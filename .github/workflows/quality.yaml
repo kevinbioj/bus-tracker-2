@@ -29,7 +29,7 @@ jobs:
         run: pnpm install
 
       - name: Biome linting
-        run: pnpm lint:ci
+        run: pnpm lint
 
   sonarcloud:
     name: SonarCloud
