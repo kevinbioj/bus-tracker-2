@@ -1,0 +1,32 @@
+{
+	"name": "@bus-tracker/server",
+	"main": "dist/index.js",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "tsc",
+		"dev": "nodemon src/index.ts",
+		"start": "node --env-file .env --enable-source-maps .",
+		"migrations:generate": "drizzle-kit generate",
+		"migrations:push": "drizzle-kit push"
+	},
+	"devDependencies": {
+		"@types/node": "^22.7.7",
+		"drizzle-kit": "^0.26.2",
+		"nodemon": "^3.1.7",
+		"ts-node": "^10.9.2"
+	},
+	"dependencies": {
+		"@bus-tracker/contracts": "workspace:*",
+		"@hono/node-server": "^1.13.2",
+		"@sentry/node": "^8.35.0",
+		"@sentry/profiling-node": "^8.35.0",
+		"drizzle-orm": "^0.35.2",
+		"hono": "^4.6.5",
+		"p-limit": "^6.1.0",
+		"postgres": "^3.4.4",
+		"redis": "^4.7.0",
+		"temporal-polyfill": "^0.2.5",
+		"zod": "^3.23.8"
+	}
+}

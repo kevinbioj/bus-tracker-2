@@ -1,0 +1,541 @@
+{
+	"id": "589b78e6-ea70-4261-b479-d543fba78e2e",
+	"prevId": "00000000-0000-0000-0000-000000000000",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.girouette": {
+			"name": "girouette",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"network_id": {
+					"name": "network_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"line_id": {
+					"name": "line_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"direction_id": {
+					"name": "direction_id",
+					"type": "smallint",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"destinations": {
+					"name": "destinations",
+					"type": "varchar[]",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"data": {
+					"name": "data",
+					"type": "json",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"girouette_network_id_network_id_fk": {
+					"name": "girouette_network_id_network_id_fk",
+					"tableFrom": "girouette",
+					"tableTo": "network",
+					"columnsFrom": ["network_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"girouette_line_id_line_id_fk": {
+					"name": "girouette_line_id_line_id_fk",
+					"tableFrom": "girouette",
+					"tableTo": "line",
+					"columnsFrom": ["line_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		},
+		"public.line_activity": {
+			"name": "line_activity",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"vehicle_id": {
+					"name": "vehicle_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"line_id": {
+					"name": "line_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"service_date": {
+					"name": "service_date",
+					"type": "date",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"started_at": {
+					"name": "started_at",
+					"type": "timestamp (0)",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp (0)",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {
+				"line_activity_vehicle_index": {
+					"name": "line_activity_vehicle_index",
+					"columns": [
+						{
+							"expression": "vehicle_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"line_activity_vehicle_id_vehicle_id_fk": {
+					"name": "line_activity_vehicle_id_vehicle_id_fk",
+					"tableFrom": "line_activity",
+					"tableTo": "vehicle",
+					"columnsFrom": ["vehicle_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"line_activity_line_id_line_id_fk": {
+					"name": "line_activity_line_id_line_id_fk",
+					"tableFrom": "line_activity",
+					"tableTo": "line",
+					"columnsFrom": ["line_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		},
+		"public.line": {
+			"name": "line",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"network_id": {
+					"name": "network_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"ref": {
+					"name": "ref",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"number": {
+					"name": "number",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"cartridge_href": {
+					"name": "cartridge_href",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"color": {
+					"name": "color",
+					"type": "char(6)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"text_color": {
+					"name": "text_color",
+					"type": "char(6)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"archived_at": {
+					"name": "archived_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"line_network_id_network_id_fk": {
+					"name": "line_network_id_network_id_fk",
+					"tableFrom": "line",
+					"tableTo": "network",
+					"columnsFrom": ["network_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		},
+		"public.mercato_activity": {
+			"name": "mercato_activity",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"vehicle_id": {
+					"name": "vehicle_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"from_network_id": {
+					"name": "from_network_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"to_network_id": {
+					"name": "to_network_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"comment": {
+					"name": "comment",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"recorded_at": {
+					"name": "recorded_at",
+					"type": "timestamp (0)",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {
+				"mercato_activity_vehicle_index": {
+					"name": "mercato_activity_vehicle_index",
+					"columns": [
+						{
+							"expression": "vehicle_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"mercato_activity_vehicle_id_vehicle_id_fk": {
+					"name": "mercato_activity_vehicle_id_vehicle_id_fk",
+					"tableFrom": "mercato_activity",
+					"tableTo": "vehicle",
+					"columnsFrom": ["vehicle_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"mercato_activity_from_network_id_network_id_fk": {
+					"name": "mercato_activity_from_network_id_network_id_fk",
+					"tableFrom": "mercato_activity",
+					"tableTo": "network",
+					"columnsFrom": ["from_network_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"mercato_activity_to_network_id_network_id_fk": {
+					"name": "mercato_activity_to_network_id_network_id_fk",
+					"tableFrom": "mercato_activity",
+					"tableTo": "network",
+					"columnsFrom": ["to_network_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		},
+		"public.network": {
+			"name": "network",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"ref": {
+					"name": "ref",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"authority": {
+					"name": "authority",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"logo_href": {
+					"name": "logo_href",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"color": {
+					"name": "color",
+					"type": "char(6)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"text_color": {
+					"name": "text_color",
+					"type": "char(6)",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"network_ref_unique": {
+					"name": "network_ref_unique",
+					"nullsNotDistinct": false,
+					"columns": ["ref"]
+				}
+			},
+			"checkConstraints": {}
+		},
+		"public.operator": {
+			"name": "operator",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"network_id": {
+					"name": "network_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"ref": {
+					"name": "ref",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"logo_href": {
+					"name": "logo_href",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"operator_network_id_network_id_fk": {
+					"name": "operator_network_id_network_id_fk",
+					"tableFrom": "operator",
+					"tableTo": "network",
+					"columnsFrom": ["network_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"operator_ref_unique": {
+					"name": "operator_ref_unique",
+					"nullsNotDistinct": false,
+					"columns": ["ref"]
+				}
+			},
+			"checkConstraints": {}
+		},
+		"public.vehicle": {
+			"name": "vehicle",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "serial",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"network_id": {
+					"name": "network_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"operator_id": {
+					"name": "operator_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"ref": {
+					"name": "ref",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"number": {
+					"name": "number",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"designation": {
+					"name": "designation",
+					"type": "varchar",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"tc_id": {
+					"name": "tc_id",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"last_seen_at": {
+					"name": "last_seen_at",
+					"type": "timestamp (0)",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"archived_at": {
+					"name": "archived_at",
+					"type": "timestamp (0)",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"vehicle_network_index": {
+					"name": "vehicle_network_index",
+					"columns": [
+						{
+							"expression": "operator_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"vehicle_network_id_network_id_fk": {
+					"name": "vehicle_network_id_network_id_fk",
+					"tableFrom": "vehicle",
+					"tableTo": "network",
+					"columnsFrom": ["network_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"vehicle_operator_id_operator_id_fk": {
+					"name": "vehicle_operator_id_operator_id_fk",
+					"tableFrom": "vehicle",
+					"tableTo": "operator",
+					"columnsFrom": ["operator_id"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		}
+	},
+	"enums": {},
+	"schemas": {},
+	"sequences": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
+}
