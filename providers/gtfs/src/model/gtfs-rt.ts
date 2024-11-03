@@ -1,3 +1,8 @@
+export type GtfsRt = {
+	header: { timestamp: number };
+	entity?: GtfsRtEntity[];
+};
+
 export type GtfsRtEntity = {
 	id: string;
 	tripUpdate?: TripUpdate;

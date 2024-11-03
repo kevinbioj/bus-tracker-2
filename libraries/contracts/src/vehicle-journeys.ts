@@ -8,8 +8,12 @@ export const vehicleJourneyLineSchema = z.object({
 	ref: z.string(),
 	number: z.string(),
 	type: vehicleJourneyLineTypeEnum,
-	color: z.string().length(6).optional(),
-	textColor: z.string().length(6).optional(),
+	color: z
+		.string() /*.length(6)*/
+		.optional(),
+	textColor: z
+		.string() /*.length(6)*/
+		.optional(),
 });
 
 export type VehicleJourneyLine = z.infer<typeof vehicleJourneyLineSchema>;

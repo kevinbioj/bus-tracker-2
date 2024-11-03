@@ -13,7 +13,10 @@ export async function importRoutes(gtfsDirectory: string, agencies: Map<string, 
 	const routes = new Map<string, Route>();
 
 	await readCsv<RouteRecord>(join(gtfsDirectory, "routes.txt"), (routeRecord) => {
-		const agency = agencies.get(routeRecord.agency_id);
+		const agency =
+			typeof routeRecord.agency_id !== "undefined"
+				? agencies.get(routeRecord.agency_id)
+				: agencies.values().next().value;
 		if (typeof agency === "undefined") {
 			throw new Error(`Unknown agency with id '${routeRecord.agency_id}' for route '${routeRecord.route_id}'.`);
 		}
@@ -23,8 +26,8 @@ export async function importRoutes(gtfsDirectory: string, agencies: Map<string, 
 			agency,
 			routeRecord.route_short_name,
 			routeRecord.route_type in routeTypes ? routeTypes[routeRecord.route_type as keyof typeof routeTypes] : "UNKNOWN",
-			routeRecord.route_color?.toUpperCase(),
-			routeRecord.route_text_color?.toUpperCase(),
+			routeRecord.route_color?.toUpperCase() || "000000",
+			routeRecord.route_text_color?.toUpperCase() || "FFFFFF",
 		);
 
 		routes.set(route.id, route);

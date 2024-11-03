@@ -69,6 +69,8 @@ export function VehicleMarker({ activeMarker, setActiveMarker, journey }: Vehicl
 	// const ledColor = "YELLOW";
 	const tooltipId = journey.id;
 
+	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName ?? "Destination inconnue";
+
 	return (
 		<ReactMoveableCircleMarker
 			color={`#${journey.line?.color ?? "FFFFFF"}`}
@@ -115,22 +117,37 @@ export function VehicleMarker({ activeMarker, setActiveMarker, journey }: Vehicl
 					<div className="border-[1px] border-neutral-800">
 						<Girouette
 							ledColor="WHITE"
-							routeNumber={{
-								backgroundColor: journey.line?.color ? `#${journey.line?.color}` : undefined,
-								textColor: journey.line?.textColor ? `#${journey.line?.textColor}` : undefined,
-								outlineColor:
-									journey.line?.textColor === "FFFFFF"
-										? "#000000"
-										: journey.line?.textColor === "000000"
-											? "#FFFFFF"
-											: undefined,
-								font: "1508SUPX",
-								text: journey.line?.number ?? "",
-							}}
+							routeNumber={
+								typeof journey.line !== "undefined"
+									? {
+											backgroundColor: journey.line.color ? `#${journey.line.color}` : undefined,
+											textColor: journey.line.textColor ? `#${journey.line.textColor}` : undefined,
+											outlineColor:
+												journey.line.textColor === "FFFFFF"
+													? "#000000"
+													: journey.line.textColor === "000000"
+														? "#FFFFFF"
+														: undefined,
+											font:
+												journey.line.number.length <= 3
+													? "1508SUPX"
+													: journey.line.number.length === 4
+														? "1507SUPX"
+														: "1407SUPX",
+											spacing: journey.line.number.length < 4 ? 1 : 0,
+											text: journey.line.number ?? "",
+										}
+									: undefined
+							}
 							pages={[
 								{
-									font: "1407SUPX",
-									text: journey.destination ?? journey.calls?.at(-1)?.stopName ?? "Destination inconnue",
+									font:
+										destination.length <= "KKKKKKKKKKKKKKKKK".length
+											? "1508SUPX"
+											: destination.length <= "FFFFFFFFFFFFFFFFFFFF".length
+												? "1507SUPX"
+												: "1407SUPX",
+									text: destination,
 								},
 							]}
 							width={girouetteWidth}

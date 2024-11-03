@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 
-import type { GtfsRtEntity, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
+import type { GtfsRt, GtfsRtEntity, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
 
@@ -25,21 +25,24 @@ export async function downloadGtfsRt(
 			if (response.status === 204) return;
 
 			const buffer = Buffer.from(await response.arrayBuffer());
-			const entities: GtfsRtEntity[] =
-				feedMessage.toObject(feedMessage.decode(buffer), {
-					enums: String,
-					longs: Number,
-				})?.entity ?? [];
+			const gtfsRt = feedMessage.toObject(feedMessage.decode(buffer), {
+				enums: String,
+				longs: Number,
+			}) as GtfsRt;
+			const entities = gtfsRt.entity ?? [];
 
 			for (const entity of entities) {
 				if (entity.tripUpdate) {
-					tripUpdates.push(typeof mapTripUpdate === "function" ? mapTripUpdate(entity.tripUpdate) : entity.tripUpdate);
+					const tripUpdate = typeof mapTripUpdate === "function" ? mapTripUpdate(entity.tripUpdate) : entity.tripUpdate;
+					tripUpdate.timestamp ||= gtfsRt.header.timestamp;
+					tripUpdates.push(tripUpdate);
 				}
 
 				if (entity.vehicle) {
-					vehiclePositions.push(
-						typeof mapVehiclePosition === "function" ? mapVehiclePosition(entity.vehicle) : entity.vehicle,
-					);
+					const vehiclePosition =
+						typeof mapVehiclePosition === "function" ? mapVehiclePosition(entity.vehicle) : entity.vehicle;
+					vehiclePosition.timestamp ||= gtfsRt.header.timestamp;
+					vehiclePositions.push(vehiclePosition);
 				}
 			}
 		}),

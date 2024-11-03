@@ -99,10 +99,10 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 		for (const vehiclePosition of vehiclePositions) {
 			let journey: Journey | undefined;
 
-			if (typeof vehiclePosition.trip !== "undefined") {
-				const updatedAt = Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp);
-				if (now.since(updatedAt).total("minutes") >= 10) continue;
+			const updatedAt = Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp);
+			if (now.since(updatedAt).total("minutes") >= 10) continue;
 
+			if (typeof vehiclePosition.trip !== "undefined") {
 				const trip = source.gtfs.trips.get(vehiclePosition.trip.tripId);
 				if (typeof trip !== "undefined") {
 					const firstStopTime = trip.stopTimes.at(0)!;
@@ -143,10 +143,6 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				source.options.getVehicleRef?.(vehiclePosition.vehicle) ??
 				vehiclePosition.vehicle.label ??
 				vehiclePosition.vehicle.id;
-
-			if (typeof vehicleRef !== "string") {
-				console.log(vehiclePosition);
-			}
 
 			const tripRef =
 				typeof journey !== "undefined" ? (source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id) : undefined;
@@ -223,9 +219,6 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				source.options.getVehicleRef?.(vehicleDescriptor) ?? vehicleDescriptor?.label ?? vehicleDescriptor?.id;
 			const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
 
-			if (typeof vehicleRef !== "string") {
-				console.log(journey);
-			}
 			if (journey.hasRealtime() && !(source.options.coverWithTripUpdates ?? false)) continue;
 
 			const key =
