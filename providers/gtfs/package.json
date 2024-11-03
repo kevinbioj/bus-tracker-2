@@ -7,7 +7,7 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "nodemon src/index.ts",
-		"start": "node --env-file .env --enable-source-maps --expose-gc .",
+		"start": "node --enable-source-maps --expose-gc .",
 		"test": "vitest --run .",
 		"test:watch": "vitest ."
 	},
@@ -21,7 +21,6 @@
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@fast-csv/parse": "^5.0.2",
 		"croner": "^9.0.0",
 		"decompress": "^4.2.1",
 		"dotenv": "^16.4.5",

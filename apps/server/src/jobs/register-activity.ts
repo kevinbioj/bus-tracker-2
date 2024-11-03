@@ -1,9 +1,6 @@
-import * as Sentry from "@sentry/node";
-import { and, eq, gte } from "drizzle-orm";
-import pLimit from "p-limit";
-import { Temporal } from "temporal-polyfill";
-
 import type { VehicleJourney } from "@bus-tracker/contracts";
+import { and, eq, gte } from "drizzle-orm";
+import { Temporal } from "temporal-polyfill";
 
 import { database } from "../database/database.js";
 import { lineActivities, vehicles } from "../database/schema.js";
@@ -12,23 +9,7 @@ import { importVehicle } from "../import/import-vehicle.js";
 
 const ACTIVITY_THRESHOLD_MNS = 10;
 
-const registerFn = pLimit(1);
-
-export function registerActivity(vehicleJourney: VehicleJourney) {
-	return registerFn(async () => {
-		try {
-			await _registerActivity(vehicleJourney);
-		} catch (error) {
-			console.error("Failed to register activity for '%s':", vehicleJourney.id, error);
-			Sentry.captureException(error, {
-				extra: { journey: vehicleJourney },
-				tags: { section: "activity-registration" },
-			});
-		}
-	});
-}
-
-async function _registerActivity(vehicleJourney: VehicleJourney) {
+export async function registerActivity(vehicleJourney: VehicleJourney) {
 	if (typeof vehicleJourney.line === "undefined" || typeof vehicleJourney.vehicleRef === "undefined") return;
 
 	const vehicle = await importVehicle(vehicleJourney.networkRef, vehicleJourney.vehicleRef, vehicleJourney.operatorRef);

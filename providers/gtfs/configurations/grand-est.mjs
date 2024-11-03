@@ -1,4 +1,4 @@
-/** @type {import('../src/model/source.ts').Source[]} */
+/** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
 		id: "dijon",
@@ -8,8 +8,8 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/divia-dijon-gtfs-rt-vehicle-position",
 		],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: (trip) =>
-			[
+		excludeScheduled: (trip) =>
+			![
 				"4-PL",
 				"4-39",
 				"4-61",

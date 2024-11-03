@@ -9,7 +9,7 @@ function nthIndexOf(input, pattern, n) {
 	return i;
 }
 
-/** @type {import('../src/model/source.ts').Source[]} */
+/** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	//- NOMAD
 	{
@@ -41,9 +41,9 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
 		],
-		allowScheduled: (trip) =>
-			["06", "89", "99"].includes(trip.route.id) ||
-			["IST_", "INT_"].some((pattern) => trip.service.id.includes(pattern)),
+		excludeScheduled: (trip) =>
+			!["06", "89", "99"].includes(trip.route.id) &&
+			!["IST_", "INT_"].some((pattern) => trip.service.id.includes(pattern)),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (
@@ -70,7 +70,7 @@ const sources = [
 		id: "tgr",
 		staticResourceHref: "https://pysae.com/api/v2/groups/tcar/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
-		allowScheduled: (trip) => trip.route.name !== "06",
+		excludeScheduled: (trip) => trip.route.name === "06",
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
 	},
@@ -96,7 +96,7 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/vehicle-positions",
 		],
-		allowScheduled: (trip) => ["12", "13", "21"].includes(trip.route.id),
+		excludeScheduled: (trip) => !["12", "13", "21"].includes(trip.route.id),
 		getNetworkRef: () => "LIA",
 	},
 	//- Twisto
@@ -105,7 +105,7 @@ const sources = [
 		id: "cap-cotentin",
 		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-cotentin/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-cotentin/gtfs-rt"],
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "CAP-COTENTIN",
 	},
 	//- SEMO
@@ -156,7 +156,7 @@ const sources = [
 		id: "sngo-giverny",
 		staticResourceHref: "https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs-rt"],
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "SNGO",
 		getVehicleRef: (vehicle) => vehicle.label ?? undefined,
 	},
@@ -166,7 +166,7 @@ const sources = [
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=astrobus",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=astrobus"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "ASTROBUS",
 		getVehicleRef: () => undefined,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
@@ -178,7 +178,7 @@ const sources = [
 		staticResourceHref: "https://pysae.com/api/v2/groups/caux-seine-agglo/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/caux-seine-agglo/gtfs-rt"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: (trip) => !["14", "30"].includes(trip.route.id),
+		excludeScheduled: (trip) => ["14", "30"].includes(trip.route.id),
 		getNetworkRef: () => "REZOBUS",
 		getVehicleRef: () => undefined,
 	},
@@ -188,7 +188,7 @@ const sources = [
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=granville",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=granville"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "NEVA",
 		getVehicleRef: () => undefined,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
@@ -203,7 +203,7 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/ficibus/vehicle-positions",
 		],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "FICIBUS",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
@@ -215,7 +215,7 @@ const sources = [
 		staticResourceHref: "https://pysae.com/api/v2/groups/moca/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/moca/gtfs-rt"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "MOCA",
 		getVehicleRef: (vehicle) => vehicle.label ?? undefined,
 	},
@@ -225,7 +225,7 @@ const sources = [
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=hobus",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=hobus"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "HOBUS",
 		getVehicleRef: () => undefined,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
@@ -237,7 +237,7 @@ const sources = [
 		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-bayeux/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-bayeux/gtfs-rt"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "BYBUS",
 		getVehicleRef: (vehicle) => vehicle.label ?? undefined,
 	},
@@ -247,7 +247,7 @@ const sources = [
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=bernay",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=bernay"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
-		allowScheduled: () => false,
+		excludeScheduled: true,
 		getNetworkRef: () => "IBUS",
 		getVehicleRef: () => undefined,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),

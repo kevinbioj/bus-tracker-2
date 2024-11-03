@@ -13,7 +13,8 @@
 		"noImplicitOverride": true,
 		"module": "NodeNext",
 		"outDir": "dist",
-		"lib": ["es2022"]
+		"lib": ["es2022"],
+		"noEmit": true
 	},
 	"include": ["drizzle.config.ts"],
 	"exclude": ["node_modules"]

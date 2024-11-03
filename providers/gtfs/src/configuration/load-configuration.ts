@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { cwd } from "node:process";
 
+import { Source } from "../model/source.js";
 import type { Configuration } from "./configuration.js";
 
 export async function loadConfiguration(path: string) {
@@ -8,16 +9,20 @@ export async function loadConfiguration(path: string) {
 	try {
 		console.log("► Loading configuration '%s'.", resolvedPath);
 		const module = await import(resolvedPath);
-		const configuration = module.default as Configuration;
-		for (const source of configuration.sources) {
+		const { computeDelayMs, redisOptions, sources: sourcesOptions } = module.default as Configuration;
+
+		const sources = sourcesOptions.map(({ id, ...sourceOptions }) => {
+			const source = new Source(id, sourceOptions);
 			console.log(
 				`\tⓘ Loaded source '%s' with %d real-time feed(s).`,
-				source.id,
-				source.realtimeResourceHrefs?.length ?? 0,
+				id,
+				sourceOptions.realtimeResourceHrefs?.length ?? 0,
 			);
-		}
+			return source;
+		});
+
 		console.log();
-		return configuration;
+		return { computeDelayMs, redisOptions, sources };
 	} catch (cause) {
 		throw new Error(`Unable to load configuration at '${resolvedPath}'.`, { cause });
 	}

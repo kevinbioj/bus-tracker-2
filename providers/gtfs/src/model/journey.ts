@@ -81,8 +81,12 @@ export class Journey {
 			longitude: currentShapePoint.longitude + (nextShapePoint.longitude - currentShapePoint.longitude) * ratio,
 			atStop: false,
 			type: "COMPUTED",
-			recordedAt: at.toZonedDateTimeISO(this.trip.route.agency.timeZone).toString(),
+			recordedAt: at.toZonedDateTimeISO(this.trip.route.agency.timeZone).toString({ timeZoneName: "never" }),
 		};
+	}
+
+	hasRealtime() {
+		return this.calls.some((call) => !!(call.expectedArrivalTime ?? call.expectedDepartureTime));
 	}
 
 	updateJourney(stopTimeUpdates: StopTimeUpdate[]) {
@@ -148,7 +152,7 @@ export class Journey {
 			longitude: call.stop.longitude,
 			atStop: true,
 			type: "COMPUTED",
-			recordedAt: (call.expectedArrivalTime ?? call.aimedArrivalTime).toString(),
+			recordedAt: (call.expectedArrivalTime ?? call.aimedArrivalTime).toString({ timeZoneName: "never" }),
 		};
 	}
 }

@@ -58,9 +58,9 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 	try {
 		updateLog("%s 1/2 ► Downloading real-time data from feeds.", sourceId);
 		const { tripUpdates, vehiclePositions } = await downloadGtfsRt(
-			source.realtimeResourceHrefs ?? [],
-			source.mapTripUpdate,
-			source.mapVehiclePosition,
+			source.options.realtimeResourceHrefs ?? [],
+			source.options.mapTripUpdate,
+			source.options.mapVehiclePosition,
 		);
 		const downloadTime = watch.step();
 
@@ -131,16 +131,25 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						}
 					}
 					handledJourneyIds.add(journey.id);
+					if (typeof journey.trip.block !== "undefined") {
+						handledBlockIds.add(journey.trip.block);
+					}
 				}
 			}
 
-			const networkRef = source.getNetworkRef(journey, vehiclePosition.vehicle);
-			const operatorRef = source.getOperatorRef?.(journey, vehiclePosition.vehicle);
+			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
+			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);
 			const vehicleRef =
-				source.getVehicleRef?.(vehiclePosition.vehicle) ?? vehiclePosition.vehicle.label ?? vehiclePosition.vehicle.id;
+				source.options.getVehicleRef?.(vehiclePosition.vehicle) ??
+				vehiclePosition.vehicle.label ??
+				vehiclePosition.vehicle.id;
+
+			if (typeof vehicleRef !== "string") {
+				console.log(vehiclePosition);
+			}
 
 			const tripRef =
-				typeof journey !== "undefined" ? (source.mapTripRef?.(journey.trip.id) ?? journey.trip.id) : undefined;
+				typeof journey !== "undefined" ? (source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id) : undefined;
 
 			const calls =
 				typeof journey !== "undefined"
@@ -157,7 +166,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				...(typeof journey !== "undefined"
 					? {
 							line: {
-								ref: `${networkRef}:Line:${source.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
+								ref: `${networkRef}:Line:${source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
 								number: journey.trip.route.name,
 								type: journey.trip.route.type,
 								color: journey.trip.route.color,
@@ -169,9 +178,13 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 								calls?.map((call, index) => {
 									const isLast = index === calls.length - 1;
 									return {
-										aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString(),
-										expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString(),
-										stopRef: `${networkRef}:StopPoint:${source.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
+										aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({
+											timeZoneName: "never",
+										}),
+										expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
+											timeZoneName: "never",
+										}),
+										stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 										stopName: call.stop.name,
 										stopOrder: call.sequence,
 										callStatus: call.status,
@@ -186,7 +199,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					type: "GPS",
 					recordedAt: Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp)
 						.toZonedDateTimeISO(journey?.trip.route.agency.timeZone ?? "Europe/Paris")
-						.toString(),
+						.toString({ timeZoneName: "never" }),
 				},
 				journeyRef: typeof journey !== "undefined" ? `${networkRef}:ServiceJourney:${tripRef}` : undefined,
 				networkRef,
@@ -201,31 +214,38 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 		for (const journey of source.gtfs.journeys) {
 			if (handledJourneyIds.has(journey.id)) continue;
 			if (typeof journey.trip.block !== "undefined" && handledBlockIds.has(journey.trip.block)) continue;
-			if (typeof source.allowScheduled === "function" && !source.allowScheduled(journey.trip)) continue;
 
 			const vehicleDescriptor = tripUpdates.find((tu) => matchJourneyToTripDescriptor(journey, tu.trip))?.vehicle;
 
-			const networkRef = source.getNetworkRef(journey);
-			const operatorRef = source.getOperatorRef?.(journey, vehicleDescriptor);
-			const vehicleRef = source.getVehicleRef?.(vehicleDescriptor) ?? vehicleDescriptor?.label ?? vehicleDescriptor?.id;
+			const networkRef = source.options.getNetworkRef(journey);
+			const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);
+			const vehicleRef =
+				source.options.getVehicleRef?.(vehicleDescriptor) ?? vehicleDescriptor?.label ?? vehicleDescriptor?.id;
+			const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
 
-			const tripRef = source.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
+			if (typeof vehicleRef !== "string") {
+				console.log(journey);
+			}
+			if (journey.hasRealtime() && !(source.options.coverWithTripUpdates ?? false)) continue;
+
+			const key =
+				typeof vehicleRef !== "undefined"
+					? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}`
+					: `${networkRef}:${operatorRef ?? ""}:FakeVehicle:${tripRef}:${journey.date}`;
+
+			if (activeJourneys.has(key)) continue;
 
 			if (typeof journey.trip.block !== "undefined") {
 				handledBlockIds.add(journey.trip.block);
 			}
 
-			const calls = getCalls(journey, now, source.getAheadTime);
+			const calls = getCalls(journey, now, source.options.getAheadTime);
 			if (typeof calls === "undefined") continue;
 
-			const key =
-				typeof vehicleDescriptor !== "undefined"
-					? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}`
-					: `${networkRef}:${operatorRef ?? ""}:FakeVehicle:${tripRef}:${journey.date}`;
 			activeJourneys.set(key, {
 				id: key,
 				line: {
-					ref: `${networkRef}:Line:${source.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
+					ref: `${networkRef}:Line:${source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
 					number: journey.trip.route.name,
 					type: journey.trip.route.type,
 					color: journey.trip.route.color,
@@ -236,9 +256,11 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				calls: calls.map((call, index) => {
 					const isLast = index === calls.length - 1;
 					return {
-						aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString(),
-						expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString(),
-						stopRef: `${networkRef}:StopPoint:${source.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
+						aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({ timeZoneName: "never" }),
+						expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
+							timeZoneName: "never",
+						}),
+						stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 						stopName: call.stop.name,
 						stopOrder: call.sequence,
 						callStatus: call.status,
