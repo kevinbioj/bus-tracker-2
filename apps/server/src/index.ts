@@ -1,16 +1,16 @@
-import "dotenv";
+import "dotenv/config.js";
 import "./sentry.js";
 
+import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { serve } from "@hono/node-server";
 import * as Sentry from "@sentry/node";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
+import { cors } from "hono/cors";
 import { createClient } from "redis";
 import * as z from "zod";
 
-import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
-
-import { cors } from "hono/cors";
+import { registerGirouetteRoutes } from "./controllers/girouettes.js";
 import { registerNetworkRoutes } from "./controllers/networks.js";
 import { registerVehicleJourneyRoutes } from "./controllers/vehicle-journeys.js";
 import { registerVehicleRoutes } from "./controllers/vehicles.js";
@@ -35,7 +35,15 @@ await redis.subscribe("journeys", async (message) => {
 
 	try {
 		const payload = JSON.parse(message);
-		vehicleJourneys = z.array(vehicleJourneySchema).parse(payload);
+		if (!Array.isArray(payload)) throw new Error("Payload is not an array");
+		vehicleJourneys = payload.flatMap((entry) => {
+			const parsed = vehicleJourneySchema.safeParse(entry);
+			if (!parsed.success) {
+				Sentry.captureException(parsed.error, { extra: { entry }, tags: { section: "journey-decode" } });
+				return [];
+			}
+			return parsed.data;
+		});
 	} catch (error) {
 		Sentry.captureException(error, {
 			extra: { message },
@@ -59,4 +67,5 @@ hono.use(cors({ origin: "*" }));
 registerNetworkRoutes(hono);
 registerVehicleRoutes(hono);
 registerVehicleJourneyRoutes(hono, journeyStore);
+registerGirouetteRoutes(hono);
 serve({ fetch: hono.fetch, port });

@@ -2,31 +2,37 @@
 const sources = [
 	{
 		id: "tcar",
-		staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE",
+		staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
 		realtimeResourceHrefs: [
-			"https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
-			"https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
 		],
-		excludeScheduled: (trip) =>
-			!["06", "89", "99"].includes(trip.route.id) &&
-			!["IST_", "INT_"].some((pattern) => trip.service.id.includes(pattern)),
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: (trip) => !["06", "89", "99"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
-			if (
-				journey?.trip.route.id === "06" ||
-				journey?.trip.route.id === "89" ||
-				journey?.trip.service.id.includes("IST_") ||
-				journey?.trip.service.id.includes("INT_")
-			)
-				return "TNI";
+			if (journey?.trip.route.id === "06" || journey?.trip.route.id === "89") return "TNI";
 			if (typeof vehicle !== "undefined" && +vehicle.id >= 670 && +vehicle.id <= 685) return "TNI";
 			return "TCAR";
+		},
+		getDestination: (journey, vehicle) => {
+			if (typeof journey !== "undefined") {
+				return (
+					journey?.calls.findLast((call) => typeof call.aimedDepartureTime !== "undefined") ?? journey?.calls.at(-1)
+				)?.stop.name;
+			}
+
+			if (typeof vehicle !== "undefined") {
+				if (+vehicle.id >= 831 && +vehicle.id <= 857) return "Dépôt Métro";
+				return "Dépôt Bus";
+			}
 		},
 	},
 	{
 		id: "tae",
 		staticResourceHref: "https://gtfs.tae76.fr/gtfs/feed.zip",
 		realtimeResourceHrefs: ["https://gtfs.tae76.fr/gtfs-rt.bin"],
+		excludeScheduled: true,
 		getAheadTime: (journey) =>
 			journey?.calls.some((c) => !!(c.expectedArrivalTime ?? c.expectedDepartureTime)) ? 15 * 60 : 0,
 		getNetworkRef: () => "ASTUCE",

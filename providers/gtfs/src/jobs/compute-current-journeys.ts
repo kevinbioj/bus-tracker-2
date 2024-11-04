@@ -169,7 +169,6 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 								textColor: journey.trip.route.textColor,
 							},
 							direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
-							destination: journey.trip.headsign,
 							calls:
 								calls?.map((call, index) => {
 									const isLast = index === calls.length - 1;
@@ -188,6 +187,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 								}) ?? [],
 						}
 					: {}),
+				destination: source.options.getDestination?.(journey, vehiclePosition.vehicle) ?? journey?.trip.headsign,
 				position: {
 					latitude: vehiclePosition.position.latitude,
 					longitude: vehiclePosition.position.longitude,
@@ -245,7 +245,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					textColor: journey.trip.route.textColor,
 				},
 				direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
-				destination: journey.trip.headsign,
+				destination: source.options.getDestination?.(journey, vehicleDescriptor) ?? journey.trip.headsign,
 				calls: calls.map((call, index) => {
 					const isLast = index === calls.length - 1;
 					return {

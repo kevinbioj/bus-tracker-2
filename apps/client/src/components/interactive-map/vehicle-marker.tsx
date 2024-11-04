@@ -1,16 +1,15 @@
 "use client";
 
-import type { VehicleJourney } from "@bus-tracker/contracts";
 import dayjs from "dayjs";
 import type { LatLngExpression } from "leaflet";
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 import { Popup } from "react-leaflet";
 import { Satellite as SatelliteIcon } from "tabler-icons-react";
 import { match } from "ts-pattern";
-import { useScreen } from "usehooks-ts";
+import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 
-import { Girouette } from "~/components/interactive-map/girouette";
 import { NextStops } from "~/components/interactive-map/next-stops";
+import { VehicleGirouette } from "~/components/interactive-map/vehicle-girouette";
 import ReactMoveableCircleMarker, { type MoveableCircleMarker } from "~/utils/moveable-circler-marker";
 
 const getNoise = () => (Math.random() - 0.5) * 0.000045;
@@ -20,12 +19,10 @@ const isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
 type VehicleMarkerProps = {
 	activeMarker?: string;
 	setActiveMarker: (marker: string) => void;
-	journey: VehicleJourney;
+	journey: DisposeableVehicleJourney;
 };
 
 export function VehicleMarker({ activeMarker, setActiveMarker, journey }: VehicleMarkerProps) {
-	const { width } = useScreen();
-
 	const updatePositionTime = useCallback(() => {
 		const timestamp = dayjs(journey.position.recordedAt);
 		if (dayjs().diff(timestamp, "hours") < 1) return timestamp.fromNow();
@@ -65,11 +62,8 @@ export function VehicleMarker({ activeMarker, setActiveMarker, journey }: Vehicl
 	// 	return () => clearInterval(interval);
 	// }, [journey, updatePositionTime]);
 
-	const girouetteWidth = Math.min(width - 50, 384);
 	// const ledColor = "YELLOW";
 	const tooltipId = journey.id;
-
-	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName ?? "Destination inconnue";
 
 	return (
 		<ReactMoveableCircleMarker
@@ -113,45 +107,15 @@ export function VehicleMarker({ activeMarker, setActiveMarker, journey }: Vehicl
 			ref={ref}
 		>
 			<Popup autoClose autoPan={false} closeButton={false} closeOnClick={false}>
-				<div style={{ width: `${girouetteWidth + 1}px` }}>
+				<div
+					style={
+						{
+							/*width: `${girouetteWidth + 1}px`*/
+						}
+					}
+				>
 					<div className="border-[1px] border-neutral-800">
-						<Girouette
-							ledColor="WHITE"
-							routeNumber={
-								typeof journey.line !== "undefined"
-									? {
-											backgroundColor: journey.line.color ? `#${journey.line.color}` : undefined,
-											textColor: journey.line.textColor ? `#${journey.line.textColor}` : undefined,
-											outlineColor:
-												journey.line.textColor === "FFFFFF"
-													? "#000000"
-													: journey.line.textColor === "000000"
-														? "#FFFFFF"
-														: undefined,
-											font:
-												journey.line.number.length <= 3
-													? "1508SUPX"
-													: journey.line.number.length === 4
-														? "1507SUPX"
-														: "1407SUPX",
-											spacing: journey.line.number.length < 4 ? 1 : 0,
-											text: journey.line.number ?? "",
-										}
-									: undefined
-							}
-							pages={[
-								{
-									font:
-										destination.length <= "KKKKKKKKKKKKKKKKK".length
-											? "1508SUPX"
-											: destination.length <= "FFFFFFFFFFFFFFFFFFFF".length
-												? "1507SUPX"
-												: "1407SUPX",
-									text: destination,
-								},
-							]}
-							width={girouetteWidth}
-						/>
+						<VehicleGirouette journey={journey} />
 					</div>
 					<div className="flex w-full flex-col font-[Achemine]">
 						<div className="flex items-center justify-between gap-2 px-2 py-[1px]">

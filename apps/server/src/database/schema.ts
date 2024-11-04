@@ -1,5 +1,6 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
+	boolean,
 	char,
 	customType,
 	date,
@@ -79,6 +80,7 @@ export const girouettes = pgTable("girouette", {
 	directionId: smallint("direction_id"),
 	destinations: varchar("destinations").array(),
 	data: json("data").notNull(),
+	enabled: boolean("enabled").notNull().default(true),
 });
 
 export type Girouette = InferSelectModel<typeof girouettes>;

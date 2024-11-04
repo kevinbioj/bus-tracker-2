@@ -5,6 +5,7 @@ export const createQueryValidator = <O, D extends ZodTypeDef, I>(schema: Zod.Sch
 	validator("query", (values, c) => {
 		const parsed = schema.safeParse(values);
 		if (!parsed.success) {
+			c.status(400);
 			return c.json({
 				code: 400,
 				message: 'Query parameters are invalid, please check "issues" for more information.',
@@ -18,6 +19,7 @@ export const createParamValidator = <O, D extends ZodTypeDef, I>(schema: Zod.Sch
 	validator("param", (values, c) => {
 		const parsed = schema.safeParse(values);
 		if (!parsed.success) {
+			c.status(400);
 			return c.json({
 				code: 400,
 				message: 'Path parameters are invalid, please check "issues" for more information.',
