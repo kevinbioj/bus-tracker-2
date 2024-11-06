@@ -5,7 +5,7 @@
 	"private": true,
 	"scripts": {
 		"build": "tsc -b",
-		"dev": "nodemon src/index.ts",
+		"dev": "tsx watch src/index.ts",
 		"start": "node --enable-source-maps .",
 		"migrations:generate": "drizzle-kit generate",
 		"migrations:push": "drizzle-kit push"
@@ -13,8 +13,7 @@
 	"devDependencies": {
 		"@types/node": "^22.7.7",
 		"drizzle-kit": "^0.26.2",
-		"nodemon": "^3.1.7",
-		"ts-node": "^10.9.2"
+		"tsx": "^4.19.2"
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",

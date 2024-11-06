@@ -5,6 +5,10 @@ const config: Config = {
 	content: ["./src/**/*.tsx"],
 	theme: {
 		extend: {
+			animation: {
+				"route-number": "route-number 2.5s linear infinite",
+				page: "page 5s linear infinite",
+			},
 			colors: {
 				primary: {
 					DEFAULT: "#8c0046",
@@ -31,6 +35,16 @@ const config: Config = {
 			},
 			fontFamily: {
 				sans: ['"Achemine"', ...defaultTheme.fontFamily.sans],
+			},
+			keyframes: {
+				"route-number": {
+					"0%": { transform: "translateX(100%)" },
+					"100%": { transform: "translateX(-100%)" },
+				},
+				page: {
+					"0%": { transform: "translateX(95%)" },
+					"100%": { transform: "translateX(-95%)" },
+				},
 			},
 		},
 	},

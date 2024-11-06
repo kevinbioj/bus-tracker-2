@@ -8,11 +8,11 @@ import { Tooltip } from "~/components/ui/tooltip";
 
 type NextStopsProps = { calls: VehicleJourneyCall[]; tooltipId?: string };
 
-export function NextStops({ calls }: NextStopsProps) {
+export function VehicleNextStops({ calls }: NextStopsProps) {
 	if (calls.length === 0) return null;
 	return (
-		<div className="px-2">
-			<div className="flex max-h-44 flex-col gap-1 overflow-y-auto">
+		<div className="px-2 -my-0.5">
+			<div className="flex max-h-24 flex-col gap-1 overflow-y-auto py-0.5">
 				{calls.map((call) => {
 					const accentColor = match([call.callStatus, call.expectedTime])
 						.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")
@@ -39,12 +39,12 @@ export function NextStops({ calls }: NextStopsProps) {
 										["SCHEDULED", P.number.negative()],
 										([, delay]) =>
 											({
-												className: "bg-red-500 dark:bg-red-700 text-white",
+												className: "bg-red-600 dark:bg-red-500 text-white",
 												content: `Avance de ${Math.abs(delay)} minute${delay < -1 ? "s" : ""}`,
 											}) as const,
 									)
 									.otherwise(
-										() => ({ className: "bg-green-500 dark:bg-green-700 text-white", content: "À l'heure" }) as const,
+										() => ({ className: "bg-green-600 dark:bg-green-500 text-white", content: "À l'heure" }) as const,
 									)
 							: null;
 

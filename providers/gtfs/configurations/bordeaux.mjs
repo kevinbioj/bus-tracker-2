@@ -8,10 +8,16 @@ const sources = [
 			"https://bdx.mecatran.com/utw/ws/gtfsfeed/vehicles/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt",
 			"https://bdx.mecatran.com/utw/ws/gtfsfeed/realtime/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt",
 		],
+		mode: "VP-ONLY",
 		excludeScheduled: true,
 		getNetworkRef: () => "TBM",
 		getOperatorRef: () => "KBDX",
 		getVehicleRef: (vehicle) => vehicle?.id.split(":")[1],
+		getDestination: (journey) => {
+			const lastCall = journey.calls.at(-1);
+			if (typeof lastCall === "undefined" || lastCall.status === "SCHEDULED") return journey.trip.headsign;
+			return journey.calls.findLast((call) => call.status === "SCHEDULED")?.stop.name ?? "HAUT  LE  PIED";
+		},
 	},
 ];
 

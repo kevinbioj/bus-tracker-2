@@ -11,12 +11,20 @@ import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 
 const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journey: Journey) => number) => {
-	const atWithMargin = at.add({ seconds: getAheadTime?.(journey) ?? 0 });
+	const aheadTime = getAheadTime?.(journey) ?? 0;
 
-	const firstCall = journey.calls[0];
+	const firstEffectiveCall = journey.calls.find((call) => call.status === "SCHEDULED");
 	if (
-		typeof firstCall === "undefined" ||
-		atWithMargin.epochSeconds < (firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime).epochSeconds
+		typeof firstEffectiveCall === "undefined" ||
+		at.epochSeconds + aheadTime <
+			(firstEffectiveCall.expectedArrivalTime ?? firstEffectiveCall.aimedArrivalTime).epochSeconds
+	)
+		return;
+
+	const lastEffectiveCall = journey.calls.findLast((call) => call.status === "SCHEDULED");
+	if (
+		typeof lastEffectiveCall === "undefined" ||
+		at.epochSeconds > (lastEffectiveCall.expectedDepartureTime ?? lastEffectiveCall.aimedDepartureTime).epochSeconds
 	)
 		return;
 
@@ -73,7 +81,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
 
 			const updatedAt = Temporal.Instant.fromEpochSeconds(tripUpdate.timestamp);
-			if (now.since(updatedAt).total("minutes") >= 10) continue;
+			// if (now.since(updatedAt).total("minutes") >= 10) continue;
 
 			const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip);
 			if (typeof trip === "undefined") continue;
@@ -100,7 +108,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			let journey: Journey | undefined;
 
 			const updatedAt = Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp);
-			if (now.since(updatedAt).total("minutes") >= 10) continue;
+			// if (now.since(updatedAt).total("minutes") >= 10) continue;
 
 			if (typeof vehiclePosition.trip !== "undefined") {
 				const trip = source.gtfs.trips.get(vehiclePosition.trip.tripId);
@@ -140,7 +148,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
 			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);
 			const vehicleRef =
-				source.options.getVehicleRef?.(vehiclePosition.vehicle) ??
+				source.options.getVehicleRef?.(vehiclePosition.vehicle, journey) ??
 				vehiclePosition.vehicle.label ??
 				vehiclePosition.vehicle.id;
 
@@ -207,67 +215,71 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			});
 		}
 
-		for (const journey of source.gtfs.journeys) {
-			if (handledJourneyIds.has(journey.id)) continue;
-			if (typeof journey.trip.block !== "undefined" && handledBlockIds.has(journey.trip.block)) continue;
+		if (source.options.mode !== "VP-ONLY") {
+			for (const journey of source.gtfs.journeys) {
+				if (handledJourneyIds.has(journey.id)) continue;
+				if (typeof journey.trip.block !== "undefined" && handledBlockIds.has(journey.trip.block)) continue;
 
-			const vehicleDescriptor = tripUpdates.find((tu) => matchJourneyToTripDescriptor(journey, tu.trip))?.vehicle;
+				const vehicleDescriptor = tripUpdates.find((tu) => matchJourneyToTripDescriptor(journey, tu.trip))?.vehicle;
 
-			const networkRef = source.options.getNetworkRef(journey);
-			const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);
-			const vehicleRef =
-				source.options.getVehicleRef?.(vehicleDescriptor) ?? vehicleDescriptor?.label ?? vehicleDescriptor?.id;
-			const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
+				const networkRef = source.options.getNetworkRef(journey);
+				const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);
+				const vehicleRef =
+					source.options.getVehicleRef?.(vehicleDescriptor, journey) ??
+					vehicleDescriptor?.label ??
+					vehicleDescriptor?.id;
+				const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
 
-			if (journey.hasRealtime() && !(source.options.coverWithTripUpdates ?? false)) continue;
+				if (!journey.hasRealtime() && source.options.mode === "NO-TU") continue;
 
-			const key =
-				typeof vehicleRef !== "undefined"
-					? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}`
-					: `${networkRef}:${operatorRef ?? ""}:FakeVehicle:${tripRef}:${journey.date}`;
+				const key =
+					typeof vehicleRef !== "undefined"
+						? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}`
+						: `${networkRef}:${operatorRef ?? ""}:FakeVehicle:${tripRef}:${journey.date}`;
 
-			if (activeJourneys.has(key)) continue;
+				if (activeJourneys.has(key)) continue;
 
-			if (typeof journey.trip.block !== "undefined") {
-				handledBlockIds.add(journey.trip.block);
+				const calls = getCalls(journey, now, source.options.getAheadTime);
+				if (typeof calls === "undefined") continue;
+
+				if (typeof journey.trip.block !== "undefined") {
+					handledBlockIds.add(journey.trip.block);
+				}
+
+				activeJourneys.set(key, {
+					id: key,
+					line: {
+						ref: `${networkRef}:Line:${source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
+						number: journey.trip.route.name,
+						type: journey.trip.route.type,
+						color: journey.trip.route.color,
+						textColor: journey.trip.route.textColor,
+					},
+					direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
+					destination: source.options.getDestination?.(journey, vehicleDescriptor) ?? journey.trip.headsign,
+					calls: calls.map((call, index) => {
+						const isLast = index === calls.length - 1;
+						return {
+							aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({ timeZoneName: "never" }),
+							expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
+								timeZoneName: "never",
+							}),
+							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
+							stopName: call.stop.name,
+							stopOrder: call.sequence,
+							callStatus: call.status,
+						};
+					}),
+					position: journey.guessPosition(now),
+					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
+					networkRef,
+					operatorRef,
+					vehicleRef:
+						typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
+					serviceDate: journey.date.toString(),
+					updatedAt: now.toString(),
+				});
 			}
-
-			const calls = getCalls(journey, now, source.options.getAheadTime);
-			if (typeof calls === "undefined") continue;
-
-			activeJourneys.set(key, {
-				id: key,
-				line: {
-					ref: `${networkRef}:Line:${source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
-					number: journey.trip.route.name,
-					type: journey.trip.route.type,
-					color: journey.trip.route.color,
-					textColor: journey.trip.route.textColor,
-				},
-				direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
-				destination: source.options.getDestination?.(journey, vehicleDescriptor) ?? journey.trip.headsign,
-				calls: calls.map((call, index) => {
-					const isLast = index === calls.length - 1;
-					return {
-						aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({ timeZoneName: "never" }),
-						expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
-							timeZoneName: "never",
-						}),
-						stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
-						stopName: call.stop.name,
-						stopOrder: call.sequence,
-						callStatus: call.status,
-					};
-				}),
-				position: journey.guessPosition(now),
-				journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
-				networkRef,
-				operatorRef,
-				vehicleRef:
-					typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
-				serviceDate: journey.date.toString(),
-				updatedAt: now.toString(),
-			});
 		}
 
 		const computeTime = watch.step();

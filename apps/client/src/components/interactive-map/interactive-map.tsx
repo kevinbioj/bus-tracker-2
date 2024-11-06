@@ -1,5 +1,5 @@
 import type { LatLngExpression, Map as MapInstance } from "leaflet";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -37,13 +37,16 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Intera
 			id="interactive-map"
 			ref={mapRef}
 			zoom={lastLocation?.[2] ?? defaultZoom}
+			minZoom={9}
 		>
 			<TileLayer
 				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 				url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 			/>
 			<LocationSaver />
-			<VehicleMarkers activeMarker={activeMarker} setActiveMarker={setActiveMarker} />
+			<Suspense>
+				<VehicleMarkers activeMarker={activeMarker} setActiveMarker={setActiveMarker} />
+			</Suspense>
 			<Geolocate />
 		</MapContainer>
 	);

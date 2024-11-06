@@ -4,6 +4,9 @@
 	"author": "Kevin BIOJOUT <coucou@kevinbioj.fr>",
 	"license": "GPL-3.0-only",
 	"scripts": {
+		"dev:client": "pnpm -C apps/client dev",
+		"dev:server": "pnpm -C apps/server dev",
+		"dev:gtfs": "pnpm -C providers/gtfs dev",
 		"lint": "biome lint",
 		"format": "biome format --write"
 	},

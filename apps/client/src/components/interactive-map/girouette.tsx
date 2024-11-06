@@ -1,5 +1,3 @@
-"use client";
-
 import { clsx } from "clsx";
 import { type ComponentPropsWithoutRef, useEffect, useState } from "react";
 
@@ -30,7 +28,7 @@ const fontProperties = {
 } as const;
 
 type Font = keyof typeof fontProperties;
-type TextSpacing = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+type TextSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 const ledColors = {
 	YELLOW: "#FF8000",
@@ -45,6 +43,7 @@ export type RouteNumberData = {
 	text: string;
 	//- Font & spacing
 	font?: Font;
+	scroll?: boolean;
 	spacing?: TextSpacing;
 	//- Colors
 	backgroundColor?: string;
@@ -54,6 +53,7 @@ export type RouteNumberData = {
 
 type PageLine = {
 	font?: Font;
+	scroll?: boolean;
 	spacing?: number;
 	text: string;
 };
@@ -118,9 +118,7 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: RouteNumberPr
 	const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 	return (
 		<div
-			className="flex items-center justify-center overflow-hidden whitespace-nowrap"
-			// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-			dangerouslySetInnerHTML={{ __html: routeNumber.text.trimEnd().replaceAll(" ", "&nbsp;") }}
+			className={clsx("flex items-center justify-center overflow-hidden whitespace-nowrap")}
 			style={{
 				width: `${onePixel * dimensions.rnWidth}px`,
 				//- Font, placement & spacing
@@ -143,7 +141,13 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: RouteNumberPr
 						}
 					: {}),
 			}}
-		/>
+		>
+			<span
+				className={clsx({ "animate-route-number": routeNumber.scroll })}
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+				dangerouslySetInnerHTML={{ __html: routeNumber.text.trimEnd().replaceAll(" ", "&nbsp;") }}
+			/>
+		</div>
 	);
 }
 
@@ -189,11 +193,12 @@ function Pages({ dimensions, ledColor, pages, width }: PagesProps) {
 				const fontFamily = line.font ?? (oneLine ? "1513B3E1" : "0808B2E1");
 				const spacing = onePixel * (line.spacing ?? fontProperties[fontFamily].spacing);
 				const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
+				const processedText = line.text.trimEnd().replaceAll(" ", "&nbsp;");
 				return (
 					<span
-						className="overflow-hidden whitespace-nowrap"
+						className={clsx("overflow-hidden whitespace-nowrap", { "animate-page": line.scroll })}
 						// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-						dangerouslySetInnerHTML={{ __html: line.text.trimEnd().replaceAll(" ", "&nbsp;") }}
+						dangerouslySetInnerHTML={{ __html: processedText }}
 						key={line.text}
 						style={{
 							//- Font, placement & spacing

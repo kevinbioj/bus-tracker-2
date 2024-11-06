@@ -153,6 +153,10 @@
 	transition-duration: 0.15s !important;
 }
 
+.leaflet-container {
+	font-family: inherit;
+}
+
 .leaflet-container a {
 	color: inherit !important;
 }

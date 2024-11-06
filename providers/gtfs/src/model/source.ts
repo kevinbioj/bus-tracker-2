@@ -20,12 +20,12 @@ export type SourceOptions = {
 	realtimeResourceHrefs?: string[];
 	gtfsOptions?: ImportGtfsOptions;
 	// --- Additional data acquirance
-	coverWithTripUpdates?: boolean;
+	mode?: "ALL" | "VP-ONLY" | "VP+TU" | "NO-TU";
 	excludeScheduled?: ((trip: Trip) => boolean) | boolean;
 	getAheadTime?: (journey?: Journey) => number;
 	getNetworkRef: (journey?: Journey, vehicle?: VehicleDescriptor) => string;
 	getOperatorRef?: (journey?: Journey, vehicle?: VehicleDescriptor) => string | undefined;
-	getVehicleRef?: (vehicle?: VehicleDescriptor) => string | undefined;
+	getVehicleRef?: (vehicle?: VehicleDescriptor, journey?: Journey) => string | undefined;
 	getDestination?: (journey?: Journey, vehicle?: VehicleDescriptor) => string | undefined;
 	// --- Data transformation
 	mapLineRef?: (lineRef: string) => string;
@@ -80,6 +80,7 @@ export class Source {
 					const journeys = dates.map((date) => trip.getScheduledJourney(date));
 					for (const journey of journeys) {
 						if (typeof journey === "undefined") continue;
+						if (now.epochSeconds > journey.calls.at(-1)!.aimedDepartureTime.epochSeconds) continue;
 						gtfs.journeys.push(journey);
 					}
 				}
@@ -176,10 +177,10 @@ export class Source {
 				if (this.options.excludeScheduled?.(trip)) continue;
 
 				const journey = trip.getScheduledJourney(date);
-				if (typeof journey !== "undefined") {
-					this.gtfs.journeys.push(journey);
-					computedJourneys += 1;
-				}
+				if (typeof journey === "undefined") continue;
+
+				this.gtfs.journeys.push(journey);
+				computedJourneys += 1;
 			}
 
 			this.gtfs.journeys.sort((a, b) =>

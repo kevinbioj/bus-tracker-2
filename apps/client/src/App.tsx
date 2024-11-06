@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { RouterProvider } from "react-router-dom";
 
 import { NavigationBar } from "./layout/navigation-bar.jsx";

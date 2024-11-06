@@ -6,11 +6,12 @@ import type { GirouetteData } from "~/components/interactive-map/girouette";
 
 export const GetJourneyGirouetteQuery = (journey: DisposeableVehicleJourney) =>
 	queryOptions({
-		queryKey: ["girouette", journey.network.id, journey.line?.id, journey.direction, journey.destination],
+		refetchOnMount: false,
+		queryKey: ["girouette", journey.networkId, journey.lineId, journey.direction, journey.destination],
 		queryFn: () => {
 			const params = new URLSearchParams();
-			params.append("networkId", journey.network.id.toString());
-			if (journey.line) params.append("lineId", journey.line.id.toString());
+			params.append("networkId", journey.networkId.toString());
+			if (journey.lineId) params.append("lineId", journey.lineId.toString());
 			if (journey.direction) params.append("directionId", journey.direction.toString());
 			if (journey.destination) params.append("destination", journey.destination);
 			return client

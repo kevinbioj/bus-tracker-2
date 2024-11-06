@@ -10,7 +10,12 @@ import { importVehicle } from "../import/import-vehicle.js";
 const ACTIVITY_THRESHOLD_MNS = 10;
 
 export async function registerActivity(vehicleJourney: VehicleJourney) {
-	if (typeof vehicleJourney.line === "undefined" || typeof vehicleJourney.vehicleRef === "undefined") return;
+	if (
+		typeof vehicleJourney.line === "undefined" ||
+		typeof vehicleJourney.vehicleRef === "undefined" ||
+		vehicleJourney.line.type === "RAIL"
+	)
+		return;
 
 	const vehicle = await importVehicle(vehicleJourney.networkRef, vehicleJourney.vehicleRef, vehicleJourney.operatorRef);
 	const line = await importLine(

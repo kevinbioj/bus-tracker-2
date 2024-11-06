@@ -32,17 +32,19 @@ export class Journey {
 	) {}
 
 	guessPosition(at: Temporal.Instant): VehicleJourneyPosition {
-		const nextCall = this.calls.find(
+		const calls = this.calls.filter((call) => call.status !== "SKIPPED");
+
+		const nextCall = calls.find(
 			(call) => at.epochSeconds < (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds,
 		);
 		if (typeof nextCall === "undefined") {
 			// Le véhicule se situe à l'arrêt d'arrivée.
-			const lastCall = this.calls.at(-1)!;
+			const lastCall = calls.at(-1)!;
 			return Journey.getJourneyPositionAt(lastCall);
 		}
 
-		const nextCallIndex = this.calls.indexOf(nextCall);
-		const monitoredCall = nextCallIndex === 0 ? nextCall : this.calls.at(nextCallIndex - 1)!;
+		const nextCallIndex = calls.indexOf(nextCall);
+		const monitoredCall = nextCallIndex === 0 ? nextCall : calls.at(nextCallIndex - 1)!;
 		const monitoredCallDistanceTraveled = this.trip.stopTimes.find(
 			(stopTime) => stopTime.sequence === monitoredCall.sequence,
 		)!.distanceTraveled;
@@ -86,7 +88,9 @@ export class Journey {
 	}
 
 	hasRealtime() {
-		return this.calls.some((call) => !!(call.expectedArrivalTime ?? call.expectedDepartureTime));
+		return this.calls.some(
+			(call) => typeof call.expectedArrivalTime !== "undefined" || typeof call.expectedDepartureTime !== "undefined",
+		);
 	}
 
 	updateJourney(stopTimeUpdates: StopTimeUpdate[]) {
