@@ -61,7 +61,7 @@ export const lines = pgTable("line", {
 	networkId: integer("network_id")
 		.notNull()
 		.references(() => networks.id),
-	ref: varchar("ref").notNull(),
+	references: varchar("ref").array(),
 	number: varchar("number").notNull(),
 	cartridgeHref: varchar("cartridge_href"),
 	color: char("color", { length: 6 }),

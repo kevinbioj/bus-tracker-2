@@ -148,9 +148,9 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
 			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);
 			const vehicleRef =
-				source.options.getVehicleRef?.(vehiclePosition.vehicle, journey) ??
-				vehiclePosition.vehicle.label ??
-				vehiclePosition.vehicle.id;
+				typeof source.options.getVehicleRef !== "undefined"
+					? source.options.getVehicleRef?.(vehiclePosition.vehicle, journey)
+					: (vehiclePosition.vehicle.label ?? vehiclePosition.vehicle.id);
 
 			const tripRef =
 				typeof journey !== "undefined" ? (source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id) : undefined;
@@ -164,7 +164,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 							: getCalls(journey, now)
 					: undefined;
 
-			const key = `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}`;
+			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 			activeJourneys.set(key, {
 				id: key,
 				...(typeof journey !== "undefined"
@@ -225,16 +225,16 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				const networkRef = source.options.getNetworkRef(journey);
 				const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);
 				const vehicleRef =
-					source.options.getVehicleRef?.(vehicleDescriptor, journey) ??
-					vehicleDescriptor?.label ??
-					vehicleDescriptor?.id;
+					typeof source.options.getVehicleRef !== "undefined"
+						? source.options.getVehicleRef(vehicleDescriptor, journey)
+						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
 				const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
 
 				if (!journey.hasRealtime() && source.options.mode === "NO-TU") continue;
 
 				const key =
-					typeof vehicleRef !== "undefined"
-						? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}`
+					typeof vehicleDescriptor !== "undefined"
+						? `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehicleDescriptor.id}`
 						: `${networkRef}:${operatorRef ?? ""}:FakeVehicle:${tripRef}:${journey.date}`;
 
 				if (activeJourneys.has(key)) continue;

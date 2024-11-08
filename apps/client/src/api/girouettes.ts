@@ -1,12 +1,15 @@
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import { client } from "~/api/client";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import type { GirouetteData } from "~/components/interactive-map/girouette";
 
-export const GetJourneyGirouetteQuery = (journey: DisposeableVehicleJourney) =>
+export const GetJourneyGirouetteQuery = (journey: DisposeableVehicleJourney, enabled?: boolean) =>
 	queryOptions({
-		refetchOnMount: false,
+		enabled,
+		placeholderData: keepPreviousData,
+		refetchInterval: 5_000,
+		staleTime: 5_000,
 		queryKey: ["girouette", journey.networkId, journey.lineId, journey.direction, journey.destination],
 		queryFn: () => {
 			const params = new URLSearchParams();

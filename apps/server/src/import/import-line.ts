@@ -1,4 +1,4 @@
-import { and, eq, gte, isNull, or } from "drizzle-orm";
+import { and, arrayContains, eq, gte, inArray, isNull, or } from "drizzle-orm";
 
 import type { VehicleJourneyLine } from "@bus-tracker/contracts";
 
@@ -16,7 +16,7 @@ export async function importLine(networkRef: string, lineData: VehicleJourneyLin
 		.where(
 			and(
 				eq(lines.networkId, network.id),
-				eq(lines.ref, lineData.ref),
+				arrayContains(lines.references, [lineData.ref]),
 				or(isNull(lines.archivedAt), gte(lines.archivedAt, recordedAt)),
 			),
 		);
@@ -26,7 +26,7 @@ export async function importLine(networkRef: string, lineData: VehicleJourneyLin
 				.insert(lines)
 				.values({
 					networkId: network.id,
-					ref: lineData.ref,
+					references: [lineData.ref],
 					number: lineData.number,
 					color: lineData.color,
 					textColor: lineData.textColor,

@@ -137,6 +137,12 @@
 
 	.leaflet-bar {
 		border-color: white !important;
+		color: white;
+	}
+
+	.leaflet-control-attribution {
+		background-color: rgba(0, 0, 0, 0.7) !important;
+		color: white !important;
 	}
 }
 

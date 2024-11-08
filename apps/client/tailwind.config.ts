@@ -6,8 +6,8 @@ const config: Config = {
 	theme: {
 		extend: {
 			animation: {
-				"route-number": "route-number 2.5s linear infinite",
-				page: "page 5s linear infinite",
+				"route-number": "route-number 3s linear infinite",
+				page: "page 6s linear infinite",
 			},
 			colors: {
 				primary: {
@@ -42,8 +42,8 @@ const config: Config = {
 					"100%": { transform: "translateX(-100%)" },
 				},
 				page: {
-					"0%": { transform: "translateX(95%)" },
-					"100%": { transform: "translateX(-95%)" },
+					"0%": { transform: "translateX(100%)" },
+					"100%": { transform: "translateX(-100%)" },
 				},
 			},
 		},

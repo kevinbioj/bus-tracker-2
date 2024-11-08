@@ -1,8 +1,8 @@
+import { arrayOverlaps, inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
-import { inArray } from "drizzle-orm";
 import { database } from "../database/database.js";
 import { lines, networks, operators, vehicles } from "../database/schema.js";
 import { createQueryValidator } from "../helpers/validator-helpers.js";
@@ -74,15 +74,17 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 				),
 			);
 
-		const lineList = await database
-			.select({ id: lines.id, ref: lines.ref })
-			.from(lines)
-			.where(
-				inArray(
-					lines.ref,
-					journeys.flatMap(({ line }) => line?.ref ?? []),
-				),
-			);
+		const lineList = journeys.some((journey) => typeof journey.line !== "undefined")
+			? await database
+					.select({ id: lines.id, references: lines.references })
+					.from(lines)
+					.where(
+						arrayOverlaps(
+							lines.references,
+							journeys.flatMap(({ line }) => line?.ref ?? []),
+						),
+					)
+			: [];
 
 		const vehicleList = await database
 			.select({ id: vehicles.id, ref: vehicles.ref, number: vehicles.number })
@@ -99,7 +101,7 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 				const vehicle = vehicleList.find(({ ref }) => ref === journey.vehicleRef);
 				return {
 					id: journey.id,
-					lineId: lineList.find(({ ref }) => ref === journey.line?.ref)?.id,
+					lineId: lineList.find(({ references }) => references?.some((ref) => ref === journey.line?.ref))?.id,
 					direction: journey.direction,
 					destination: journey.destination,
 					calls: journey.calls,

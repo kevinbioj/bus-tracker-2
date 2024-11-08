@@ -1,28 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
-import { useScreen } from "usehooks-ts";
+import { useRef } from "react";
 
 import { GetJourneyGirouetteQuery } from "~/api/girouettes";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Girouette } from "~/components/interactive-map/girouette";
+import { useDomVisibility } from "~/hooks/use-dom-visibility";
 import { useLine } from "~/hooks/use-line";
 
 type VehicleGirouetteProps = {
 	journey: DisposeableVehicleJourney;
+	visible?: boolean;
+	width: number;
 };
 
-export function VehicleGirouette({ journey }: VehicleGirouetteProps) {
-	const line = useLine(journey.networkId, journey.lineId);
-	const { data: girouette } = useQuery(GetJourneyGirouetteQuery(journey));
+export function VehicleGirouette({ journey, width }: VehicleGirouetteProps) {
+	const containerRef = useRef<HTMLDivElement>(null);
 
-	const { width } = useScreen();
-	const girouetteWidth = Math.min(width - 50, 384);
+	const isGirouetteVisible = useDomVisibility(containerRef);
+
+	const line = useLine(journey.networkId, journey.lineId);
+	const { data: girouette } = useQuery(GetJourneyGirouetteQuery(journey, isGirouetteVisible));
 
 	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName ?? "Destination inconnue";
 
 	return (
-		<div className="border-[1px] border-neutral-800">
+		<div className="border-[1px] border-neutral-800" ref={containerRef}>
 			{girouette?.at(0) ? (
-				<Girouette ledColor="WHITE" width={girouetteWidth} {...girouette.at(0)!.data} />
+				<Girouette ledColor="WHITE" width={width} {...girouette.at(0)!.data} />
 			) : (
 				<Girouette
 					ledColor="WHITE"
@@ -52,7 +56,7 @@ export function VehicleGirouette({ journey }: VehicleGirouetteProps) {
 							text: destination,
 						},
 					]}
-					width={girouetteWidth}
+					width={width}
 				/>
 			)}
 		</div>

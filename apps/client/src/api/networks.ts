@@ -33,7 +33,6 @@ export type NetworkWithDetails = Network & {
 };
 
 export const GetNetworksQuery = queryOptions({
-	refetchOnMount: false,
 	queryKey: ["networks"],
 	queryFn: () => client.get("networks").then((response) => response.json<Network[]>()),
 	select: (networks) =>
@@ -46,7 +45,6 @@ export const GetNetworksQuery = queryOptions({
 
 export const GetNetworkQuery = (networkId: number) =>
 	queryOptions({
-		refetchOnMount: false,
 		queryKey: ["networks", networkId],
 		queryFn: () => client.get(`networks/${networkId}`).then((response) => response.json<NetworkWithDetails>()),
 		select: ({ lines, ...network }) => ({

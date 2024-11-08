@@ -4,7 +4,8 @@ CREATE TABLE IF NOT EXISTS "girouette" (
 	"line_id" integer,
 	"direction_id" smallint,
 	"destinations" varchar[],
-	"data" json NOT NULL
+	"data" json NOT NULL,
+	"enabled" boolean DEFAULT true NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "line_activity" (
@@ -19,7 +20,7 @@ CREATE TABLE IF NOT EXISTS "line_activity" (
 CREATE TABLE IF NOT EXISTS "line" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"network_id" integer NOT NULL,
-	"ref" varchar NOT NULL,
+	"ref" varchar[],
 	"number" varchar NOT NULL,
 	"cartridge_href" varchar,
 	"color" char(6),
