@@ -66,6 +66,9 @@ jobs:
       packages: read
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Deploy
         uses: kitconcept/docker-stack-deploy@v1.2.0
         with:
