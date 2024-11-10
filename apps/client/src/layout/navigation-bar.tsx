@@ -20,9 +20,8 @@ export function NavigationBar() {
 					</Link>
 				</Button>
 			</nav>
-			<div className="">
+			<div>
 				<Settings />
-				<p className="mt-3 hidden text-center text-white text-xs lg:block">V.2.0.0 - 04/10/2024</p>
 			</div>
 		</header>
 	);
