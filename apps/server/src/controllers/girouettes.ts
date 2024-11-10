@@ -42,8 +42,8 @@ export const registerGirouetteRoutes = (hono: Hono) => {
 
 		return c.json(
 			girouetteList.toSorted((a, b) => {
-				if (a.destinations !== null && b.destinations === null) return -1;
-				if (a.destinations === null && b.destinations !== null) return 1;
+				if (a.destinations?.length !== 0 && b.destinations?.length === 0) return -1;
+				if (a.destinations?.length === 0 && b.destinations?.length !== 0) return 1;
 				if (a.directionId !== null && b.directionId === null) return -1;
 				if (a.directionId === null && b.directionId !== null) return 1;
 				if (a.lineId !== null && b.lineId === null) return -1;

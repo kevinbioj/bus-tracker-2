@@ -1,9 +1,20 @@
-import { createBrowserRouter } from "react-router-dom";
+import { Outlet, createBrowserRouter } from "react-router-dom";
+import { NavigationBar } from "~/layout/navigation-bar.js";
 import MapPage from "./pages/map/page.js";
 
 export const router = createBrowserRouter([
 	{
-		path: "/",
-		element: <MapPage />,
+		element: (
+			<>
+				<NavigationBar />
+				<Outlet />
+			</>
+		),
+		children: [
+			{
+				path: "/",
+				element: <MapPage />,
+			},
+		],
 	},
 ]);

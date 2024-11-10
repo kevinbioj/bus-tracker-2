@@ -142,7 +142,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 			},
 			journeyRef: vehicle.MonitoredVehicleJourney.VehicleJourneyName,
 			networkRef: "TWISTO",
-			vehicleRef,
+			vehicleRef: `TWISTO::Vehicle:${vehicleRef}`,
 			serviceDate: Temporal.Now.plainDateISO().toString(),
 			updatedAt: recordedAt.toInstant().toString(),
 		});

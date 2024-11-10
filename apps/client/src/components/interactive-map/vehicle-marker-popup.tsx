@@ -14,7 +14,7 @@ export function VehicleMarkerPopup({ journey }: VehicleDetailsProps) {
 	const girouetteWidth = Math.min(width - 50, 384);
 
 	return (
-		<div style={{ width: girouetteWidth + 2 }}>
+		<div>
 			<VehicleGirouette journey={journey} width={girouetteWidth} />
 			<VehicleInformation journey={journey} />
 			{typeof journey.calls !== "undefined" ? <VehicleNextStops calls={journey.calls} tooltipId={journey.id} /> : null}

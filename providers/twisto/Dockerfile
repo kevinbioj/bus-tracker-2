@@ -32,5 +32,4 @@ RUN pnpm install --frozen-lockfile --prod
 COPY --from=build /app/dist ./dist/
 
 ENV NODE_ENV=production
-ENV CONFIGURATION_PATH=/opt/gtfs-processor/configuration.mjs
 CMD ["node", "--expose-gc", "--enable-source-maps", "dist/index.js"]

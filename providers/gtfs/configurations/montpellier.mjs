@@ -7,6 +7,7 @@ const sources = [
 			"https://data.montpellier3m.fr/TAM_MMM_GTFSRT/TripUpdate.pb",
 			"https://data.montpellier3m.fr/TAM_MMM_GTFSRT/VehiclePosition.pb",
 		],
+		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "TAM",
 	},

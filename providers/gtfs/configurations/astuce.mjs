@@ -7,6 +7,7 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
 		],
+		mode: "NO-TU",
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: (trip) => !["06", "89", "99"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
@@ -15,18 +16,8 @@ const sources = [
 			if (typeof vehicle !== "undefined" && +vehicle.id >= 670 && +vehicle.id <= 685) return "TNI";
 			return "TCAR";
 		},
-		getDestination: (journey, vehicle) => {
-			if (typeof journey !== "undefined") {
-				return (
-					journey?.calls.findLast((call) => typeof call.aimedDepartureTime !== "undefined") ?? journey?.calls.at(-1)
-				)?.stop.name;
-			}
-
-			if (typeof vehicle !== "undefined") {
-				if (+vehicle.id >= 831 && +vehicle.id <= 857) return "Dépôt Métro";
-				return "Dépôt Bus";
-			}
-		},
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey.calls.at(-1)?.stop.name ?? "Spécial",
 	},
 	{
 		id: "tae",

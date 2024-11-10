@@ -6,6 +6,7 @@
 	"scripts": {
 		"build": "tsc -b",
 		"dev": "tsx watch src/index.ts",
+		"package": "pkg",
 		"start": "node --enable-source-maps .",
 		"migrations:generate": "drizzle-kit generate",
 		"migrations:push": "drizzle-kit push"
@@ -13,7 +14,8 @@
 	"devDependencies": {
 		"@types/node": "^22.7.7",
 		"drizzle-kit": "^0.26.2",
-		"tsx": "^4.19.2"
+		"tsx": "^4.19.2",
+		"typescript": "^5.6.3"
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",

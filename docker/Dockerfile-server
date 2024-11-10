@@ -1,0 +1,40 @@
+FROM node:22.10.0-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+WORKDIR /bus-tracker
+
+##########################################
+# STAGE 1 - Build project artifacts      #
+##########################################
+
+FROM base AS builder
+RUN corepack enable
+
+# Fetch dependencies
+COPY pnpm-lock.yaml ./
+RUN pnpm fetch
+
+# Install dependencies
+COPY libraries/contracts/ ./libraries/contracts/
+COPY apps/server/ ./apps/server/
+RUN pnpm install -r
+
+# Build server
+RUN pnpm -r build
+
+# Deploy server
+RUN pnpm deploy --filter=@bus-tracker/server --prod server-deployment
+
+##########################################
+# STAGE 2 - Run distribution app         #
+##########################################
+
+FROM base AS runtime
+ENV NODE_ENV=production
+
+# Copy project artifacts
+COPY --from=builder /bus-tracker/server-deployment/node_modules ./server/node_modules/
+COPY --from=builder /bus-tracker/server-deployment/drizzle ./server/drizzle/
+COPY --from=builder /bus-tracker/server-deployment/dist ./server/
+
+CMD ["node", "--enable-source-maps", "/bus-tracker/server/index.js"]

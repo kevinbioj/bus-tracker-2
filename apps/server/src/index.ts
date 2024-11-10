@@ -14,6 +14,7 @@ import { registerGirouetteRoutes } from "./controllers/girouettes.js";
 import { registerNetworkRoutes } from "./controllers/networks.js";
 import { registerVehicleJourneyRoutes } from "./controllers/vehicle-journeys.js";
 import { registerVehicleRoutes } from "./controllers/vehicles.js";
+import { migrateDatabase } from "./database/migrate.js";
 import { handleVehicleBatch } from "./jobs/handle-vehicle-batch.js";
 import { port } from "./options.js";
 import { createJourneyStore } from "./store/journey-store.js";
@@ -25,6 +26,9 @@ console.log(`,-----.                  ,--------.                   ,--.         
 \`------'  \`----' \`----'     \`--'   \`--'   \`--\`--'\`---'\`--'\`--'\`----'\`--'            \`-----' \`----'\`--'      \`--'   \`----'\`--'    \n`);
 
 const journeyStore = createJourneyStore();
+
+console.log("► Running database migrations.");
+await migrateDatabase();
 
 console.log("► Connecting to Redis.");
 const redis = createClient({ url: process.env.REDIS_URL ?? "redis://localhost:6379" });

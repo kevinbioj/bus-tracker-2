@@ -1,0 +1,41 @@
+services:
+  database:
+    image: postgres:17.0-alpine
+    environment:
+      - POSTGRES_USER=bustracker
+      - POSTGRES_PASSWORD_FILE=/run/secrets/database_password
+    ports:
+      - 5432:5432
+    secrets:
+      - database_password
+    volumes:
+      - database_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4.1-alpine
+    ports:
+      - 6379:6379
+
+  server:
+    image: server-test:latest
+    environment:
+      - DATABASE_URL=postgresql://bustracker:{PASSWORD_FILE}@database:5432/bustracker
+      - DATABASE_PASSWORD_FILE=/run/secrets/database_password
+      - REDIS_URL=redis://redis:6379
+    secrets:
+      - database_password
+  
+  client:
+    image: client-test:latest
+    ports:
+      - 3000:3000
+
+secrets:
+  database_password:
+    name: bus-tracker-database_password
+    external: true
+
+volumes:
+  database_data:
+    name: bus-tracker-database_data
+    external: true

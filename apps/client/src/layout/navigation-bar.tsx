@@ -1,6 +1,6 @@
 // import { IconBus, IconWorld } from "@tabler/icons-react";
 
-import { Button } from "../components/button";
+import { Button } from "../components/ui/button";
 
 export function NavigationBar() {
 	return (
