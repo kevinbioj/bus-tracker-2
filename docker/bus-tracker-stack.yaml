@@ -17,7 +17,7 @@ services:
       - 6379:6379
 
   server:
-    image: server-test:latest
+    image: ghcr.io/kevinbioj/bus-tracker-2/server:sha-${GITHUB_SHA}
     environment:
       - DATABASE_URL=postgresql://bustracker:{PASSWORD_FILE}@database:5432/bustracker
       - DATABASE_PASSWORD_FILE=/run/secrets/database_password
@@ -26,7 +26,7 @@ services:
       - database_password
   
   client:
-    image: client-test:latest
+    image: ghcr.io/kevinbioj/bus-tracker-2/client:sha-${GITHUB_SHA}
     ports:
       - 3000:3000
 

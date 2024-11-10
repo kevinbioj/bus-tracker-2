@@ -44,7 +44,7 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.component }}
-          tags: type=sha
+          tags: type=sha,format=long
 
       - name: Build and push Docker image
         id: push
@@ -56,4 +56,15 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-    
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy application components
+        uses: sagebind/docker-swarm-deploy-action@v2
+        with:
+          remote_host: ${{ secrets.DEPLOY_SSH_HOST }}
+          ssh_private_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          ssh_public_key: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
+          args: stack deploy --compose-file docker/bus-tracker-stack.yaml bus-tracker
