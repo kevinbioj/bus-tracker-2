@@ -31,17 +31,18 @@ export type DisposeableVehicleJourney = {
 	updatedAt: string;
 };
 
-export const VehicleJourneysQuery = (bounds: MapBounds) =>
+export const VehicleJourneysQuery = (bounds: MapBounds, withCalls: boolean) =>
 	queryOptions({
 		placeholderData: keepPreviousData,
 		refetchInterval: 5_000,
-		queryKey: ["vehicle-journeys", bounds],
+		queryKey: ["vehicle-journeys", bounds, withCalls],
 		queryFn: () => {
 			const params = new URLSearchParams();
 			params.append("swLat", bounds.sw[0].toString());
 			params.append("swLon", bounds.sw[1].toString());
 			params.append("neLat", bounds.ne[0].toString());
 			params.append("neLon", bounds.ne[1].toString());
+			params.append("withCalls", String(withCalls));
 			return client
 				.get(`vehicle-journeys?${params}`)
 				.then((response) => response.json<{ journeys: DisposeableVehicleJourney[] }>());

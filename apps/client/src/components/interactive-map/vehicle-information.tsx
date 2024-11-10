@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { Satellite as SatelliteIcon } from "tabler-icons-react";
+import { LocateFixedIcon } from "lucide-react";
 import { match } from "ts-pattern";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -13,14 +13,17 @@ type VehicleInformationProps = {
 };
 
 export function VehicleInformation({ journey }: VehicleInformationProps) {
-	const [useAbsoluteTime] = useLocalStorage("use-absolute-time", false);
+	const [displayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
 
 	const { data: network } = useQuery(GetNetworkQuery(journey.networkId));
 
 	const recordedAt = useDebouncedMemo(
 		() =>
-			useAbsoluteTime ? dayjs(journey.position.recordedAt).format("HH:mm:ss") : dayjs().to(journey.position.recordedAt),
+			displayAbsoluteTime
+				? dayjs(journey.position.recordedAt).format("HH:mm:ss")
+				: dayjs().to(journey.position.recordedAt),
 		3_000,
+		[journey],
 	);
 
 	return (
@@ -39,12 +42,14 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 			<span className="text-center">
 				{journey.vehicle ? `n°${journey.vehicle.number}` : "N/A"} – {recordedAt}
 			</span>
-			<SatelliteIcon
+			<LocateFixedIcon
 				className="h-5 w-5 ml-auto"
 				color={match(journey.position.type)
 					.with("GPS", () => "#00AA00")
-					// .with("REALTIME", () => "#FF6600")
-					.with("COMPUTED", () => "#DD0000")
+					.with("COMPUTED", () => {
+						const isRealtime = journey.calls?.some((call) => typeof call.expectedTime !== "undefined");
+						return isRealtime ? "#FF6600" : "#DD0000";
+					})
 					.exhaustive()}
 				size={20}
 			/>

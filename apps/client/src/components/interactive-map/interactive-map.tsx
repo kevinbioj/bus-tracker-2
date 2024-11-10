@@ -3,7 +3,7 @@ import { Suspense, useCallback, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import { useLocalStorage } from "usehooks-ts";
 
-import { Geolocate } from "~/components/interactive-map/geolocate";
+import { LocateControl } from "~/components/interactive-map/locate-control";
 import { LocationSaver } from "~/components/interactive-map/location-saver";
 import { VehicleMarkers } from "~/components/interactive-map/vehicle-markers";
 
@@ -47,7 +47,7 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Intera
 			<Suspense>
 				<VehicleMarkers activeMarker={activeMarker} setActiveMarker={setActiveMarker} />
 			</Suspense>
-			<Geolocate />
+			<LocateControl />
 		</MapContainer>
 	);
 }

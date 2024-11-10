@@ -77,31 +77,39 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
 
-		for (const tripUpdate of tripUpdates) {
-			if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
+		if (tripUpdates.length > 0) {
+			for (const tripUpdate of tripUpdates) {
+				if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
 
-			const updatedAt = Temporal.Instant.fromEpochSeconds(tripUpdate.timestamp);
-			// if (now.since(updatedAt).total("minutes") >= 10) continue;
+				const updatedAt = Temporal.Instant.fromEpochSeconds(tripUpdate.timestamp);
+				// if (now.since(updatedAt).total("minutes") >= 10) continue;
 
-			const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip);
-			if (typeof trip === "undefined") continue;
-			const firstStopTime = trip.stopTimes.at(0)!;
+				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip);
+				if (typeof trip === "undefined") continue;
+				const firstStopTime = trip.stopTimes.at(0)!;
 
-			const startDate =
-				typeof tripUpdate.trip.startDate !== "undefined"
-					? Temporal.PlainDate.from(tripUpdate.trip.startDate)
-					: guessStartDate(
-							firstStopTime.arrivalTime,
-							firstStopTime.arrivalModulus,
-							updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
-						);
+				const startDate =
+					typeof tripUpdate.trip.startDate !== "undefined"
+						? Temporal.PlainDate.from(tripUpdate.trip.startDate)
+						: guessStartDate(
+								firstStopTime.arrivalTime,
+								firstStopTime.arrivalModulus,
+								updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
+							);
 
-			let journey = source.gtfs.journeys.find((journey) => journey.date.equals(startDate) && journey.trip === trip);
-			if (typeof journey === "undefined") {
-				journey = trip.getScheduledJourney(startDate, true);
-				source.gtfs.journeys.push(journey);
+				let journey = source.gtfs.journeys.find((journey) => journey.date.equals(startDate) && journey.trip === trip);
+				if (typeof journey === "undefined") {
+					journey = trip.getScheduledJourney(startDate, true);
+					source.gtfs.journeys.push(journey);
+				}
+				journey.updateJourney(tripUpdate.stopTimeUpdate ?? []);
 			}
-			journey.updateJourney(tripUpdate.stopTimeUpdate ?? []);
+
+			source.gtfs.journeys.sort((a, b) => {
+				const aStart = a.calls.at(0)!.expectedArrivalTime ?? a.calls.at(0)!.aimedArrivalTime;
+				const bStart = b.calls.at(0)!.expectedArrivalTime ?? b.calls.at(0)!.aimedArrivalTime;
+				return aStart.epochSeconds - bStart.epochSeconds;
+			});
 		}
 
 		for (const vehiclePosition of vehiclePositions) {

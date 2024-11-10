@@ -1,7 +1,7 @@
 import type { VehicleJourneyCall } from "@bus-tracker/contracts";
 import { clsx } from "clsx";
 import dayjs from "dayjs";
-import { Rss as RssIcon } from "tabler-icons-react";
+import { Rss } from "lucide-react";
 import { P, match } from "ts-pattern";
 
 import { Tooltip } from "~/components/ui/tooltip";
@@ -50,7 +50,7 @@ export function VehicleNextStops({ calls }: NextStopsProps) {
 					const children = (
 						<div className={clsx("flex", accentColor)}>
 							{typeof call.expectedTime !== "undefined" && (
-								<RssIcon className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} />
+								<Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} />
 							)}
 							<span
 								className={clsx("select-none hover:cursor-default", call.callStatus === "SKIPPED" && "line-through")}

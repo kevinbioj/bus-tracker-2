@@ -13,6 +13,7 @@ const getVehicleJourneysQuerySchema = z.object({
 	swLon: z.coerce.number().min(-180).max(180),
 	neLat: z.coerce.number().min(-90).max(90),
 	neLon: z.coerce.number().min(-180).max(180),
+	withCalls: z.enum(["true", "false"]).default("true"),
 });
 
 type DisposeableVehicleJourney = {
@@ -44,7 +45,7 @@ type DisposeableVehicleJourney = {
 
 export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 	hono.get("/vehicle-journeys", createQueryValidator(getVehicleJourneysQuerySchema), async (c) => {
-		const { swLat, swLon, neLat, neLon } = c.req.valid("query");
+		const { swLat, swLon, neLat, neLon, withCalls } = c.req.valid("query");
 
 		const journeys = store
 			.values()
@@ -104,7 +105,7 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 					lineId: lineList.find(({ references }) => references?.some((ref) => ref === journey.line?.ref))?.id,
 					direction: journey.direction,
 					destination: journey.destination,
-					calls: journey.calls,
+					...(withCalls === "true" ? { calls: journey.calls } : {}),
 					position: journey.position,
 					networkId: networkList.find(({ ref }) => ref === journey.networkRef)!.id,
 					operatorId: operatorList.find(({ ref }) => ref === journey.operatorRef)?.id,

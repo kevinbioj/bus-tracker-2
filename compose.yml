@@ -4,8 +4,6 @@ services:
     ports:
       - 6379:6379
       - 8001:8001
-    networks:
-      - bus-tracker_network
 
   postgres:
     image: postgres:17.0
@@ -14,14 +12,8 @@ services:
       POSTGRES_PASSWORD: QsPkHJ0696UDf6UX
     ports:
       - 5432:5432
-    networks:
-      - bus-tracker_network
     volumes:
       - database_data:/var/lib/postgresql/data
-
-networks:
-  bus-tracker_network:
-    external: true
 
 volumes:
   database_data:
