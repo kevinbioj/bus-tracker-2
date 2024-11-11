@@ -1,4 +1,5 @@
 import { useScreen } from "usehooks-ts";
+
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { VehicleGirouette } from "~/components/interactive-map/vehicle-girouette";
 import { VehicleInformation } from "~/components/interactive-map/vehicle-information";

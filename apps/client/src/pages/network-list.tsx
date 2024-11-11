@@ -19,7 +19,7 @@ export function NetworkList() {
 					<Link
 						className="flex justify-between items-center h-16 px-4 py-2 rounded-lg transition-colors bg-primary hover:bg-primary/70 text-primary-foreground"
 						key={network.id}
-						to={`/data/${network.id}`}
+						to={`/data/networks/${network.id}`}
 						style={{
 							backgroundColor: network.color ?? undefined,
 							color: network.textColor ?? undefined,

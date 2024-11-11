@@ -50,7 +50,7 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 
 		return c.json({
 			network,
-			ongoingJourneyCount: vehicleJourneys.length,
+			ongoingJourneyCount: vehicleJourneys.filter((journey) => typeof journey.journeyRef !== "undefined").length,
 			onlineVehicleCount: vehicleJourneys.filter((journey) => journey.position.type === "GPS").length,
 			totalVehicleCount: vehicleCount?.value ?? 0,
 		});

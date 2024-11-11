@@ -5,6 +5,7 @@ import { NavigationBar } from "~/layout/navigation-bar.js";
 import MapPage from "~/pages/map.js";
 import { NetworkDetails } from "~/pages/network-details";
 import { NetworkList } from "~/pages/network-list.js";
+import { VehicleDetails } from "~/pages/vehicle-details";
 
 export const router = createBrowserRouter([
 	{
@@ -26,8 +27,12 @@ export const router = createBrowserRouter([
 				element: <NetworkList />,
 			},
 			{
-				path: "/data/:networkId",
+				path: "/data/networks/:networkId",
 				element: <NetworkDetails />,
+			},
+			{
+				path: "/data/vehicles/:vehicleId",
+				element: <VehicleDetails />,
 			},
 		],
 	},

@@ -49,42 +49,48 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 			<h3 className="inline-flex gap-2 text-lg">
 				<LucideBus /> Véhicules
 			</h3>
-			<div className="flex justify-between gap-3 py-2">
-				<div className="flex flex-col gap-1">
-					<Label className="inline-flex items-center gap-1" htmlFor="filter">
-						<FilterIcon size={16} /> Filtrer
-					</Label>
-					<Input
-						className="h-10"
-						placeholder="Numéro, désignation, etc."
-						value={searchParams.get("filter") ?? ""}
-						onChange={(e) => setSearchParams({ filter: e.target.value, sort })}
-					/>
-				</div>
-				<div className="flex flex-col gap-1">
-					<Label className="inline-flex items-center gap-1" htmlFor="sort">
-						<SortAscIcon size={16} /> Trier par
-					</Label>
-					<Select
-						value={searchParams.get("sort") ?? "number"}
-						onValueChange={(newSort) => setSearchParams({ filter, sort: newSort })}
-					>
-						<SelectTrigger className="h-10 min-w-28">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="number">Numéro</SelectItem>
-							<SelectItem value="line">Ligne</SelectItem>
-							<SelectItem value="activity">Activité</SelectItem>
-						</SelectContent>
-					</Select>
-				</div>
-			</div>
-			<div className="flex flex-col gap-2">
-				{filteredAndSortedVehicles.map((vehicle) => (
-					<VehicleCard key={vehicle.id} vehicle={vehicle} />
-				))}
-			</div>
+			{vehicles.length > 0 ? (
+				<>
+					<div className="flex justify-between gap-3 py-2">
+						<div className="flex flex-col gap-1">
+							<Label className="inline-flex items-center gap-1" htmlFor="filter">
+								<FilterIcon size={16} /> Filtrer
+							</Label>
+							<Input
+								className="h-10"
+								placeholder="Numéro, désignation, etc."
+								value={searchParams.get("filter") ?? ""}
+								onChange={(e) => setSearchParams({ filter: e.target.value, sort })}
+							/>
+						</div>
+						<div className="flex flex-col gap-1">
+							<Label className="inline-flex items-center gap-1" htmlFor="sort">
+								<SortAscIcon size={16} /> Trier par
+							</Label>
+							<Select
+								value={searchParams.get("sort") ?? "number"}
+								onValueChange={(newSort) => setSearchParams({ filter, sort: newSort })}
+							>
+								<SelectTrigger className="h-10 min-w-28">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="number">Numéro</SelectItem>
+									<SelectItem value="line">Ligne</SelectItem>
+									<SelectItem value="activity">Activité</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+					<div className="flex flex-col gap-2">
+						{filteredAndSortedVehicles.map((vehicle) => (
+							<VehicleCard key={vehicle.id} vehicle={vehicle} />
+						))}
+					</div>
+				</>
+			) : (
+				<p className="text-center text-muted-foreground">Aucun véhicule n'est disponible pour ce réseau.</p>
+			)}
 		</section>
 	);
 }

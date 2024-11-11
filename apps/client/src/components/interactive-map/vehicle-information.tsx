@@ -8,6 +8,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Button } from "~/components/ui/button";
+import { Tooltip } from "~/components/ui/tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 
 type VehicleInformationProps = {
@@ -33,7 +34,7 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 	const vehicleLink = journey.vehicle?.id ? (
 		<Button asChild className="gap-0.5 py-0.5" size="xs" variant="ghost">
 			<Link target="_blank" to={`/data/vehicles/${journey.vehicle.id}`}>
-				{vehicleNumber} <ExternalLinkIcon className="mb-auto" size={10} />
+				{vehicleNumber}
 			</Link>
 		</Button>
 	) : (
@@ -42,13 +43,17 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 
 	return (
 		<div className="grid grid-cols-[3rem_1fr_3rem] gap-2 px-2 py-1">
-			{network?.logoHref ? (
-				<img className="h-4 object-contain my-auto" src={network.logoHref} alt={network.name} />
-			) : (
-				<span>{network?.name}</span>
-			)}
+			<Button asChild size="xs" variant="ghost">
+				<Link target="_blank" to={`/data/networks/${network?.id}`}>
+					{network?.logoHref ? (
+						<img className="h-4 object-contain my-auto" src={network.logoHref} alt={network.name} />
+					) : (
+						<span>{network?.name}</span>
+					)}
+				</Link>
+			</Button>
 			<span className="text-center">
-				{vehicleLink} – {recordedAt}
+				{vehicleLink}– {recordedAt}
 			</span>
 			<LocateFixedIcon
 				className="h-5 w-5 ml-auto"
