@@ -6,9 +6,9 @@ import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import { Separator } from "~/components/ui/separator";
 
-const buildHash = import.meta.env.BUILD_HASH ?? "dev";
+const buildHash = import.meta.env.VITE_BUILD_HASH ?? "dev";
 
-const builtAt = dayjs(import.meta.env.BUILD_TIMESTAMP);
+const builtAt = dayjs(import.meta.env.VITE_BUILD_TIMESTAMP);
 
 export function About() {
 	return (
