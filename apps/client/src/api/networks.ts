@@ -32,6 +32,13 @@ export type NetworkWithDetails = Network & {
 	lines: Line[];
 };
 
+export type NetworkStats = {
+	network: Network;
+	ongoingJourneyCount: number;
+	onlineVehicleCount: number;
+	totalVehicleCount: number;
+};
+
 export const GetNetworksQuery = queryOptions({
 	queryKey: ["networks"],
 	queryFn: () => client.get("networks").then((response) => response.json<Network[]>()),
@@ -53,10 +60,18 @@ export const GetNetworkQuery = (networkId: number) =>
 			...network,
 			color: network.color ? `#${network.color}` : null,
 			textColor: network.textColor ? `#${network.textColor}` : null,
-			lines: lines.map((line) => ({
-				...line,
-				color: line.color ? `#${line.color}` : null,
-				textColor: line.textColor ? `#${line.textColor}` : null,
-			})),
+			lines: lines
+				.sort((a, b) => a.number.localeCompare(b.number))
+				.map((line) => ({
+					...line,
+					color: line.color ? `#${line.color}` : null,
+					textColor: line.textColor ? `#${line.textColor}` : null,
+				})),
 		}),
+	});
+
+export const GetNetworkStatsQuery = (networkId: number) =>
+	queryOptions({
+		queryKey: ["networks", networkId, "stats"],
+		queryFn: () => client.get(`networks/${networkId}/stats`).then((response) => response.json<NetworkStats>()),
 	});

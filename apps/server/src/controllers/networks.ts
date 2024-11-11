@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import * as z from "zod";
 
 import { database } from "../database/database.js";
-import { lines, networks, operators } from "../database/schema.js";
+import { lines, networks, operators, vehicles } from "../database/schema.js";
 import { createParamValidator } from "../helpers/validator-helpers.js";
 import type { JourneyStore } from "../store/journey-store.js";
 
@@ -38,6 +38,11 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 		const [network] = await database.select().from(networks).where(eq(networks.id, id));
 		if (typeof network === "undefined") return c.json({ error: `No network found with id '${id}'.` }, 404);
 
+		const [vehicleCount] = await database
+			.select({ value: count() })
+			.from(vehicles)
+			.where(eq(vehicles.networkId, network.id));
+
 		const vehicleJourneys = store
 			.values()
 			.filter((journey) => journey.networkRef === network.ref)
@@ -45,8 +50,9 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 
 		return c.json({
 			network,
-			journeyCount: vehicleJourneys.length,
-			vehicleCount: vehicleJourneys.filter((journey) => journey.position.type === "GPS").length,
+			ongoingJourneyCount: vehicleJourneys.length,
+			onlineVehicleCount: vehicleJourneys.filter((journey) => journey.position.type === "GPS").length,
+			totalVehicleCount: vehicleCount?.value ?? 0,
 		});
 	});
 };

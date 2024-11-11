@@ -16,7 +16,8 @@ export type Vehicle = {
 	activity: VehicleActivity;
 };
 
-export type VehicleActivity = { since: string } & ({ status: "online"; lineId: number } | { status: "offline" });
+export type VehicleActivity = { status: "online" | "offline"; since: string; lineId?: number };
+// export type VehicleActivity = { since: string } & ({ status: "online"; lineId: number } | { status: "offline" });
 
 export const GetVehiclesQuery = (networkId: number) =>
 	queryOptions({
