@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { ExternalLinkIcon, LocateFixedIcon } from "lucide-react";
+import { LocateFixedIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { match } from "ts-pattern";
 import { useLocalStorage } from "usehooks-ts";
@@ -8,7 +8,6 @@ import { useLocalStorage } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Button } from "~/components/ui/button";
-import { Tooltip } from "~/components/ui/tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 
 type VehicleInformationProps = {
