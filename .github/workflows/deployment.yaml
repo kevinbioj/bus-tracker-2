@@ -53,12 +53,12 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
-        env:
-          BUILD_HASH: ${{ steps.build-info.outputs.short_sha }}
-          BUILD_TIMESTAMP: ${{ steps.build-info.outputs.build_time }}
         with:
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_HASH=${{ steps.build-info.outputs.short_sha }}
+            BUILD_TIMESTAMP${{ steps.build-info.outputs.build_time }}
           context: .
           file: docker/Dockerfile-${{ matrix.component }}
           platforms: linux/amd64,linux/arm64
