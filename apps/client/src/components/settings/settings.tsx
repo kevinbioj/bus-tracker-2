@@ -10,9 +10,8 @@ export function Settings() {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button variant="branding-outline">
-					<LucideSettings />
-					<span className="hidden lg:block">Paramètres</span>
+				<Button size="icon" variant="branding-outline">
+					<LucideSettings aria-label="Paramètres" />
 				</Button>
 			</DialogTrigger>
 			<DialogContent>

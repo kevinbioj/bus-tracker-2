@@ -20,7 +20,7 @@
 }
 
 .leaflet-container a {
-	color: inherit !important;
+	color: unset;
 }
 
 .leaflet-popup-content {

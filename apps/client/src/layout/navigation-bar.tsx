@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 
+import { About } from "~/components/about/about";
 import { Settings } from "~/components/settings/settings";
 import { Button } from "~/components/ui/button";
 
@@ -23,8 +24,9 @@ export function NavigationBar() {
 					</Button>
 				))}
 			</nav>
-			<div>
+			<div className="space-x-2">
 				<Settings />
+				<About />
 			</div>
 		</header>
 	);
