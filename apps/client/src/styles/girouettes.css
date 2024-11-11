@@ -1,0 +1,112 @@
+@font-face {
+	font-family: Achemine;
+	src: url("../fonts/achemine-regular-webfont.woff2");
+}
+
+@font-face {
+	font-family: Achemine;
+	font-weight: bold;
+	src: url("../fonts/achemine-bold-webfont.woff2");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "0808B2E1";
+	src: url("../fonts/girouette/0808B2E1.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1310C2E1";
+	src: url("../fonts/girouette/1310C2E1.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "0505SUPX";
+	src: url("../fonts/girouette/0505SUPX.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1107SUPX";
+	src: url("../fonts/girouette/1107SUPX.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1407SUPX";
+	src: url("../fonts/girouette/1407SUPX.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "14LUPLAN";
+	src: url("../fonts/girouette/14LUPLAN.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1507SUPX";
+	src: url("../fonts/girouette/1507SUPX.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1508C2E1";
+	src: url("../fonts/girouette/1508C2E1.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1508SUPX";
+	src: url("../fonts/girouette/1508SUPX.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1510N2E1";
+	src: url("../fonts/girouette/1510N2E1.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1513B3E1";
+	src: url("../fonts/girouette/1513B3E1.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1710SUPX";
+	src: url("../fonts/girouette/1710SUPX.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "METRO";
+	src: url("../fonts/girouette/METRO.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "DUHAMEL-24-22-2";
+	src: url("../fonts/girouette/DUHAMEL-24-22-2.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "1510N2E1-TCAR";
+	src: url("../fonts/girouette/1510N2E1-TCAR.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "LUMIPLAN-A";
+	src: url("../fonts/girouette/LUMIPLAN-A.ttf");
+}
+
+@font-face {
+	font-display: block;
+	font-family: "LUMIPLAN-2";
+	src: url("../fonts/girouette/LUMIPLAN-2.ttf");
+}

@@ -11,7 +11,7 @@ const fixTimestamp = (input: string) => {
 	return `${input}[${input.slice(plusIndex)}]`;
 };
 
-const unescape = (input: string) => input.replace("&apos;", "'");
+const unescapeString = (input: string) => input.replace("&apos;", "'");
 
 export type SiriVehicleActivity = {
 	RecordedAtTime: string;
@@ -107,7 +107,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 							aimedTime: vehicle.MonitoredVehicleJourney.OriginAimedDepartureTime,
 							expectedTime: vehicle.MonitoredVehicleJourney.OriginAimedDepartureTime,
 							stopRef: vehicle.MonitoredVehicleJourney.OriginRef.split(":")[3]!,
-							stopName: unescape(vehicle.MonitoredVehicleJourney.OriginName),
+							stopName: unescapeString(vehicle.MonitoredVehicleJourney.OriginName),
 							stopOrder: 1,
 							callStatus: "SCHEDULED" as const,
 						},
@@ -117,7 +117,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 				aimedTime: call.AimedDepartureTime ?? call.AimedArrivalTime,
 				expectedTime: call.ExpectedDepartureTime ?? call.ExpectedArrivalTime,
 				stopRef: call.StopPointRef.split(":")[3]!,
-				stopName: unescape(call.StopPointName),
+				stopName: unescapeString(call.StopPointName),
 				stopOrder: call.Order,
 				callStatus: call.ArrivalStatus === "cancelled" ? ("SKIPPED" as const) : ("SCHEDULED" as const),
 			})),
@@ -131,7 +131,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 				type: vehicle.MonitoredVehicleJourney.VehicleMode === "tram" ? "TRAMWAY" : "BUS",
 			},
 			direction: vehicle.MonitoredVehicleJourney.DirectionName === 1 ? "OUTBOUND" : "INBOUND",
-			destination: unescape(vehicle.MonitoredVehicleJourney.DestinationName),
+			destination: unescapeString(vehicle.MonitoredVehicleJourney.DestinationName),
 			calls: nextCalls,
 			position: {
 				latitude: +vehicle.MonitoredVehicleJourney.VehicleLocation!.Latitude,

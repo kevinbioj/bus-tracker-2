@@ -16,6 +16,14 @@ const config: Config = {
 				},
 				background: "hsl(var(--background))",
 				foreground: "hsl(var(--foreground))",
+				branding: {
+					DEFAULT: "hsl(var(--branding))",
+					foreground: "hsl(var(--branding-foreground))",
+				},
+				"branding-accent": {
+					DEFAULT: "hsl(var(--branding-accent))",
+					foreground: "hsl(var(--branding-accent-foreground))",
+				},
 				card: {
 					DEFAULT: "hsl(var(--card))",
 					foreground: "hsl(var(--card-foreground))",

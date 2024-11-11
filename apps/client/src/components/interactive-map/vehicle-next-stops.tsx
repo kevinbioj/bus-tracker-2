@@ -24,7 +24,8 @@ export function VehicleNextStops({ calls }: NextStopsProps) {
 							? match([call.callStatus, dayjs(call.expectedTime).diff(call.aimedTime, "minutes")])
 									.with(
 										["SKIPPED", P.any],
-										() => ({ className: "bg-red-600 text-white", content: "Arrêt non desservi" }) as const,
+										() =>
+											({ className: "bg-red-600 dark:bg-red-600 text-white", content: "Arrêt non desservi" }) as const,
 									)
 									.with(
 										["SCHEDULED", P.number.positive()],

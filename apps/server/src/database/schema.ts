@@ -1,3 +1,4 @@
+import { vehicleJourneyLineTypes } from "@bus-tracker/contracts";
 import type { InferSelectModel } from "drizzle-orm";
 import {
 	boolean,
@@ -7,6 +8,7 @@ import {
 	index,
 	integer,
 	json,
+	pgEnum,
 	pgTable,
 	serial,
 	smallint,
@@ -94,6 +96,10 @@ export const vehicles = pgTable(
 			.references(() => networks.id),
 		operatorId: integer("operator_id").references(() => operators.id),
 		ref: varchar("ref").notNull(),
+		type: varchar("type", {
+			enum: vehicleJourneyLineTypes,
+			length: 32,
+		}).default("UNKNOWN"),
 		number: varchar("number").notNull(),
 		designation: varchar("designation"),
 		tcId: integer("tc_id"),

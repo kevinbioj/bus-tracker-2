@@ -36,11 +36,13 @@ export const GetNetworksQuery = queryOptions({
 	queryKey: ["networks"],
 	queryFn: () => client.get("networks").then((response) => response.json<Network[]>()),
 	select: (networks) =>
-		networks.map((network) => ({
-			...network,
-			color: network.color ? `#${network.color}` : null,
-			textColor: network.textColor ? `#${network.textColor}` : null,
-		})),
+		networks
+			.map((network) => ({
+				...network,
+				color: network.color ? `#${network.color}` : null,
+				textColor: network.textColor ? `#${network.textColor}` : null,
+			}))
+			.sort((a, b) => a.name.localeCompare(b.name)),
 });
 
 export const GetNetworkQuery = (networkId: number) =>

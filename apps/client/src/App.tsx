@@ -9,9 +9,7 @@ export default function App() {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<div className="flex h-[100dvh] flex-col-reverse lg:flex-row">
-				<RouterProvider router={router} />
-			</div>
+			<RouterProvider router={router} />
 		</QueryClientProvider>
 	);
 }

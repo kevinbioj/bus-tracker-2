@@ -89,6 +89,7 @@ export const registerVehicleRoutes = (hono: Hono) => {
 				},
 			};
 		});
+
 		return c.json(vehicleWithActivityList);
 	});
 

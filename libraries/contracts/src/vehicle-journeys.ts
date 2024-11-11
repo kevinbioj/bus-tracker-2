@@ -1,6 +1,8 @@
 import * as z from "zod";
 
-export const vehicleJourneyLineTypeEnum = z.enum(["TRAMWAY", "SUBWAY", "RAIL", "BUS", "FERRY", "COACH", "UNKNOWN"]);
+export const vehicleJourneyLineTypes = ["TRAMWAY", "SUBWAY", "RAIL", "BUS", "FERRY", "COACH", "UNKNOWN"] as const;
+
+export const vehicleJourneyLineTypeEnum = z.enum(vehicleJourneyLineTypes);
 
 export type VehicleJourneyLineType = z.infer<typeof vehicleJourneyLineTypeEnum>;
 

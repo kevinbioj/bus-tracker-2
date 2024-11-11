@@ -1,0 +1,1 @@
+ALTER TABLE "vehicle" ADD COLUMN "type" varchar(32) DEFAULT 'UNKNOWN';

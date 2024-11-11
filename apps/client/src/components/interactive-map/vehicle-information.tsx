@@ -27,15 +27,9 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 	);
 
 	return (
-		<div
-			className="grid grid-cols-[3rem_1fr_3rem] gap-2 px-2 py-1"
-			style={{
-				backgroundColor: network?.color ?? undefined,
-				color: network?.textColor ?? undefined,
-			}}
-		>
+		<div className="grid grid-cols-[3rem_1fr_3rem] gap-2 px-2 py-1">
 			{network?.logoHref ? (
-				<img className="h-4 my-auto" src={network.logoHref} alt={network.name} />
+				<img className="h-4 object-contain my-auto" src={network.logoHref} alt={network.name} />
 			) : (
 				<span>{network?.name}</span>
 			)}
