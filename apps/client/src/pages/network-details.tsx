@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import clsx from "clsx";
-import { ArrowLeft, ArrowLeftSquare } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery } from "~/api/vehicles";
 import { VehicleCard } from "~/components/data/vehicle-card";

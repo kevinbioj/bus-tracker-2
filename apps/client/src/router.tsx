@@ -9,10 +9,12 @@ import { NetworkList } from "~/pages/network-list.js";
 export const router = createBrowserRouter([
 	{
 		element: (
-			<Suspense>
+			<>
 				<NavigationBar />
-				<Outlet />
-			</Suspense>
+				<Suspense>
+					<Outlet />
+				</Suspense>
+			</>
 		),
 		children: [
 			{
