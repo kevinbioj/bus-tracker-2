@@ -68,7 +68,7 @@ console.log("► Listening on port %d.\n", port);
 export const hono = new Hono();
 hono.use(compress());
 hono.use(cors({ origin: "*" }));
-registerNetworkRoutes(hono);
+registerNetworkRoutes(hono, journeyStore);
 registerVehicleRoutes(hono);
 registerVehicleJourneyRoutes(hono, journeyStore);
 registerGirouetteRoutes(hono);
