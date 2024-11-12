@@ -30,7 +30,10 @@ export async function registerActivity(vehicleJourney: DisposeableVehicleJourney
 			: database.insert(lineActivities).values({
 					vehicleId: vehicleJourney.vehicle.id,
 					lineId: vehicleJourney.lineId,
-					serviceDate: Temporal.PlainDate.from(vehicleJourney.serviceDate!).toString(),
+					serviceDate: (vehicleJourney.serviceDate
+						? Temporal.PlainDate.from(vehicleJourney.serviceDate)
+						: Temporal.Now.plainDateISO()
+					).toString(),
 					startedAt: recordedAt,
 					updatedAt: recordedAt,
 				}),

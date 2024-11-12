@@ -115,6 +115,7 @@ const sources = [
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=astrobus",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=astrobus"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "VP-ONLY",
 		excludeScheduled: true,
 		getNetworkRef: () => "ASTROBUS",
 		getVehicleRef: () => undefined,

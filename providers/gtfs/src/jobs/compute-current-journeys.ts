@@ -175,34 +175,41 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 			activeJourneys.set(key, {
 				id: key,
-				...(typeof journey !== "undefined"
-					? {
-							line: {
+				line:
+					typeof journey !== "undefined"
+						? {
 								ref: `${networkRef}:Line:${source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
 								number: journey.trip.route.name,
 								type: journey.trip.route.type,
 								color: journey.trip.route.color,
 								textColor: journey.trip.route.textColor,
-							},
-							direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
-							calls:
-								calls?.map((call, index) => {
-									const isLast = index === calls.length - 1;
-									return {
-										aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({
-											timeZoneName: "never",
-										}),
-										expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
-											timeZoneName: "never",
-										}),
-										stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
-										stopName: call.stop.name,
-										stopOrder: call.sequence,
-										callStatus: call.status,
-									};
-								}) ?? [],
-						}
-					: {}),
+							}
+						: typeof vehiclePosition.trip?.routeId !== "undefined"
+							? {
+									ref: `${networkRef}:Line:${source.options.mapLineRef?.(vehiclePosition.trip.routeId) ?? vehiclePosition.trip.routeId}`,
+									number: vehiclePosition.trip.routeId,
+									type: "UNKNOWN",
+								}
+							: undefined,
+				direction: (journey?.trip.direction ?? vehiclePosition.trip?.directionId) === 0 ? "OUTBOUND" : "INBOUND",
+				calls:
+					typeof journey !== "undefined"
+						? (calls?.map((call, index) => {
+								const isLast = index === calls.length - 1;
+								return {
+									aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({
+										timeZoneName: "never",
+									}),
+									expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
+										timeZoneName: "never",
+									}),
+									stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
+									stopName: call.stop.name,
+									stopOrder: call.sequence,
+									callStatus: call.status,
+								};
+							}) ?? [])
+						: undefined,
 				destination: source.options.getDestination?.(journey, vehiclePosition.vehicle) ?? journey?.trip.headsign,
 				position: {
 					latitude: vehiclePosition.position.latitude,
