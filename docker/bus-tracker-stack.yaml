@@ -1,12 +1,31 @@
 version: '3.9'
 
 services:
+  database:
+    image: postgres:17.0-alpine
+    environment:
+      - POSTGRES_USER=bustracker
+      - POSTGRES_PASSWORD_FILE=/run/secrets/database_password
+    ports:
+      - 5432:5432
+    secrets:
+      - database_password
+    volumes:
+      - database_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.4.1-alpine
+    ports:
+      - 6379:6379
+
   server:
     image: ghcr.io/kevinbioj/bus-tracker-2/server:sha-${GITHUB_SHA}
     environment:
-      - DATABASE_URL_FILE=/run/secrets/database_url
+      - DATABASE_URL=postgresql://bustracker:{PASSWORD_FILE}@database:5432/bustracker
+      - DATABASE_PASSWORD_FILE=/run/secrets/database_password
+      - REDIS_URL=redis://redis:6379
     secrets:
-      - database_url
+      - database_password
   
   client:
     image: ghcr.io/kevinbioj/bus-tracker-2/client:sha-${GITHUB_SHA}
@@ -14,6 +33,11 @@ services:
       - 3000:3000
 
 secrets:
-  database_url:
-    name: bus-tracker_database-url
+  database_password:
+    name: bus-tracker_database-password
+    external: true
+
+volumes:
+  database_data:
+    name: bus-tracker_database-data
     external: true
