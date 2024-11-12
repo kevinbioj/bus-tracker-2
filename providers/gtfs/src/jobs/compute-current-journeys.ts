@@ -245,7 +245,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
 				const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
 
-				if (!journey.hasRealtime() && source.options.mode === "NO-TU") continue;
+				if (journey.hasRealtime() && source.options.mode === "NO-TU") continue;
 
 				const key =
 					typeof vehicleDescriptor !== "undefined"
