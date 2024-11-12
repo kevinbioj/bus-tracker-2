@@ -3,26 +3,20 @@ import { and, eq, gte } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 
 import { database } from "../database/database.js";
-import { lineActivities, vehicles } from "../database/schema.js";
-import { importLine } from "../import/import-line.js";
+import { type Line, type Network, lineActivities, vehicles } from "../database/schema.js";
 import { importVehicle } from "../import/import-vehicle.js";
 
 const ACTIVITY_THRESHOLD_MNS = 10;
 
-export async function registerActivity(vehicleJourney: VehicleJourney) {
+export async function registerActivity(vehicleJourney: VehicleJourney, network: Network, line?: Line) {
 	if (
-		typeof vehicleJourney.line === "undefined" ||
+		typeof line === "undefined" ||
 		typeof vehicleJourney.vehicleRef === "undefined" ||
-		vehicleJourney.line.type === "RAIL"
+		vehicleJourney.line?.type === "RAIL"
 	)
 		return;
 
-	const vehicle = await importVehicle(vehicleJourney.networkRef, vehicleJourney.vehicleRef, vehicleJourney.operatorRef);
-	const line = await importLine(
-		vehicleJourney.networkRef,
-		vehicleJourney.line,
-		Temporal.Instant.from(vehicleJourney.updatedAt),
-	);
+	const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
 
 	const recordedAt = Temporal.Instant.from(vehicleJourney.position.recordedAt);
 

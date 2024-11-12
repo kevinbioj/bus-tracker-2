@@ -1,15 +1,11 @@
-import { and, arrayContains, eq, gte, inArray, isNull, or } from "drizzle-orm";
-
 import type { VehicleJourneyLine } from "@bus-tracker/contracts";
+import { and, arrayContains, eq, gte, isNull, or } from "drizzle-orm";
+import type { Temporal } from "temporal-polyfill";
 
 import { database } from "../database/database.js";
-import { lines } from "../database/schema.js";
+import { type Network, lines } from "../database/schema.js";
 
-import type { Temporal } from "temporal-polyfill";
-import { importNetwork } from "./import-network.js";
-
-export async function importLine(networkRef: string, lineData: VehicleJourneyLine, recordedAt: Temporal.Instant) {
-	const network = await importNetwork(networkRef);
+export async function importLine(network: Network, lineData: VehicleJourneyLine, recordedAt: Temporal.Instant) {
 	let [line] = await database
 		.select()
 		.from(lines)
