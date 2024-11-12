@@ -37,7 +37,7 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 		}),
 	);
 
-	const limitRegister = pLimit(100);
+	const limitRegister = pLimit(10);
 	for (const vehicleJourney of vehicleJourneys) {
 		const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
 		if (timeSince.total("minutes") >= 10) return;
