@@ -6,9 +6,12 @@ import type { Network } from "../database/schema.js";
 import { importLine } from "../import/import-line.js";
 import { importNetwork } from "../import/import-network.js";
 
+import { importVehicle } from "../import/import-vehicle.js";
+import type { JourneyStore } from "../store/journey-store.js";
+import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { registerActivity } from "./register-activity.js";
 
-export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
+export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
 
 	const networkRefs = vehicleJourneys.reduce(
@@ -38,12 +41,33 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 	for (const vehicleJourney of vehicleJourneys) {
 		const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
 		if (timeSince.total("minutes") >= 10) return;
-		limitRegister(() =>
-			registerActivity(
-				vehicleJourney,
-				networks.get(vehicleJourney.networkRef)!,
-				vehicleJourney.line ? lines.find((line) => line.references?.includes(vehicleJourney.line!.ref)) : undefined,
-			),
-		);
+		limitRegister(async () => {
+			const network = networks.get(vehicleJourney.networkRef)!;
+			const line = vehicleJourney.line
+				? lines.find(({ references }) => references?.includes(vehicleJourney.line!.ref))
+				: undefined;
+
+			const disposeableJourney: DisposeableVehicleJourney = {
+				id: vehicleJourney.id,
+				lineId: line?.id,
+				direction: vehicleJourney.direction,
+				destination: vehicleJourney.destination,
+				calls: vehicleJourney.calls,
+				position: vehicleJourney.position,
+				networkId: network.id,
+				operatorId: undefined,
+				vehicle: undefined,
+				serviceDate: vehicleJourney.serviceDate,
+				updatedAt: vehicleJourney.updatedAt,
+			};
+
+			if (typeof vehicleJourney.vehicleRef !== "undefined") {
+				const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
+				disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
+			}
+
+			registerActivity(disposeableJourney);
+			store.set(disposeableJourney.id, disposeableJourney);
+		});
 	}
 }

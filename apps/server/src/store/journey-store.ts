@@ -1,10 +1,12 @@
-import type { VehicleJourney } from "@bus-tracker/contracts";
 import { Temporal } from "temporal-polyfill";
+
+import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 
 const SWEEP_INTERVAL = Temporal.Duration.from({ seconds: 60 });
 
 export function createJourneyStore() {
-	const journeys = new Map<string, VehicleJourney>();
+	const journeys = new Map<string, DisposeableVehicleJourney>();
+
 	setInterval(() => {
 		const now = Temporal.Now.instant();
 		let sweptJourneys = 0;
@@ -17,6 +19,7 @@ export function createJourneyStore() {
 		}
 		console.log("► Swept %d outdated vehicle journeys.", sweptJourneys);
 	}, SWEEP_INTERVAL.total("milliseconds"));
+
 	return journeys;
 }
 

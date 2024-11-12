@@ -1,22 +1,14 @@
-import type { VehicleJourney } from "@bus-tracker/contracts";
 import { and, eq, gte } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 
 import { database } from "../database/database.js";
-import { type Line, type Network, lineActivities, vehicles } from "../database/schema.js";
-import { importVehicle } from "../import/import-vehicle.js";
+import { lineActivities, vehicles } from "../database/schema.js";
+import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 
 const ACTIVITY_THRESHOLD_MNS = 10;
 
-export async function registerActivity(vehicleJourney: VehicleJourney, network: Network, line?: Line) {
-	if (
-		typeof line === "undefined" ||
-		typeof vehicleJourney.vehicleRef === "undefined" ||
-		vehicleJourney.line?.type === "RAIL"
-	)
-		return;
-
-	const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
+export async function registerActivity(vehicleJourney: DisposeableVehicleJourney) {
+	if (typeof vehicleJourney.lineId === "undefined" || typeof vehicleJourney.vehicle?.id === "undefined") return;
 
 	const recordedAt = Temporal.Instant.from(vehicleJourney.position.recordedAt);
 
@@ -25,19 +17,19 @@ export async function registerActivity(vehicleJourney: VehicleJourney, network: 
 		.from(lineActivities)
 		.where(
 			and(
-				eq(lineActivities.vehicleId, vehicle.id),
-				eq(lineActivities.lineId, line.id),
+				eq(lineActivities.vehicleId, vehicleJourney.vehicle.id),
+				eq(lineActivities.lineId, vehicleJourney.lineId),
 				gte(lineActivities.updatedAt, recordedAt.subtract({ minutes: ACTIVITY_THRESHOLD_MNS })),
 			),
 		);
 
 	await Promise.all([
-		database.update(vehicles).set({ lastSeenAt: recordedAt }).where(eq(vehicles.id, vehicle.id)),
+		database.update(vehicles).set({ lastSeenAt: recordedAt }).where(eq(vehicles.id, vehicleJourney.vehicle.id)),
 		typeof currentActivity !== "undefined"
 			? database.update(lineActivities).set({ updatedAt: recordedAt }).where(eq(lineActivities.id, currentActivity.id))
 			: database.insert(lineActivities).values({
-					vehicleId: vehicle.id,
-					lineId: line.id,
+					vehicleId: vehicleJourney.vehicle.id,
+					lineId: vehicleJourney.lineId,
 					serviceDate: Temporal.PlainDate.from(vehicleJourney.serviceDate!).toString(),
 					startedAt: recordedAt,
 					updatedAt: recordedAt,

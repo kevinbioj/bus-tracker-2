@@ -57,10 +57,7 @@ await redis.subscribe("journeys", async (message) => {
 		return;
 	}
 
-	await handleVehicleBatch(vehicleJourneys);
-	for (const vehicleJourney of vehicleJourneys) {
-		journeyStore.set(vehicleJourney.id, vehicleJourney);
-	}
+	await handleVehicleBatch(journeyStore, vehicleJourneys);
 });
 
 console.log("► Listening on port %d.\n", port);
