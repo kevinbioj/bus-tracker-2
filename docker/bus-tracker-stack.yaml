@@ -6,13 +6,22 @@ services:
     environment:
       - DATABASE_URL=postgresql://bustracker:{PASSWORD_FILE}@localhost:5432/bustracker_staging
       - DATABASE_PASSWORD_FILE=/run/secrets/database_password
+    networks:
+      - network
     secrets:
       - database_password
   
   client:
     image: ghcr.io/kevinbioj/bus-tracker-2/client:sha-${GITHUB_SHA}
+    networks:
+      - network
     ports:
       - 3000:3000
+
+networks:
+  network:
+    name: bus-tracker_network
+    external: true
 
 secrets:
   database_password:
