@@ -4,7 +4,7 @@ import { client } from "~/api/client";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import type { GirouetteData } from "~/components/interactive-map/girouette";
 
-export const GetJourneyGirouetteQuery = (journey: DisposeableVehicleJourney, enabled?: boolean) =>
+export const GetJourneyGirouetteQuery = (journey: DisposeableVehicleJourney, enabled: boolean) =>
 	queryOptions({
 		enabled,
 		placeholderData: keepPreviousData,

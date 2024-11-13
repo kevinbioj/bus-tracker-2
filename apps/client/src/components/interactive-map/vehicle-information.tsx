@@ -37,7 +37,7 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 			</Link>
 		</Button>
 	) : (
-		vehicleNumber
+		<>{vehicleNumber} </>
 	);
 
 	return (

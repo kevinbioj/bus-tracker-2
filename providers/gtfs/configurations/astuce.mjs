@@ -33,6 +33,7 @@ const sources = [
 		id: "tgr",
 		staticResourceHref: "https://pysae.com/api/v2/groups/tcar/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
+		mode: "NO-TU",
 		excludeScheduled: (trip) => trip.route.name === "06",
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
@@ -44,12 +45,9 @@ const sources = [
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
+		mode: "NO-TU",
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
-		mapVehiclePosition: (vehicle) => {
-			vehicle.vehicle.id = vehicle.vehicle.label;
-			return vehicle;
-		},
 	},
 ];
 

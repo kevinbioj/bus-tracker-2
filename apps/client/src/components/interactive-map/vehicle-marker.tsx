@@ -1,10 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query";
 import type { LatLngExpression } from "leaflet";
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 import { Popup } from "react-leaflet";
 
-import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
+import { GetVehicleJourneyQuery, type VehicleJourneyMarker } from "~/api/vehicle-journeys";
 import { VehicleMarkerPopup } from "~/components/interactive-map/vehicle-marker-popup";
-import { useLine } from "~/hooks/use-line";
 import ReactMoveableCircleMarker, { type MoveableCircleMarker } from "~/utils/moveable-circler-marker";
 
 const getNoise = () => (Math.random() - 0.5) * 0.000045;
@@ -14,17 +14,17 @@ const isTouchScreen = window.matchMedia("(pointer: coarse)").matches;
 type VehicleMarkerProps = {
 	activeMarker?: string;
 	setActiveMarker: (marker: string) => void;
-	journey: DisposeableVehicleJourney;
+	marker: VehicleJourneyMarker;
 };
 
-export function VehicleMarker({ activeMarker, setActiveMarker, journey }: VehicleMarkerProps) {
-	const line = useLine(journey.networkId, journey.lineId);
+export function VehicleMarker({ activeMarker, setActiveMarker, marker }: VehicleMarkerProps) {
+	const queryClient = useQueryClient();
 
 	const position = useMemo(() => {
-		const { latitude, longitude, type } = journey.position;
+		const { latitude, longitude, type } = marker.position;
 		if (type === "GPS") return [latitude, longitude];
 		return [latitude + getNoise(), longitude + getNoise()];
-	}, [journey]) satisfies LatLngExpression;
+	}, [marker]) satisfies LatLngExpression;
 
 	const ref = useRef<MoveableCircleMarker>(null);
 	useEffect(() => {
@@ -32,15 +32,15 @@ export function VehicleMarker({ activeMarker, setActiveMarker, journey }: Vehicl
 		const circleMarker = ref.current;
 
 		// @ts-expect-error Won't be typing it
-		circleMarker.options.id = journey.id;
+		circleMarker.options.id = marker.id;
 
-		if (circleMarker.options.color !== line?.textColor || circleMarker.options.fillColor !== line?.color) {
+		if (circleMarker.options.color !== marker.color || circleMarker.options.fillColor !== marker.fillColor) {
 			ref.current.setStyle({
-				color: line?.textColor ?? "#FFFFFF",
-				fillColor: line?.color ?? "#000000",
+				color: marker.color ?? "#FFFFFF",
+				fillColor: marker.fillColor ?? "#000000",
 			});
 		}
-	}, [journey, line]);
+	}, [marker]);
 
 	const adjustPan = useCallback((ref: RefObject<MoveableCircleMarker>) => {
 		if (ref.current === null) return;
@@ -52,13 +52,14 @@ export function VehicleMarker({ activeMarker, setActiveMarker, journey }: Vehicl
 
 	return (
 		<ReactMoveableCircleMarker
-			color={line?.textColor ?? "#FFFFFF"}
+			color={marker.color ?? "#FFFFFF"}
 			duration={1000}
 			bubblingMouseEvents={false}
 			eventHandlers={{
-				click: (e) => {
+				click: async (e) => {
+					await queryClient.prefetchQuery(GetVehicleJourneyQuery(marker.id));
 					const target = e.target as MoveableCircleMarker;
-					setActiveMarker(journey.id);
+					setActiveMarker(marker.id);
 					if (!target.isPopupOpen()) target.openPopup();
 					if (!isTouchScreen) {
 						adjustPan(ref);
@@ -70,29 +71,30 @@ export function VehicleMarker({ activeMarker, setActiveMarker, journey }: Vehicl
 						adjustPan(ref);
 					}
 				},
-				mouseover: (e) => {
+				mouseover: async (e) => {
 					if (isTouchScreen) return;
+					await queryClient.prefetchQuery(GetVehicleJourneyQuery(marker.id));
 					const target = e.target as MoveableCircleMarker;
-					if (activeMarker !== journey.id) {
+					if (activeMarker !== marker.id) {
 						target.openPopup();
 					}
 				},
 				mouseout: (e) => {
 					if (isTouchScreen) return;
 					const target = e.target as MoveableCircleMarker;
-					if (activeMarker !== journey.id) {
+					if (activeMarker !== marker.id) {
 						target.closePopup();
 					}
 				},
 			}}
 			fillOpacity={1}
-			fillColor={line?.color ?? "#000000"}
+			fillColor={marker.fillColor ?? "#000000"}
 			position={position}
 			radius={8}
 			ref={ref}
 		>
 			<Popup autoClose autoPan={false} closeButton={false} closeOnClick={false}>
-				<VehicleMarkerPopup journey={journey} />
+				<VehicleMarkerPopup journeyId={marker.id} />
 			</Popup>
 		</ReactMoveableCircleMarker>
 	);

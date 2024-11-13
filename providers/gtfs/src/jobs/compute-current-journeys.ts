@@ -250,7 +250,9 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				const key =
 					typeof vehicleDescriptor !== "undefined"
 						? `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehicleDescriptor.id}`
-						: `${networkRef}:${operatorRef ?? ""}:FakeVehicle:${tripRef}:${journey.date}`;
+						: typeof journey.trip.block !== "undefined"
+							? `${networkRef}:${operatorRef ?? ""}:ServiceBlock:${journey.trip.block}:${journey.date}`
+							: `${networkRef}:${operatorRef ?? ""}:ServiceJourney:${tripRef}:${journey.date}`;
 
 				if (activeJourneys.has(key)) continue;
 

@@ -6,6 +6,7 @@ const sources = [
 			"https://www.datagrandest.fr/metadata/fluo-grand-est/FR-200052264-T0031-0000/fluo-grand-est-rei-gtfs.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/fluo-citura-reims-gtfs-rt"],
 		excludeScheduled: true,
+		mode: "NO-TU",
 		getNetworkRef: () => "GRM",
 	},
 ];

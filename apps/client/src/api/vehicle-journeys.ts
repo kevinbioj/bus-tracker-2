@@ -4,6 +4,13 @@ import type { MapBounds } from "~/hooks/use-map-bounds.js";
 
 import { client } from "./client.js";
 
+export type VehicleJourneyMarker = {
+	id: string;
+	color?: string;
+	fillColor?: string;
+	position: { latitude: number; longitude: number; type: "GPS" | "COMPUTED" };
+};
+
 export type DisposeableVehicleJourney = {
 	id: string;
 	lineId?: number;
@@ -31,20 +38,28 @@ export type DisposeableVehicleJourney = {
 	updatedAt: string;
 };
 
-export const VehicleJourneysQuery = (bounds: MapBounds, withCalls: boolean) =>
+export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds) =>
 	queryOptions({
 		placeholderData: keepPreviousData,
 		refetchInterval: 5_000,
-		queryKey: ["vehicle-journeys", bounds, withCalls],
+		queryKey: ["vehicle-journeys", bounds],
 		queryFn: () => {
 			const params = new URLSearchParams();
 			params.append("swLat", bounds.sw[0].toString());
 			params.append("swLon", bounds.sw[1].toString());
 			params.append("neLat", bounds.ne[0].toString());
 			params.append("neLon", bounds.ne[1].toString());
-			params.append("withCalls", String(withCalls));
 			return client
-				.get(`vehicle-journeys?${params}`)
-				.then((response) => response.json<{ journeys: DisposeableVehicleJourney[] }>());
+				.get(`vehicle-journeys/markers?${params}`)
+				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
 		},
+	});
+
+export const GetVehicleJourneyQuery = (id: string, enabled?: boolean) =>
+	queryOptions({
+		enabled,
+		placeholderData: keepPreviousData,
+		refetchInterval: 10_000,
+		queryKey: ["vehicle-journeys", id],
+		queryFn: () => client.get(`vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),
 	});

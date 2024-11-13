@@ -37,7 +37,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 						return +a.number - +b.number;
 					if (typeof a.activity.lineId === "number") return -1;
 					if (typeof b.activity.lineId === "number") return 1;
-					return b.activity.since.localeCompare(a.activity.since);
+					return b.activity.since?.localeCompare(a.activity.since);
 				}
 
 				return +a.number - +b.number;
