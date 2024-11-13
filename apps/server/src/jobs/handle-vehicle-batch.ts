@@ -63,7 +63,7 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 			};
 
 			if (typeof vehicleJourney.vehicleRef !== "undefined") {
-				if (typeof vehicleJourney.line !== "undefined" && vehicleJourney.line.type !== "RAIL") {
+				if (typeof vehicleJourney.line !== "undefined" && vehicleJourney.networkRef !== "SNCF") {
 					const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
 					disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
 					registerActivity(disposeableJourney);
