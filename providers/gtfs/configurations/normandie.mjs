@@ -87,9 +87,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		mapLineRef: (lineRef) =>
-			lineRef.indexOf(":") >= 0 - 1
-				? lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3))
-				: lineRef,
+			lineRef.indexOf(":") >= 0 ? lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)) : lineRef,
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
 		getNetworkRef: () => "DEEPMOB",
