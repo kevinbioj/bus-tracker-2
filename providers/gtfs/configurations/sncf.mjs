@@ -13,7 +13,7 @@ function nthIndexOf(input, pattern, n) {
 const sources = [
 	{
 		id: "sncf-ter",
-		staticResourceHref: "https://eu.ftp.opendatasoft.com/sncf/gtfs/export-ter-gtfs-last.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-ter.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ter-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		getNetworkRef: () => "SNCF",
@@ -25,7 +25,7 @@ const sources = [
 	},
 	{
 		id: "sncf-intercites",
-		staticResourceHref: "https://eu.ftp.opendatasoft.com/sncf/gtfs/export-intercites-gtfs-last.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-intercites.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ic-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		getNetworkRef: () => "SNCF",
@@ -37,7 +37,7 @@ const sources = [
 	},
 	{
 		id: "sncf-tgv",
-		staticResourceHref: "https://eu.ftp.opendatasoft.com/sncf/gtfs/export_gtfs_voyages.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-tgv.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-tgv-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		getNetworkRef: () => "SNCF",
