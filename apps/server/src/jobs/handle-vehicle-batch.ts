@@ -5,10 +5,10 @@ import { Temporal } from "temporal-polyfill";
 import type { Network } from "../database/schema.js";
 import { importLine } from "../import/import-line.js";
 import { importNetwork } from "../import/import-network.js";
-
 import { importVehicle } from "../import/import-vehicle.js";
 import type { JourneyStore } from "../store/journey-store.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
+
 import { registerActivity } from "./register-activity.js";
 
 export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
@@ -61,12 +61,16 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 				updatedAt: vehicleJourney.updatedAt,
 			};
 
-			if (typeof vehicleJourney.vehicleRef !== "undefined") {
+			if (
+				typeof vehicleJourney.line !== "undefined" &&
+				vehicleJourney.line.type !== "RAIL" &&
+				typeof vehicleJourney.vehicleRef !== "undefined"
+			) {
 				const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
 				disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
+				registerActivity(disposeableJourney);
 			}
 
-			registerActivity(disposeableJourney);
 			store.set(disposeableJourney.id, disposeableJourney);
 		});
 	}

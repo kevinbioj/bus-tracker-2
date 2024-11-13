@@ -11,7 +11,6 @@ const sources = [
 		mode: "VP-ONLY",
 		excludeScheduled: true,
 		getNetworkRef: () => "TBM",
-		getOperatorRef: () => "KBDX",
 		getVehicleRef: (vehicle) => vehicle?.id.split(":")[1],
 		getDestination: (journey) => {
 			const lastCall = journey.calls.at(-1);
