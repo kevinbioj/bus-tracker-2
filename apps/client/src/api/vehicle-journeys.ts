@@ -41,7 +41,8 @@ export type DisposeableVehicleJourney = {
 export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds) =>
 	queryOptions({
 		placeholderData: keepPreviousData,
-		refetchInterval: 5_000,
+		refetchInterval: 15_000,
+		staleTime: 30_000,
 		queryKey: ["vehicle-journeys", bounds],
 		queryFn: () => {
 			const params = new URLSearchParams();
@@ -60,6 +61,7 @@ export const GetVehicleJourneyQuery = (id: string, enabled?: boolean) =>
 		enabled,
 		placeholderData: keepPreviousData,
 		refetchInterval: 10_000,
+		staleTime: 30_000,
 		queryKey: ["vehicle-journeys", id],
 		queryFn: () => client.get(`vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),
 	});

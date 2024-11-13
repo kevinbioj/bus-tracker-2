@@ -57,7 +57,7 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Vehicle
 			bubblingMouseEvents={false}
 			eventHandlers={{
 				click: async (e) => {
-					await queryClient.prefetchQuery(GetVehicleJourneyQuery(marker.id));
+					await queryClient.ensureQueryData({ ...GetVehicleJourneyQuery(marker.id), revalidateIfStale: true });
 					const target = e.target as MoveableCircleMarker;
 					setActiveMarker(marker.id);
 					if (!target.isPopupOpen()) target.openPopup();
@@ -73,7 +73,7 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Vehicle
 				},
 				mouseover: async (e) => {
 					if (isTouchScreen) return;
-					await queryClient.prefetchQuery(GetVehicleJourneyQuery(marker.id));
+					await queryClient.ensureQueryData({ ...GetVehicleJourneyQuery(marker.id), revalidateIfStale: true });
 					const target = e.target as MoveableCircleMarker;
 					if (activeMarker !== marker.id) {
 						target.openPopup();
