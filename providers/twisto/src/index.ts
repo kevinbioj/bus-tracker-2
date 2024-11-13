@@ -7,7 +7,11 @@ import { fetchMonitoredLines } from "./jobs/fetch-monitored-lines.js";
 import { fetchMonitoredVehicles } from "./jobs/fetch-monitored-vehicles.js";
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
-const redis = createClient();
+const redis = createClient({
+	url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
+	username: process.env.REDIS_USERNAME,
+	password: process.env.REDIS_PASSWORD,
+});
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
