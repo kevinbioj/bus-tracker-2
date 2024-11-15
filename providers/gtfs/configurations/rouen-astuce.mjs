@@ -37,6 +37,7 @@ const sources = [
 		excludeScheduled: (trip) => trip.route.name === "06",
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
+		getVehicleRef: (descriptor) => descriptor.label ?? undefined,
 	},
 	{
 		id: "tni",
