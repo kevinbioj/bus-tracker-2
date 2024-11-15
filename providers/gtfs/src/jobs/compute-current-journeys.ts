@@ -226,7 +226,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				vehicleRef:
 					typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
 				serviceDate: journey?.date.toString(),
-				updatedAt: now.toString(),
+				updatedAt: Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp).toString(),
 			});
 		}
 

@@ -2,8 +2,6 @@ import { Temporal } from "temporal-polyfill";
 
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 
-const SWEEP_INTERVAL = Temporal.Duration.from({ seconds: 60 });
-
 export function createJourneyStore() {
 	const journeys = new Map<string, DisposeableVehicleJourney>();
 
@@ -12,13 +10,13 @@ export function createJourneyStore() {
 		let sweptJourneys = 0;
 		for (const [key, journey] of journeys) {
 			const timeSince = now.since(journey.updatedAt).total("minutes");
-			if (timeSince >= 10) {
+			if (timeSince >= 5) {
 				journeys.delete(key);
 				sweptJourneys += 1;
 			}
 		}
 		console.log("► Swept %d outdated vehicle journeys.", sweptJourneys);
-	}, SWEEP_INTERVAL.total("milliseconds"));
+	}, 60_000);
 
 	return journeys;
 }
