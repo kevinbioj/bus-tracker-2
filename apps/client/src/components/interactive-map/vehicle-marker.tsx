@@ -1,9 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
 import type { LatLngExpression } from "leaflet";
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 import { Popup } from "react-leaflet";
 
-import { GetVehicleJourneyQuery, type VehicleJourneyMarker } from "~/api/vehicle-journeys";
+import type { VehicleJourneyMarker } from "~/api/vehicle-journeys";
 import { VehicleMarkerPopup } from "~/components/interactive-map/vehicle-marker-popup";
 import ReactMoveableCircleMarker, { type MoveableCircleMarker } from "~/utils/moveable-circler-marker";
 
@@ -18,8 +17,6 @@ type VehicleMarkerProps = {
 };
 
 export function VehicleMarker({ activeMarker, setActiveMarker, marker }: VehicleMarkerProps) {
-	const queryClient = useQueryClient();
-
 	const position = useMemo(() => {
 		const { latitude, longitude, type } = marker.position;
 		if (type === "GPS") return [latitude, longitude];
@@ -57,7 +54,6 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Vehicle
 			bubblingMouseEvents={false}
 			eventHandlers={{
 				click: async (e) => {
-					await queryClient.ensureQueryData({ ...GetVehicleJourneyQuery(marker.id), revalidateIfStale: true });
 					const target = e.target as MoveableCircleMarker;
 					setActiveMarker(marker.id);
 					if (!target.isPopupOpen()) target.openPopup();
@@ -73,7 +69,6 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Vehicle
 				},
 				mouseover: async (e) => {
 					if (isTouchScreen) return;
-					await queryClient.ensureQueryData({ ...GetVehicleJourneyQuery(marker.id), revalidateIfStale: true });
 					const target = e.target as MoveableCircleMarker;
 					if (activeMarker !== marker.id) {
 						target.openPopup();
