@@ -53,7 +53,11 @@ export type SiriStopCall = {
 };
 
 export async function fetchMonitoredVehicles(lineRefs: string[]) {
-	const siriResponse = await siriRequest(siriEndpoint, GET_VEHICLE_MONITORING(lineRefs));
+	const siriResponse = await siriRequest(siriEndpoint, GET_VEHICLE_MONITORING(lineRefs)).catch((e) => console.error(e));
+
+	if (typeof siriResponse === "undefined") {
+		return [];
+	}
 
 	const vehiclesDelivery =
 		siriResponse?.Envelope?.Body?.GetVehicleMonitoringResponse?.Answer?.VehicleMonitoringDelivery;

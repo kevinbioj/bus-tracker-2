@@ -24,7 +24,7 @@ async function readFirstBytes(path: string, size: number) {
 export async function readCsv<T extends CsvRecord<string>>(
 	path: string,
 	onRecord: (record: T) => void,
-	{ delimiter, encoding }: ReadCsvOptions = {},
+	{ delimiter = ",", encoding }: ReadCsvOptions = {},
 ) {
 	const firstBytes = await readFirstBytes(path, 3);
 	const hasBom = firstBytes.toString().charCodeAt(0) === 0xfeff;
