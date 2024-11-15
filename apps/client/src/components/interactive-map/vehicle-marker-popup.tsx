@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Loader2Icon, LoaderCircleIcon, LoaderIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { useRef } from "react";
 import { useScreen } from "usehooks-ts";
 
