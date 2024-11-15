@@ -8,8 +8,8 @@ export const GetJourneyGirouetteQuery = (journey: DisposeableVehicleJourney, ena
 	queryOptions({
 		enabled,
 		placeholderData: keepPreviousData,
-		refetchInterval: 5_000,
-		staleTime: 5_000,
+		refetchInterval: 30_000,
+		staleTime: 30_000,
 		queryKey: ["girouette", journey.networkId, journey.lineId, journey.direction, journey.destination],
 		queryFn: () => {
 			const params = new URLSearchParams();

@@ -56,6 +56,7 @@ export const GetNetworkQuery = (networkId: number) =>
 	queryOptions({
 		queryKey: ["networks", networkId],
 		queryFn: () => client.get(`networks/${networkId}`).then((response) => response.json<NetworkWithDetails>()),
+		staleTime: 300_000,
 		select: ({ lines, ...network }) => ({
 			...network,
 			color: network.color ? `#${network.color}` : null,
