@@ -1,4 +1,4 @@
-import { mkdtemp, rmdir } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Temporal } from "temporal-polyfill";
@@ -122,7 +122,7 @@ export class Source {
         );
       }
 
-      await rmdir(resourceDirectory);
+      await rm(resourceDirectory, { recursive: true, force: true });
       updateLog(
         "%s     ✓ Resource %s in %dms - %d journeys were pre-computed.\n",
         sourceId,
