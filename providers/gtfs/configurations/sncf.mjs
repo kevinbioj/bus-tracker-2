@@ -16,6 +16,16 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-ter.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ter-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
+		gtfsOptions: {
+			filterTrips: (trip) => {
+				trip.id = trip.id.slice(0, trip.id.indexOf(":"));
+				return true;
+			},
+		},
+		mapTripUpdate: (tripUpdate) => {
+			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
+			return tripUpdate;
+		},
 		getNetworkRef: () => "SNCF",
 		getVehicleRef: (_, journey) => journey?.trip.headsign,
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
@@ -28,6 +38,16 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-intercites.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ic-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
+		gtfsOptions: {
+			filterTrips: (trip) => {
+				trip.id = trip.id.slice(0, trip.id.indexOf(":"));
+				return true;
+			},
+		},
+		mapTripUpdate: (tripUpdate) => {
+			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
+			return tripUpdate;
+		},
 		getNetworkRef: () => "SNCF",
 		getVehicleRef: (_, journey) => journey?.trip.headsign,
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
@@ -40,6 +60,16 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-tgv.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-tgv-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
+		gtfsOptions: {
+			filterTrips: (trip) => {
+				trip.id = trip.id.slice(0, trip.id.indexOf(":"));
+				return true;
+			},
+		},
+		mapTripUpdate: (tripUpdate) => {
+			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
+			return tripUpdate;
+		},
 		getNetworkRef: () => "SNCF",
 		getVehicleRef: (_, journey) => journey?.trip.headsign,
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
