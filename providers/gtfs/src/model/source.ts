@@ -67,11 +67,11 @@ export class Source {
       sourceId
     );
 
-    try {
-      const resourceDirectory = await mkdtemp(
-        join(tmpdir(), `bt-gtfs_${this.id}_`)
-      );
+    const resourceDirectory = await mkdtemp(
+      join(tmpdir(), `bt-gtfs_${this.id}_`)
+    );
 
+    try {
       updateLog(
         "%s 1/3 ► Downloading GTFS resource into temporary directory...",
         sourceId
@@ -122,7 +122,6 @@ export class Source {
         );
       }
 
-      await rm(resourceDirectory, { recursive: true, force: true });
       updateLog(
         "%s     ✓ Resource %s in %dms - %d journeys were pre-computed.\n",
         sourceId,
@@ -140,6 +139,8 @@ export class Source {
       throw new Error(`Failed to load GTFS resource for '${this.id}'.`, {
         cause,
       });
+    } finally {
+      await rm(resourceDirectory, { recursive: true, force: true });
     }
   }
 
