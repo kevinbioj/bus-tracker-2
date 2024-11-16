@@ -10,6 +10,7 @@ export function createPlainDate(item: string) {
   // }
   // return plainDate;
   // We won't be caching this for now
+  return Temporal.PlainDate.from(item);
 }
 
 const plainTimeCache = new Map<string, Temporal.PlainTime>();
