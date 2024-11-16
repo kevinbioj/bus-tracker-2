@@ -17,10 +17,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ter-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		gtfsOptions: {
-			filterTrips: (trip) => {
-				trip.id = trip.id.slice(0, trip.id.indexOf(":"));
-				return true;
-			},
+			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
 		},
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
@@ -39,10 +36,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ic-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		gtfsOptions: {
-			filterTrips: (trip) => {
-				trip.id = trip.id.slice(0, trip.id.indexOf(":"));
-				return true;
-			},
+			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
 		},
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
@@ -61,10 +55,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-tgv-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		gtfsOptions: {
-			filterTrips: (trip) => {
-				trip.id = trip.id.slice(0, trip.id.indexOf(":"));
-				return true;
-			},
+			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
 		},
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
