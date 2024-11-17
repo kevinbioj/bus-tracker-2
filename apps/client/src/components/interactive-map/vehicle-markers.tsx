@@ -12,7 +12,7 @@ type VehicleMarkersProps = {
 export function VehicleMarkers({ activeMarker, setActiveMarker }: VehicleMarkersProps) {
 	const bounds = useMapBounds();
 
-	const { data } = useQuery(GetVehicleJourneyMarkersQuery(bounds));
+	const { data } = useQuery(GetVehicleJourneyMarkersQuery(bounds, activeMarker));
 
 	return data?.items.map((marker) => (
 		<VehicleMarker key={marker.id} activeMarker={activeMarker} setActiveMarker={setActiveMarker} marker={marker} />
