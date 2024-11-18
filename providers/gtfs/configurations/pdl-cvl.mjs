@@ -42,6 +42,12 @@ const sources = [
 		getVehicleRef: (descriptor) => descriptor?.label?.trim() || undefined,
 	},
 	{
+		id: "lemans",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/5339d96c-6d20-4a01-939a-40f7b56d6cc1",
+		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/setram-lemans-gtfs-rt-trip-update"],
+		getNetworkRef: () => "SETRAM",
+	},
+	{
 		id: "nantes",
 		staticResourceHref:
 			"https://data.nantesmetropole.fr/explore/dataset/244400404_tan-arrets-horaires-circuits/files/16a1a0af5946619af621baa4ad9ee662/download/",
