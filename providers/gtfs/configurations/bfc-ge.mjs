@@ -41,6 +41,12 @@ const sources = [
 		getNetworkRef: () => "LEMET",
 	},
 	{
+		id: "nancy",
+		staticResourceHref: "https://hstan.g-ny.eu/gtfs/gtfs_stan.zip",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "STAN",
+	},
+	{
 		id: "reims",
 		staticResourceHref:
 			"https://www.datagrandest.fr/metadata/fluo-grand-est/FR-200052264-T0031-0000/fluo-grand-est-rei-gtfs.zip",
