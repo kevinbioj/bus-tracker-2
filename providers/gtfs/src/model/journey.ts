@@ -58,9 +58,15 @@ export class Journey {
       monitoredCall === nextCall ||
       typeof this.trip.shape === "undefined" ||
       typeof monitoredCallDistanceTraveled === "undefined" ||
-      typeof nextCallDistanceTraveled === "undefined"
+      typeof nextCallDistanceTraveled === "undefined" ||
+      at.epochSeconds <
+        (
+          monitoredCall.expectedDepartureTime ??
+          monitoredCall.aimedDepartureTime
+        ).epochSeconds
     ) {
-      // Le véhicule se situe à l'arrêt de départ ou il n'y a pas de tracé pour ce trajet.
+      // Le véhicule se situe à l'arrêt de départ, ou il n'y a pas de tracé pour ce trajet, ou encore
+      // le véhicule stationne à l'arrêt pendant un certain temps (typiquement les trains SNCF).
       return Journey.getJourneyPositionAt(monitoredCall);
     }
 
