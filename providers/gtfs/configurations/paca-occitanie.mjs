@@ -29,6 +29,12 @@ const sources = [
 		getNetworkRef: () => "TAM",
 	},
 	{
+		id: "perpignan",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/2afffa1f-aa4a-4fe4-9802-4b5f82bb96c6",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "SANKEO",
+	},
+	{
 		id: "zou",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/",
 		realtimeResourceHrefs: [

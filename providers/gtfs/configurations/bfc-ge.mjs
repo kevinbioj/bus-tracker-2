@@ -56,6 +56,12 @@ const sources = [
 		getNetworkRef: () => "GRM",
 	},
 	{
+		id: "strasbourg",
+		staticResourceHref: "https://opendata.cts-strasbourg.eu/google_transit.zip",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "CTS",
+	},
+	{
 		id: "troyes",
 		// TODO: À remplacer lorsqu'ils auront corrigé le problème de line endings
 		staticResourceHref: "https://gtfs.bus-tracker.fr/troyes.zip",
