@@ -10,309 +10,463 @@ import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 
-const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journey: Journey) => number) => {
-	const aheadTime = getAheadTime?.(journey) ?? 0;
+const getCalls = (
+  journey: Journey,
+  at: Temporal.Instant,
+  getAheadTime?: (journey: Journey) => number
+) => {
+  const aheadTime = getAheadTime?.(journey) ?? 0;
 
-	const firstEffectiveCall = journey.calls.find((call) => call.status === "SCHEDULED");
-	if (
-		typeof firstEffectiveCall === "undefined" ||
-		at.epochSeconds + aheadTime <
-			(firstEffectiveCall.expectedArrivalTime ?? firstEffectiveCall.aimedArrivalTime).epochSeconds
-	)
-		return;
+  const firstEffectiveCall = journey.calls.find(
+    (call) => call.status === "SCHEDULED"
+  );
+  if (
+    typeof firstEffectiveCall === "undefined" ||
+    at.epochSeconds + aheadTime <
+      (
+        firstEffectiveCall.expectedArrivalTime ??
+        firstEffectiveCall.aimedArrivalTime
+      ).epochSeconds
+  )
+    return;
 
-	const lastEffectiveCall = journey.calls.findLast((call) => call.status === "SCHEDULED");
-	if (
-		typeof lastEffectiveCall === "undefined" ||
-		at.epochSeconds > (lastEffectiveCall.expectedDepartureTime ?? lastEffectiveCall.aimedDepartureTime).epochSeconds
-	)
-		return;
+  const lastEffectiveCall = journey.calls.findLast(
+    (call) => call.status === "SCHEDULED"
+  );
+  if (
+    typeof lastEffectiveCall === "undefined" ||
+    at.epochSeconds >
+      (
+        lastEffectiveCall.expectedDepartureTime ??
+        lastEffectiveCall.aimedDepartureTime
+      ).epochSeconds
+  )
+    return;
 
-	const ongoingCalls = journey.calls.filter((call, index) => {
-		return index === journey.calls.length - 1
-			? at.epochSeconds < (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds
-			: at.epochSeconds < (call.expectedDepartureTime ?? call.aimedDepartureTime).epochSeconds;
-	});
-	if (ongoingCalls.length === 0) return;
-	return ongoingCalls;
+  const ongoingCalls = journey.calls.filter((call, index) => {
+    return index === journey.calls.length - 1
+      ? at.epochSeconds <
+          (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds
+      : at.epochSeconds <
+          (call.expectedDepartureTime ?? call.aimedDepartureTime).epochSeconds;
+  });
+  if (ongoingCalls.length === 0) return;
+  return ongoingCalls;
 };
 
 const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor) => {
-	const trip = gtfs.trips.get(tripDescriptor.tripId);
-	if (typeof trip === "undefined") return;
+  const trip = gtfs.trips.get(tripDescriptor.tripId);
+  if (typeof trip === "undefined") return;
 
-	if (typeof tripDescriptor.routeId !== "undefined" && trip.route.id !== tripDescriptor.routeId) return;
-	if (typeof tripDescriptor.directionId !== "undefined" && trip.direction !== tripDescriptor.directionId) return;
-	return trip;
+  if (
+    typeof tripDescriptor.routeId !== "undefined" &&
+    trip.route.id !== tripDescriptor.routeId
+  )
+    return;
+  if (
+    typeof tripDescriptor.directionId !== "undefined" &&
+    trip.direction !== tripDescriptor.directionId
+  )
+    return;
+  return trip;
 };
 
-const matchJourneyToTripDescriptor = (journey: Journey, tripDescriptor: TripDescriptor) => {
-	if (journey.trip.id !== tripDescriptor.tripId) return false;
-	if (typeof tripDescriptor.routeId !== "undefined" && journey.trip.route.id !== tripDescriptor.routeId) return false;
-	if (typeof tripDescriptor.directionId !== "undefined" && journey.trip.direction !== tripDescriptor.directionId)
-		return false;
-	if (typeof tripDescriptor.startDate !== "undefined" && !journey.date.equals(tripDescriptor.startDate)) return false;
-	return true;
+const matchJourneyToTripDescriptor = (
+  journey: Journey,
+  tripDescriptor: TripDescriptor
+) => {
+  if (journey.trip.id !== tripDescriptor.tripId) return false;
+  if (
+    typeof tripDescriptor.routeId !== "undefined" &&
+    journey.trip.route.id !== tripDescriptor.routeId
+  )
+    return false;
+  if (
+    typeof tripDescriptor.directionId !== "undefined" &&
+    journey.trip.direction !== tripDescriptor.directionId
+  )
+    return false;
+  if (
+    typeof tripDescriptor.startDate !== "undefined" &&
+    !journey.date.equals(tripDescriptor.startDate)
+  )
+    return false;
+  return true;
 };
 
-export async function computeVehicleJourneys(source: Source): Promise<VehicleJourney[]> {
-	if (typeof source.gtfs === "undefined") return [];
+export async function computeVehicleJourneys(
+  source: Source
+): Promise<VehicleJourney[]> {
+  if (typeof source.gtfs === "undefined") return [];
 
-	const now = Temporal.Now.instant();
-	const watch = createStopWatch();
-	const sourceId = padSourceId(source);
-	const updateLog = console.draft("%s     ► Generating active journeys list.", sourceId);
+  const now = Temporal.Now.instant();
+  const watch = createStopWatch();
+  const sourceId = padSourceId(source);
+  const updateLog = console.draft(
+    "%s     ► Generating active journeys list.",
+    sourceId
+  );
 
-	try {
-		updateLog("%s 1/2 ► Downloading real-time data from feeds.", sourceId);
-		const { tripUpdates, vehiclePositions } = await downloadGtfsRt(
-			source.options.realtimeResourceHrefs ?? [],
-			source.options.mapTripUpdate,
-			source.options.mapVehiclePosition,
-		);
-		const downloadTime = watch.step();
+  try {
+    updateLog("%s 1/2 ► Downloading real-time data from feeds.", sourceId);
+    const { tripUpdates, vehiclePositions } = await downloadGtfsRt(
+      source.options.realtimeResourceHrefs ?? [],
+      source.options.mapTripUpdate,
+      source.options.mapVehiclePosition
+    );
+    const downloadTime = watch.step();
 
-		updateLog("%s 2/2 ► Computing active journeys.", sourceId);
-		const activeJourneys = new Map<string, VehicleJourney>();
-		const handledJourneyIds = new Set<string>();
-		const handledBlockIds = new Set<string>();
+    updateLog("%s 2/2 ► Computing active journeys.", sourceId);
+    const activeJourneys = new Map<string, VehicleJourney>();
+    const handledJourneyIds = new Set<string>();
+    const handledBlockIds = new Set<string>();
 
-		if (tripUpdates.length > 0) {
-			for (const tripUpdate of tripUpdates) {
-				if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
+    if (tripUpdates.length > 0) {
+      for (const tripUpdate of tripUpdates) {
+        if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
 
-				const updatedAt = Temporal.Instant.fromEpochSeconds(tripUpdate.timestamp);
-				// if (now.since(updatedAt).total("minutes") >= 10) continue;
+        const updatedAt = Temporal.Instant.fromEpochSeconds(
+          tripUpdate.timestamp
+        );
+        // if (now.since(updatedAt).total("minutes") >= 10) continue;
 
-				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip);
-				if (typeof trip === "undefined") continue;
-				const firstStopTime = trip.stopTimes.at(0)!;
+        const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip);
+        if (typeof trip === "undefined") continue;
+        const firstStopTime = trip.stopTimes.at(0)!;
 
-				const startDate =
-					typeof tripUpdate.trip.startDate !== "undefined"
-						? Temporal.PlainDate.from(tripUpdate.trip.startDate)
-						: guessStartDate(
-								firstStopTime.arrivalTime,
-								firstStopTime.arrivalModulus,
-								updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
-							);
+        const startDate =
+          typeof tripUpdate.trip.startDate !== "undefined"
+            ? Temporal.PlainDate.from(tripUpdate.trip.startDate)
+            : guessStartDate(
+                firstStopTime.arrivalTime,
+                firstStopTime.arrivalModulus,
+                updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone)
+              );
 
-				let journey = source.gtfs.journeys.find((journey) => journey.date.equals(startDate) && journey.trip === trip);
-				if (typeof journey === "undefined") {
-					journey = trip.getScheduledJourney(startDate, true);
-					source.gtfs.journeys.push(journey);
-				}
-				journey.updateJourney(tripUpdate.stopTimeUpdate ?? []);
-			}
+        let journey = source.gtfs.journeys.find(
+          (journey) => journey.date.equals(startDate) && journey.trip === trip
+        );
+        if (typeof journey === "undefined") {
+          journey = trip.getScheduledJourney(startDate, true);
+          source.gtfs.journeys.push(journey);
+        }
+        journey.updateJourney(tripUpdate.stopTimeUpdate ?? []);
+      }
 
-			source.gtfs.journeys.sort((a, b) => {
-				const aStart = a.calls.at(0)!.expectedArrivalTime ?? a.calls.at(0)!.aimedArrivalTime;
-				const bStart = b.calls.at(0)!.expectedArrivalTime ?? b.calls.at(0)!.aimedArrivalTime;
-				return aStart.epochSeconds - bStart.epochSeconds;
-			});
-		}
+      source.gtfs.journeys.sort((a, b) => {
+        const aStart =
+          a.calls.at(0)!.expectedArrivalTime ?? a.calls.at(0)!.aimedArrivalTime;
+        const bStart =
+          b.calls.at(0)!.expectedArrivalTime ?? b.calls.at(0)!.aimedArrivalTime;
+        return aStart.epochSeconds - bStart.epochSeconds;
+      });
+    }
 
-		for (const vehiclePosition of vehiclePositions) {
-			let journey: Journey | undefined;
+    for (const vehiclePosition of vehiclePositions) {
+      let journey: Journey | undefined;
 
-			const updatedAt = Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp);
-			// if (now.since(updatedAt).total("minutes") >= 10) continue;
+      const updatedAt = Temporal.Instant.fromEpochSeconds(
+        vehiclePosition.timestamp
+      );
+      // if (now.since(updatedAt).total("minutes") >= 10) continue;
 
-			if (typeof vehiclePosition.trip !== "undefined") {
-				const trip = source.gtfs.trips.get(vehiclePosition.trip.tripId);
-				if (typeof trip !== "undefined") {
-					const firstStopTime = trip.stopTimes.at(0)!;
+      if (typeof vehiclePosition.trip !== "undefined") {
+        const trip = source.gtfs.trips.get(vehiclePosition.trip.tripId);
+        if (typeof trip !== "undefined") {
+          const firstStopTime = trip.stopTimes.at(0)!;
 
-					const startDate =
-						typeof vehiclePosition.trip.startDate !== "undefined"
-							? Temporal.PlainDate.from(vehiclePosition.trip.startDate)
-							: guessStartDate(
-									firstStopTime.arrivalTime,
-									firstStopTime.arrivalModulus,
-									updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
-								);
+          const startDate =
+            typeof vehiclePosition.trip.startDate !== "undefined"
+              ? Temporal.PlainDate.from(vehiclePosition.trip.startDate)
+              : guessStartDate(
+                  firstStopTime.arrivalTime,
+                  firstStopTime.arrivalModulus,
+                  updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone)
+                );
 
-					journey = source.gtfs.journeys.find((journey) => journey.date.equals(startDate) && journey.trip === trip);
-					if (typeof journey === "undefined") {
-						journey = trip.getScheduledJourney(startDate, true);
-						source.gtfs.journeys.push(journey);
-					}
+          journey = source.gtfs.journeys.find(
+            (journey) => journey.date.equals(startDate) && journey.trip === trip
+          );
+          if (typeof journey === "undefined") {
+            journey = trip.getScheduledJourney(startDate, true);
+            source.gtfs.journeys.push(journey);
+          }
 
-					if (now.since(Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp)).total("minutes") >= 10) {
-						const lastCall = journey.calls.at(-1)!;
-						if (
-							Temporal.Instant.compare(now, (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).toInstant())
-						) {
-							continue;
-						}
-					}
-					handledJourneyIds.add(journey.id);
-					if (typeof journey.trip.block !== "undefined") {
-						handledBlockIds.add(journey.trip.block);
-					}
-				}
-			}
+          if (
+            now
+              .since(
+                Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp)
+              )
+              .total("minutes") >= 10
+          ) {
+            const lastCall = journey.calls.at(-1)!;
+            if (
+              Temporal.Instant.compare(
+                now,
+                (
+                  lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime
+                ).toInstant()
+              )
+            ) {
+              continue;
+            }
+          }
+          handledJourneyIds.add(journey.id);
+          if (typeof journey.trip.block !== "undefined") {
+            handledBlockIds.add(journey.trip.block);
+          }
+        }
+      }
 
-			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
-			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);
-			const vehicleRef =
-				typeof source.options.getVehicleRef !== "undefined"
-					? source.options.getVehicleRef?.(vehiclePosition.vehicle, journey)
-					: (vehiclePosition.vehicle.label ?? vehiclePosition.vehicle.id);
+      const networkRef = source.options.getNetworkRef(
+        journey,
+        vehiclePosition.vehicle
+      );
+      const operatorRef = source.options.getOperatorRef?.(
+        journey,
+        vehiclePosition.vehicle
+      );
+      const vehicleRef =
+        typeof source.options.getVehicleRef !== "undefined"
+          ? source.options.getVehicleRef?.(vehiclePosition.vehicle, journey)
+          : vehiclePosition.vehicle.label ?? vehiclePosition.vehicle.id;
 
-			const tripRef =
-				typeof journey !== "undefined" ? (source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id) : undefined;
+      const tripRef =
+        typeof journey !== "undefined"
+          ? source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id
+          : undefined;
 
-			const calls =
-				typeof journey !== "undefined"
-					? typeof vehiclePosition.currentStopSequence !== "undefined"
-						? journey.calls.filter((call) => call.sequence >= vehiclePosition.currentStopSequence!)
-						: typeof vehiclePosition.stopId !== "undefined"
-							? journey.calls.slice(journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId))
-							: getCalls(journey, now)
-					: undefined;
+      const calls =
+        typeof journey !== "undefined"
+          ? typeof vehiclePosition.currentStopSequence !== "undefined"
+            ? journey.calls.filter(
+                (call) => call.sequence >= vehiclePosition.currentStopSequence!
+              )
+            : typeof vehiclePosition.stopId !== "undefined"
+            ? journey.calls.slice(
+                journey.calls.findIndex(
+                  (call) => call.stop.id === vehiclePosition.stopId
+                )
+              )
+            : getCalls(journey, now)
+          : undefined;
 
-			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
-			activeJourneys.set(key, {
-				id: key,
-				line:
-					typeof journey !== "undefined"
-						? {
-								ref: `${networkRef}:Line:${source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
-								number: journey.trip.route.name,
-								type: journey.trip.route.type,
-								color: journey.trip.route.color,
-								textColor: journey.trip.route.textColor,
-							}
-						: typeof vehiclePosition.trip?.routeId !== "undefined"
-							? {
-									ref: `${networkRef}:Line:${source.options.mapLineRef?.(vehiclePosition.trip.routeId) ?? vehiclePosition.trip.routeId}`,
-									number: vehiclePosition.trip.routeId,
-									type: "UNKNOWN",
-								}
-							: undefined,
-				direction: (journey?.trip.direction ?? vehiclePosition.trip?.directionId) === 0 ? "OUTBOUND" : "INBOUND",
-				calls:
-					typeof journey !== "undefined"
-						? (calls?.map((call, index) => {
-								const isLast = index === calls.length - 1;
-								return {
-									aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({
-										timeZoneName: "never",
-									}),
-									expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
-										timeZoneName: "never",
-									}),
-									stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
-									stopName: call.stop.name,
-									stopOrder: call.sequence,
-									callStatus: call.status,
-								};
-							}) ?? [])
-						: undefined,
-				destination: source.options.getDestination?.(journey, vehiclePosition.vehicle) ?? journey?.trip.headsign,
-				position: {
-					latitude: vehiclePosition.position.latitude,
-					longitude: vehiclePosition.position.longitude,
-					atStop: vehiclePosition.currentStatus === "STOPPED_AT",
-					type: "GPS",
-					recordedAt: Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp)
-						.toZonedDateTimeISO(journey?.trip.route.agency.timeZone ?? "Europe/Paris")
-						.toString({ timeZoneName: "never" }),
-				},
-				journeyRef: typeof journey !== "undefined" ? `${networkRef}:ServiceJourney:${tripRef}` : undefined,
-				networkRef,
-				operatorRef,
-				vehicleRef:
-					typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
-				serviceDate: journey?.date.toString(),
-				updatedAt: Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp).toString(),
-			});
-		}
+      const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${
+        vehiclePosition.vehicle.id
+      }`;
+      activeJourneys.set(key, {
+        id: key,
+        line:
+          typeof journey !== "undefined"
+            ? {
+                ref: `${networkRef}:Line:${
+                  source.options.mapLineRef?.(journey.trip.route.id) ??
+                  journey.trip.route.id
+                }`,
+                number: journey.trip.route.name,
+                type: journey.trip.route.type,
+                color: journey.trip.route.color,
+                textColor: journey.trip.route.textColor,
+              }
+            : typeof vehiclePosition.trip?.routeId !== "undefined"
+            ? {
+                ref: `${networkRef}:Line:${
+                  source.options.mapLineRef?.(vehiclePosition.trip.routeId) ??
+                  vehiclePosition.trip.routeId
+                }`,
+                number: vehiclePosition.trip.routeId,
+                type: "UNKNOWN",
+              }
+            : undefined,
+        direction:
+          (journey?.trip.direction ?? vehiclePosition.trip?.directionId) === 0
+            ? "OUTBOUND"
+            : "INBOUND",
+        calls:
+          typeof journey !== "undefined"
+            ? calls?.map((call, index) => {
+                const isLast = index === calls.length - 1;
+                return {
+                  aimedTime: (isLast
+                    ? call.aimedArrivalTime
+                    : call.aimedDepartureTime
+                  ).toString({
+                    timeZoneName: "never",
+                  }),
+                  expectedTime: (isLast
+                    ? call.expectedArrivalTime
+                    : call.expectedDepartureTime
+                  )?.toString({
+                    timeZoneName: "never",
+                  }),
+                  stopRef: `${networkRef}:StopPoint:${
+                    source.options.mapStopRef?.(call.stop.id) ?? call.stop.id
+                  }`,
+                  stopName: call.stop.name,
+                  stopOrder: call.sequence,
+                  callStatus: call.status,
+                };
+              }) ?? []
+            : undefined,
+        destination:
+          source.options.getDestination?.(journey, vehiclePosition.vehicle) ??
+          journey?.trip.headsign,
+        position: {
+          latitude: vehiclePosition.position.latitude,
+          longitude: vehiclePosition.position.longitude,
+          atStop: vehiclePosition.currentStatus === "STOPPED_AT",
+          type: "GPS",
+          recordedAt: Temporal.Instant.fromEpochSeconds(
+            vehiclePosition.timestamp
+          )
+            .toZonedDateTimeISO(
+              journey?.trip.route.agency.timeZone ?? "Europe/Paris"
+            )
+            .toString({ timeZoneName: "never" }),
+        },
+        journeyRef:
+          typeof journey !== "undefined"
+            ? `${networkRef}:ServiceJourney:${tripRef}`
+            : undefined,
+        networkRef,
+        operatorRef,
+        vehicleRef:
+          typeof vehicleRef !== "undefined"
+            ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}`
+            : undefined,
+        serviceDate: journey?.date.toString(),
+        updatedAt: Temporal.Instant.fromEpochSeconds(
+          vehiclePosition.timestamp
+        ).toString(),
+      });
+    }
 
-		if (source.options.mode !== "VP-ONLY") {
-			for (const journey of source.gtfs.journeys) {
-				if (handledJourneyIds.has(journey.id)) continue;
-				if (typeof journey.trip.block !== "undefined" && handledBlockIds.has(journey.trip.block)) continue;
+    if (source.options.mode !== "VP-ONLY") {
+      for (const journey of source.gtfs.journeys) {
+        if (handledJourneyIds.has(journey.id)) continue;
+        if (
+          typeof journey.trip.block !== "undefined" &&
+          handledBlockIds.has(journey.trip.block)
+        )
+          continue;
 
-				const vehicleDescriptor = tripUpdates.find((tu) => matchJourneyToTripDescriptor(journey, tu.trip))?.vehicle;
+        const vehicleDescriptor = tripUpdates.find((tu) =>
+          matchJourneyToTripDescriptor(journey, tu.trip)
+        )?.vehicle;
 
-				const networkRef = source.options.getNetworkRef(journey);
-				const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);
-				const vehicleRef =
-					typeof source.options.getVehicleRef !== "undefined"
-						? source.options.getVehicleRef(vehicleDescriptor, journey)
-						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
-				const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
+        const networkRef = source.options.getNetworkRef(journey);
+        const operatorRef = source.options.getOperatorRef?.(
+          journey,
+          vehicleDescriptor
+        );
+        const vehicleRef =
+          typeof source.options.getVehicleRef !== "undefined"
+            ? source.options.getVehicleRef(vehicleDescriptor, journey)
+            : vehicleDescriptor?.label ?? vehicleDescriptor?.id;
+        const tripRef =
+          source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
 
-				if (journey.hasRealtime() && source.options.mode === "NO-TU") continue;
+        if (journey.hasRealtime()) {
+          if (source.options.mode === "NO-TU") continue;
+        } else {
+          if (source.options.excludeScheduled === true) continue;
+          if (
+            typeof source.options.excludeScheduled === "function" &&
+            source.options.excludeScheduled?.(journey.trip)
+          )
+            continue;
+        }
 
-				const key =
-					typeof vehicleDescriptor !== "undefined"
-						? `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehicleDescriptor.id}`
-						: typeof journey.trip.block !== "undefined"
-							? `${networkRef}:${operatorRef ?? ""}:ServiceBlock:${journey.trip.block}:${journey.date}`
-							: `${networkRef}:${operatorRef ?? ""}:ServiceJourney:${tripRef}:${journey.date}`;
+        const key =
+          typeof vehicleDescriptor !== "undefined"
+            ? `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${
+                vehicleDescriptor.id
+              }`
+            : typeof journey.trip.block !== "undefined"
+            ? `${networkRef}:${operatorRef ?? ""}:ServiceBlock:${
+                journey.trip.block
+              }:${journey.date}`
+            : `${networkRef}:${operatorRef ?? ""}:ServiceJourney:${tripRef}:${
+                journey.date
+              }`;
 
-				if (activeJourneys.has(key)) continue;
+        if (activeJourneys.has(key)) continue;
 
-				const calls = getCalls(journey, now, source.options.getAheadTime);
-				if (typeof calls === "undefined") continue;
+        const calls = getCalls(journey, now, source.options.getAheadTime);
+        if (typeof calls === "undefined") continue;
 
-				if (typeof journey.trip.block !== "undefined") {
-					handledBlockIds.add(journey.trip.block);
-				}
+        if (typeof journey.trip.block !== "undefined") {
+          handledBlockIds.add(journey.trip.block);
+        }
 
-				activeJourneys.set(key, {
-					id: key,
-					line: {
-						ref: `${networkRef}:Line:${source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
-						number: journey.trip.route.name,
-						type: journey.trip.route.type,
-						color: journey.trip.route.color,
-						textColor: journey.trip.route.textColor,
-					},
-					direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
-					destination: source.options.getDestination?.(journey, vehicleDescriptor) ?? journey.trip.headsign,
-					calls: calls.map((call, index) => {
-						const isLast = index === calls.length - 1;
-						return {
-							aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({ timeZoneName: "never" }),
-							expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
-								timeZoneName: "never",
-							}),
-							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
-							stopName: call.stop.name,
-							stopOrder: call.sequence,
-							callStatus: call.status,
-						};
-					}),
-					position: journey.guessPosition(now),
-					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
-					networkRef,
-					operatorRef,
-					vehicleRef:
-						typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
-					serviceDate: journey.date.toString(),
-					updatedAt: now.toString(),
-				});
-			}
-		}
+        activeJourneys.set(key, {
+          id: key,
+          line: {
+            ref: `${networkRef}:Line:${
+              source.options.mapLineRef?.(journey.trip.route.id) ??
+              journey.trip.route.id
+            }`,
+            number: journey.trip.route.name,
+            type: journey.trip.route.type,
+            color: journey.trip.route.color,
+            textColor: journey.trip.route.textColor,
+          },
+          direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
+          destination:
+            source.options.getDestination?.(journey, vehicleDescriptor) ??
+            journey.trip.headsign,
+          calls: calls.map((call, index) => {
+            const isLast = index === calls.length - 1;
+            return {
+              aimedTime: (isLast
+                ? call.aimedArrivalTime
+                : call.aimedDepartureTime
+              ).toString({ timeZoneName: "never" }),
+              expectedTime: (isLast
+                ? call.expectedArrivalTime
+                : call.expectedDepartureTime
+              )?.toString({
+                timeZoneName: "never",
+              }),
+              stopRef: `${networkRef}:StopPoint:${
+                source.options.mapStopRef?.(call.stop.id) ?? call.stop.id
+              }`,
+              stopName: call.stop.name,
+              stopOrder: call.sequence,
+              callStatus: call.status,
+            };
+          }),
+          position: journey.guessPosition(now),
+          journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
+          networkRef,
+          operatorRef,
+          vehicleRef:
+            typeof vehicleRef !== "undefined"
+              ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}`
+              : undefined,
+          serviceDate: journey.date.toString(),
+          updatedAt: now.toString(),
+        });
+      }
+    }
 
-		const computeTime = watch.step();
-		updateLog(
-			"%s     ✓ Computed %d journeys in %dms (%dms download - %dms compute).",
-			sourceId,
-			activeJourneys.size,
-			watch.total(),
-			downloadTime,
-			computeTime,
-		);
-		return Array.from(activeJourneys.values());
-	} catch (cause) {
-		updateLog("%s     ✘ Something wrong occurred during computation.", sourceId);
-		throw new Error(`Failed to compute vehicle journeys for '${source.id}'.`, {
-			cause,
-		});
-	}
+    const computeTime = watch.step();
+    updateLog(
+      "%s     ✓ Computed %d journeys in %dms (%dms download - %dms compute).",
+      sourceId,
+      activeJourneys.size,
+      watch.total(),
+      downloadTime,
+      computeTime
+    );
+    return Array.from(activeJourneys.values());
+  } catch (cause) {
+    updateLog(
+      "%s     ✘ Something wrong occurred during computation.",
+      sourceId
+    );
+    throw new Error(`Failed to compute vehicle journeys for '${source.id}'.`, {
+      cause,
+    });
+  }
 }
