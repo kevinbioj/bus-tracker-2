@@ -8,7 +8,14 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
 		],
 		mode: "NO-TU",
-		gtfsOptions: { shapesStrategy: "IGNORE" },
+		gtfsOptions: {
+			filterTrips: (trip) => {
+				if (trip.id === "99") {
+					trip.block = "CALYPSO";
+				}
+				return trip;
+			},
+		},
 		excludeScheduled: (trip) => !["06", "89", "99"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
