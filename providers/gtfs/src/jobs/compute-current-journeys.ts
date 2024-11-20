@@ -116,7 +116,6 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			let journey: Journey | undefined;
 
 			const updatedAt = Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp);
-			// if (now.since(updatedAt).total("minutes") >= 10) continue;
 
 			if (typeof vehiclePosition.trip !== "undefined") {
 				const trip = source.gtfs.trips.get(vehiclePosition.trip.tripId);
@@ -152,6 +151,8 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					}
 				}
 			}
+
+			if (typeof journey === "undefined" && now.since(updatedAt).total("minutes") >= 5) continue;
 
 			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
 			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);

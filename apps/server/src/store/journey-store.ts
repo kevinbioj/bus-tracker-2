@@ -9,20 +9,22 @@ export function createJourneyStore() {
 		const now = Temporal.Now.instant();
 		let sweptJourneys = 0;
 		for (const [key, journey] of journeys) {
-			const lastCall = journey.calls?.at(-1);
-			if (
-				typeof lastCall !== "undefined" &&
-				Temporal.Instant.compare(now, lastCall.expectedTime ?? lastCall.aimedTime) < 0
-			) {
-				continue;
+			let shouldDelete = false;
+
+			if (journey.position.type === "GPS") {
+				const lastCall = journey.calls?.at(-1);
+				shouldDelete =
+					(typeof lastCall === "undefined" ||
+						now.since(lastCall.expectedTime ?? lastCall.aimedTime).total("minutes") >= 5) &&
+					now.since(journey.position.recordedAt).total("minutes") >= 10;
+			} else {
+				shouldDelete = now.since(journey.updatedAt).total("minutes") >= 5;
 			}
 
-			if (journey.position.type === "GPS" && now.since(journey.position.recordedAt).total("minutes") < 10) {
-				continue;
+			if (shouldDelete) {
+				journeys.delete(key);
+				sweptJourneys += 1;
 			}
-
-			journeys.delete(key);
-			sweptJourneys += 1;
 		}
 		console.log("► Swept %d outdated vehicle journeys.", sweptJourneys);
 	}, 60_000);
