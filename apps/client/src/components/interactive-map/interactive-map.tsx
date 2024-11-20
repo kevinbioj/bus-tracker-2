@@ -16,6 +16,7 @@ type InteractiveMapProps = {
 export function InteractiveMap({ className, defaultCenter, defaultZoom }: InteractiveMapProps) {
 	const [activeMarker, setActiveMarker] = useState<string>();
 	const [lastLocation] = useLocalStorage<[number, number, number] | null>("last-location", null);
+	const [bypassMinZoom] = useLocalStorage("bypass-min-zoom", false);
 
 	const mapRef = useCallback((map: MapInstance | null) => {
 		if (map === null) return;
@@ -37,7 +38,7 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Intera
 			id="interactive-map"
 			ref={mapRef}
 			zoom={lastLocation?.[2] ?? defaultZoom}
-			minZoom={9}
+			minZoom={bypassMinZoom ? undefined : 9}
 		>
 			<TileLayer
 				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
