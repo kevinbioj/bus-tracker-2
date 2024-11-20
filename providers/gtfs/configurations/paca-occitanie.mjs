@@ -1,6 +1,16 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "aix-marseille",
+		staticResourceHref:
+			"https://app.mecatran.com/utw/ws/gtfsfeed/static/mamp?apiKey=60327e505a214c77303f52206f11483069257343",
+		realtimeResourceHrefs: [],
+		gtfsOptions: { filterTrips: (trip) => !trip.route.id.startsWith("TER") && !trip.route.id.startsWith("LER") },
+		mapLineRef: (lineRef) => lineRef.slice(4),
+		mapTripRef: (tripRef) => tripRef.slice(4),
+		getNetworkRef: (journey) => journey.trip.route.agency.id,
+	},
+	{
 		id: "avigon",
 		staticResourceHref: "https://exs.tcra2.cityway.fr/gtfs.aspx?key=UID&operatorCode=TCRA",
 		realtimeResourceHrefs: ["https://export.tcra2.cityway.fr/GtfsRt/GtfsRT.TCRA.pb"],
