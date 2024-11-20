@@ -8,7 +8,6 @@ import { Hono } from "hono";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { createClient } from "redis";
-import * as z from "zod";
 
 import { registerGirouetteRoutes } from "./controllers/girouettes.js";
 import { registerNetworkRoutes } from "./controllers/networks.js";

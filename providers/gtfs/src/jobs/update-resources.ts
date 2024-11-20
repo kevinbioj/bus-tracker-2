@@ -1,4 +1,5 @@
 import { Temporal } from "temporal-polyfill";
+
 import type { Source } from "../model/source.js";
 
 export async function updateResources(sources: Source[]) {

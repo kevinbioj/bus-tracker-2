@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { cwd } from "node:process";
 
 import { Source } from "../model/source.js";
+
 import type { Configuration } from "./configuration.js";
 
 export async function loadConfiguration(path: string) {
@@ -24,6 +25,8 @@ export async function loadConfiguration(path: string) {
 		console.log();
 		return { computeDelayMs, redisOptions, sources };
 	} catch (cause) {
-		throw new Error(`Unable to load configuration at '${resolvedPath}'.`, { cause });
+		throw new Error(`Unable to load configuration at '${resolvedPath}'.`, {
+			cause,
+		});
 	}
 }

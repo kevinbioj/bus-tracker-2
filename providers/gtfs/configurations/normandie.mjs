@@ -19,6 +19,7 @@ const sources = [
 			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=NOMAD&dataFormat=GTFS-RT",
 			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=NOMAD&dataFormat=GTFS-RT",
 		],
+		excludeScheduled: (trip) => !["216", "228", "423", "424", "527", "530"].includes(trip.route.name),
 		getNetworkRef: () => "NOMAD-CAR",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
@@ -31,6 +32,7 @@ const sources = [
 			"https://lrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://lrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
+		mode: "NO-TU",
 		getNetworkRef: () => "NOMAD-CAR",
 	},
 	//- LiA

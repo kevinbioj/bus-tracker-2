@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 
-import type { GtfsRt, GtfsRtEntity, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
+import type { GtfsRt, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
 
