@@ -25,8 +25,6 @@ export type JourneyPosition = {
 };
 
 export class Journey {
-	#currentShapeIndex = -1;
-
 	constructor(
 		readonly id: string,
 		readonly trip: Trip,
@@ -54,6 +52,7 @@ export class Journey {
 		const monitoredCall = calls.findLast(
 			(call) => at.epochSeconds >= (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds,
 		)!;
+
 		if (at.epochSeconds < (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochSeconds) {
 			return Journey.getJourneyPositionAt(monitoredCall);
 		}

@@ -59,6 +59,7 @@ export class Trip {
 					expectedDepartureTime: undefined,
 					stop: stopTime.stop,
 					sequence: stopTime.sequence,
+					distanceTraveled: stopTime.distanceTraveled,
 					status: "SCHEDULED",
 				};
 			}),
