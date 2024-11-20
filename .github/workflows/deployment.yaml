@@ -6,6 +6,7 @@ on:
     paths:
       - apps/client/**/*
       - apps/server/**/*
+      - .github/workflows/deployment.yaml
 
 env:
   REGISTRY: ghcr.io
