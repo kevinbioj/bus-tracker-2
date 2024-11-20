@@ -39,6 +39,12 @@ const sources = [
 		getNetworkRef: () => "TAM",
 	},
 	{
+		id: "nice",
+		staticResourceHref: "https://transport.data.gouv.fr/resources/79642/download",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "LIGNES-AZUR",
+	},
+	{
 		id: "perpignan",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/2afffa1f-aa4a-4fe4-9802-4b5f82bb96c6",
 		realtimeResourceHrefs: [],
