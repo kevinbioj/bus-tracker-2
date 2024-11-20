@@ -35,6 +35,15 @@ const sources = [
 		getNetworkRef: () => "SANKEO",
 	},
 	{
+		id: "toulouse",
+		staticResourceHref:
+			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
+		realtimeResourceHrefs: [],
+		mapLineRef: (lineRef) => lineRef.slice(4),
+		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
+		getNetworkRef: () => "TISSEO",
+	},
+	{
 		id: "zou",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/",
 		realtimeResourceHrefs: [
