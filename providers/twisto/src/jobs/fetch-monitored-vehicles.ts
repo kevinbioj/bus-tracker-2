@@ -131,7 +131,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 			id: `TWISTO::VehicleTracking:${vehicleRef}`,
 			line: {
 				ref: `TWISTO:Line:${vehicle.MonitoredVehicleJourney.PublishedLineName}`,
-				number: vehicle.MonitoredVehicleJourney.PublishedLineName,
+				number: vehicle.MonitoredVehicleJourney.PublishedLineName.toString(),
 				type: vehicle.MonitoredVehicleJourney.VehicleMode === "tram" ? "TRAMWAY" : "BUS",
 			},
 			direction: vehicle.MonitoredVehicleJourney.DirectionName === 1 ? "OUTBOUND" : "INBOUND",
