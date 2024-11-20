@@ -3,6 +3,9 @@ name: Deployment
 on:
   push:
     branches: ['main']
+    paths:
+      - apps/client/**/*
+      - apps/server/**/*
 
 env:
   REGISTRY: ghcr.io
