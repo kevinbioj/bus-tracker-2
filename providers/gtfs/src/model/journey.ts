@@ -51,7 +51,7 @@ export class Journey {
 		}
 
 		// Cas n°3 - on est à l'arrêt
-		const monitoredCall = calls.find(
+		const monitoredCall = calls.findLast(
 			(call) => at.epochSeconds >= (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds,
 		)!;
 		if (at.epochSeconds < (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochSeconds) {
