@@ -12,6 +12,7 @@ export type JourneyCall = {
 	expectedDepartureTime?: Temporal.ZonedDateTime;
 	stop: Stop;
 	sequence: number;
+	distanceTraveled?: number;
 	status: "SCHEDULED" | "SKIPPED";
 };
 
@@ -24,6 +25,8 @@ export type JourneyPosition = {
 };
 
 export class Journey {
+	#currentShapeIndex = -1;
+
 	constructor(
 		readonly id: string,
 		readonly trip: Trip,
@@ -33,51 +36,53 @@ export class Journey {
 
 	guessPosition(at: Temporal.Instant): VehicleJourneyPosition {
 		const calls = this.calls.filter((call) => call.status !== "SKIPPED");
+		if (calls.length < 2) throw new Error(`Journey '${this.id}' has less than 2 scheduled calls`);
 
-		const nextCall = calls.find(
-			(call) => at.epochSeconds < (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds,
-		);
-		if (typeof nextCall === "undefined") {
-			// Le véhicule se situe à l'arrêt d'arrivée.
-			const lastCall = calls.at(-1)!;
+		// Cas n°1 - la course n'a pas encore commencé
+		const firstCall = calls.at(0)!;
+		if (at.epochSeconds < (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime).epochSeconds) {
+			return Journey.getJourneyPositionAt(firstCall);
+		}
+
+		// Cas n°2 - la course est terminée
+		const lastCall = calls.at(-1)!;
+		if (at.epochSeconds >= (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime).epochSeconds) {
 			return Journey.getJourneyPositionAt(lastCall);
 		}
 
-		const nextCallIndex = calls.indexOf(nextCall);
-		const monitoredCall = nextCallIndex === 0 ? nextCall : calls.at(nextCallIndex - 1)!;
-		const monitoredCallDistanceTraveled = this.trip.stopTimes.find(
-			(stopTime) => stopTime.sequence === monitoredCall.sequence,
-		)!.distanceTraveled;
-		const nextCallDistanceTraveled = this.trip.stopTimes.find(
-			(stopTime) => stopTime.sequence === nextCall.sequence,
-		)!.distanceTraveled;
-		if (
-			monitoredCall === nextCall ||
-			typeof this.trip.shape === "undefined" ||
-			typeof monitoredCallDistanceTraveled === "undefined" ||
-			typeof nextCallDistanceTraveled === "undefined" ||
-			at.epochSeconds < (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochSeconds
-		) {
-			// Le véhicule se situe à l'arrêt de départ, ou il n'y a pas de tracé pour ce trajet, ou encore
-			// le véhicule stationne à l'arrêt pendant un certain temps (typiquement les trains SNCF).
+		// Cas n°3 - on est à l'arrêt
+		const monitoredCall = calls.find(
+			(call) => at.epochSeconds >= (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds,
+		)!;
+		if (at.epochSeconds < (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochSeconds) {
 			return Journey.getJourneyPositionAt(monitoredCall);
 		}
 
-		const lastDepartureTime = (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochSeconds;
-		const nextArrivalTime = (nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime).epochSeconds;
-		const inBetweenTime = nextArrivalTime - lastDepartureTime;
-		const percentTraveled = (at.epochSeconds - lastDepartureTime) / inBetweenTime;
-		const estimatedDistanceTraveled =
-			monitoredCallDistanceTraveled + (nextCallDistanceTraveled - monitoredCallDistanceTraveled) * percentTraveled;
+		// Autrement - on est en voyage
+		const nextCall = calls.at(calls.indexOf(monitoredCall) + 1);
+		if (
+			typeof this.trip.shape === "undefined" ||
+			typeof monitoredCall.distanceTraveled === "undefined" ||
+			typeof nextCall?.distanceTraveled === "undefined"
+		) {
+			return Journey.getJourneyPositionAt(monitoredCall);
+		}
+
+		const leftAt = (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochSeconds;
+		const arrivesAt = (nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime).epochSeconds;
+
+		const percentTraveled = (at.epochSeconds - leftAt) / (arrivesAt - leftAt);
+		const distanceTraveled =
+			monitoredCall.distanceTraveled + (nextCall.distanceTraveled - monitoredCall.distanceTraveled) * percentTraveled;
 
 		const currentShapePoint =
-			this.trip.shape.points.findLast((point) => estimatedDistanceTraveled >= point.distanceTraveled) ??
-			this.trip.shape.points.at(-1)!;
+			this.trip.shape.points.findLast((point) => distanceTraveled >= point.distanceTraveled) ??
+			this.trip.shape.points.at(0)!;
 		const nextShapePoint =
 			this.trip.shape.points.at(this.trip.shape.points.indexOf(currentShapePoint) + 1) ??
 			this.trip.shape.points.at(-1)!;
 		const ratio =
-			(estimatedDistanceTraveled - currentShapePoint.distanceTraveled) /
+			(distanceTraveled - currentShapePoint.distanceTraveled) /
 			(nextShapePoint.distanceTraveled - currentShapePoint.distanceTraveled);
 
 		return {
