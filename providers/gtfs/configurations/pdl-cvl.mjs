@@ -1,6 +1,17 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "aleop",
+		staticResourceHref: "https://donnees.paysdelaloire.fr/data/pdl.zip",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-vehicle-position",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "ALEOP",
+		getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
+	},
+	{
 		id: "angers",
 		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/Irigo/gtfs.zip",
 		realtimeResourceHrefs: ["https://ara-api.enroute.mobi/irigo/gtfs/trip-updates"],
