@@ -37,7 +37,7 @@ const sources = [
 	{
 		id: "toulouse",
 		staticResourceHref:
-			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/81678/81678.20241111.061207.408753.zip",
 		realtimeResourceHrefs: [],
 		mapLineRef: (lineRef) => lineRef.slice(4),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
