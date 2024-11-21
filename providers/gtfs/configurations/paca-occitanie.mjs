@@ -60,11 +60,17 @@ const sources = [
 		getNetworkRef: () => "TISSEO",
 	},
 	{
-		id: "zou",
+		id: "zou-proximite",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/region-sud-zou-proximite-gtfs-rt-trip-update",
 		],
+		getNetworkRef: () => "ZOU",
+	},
+	{
+		id: "zou-express",
+		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3743/resource/5153/download/",
+		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/region-sud-zou-express-gtfs-rt-trip-update"],
 		getNetworkRef: () => "ZOU",
 	},
 ];
