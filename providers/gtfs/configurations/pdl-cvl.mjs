@@ -10,6 +10,7 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "ALEOP",
 		getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
+		getDestination: (journey) => journey?.trip.headsign?.replace("→", ">"),
 	},
 	{
 		id: "angers",
