@@ -57,6 +57,13 @@ const sources = [
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
 	},
+	{
+		id: "hanga",
+		staticResourceHref: "http://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE&companyCode=ASTUCE:004",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "ASTUCE",
+		getOperatorRef: (journey) => (["204", "214"].includes(journey?.trip.route.id) ? "TNI" : "HANGA"),
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
