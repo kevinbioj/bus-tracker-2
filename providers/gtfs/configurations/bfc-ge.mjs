@@ -63,8 +63,7 @@ const sources = [
 	},
 	{
 		id: "troyes",
-		// TODO: À remplacer lorsqu'ils auront corrigé le problème de line endings
-		staticResourceHref: "https://gtfs.bus-tracker.fr/troyes.zip",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/764e07f3-4297-44ac-810e-f3db295dbef6",
 		realtimeResourceHrefs: [
 			"https://transport.data.gouv.fr/resources/81544/download",
 			"https://transport.data.gouv.fr/resources/81543/download",
