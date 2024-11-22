@@ -17,6 +17,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ter-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		gtfsOptions: {
+			filterTrips: (trip) => trip.route.type !== "BUS",
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
 		},
 		mapTripUpdate: (tripUpdate) => {
