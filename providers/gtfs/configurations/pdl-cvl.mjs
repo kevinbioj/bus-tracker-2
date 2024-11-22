@@ -7,7 +7,6 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-vehicle-position",
 		],
-		mode: "NO-TU",
 		getNetworkRef: () => "ALEOP",
 		getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
 		getDestination: (journey) => journey?.trip.headsign?.replace("→", ">"),
