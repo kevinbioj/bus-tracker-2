@@ -20,8 +20,8 @@ export function VehicleNextStops({ calls }: NextStopsProps) {
 						.otherwise(() => null);
 
 					const tooltipProps =
-						typeof call.expectedTime !== "undefined"
-							? match([call.callStatus, dayjs(call.expectedTime).diff(call.aimedTime, "minutes")])
+						typeof call.expectedTime !== "undefined" || call.callStatus === "SKIPPED"
+							? match([call.callStatus, dayjs(call.expectedTime ?? call.aimedTime).diff(call.aimedTime, "minutes")])
 									.with(
 										["SKIPPED", P.any],
 										() =>
@@ -50,9 +50,9 @@ export function VehicleNextStops({ calls }: NextStopsProps) {
 
 					const children = (
 						<div className={clsx("flex", accentColor)}>
-							{typeof call.expectedTime !== "undefined" && (
+							{typeof call.expectedTime !== "undefined" || call.callStatus === "SKIPPED" ? (
 								<Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} />
-							)}
+							) : null}
 							<span
 								className={clsx("select-none hover:cursor-default", call.callStatus === "SKIPPED" && "line-through")}
 							>
