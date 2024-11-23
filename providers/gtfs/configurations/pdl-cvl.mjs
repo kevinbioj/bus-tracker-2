@@ -72,6 +72,38 @@ const sources = [
 		getNetworkRef: () => "NAOLIB",
 	},
 	{
+		id: "remi-28",
+		staticResourceHref: "https://www.transdev-centrevaldeloire.com/cvl/open-data/remi-28/gtfs",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/eure-et-loir-mobilite/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "REMI",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "remi-37",
+		staticResourceHref: "https://www.transdev-centrevaldeloire.com/cvl/open-data/remi-37/gtfs",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-37/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "REMI",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "remi-41",
+		staticResourceHref: "https://www.transdev-centrevaldeloire.com/cvl/open-data/remi-41/gtfs",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-41/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "REMI",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "remi-45",
+		staticResourceHref: "https://www.transdev-centrevaldeloire.com/cvl/open-data/remi-45/gtfs",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-45/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "REMI",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "tours",
 		staticResourceHref:
 			"https://data.tours-metropole.fr/api/v2/catalog/datasets/horaires-temps-reel-gtfsrt-reseau-filbleu-tmvl/alternative_exports/filbleu_gtfszip",
