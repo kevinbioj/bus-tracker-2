@@ -31,8 +31,8 @@ export type SourceOptions = {
 	mapLineRef?: (lineRef: string) => string;
 	mapStopRef?: (stopRef: string) => string;
 	mapTripRef?: (tripRef: string) => string;
-	mapTripUpdate?: (tripUpdate: TripUpdate) => TripUpdate;
-	mapVehiclePosition?: (vehicle: VehiclePosition) => VehiclePosition;
+	mapTripUpdate?: (tripUpdate: TripUpdate) => TripUpdate | undefined;
+	mapVehiclePosition?: (vehicle: VehiclePosition) => VehiclePosition | undefined;
 };
 
 export class Source {

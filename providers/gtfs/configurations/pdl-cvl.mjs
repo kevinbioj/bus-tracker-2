@@ -10,7 +10,11 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "ALEOP",
-		getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
+		getVehicleRef: (descriptor, journey) => {
+			const label = descriptor?.label;
+			if (label === journey?.trip.headsign) return;
+			return label;
+		},
 		getDestination: (journey) => journey?.trip.headsign?.replace("→", ">"),
 	},
 	{

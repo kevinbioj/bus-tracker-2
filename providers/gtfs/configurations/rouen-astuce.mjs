@@ -42,6 +42,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: (trip) => trip.route.name === "06",
+		mapTripUpdate: (tripUpdate) => (tripUpdate.vehicle?.id ? tripUpdate : undefined),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
 		getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
