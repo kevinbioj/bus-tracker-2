@@ -31,6 +31,7 @@ const sources = [
 		staticResourceHref: "https://gtfs.tae76.fr/gtfs/feed.zip",
 		realtimeResourceHrefs: ["https://gtfs.tae76.fr/gtfs-rt.bin"],
 		excludeScheduled: true,
+		mapTripUpdate: (tripUpdate) => (tripUpdate.vehicle?.id ? tripUpdate : undefined),
 		getAheadTime: (journey) =>
 			journey?.calls.some((c) => !!(c.expectedArrivalTime ?? c.expectedDepartureTime)) ? 15 * 60 : 0,
 		getNetworkRef: () => "ASTUCE",
@@ -42,7 +43,6 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: (trip) => trip.route.name === "06",
-		mapTripUpdate: (tripUpdate) => (tripUpdate.vehicle?.id ? tripUpdate : undefined),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
 		getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
