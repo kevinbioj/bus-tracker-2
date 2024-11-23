@@ -1,14 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
+import clsx from "clsx";
 import dayjs from "dayjs";
-import { LocateFixedIcon } from "lucide-react";
+import { SatelliteDishIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import { match } from "ts-pattern";
 import { useLocalStorage } from "usehooks-ts";
 
 import { GetNetworkQuery } from "~/api/networks";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Button } from "~/components/ui/button";
+import { Tooltip } from "~/components/ui/tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
+
+const positionIconDetails = {
+	GPS: {
+		iconColor: "#38A169",
+		tooltipClasses: "bg-green-600 dark:bg-green-700 text-white",
+		tooltipText: "Position GPS",
+	},
+	ESTIMATED: {
+		iconColor: "#DD6B20",
+		tooltipClasses: "bg-orange-600 dark:bg-orange-700 text-white",
+		tooltipText: "Position estimée",
+	},
+	SCHEDULED: {
+		iconColor: "#E53E3E",
+		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
+		tooltipText: "Position théorique",
+	},
+} as const;
 
 type VehicleInformationProps = {
 	journey: DisposeableVehicleJourney;
@@ -40,6 +59,13 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 		<>{vehicleNumber} </>
 	);
 
+	const positionInformation =
+		journey.position.type === "GPS"
+			? positionIconDetails.GPS
+			: journey.calls?.some((call) => typeof call.expectedTime !== "undefined")
+				? positionIconDetails.ESTIMATED
+				: positionIconDetails.SCHEDULED;
+
 	return (
 		<div className="grid grid-cols-[3rem_1fr_3rem] gap-2 px-2 py-1">
 			<Button asChild size="xs" variant="ghost">
@@ -54,17 +80,15 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 			<span className="text-center">
 				{vehicleLink}– {recordedAt}
 			</span>
-			<LocateFixedIcon
-				className="h-5 w-5 ml-auto"
-				color={match(journey.position.type)
-					.with("GPS", () => "#00AA00")
-					.with("COMPUTED", () => {
-						const isRealtime = journey.calls?.some((call) => typeof call.expectedTime !== "undefined");
-						return isRealtime ? "#FF6600" : "#DD0000";
-					})
-					.exhaustive()}
-				size={20}
-			/>
+			<div className="flex justify-end">
+				<Tooltip
+					className={clsx("font-bold", positionInformation.tooltipClasses)}
+					content={positionInformation.tooltipText}
+					place="left"
+				>
+					<SatelliteDishIcon className="h-5 w-5" color={positionInformation.iconColor} size={20} />
+				</Tooltip>
+			</div>
 		</div>
 	);
 }
