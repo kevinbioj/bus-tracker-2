@@ -14,6 +14,7 @@ export type ImportGtfsOptions = {
 	filterTrips?: (trip: Trip) => boolean;
 	mapTripId?: (tripId: string) => string;
 	shapesStrategy?: LoadShapesStrategy;
+	ignoreBlocks?: boolean;
 };
 
 export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptions = {}) {

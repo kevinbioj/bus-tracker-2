@@ -19,6 +19,7 @@ const sources = [
 		gtfsOptions: {
 			filterTrips: (trip) => trip.route.type !== "BUS",
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
+			ignoreBlocks: true,
 		},
 		getAheadTime: () => 5 * 60,
 		mapTripUpdate: (tripUpdate) => {
@@ -39,6 +40,7 @@ const sources = [
 		excludeScheduled: true,
 		gtfsOptions: {
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
+			ignoreBlocks: true,
 		},
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
@@ -58,6 +60,7 @@ const sources = [
 		excludeScheduled: true,
 		gtfsOptions: {
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
+			ignoreBlocks: true,
 		},
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));

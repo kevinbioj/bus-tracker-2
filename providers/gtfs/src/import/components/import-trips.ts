@@ -22,7 +22,7 @@ type StopTimeRecord = CsvRecord<
 
 export async function importTrips(
 	gtfsDirectory: string,
-	{ filterTrips, mapTripId }: ImportGtfsOptions,
+	{ filterTrips, mapTripId, ignoreBlocks }: ImportGtfsOptions,
 	routes: Map<string, Route>,
 	services: Map<string, Service>,
 	shapes: Map<string, Shape>,
@@ -49,7 +49,7 @@ export async function importTrips(
 			[],
 			+tripRecord.direction_id as 0 | 1,
 			tripRecord.trip_headsign || undefined,
-			tripRecord.block_id || undefined,
+			typeof tripRecord.block_id !== "undefined" && !ignoreBlocks ? tripRecord.block_id : undefined,
 			typeof tripRecord.shape_id !== "undefined" ? shapes.get(tripRecord.shape_id) : undefined,
 		);
 
