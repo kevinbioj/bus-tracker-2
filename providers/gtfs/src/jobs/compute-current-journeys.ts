@@ -13,14 +13,14 @@ import { createStopWatch } from "../utils/stop-watch.js";
 const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journey: Journey) => number) => {
 	const aheadTime = getAheadTime?.(journey) ?? 0;
 
-	const firstCall = journey.calls.find((call) => call.status === "SCHEDULED");
+	const firstCall = journey.calls.at(0);
 	if (
 		typeof firstCall === "undefined" ||
 		at.epochSeconds + aheadTime < (firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime).epochSeconds
 	)
 		return;
 
-	const lastCall = journey.calls.findLast((call) => call.status === "SCHEDULED");
+	const lastCall = journey.calls.at(-1);
 	if (
 		typeof lastCall === "undefined" ||
 		at.epochSeconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochSeconds

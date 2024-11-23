@@ -20,6 +20,7 @@ const sources = [
 			filterTrips: (trip) => trip.route.type !== "BUS",
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
 		},
+		getAheadTime: () => 5 * 60,
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
 			return tripUpdate;
