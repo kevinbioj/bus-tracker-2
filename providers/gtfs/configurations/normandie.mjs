@@ -47,7 +47,6 @@ const sources = [
 		excludeScheduled: (trip) => !["12", "13", "21"].includes(trip.route.id),
 		getNetworkRef: () => "LIA",
 	},
-	//- Twisto
 	//- Cap Cotentin
 	{
 		id: "cap-cotentin",
@@ -61,7 +60,6 @@ const sources = [
 	{
 		id: "semo",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/98bbbf7c-10ff-48a0-afc2-c5f7b3dda5af",
-		gtfsOptions: { filterTrips: (trip) => trip.route.id.startsWith("S") },
 		getNetworkRef: () => "SEMO",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
@@ -95,22 +93,22 @@ const sources = [
 	{
 		id: "sngo",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/71bf48f1-178e-4ce3-ba9d-361cc5be76a7",
-		// realtimeResourceHrefs: [
-		//   "https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
-		//   "https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
-		// ],
+		realtimeResourceHrefs: [
+			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
+			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
+		],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "SNGO",
 	},
-	//- SNgo! (navette Giverny)
-	{
-		id: "sngo-giverny",
-		staticResourceHref: "https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs-rt"],
-		excludeScheduled: true,
-		getNetworkRef: () => "SNGO",
-		getVehicleRef: (vehicle) => vehicle.label ?? undefined,
-	},
+	//- SNgo! (navette Giverny) - OFF jusqu'au printemps
+	// {
+	// 	id: "sngo-giverny",
+	// 	staticResourceHref: "https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs/pub",
+	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs-rt"],
+	// 	excludeScheduled: true,
+	// 	getNetworkRef: () => "SNGO",
+	// 	getVehicleRef: (vehicle) => vehicle.label ?? undefined,
+	// },
 	//- Astrobus
 	{
 		id: "astrobus",
@@ -163,6 +161,17 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
 	},
+	//- Némus
+	{
+		id: "flers",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/388da89c-d15b-4496-810a-be250be9a26a",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/flers-nemus-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/flers-nemus-gtfs-rt-vehicle-position",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "NEMUS",
+	},
 	//- MOCA
 	{
 		id: "moca",
@@ -211,11 +220,71 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
+	//- Slambus
+	{
+		id: "slambus",
+		staticResourceHref: "https://exs.atm.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=SLAM",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "SLAMBUS",
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
+	},
+	//- Vikibus
+	{
+		id: "vikibus",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/b3e50a9c-bdca-42c5-b04b-aeba964b0df8",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/vikibus/vehicle-positions",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/vikibus/trip-updates",
+		],
+		getNetworkRef: () => "VIKIBUS",
+	},
+	//- Argentan Bus
+	{
+		id: "argentan-bus",
+		staticResourceHref: "https://transport.data.gouv.fr/datasets/argentanbus-argentan-intercom",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "ARGENTAN-BUS",
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
+	},
+	//- Cosibus
+	{
+		id: "cosibus",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/ff3d0940-f19a-4981-b4b1-6ddbc9c6018f",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "COSIBUS",
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
+	},
+	//- Amibus
+	{
+		id: "amibus",
+		staticResourceHref: "https://transport.data.gouv.fr/datasets/amibus-intercom-de-la-vire-au-noireau",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "AMIBUS-VIRE",
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
+	},
 	//- LeBus (Pont-Audemer)
 	{
 		id: "lebus",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/lebus.zip",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/e8fe8980-c502-466c-9054-ddb28d367e4f",
 		getNetworkRef: () => "LEBUS",
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
+	},
+	//- Bacs de Seine-Maritime
+	{
+		id: "bacs-76",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/fbbbec28-bcdb-4158-a868-6f0b388f3208",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "CG76",
 	},
 ];
 
