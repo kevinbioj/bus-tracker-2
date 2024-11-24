@@ -6,9 +6,7 @@ const sources = [
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/mamp?apiKey=60327e505a214c77303f52206f11483069257343",
 		realtimeResourceHrefs: [],
 		gtfsOptions: { filterTrips: (trip) => !trip.route.id.startsWith("TER") && !trip.route.id.startsWith("LER") },
-		mapLineRef: (lineRef) => lineRef.slice(4),
-		mapTripRef: (tripRef) => tripRef.slice(4),
-		getNetworkRef: (journey) => journey.trip.route.agency.id,
+		getNetworkRef: () => "LMM",
 	},
 	{
 		id: "avigon",
