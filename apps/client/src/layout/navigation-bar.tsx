@@ -17,6 +17,7 @@ export function NavigationBar() {
 			<h1 className="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
 				Bus Tracker
 			</h1>
+			<img src="/logo.svg" alt="Bus Tracker" className="lg:hidden" />
 			<nav className="flex flex-1 gap-3">
 				{links.map(({ href, label, isActive }) => (
 					<Button asChild key={href} variant={isActive(pathname) ? "on-branding-default" : "branding-ghost"}>
