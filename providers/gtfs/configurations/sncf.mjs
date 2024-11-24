@@ -42,6 +42,7 @@ const sources = [
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
 			ignoreBlocks: true,
 		},
+		getAheadTime: () => 20 * 60,
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
 			return tripUpdate;
@@ -62,6 +63,7 @@ const sources = [
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
 			ignoreBlocks: true,
 		},
+		getAheadTime: () => 20 * 60,
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
 			return tripUpdate;
