@@ -43,6 +43,16 @@ const sources = [
 		getNetworkRef: () => "LIGNES-AZUR",
 	},
 	{
+		id: "nimes",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/9f5fa77b-30b7-4520-a17c-db2122339612",
+		realtimeResourceHrefs: [
+			"https://transport.data.gouv.fr/resources/80732/download",
+			"https://transport.data.gouv.fr/resources/80731/download",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "TANGO",
+	},
+	{
 		id: "perpignan",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/2afffa1f-aa4a-4fe4-9802-4b5f82bb96c6",
 		realtimeResourceHrefs: [],
