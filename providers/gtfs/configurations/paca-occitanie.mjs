@@ -44,7 +44,11 @@ const sources = [
 	},
 	{
 		id: "nimes",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/9f5fa77b-30b7-4520-a17c-db2122339612",
+		staticResourceHref:
+			// > 25/11/2024
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/81686/81686.20241031.170758.236270.zip",
+		// 26/11/2024 >
+		// "https://www.data.gouv.fr/fr/datasets/r/9f5fa77b-30b7-4520-a17c-db2122339612"
 		realtimeResourceHrefs: [
 			"https://transport.data.gouv.fr/resources/80732/download",
 			"https://transport.data.gouv.fr/resources/80731/download",
