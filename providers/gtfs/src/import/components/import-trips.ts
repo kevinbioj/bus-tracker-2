@@ -49,7 +49,9 @@ export async function importTrips(
 			[],
 			+tripRecord.direction_id as 0 | 1,
 			tripRecord.trip_headsign || undefined,
-			typeof tripRecord.block_id !== "undefined" && !ignoreBlocks ? tripRecord.block_id : undefined,
+			typeof tripRecord.block_id !== "undefined" && tripRecord.block_id.length > 0 && !ignoreBlocks
+				? tripRecord.block_id
+				: undefined,
 			typeof tripRecord.shape_id !== "undefined" ? shapes.get(tripRecord.shape_id) : undefined,
 		);
 
