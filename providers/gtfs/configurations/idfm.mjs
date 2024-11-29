@@ -4,7 +4,7 @@ const sources = [
 		id: "idfm",
 		staticResourceHref:
 			"https://data.iledefrance-mobilites.fr/explore/dataset/offre-horaires-tc-gtfs-idfm/files/a925e164271e4bca93433756d6a340d1/download/",
-		gtfsOptions: { filterTrips: (trip) => trip.route.name !== "TER" },
+		gtfsOptions: { filterTrips: (trip) => trip.route.name !== "TER" && trip.route.type !== "BUS" },
 		getNetworkRef: () => "IDFM",
 	},
 ];
