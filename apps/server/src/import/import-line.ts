@@ -24,8 +24,8 @@ export async function importLine(network: Network, lineData: VehicleJourneyLine,
 					networkId: network.id,
 					references: [lineData.ref],
 					number: lineData.number,
-					color: lineData.color,
-					textColor: lineData.textColor,
+					color: lineData.color?.length === 6 ? lineData.color : undefined,
+					textColor: lineData.textColor?.length === 6 ? lineData.textColor : undefined,
 				})
 				.returning()
 		).at(0)!;
