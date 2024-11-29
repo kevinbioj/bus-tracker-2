@@ -58,7 +58,7 @@ const sources = [
 	{
 		id: "strasbourg",
 		staticResourceHref: "https://opendata.cts-strasbourg.eu/google_transit.zip",
-		realtimeResourceHrefs: [],
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/cts/trip-updates"],
 		getNetworkRef: () => "CTS",
 	},
 	{
