@@ -40,6 +40,7 @@ export const networks = pgTable("network", {
 	name: varchar("name").notNull(),
 	authority: varchar("authority"),
 	logoHref: varchar("logo_href"),
+	darkModeLogoHref: varchar("dark_mode_logo_href"),
 	color: char("color", { length: 6 }),
 	textColor: char("text_color", { length: 6 }),
 });

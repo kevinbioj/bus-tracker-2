@@ -71,7 +71,12 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 			<Button asChild size="xs" variant="ghost">
 				<Link target="_blank" to={`/data/networks/${network?.id}`}>
 					{network?.logoHref ? (
-						<img className="h-4 object-contain my-auto" src={network.logoHref} alt={network.name} />
+						<picture>
+							{network.darkModeLogoHref !== null ? (
+								<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+							) : null}
+							<img className="h-4 object-contain my-auto" src={network.logoHref} alt="" />
+						</picture>
 					) : (
 						<span>{network?.name}</span>
 					)}

@@ -6,6 +6,7 @@ export const network = z.object({
 	name: z.string(),
 	authority: z.string().nullable(),
 	logoHref: z.string().url().nullable(),
+	darkModeLogoHref: z.string().url().nullable(),
 	color: z.string().length(6).nullable(),
 	textColor: z.string().length(6).nullable(),
 });

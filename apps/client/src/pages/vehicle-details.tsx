@@ -25,7 +25,12 @@ export function VehicleDetails() {
 	return (
 		<main className="p-3 max-w-screen-lg w-full mx-auto">
 			{network.logoHref ? (
-				<img className="h-16 mx-auto" src={network.logoHref} alt="Logo" />
+				<picture>
+					{network.darkModeLogoHref !== null ? (
+						<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+					) : null}
+					<img className="h-16 mx-auto" src={network.logoHref} alt="" />
+				</picture>
 			) : (
 				<h2 className="font-bold text-3xl text-center">{network.name}</h2>
 			)}

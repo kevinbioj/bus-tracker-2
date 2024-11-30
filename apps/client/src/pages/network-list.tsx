@@ -28,7 +28,12 @@ export function NetworkList() {
 						{network.logoHref ? (
 							<>
 								<div className="h-full w-full lg:w-40">
-									<img className="h-full object-contain mx-auto" src={network.logoHref} alt="" />
+									<picture>
+										{network.darkModeLogoHref !== null ? (
+											<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+										) : null}
+										<img className="h-full object-contain mx-auto" src={network.logoHref} alt="" />
+									</picture>
 								</div>
 								<Separator className="mx-4 bg-foreground dark:bg-foreground hidden lg:block" orientation="vertical" />
 							</>

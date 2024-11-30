@@ -8,6 +8,7 @@ export type Network = {
 	name: string;
 	authority: string | null;
 	logoHref: string | null;
+	darkModeLogoHref: string | null;
 	color: string | null;
 	textColor: string | null;
 };
