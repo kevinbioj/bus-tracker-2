@@ -21,7 +21,7 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/star-rennes-integration-gtfs-rt-vehicle-position",
 		],
 		mode: "NO-TU",
-		excludeScheduled: true,
+		excludeScheduled: (trip) => trip.route.type !== "SUBWAY",
 		getNetworkRef: () => "STAR",
 	},
 ];
