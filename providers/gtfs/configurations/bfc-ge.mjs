@@ -40,12 +40,12 @@ const sources = [
 		excludeScheduled: true,
 		getNetworkRef: () => "LEMET",
 	},
-	{
-		id: "nancy",
-		staticResourceHref: "https://hstan.g-ny.eu/gtfs/gtfs_stan.zip",
-		realtimeResourceHrefs: [],
-		getNetworkRef: () => "STAN",
-	},
+	// {
+	// 	id: "nancy",
+	// 	staticResourceHref: "https://hstan.g-ny.eu/gtfs/gtfs_stan.zip",
+	// 	realtimeResourceHrefs: [],
+	// 	getNetworkRef: () => "STAN",
+	// },
 	{
 		id: "reims",
 		staticResourceHref:

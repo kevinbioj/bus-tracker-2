@@ -55,6 +55,7 @@ const sources = [
 		id: "angers-sub",
 		staticResourceHref: "https://pysae.com/api/v2/groups/irigo/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/irigo/gtfs-rt"],
+		mode: "NO-TU",
 		getNetworkRef: () => "IRIGO",
 		getVehicleRef: (descriptor) => descriptor?.label?.trim() || undefined,
 	},
@@ -67,8 +68,12 @@ const sources = [
 	{
 		id: "nantes",
 		staticResourceHref:
-			"https://data.nantesmetropole.fr/explore/dataset/244400404_tan-arrets-horaires-circuits/files/16a1a0af5946619af621baa4ad9ee662/download/",
-		realtimeResourceHrefs: [],
+			"https://data.nantesmetropole.fr/explore/dataset/244400404_transports_commun_naolib_nantes_metropole_gtfs/files/0cc0469a72de54ee045cb66d1a21de9e/download/",
+		realtimeResourceHrefs: [
+			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/trip-updates/NAOLIBORG",
+			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
+		],
+		excludeScheduled: true,
 		getNetworkRef: () => "NAOLIB",
 	},
 	{
@@ -111,6 +116,7 @@ const sources = [
 			"https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/trip-updates",
 			"https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/vehicle-positions",
 		],
+		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "FILBLEU",
 	},
