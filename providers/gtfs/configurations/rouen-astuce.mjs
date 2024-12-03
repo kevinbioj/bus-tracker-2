@@ -28,9 +28,9 @@ const sources = [
 	},
 	{
 		id: "tae",
-		staticResourceHref: "https://gtfs.tae76.fr/gtfs/feed.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/tae.zip",
 		realtimeResourceHrefs: ["https://gtfs.tae76.fr/gtfs-rt.bin"],
-		excludeScheduled: true,
+		excludeScheduled: (trip) => trip.route.name !== "I",
 		mapTripUpdate: (tripUpdate) => (tripUpdate.vehicle?.id ? tripUpdate : undefined),
 		getAheadTime: (journey) =>
 			journey?.calls.some((c) => !!(c.expectedArrivalTime ?? c.expectedDepartureTime)) ? 15 * 60 : 0,
