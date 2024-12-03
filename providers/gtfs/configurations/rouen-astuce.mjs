@@ -64,6 +64,7 @@ const sources = [
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey) => (["204", "214"].includes(journey?.trip.route.id) ? "TNI" : "HANGA"),
+		getDestination: (journey) => journey?.trip.stopTimes.at(-1).stop.name,
 	},
 ];
 
