@@ -1,31 +1,31 @@
 {
-	"name": "@bus-tracker/processor-twisto",
-	"version": "0.0.0",
-	"main": "dist/index.js",
-	"type": "module",
-	"private": true,
-	"scripts": {
-		"build": "tsc",
-		"dev": "tsx watch src/index.ts",
-		"start": "node --enable-source-maps --expose-gc .",
-		"test": "vitest --run .",
-		"test:watch": "vitest ."
-	},
-	"devDependencies": {
-		"@types/node": "^22.7.7",
-		"tsx": "^4.19.2",
-		"typescript": "^5.6.3"
-	},
-	"dependencies": {
-		"@bus-tracker/contracts": "workspace:*",
-		"@rgrove/parse-xml": "^4.2.0",
-		"croner": "^9.0.0",
-		"dotenv": "^16.4.5",
-		"draftlog": "^1.0.13",
-		"fast-xml-parser": "^4.5.0",
-		"gtfs-realtime-bindings": "^1.1.1",
-		"ky": "^1.7.2",
-		"redis": "^4.7.0",
-		"temporal-polyfill": "^0.2.5"
-	}
+  "name": "@bus-tracker/processor-twisto",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node --enable-source-maps --expose-gc .",
+    "test": "vitest --run .",
+    "test:watch": "vitest ."
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@bus-tracker/contracts": "workspace:*",
+    "@rgrove/parse-xml": "^4.2.0",
+    "croner": "^9.0.0",
+    "dotenv": "^16.4.7",
+    "draftlog": "^1.0.13",
+    "fast-xml-parser": "^4.5.0",
+    "gtfs-realtime-bindings": "^1.1.1",
+    "ky": "^1.7.2",
+    "redis": "^4.7.0",
+    "temporal-polyfill": "^0.2.5"
+  }
 }
