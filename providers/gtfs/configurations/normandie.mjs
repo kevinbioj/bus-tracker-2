@@ -97,6 +97,7 @@ const sources = [
 			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
+		mode: "NO-TU",
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "SNGO",
 	},

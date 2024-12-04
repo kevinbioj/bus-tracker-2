@@ -7,6 +7,7 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/divia-dijon-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/divia-dijon-gtfs-rt-vehicle-position",
 		],
+		mode: "NO-TU",
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: (trip) =>
 			![
