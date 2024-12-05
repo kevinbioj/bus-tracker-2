@@ -47,6 +47,15 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Vehicle
 		_popup.options.autoPan = false;
 	}, []);
 
+	const updatePopup = () => {
+		if (ref.current === null) return;
+
+		const popup = ref.current.getPopup();
+		if (popup) {
+			popup.update();
+		}
+	};
+
 	return (
 		<ReactMoveableCircleMarker
 			color={marker.color ?? "#FFFFFF"}
@@ -89,7 +98,7 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Vehicle
 			ref={ref}
 		>
 			<Popup autoClose autoPan={false} closeButton={false} closeOnClick={false}>
-				<VehicleMarkerPopup journeyId={marker.id} />
+				<VehicleMarkerPopup journeyId={marker.id} updatePopup={updatePopup} />
 			</Popup>
 		</ReactMoveableCircleMarker>
 	);

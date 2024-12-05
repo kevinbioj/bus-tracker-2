@@ -23,5 +23,6 @@ export const GetJourneyGirouetteQuery = (journey: DisposeableVehicleJourney, ena
 				.get(`girouettes?${params.toString()}`)
 				.then((response) => response.json<{ data: GirouetteData }[]>());
 		},
+		select: (girouettes) => girouettes.at(0),
 	});
 };

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useScreen } from "usehooks-ts";
 
 import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
@@ -11,23 +11,28 @@ import { useDomVisibility } from "~/hooks/use-dom-visibility";
 
 type VehicleDetailsProps = {
 	journeyId: string;
+	updatePopup: () => void;
 };
 
-export function VehicleMarkerPopup({ journeyId }: VehicleDetailsProps) {
+export function VehicleMarkerPopup({ journeyId, updatePopup }: VehicleDetailsProps) {
 	const popupRef = useRef(null);
 	const isPopupVisible = useDomVisibility(popupRef);
 
 	const { width } = useScreen();
+	const [popupWidth, setPopupWidth] = useState(Math.min(width - 50, 384));
 
 	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible));
 
-	const popupWidth = Math.min(width - 50, 384);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on popupWidth changes
+	useEffect(() => {
+		updatePopup();
+	}, [popupWidth, updatePopup]);
 
 	return (
 		<div ref={popupRef} style={{ width: popupWidth + 2 }}>
 			{typeof journey !== "undefined" ? (
 				<>
-					<VehicleGirouette journey={journey} visible={isPopupVisible} width={popupWidth} />
+					<VehicleGirouette journey={journey} visible={isPopupVisible} width={popupWidth} updateWidth={setPopupWidth} />
 					<VehicleInformation journey={journey} />
 					{typeof journey.calls !== "undefined" ? (
 						<VehicleNextStops calls={journey.calls} tooltipId={journey.id} />

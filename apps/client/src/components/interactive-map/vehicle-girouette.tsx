@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { GetJourneyGirouetteQuery } from "~/api/girouettes";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
@@ -9,18 +10,25 @@ type VehicleGirouetteProps = {
 	journey: DisposeableVehicleJourney;
 	visible: boolean;
 	width: number;
+	updateWidth: (width: number) => void;
 };
 
-export function VehicleGirouette({ journey, visible, width }: VehicleGirouetteProps) {
+export function VehicleGirouette({ journey, visible, width, updateWidth }: VehicleGirouetteProps) {
 	const line = useLine(journey.networkId, journey.lineId);
 	const { data: girouette } = useQuery(GetJourneyGirouetteQuery(journey, visible));
 
 	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName ?? "Destination inconnue";
 
+	useEffect(() => {
+		if (typeof girouette?.data.width !== "undefined") {
+			updateWidth(girouette.data.width);
+		}
+	}, [girouette, updateWidth]);
+
 	return (
 		<div className="border-[1px] border-neutral-800">
-			{girouette?.at(0) ? (
-				<Girouette ledColor="WHITE" width={width} {...girouette.at(0)!.data} />
+			{girouette ? (
+				<Girouette ledColor="WHITE" width={width} {...girouette.data} />
 			) : (
 				<Girouette
 					ledColor="WHITE"
