@@ -117,7 +117,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			const updatedAt = Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp);
 
 			if (typeof vehiclePosition.trip !== "undefined") {
-				const trip = source.gtfs.trips.get(vehiclePosition.trip.tripId);
+				const trip = getTripFromDescriptor(source.gtfs, vehiclePosition.trip);
 				if (typeof trip !== "undefined") {
 					const firstStopTime = trip.stopTimes.at(0)!;
 
