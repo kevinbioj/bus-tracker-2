@@ -74,6 +74,7 @@ const sources = [
 			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
 		],
 		getNetworkRef: () => "NAOLIB",
+		getVehicleRef: () => undefined,
 	},
 	{
 		id: "remi-28",
