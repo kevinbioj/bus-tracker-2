@@ -73,7 +73,6 @@ const sources = [
 			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/trip-updates/NAOLIBORG",
 			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
 		],
-		excludeScheduled: true,
 		getNetworkRef: () => "NAOLIB",
 	},
 	{
