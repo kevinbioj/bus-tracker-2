@@ -32,6 +32,12 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs.tae76.fr/gtfs-rt.bin"],
 		excludeScheduled: (trip) => trip.route.name !== "I",
 		mapTripUpdate: (tripUpdate) => (tripUpdate.vehicle?.id ? tripUpdate : undefined),
+		getDestination: (journey) =>
+			journey?.trip.stopTimes
+				.at(-1)
+				.stop.name.toUpperCase()
+				.normalize("NFD")
+				.replace(/\p{Diacritic}/gu, ""),
 		getAheadTime: (journey) =>
 			journey?.calls.some((c) => !!(c.expectedArrivalTime ?? c.expectedDepartureTime)) ? 15 * 60 : 0,
 		getNetworkRef: () => "ASTUCE",
