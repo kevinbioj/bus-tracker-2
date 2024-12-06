@@ -225,7 +225,10 @@ const sources = [
 	{
 		id: "slambus",
 		staticResourceHref: "https://exs.atm.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=SLAM",
-		realtimeResourceHrefs: [],
+		realtimeResourceHrefs: [
+		  "https://gtfs.bus-tracker.fr/gtfs-rt/slam/vehicle-positions",
+				"https://gtfs.bus-tracker.fr/gtfs-rt/slam/trip-updates",
+		],
 		getNetworkRef: () => "SLAMBUS",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
