@@ -249,7 +249,7 @@ const sources = [
 	//- Argentan Bus
 	{
 		id: "argentan-bus",
-		staticResourceHref: "https://transport.data.gouv.fr/datasets/argentanbus-argentan-intercom",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/bccfa3f2-ef45-4b9e-9586-7e117286bc60",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "ARGENTAN-BUS",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
@@ -269,7 +269,7 @@ const sources = [
 	//- Amibus
 	{
 		id: "amibus",
-		staticResourceHref: "https://transport.data.gouv.fr/datasets/amibus-intercom-de-la-vire-au-noireau",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/cdd4681c-dfcb-46c1-8802-2aae4f296618",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "AMIBUS-VIRE",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
