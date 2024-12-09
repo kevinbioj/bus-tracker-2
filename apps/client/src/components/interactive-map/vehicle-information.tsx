@@ -67,7 +67,7 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 				: positionIconDetails.SCHEDULED;
 
 	return (
-		<div className="grid grid-cols-[4rem_1fr_4rem] gap-2 px-2 py-1">
+		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] gap-2 px-2 py-1">
 			<Button asChild className="w-fit" size="xs" variant="ghost">
 				<Link target="_blank" to={`/data/networks/${network?.id}`}>
 					{network?.logoHref ? (
