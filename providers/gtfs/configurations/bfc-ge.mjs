@@ -39,6 +39,7 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/lemet-metz-gtfs-rt-vehicle-position",
 		],
 		excludeScheduled: true,
+		mode: "NO-TU",
 		getNetworkRef: () => "LEMET",
 	},
 	// {
