@@ -285,13 +285,6 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
 	},
-	//- Bacs de Seine-Maritime
-	{
-		id: "bacs-76",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/fbbbec28-bcdb-4158-a868-6f0b388f3208",
-		realtimeResourceHrefs: [],
-		getNetworkRef: () => "CG76",
-	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */

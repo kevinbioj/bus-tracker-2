@@ -10,11 +10,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "ALEOP",
-		getVehicleRef: (descriptor, journey) => {
-			const label = descriptor?.label;
-			if (label === journey?.trip.headsign) return;
-			return label;
-		},
+		getVehicleRef: (descriptor) => +descriptor?.label || undefined,
 		getDestination: (journey) => journey?.trip.headsign?.replace("→", ">"),
 	},
 	{
@@ -82,7 +78,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/eure-et-loir-mobilite/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "REMI",
-		getVehicleRef: (vehicle) => vehicle?.label,
+		getVehicleRef: (vehicle) => +vehicle?.label || undefined,
 	},
 	{
 		id: "remi-37",
@@ -90,7 +86,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-37/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "REMI",
-		getVehicleRef: (vehicle) => vehicle?.label,
+		getVehicleRef: (vehicle) => +vehicle?.label || undefined,
 	},
 	{
 		id: "remi-41",
@@ -98,7 +94,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-41/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "REMI",
-		getVehicleRef: (vehicle) => vehicle?.label,
+		getVehicleRef: (vehicle) => +vehicle?.label || undefined,
 	},
 	{
 		id: "remi-45",
@@ -106,7 +102,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-45/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "REMI",
-		getVehicleRef: (vehicle) => vehicle?.label,
+		getVehicleRef: (vehicle) => +vehicle?.label || undefined,
 	},
 	{
 		id: "tours",
