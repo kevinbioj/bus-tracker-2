@@ -15,6 +15,7 @@ const sources = [
 				}
 				return trip;
 			},
+			shapesStrategy: "IGNORE",
 		},
 		excludeScheduled: (trip) => !["06", "89", "99"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
