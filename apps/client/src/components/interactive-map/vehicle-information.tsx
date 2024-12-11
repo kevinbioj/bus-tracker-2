@@ -82,7 +82,7 @@ export function VehicleInformation({ journey }: VehicleInformationProps) {
 					)}
 				</Link>
 			</Button>
-			<span className="text-center">
+			<span className="my-auto text-center">
 				{vehicleLink}– {recordedAt}
 			</span>
 			<div className="flex justify-end">
