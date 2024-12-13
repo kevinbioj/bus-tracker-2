@@ -74,14 +74,14 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/region-sud-zou-proximite-gtfs-rt-trip-update",
 		],
 		getNetworkRef: () => "ZOU",
-		getVehicleRef: (descriptor) => +descriptor?.label ?? undefined,
+		getVehicleRef: (descriptor) => +descriptor?.label || undefined,
 	},
 	{
 		id: "zou-express",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3743/resource/5153/download/",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/region-sud-zou-express-gtfs-rt-trip-update"],
 		getNetworkRef: () => "ZOU",
-		getVehicleRef: (descriptor) => +descriptor?.label ?? undefined,
+		getVehicleRef: (descriptor) => +descriptor?.label || undefined,
 	},
 ];
 
