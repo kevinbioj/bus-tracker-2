@@ -39,7 +39,7 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Vehicle
 		}
 	}, [marker]);
 
-	const adjustPan = useCallback((ref: RefObject<MoveableCircleMarker>) => {
+	const adjustPan = useCallback((ref: RefObject<MoveableCircleMarker | null>) => {
 		if (ref.current === null) return;
 		const { _popup } = ref.current as unknown as { _popup: { options: { autoPan: boolean }; _adjustPan: () => void } };
 		_popup.options.autoPan = true;
