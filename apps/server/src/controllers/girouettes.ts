@@ -36,7 +36,7 @@ export const registerGirouetteRoutes = (hono: Hono) => {
 								arrayContains(girouettes.destinations, [destination]),
 								eq(sql`cardinality(${girouettes.destinations})`, 0),
 							)
-						: undefined,
+						: eq(sql`cardinality(${girouettes.destinations})`, 0),
 				),
 			);
 
