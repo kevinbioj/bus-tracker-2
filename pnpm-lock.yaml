@@ -114,6 +114,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.20
         version: 10.4.20(postcss@8.4.49)
+      babel-plugin-react-compiler:
+        specifier: 19.0.0-beta-37ed2a7-20241206
+        version: 19.0.0-beta-37ed2a7-20241206
       postcss:
         specifier: ^8.4.49
         version: 8.4.49
@@ -2748,6 +2751,9 @@ packages:
     resolution: {integrity: sha512-LiWSbl4CRSIa5x/JAU6jZiG9eit9w6mz+yVMFwDE83LAWvt0AfGBoZ7HS/mkhrKuh2ZlzfVZYKoLjXdqw6Yt7Q==}
     peerDependencies:
       '@babel/core': ^7.4.0 || ^8.0.0-0 <8.0.0
+
+  babel-plugin-react-compiler@19.0.0-beta-37ed2a7-20241206:
+    resolution: {integrity: sha512-nnkrHpeDKM8A5laq9tmFvvGbbDQ7laGfQLp50cvCkCXmWrPcZdCtaQpNh8UJS/yLREJnv2R4JDL5ADfxyAn+yQ==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -7247,6 +7253,10 @@ snapshots:
       '@babel/helper-define-polyfill-provider': 0.6.3(@babel/core@7.26.0)
     transitivePeerDependencies:
       - supports-color
+
+  babel-plugin-react-compiler@19.0.0-beta-37ed2a7-20241206:
+    dependencies:
+      '@babel/types': 7.26.0
 
   balanced-match@1.0.2: {}
 
