@@ -23,14 +23,14 @@ export function NetworkDetails() {
 
 	return (
 		<main className="p-3 max-w-screen-lg w-full mx-auto">
-			<div className="flex h-16 space-x-4">
+			<div className="flex h-16 space-x-4 w-full">
 				{network.logoHref ? (
 					<>
 						<picture className="mx-auto sm:mx-0">
 							{network.darkModeLogoHref !== null ? (
 								<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
 							) : null}
-							<img className="h-full mx-auto" src={network.logoHref} alt="" />
+							<img className="h-full w-full sm:w-60" src={network.logoHref} alt="" />
 						</picture>
 						<Separator className="hidden sm:block" orientation="vertical" />
 					</>
