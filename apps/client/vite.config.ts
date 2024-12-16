@@ -1,3 +1,4 @@
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -34,6 +35,10 @@ export default defineConfig({
 			},
 			registerType: "autoUpdate",
 		}),
+		sentryVitePlugin({
+			org: "bus-tracker",
+			project: "client",
+		}),
 	],
 	server: {
 		port: 3000,
@@ -44,5 +49,8 @@ export default defineConfig({
 				rewrite: (path) => path.replace(/^\/api/, ""),
 			},
 		},
+	},
+	build: {
+		sourcemap: true,
 	},
 });
