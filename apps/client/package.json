@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && NODE_ENV=production vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -30,6 +30,7 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-switch": "^1.1.2",
     "@react-leaflet/core": "^3.0.0",
+    "@sentry/react": "^8.45.1",
     "@tabler/icons-react": "^3.26.0",
     "@tanstack/react-query": "^5.62.7",
     "@tanstack/react-virtual": "^3.11.2",
