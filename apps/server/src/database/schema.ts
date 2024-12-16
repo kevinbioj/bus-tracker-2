@@ -8,7 +8,6 @@ import {
 	index,
 	integer,
 	json,
-	pgEnum,
 	pgTable,
 	serial,
 	smallint,

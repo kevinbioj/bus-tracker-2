@@ -16,7 +16,7 @@ type VehicleMarkerProps = {
 	marker: VehicleJourneyMarker;
 };
 
-export function VehicleMarker({ activeMarker, setActiveMarker, marker }: VehicleMarkerProps) {
+export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Readonly<VehicleMarkerProps>) {
 	const position = useMemo(() => {
 		const { latitude, longitude, type } = marker.position;
 		if (type === "GPS") return [latitude, longitude];

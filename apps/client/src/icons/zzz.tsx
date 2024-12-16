@@ -2,7 +2,7 @@ import type { ComponentPropsWithoutRef } from "react";
 
 type ZzzProps = Omit<ComponentPropsWithoutRef<"svg">, "xmlns" | "viewBox">;
 
-export function Zzz(props: ZzzProps) {
+export function Zzz(props: Readonly<ZzzProps>) {
 	return (
 		<svg
 			{...props}

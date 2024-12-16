@@ -1,4 +1,3 @@
-import type { StopTime } from "../model/stop-time.js";
 import type { Trip } from "../model/trip.js";
 
 import { importAgencies } from "./components/import-agencies.js";

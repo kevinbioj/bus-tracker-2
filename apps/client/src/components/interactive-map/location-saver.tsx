@@ -15,7 +15,9 @@ export function LocationSaver() {
 		};
 
 		map.addEventListener("moveend", onMoveEnd);
-		return () => void map.removeEventListener("moveend", onMoveEnd);
+		return () => {
+			map.removeEventListener("moveend", onMoveEnd);
+		};
 	}, [map, setLastLocation]);
 
 	return null;

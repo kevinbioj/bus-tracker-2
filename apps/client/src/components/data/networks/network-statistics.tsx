@@ -6,7 +6,7 @@ import { Card, CardContent, CardTitle } from "~/components/ui/card";
 
 type NetworkStatisticsProps = { networkId: number };
 
-export function NetworkStatistics({ networkId }: NetworkStatisticsProps) {
+export function NetworkStatistics({ networkId }: Readonly<NetworkStatisticsProps>) {
 	const { data: stats } = useSuspenseQuery(GetNetworkStatsQuery(networkId));
 
 	return (

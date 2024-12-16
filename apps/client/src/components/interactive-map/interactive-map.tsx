@@ -13,7 +13,7 @@ type InteractiveMapProps = {
 	defaultZoom: number;
 };
 
-export function InteractiveMap({ className, defaultCenter, defaultZoom }: InteractiveMapProps) {
+export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readonly<InteractiveMapProps>) {
 	const [activeMarker, setActiveMarker] = useState<string>();
 	const [lastLocation] = useLocalStorage<[number, number, number] | null>("last-location", null);
 	const [bypassMinZoom] = useLocalStorage("bypass-min-zoom", false);

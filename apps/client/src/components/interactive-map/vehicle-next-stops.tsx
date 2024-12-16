@@ -8,7 +8,7 @@ import { Tooltip } from "~/components/ui/tooltip";
 
 type NextStopsProps = { calls: VehicleJourneyCall[]; tooltipId?: string };
 
-export function VehicleNextStops({ calls }: NextStopsProps) {
+export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 	if (calls.length === 0) return null;
 	return (
 		<div className="px-2 -my-0.5">

@@ -33,7 +33,7 @@ type VehicleInformationProps = {
 	journey: DisposeableVehicleJourney;
 };
 
-export function VehicleInformation({ journey }: VehicleInformationProps) {
+export function VehicleInformation({ journey }: Readonly<VehicleInformationProps>) {
 	const [displayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
 
 	const { data: network } = useQuery(GetNetworkQuery(journey.networkId));

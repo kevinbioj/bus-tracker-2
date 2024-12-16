@@ -26,7 +26,12 @@ export function Tooltip({ children, content, place, spacing = 5, ...tooltipProps
 
 	const { className, style, ...props } = tooltipProps;
 	return (
-		<div className="relative inline-block" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+		<div
+			className="relative inline-block"
+			onMouseEnter={() => setOpen(true)}
+			onMouseLeave={() => setOpen(false)}
+			role="tooltip"
+		>
 			{children}
 			<span
 				className={twMerge(

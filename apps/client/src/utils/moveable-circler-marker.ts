@@ -1,6 +1,5 @@
 import { type EventedProps, createLayerComponent } from "@react-leaflet/core";
-import { CircleMarker, type CircleMarkerOptions, Util } from "leaflet";
-import type { LatLngExpression } from "leaflet";
+import { CircleMarker, type CircleMarkerOptions, type LatLngExpression, Util } from "leaflet";
 import type { ReactNode } from "react";
 
 export type MoveableCircleMarkerProps = CircleMarkerOptions &
@@ -40,8 +39,7 @@ export class MoveableCircleMarker extends CircleMarker {
 		this._slideFromLatLng = this.getLatLng();
 		this._slideToLatLng = latlng;
 		this._slideKeepAtCenter = !!options.keepAtCenter;
-		this._slideDraggingWasAllowed =
-			this._slideDraggingWasAllowed !== undefined ? this._slideDraggingWasAllowed : this._map.dragging.enabled();
+		this._slideDraggingWasAllowed = this._slideDraggingWasAllowed ?? this._map.dragging.enabled();
 
 		if (this._slideKeepAtCenter) {
 			this._map.dragging.disable();

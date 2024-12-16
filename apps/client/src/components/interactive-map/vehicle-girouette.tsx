@@ -13,7 +13,7 @@ type VehicleGirouetteProps = {
 	updateWidth: (width: number) => void;
 };
 
-export function VehicleGirouette({ journey, visible, width, updateWidth }: VehicleGirouetteProps) {
+export function VehicleGirouette({ journey, visible, width, updateWidth }: Readonly<VehicleGirouetteProps>) {
 	const line = useLine(journey.networkId, journey.lineId);
 	const { data: girouette } = useQuery(GetJourneyGirouetteQuery(journey, visible));
 

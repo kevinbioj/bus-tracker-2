@@ -9,7 +9,7 @@ type VehiclesTableProps = {
 	data: Vehicle[];
 };
 
-export function VehiclesTable({ data }: VehiclesTableProps) {
+export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 	const parentRef = useRef(null);
 
 	const isDesktop = useMediaQuery("(min-width: 640px)");
@@ -29,7 +29,7 @@ export function VehiclesTable({ data }: VehiclesTableProps) {
 		<div className="h-[calc(100dvh-270px)] overflow-auto" ref={parentRef}>
 			<div className="w-full relative" style={{ height: `${virtualizer.getTotalSize()}px` }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
-					const vehicle = data[virtualItem.index]!;
+					const vehicle = data[virtualItem.index];
 					return (
 						<div
 							className="absolute py-2 top-0 left-0 w-full"

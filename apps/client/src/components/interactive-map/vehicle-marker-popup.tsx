@@ -14,7 +14,7 @@ type VehicleDetailsProps = {
 	updatePopup: () => void;
 };
 
-export function VehicleMarkerPopup({ journeyId, updatePopup }: VehicleDetailsProps) {
+export function VehicleMarkerPopup({ journeyId, updatePopup }: Readonly<VehicleDetailsProps>) {
 	const popupRef = useRef(null);
 	const isPopupVisible = useDomVisibility(popupRef);
 

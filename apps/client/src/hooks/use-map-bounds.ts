@@ -30,7 +30,9 @@ export function useMapBounds() {
 		};
 
 		map.addEventListener("moveend", onMoveEnd);
-		return () => void map.removeEventListener("moveend", onMoveEnd);
+		return () => {
+			map.removeEventListener("moveend", onMoveEnd);
+		};
 	}, [map]);
 
 	return bounds;

@@ -81,7 +81,7 @@ export function Girouette({
 	routeNumber = { text: "" },
 	width,
 	...props
-}: GirouetteProps) {
+}: Readonly<GirouetteProps>) {
 	return (
 		<div
 			className={clsx("flex border-white", className)}
@@ -107,7 +107,7 @@ type RouteNumberProps = {
 	width: number;
 };
 
-function RouteNumber({ dimensions, ledColor, routeNumber, width }: RouteNumberProps) {
+function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<RouteNumberProps>) {
 	if (typeof routeNumber === "undefined") return null;
 	const fontFamily = routeNumber.font ?? "1513B3E1";
 	const height = (dimensions.height * width) / (dimensions.rnWidth + dimensions.destinationWidth);
@@ -160,7 +160,7 @@ type PagesProps = {
 	width: number;
 };
 
-function Pages({ dimensions, ledColor, pages, width }: PagesProps) {
+function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 	const [currentPageIndex, setCurrentPageIndex] = useState(0);
 	useEffect(() => {
 		const nextPage = () => {

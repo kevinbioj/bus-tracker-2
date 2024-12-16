@@ -7,7 +7,7 @@ import type { Vehicle } from "~/api/vehicles";
 import { useLine } from "~/hooks/use-line";
 import { Zzz } from "~/icons/zzz";
 
-export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
+export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 
 	return (

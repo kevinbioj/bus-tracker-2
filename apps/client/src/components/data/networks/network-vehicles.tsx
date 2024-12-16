@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~
 
 type NetworkVehiclesProps = { networkId: number };
 
-export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
+export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 	const { data: vehicles } = useSuspenseQuery(GetVehiclesQuery(networkId));
 
 	const [searchParams, setSearchParams] = useSearchParams("");
