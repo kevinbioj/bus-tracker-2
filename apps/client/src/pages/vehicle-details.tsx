@@ -34,7 +34,7 @@ export function VehicleDetails() {
 			) : (
 				<h2 className="font-bold text-3xl text-center">{network.name}</h2>
 			)}
-			<Breadcrumb className="mt-2">
+			<Breadcrumb className="mt-3">
 				<BreadcrumbList>
 					<BreadcrumbItem>
 						<BreadcrumbLink asChild>

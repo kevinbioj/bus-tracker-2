@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
 
 import { GetVehiclesQuery } from "~/api/vehicles";
-import { VehicleCard } from "~/components/data/networks/vehicle-card";
+import { VehiclesTable } from "~/components/data/networks/vehicles-table";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
@@ -20,7 +20,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	const filter = searchParams.get("filter") ?? "";
 	const sort = searchParams.get("sort") ?? "number";
 
-	const [debouncedFilter] = useDebounceValue(() => filter, 1_000);
+	const [debouncedFilter] = useDebounceValue(() => filter, 250);
 
 	const filteredAndSortedVehicles = useMemo(() => {
 		const pattern = new RegExp(debouncedFilter.replaceAll("_", "\\d"));
@@ -46,19 +46,16 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 	return (
 		<section className="py-2">
-			<h3 className="inline-flex gap-2 text-lg">
-				<LucideBus /> Véhicules
-			</h3>
 			{vehicles.length > 0 ? (
 				<>
 					<div className="flex justify-between gap-3 py-2">
-						<div className="flex flex-col gap-1">
+						<div className="flex flex-col gap-1 w-full max-w-72">
 							<Label className="inline-flex items-center gap-1" htmlFor="filter">
 								<FilterIcon size={16} /> Filtrer
 							</Label>
 							<Input
 								className="h-10"
-								placeholder="Numéro, désignation, etc."
+								placeholder="par numéro ou désignation..."
 								value={searchParams.get("filter") ?? ""}
 								onChange={(e) => setSearchParams({ filter: e.target.value, sort })}
 							/>
@@ -76,17 +73,13 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value="number">Numéro</SelectItem>
-									<SelectItem value="line">Ligne</SelectItem>
+									{/* <SelectItem value="line">Ligne</SelectItem> */}
 									<SelectItem value="activity">Activité</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 					</div>
-					<div className="flex flex-col gap-2">
-						{filteredAndSortedVehicles.map((vehicle) => (
-							<VehicleCard key={vehicle.id} vehicle={vehicle} />
-						))}
-					</div>
+					<VehiclesTable data={filteredAndSortedVehicles} />
 				</>
 			) : (
 				<p className="text-center text-muted-foreground">Aucun véhicule n'est disponible pour ce réseau.</p>

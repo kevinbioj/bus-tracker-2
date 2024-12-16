@@ -10,9 +10,9 @@ export function NetworkList() {
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
 	return (
-		<main className="mt-3 p-3 max-w-screen-lg w-full mx-auto">
-			<h2 className="font-bold text-2xl">Données statistiques</h2>
-			<p className="text-muted-foreground">Sélectionnez un réseau de transport pour continuer.</p>
+		<main className="p-3 max-w-screen-lg w-full mx-auto">
+			<h2 className="font-bold text-2xl">Données historisées</h2>
+			<p className="text-muted-foreground">Sélectionnez un réseau pour continuer.</p>
 			<Separator />
 			<div className="mt-3 flex flex-col gap-3">
 				{networks.map((network) => (

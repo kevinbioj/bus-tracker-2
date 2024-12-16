@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { BusFront, ShipIcon, TramFront } from "lucide-react";
 import { Link } from "react-router-dom";
 import { P, match } from "ts-pattern";
+
 import type { Vehicle } from "~/api/vehicles";
 import { useLine } from "~/hooks/use-line";
 import { Zzz } from "~/icons/zzz";

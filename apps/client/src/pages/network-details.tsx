@@ -2,7 +2,6 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 
 import { GetNetworkQuery } from "~/api/networks";
-import { NetworkStatistics } from "~/components/data/networks/network-statistics";
 import { NetworkVehicles } from "~/components/data/networks/network-vehicles";
 import {
 	Breadcrumb,
@@ -24,17 +23,24 @@ export function NetworkDetails() {
 
 	return (
 		<main className="p-3 max-w-screen-lg w-full mx-auto">
-			{network.logoHref ? (
-				<picture>
-					{network.darkModeLogoHref !== null ? (
-						<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-					) : null}
-					<img className="h-16 mx-auto" src={network.logoHref} alt="" />
-				</picture>
-			) : (
-				<h2 className="font-bold text-3xl text-center">{network.name}</h2>
-			)}
-			<Breadcrumb className="mt-2">
+			<div className="flex h-16 space-x-4">
+				{network.logoHref ? (
+					<>
+						<picture className="mx-auto sm:mx-0">
+							{network.darkModeLogoHref !== null ? (
+								<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+							) : null}
+							<img className="h-full mx-auto" src={network.logoHref} alt="" />
+						</picture>
+						<Separator className="hidden sm:block" orientation="vertical" />
+					</>
+				) : null}
+				<div className="flex-col my-auto hidden sm:flex">
+					<h1 className="font-bold text-3xl">{network.name}</h1>
+					{network.authority ? <span>{network.authority}</span> : null}
+				</div>
+			</div>
+			<Breadcrumb className="mt-3">
 				<BreadcrumbList>
 					<BreadcrumbItem>
 						<BreadcrumbLink asChild>
@@ -48,7 +54,7 @@ export function NetworkDetails() {
 				</BreadcrumbList>
 			</Breadcrumb>
 			<Separator className="my-1" />
-			<NetworkStatistics networkId={network.id} />
+			{/* <NetworkStatistics networkId={network.id} /> */}
 			<NetworkVehicles networkId={network.id} />
 		</main>
 	);
