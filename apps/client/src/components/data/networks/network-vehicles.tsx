@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import clsx from "clsx";
 import { FilterIcon, SortAscIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -9,6 +10,7 @@ import { VehiclesTable } from "~/components/data/networks/vehicles-table";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Separator } from "~/components/ui/separator";
 
 type NetworkVehiclesProps = { networkId: number };
 
@@ -43,6 +45,11 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 				return +a.number - +b.number;
 			});
 	}, [debouncedFilter, searchParams, vehicles]);
+
+	const onlineVehicles = useMemo(
+		() => filteredAndSortedVehicles.filter(({ activity }) => typeof activity.lineId !== "undefined"),
+		[filteredAndSortedVehicles],
+	);
 
 	return (
 		<section className="py-2">
@@ -79,6 +86,26 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 							</Select>
 						</div>
 					</div>
+					<Separator />
+					<p
+						className={clsx(
+							"text-muted-foreground mt-2",
+							filteredAndSortedVehicles.length > 0 ? "text-end" : "text-center",
+						)}
+					>
+						{filteredAndSortedVehicles.length > 0 ? (
+							onlineVehicles.length > 0 ? (
+								<>
+									{onlineVehicles.length}/{filteredAndSortedVehicles.length} véhicule
+									{filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation.
+								</>
+							) : (
+								<>Aucun véhicule sur {filteredAndSortedVehicles.length} en circulation.</>
+							)
+						) : (
+							<>Aucun véhicule n'existe avec ces critères de recherche.</>
+						)}
+					</p>
 					<VehiclesTable data={filteredAndSortedVehicles} />
 				</>
 			) : (

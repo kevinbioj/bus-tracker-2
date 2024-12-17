@@ -25,6 +25,11 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 		virtualizer.measure();
 	}, [isDesktop, virtualizer]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we reset position when data changes
+	useEffect(() => {
+		virtualizer.scrollToIndex(0, { behavior: "smooth" });
+	}, [data]);
+
 	return (
 		<div className="h-[calc(100dvh-270px)] overflow-auto" ref={parentRef}>
 			<div className="w-full relative" style={{ height: `${virtualizer.getTotalSize()}px` }}>
