@@ -31,7 +31,7 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 	}, [data]);
 
 	return (
-		<div className="h-[calc(100dvh-270px)] overflow-auto" ref={parentRef}>
+		<div className="h-[calc(100dvh-314px)] overflow-auto" ref={parentRef}>
 			<div className="w-full relative" style={{ height: `${virtualizer.getTotalSize()}px` }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
 					const vehicle = data[virtualItem.index];
