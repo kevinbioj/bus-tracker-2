@@ -77,7 +77,8 @@ const sources = [
 	//- DeepMob
 	{
 		id: "deepmob",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/62248658-0eba-4f4e-b367-aaea635ecd38",
+		staticResourceHref:
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/80680/80680.20231227.130734.249189.zip",
 		realtimeResourceHrefs: [
 			"https://tud.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 			"https://tud.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
