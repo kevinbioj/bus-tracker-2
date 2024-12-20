@@ -22,6 +22,13 @@
       "when": 1732998881195,
       "tag": "0002_fuzzy_kate_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1734728530427,
+      "tag": "0003_workable_zodiak",
+      "breakpoints": true
     }
   ]
 }

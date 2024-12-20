@@ -1,0 +1,1 @@
+ALTER TABLE "network" ADD COLUMN "timezone" varchar DEFAULT 'Europe/Paris' NOT NULL;

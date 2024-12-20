@@ -38,6 +38,7 @@ export const networks = pgTable("network", {
 	ref: varchar("ref").notNull().unique(),
 	name: varchar("name").notNull(),
 	authority: varchar("authority"),
+	timezone: varchar("timezone").notNull().default("Europe/Paris"),
 	logoHref: varchar("logo_href"),
 	darkModeLogoHref: varchar("dark_mode_logo_href"),
 	color: char("color", { length: 6 }),

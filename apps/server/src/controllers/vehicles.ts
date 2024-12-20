@@ -5,7 +5,7 @@ import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
 import { database } from "../database/database.js";
-import { lineActivities, vehicles } from "../database/schema.js";
+import { lineActivities, networks, vehicles } from "../database/schema.js";
 import { paginationSchema } from "../helpers/pagination-schema.js";
 import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
 
@@ -93,43 +93,42 @@ export const registerVehicleRoutes = (hono: Hono) => {
 		return c.json(vehicleWithActivityList);
 	});
 
-	hono.get(
-		"/vehicles/:id",
-		validator("param", (values, c) => {
-			const parsed = getVehicleByIdParamSchema.safeParse(values);
-			if (!parsed.success) return c.json({ error: "Invalid request" }, 400);
-			return parsed.data;
-		}),
-		async (c) => {
-			const { id } = c.req.valid("param");
+	hono.get("/vehicles/:id", createParamValidator(getVehicleByIdParamSchema), async (c) => {
+		const { id } = c.req.valid("param");
 
-			const [vehicle] = await database.select().from(vehicles).where(eq(vehicles.id, id));
-			if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+		const [data] = await database
+			.select()
+			.from(vehicles)
+			.innerJoin(networks, (network) => eq(network.id, vehicles.networkId))
+			.where(eq(vehicles.id, id));
+		if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
-			const currentActivity = (
-				await database
-					.select({ vehicleId: vehicles.id, lineId: lineActivities.lineId, since: lineActivities.startedAt })
-					.from(vehicles)
-					.where(
-						and(
-							eq(vehicles.id, vehicle.id),
-							lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivities.updatedAt}))`, 600),
-						),
-					)
-					.innerJoin(lineActivities, eq(vehicles.id, lineActivities.vehicleId))
-					.orderBy(desc(lineActivities.startedAt))
-			).at(0);
+		const { vehicle, network } = data;
 
-			return c.json({
-				...vehicle,
-				activity: {
-					status: currentActivity ? "online" : "offline",
-					since: currentActivity ? currentActivity.since : vehicle.lastSeenAt,
-					lineId: currentActivity?.lineId,
-				},
-			});
-		},
-	);
+		const currentActivity = (
+			await database
+				.select({ vehicleId: vehicles.id, lineId: lineActivities.lineId, since: lineActivities.startedAt })
+				.from(vehicles)
+				.where(
+					and(
+						eq(vehicles.id, vehicle.id),
+						lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivities.updatedAt}))`, 600),
+					),
+				)
+				.innerJoin(lineActivities, eq(vehicles.id, lineActivities.vehicleId))
+				.orderBy(desc(lineActivities.startedAt))
+		).at(0);
+
+		return c.json({
+			...vehicle,
+			activity: {
+				status: currentActivity ? "online" : "offline",
+				since:
+					(currentActivity ? currentActivity.since : vehicle.lastSeenAt)?.toZonedDateTimeISO(network.timezone) ?? null,
+				lineId: currentActivity?.lineId,
+			},
+		});
+	});
 
 	hono.get(
 		"/vehicles/:id/activities",
@@ -139,8 +138,14 @@ export const registerVehicleRoutes = (hono: Hono) => {
 			const { id } = c.req.valid("param");
 			const { month } = c.req.valid("query");
 
-			const [vehicle] = await database.select().from(vehicles).where(eq(vehicles.id, id));
-			if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+			const [data] = await database
+				.select()
+				.from(vehicles)
+				.innerJoin(networks, (network) => eq(network.id, vehicles.networkId))
+				.where(eq(vehicles.id, id));
+			if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+
+			const { vehicle, network } = data;
 
 			const lineActivityList = await database
 				.select()
@@ -164,12 +169,12 @@ export const registerVehicleRoutes = (hono: Hono) => {
 						lineActivitiesByDay.get(date.toString())?.map((lineActivity) => ({
 							type: "LINE_ACTIVITY" as const,
 							lineId: lineActivity.lineId,
-							startedAt: lineActivity.startedAt,
-							updatedAt: lineActivity.updatedAt,
+							startedAt: Temporal.Instant.from(lineActivity.startedAt).toZonedDateTimeISO(network.timezone),
+							updatedAt: Temporal.Instant.from(lineActivity.updatedAt).toZonedDateTimeISO(network.timezone),
 						})) ?? [];
 
 					const activities = [...lineActivitiesThatDay].sort((a, b) =>
-						Temporal.Instant.compare(b.startedAt, a.startedAt),
+						Temporal.ZonedDateTime.compare(b.startedAt, a.startedAt),
 					);
 					return { date, activities };
 				}),
