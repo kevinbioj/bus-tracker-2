@@ -99,7 +99,7 @@ export const registerVehicleRoutes = (hono: Hono) => {
 		const [data] = await database
 			.select()
 			.from(vehicles)
-			.innerJoin(networks, (network) => eq(network.id, vehicles.networkId))
+			.innerJoin(networks, eq(networks.id, vehicles.networkId))
 			.where(eq(vehicles.id, id));
 		if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
@@ -141,7 +141,7 @@ export const registerVehicleRoutes = (hono: Hono) => {
 			const [data] = await database
 				.select()
 				.from(vehicles)
-				.innerJoin(networks, (network) => eq(network.id, vehicles.networkId))
+				.innerJoin(networks, eq(networks.id, vehicles.networkId))
 				.where(eq(vehicles.id, id));
 			if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
