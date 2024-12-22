@@ -9,15 +9,9 @@ const sources = [
 		],
 		mode: "NO-TU",
 		gtfsOptions: {
-			filterTrips: (trip) => {
-				if (trip.id === "99") {
-					trip.block = "CALYPSO";
-				}
-				return trip;
-			},
 			shapesStrategy: "IGNORE",
 		},
-		excludeScheduled: (trip) => !["06", "89", "99"].includes(trip.route.id),
+		excludeScheduled: (trip) => !["06", "89", "98"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (journey?.trip.route.id === "06" || journey?.trip.route.id === "89") return "TNI";
