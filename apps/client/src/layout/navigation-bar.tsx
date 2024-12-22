@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 
 import { About } from "~/components/about/about";
+import { Help } from "~/components/help/help";
 import { Settings } from "~/components/settings/settings";
 import { Button } from "~/components/ui/button";
 
@@ -13,19 +14,26 @@ export function NavigationBar() {
 	const { pathname } = useLocation();
 
 	return (
-		<header className="bg-branding text-branding-foreground flex gap-5 h-[60px] p-3">
+		<header className="bg-branding text-branding-foreground flex gap-4 h-[60px] p-3">
+			<img className="h-full" src="/logo.svg" alt="" />
 			<span className="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
 				Bus Tracker
 			</span>
-			<nav className="flex flex-1 gap-3">
+			<nav className="flex flex-1 gap-1 sm:gap-3">
 				{links.map(({ href, label, isActive }) => (
-					<Button asChild key={href} variant={isActive(pathname) ? "on-branding-default" : "branding-ghost"}>
+					<Button
+						asChild
+						key={href}
+						variant={isActive(pathname) ? "on-branding-default" : "branding-ghost"}
+						className="px-3"
+					>
 						<Link to={href}>{label}</Link>
 					</Button>
 				))}
 			</nav>
-			<div className="space-x-2">
+			<div className="space-x-1 sm:space-x-2">
 				<Settings />
+				<Help />
 				<About />
 			</div>
 		</header>

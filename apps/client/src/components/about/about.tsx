@@ -1,9 +1,9 @@
 import dayjs from "dayjs";
 import { LucideInfo } from "lucide-react";
-import { Link } from "react-router-dom";
 
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
+import { Link } from "~/components/ui/link";
 import { Separator } from "~/components/ui/separator";
 
 const buildHash = import.meta.env.VITE_BUILD_HASH ?? "dev";
@@ -25,14 +25,19 @@ export function About() {
 				<p>
 					Build <code>{buildHash}</code> du {builtAt.format("LLLL")}.
 				</p>
-				<Separator />
 				<p>
 					Un bug ? Une suggestion ? Une remarque ou une question ?<br />
-					Envoyez-moi un e-mail à{" "}
-					<Link className="transition-colors hover:text-foreground/70" to="mailto:contact@bus-tracker.fr">
-						contact@bus-tracker.fr
+					Envoyez-moi un e-mail à <Link to="mailto:contact@bus-tracker.fr">contact@bus-tracker.fr</Link> 😉
+				</p>
+				<Separator />
+				<p className="text-center">
+					<Link to="https://kevinbioj.fr" target="_blank">
+						kevinbioj.fr <span className="text-xs">(un jour peut-être)</span>
 					</Link>{" "}
-					😉
+					•{" "}
+					<Link to="https://github.com/kevinbioj/bus-tracker-2" target="_blank">
+						GitHub
+					</Link>
 				</p>
 			</DialogContent>
 		</Dialog>
