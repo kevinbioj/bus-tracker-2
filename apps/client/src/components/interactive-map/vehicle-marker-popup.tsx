@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import type { LatLngExpression } from "leaflet";
 import { LoaderCircleIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useScreen } from "usehooks-ts";
@@ -11,22 +12,28 @@ import { useDomVisibility } from "~/hooks/use-dom-visibility";
 
 type VehicleDetailsProps = {
 	journeyId: string;
+	position: LatLngExpression;
 	updatePopup: () => void;
 };
 
-export function VehicleMarkerPopup({ journeyId, updatePopup }: Readonly<VehicleDetailsProps>) {
+export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonly<VehicleDetailsProps>) {
 	const popupRef = useRef(null);
 	const isPopupVisible = useDomVisibility(popupRef);
 
 	const { width } = useScreen();
 	const [popupWidth, setPopupWidth] = useState(Math.min(width - 50, 384));
 
-	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible));
+	const { data: journey, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible));
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on popupWidth changes
 	useEffect(() => {
 		updatePopup();
 	}, [popupWidth, updatePopup]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on position changes
+	useEffect(() => {
+		refetch();
+	}, [position]);
 
 	return (
 		<div ref={popupRef} style={{ width: popupWidth + 2 }}>

@@ -98,7 +98,7 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Readonl
 			ref={ref}
 		>
 			<Popup autoClose autoPan={false} closeButton={false} closeOnClick={false}>
-				<VehicleMarkerPopup journeyId={marker.id} updatePopup={updatePopup} />
+				<VehicleMarkerPopup journeyId={marker.id} position={position} updatePopup={updatePopup} />
 			</Popup>
 		</ReactMoveableCircleMarker>
 	);
