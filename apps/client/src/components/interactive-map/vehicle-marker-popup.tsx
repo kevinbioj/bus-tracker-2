@@ -27,12 +27,16 @@ export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonl
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on popupWidth changes
 	useEffect(() => {
-		updatePopup();
+		if (isPopupVisible) {
+			updatePopup();
+		}
 	}, [popupWidth, updatePopup]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on position changes
 	useEffect(() => {
-		refetch();
+		if (isPopupVisible) {
+			refetch();
+		}
 	}, [position]);
 
 	return (
