@@ -1,6 +1,6 @@
 import { LucideCircleHelp, SatelliteDishIcon } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import { Link } from "~/components/ui/link";
@@ -28,6 +28,21 @@ const qanda = [
 	{
 		question: "Pourquoi mon réseau n'apparait-il pas ?",
 		answer: <p>Si vous pensez que votre réseau de transport mérite sa place, faites-le moi savoir par e-mail 😉</p>,
+	},
+	{
+		question: "Qui suis-je ?",
+		answer: (
+			<>
+				<p>Kevin, 22 ans et développeur junior dans la vraie vie 😉</p>
+				<p>
+					Passez par mon{" "}
+					<Link to="https://twitter.com/Keke27210" target="_blank">
+						Twitter
+					</Link>{" "}
+					pour me contacter !
+				</p>
+			</>
+		),
 	},
 ] as const;
 

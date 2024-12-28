@@ -1,4 +1,5 @@
 import { LucideSettings } from "lucide-react";
+import { BypassMinZoomSetting } from "~/components/settings/bypass-min-zoom";
 
 import { DisplayNextCallsSetting } from "~/components/settings/display-next-calls";
 import { GeolocateOnStartSetting } from "~/components/settings/geolocate-on-start";
@@ -22,6 +23,7 @@ export function Settings() {
 					<GeolocateOnStartSetting />
 					<DisplayNextCallsSetting />
 					<DisplayAbsoluteTimeSetting />
+					<BypassMinZoomSetting />
 				</div>
 			</DialogContent>
 		</Dialog>

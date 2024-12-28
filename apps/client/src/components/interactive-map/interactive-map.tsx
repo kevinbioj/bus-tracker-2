@@ -1,5 +1,5 @@
 import type { LatLngExpression, Map as MapInstance } from "leaflet";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -13,14 +13,25 @@ type InteractiveMapProps = {
 	defaultZoom: number;
 };
 
+type MapElement = {
+	target: MapInstance;
+};
+
 export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readonly<InteractiveMapProps>) {
 	const [activeMarker, setActiveMarker] = useState<string>();
 	const [lastLocation] = useLocalStorage<[number, number, number] | null>("last-location", null);
 	const [bypassMinZoom] = useLocalStorage("bypass-min-zoom", false);
 
-	const mapRef = useCallback((map: MapInstance | null) => {
+	const mapRef = useRef<MapInstance>(null);
+
+	useEffect(() => {
+		const map = mapRef.current;
 		if (map === null) return;
 
+		map.setMinZoom(bypassMinZoom ? 0 : 9);
+	}, [bypassMinZoom]);
+
+	const whenMapReady = ({ target: map }: MapElement) => {
 		map.addEventListener("click", () => {
 			setActiveMarker(undefined);
 			map.closePopup();
@@ -29,7 +40,7 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readon
 		map.addEventListener("popupclose", () => {
 			setActiveMarker(undefined);
 		});
-	}, []);
+	};
 
 	return (
 		<MapContainer
@@ -39,6 +50,8 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readon
 			ref={mapRef}
 			zoom={lastLocation?.[2] ?? defaultZoom}
 			minZoom={bypassMinZoom ? undefined : 9}
+			// @ts-expect-error react-leaflet typings are broken
+			whenReady={whenMapReady}
 		>
 			<TileLayer
 				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
