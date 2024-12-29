@@ -15,7 +15,7 @@ export function Settings() {
 					<LucideSettings aria-label="Paramètres" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent aria-describedby={undefined}>
 				<DialogHeader>
 					<DialogTitle>Paramètres de l'application</DialogTitle>
 				</DialogHeader>

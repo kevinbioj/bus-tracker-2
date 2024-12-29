@@ -54,7 +54,7 @@ export function Help() {
 					<LucideCircleHelp aria-label="Questions fréquentes" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent aria-describedby={undefined}>
 				<DialogHeader>
 					<DialogTitle>Questions fréquentes</DialogTitle>
 				</DialogHeader>

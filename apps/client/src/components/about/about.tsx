@@ -18,7 +18,7 @@ export function About() {
 					<LucideInfo aria-label="À propos" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent aria-describedby={undefined}>
 				<DialogHeader>
 					<DialogTitle>À propos de Bus Tracker</DialogTitle>
 				</DialogHeader>
