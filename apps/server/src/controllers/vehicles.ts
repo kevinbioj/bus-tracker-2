@@ -184,7 +184,7 @@ export const registerVehicleRoutes = (hono: Hono) => {
 						})) ?? [];
 
 					const activities = [...lineActivitiesThatDay].sort((a, b) =>
-						Temporal.ZonedDateTime.compare(b.startedAt, a.startedAt),
+						Temporal.Instant.compare(b.startedAt, a.startedAt),
 					);
 					return { date, activities };
 				}),
