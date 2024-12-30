@@ -175,8 +175,12 @@ export const registerVehicleRoutes = (hono: Hono) => {
 						lineActivitiesByDay.get(date.toString())?.map((lineActivity) => ({
 							type: "LINE_ACTIVITY" as const,
 							lineId: lineActivity.lineId,
-							startedAt: Temporal.Instant.from(lineActivity.startedAt).toZonedDateTimeISO(network.timezone),
-							updatedAt: Temporal.Instant.from(lineActivity.updatedAt).toZonedDateTimeISO(network.timezone),
+							startedAt: Temporal.Instant.from(lineActivity.startedAt)
+								.toZonedDateTimeISO(network.timezone)
+								.toString({ timeZoneName: "never" }),
+							updatedAt: Temporal.Instant.from(lineActivity.updatedAt)
+								.toZonedDateTimeISO(network.timezone)
+								.toString({ timeZoneName: "never" }),
 						})) ?? [];
 
 					const activities = [...lineActivitiesThatDay].sort((a, b) =>
