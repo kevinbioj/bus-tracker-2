@@ -16,7 +16,27 @@ export type Vehicle = {
 	activity: VehicleActivity;
 };
 
+export type VehicleWithActiveMonths = Vehicle & {
+	activeMonths: string[];
+};
+
 export type VehicleActivity = { status: "online" | "offline"; since: string; lineId?: number };
+
+export type VehicleTimeline = {
+	timeline: VehicleTimelineDay[];
+};
+
+export type VehicleTimelineDay = {
+	date: string;
+	activities: VehicleTimelineDayActivity[];
+};
+
+export type VehicleTimelineDayActivity = {
+	type: "LINE_ACTIVITY";
+	lineId: number;
+	startedAt: string;
+	updatedAt: string;
+};
 
 export const GetVehiclesQuery = (networkId: number) =>
 	queryOptions({
@@ -33,5 +53,17 @@ export const GetVehiclesQuery = (networkId: number) =>
 export const GetVehicleQuery = (vehicleId: number) =>
 	queryOptions({
 		queryKey: ["vehicles", vehicleId],
-		queryFn: () => client.get(`vehicles/${vehicleId}`).then((response) => response.json<Vehicle>()),
+		queryFn: () => client.get(`vehicles/${vehicleId}`).then((response) => response.json<VehicleWithActiveMonths>()),
+	});
+
+export const GetVehicleActivitiesQuery = (vehicleId: number, month?: string) =>
+	queryOptions({
+		queryKey: ["vehicles", vehicleId, "activities", month],
+		queryFn: () => {
+			const params = new URLSearchParams();
+			if (month) params.append("month", month);
+			return client
+				.get(`vehicles/${vehicleId}/activities?${params.toString()}`)
+				.then((response) => response.json<VehicleTimeline>());
+		},
 	});

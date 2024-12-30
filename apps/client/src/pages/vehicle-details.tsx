@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
+import { NetworkHeader } from "~/components/data/network-header";
+import { VehicleActivities } from "~/components/data/vehicles/vehicle-activities";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -24,16 +26,7 @@ export function VehicleDetails() {
 
 	return (
 		<main className="p-3 max-w-screen-lg w-full mx-auto">
-			{network.logoHref ? (
-				<picture>
-					{network.darkModeLogoHref !== null ? (
-						<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-					) : null}
-					<img className="h-16 mx-auto" src={network.logoHref} alt="" />
-				</picture>
-			) : (
-				<h2 className="font-bold text-3xl text-center">{network.name}</h2>
-			)}
+			<NetworkHeader network={network} />
 			<Breadcrumb className="mt-3">
 				<BreadcrumbList>
 					<BreadcrumbItem>
@@ -56,6 +49,7 @@ export function VehicleDetails() {
 				</BreadcrumbList>
 			</Breadcrumb>
 			<Separator className="my-1" />
+			<VehicleActivities vehicleId={vehicle.id} />
 		</main>
 	);
 }
