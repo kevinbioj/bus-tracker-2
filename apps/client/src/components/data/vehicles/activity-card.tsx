@@ -18,12 +18,15 @@ export function ActivityCard({ activity }: { activity: VehicleTimelineDayActivit
 			}}
 		>
 			{line?.cartridgeHref ? (
-				<img className="mx-auto" alt={line.number} src={line.cartridgeHref} height={48} />
+				<img className="h-12 mx-auto" alt={line.number} src={line.cartridgeHref} />
 			) : (
 				<p className="font-bold my-auto pt-[1px] text-2xl text-center w-12">{line?.number}</p>
 			)}
-			<div className="border-l-[1px] mx-2" style={{ borderColor: line?.color ? `#${line.color}` : undefined }} />
-			<p className="my-auto text-2xl">
+			<div
+				className="border-l-[1px] mx-2"
+				style={{ borderColor: line?.textColor ? `#${line.textColor}` : undefined }}
+			/>
+			<p className="flex-1 my-auto text-2xl">
 				{ongoing ? (
 					<>
 						depuis <span className="font-bold tabular-nums">{dayjs(activity.startedAt).format("HH:mm")}</span>
