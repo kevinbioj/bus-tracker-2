@@ -5,7 +5,7 @@ import { database } from "../database/database.js";
 import { lineActivities, vehicles } from "../database/schema.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 
-const ACTIVITY_THRESHOLD_MNS = 10;
+const ACTIVITY_THRESHOLD_MNS = 90;
 
 export async function registerActivity(vehicleJourney: DisposeableVehicleJourney) {
 	if (typeof vehicleJourney.lineId === "undefined" || typeof vehicleJourney.vehicle?.id === "undefined") return;
