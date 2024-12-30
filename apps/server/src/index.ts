@@ -10,6 +10,7 @@ import { cors } from "hono/cors";
 import { createClient } from "redis";
 
 import { registerGirouetteRoutes } from "./controllers/girouettes.js";
+import { registerLineRoutes } from "./controllers/lines.js";
 import { registerNetworkRoutes } from "./controllers/networks.js";
 import { registerVehicleJourneyRoutes } from "./controllers/vehicle-journeys.js";
 import { registerVehicleRoutes } from "./controllers/vehicles.js";
@@ -64,6 +65,7 @@ console.log("► Listening on port %d.\n", port);
 export const hono = new Hono();
 hono.use(compress());
 hono.use(cors({ origin: "*" }));
+registerLineRoutes(hono);
 registerNetworkRoutes(hono, journeyStore);
 registerVehicleRoutes(hono);
 registerVehicleJourneyRoutes(hono, journeyStore);
