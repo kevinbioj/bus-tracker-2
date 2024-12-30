@@ -119,6 +119,11 @@ export const registerVehicleRoutes = (hono: Hono) => {
 				.orderBy(desc(lineActivities.startedAt))
 		).at(0);
 
+		const activeMonths = await database
+			.select({ month: sql<string>`DISTINCT TO_CHAR(started_at, 'YYYY-MM')` })
+			.from(lineActivities)
+			.where(eq(lineActivities.vehicleId, vehicle.id));
+
 		return c.json({
 			...vehicle,
 			activity: {
@@ -127,6 +132,7 @@ export const registerVehicleRoutes = (hono: Hono) => {
 					(currentActivity ? currentActivity.since : vehicle.lastSeenAt)?.toZonedDateTimeISO(network.timezone) ?? null,
 				lineId: currentActivity?.lineId,
 			},
+			activeMonths: activeMonths.map(({ month }) => month),
 		});
 	});
 
