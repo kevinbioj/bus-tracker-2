@@ -20,7 +20,7 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 		estimateSize: useCallback(() => (isDesktop ? 64 : 105), [isDesktop]),
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: should be obvious
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we force component height to be recomputed on viewport dimensions changes.
 	useEffect(() => {
 		virtualizer.measure();
 	}, [isDesktop, virtualizer]);
@@ -31,7 +31,7 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 	}, [data]);
 
 	return (
-		<div className="h-[calc(100dvh-314px)] overflow-auto" ref={parentRef}>
+		<div className="h-[calc(100dvh-298px)] overflow-auto" ref={parentRef}>
 			<div className="w-full relative" style={{ height: `${virtualizer.getTotalSize()}px` }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
 					const vehicle = data[virtualItem.index];

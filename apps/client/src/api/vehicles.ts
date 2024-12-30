@@ -17,7 +17,6 @@ export type Vehicle = {
 };
 
 export type VehicleActivity = { status: "online" | "offline"; since: string; lineId?: number };
-// export type VehicleActivity = { since: string } & ({ status: "online"; lineId: number } | { status: "offline" });
 
 export const GetVehiclesQuery = (networkId: number) =>
 	queryOptions({
@@ -28,6 +27,7 @@ export const GetVehiclesQuery = (networkId: number) =>
 			return client.get(`vehicles?${params}`).then((response) => response.json<Vehicle[]>());
 		},
 		select: (data) => data.sort((a, b) => +a.number - +b.number),
+		refetchOnWindowFocus: false,
 	});
 
 export const GetVehicleQuery = (vehicleId: number) =>

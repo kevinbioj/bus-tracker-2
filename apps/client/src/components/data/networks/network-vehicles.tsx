@@ -22,7 +22,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 	const filter = searchParams.get("filter") ?? "";
 	const sort = searchParams.get("sort") ?? "number";
 
-	const [debouncedFilter] = useDebounceValue(() => filter, 250);
+	const [debouncedFilter] = useDebounceValue(() => filter, 100);
 
 	const filteredAndSortedVehicles = useMemo(() => {
 		const pattern = new RegExp(debouncedFilter.replaceAll("_", "\\d"));
@@ -52,7 +52,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 	);
 
 	return (
-		<section className="py-2">
+		<section>
 			{vehicles.length > 0 ? (
 				<>
 					<div className="flex justify-between gap-3 py-2">
