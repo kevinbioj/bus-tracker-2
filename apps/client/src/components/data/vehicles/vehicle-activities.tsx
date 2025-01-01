@@ -1,4 +1,4 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -7,9 +7,9 @@ import { GetVehicleActivitiesQuery, GetVehicleQuery } from "~/api/vehicles";
 import { ActivityCard } from "~/components/data/vehicles/activity-card";
 import { Link } from "~/components/ui/link";
 
-const parseMonth = (input: string | null) => {
-	const month = dayjs(input, "YYYY-MM");
-	return (month.isValid() ? month : dayjs()).format("YYYY-MM");
+const parseMonth = (input: string | null, validMonths: string[]) => {
+	if (input === null || !validMonths.includes(input)) return validMonths.at(-1) ?? dayjs().format("YYYY-MM");
+	return input;
 };
 
 type VehicleActivitiesProps = {
@@ -19,20 +19,20 @@ type VehicleActivitiesProps = {
 export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 	const [searchParams] = useSearchParams();
 
-	const month = parseMonth(searchParams.get("month"));
-
 	const { data: vehicle } = useSuspenseQuery(GetVehicleQuery(vehicleId));
-	const { data: activities } = useQuery(GetVehicleActivitiesQuery(vehicle.id, month));
 
+	const month = parseMonth(searchParams.get("month"), vehicle.activeMonths);
 	const currentMonthIndex = vehicle.activeMonths.indexOf(month);
+
+	const { data: activities } = useSuspenseQuery(GetVehicleActivitiesQuery(vehicle.id, month));
 
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<>
 			<section>
-				<div className="bg-brand grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md">
+				<div className="bg-branding text-branding-foreground grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md">
 					{currentMonthIndex > 0 ? (
 						<Link
-							className="hover:brightness-75 hover:transition"
+							className="transition-opacity hover:opacity-70"
 							to={`?month=${vehicle.activeMonths.at(currentMonthIndex - 1)}`}
 						>
 							<ChevronLeft className="mx-auto" color="white" width={32} height={32} strokeWidth={2.5} />
@@ -40,12 +40,10 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					) : (
 						<div />
 					)}
-					<p className="font-bold my-auto select-none text-2xl text-center text-white">
-						{dayjs(month).format("MMMM YYYY")}
-					</p>
+					<p className="font-bold my-auto text-2xl text-center">{dayjs(month).format("MMMM YYYY")}</p>
 					{currentMonthIndex < vehicle.activeMonths.length - 1 ? (
 						<Link
-							className="hover:brightness-75 hover:transition"
+							className="transition-opacity hover:opacity-70"
 							to={`?month=${vehicle.activeMonths.at(currentMonthIndex + 1)}`}
 						>
 							<ChevronRight className="mx-auto" color="white" width={32} height={32} strokeWidth={2.5} />
