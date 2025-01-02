@@ -188,15 +188,13 @@ const sources = [
 	//- Hobus
 	{
 		id: "hobus",
-		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=hobus",
-		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=hobus"],
+		staticResourceHref: "https://pysae.com/api/v2/groups/hobus/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/hobus/gtfs-rt"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "HOBUS",
-		getVehicleRef: () => undefined,
-		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
-		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+		getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
 	},
 	//- Bybus
 	{
