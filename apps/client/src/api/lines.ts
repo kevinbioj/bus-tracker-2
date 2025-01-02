@@ -15,6 +15,7 @@ export type Line = {
 
 export const GetLineQuery = (lineId: number) =>
 	queryOptions({
+		staleTime: 600_000,
 		queryKey: ["lines", lineId],
 		queryFn: () => client.get(`lines/${lineId}`).then((response) => response.json<Line>()),
 	});
