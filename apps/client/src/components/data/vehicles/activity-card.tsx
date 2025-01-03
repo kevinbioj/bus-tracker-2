@@ -4,7 +4,9 @@ import dayjs from "dayjs";
 import { GetLineQuery } from "~/api/lines";
 import type { VehicleTimelineDayActivity } from "~/api/vehicles";
 
-export function ActivityCard({ activity }: { activity: VehicleTimelineDayActivity }) {
+type ActivityCardProps = { activity: VehicleTimelineDayActivity };
+
+export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
 	const { data: line } = useQuery(GetLineQuery(activity.lineId));
 
 	const ongoing = dayjs().diff(activity.updatedAt, "minutes") < 10;

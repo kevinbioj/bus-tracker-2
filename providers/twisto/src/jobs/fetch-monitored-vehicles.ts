@@ -70,8 +70,8 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 				: [vehiclesDelivery.VehicleActivity]
 	) as SiriVehicleActivity[];
 
-	const processableVehicles = vehicles
-		.sort((a, b) =>
+	const processeableVehicles = vehicles
+		.toSorted((a, b) =>
 			Temporal.ZonedDateTime.compare(
 				fixTimestamp(a.MonitoredVehicleJourney.OriginAimedDepartureTime),
 				fixTimestamp(b.MonitoredVehicleJourney.OriginAimedDepartureTime),
@@ -85,7 +85,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 
 	const vehicleJourneys: VehicleJourney[] = [];
 
-	for (const vehicle of processableVehicles) {
+	for (const vehicle of processeableVehicles) {
 		const recordedAt = Temporal.ZonedDateTime.from(fixTimestamp(vehicle.RecordedAtTime));
 		const vehicleRef = vehicle.VehicleMonitoringRef.split(":")[3]?.replace("Keolis_", "");
 

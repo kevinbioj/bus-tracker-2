@@ -5,7 +5,7 @@ type NetworkHeaderProps = {
 	network: Network;
 };
 
-export function NetworkHeader({ network }: NetworkHeaderProps) {
+export function NetworkHeader({ network }: Readonly<NetworkHeaderProps>) {
 	return (
 		<div className="flex h-16 space-x-4 w-full">
 			{network.logoHref ? (

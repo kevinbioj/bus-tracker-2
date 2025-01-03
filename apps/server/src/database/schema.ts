@@ -135,14 +135,6 @@ export const lineActivities = pgTable(
 
 export type LineActivity = InferSelectModel<typeof lineActivities>;
 
-// export const currentVehicleActivities = pgView("current_vehicle_activity").as((qb) =>
-// 	qb
-// 		.select({ vehicleId: vehicles.id, lineId: lineActivities.lineId, since: lineActivities.startedAt })
-// 		.from(lineActivities)
-// 		// .where(lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivities.updatedAt}))`, 600_000))
-// 		.rightJoin(vehicles, eq(vehicles.id, lineActivities.vehicleId)),
-// );
-
 export const mercatoActivity = pgTable(
 	"mercato_activity",
 	{

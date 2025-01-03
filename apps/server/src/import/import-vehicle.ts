@@ -11,17 +11,8 @@ export async function importVehicle(network: Network, vehicleRef: string, type?:
 	let [vehicle] = await database
 		.select()
 		.from(vehicles)
-		.where(
-			// operator
-			// 	? and(
-			// 			eq(vehicles.networkId, network.id),
-			// 			eq(vehicles.operatorId, operator.id),
-			// 			eq(vehicles.ref, vehicleRef),
-			// 			isNull(vehicles.archivedAt),
-			// 		)
-			// 	:
-			and(eq(vehicles.networkId, network.id), eq(vehicles.ref, vehicleRef), isNull(vehicles.archivedAt)),
-		);
+		.where(and(eq(vehicles.networkId, network.id), eq(vehicles.ref, vehicleRef), isNull(vehicles.archivedAt)));
+
 	if (typeof vehicle === "undefined") {
 		vehicle = (
 			await database

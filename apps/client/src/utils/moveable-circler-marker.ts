@@ -60,7 +60,7 @@ export class MoveableCircleMarker extends CircleMarker {
 		Util.cancelAnimFrame(this._slideFrame);
 	}
 
-	private _slideTo = () => {
+	private readonly _slideTo = () => {
 		if (!this._map) return;
 
 		const remaining = this._slideToUntil - performance.now();

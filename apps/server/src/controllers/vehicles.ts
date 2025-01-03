@@ -1,6 +1,5 @@
 import { and, asc, desc, eq, ilike, lt, sql } from "drizzle-orm";
 import type { Hono } from "hono";
-import { validator } from "hono/validator";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
