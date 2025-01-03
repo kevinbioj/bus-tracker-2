@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { BusFront, ShipIcon, TramFront } from "lucide-react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { P, match } from "ts-pattern";
 
@@ -9,6 +10,15 @@ import { Zzz } from "~/icons/zzz";
 
 export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
+
+	const activeLine = useMemo(() => {
+		if (typeof line === "undefined") return <Zzz className="h-full mx-auto" />;
+		return line.cartridgeHref ? (
+			<img className="h-full mx-auto object-contain" src={line.cartridgeHref} alt={line.number} />
+		) : (
+			<p className="flex items-center justify-center h-full font-bold text-2xl">{line.number}</p>
+		);
+	}, [line]);
 
 	return (
 		<Link
@@ -51,17 +61,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 				style={{ borderColor: line?.textColor ?? undefined }}
 			/>
 			<div className="flex gap-2 flex-1 mt-2 mx-2 sm:mt-0 sm:mx-0">
-				<div className="h-12 w-16">
-					{line ? (
-						line.cartridgeHref ? (
-							<img className="h-full mx-auto object-contain" src={line.cartridgeHref} alt={line.number} />
-						) : (
-							<p className="flex items-center justify-center h-full font-bold text-2xl">{line.number}</p>
-						)
-					) : (
-						<Zzz className="h-full mx-auto" />
-					)}
-				</div>
+				<div className="h-12 w-16">{activeLine}</div>
 				<div className="flex flex-col justify-center">
 					{vehicle.designation && <p className="font-bold">{vehicle.designation}</p>}
 					{vehicle.activity?.status === "online" ? (

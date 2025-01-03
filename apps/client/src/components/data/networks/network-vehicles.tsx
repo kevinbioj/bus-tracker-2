@@ -51,6 +51,12 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 		[filteredAndSortedVehicles],
 	);
 
+	const activeVehiclesLabel = useMemo(() => {
+		if (filteredAndSortedVehicles.length === 0) return "Aucun véhicule n'existe avec ces critères de recherche.";
+		if (onlineVehicles.length === 0) return `Aucun véhicule sur ${filteredAndSortedVehicles.length} en circulation.`;
+		return `${onlineVehicles.length}/${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation.`;
+	}, [filteredAndSortedVehicles, onlineVehicles]);
+
 	return (
 		<section>
 			{vehicles.length > 0 ? (
@@ -93,18 +99,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 							filteredAndSortedVehicles.length > 0 ? "text-end" : "text-center",
 						)}
 					>
-						{filteredAndSortedVehicles.length > 0 ? (
-							onlineVehicles.length > 0 ? (
-								<>
-									{onlineVehicles.length}/{filteredAndSortedVehicles.length} véhicule
-									{filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation.
-								</>
-							) : (
-								<>Aucun véhicule sur {filteredAndSortedVehicles.length} en circulation.</>
-							)
-						) : (
-							<>Aucun véhicule n'existe avec ces critères de recherche.</>
-						)}
+						{activeVehiclesLabel}
 					</p>
 					<VehiclesTable data={filteredAndSortedVehicles} />
 				</>

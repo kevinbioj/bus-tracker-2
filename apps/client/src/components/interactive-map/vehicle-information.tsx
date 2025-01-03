@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import { SatelliteDishIcon } from "lucide-react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -59,12 +60,12 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 		<>{vehicleNumber} </>
 	);
 
-	const positionInformation =
-		journey.position.type === "GPS"
-			? positionIconDetails.GPS
-			: journey.calls?.some((call) => typeof call.expectedTime !== "undefined")
-				? positionIconDetails.ESTIMATED
-				: positionIconDetails.SCHEDULED;
+	const positionInformation = useMemo(() => {
+		if (journey.position.type === "GPS") return positionIconDetails.GPS;
+		return journey.calls?.some((call) => typeof call.expectedTime !== "undefined")
+			? positionIconDetails.ESTIMATED
+			: positionIconDetails.SCHEDULED;
+	}, [journey]);
 
 	return (
 		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] gap-2 px-2 py-1">

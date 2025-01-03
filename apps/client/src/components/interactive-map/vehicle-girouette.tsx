@@ -6,6 +6,14 @@ import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Girouette } from "~/components/interactive-map/girouette";
 import { useLine } from "~/hooks/use-line";
 
+const guessFont = (text: string) => {
+	if (text.length <= "KKKKKKKKKKKKKKKKK".length) return "1508SUPX";
+	if (text.length <= "FFFFFFFFFFFFFFFFFFFF".length) return "1507SUPX";
+	return "1407SUPX";
+};
+
+const shouldScroll = (text: string) => text.length >= "FFFFFFFFFFFFFFFFFFFFFFF".length;
+
 type VehicleGirouetteProps = {
 	journey: DisposeableVehicleJourney;
 	visible: boolean;
@@ -37,8 +45,7 @@ export function VehicleGirouette({ journey, visible, width, updateWidth }: Reado
 							? {
 									backgroundColor: line.color ?? undefined,
 									textColor: line.textColor ?? undefined,
-									outlineColor:
-										line.textColor !== null ? (line.textColor === "#FFFFFF" ? "#000000" : "#FFFFFF") : undefined,
+									outlineColor: line.textColor === "#FFFFFF" ? "#000000" : "#FFFFFF",
 									font: line.number.length <= 3 ? "1508SUPX" : "1407SUPX",
 									scroll: line.number.length >= "KKKKK".length,
 									spacing: line.number.length >= 4 ? 0 : 1,
@@ -48,13 +55,8 @@ export function VehicleGirouette({ journey, visible, width, updateWidth }: Reado
 					}
 					pages={[
 						{
-							font:
-								destination.length <= "KKKKKKKKKKKKKKKKK".length
-									? "1508SUPX"
-									: destination.length <= "FFFFFFFFFFFFFFFFFFFF".length
-										? "1507SUPX"
-										: "1407SUPX",
-							scroll: destination.length >= "FFFFFFFFFFFFFFFFFFFFFFF".length,
+							font: guessFont(destination),
+							scroll: shouldScroll(destination),
 							text: destination,
 						},
 					]}
