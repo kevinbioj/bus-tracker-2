@@ -26,7 +26,11 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/tae.zip",
 		realtimeResourceHrefs: ["https://gtfs.tae76.fr/gtfs-rt.bin"],
 		excludeScheduled: (trip) => trip.route.name !== "I",
-		mapTripUpdate: (tripUpdate) => (tripUpdate.vehicle?.id ? tripUpdate : undefined),
+		mapTripUpdate: (tripUpdate) => {
+			if (typeof tripUpdate.vehicle?.id === "undefined") return;
+			if (tripUpdate.stopTimeUpdate?.some(({ arrival }) => arrival?.delay > 5400)) return;
+			return tripUpdate;
+		},
 		getDestination: (journey) =>
 			journey?.trip.stopTimes
 				.at(-1)
