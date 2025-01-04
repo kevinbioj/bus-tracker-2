@@ -1,6 +1,9 @@
+import "@maplibre/maplibre-gl-leaflet";
+
 import type { LatLngExpression, Map as MapInstance } from "leaflet";
+import * as L from "leaflet";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer } from "react-leaflet";
 import { useLocalStorage } from "usehooks-ts";
 
 import { LocateControl } from "~/components/interactive-map/locate-control";
@@ -40,6 +43,10 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readon
 		map.addEventListener("popupclose", () => {
 			setActiveMarker(undefined);
 		});
+
+		L.maplibreGL({
+			style: "https://tiles.openfreemap.org/styles/liberty",
+		}).addTo(map);
 	};
 
 	return (
@@ -53,10 +60,6 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readon
 			// @ts-expect-error react-leaflet typings are broken
 			whenReady={whenMapReady}
 		>
-			<TileLayer
-				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-				url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-			/>
 			<LocationSaver />
 			<Suspense>
 				<VehicleMarkers activeMarker={activeMarker} setActiveMarker={setActiveMarker} />
