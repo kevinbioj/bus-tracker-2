@@ -6,8 +6,6 @@ import { type Network, vehicles } from "../database/schema.js";
 import { nthIndexOf } from "../utils/nth-index-of.js";
 
 export async function importVehicle(network: Network, vehicleRef: string, type?: VehicleJourneyLineType) {
-	// const operator = operatorRef ? await importOperator(networkRef, operatorRef) : undefined;
-
 	let [vehicle] = await database
 		.select()
 		.from(vehicles)
