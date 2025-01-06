@@ -12,7 +12,7 @@
     "test:watch": "vitest ."
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
+    "@types/node": "^22.10.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
@@ -22,9 +22,9 @@
     "croner": "^9.0.0",
     "dotenv": "^16.4.7",
     "draftlog": "^1.0.13",
-    "fast-xml-parser": "^4.5.0",
+    "fast-xml-parser": "^4.5.1",
     "gtfs-realtime-bindings": "^1.1.1",
-    "ky": "^1.7.2",
+    "ky": "^1.7.4",
     "redis": "^4.7.0",
     "temporal-polyfill": "^0.2.5"
   }

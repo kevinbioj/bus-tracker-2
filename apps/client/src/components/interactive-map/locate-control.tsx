@@ -1,5 +1,4 @@
-// @ts-expect-error Because @types/leaflet.locatecontrol is off
-import { locate } from "leaflet.locatecontrol";
+import { LocateControl as LeafletLocateControl } from "leaflet.locatecontrol";
 import "leaflet.locatecontrol/dist/L.Control.Locate.min.css";
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
@@ -10,10 +9,10 @@ export function LocateControl() {
 	const [geolocateOnStart] = useLocalStorage("geolocate-on-start", false);
 
 	useEffect(() => {
-		const locateInstance: L.Control.Locate = locate({
+		const locateInstance = new LeafletLocateControl({
 			showPopup: false,
 			strings: { title: "Me géolocaliser" },
-			locateOptions: { maxZoom: 13 },
+			locateOptions: { initialZoomLevel: 13 },
 		}).addTo(map);
 
 		if (geolocateOnStart) {

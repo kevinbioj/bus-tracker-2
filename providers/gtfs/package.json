@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@types/decompress": "^4.2.7",
-    "@types/node": "^22.10.1",
+    "@types/node": "^22.10.5",
     "@types/papaparse": "^5.3.15",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
@@ -26,8 +26,8 @@
     "dotenv": "^16.4.7",
     "draftlog": "^1.0.13",
     "gtfs-realtime-bindings": "^1.1.1",
-    "ky": "^1.7.2",
-    "p-limit": "^6.1.0",
+    "ky": "^1.7.4",
+    "p-limit": "^6.2.0",
     "papaparse": "^5.4.1",
     "redis": "^4.7.0",
     "temporal-polyfill": "^0.2.5"
