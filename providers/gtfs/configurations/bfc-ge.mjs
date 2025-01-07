@@ -30,6 +30,8 @@ const sources = [
 				"4-75",
 			].includes(trip.route),
 		getNetworkRef: () => "DIVIA",
+		getDestination: (journey) =>
+			journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name ?? journey?.trip.headsign,
 	},
 	{
 		id: "metz",
