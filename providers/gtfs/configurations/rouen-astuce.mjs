@@ -2,7 +2,7 @@
 const sources = [
 	{
 		id: "tcar",
-		staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
+		staticResourceHref: "https://preprod.api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
