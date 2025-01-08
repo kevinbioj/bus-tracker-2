@@ -104,8 +104,8 @@ export class Journey {
 		let departureDelay: number | undefined;
 
 		for (const call of this.calls) {
-			const timeUpdate = stopTimeUpdates?.find(
-				(stu) => stu.stopSequence === call.sequence || stu.stopId === call.stop.id,
+			const timeUpdate = stopTimeUpdates?.find((stu) =>
+				stu.stopSequence ? stu.stopSequence === call.sequence : stu.stopId === call.stop.id,
 			);
 
 			if (timeUpdate?.scheduleRelationship === "NO_DATA") {
