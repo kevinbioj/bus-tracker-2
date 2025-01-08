@@ -48,6 +48,7 @@ const sources = [
 		id: "montbeliard",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/b45aa8d8-4bd4-4528-99c7-acfc980fdb09",
 		realtimeResourceHrefs: [],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "EVOLITY",
 	},
 	{
