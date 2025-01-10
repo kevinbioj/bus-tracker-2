@@ -58,6 +58,19 @@ const sources = [
 	// 	realtimeResourceHrefs: [],
 	// 	getNetworkRef: () => "SANKEO",
 	// },
+	{
+		id: "toulon",
+		staticResourceHref:
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rd-toulon/exports/gtfs-complet.zip",
+		realtimeResourceHrefs: [
+			"https://feed-rdtpm-toulon.ratpdev.com/VehiclePosition/GTFS-RT",
+			"https://feed-rdtpm-toulon.ratpdev.com/TripUpdate/GTFS-RT",
+		],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "MISTRAL",
+		getVehicleRef: (vehicleDescriptor) => vehicleDescriptor?.label?.padStart(3, "0"),
+	},
 	// {
 	// 	id: "toulouse",
 	// 	staticResourceHref:
