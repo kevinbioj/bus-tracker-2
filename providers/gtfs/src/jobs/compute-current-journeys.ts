@@ -173,7 +173,8 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					: undefined;
 
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
-			activeJourneys.set(key, {
+
+			const vehicleJourney: VehicleJourney = {
 				id: key,
 				line:
 					typeof journey !== "undefined"
@@ -231,7 +232,11 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
 				serviceDate: journey?.date.toString(),
 				updatedAt: Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp).toString(),
-			});
+			};
+
+			if (typeof source.options.isValidJourney === "undefined" || source.options.isValidJourney(vehicleJourney)) {
+				activeJourneys.set(key, vehicleJourney);
+			}
 		}
 
 		if (source.options.mode !== "VP-ONLY") {
@@ -273,7 +278,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					handledBlockIds.add(journey.trip.block);
 				}
 
-				activeJourneys.set(key, {
+				const vehicleJourney: VehicleJourney = {
 					id: key,
 					line: {
 						ref: `${networkRef}:Line:${source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id}`,
@@ -305,7 +310,11 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
 					serviceDate: journey.date.toString(),
 					updatedAt: now.toString(),
-				});
+				};
+
+				if (typeof source.options.isValidJourney === "undefined" || source.options.isValidJourney(vehicleJourney)) {
+					activeJourneys.set(key, vehicleJourney);
+				}
 			}
 		}
 

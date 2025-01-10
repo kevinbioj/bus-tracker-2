@@ -41,6 +41,7 @@ const sources = [
 			journey?.calls.some((c) => !!(c.expectedArrivalTime ?? c.expectedDepartureTime)) ? 15 * 60 : 0,
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TAE",
+		isValidJourney: (vehicleJourney) => typeof vehicleJourney.vehicleRef !== "undefined",
 	},
 	{
 		id: "tgr",

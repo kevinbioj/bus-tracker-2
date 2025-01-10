@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { VehicleJourney } from "@bus-tracker/contracts";
 import { Temporal } from "temporal-polyfill";
 
 import { downloadGtfs } from "../download/download-gtfs.js";
@@ -33,6 +34,7 @@ export type SourceOptions = {
 	mapTripRef?: (tripRef: string) => string;
 	mapTripUpdate?: (tripUpdate: TripUpdate) => TripUpdate | undefined;
 	mapVehiclePosition?: (vehicle: VehiclePosition) => VehiclePosition | undefined;
+	isValidJourney?: (vehicleJourney: VehicleJourney) => boolean;
 };
 
 export class Source {
