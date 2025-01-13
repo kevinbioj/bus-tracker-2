@@ -29,7 +29,13 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 			...network,
 			operators: operatorList.map(({ networkId, ...operator }) => operator),
 			lines: lineList
-				.toSorted((a, b) => (a.sortOrder ?? lineList.length) - (b.sortOrder ?? lineList.length))
+				.toSorted((a, b) => {
+					const sortOrderDiff = (a.sortOrder ?? lineList.length) - (b.sortOrder ?? lineList.length);
+					if (sortOrderDiff === 0) {
+						return a.number.localeCompare(b.number);
+					}
+					return sortOrderDiff;
+				})
 				.map(({ networkId, ...line }) => line),
 		});
 	});
