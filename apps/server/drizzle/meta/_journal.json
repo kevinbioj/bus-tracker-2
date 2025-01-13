@@ -29,6 +29,13 @@
       "when": 1734728530427,
       "tag": "0003_workable_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1736771464213,
+      "tag": "0004_rapid_makkari",
+      "breakpoints": true
     }
   ]
 }

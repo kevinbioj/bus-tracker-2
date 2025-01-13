@@ -1,0 +1,1 @@
+ALTER TABLE "line" ADD COLUMN "sort_order" integer;
