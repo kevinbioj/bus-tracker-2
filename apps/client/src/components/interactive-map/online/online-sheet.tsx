@@ -1,6 +1,8 @@
-import { ArrowLeft, BusFrontIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, BusFrontIcon, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { P, match } from "ts-pattern";
+import { GetNetworkQuery } from "~/api/networks";
 import { OnlineLines } from "~/components/interactive-map/online/online-lines";
 
 import { OnlineNetworks } from "~/components/interactive-map/online/online-networks";
@@ -13,6 +15,8 @@ export function OnlineSheet() {
 
 	const [networkId, setNetworkId] = useState<number>();
 	const [lineId, setLineId] = useState<number>();
+
+	const { data: network } = useQuery(GetNetworkQuery(networkId));
 
 	const back = () => {
 		if (typeof lineId !== "undefined") {
@@ -39,7 +43,19 @@ export function OnlineSheet() {
 									<ArrowLeft />
 								</Button>
 							) : null}
-							Véhicules en ligne
+							{typeof networkId === "undefined" ? (
+								<>Véhicules en ligne</>
+							) : (
+								<>
+									{network?.name}
+									{typeof lineId !== "undefined" ? (
+										<>
+											{" "}
+											<ChevronRight /> {network?.lines.find(({ id }) => id === lineId)?.number}
+										</>
+									) : null}
+								</>
+							)}
 						</div>
 					</SheetTitle>
 					<div className="h-[91dvh] overflow-y-auto">

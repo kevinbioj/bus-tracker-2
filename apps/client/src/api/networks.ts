@@ -53,8 +53,9 @@ export const GetNetworksQuery = queryOptions({
 			.sort((a, b) => a.name.localeCompare(b.name)),
 });
 
-export const GetNetworkQuery = (networkId: number) =>
+export const GetNetworkQuery = (networkId?: number) =>
 	queryOptions({
+		enabled: typeof networkId !== "undefined",
 		queryKey: ["networks", networkId],
 		queryFn: () => client.get(`networks/${networkId}`).then((response) => response.json<NetworkWithDetails>()),
 		staleTime: 300_000,
