@@ -69,6 +69,7 @@ export const lines = pgTable("line", {
 	cartridgeHref: varchar("cartridge_href"),
 	color: char("color", { length: 6 }),
 	textColor: char("text_color", { length: 6 }),
+	sortOrder: integer("sort_order"),
 	archivedAt: timestamp("archived_at"),
 });
 

@@ -28,7 +28,9 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 		return c.json({
 			...network,
 			operators: operatorList.map(({ networkId, ...operator }) => operator),
-			lines: lineList.map(({ networkId, ...line }) => line),
+			lines: lineList
+				.toSorted((a, b) => (a.sortOrder ?? lineList.length) - (b.sortOrder ?? lineList.length))
+				.map(({ networkId, ...line }) => line),
 		});
 	});
 
