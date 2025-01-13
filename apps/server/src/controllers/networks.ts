@@ -31,10 +31,7 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 			lines: lineList
 				.toSorted((a, b) => {
 					const sortOrderDiff = (a.sortOrder ?? lineList.length) - (b.sortOrder ?? lineList.length);
-					if (sortOrderDiff === 0) {
-						return a.number.localeCompare(b.number);
-					}
-					return sortOrderDiff;
+					return sortOrderDiff || Number.parseInt(a.number) - Number.parseInt(b.number);
 				})
 				.map(({ networkId, ...line }) => line),
 		});

@@ -62,13 +62,11 @@ export const GetNetworkQuery = (networkId: number) =>
 			...network,
 			color: network.color ? `#${network.color}` : null,
 			textColor: network.textColor ? `#${network.textColor}` : null,
-			lines: lines
-				.sort((a, b) => a.number.localeCompare(b.number))
-				.map((line) => ({
-					...line,
-					color: line.color ? `#${line.color}` : null,
-					textColor: line.textColor ? `#${line.textColor}` : null,
-				})),
+			lines: lines.map((line) => ({
+				...line,
+				color: line.color ? `#${line.color}` : null,
+				textColor: line.textColor ? `#${line.textColor}` : null,
+			})),
 		}),
 	});
 

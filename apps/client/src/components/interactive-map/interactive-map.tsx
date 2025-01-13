@@ -5,7 +5,8 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { LocateControl } from "~/components/interactive-map/locate-control";
 import { LocationSaver } from "~/components/interactive-map/location-saver";
-import { VehicleMarkers } from "~/components/interactive-map/vehicle-markers";
+import { OnlineControl } from "~/components/interactive-map/online/online-control";
+import { VehicleMarkers } from "~/components/interactive-map/vehicles/vehicle-markers";
 
 type InteractiveMapProps = {
 	className?: string;
@@ -57,6 +58,7 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readon
 				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 				url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 			/>
+			<OnlineControl />
 			<LocationSaver />
 			<Suspense>
 				<VehicleMarkers activeMarker={activeMarker} setActiveMarker={setActiveMarker} />

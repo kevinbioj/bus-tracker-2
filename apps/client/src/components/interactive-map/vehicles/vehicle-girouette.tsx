@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 import { GetJourneyGirouetteQuery } from "~/api/girouettes";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
-import { Girouette } from "~/components/interactive-map/girouette";
+import { Girouette } from "~/components/interactive-map/vehicles/girouette";
 import { useLine } from "~/hooks/use-line";
 
 const guessFont = (text: string) => {

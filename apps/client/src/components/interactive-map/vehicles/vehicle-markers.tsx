@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
-import { VehicleMarker } from "~/components/interactive-map/vehicle-marker.jsx";
+import { VehicleMarker } from "~/components/interactive-map/vehicles/vehicle-marker";
 import { useMapBounds } from "~/hooks/use-map-bounds";
 
 type VehicleMarkersProps = {

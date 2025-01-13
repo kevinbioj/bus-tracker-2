@@ -2,7 +2,7 @@ import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import { client } from "~/api/client";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
-import type { GirouetteData } from "~/components/interactive-map/girouette";
+import type { GirouetteData } from "~/components/interactive-map/vehicles/girouette";
 
 export const GetJourneyGirouetteQuery = (journey: DisposeableVehicleJourney, enabled: boolean) => {
 	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName;

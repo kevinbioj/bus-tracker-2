@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 import { useScreen } from "usehooks-ts";
 
 import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
-import { VehicleGirouette } from "~/components/interactive-map/vehicle-girouette";
-import { VehicleInformation } from "~/components/interactive-map/vehicle-information";
-import { VehicleNextStops } from "~/components/interactive-map/vehicle-next-stops";
+import { VehicleGirouette } from "~/components/interactive-map/vehicles/vehicle-girouette";
+import { VehicleInformation } from "~/components/interactive-map/vehicles/vehicle-information";
+import { VehicleNextStops } from "~/components/interactive-map/vehicles/vehicle-next-stops";
 import { useDomVisibility } from "~/hooks/use-dom-visibility";
 
 type VehicleDetailsProps = {

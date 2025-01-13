@@ -3,7 +3,7 @@ import { type RefObject, useCallback, useEffect, useMemo, useRef } from "react";
 import { Popup } from "react-leaflet";
 
 import type { VehicleJourneyMarker } from "~/api/vehicle-journeys";
-import { VehicleMarkerPopup } from "~/components/interactive-map/vehicle-marker-popup";
+import { VehicleMarkerPopup } from "~/components/interactive-map/vehicles/vehicle-marker-popup";
 import ReactMoveableCircleMarker, { type MoveableCircleMarker } from "~/utils/moveable-circler-marker";
 
 const getNoise = () => (Math.random() - 0.5) * 0.000045;
