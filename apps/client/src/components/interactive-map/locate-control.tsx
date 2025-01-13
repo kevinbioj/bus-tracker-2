@@ -12,6 +12,7 @@ export function LocateControl() {
 		const locateInstance = new LeafletLocateControl({
 			showPopup: false,
 			strings: { title: "Me géolocaliser" },
+			drawCircle: false,
 		}).addTo(map);
 
 		if (geolocateOnStart) {
