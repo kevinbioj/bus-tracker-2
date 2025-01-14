@@ -7,9 +7,10 @@ import { VehicleCard } from "~/components/data/networks/vehicle-card";
 
 type VehiclesTableProps = {
 	data: Vehicle[];
+	searchParams: URLSearchParams;
 };
 
-export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
+export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProps>) {
 	const parentRef = useRef(null);
 
 	const isDesktop = useMediaQuery("(min-width: 640px)");
@@ -25,10 +26,10 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 		virtualizer.measure();
 	}, [isDesktop, virtualizer]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we reset position when data changes
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we reset position when searchParams changes
 	useEffect(() => {
 		virtualizer.scrollToIndex(0, { behavior: "smooth" });
-	}, [data]);
+	}, [searchParams]);
 
 	return (
 		<div className="h-[calc(100dvh-298px)] overflow-auto" ref={parentRef}>

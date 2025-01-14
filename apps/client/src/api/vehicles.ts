@@ -50,7 +50,7 @@ export const GetVehiclesQuery = (networkId?: number) =>
 			return client.get(`vehicles?${params}`).then((response) => response.json<Vehicle[]>());
 		},
 		select: (data) => data.sort((a, b) => +a.number - +b.number),
-		refetchOnWindowFocus: false,
+		refetchInterval: 20_000,
 	});
 
 export const GetVehicleQuery = (vehicleId: number) =>

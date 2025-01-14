@@ -101,7 +101,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 					>
 						{activeVehiclesLabel}
 					</p>
-					<VehiclesTable data={filteredAndSortedVehicles} />
+					<VehiclesTable data={filteredAndSortedVehicles} searchParams={searchParams} />
 				</>
 			) : (
 				<p className="text-center text-muted-foreground">Aucun véhicule n'est disponible pour ce réseau.</p>
