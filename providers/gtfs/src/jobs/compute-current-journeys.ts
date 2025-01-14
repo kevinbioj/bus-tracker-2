@@ -112,6 +112,9 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 		}
 
 		for (const vehiclePosition of vehiclePositions) {
+			// 👏 https://transport.data.gouv.fr/resources/81925
+			if (typeof vehiclePosition.position === "undefined") continue;
+
 			let journey: Journey | undefined;
 
 			const updatedAt = Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp);
