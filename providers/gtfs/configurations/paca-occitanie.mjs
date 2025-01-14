@@ -62,6 +62,7 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "TRANSPOR",
 		getDestination: (journey) => journey?.calls.at(-1)?.stop.name,
+		getVehicleRef: (vehicleDescriptor) => vehicleDescriptor?.label?.replaceAll(" ", ""),
 	},
 	// {
 	// 	id: "perpignan",
