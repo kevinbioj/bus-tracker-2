@@ -52,12 +52,32 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "TANGO",
 	},
+	{
+		id: "pays-or",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/bbbd5a29-2fbf-47ae-84fd-6d1ebb758eeb",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/transpor-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/transpor-gtfs-rt-vehicle-position",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "TRANSPOR",
+	},
 	// {
 	// 	id: "perpignan",
 	// 	staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/2afffa1f-aa4a-4fe4-9802-4b5f82bb96c6",
 	// 	realtimeResourceHrefs: [],
 	// 	getNetworkRef: () => "SANKEO",
 	// },
+	{
+		id: "sete",
+		staticResourceHref: "https://drive.google.com/uc?export=download&id=1JPmGimO4tfQpzL8A0ixYnYrPDehYILWn",
+		realtimeResourceHrefs: [
+			"https://sete.ceccli.com/gtfs/TripUpdates.pb",
+			"https://sete.ceccli.com/gtfs/VehiclePositions.pb",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "SAM",
+	},
 	{
 		id: "toulon",
 		staticResourceHref:
