@@ -11,6 +11,7 @@ export type Network = {
 	darkModeLogoHref: string | null;
 	color: string | null;
 	textColor: string | null;
+	hasVehiclesFeature: boolean;
 };
 
 export type Operator = {

@@ -43,6 +43,7 @@ export const networks = pgTable("network", {
 	darkModeLogoHref: varchar("dark_mode_logo_href"),
 	color: char("color", { length: 6 }),
 	textColor: char("text_color", { length: 6 }),
+	hasVehiclesFeature: boolean("has_vehicles_feature").notNull().default(false),
 });
 
 export type Network = InferSelectModel<typeof networks>;

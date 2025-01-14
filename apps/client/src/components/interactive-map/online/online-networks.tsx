@@ -15,8 +15,12 @@ export function OnlineNetworks({ updateNetwork }: Readonly<OnlineNetworksProps>)
 	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
 	if (!networks) return null;
 
-	const favoriteNetworks = networks.filter(({ id }) => favoriteNetworkIds.includes(id));
-	const otherNetworks = networks.filter(({ id }) => !favoriteNetworkIds.includes(id));
+	const favoriteNetworks = networks.filter(
+		({ id, hasVehiclesFeature }) => hasVehiclesFeature && favoriteNetworkIds.includes(id),
+	);
+	const otherNetworks = networks.filter(
+		({ id, hasVehiclesFeature }) => hasVehiclesFeature && !favoriteNetworkIds.includes(id),
+	);
 
 	const toggleFavoriteNetwork = (networkId: number) => {
 		if (favoriteNetworkIds.includes(networkId)) {
