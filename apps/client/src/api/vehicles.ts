@@ -38,12 +38,15 @@ export type VehicleTimelineDayActivity = {
 	updatedAt: string;
 };
 
-export const GetVehiclesQuery = (networkId: number) =>
+export const GetVehiclesQuery = (networkId?: number) =>
 	queryOptions({
+		enabled: typeof networkId !== "undefined",
 		queryKey: ["network-vehicles", networkId],
 		queryFn: () => {
 			const params = new URLSearchParams();
-			params.append("networkId", networkId.toString());
+			if (typeof networkId === "number") {
+				params.append("networkId", networkId.toString());
+			}
 			return client.get(`vehicles?${params}`).then((response) => response.json<Vehicle[]>());
 		},
 		select: (data) => data.sort((a, b) => +a.number - +b.number),
