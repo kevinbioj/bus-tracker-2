@@ -35,7 +35,7 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 							) : (
 								<p className="align-middle font-bold min-w-12 text-xl">{line.number}</p>
 							)}
-							{lineVehicles.length > 1 ? (
+							{lineVehicles.length > 0 ? (
 								<p className="align-middle text-base">
 									<span className="font-bold">{lineVehicles.length}</span> véhicule{lineVehicles.length > 1 ? "s" : ""}{" "}
 									en ligne
