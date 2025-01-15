@@ -45,7 +45,8 @@ const sources = [
 	},
 	{
 		id: "tgr",
-		staticResourceHref: "https://pysae.com/api/v2/groups/tcar/gtfs/pub",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/tcar-tgr.zip",
+		// staticResourceHref: "https://pysae.com/api/v2/groups/tcar/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: (trip) => trip.route.name === "06",
