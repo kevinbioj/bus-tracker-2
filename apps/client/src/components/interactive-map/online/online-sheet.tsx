@@ -28,9 +28,9 @@ export function OnlineSheet() {
 
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
-			<SheetTrigger>
+			<SheetTrigger asChild>
 				{/* biome-ignore lint/a11y/useValidAnchor: required by Leaflet */}
-				<a className="leaflet-bar-part leaflet-bar-part-single" href="#">
+				<a aria-label="Véhicules en ligne" className="leaflet-bar-part leaflet-bar-part-single" href="#">
 					<BusFrontIcon className="inline mb-0.5" />
 				</a>
 			</SheetTrigger>
