@@ -69,6 +69,11 @@ const sources = [
 	{
 		id: "transurbain",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/ec78df83-2e60-4284-acc3-86a0baa76bf0",
+		realtimeResourceHrefs: [
+			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TRANSURBAIN&dataFormat=GTFS-RT",
+			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=TRANSURBAIN&dataFormat=GTFS-RT",
+		],
+		mode: "NO-TU",
 		getNetworkRef: () => "TRANSURBAIN",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
