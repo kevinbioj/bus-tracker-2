@@ -74,7 +74,15 @@ const sources = [
 			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=TRANSURBAIN&dataFormat=GTFS-RT",
 		],
 		mode: "NO-TU",
+		// 2025/01/23 - stop_id values in the Vehicle Position feed match the stop_code GTFS field instead
+		// of the stop_id field. For now, we rely on passing time to determine the current stop. This map
+		// must be removed whenever this gets fixed upstream.
+		mapVehiclePosition: (vehicle) => {
+			vehicle.stopId = undefined;
+			return vehicle;
+		},
 		getNetworkRef: () => "TRANSURBAIN",
+		getVehicleRef: (vehicleDescriptor) => vehicleDescriptor?.id(2, "0"),
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
