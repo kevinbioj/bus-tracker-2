@@ -48,6 +48,17 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 		[journey],
 	);
 
+	const networkIdentifier = network?.logoHref ? (
+		<picture className="min-w-12 w-fit">
+			{network.darkModeLogoHref !== null ? (
+				<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+			) : null}
+			<img className="h-5 object-contain m-auto" src={network.logoHref} alt="" />
+		</picture>
+	) : (
+		<span>{network?.name}</span>
+	);
+
 	const vehicleNumber = journey.vehicle ? `n°${journey.vehicle.number}` : "N/A";
 
 	const vehicleLink = journey.vehicle?.id ? (
@@ -69,20 +80,15 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 
 	return (
 		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] gap-2 px-2 py-1">
-			<Button asChild className="min-w-12 w-fit" size="xs" variant="ghost">
-				<Link target="_blank" to={`/data/networks/${network?.id}`}>
-					{network?.logoHref ? (
-						<picture>
-							{network.darkModeLogoHref !== null ? (
-								<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-							) : null}
-							<img className="h-5 object-contain my-auto" src={network.logoHref} alt="" />
-						</picture>
-					) : (
-						<span>{network?.name}</span>
-					)}
-				</Link>
-			</Button>
+			{network?.hasVehiclesFeature ? (
+				<Button asChild className="" size="xs" variant="ghost">
+					<Link target="_blank" to={`/data/networks/${network?.id}`}>
+						{networkIdentifier}
+					</Link>
+				</Button>
+			) : (
+				networkIdentifier
+			)}
 			<span className="my-auto text-center">
 				{vehicleLink}– {recordedAt}
 			</span>
