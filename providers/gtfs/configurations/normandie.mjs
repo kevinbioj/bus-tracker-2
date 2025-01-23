@@ -82,7 +82,7 @@ const sources = [
 			return vehicle;
 		},
 		getNetworkRef: () => "TRANSURBAIN",
-		getVehicleRef: (vehicleDescriptor) => vehicleDescriptor?.id(2, "0"),
+		getVehicleRef: (vehicleDescriptor) => vehicleDescriptor?.id.padStart(2, "0"),
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
