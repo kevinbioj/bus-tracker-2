@@ -63,10 +63,12 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 			};
 
 			if (typeof vehicleJourney.vehicleRef !== "undefined") {
-				if (typeof vehicleJourney.line !== "undefined" && vehicleJourney.networkRef !== "SNCF") {
+				if (vehicleJourney.networkRef !== "SNCF") {
 					const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
 					disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
-					registerActivity(disposeableJourney);
+					if (typeof vehicleJourney.line !== "undefined") {
+						registerActivity(disposeableJourney);
+					}
 				} else {
 					disposeableJourney.vehicle = {
 						number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
