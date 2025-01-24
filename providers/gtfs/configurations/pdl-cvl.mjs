@@ -2,7 +2,9 @@
 const sources = [
 	{
 		id: "aleop",
-		staticResourceHref: "https://donnees.paysdelaloire.fr/data/pdl.zip",
+		// 2024-01-24 : TLS KO - Upload chez nous le temps de la résolution
+		// staticResourceHref: "https://donnees.paysdelaloire.fr/data/pdl.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/aleop.zip",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-vehicle-position",
