@@ -19,6 +19,11 @@ export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProp
 		count: data.length,
 		getScrollElement: () => parentRef.current,
 		estimateSize: useCallback(() => (isDesktop ? 64 : 105), [isDesktop]),
+		measureElement:
+			typeof window !== "undefined" && navigator.userAgent.indexOf("Firefox") === -1
+				? (element) => element?.getBoundingClientRect().height
+				: undefined,
+		overscan: 5,
 	});
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we force component height to be recomputed on viewport dimensions changes.
@@ -38,10 +43,11 @@ export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProp
 					const vehicle = data[virtualItem.index];
 					return (
 						<div
-							className="absolute py-2 top-0 left-0 w-full"
+							className="absolute py-1 top-0 left-0 w-full"
+							data-index={virtualItem.index}
 							key={vehicle.id}
+							ref={(node) => virtualizer.measureElement(node)}
 							style={{
-								height: `${virtualItem.size}px`,
 								transform: `translateY(${virtualItem.start}px)`,
 							}}
 						>
