@@ -17,6 +17,18 @@ const sources = [
 		getNetworkRef: () => "ARTIS",
 	},
 	{
+		id: "beauvais",
+		staticResourceHref:
+			"https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=COROLIS_URB&dataFormat=GTFS&dataProfil=OPENDATA",
+		realtimeResourceHrefs: [
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=COROLIS_URB&dataFormat=gtfs-rt",
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=COROLIS_URB&dataFormat=gtfs-rt",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "COROLIS",
+		getVehicleRef: (vehicle) => vehicle?.id.replace("TBM", ""),
+	},
+	{
 		id: "calais",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=sitac-calais-rt",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=sitac-calais-rt"],
