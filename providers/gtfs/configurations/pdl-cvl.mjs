@@ -73,6 +73,9 @@ const sources = [
 		],
 		getNetworkRef: () => "NAOLIB",
 		getVehicleRef: () => undefined,
+		mapLineRef: (lineRef) => lineRef.slice(lineRef.lastIndexOf(":") + 1),
+		mapStopRef: (stopRef) => stopRef.slice(stopRef.lastIndexOf(":") + 1),
+		mapTripRef: (tripRef) => tripRef.slice(tripRef.lastIndexOf(":") + 1),
 	},
 	{
 		id: "remi-28",
@@ -117,6 +120,9 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "FILBLEU",
+		mapLineRef: (lineRef) => lineRef.slice(lineRef.lastIndexOf(":") + 1),
+		mapStopRef: (stopRef) => stopRef.slice(stopRef.lastIndexOf(":") + 1),
+		mapTripRef: (tripRef) => tripRef.slice(tripRef.indexOf(":") + 1),
 	},
 ];
 
