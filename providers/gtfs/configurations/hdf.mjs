@@ -26,6 +26,18 @@ const sources = [
 		getVehicleRef: () => undefined,
 	},
 	{
+		id: "compiegne",
+		staticResourceHref:
+			"https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=TIC_URB&dataFormat=GTFS&dataProfil=OPENDATA",
+		realtimeResourceHrefs: [
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TIC_URB&dataFormat=gtfs-rt",
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=TIC_URB&dataFormat=gtfs-rt",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "TIC",
+		getVehicleRef: (vehicle) => vehicle?.id.replace("TAC", ""),
+	},
+	{
 		id: "creil",
 		staticResourceHref:
 			"https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=AXO&dataFormat=GTFS&dataProfil=OPENDATA",
