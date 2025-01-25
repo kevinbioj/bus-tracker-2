@@ -26,6 +26,18 @@ const sources = [
 		getVehicleRef: () => undefined,
 	},
 	{
+		id: "creil",
+		staticResourceHref:
+			"https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=AXO&dataFormat=GTFS&dataProfil=OPENDATA",
+		realtimeResourceHrefs: [
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=AXO&dataFormat=gtfs-rt",
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=AXO&dataFormat=gtfs-rt",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "AXO",
+		getVehicleRef: (vehicle) => vehicle?.id.replace("RCR", ""),
+	},
+	{
 		id: "lens-bethune",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/7b2754e2-006f-49e5-b8f1-0d784a62fb98",
 		realtimeResourceHrefs: [],
