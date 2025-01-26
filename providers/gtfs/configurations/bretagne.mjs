@@ -11,7 +11,7 @@ const sources = [
 		mode: "VP-ONLY",
 		excludeScheduled: true,
 		getNetworkRef: () => "BIBUS",
-		getVehicleRef: () => undefined,
+		getVehicleRef: (vehicle) => (vehicle ? +vehicle.id - 268435456 : undefined),
 	},
 	{
 		id: "rennes",
