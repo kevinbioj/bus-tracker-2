@@ -10,7 +10,8 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "BIBUS",
-		getVehicleRef: (vehicle) => (vehicle ? +vehicle.id - 268435456 : undefined),
+		// "anonymised" vehicle reference 😅🤣
+		getVehicleRef: (vehicle) => (vehicle ? +vehicle.id - 2 ** 28 : undefined),
 	},
 	{
 		id: "rennes",
