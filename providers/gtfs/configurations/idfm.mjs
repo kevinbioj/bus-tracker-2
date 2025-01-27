@@ -3,6 +3,7 @@ const sources = [
 	{
 		id: "idfm",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/idfm/trip-updates"],
 		gtfsOptions: {
 			filterTrips: (trip) => trip.route.name !== "TER" && trip.route.type !== "BUS" && trip.route.type !== "UNKNOWN",
 		},
