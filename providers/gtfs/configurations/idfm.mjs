@@ -1,3 +1,5 @@
+import { Temporal } from "temporal-polyfill";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -6,6 +8,11 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/idfm/trip-updates"],
 		gtfsOptions: {
 			filterTrips: (trip) => trip.route.name !== "TER" && trip.route.type !== "BUS" && trip.route.type !== "UNKNOWN",
+		},
+		isValidJourney: (journey) => {
+			const firstCall = journey.calls[0];
+			if (typeof firstCall === "undefined" || typeof firstCall.expectedTime === "undefined") return true;
+			return Temporal.Instant.from(firstCall.expectedTime).since(firstCall.aimedTime).total("minutes") < 1440;
 		},
 		getNetworkRef: () => "IDFM",
 	},
