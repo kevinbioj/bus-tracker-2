@@ -34,7 +34,7 @@ export class Journey {
 
 	guessPosition(at: Temporal.Instant): VehicleJourneyPosition {
 		const calls = this.calls.filter((call) => call.status !== "SKIPPED");
-		if (calls.length < 2) throw new Error(`Journey '${this.id}' has less than 2 scheduled calls`);
+		if (calls.length < 2) return Journey.getJourneyPositionAt(this.calls.at(0)!);
 
 		// Cas n°1 - la course n'a pas encore commencé
 		const firstCall = calls.at(0)!;
