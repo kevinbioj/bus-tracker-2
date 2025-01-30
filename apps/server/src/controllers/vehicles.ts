@@ -7,6 +7,7 @@ import { database } from "../database/database.js";
 import { lineActivities, networks, vehicles } from "../database/schema.js";
 import { paginationSchema } from "../helpers/pagination-schema.js";
 import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
+import type { JourneyStore } from "../store/journey-store.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
 
@@ -43,7 +44,7 @@ const getVehicleActivitiesQuerySchema = z.object({
 		),
 });
 
-export const registerVehicleRoutes = (hono: Hono) => {
+export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) => {
 	hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
 		const { limit, page, networkId, operatorId, number, designation, sortBy, sortOrder } = c.req.valid("query");
 
@@ -79,12 +80,19 @@ export const registerVehicleRoutes = (hono: Hono) => {
 				.get(vehicle.id)
 				?.toSorted((a, b) => Temporal.Instant.compare(b.since, a.since))
 				.at(0);
+			const journey = journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
 			return {
 				...vehicle,
 				activity: {
 					status: currentActivity ? "online" : "offline",
 					since: currentActivity ? currentActivity.since : lastSeenAt,
 					lineId: currentActivity?.lineId,
+					position: journey
+						? {
+								latitude: journey.position.latitude,
+								longitude: journey.position.longitude,
+							}
+						: undefined,
 				},
 			};
 		});

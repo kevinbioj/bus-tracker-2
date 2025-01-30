@@ -67,7 +67,7 @@ hono.use(compress());
 hono.use(cors({ origin: "*" }));
 registerLineRoutes(hono);
 registerNetworkRoutes(hono, journeyStore);
-registerVehicleRoutes(hono);
+registerVehicleRoutes(hono, journeyStore);
 registerVehicleJourneyRoutes(hono, journeyStore);
 registerGirouetteRoutes(hono);
 serve({ fetch: hono.fetch, port });
