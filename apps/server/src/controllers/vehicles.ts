@@ -87,6 +87,7 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 					status: currentActivity ? "online" : "offline",
 					since: currentActivity ? currentActivity.since : lastSeenAt,
 					lineId: currentActivity?.lineId,
+					markerId: journey?.id,
 					position: journey
 						? {
 								latitude: journey.position.latitude,
