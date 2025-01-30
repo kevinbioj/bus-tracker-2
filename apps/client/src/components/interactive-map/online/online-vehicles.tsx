@@ -4,11 +4,12 @@ import { GetVehiclesQuery } from "~/api/vehicles";
 import { OnlineVehicleCard } from "~/components/interactive-map/online/online-vehicle-card";
 
 type OnlineVehiclesProps = {
+	closeSheet: () => void;
 	networkId: number;
 	lineId: number;
 };
 
-export function OnlineVehicles({ networkId, lineId }: Readonly<OnlineVehiclesProps>) {
+export function OnlineVehicles({ closeSheet, networkId, lineId }: Readonly<OnlineVehiclesProps>) {
 	const { data: vehicles } = useQuery(GetVehiclesQuery(networkId));
 	if (typeof vehicles === "undefined") return null;
 
@@ -16,7 +17,7 @@ export function OnlineVehicles({ networkId, lineId }: Readonly<OnlineVehiclesPro
 	return lineVehicles.length > 0 ? (
 		<div className="flex flex-col gap-3">
 			{lineVehicles.map((vehicle) => (
-				<OnlineVehicleCard key={vehicle.id} vehicle={vehicle} />
+				<OnlineVehicleCard key={vehicle.id} closeSheet={closeSheet} vehicle={vehicle} />
 			))}
 		</div>
 	) : (

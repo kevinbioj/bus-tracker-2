@@ -20,7 +20,13 @@ export type VehicleWithActiveMonths = Vehicle & {
 	activeMonths: string[];
 };
 
-export type VehicleActivity = { status: "online" | "offline"; since: string; lineId?: number };
+export type VehicleActivity = {
+	status: "online" | "offline";
+	since: string;
+	lineId?: number;
+	markerId?: string;
+	position?: { latitude: number; longitude: number };
+};
 
 export type VehicleTimeline = {
 	timeline: VehicleTimelineDay[];

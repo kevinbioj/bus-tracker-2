@@ -39,6 +39,18 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Readonl
 		}
 	}, [marker]);
 
+	useEffect(() => {
+		if (ref.current === null) return;
+
+		if (activeMarker === marker.id) {
+			const target = ref.current;
+			if (!target.isPopupOpen()) target.openPopup();
+			if (!isTouchScreen) {
+				adjustPan(ref);
+			}
+		}
+	}, [activeMarker, marker]);
+
 	const adjustPan = useCallback((ref: RefObject<MoveableCircleMarker | null>) => {
 		if (ref.current === null) return;
 		const { _popup } = ref.current as unknown as { _popup: { options: { autoPan: boolean }; _adjustPan: () => void } };
@@ -62,13 +74,8 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Readonl
 			duration={1000}
 			bubblingMouseEvents={false}
 			eventHandlers={{
-				click: async (e) => {
-					const target = e.target as MoveableCircleMarker;
+				click: () => {
 					setActiveMarker(marker.id);
-					if (!target.isPopupOpen()) target.openPopup();
-					if (!isTouchScreen) {
-						adjustPan(ref);
-					}
 				},
 				moveend: (e) => {
 					const target = e.target as MoveableCircleMarker;

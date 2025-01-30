@@ -65,7 +65,7 @@ export function OnlineSheet() {
 								<OnlineLines networkId={networkId} updateLine={setLineId} />
 							))
 							.with([P.number, P.number], ([networkId, lineId]) => (
-								<OnlineVehicles networkId={networkId} lineId={lineId} />
+								<OnlineVehicles closeSheet={() => setOpen(false)} networkId={networkId} lineId={lineId} />
 							))
 							.otherwise(() => null)}
 					</div>
