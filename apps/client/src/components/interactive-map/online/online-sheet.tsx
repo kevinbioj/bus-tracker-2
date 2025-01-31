@@ -58,7 +58,7 @@ export function OnlineSheet() {
 							)}
 						</div>
 					</SheetTitle>
-					<div className="h-[91dvh] overflow-y-auto">
+					<div className="h-[91dvh] overflow-y-auto pb-3">
 						{match([networkId, lineId])
 							.with([undefined, undefined], () => <OnlineNetworks updateNetwork={setNetworkId} />)
 							.with([P.number, undefined], ([networkId]) => (
