@@ -7,6 +7,7 @@ import { P, match } from "ts-pattern";
 import type { Vehicle } from "~/api/vehicles";
 import { useActiveMarker } from "~/components/interactive-map/active-marker/active-marker";
 import { Button } from "~/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { useLine } from "~/hooks/use-line";
 
 type OnlineVehicleCardProps = {
@@ -39,13 +40,12 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 
 	return (
 		<div
-			className={`flex flex-col rounded-md ${!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"}`}
+			className={`flex flex-col relative rounded-md ${!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"}`}
 			style={{ backgroundColor: line?.color ?? undefined, color: line?.textColor ?? undefined }}
 		>
 			<Link
-				className="px-2 py-1 hover:brightness-90 transition rounded-t-md"
+				className="px-2 py-1 hover:brightness-90 transition bg-inherit rounded-md"
 				to={`/data/vehicles/${vehicle.id}`}
-				style={{ backgroundColor: line?.color ?? undefined, color: line?.textColor ?? undefined }}
 			>
 				<div className="flex justify-center">
 					{match(vehicle.type)
@@ -88,14 +88,23 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 				</div>
 			</Link>
 			{vehicle.activity.position && (
-				<Button
-					className="rounded-t-none hover:brightness-90 transition"
-					onClick={flyTo}
-					variant="ghost"
-					style={{ backgroundColor: line?.color ?? undefined, color: line?.textColor ?? undefined }}
-				>
-					<PinIcon size={16} /> Voir sur la carte
-				</Button>
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								className="absolute bottom-0 right-0 rounded-md bg-inherit hover:bg-inherit hover:brightness-90 transition"
+								onClick={flyTo}
+								variant="ghost"
+								size="icon"
+							>
+								<PinIcon />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent side="left">
+							<p>Voir sur la carte</p>
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 			)}
 		</div>
 	);

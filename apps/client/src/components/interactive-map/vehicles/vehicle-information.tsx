@@ -9,7 +9,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Button } from "~/components/ui/button";
-import { Tooltip } from "~/components/ui/tooltip";
+import { CustomTooltip } from "~/components/ui/custom-tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 
 const positionIconDetails = {
@@ -93,13 +93,13 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 				{vehicleLink}– {recordedAt}
 			</span>
 			<div className="flex justify-end">
-				<Tooltip
+				<CustomTooltip
 					className={clsx("font-bold", positionInformation.tooltipClasses)}
 					content={positionInformation.tooltipText}
 					place="left"
 				>
 					<SatelliteDishIcon className="h-5 w-5" color={positionInformation.iconColor} size={20} />
-				</Tooltip>
+				</CustomTooltip>
 			</div>
 		</div>
 	);

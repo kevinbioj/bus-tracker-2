@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { Rss } from "lucide-react";
 import { P, match } from "ts-pattern";
 
-import { Tooltip } from "~/components/ui/tooltip";
+import { CustomTooltip } from "~/components/ui/custom-tooltip";
 
 type NextStopsProps = { calls: VehicleJourneyCall[]; tooltipId?: string };
 
@@ -65,9 +65,9 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 						<div className="flex gap-0.5 font-bold" key={call.stopOrder}>
 							<div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{call.stopName}</div>
 							{tooltipProps ? (
-								<Tooltip {...tooltipProps} place="left" spacing={8}>
+								<CustomTooltip {...tooltipProps} place="left" spacing={8}>
 									{children}
-								</Tooltip>
+								</CustomTooltip>
 							) : (
 								children
 							)}
