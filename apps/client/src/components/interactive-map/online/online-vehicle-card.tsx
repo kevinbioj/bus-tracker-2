@@ -91,12 +91,7 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button
-								className="absolute bottom-0 right-0 rounded-md bg-inherit hover:bg-inherit hover:brightness-90 transition"
-								onClick={flyTo}
-								variant="ghost"
-								size="icon"
-							>
+							<Button className="absolute bottom-0 right-0 rounded-md" onClick={flyTo} variant="inherit" size="icon">
 								<PinIcon />
 							</Button>
 						</TooltipTrigger>
