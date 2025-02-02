@@ -13,7 +13,7 @@ export default defineConfig({
 			manifest: {
 				name: "Bus Tracker",
 				short_name: "Bus Tracker",
-				description: "Bus Tracker est une application de suivi des véhicules de transport en commun.",
+				description: "Localisez vos trains, bus, tramways, métros et bateaux dans toute la France grâce à Bus Tracker",
 				background_color: "#8A0045",
 				theme_color: "#8A0045",
 				display: "fullscreen",
