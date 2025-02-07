@@ -172,7 +172,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						? journey.calls.filter((call) => call.sequence >= vehiclePosition.currentStopSequence!)
 						: typeof vehiclePosition.stopId !== "undefined"
 							? journey.calls.slice(journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId))
-							: getCalls(journey, now)
+							: getCalls(journey, now, () => Number.POSITIVE_INFINITY)
 					: undefined;
 
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
