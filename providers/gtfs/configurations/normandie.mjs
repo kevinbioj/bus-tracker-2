@@ -55,6 +55,7 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "CAP-COTENTIN",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
 	//- SEMO
 	{
