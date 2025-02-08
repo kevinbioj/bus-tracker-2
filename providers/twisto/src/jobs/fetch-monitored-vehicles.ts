@@ -87,7 +87,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 
 	for (const vehicle of processeableVehicles) {
 		const recordedAt = Temporal.ZonedDateTime.from(fixTimestamp(vehicle.RecordedAtTime));
-		const [operatorRef, vehicleNumber] = vehicle.VehicleMonitoringRef.split(":")[3]!.split("_");
+		const vehicleNumber = vehicle.VehicleMonitoringRef.split(":")[3]!;
 
 		const calls = [
 			vehicle.MonitoredVehicleJourney.MonitoredCall,
@@ -146,7 +146,6 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 			},
 			journeyRef: vehicle.MonitoredVehicleJourney.VehicleJourneyName,
 			networkRef: "TWISTO",
-			operatorRef: operatorRef,
 			vehicleRef: `TWISTO::Vehicle:${vehicleNumber}`,
 			serviceDate: Temporal.Now.plainDateISO().toString(),
 			updatedAt: recordedAt.toInstant().toString(),
