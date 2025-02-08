@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Outlet, createBrowserRouter } from "react-router-dom";
+import { WelcomeBack } from "~/components/welcome-back";
 
 import { NavigationBar } from "~/layout/navigation-bar.js";
 import MapPage from "~/pages/map.js";
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
 				<Suspense>
 					<Outlet />
 				</Suspense>
+				<WelcomeBack />
 			</>
 		),
 		children: [
