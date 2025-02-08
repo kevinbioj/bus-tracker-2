@@ -6,6 +6,8 @@ on:
     paths:
       - apps/client/**/*
       - apps/server/**/*
+      - docker/**/*
+      - libraries/**/*
       - .github/workflows/deployment.yaml
 
 env:
