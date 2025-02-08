@@ -8,6 +8,7 @@ WORKDIR /bus-tracker
 ##########################################
 
 FROM base AS builder
+RUN npm install -g corepack@latest
 RUN corepack enable
 
 # Fetch dependencies
