@@ -23,7 +23,7 @@ RUN pnpm install -r
 RUN pnpm -r build
 
 # Deploy server
-RUN pnpm deploy --filter=@bus-tracker/server --prod server-deployment
+RUN pnpm deploy --legacy --filter=@bus-tracker/server --prod server-deployment
 
 ##########################################
 # STAGE 2 - Run distribution app         #
