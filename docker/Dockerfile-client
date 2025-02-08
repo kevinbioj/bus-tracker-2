@@ -2,7 +2,7 @@
 # STAGE 1 - Build project artifacts      #
 ##########################################
 
-FROM node:22.12.0-slim AS builder
+FROM node:23.7.0-slim AS builder
 WORKDIR /bus-tracker
 RUN corepack enable
 
