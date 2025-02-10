@@ -140,7 +140,7 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 					(currentActivity ? currentActivity.since : vehicle.lastSeenAt)?.toZonedDateTimeISO(network.timezone) ?? null,
 				lineId: currentActivity?.lineId,
 			},
-			activeMonths: activeMonths.map(({ month }) => month),
+			activeMonths: activeMonths.map(({ month }) => month).toSorted((a, b) => a.localeCompare(b)),
 		});
 	});
 
