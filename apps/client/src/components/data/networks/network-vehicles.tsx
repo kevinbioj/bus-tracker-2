@@ -85,7 +85,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 								<FilterIcon size={16} /> Filtrer par
 							</Label>
 							<div className="flex gap-2">
-								{availableNetworkTypeFilters.length > 1 && (
+								{availableNetworkTypeFilters.length > 2 && (
 									<Select value={type} onValueChange={(newType) => setSearchParams({ filter, sort, type: newType })}>
 										<SelectTrigger className="h-10 w-24">
 											<SelectValue />
