@@ -1,24 +1,41 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { FilterIcon, SortAscIcon } from "lucide-react";
+import { BusFrontIcon, FilterIcon, ShipIcon, SortAscIcon, TrainFrontTunnelIcon, TramFrontIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
 
-import { GetVehiclesQuery } from "~/api/vehicles";
+import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
 import { VehiclesTable } from "~/components/data/networks/vehicles-table";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
 
+const filterableVehicleTypes = {
+	ALL: "Tous",
+	SUBWAY: <TrainFrontTunnelIcon />,
+	TRAMWAY: <TramFrontIcon />,
+	BUS: <BusFrontIcon />,
+	FERRY: <ShipIcon />,
+} as const;
+
 type NetworkVehiclesProps = { networkId: number };
 
 export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 	const { data: vehicles } = useSuspenseQuery(GetVehiclesQuery(networkId));
 
+	const availableNetworkTypeFilters = useMemo(() => {
+		const networkVehicleTypes = new Set(vehicles.map(({ type }) => type));
+		return [
+			"ALL",
+			...Object.keys(filterableVehicleTypes).filter((type) => networkVehicleTypes.has(type as Vehicle["type"])),
+		];
+	}, [vehicles]);
+
 	const [searchParams, setSearchParams] = useSearchParams("");
 
+	const type = searchParams.get("type") ?? "ALL";
 	const filter = searchParams.get("filter") ?? "";
 	const sort = searchParams.get("sort") ?? "number";
 
@@ -30,6 +47,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 
 		return vehicles
 			.filter((v) => {
+				if (type?.trim().length && type !== "ALL" && v.type !== type) return false;
 				if (debouncedFilter === "") return true;
 				return pattern.test(v.number.toString()) || pattern.test(v.designation ?? "");
 			})
@@ -44,7 +62,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 
 				return +a.number - +b.number;
 			});
-	}, [debouncedFilter, searchParams, vehicles]);
+	}, [debouncedFilter, searchParams, type, vehicles]);
 
 	const onlineVehicles = useMemo(
 		() => filteredAndSortedVehicles.filter(({ activity }) => typeof activity.lineId !== "undefined"),
@@ -64,23 +82,36 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 					<div className="flex justify-between gap-3 py-2">
 						<div className="flex flex-col gap-1 w-full max-w-72">
 							<Label className="inline-flex items-center gap-1" htmlFor="filter">
-								<FilterIcon size={16} /> Filtrer
+								<FilterIcon size={16} /> Filtrer par
 							</Label>
-							<Input
-								className="h-10"
-								placeholder="par numéro ou désignation..."
-								value={searchParams.get("filter") ?? ""}
-								onChange={(e) => setSearchParams({ filter: e.target.value, sort })}
-							/>
+							<div className="flex gap-2">
+								{availableNetworkTypeFilters.length > 1 && (
+									<Select value={type} onValueChange={(newType) => setSearchParams({ filter, sort, type: newType })}>
+										<SelectTrigger className="h-10 w-24">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											{availableNetworkTypeFilters.map((type) => (
+												<SelectItem key={type} value={type}>
+													{filterableVehicleTypes[type as keyof typeof filterableVehicleTypes]}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
+								<Input
+									className="h-10"
+									placeholder="numéro ou désignation"
+									value={searchParams.get("filter") ?? ""}
+									onChange={(e) => setSearchParams({ filter: e.target.value, sort, type })}
+								/>
+							</div>
 						</div>
 						<div className="flex flex-col gap-1">
 							<Label className="inline-flex items-center gap-1" htmlFor="sort">
 								<SortAscIcon size={16} /> Trier par
 							</Label>
-							<Select
-								value={searchParams.get("sort") ?? "number"}
-								onValueChange={(newSort) => setSearchParams({ filter, sort: newSort })}
-							>
+							<Select value={sort} onValueChange={(newSort) => setSearchParams({ filter, sort: newSort, type })}>
 								<SelectTrigger className="h-10 min-w-28">
 									<SelectValue />
 								</SelectTrigger>
