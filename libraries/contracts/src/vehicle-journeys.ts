@@ -20,7 +20,7 @@ export const vehicleJourneyLineSchema = z.object({
 
 export type VehicleJourneyLine = z.infer<typeof vehicleJourneyLineSchema>;
 
-export const vehicleJourneyCallStatusEnum = z.enum(["SCHEDULED", "SKIPPED"]);
+export const vehicleJourneyCallStatusEnum = z.enum(["SCHEDULED", "UNSCHEDULED", "SKIPPED"]);
 
 export type VehicleJourneyCallStatus = z.infer<typeof vehicleJourneyCallStatusEnum>;
 

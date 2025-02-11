@@ -13,7 +13,7 @@ export type JourneyCall = {
 	stop: Stop;
 	sequence: number;
 	distanceTraveled?: number;
-	status: "SCHEDULED" | "SKIPPED";
+	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 };
 
 export type JourneyPosition = {

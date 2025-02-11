@@ -25,5 +25,5 @@ export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptio
 	]);
 	const routes = await importRoutes(gtfsDirectory, agencies);
 	const trips = await importTrips(gtfsDirectory, options, routes, services, shapes, stops);
-	return { trips, journeys: [] };
+	return { routes, stops, trips, journeys: [] };
 }

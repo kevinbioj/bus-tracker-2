@@ -2,9 +2,9 @@ import type { VehicleJourney } from "@bus-tracker/contracts";
 import { Temporal } from "temporal-polyfill";
 
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
-import type { TripDescriptor } from "../model/gtfs-rt.js";
+import type { TripDescriptor, TripUpdate } from "../model/gtfs-rt.js";
 import type { Gtfs } from "../model/gtfs.js";
-import type { Journey } from "../model/journey.js";
+import type { Journey, JourneyCall } from "../model/journey.js";
 import type { Source } from "../model/source.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
@@ -34,6 +34,41 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 	});
 	if (ongoingCalls.length === 0) return;
 	return ongoingCalls;
+};
+
+const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): JourneyCall[] | undefined => {
+	if (typeof tripUpdate?.stopTimeUpdate === "undefined") return;
+	if (
+		tripUpdate.stopTimeUpdate.some(
+			({ stopId, arrival, departure }) =>
+				!gtfs.stops.has(stopId) || (typeof arrival?.time === "undefined" && typeof departure?.time === "undefined"),
+		)
+	)
+		return;
+
+	const timeZone =
+		gtfs.trips.values().next().value?.route.agency.timeZone ??
+		new Temporal.TimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+	return tripUpdate.stopTimeUpdate.map((stopTimeUpdate, index) => {
+		const stop = gtfs.stops.get(stopTimeUpdate.stopId)!;
+		const arrivalTime = Temporal.Instant.fromEpochSeconds(
+			(stopTimeUpdate.arrival ?? stopTimeUpdate.departure)!.time!,
+		).toZonedDateTimeISO(timeZone);
+		const departureTime = Temporal.Instant.fromEpochSeconds(
+			(stopTimeUpdate.departure ?? stopTimeUpdate.arrival)!.time!,
+		).toZonedDateTimeISO(timeZone);
+
+		return {
+			aimedArrivalTime: arrivalTime,
+			expectedArrivalTime: arrivalTime,
+			aimedDepartureTime: departureTime,
+			expectedDepartureTime: departureTime,
+			sequence: stopTimeUpdate.stopSequence ?? index,
+			stop,
+			status: "UNSCHEDULED",
+		};
+	});
 };
 
 const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor) => {
@@ -173,7 +208,10 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						: typeof vehiclePosition.stopId !== "undefined"
 							? journey.calls.slice(journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId))
 							: getCalls(journey, now, () => Number.POSITIVE_INFINITY)
-					: undefined;
+					: createCallsFromTripUpdate(
+							source.gtfs,
+							tripUpdates.find((tripUpdate) => tripUpdate.trip.tripId === vehiclePosition.trip?.tripId),
+						);
 
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 

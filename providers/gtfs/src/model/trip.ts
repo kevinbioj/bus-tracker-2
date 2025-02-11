@@ -16,7 +16,7 @@ export type StopTimeCall = {
 	expectedDepartureTime?: Temporal.ZonedDateTime;
 	stop: Stop;
 	sequence: number;
-	status: "SCHEDULED" | "SKIPPED";
+	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 };
 
 export class Trip {

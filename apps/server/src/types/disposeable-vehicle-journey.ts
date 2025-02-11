@@ -9,7 +9,7 @@ export type DisposeableVehicleJourney = {
 		stopRef: string;
 		stopName: string;
 		stopOrder: number;
-		callStatus: "SCHEDULED" | "SKIPPED";
+		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 	}>;
 	position: {
 		latitude: number;
