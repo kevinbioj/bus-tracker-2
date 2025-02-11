@@ -17,6 +17,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 					const accentColor = match([call.callStatus, call.expectedTime])
 						.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")
 						.with(["SCHEDULED", P.string], () => "text-green-700 dark:text-green-500")
+						.with(["UNSCHEDULED", P.string], () => "text-yellow-700 dark:text-yellow-500")
 						.otherwise(() => null);
 
 					const tooltipProps =
@@ -26,6 +27,14 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										["SKIPPED", P.any],
 										() =>
 											({ className: "bg-red-600 dark:bg-red-700 text-white", content: "Arrêt non desservi" }) as const,
+									)
+									.with(
+										["UNSCHEDULED", P.any],
+										() =>
+											({
+												className: "bg-yellow-700 dark:bg-yellow-500 text-white dark:text-black",
+												content: "Desserte supplémentaire",
+											}) as const,
 									)
 									.with(
 										["SCHEDULED", P.number.positive()],
