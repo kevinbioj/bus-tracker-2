@@ -211,7 +211,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					: createCallsFromTripUpdate(
 							source.gtfs,
 							tripUpdates.find((tripUpdate) => tripUpdate.trip.tripId === vehiclePosition.trip?.tripId),
-						);
+						)?.filter(({ aimedDepartureTime }) => Temporal.Instant.compare(now, aimedDepartureTime.toInstant()) < 0);
 
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 
