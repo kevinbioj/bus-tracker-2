@@ -50,7 +50,7 @@ export default defineConfig({
 			},
 		},
 	},
-	// build: {
-	// 	sourcemap: true,
-	// },
+	build: {
+		sourcemap: true,
+	},
 });
