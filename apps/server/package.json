@@ -12,19 +12,19 @@
     "migrations:push": "drizzle-kit push"
   },
   "devDependencies": {
-    "@types/node": "^22.10.7",
-    "drizzle-kit": "^0.30.2",
+    "@types/node": "^22.13.1",
+    "drizzle-kit": "^0.30.4",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   },
   "dependencies": {
     "@bus-tracker/contracts": "workspace:*",
-    "@hono/node-server": "^1.13.7",
-    "@sentry/node": "^8.50.0",
-    "@sentry/profiling-node": "^8.50.0",
+    "@hono/node-server": "^1.13.8",
+    "@sentry/node": "^9.0.1",
+    "@sentry/profiling-node": "^9.0.1",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.38.4",
-    "hono": "^4.6.17",
+    "drizzle-orm": "^0.39.3",
+    "hono": "^4.7.0",
     "p-limit": "^6.2.0",
     "postgres": "^3.4.5",
     "redis": "^4.7.0",
