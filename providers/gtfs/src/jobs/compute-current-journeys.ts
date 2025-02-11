@@ -239,7 +239,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 							: undefined,
 				direction: (journey?.trip.direction ?? vehiclePosition.trip?.directionId) === 0 ? "OUTBOUND" : "INBOUND",
 				calls:
-					typeof journey !== "undefined"
+					typeof journey !== "undefined" || typeof calls !== "undefined"
 						? (calls?.map((call, index) => {
 								const isLast = index === calls.length - 1;
 								return {
