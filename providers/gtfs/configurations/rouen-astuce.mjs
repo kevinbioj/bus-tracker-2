@@ -62,7 +62,17 @@ const sources = [
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
 		mode: "NO-TU",
-		getNetworkRef: () => "ASTUCE",
+		getNetworkRef: (journey) => {
+			if (
+				typeof journey !== "undefined" &&
+				journey.trip.route.name === "530" &&
+				[journey.calls.at(0), journey.calls.at(-1)].some((call) => call.stop.name === "Caudebec - Quai")
+			) {
+				return "NOMAD";
+			}
+			return "ASTUCE";
+		},
+		getDestination: (journey) => `${journey.calls.at(0)?.stop.name} > ${journey.calls.at(-1)?.stop.name}`,
 		getOperatorRef: () => "TNI",
 	},
 	{
