@@ -68,7 +68,7 @@ const sources = [
 				journey.trip.route.name === "530" &&
 				[journey.calls.at(0), journey.calls.at(-1)].some((call) => call.stop.name === "Caudebec - Quai")
 			) {
-				return "NOMAD";
+				return "NOMAD-CAR";
 			}
 			return "ASTUCE";
 		},
