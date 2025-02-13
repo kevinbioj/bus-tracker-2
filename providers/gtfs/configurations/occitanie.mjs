@@ -1,6 +1,13 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "lio",
+		staticResourceHref:
+			"https://app.mecatran.com/utw/ws/gtfsfeed/static/lio?apiKey=2b160d626f783808095373766f18714901325e45&type=gtfs_lio",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "LIO",
+	},
+	{
 		id: "montpellier",
 		staticResourceHref: "https://data.montpellier3m.fr/TAM_MMM_GTFSRT/GTFS.zip",
 		realtimeResourceHrefs: [
@@ -38,11 +45,12 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "SAM",
+		mapVehiclePosition: (vehicle) => (vehicle.trip ? vehicle : undefined),
 	},
 	{
 		id: "toulouse",
 		staticResourceHref:
-			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/81678/81678.20241111.061207.408753.zip",
+			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
 		realtimeResourceHrefs: [],
 		mapLineRef: (lineRef) => lineRef.slice(4),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
