@@ -1,8 +1,8 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
-import type { MapBounds } from "~/hooks/use-map-bounds.js";
+import type { MapBounds } from "~/hooks/use-map-bounds";
 
-import { client } from "./client.js";
+import { client } from "./client";
 
 export type VehicleJourneyMarker = {
 	id: string;
