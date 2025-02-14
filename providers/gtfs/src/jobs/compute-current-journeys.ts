@@ -38,32 +38,23 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 
 const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): JourneyCall[] | undefined => {
 	if (typeof tripUpdate?.stopTimeUpdate === "undefined") return;
-	if (
-		tripUpdate.stopTimeUpdate.some(
-			({ stopId, arrival, departure, scheduleRelationship }) =>
-				!gtfs.stops.has(stopId) ||
-				(typeof arrival?.time === "undefined" &&
-					typeof departure?.time === "undefined" &&
-					scheduleRelationship === "SCHEDULED"),
-		)
-	)
-		return;
+	if (tripUpdate.stopTimeUpdate.some(({ stopId }) => !gtfs.stops.has(stopId))) return;
 
 	const timeZone =
 		gtfs.trips.values().next().value?.route.agency.timeZone ??
 		new Temporal.TimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
 
 	return tripUpdate.stopTimeUpdate.flatMap((stopTimeUpdate, index) => {
-		if (typeof stopTimeUpdate.arrival?.time !== "number" || typeof stopTimeUpdate.departure?.time !== "number")
+		if (typeof stopTimeUpdate.arrival?.time !== "number" && typeof stopTimeUpdate.departure?.time !== "number")
 			return [];
 
 		const stop = gtfs.stops.get(stopTimeUpdate.stopId)!;
 
 		const arrivalTime = Temporal.Instant.fromEpochSeconds(
-			(stopTimeUpdate.arrival ?? stopTimeUpdate.departure).time!,
+			(stopTimeUpdate.arrival ?? stopTimeUpdate.departure)!.time!,
 		).toZonedDateTimeISO(timeZone);
 		const departureTime = Temporal.Instant.fromEpochSeconds(
-			(stopTimeUpdate.departure ?? stopTimeUpdate.arrival).time!,
+			(stopTimeUpdate.departure ?? stopTimeUpdate.arrival)!.time!,
 		).toZonedDateTimeISO(timeZone);
 
 		return {
