@@ -24,6 +24,16 @@ const sources = [
 		excludeScheduled: (trip) => trip.route.type !== "SUBWAY",
 		getNetworkRef: () => "STAR",
 	},
+	{
+		id: "vannes",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/565533c0-64ae-44d6-9dfa-169be5b805c6",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-vehicle-position",
+		],
+		getNetworkRef: () => "KICEO",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
