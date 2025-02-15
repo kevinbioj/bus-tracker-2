@@ -25,6 +25,12 @@ const sources = [
 		getNetworkRef: () => "STAR",
 	},
 	{
+		id: "saint-malo",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/3bd31fbe-93f4-432d-ade7-ee8d69897880",
+		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/mat-saint-malo-gtfs-rt-trip-update"],
+		getNetworkRef: () => "MAT",
+	},
+	{
 		id: "vannes",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/565533c0-64ae-44d6-9dfa-169be5b805c6",
 		realtimeResourceHrefs: [
