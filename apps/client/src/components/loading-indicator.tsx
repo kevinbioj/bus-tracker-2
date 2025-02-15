@@ -17,5 +17,5 @@ export function LoadingIndicator() {
 		}
 	}, [state]);
 
-	return <LoadingBar className="h-2" color="white" ref={ref} />;
+	return <LoadingBar className="h-2" color="white" ref={ref} waitingTime={250} />;
 }
