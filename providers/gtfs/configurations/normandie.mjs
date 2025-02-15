@@ -238,13 +238,7 @@ const sources = [
 	{
 		id: "slambus",
 		staticResourceHref: "https://exs.atm.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=SLAM",
-		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/slam/vehicle-positions",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/slam/trip-updates",
-		],
-		excludeScheduled: true,
 		getNetworkRef: () => "SLAMBUS",
-		getVehicleRef: () => undefined,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
@@ -253,10 +247,6 @@ const sources = [
 	{
 		id: "vikibus",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/b3e50a9c-bdca-42c5-b04b-aeba964b0df8",
-		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/vikibus/vehicle-positions",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/vikibus/trip-updates",
-		],
 		getNetworkRef: () => "VIKIBUS",
 	},
 	//- Argentan Bus
