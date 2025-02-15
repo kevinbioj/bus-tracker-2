@@ -14,7 +14,7 @@ export function NavigationBar() {
 	const { pathname } = useLocation();
 
 	return (
-		<header className="bg-branding text-branding-foreground flex gap-4 h-[60px] p-3">
+		<header className="bg-branding text-branding-foreground flex gap-4 h-[60px] p-3 sticky top-0 z-10">
 			<img className="h-full" src="/logo.svg" alt="" />
 			<span className="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
 				Bus Tracker
