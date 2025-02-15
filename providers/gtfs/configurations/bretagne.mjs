@@ -14,6 +14,14 @@ const sources = [
 		getVehicleRef: (vehicle) => (vehicle ? +vehicle.id - 2 ** 28 : undefined),
 	},
 	{
+		id: "lorient",
+		staticResourceHref:
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rdla-lorient/exports/medias.zip",
+		realtimeResourceHrefs: ["https://feed-rdla-lorient.ratpdev.com/GTFS-RT"],
+		getNetworkRef: () => "IZILO",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
+	{
 		id: "rennes",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/star.zip",
 		realtimeResourceHrefs: [
