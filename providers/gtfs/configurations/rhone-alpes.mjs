@@ -6,6 +6,17 @@ const sources = [
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "TAG",
 	},
+	{
+		id: "st-etienne",
+		staticResourceHref: "https://api.stas3.cityway.fr/dataflow/offre-tc/download?provider=STAS&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.stas3.cityway.fr/dataflow/horaire-tc-tr/download?provider=STAS&dataFormat=GTFS-RT",
+			"https://api.stas3.cityway.fr/dataflow/vehicule-tc-tr/download?provider=STAS&dataFormat=GTFS-RT",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		getNetworkRef: () => "STAS",
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
