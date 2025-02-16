@@ -10,12 +10,14 @@ export function NetworkHeader({ network }: Readonly<NetworkHeaderProps>) {
 		<div className="flex h-16 space-x-4 w-full">
 			{network.logoHref ? (
 				<>
-					<picture className="mx-auto sm:mx-0">
-						{network.darkModeLogoHref !== null ? (
-							<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-						) : null}
-						<img className="h-full w-full sm:w-60" src={network.logoHref} alt="" />
-					</picture>
+					<div className="sm:w-60">
+						<picture>
+							{network.darkModeLogoHref !== null ? (
+								<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+							) : null}
+							<img className="h-full mx-auto" src={network.logoHref} alt="" />
+						</picture>
+					</div>
 					<Separator className="hidden sm:block" orientation="vertical" />
 				</>
 			) : null}
