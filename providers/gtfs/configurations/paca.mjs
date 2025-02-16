@@ -30,8 +30,15 @@ const sources = [
 			"https://transport.data.gouv.fr/resources/80732/download",
 			"https://transport.data.gouv.fr/resources/80731/download",
 		],
+		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "TANGO",
+		mapTripUpdate: (tripUpdate) => {
+			for (const stopTimeUpdate of tripUpdate.stopTimeUpdate) {
+				stopTimeUpdate.stopId = stopTimeUpdate.stopId.slice(stopTimeUpdate.stopId.indexOf(":") + 1);
+			}
+			return tripUpdate;
+		},
 	},
 	{
 		id: "toulon",
