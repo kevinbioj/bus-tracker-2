@@ -16,6 +16,7 @@ const sources = [
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		getNetworkRef: () => "STAS",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 ];
 
