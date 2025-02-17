@@ -23,24 +23,27 @@ export function NetworkDetails() {
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId));
 
 	return (
-		<main className="p-3 max-w-screen-lg w-full mx-auto">
-			<NetworkHeader network={network} />
-			<Breadcrumb className="mt-3">
-				<BreadcrumbList>
-					<BreadcrumbItem>
-						<BreadcrumbLink asChild>
-							<Link to="/data">Données</Link>
-						</BreadcrumbLink>
-					</BreadcrumbItem>
-					<BreadcrumbSeparator />
-					<BreadcrumbItem>
-						<BreadcrumbPage>{network.name}</BreadcrumbPage>
-					</BreadcrumbItem>
-				</BreadcrumbList>
-			</Breadcrumb>
-			<Separator className="my-1" />
-			{/* <NetworkStatistics networkId={network.id} /> */}
-			<NetworkVehicles networkId={network.id} />
-		</main>
+		<>
+			<title>{`${network.name} – Données – Bus Tracker`}</title>
+			<main className="p-3 max-w-screen-lg w-full mx-auto">
+				<NetworkHeader network={network} />
+				<Breadcrumb className="mt-3">
+					<BreadcrumbList>
+						<BreadcrumbItem>
+							<BreadcrumbLink asChild>
+								<Link to="/data">Données</Link>
+							</BreadcrumbLink>
+						</BreadcrumbItem>
+						<BreadcrumbSeparator />
+						<BreadcrumbItem>
+							<BreadcrumbPage>{network.name}</BreadcrumbPage>
+						</BreadcrumbItem>
+					</BreadcrumbList>
+				</Breadcrumb>
+				<Separator className="my-1" />
+				{/* <NetworkStatistics networkId={network.id} /> */}
+				<NetworkVehicles networkId={network.id} />
+			</main>
+		</>
 	);
 }
