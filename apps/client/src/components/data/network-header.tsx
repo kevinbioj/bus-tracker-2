@@ -7,10 +7,10 @@ type NetworkHeaderProps = {
 
 export function NetworkHeader({ network }: Readonly<NetworkHeaderProps>) {
 	return (
-		<div className="flex h-16 mt-2 mb-4 space-x-4 w-full">
+		<div className="flex h-16 mt-1 mb-4 space-x-4 w-full">
 			{network.logoHref ? (
 				<>
-					<div className="px-3 h-full w-full max-w-[30%] sm:w-auto">
+					<div className="px-3 h-full w-full sm:max-w-[30%] sm:w-auto">
 						<picture>
 							{network.darkModeLogoHref !== null ? (
 								<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
