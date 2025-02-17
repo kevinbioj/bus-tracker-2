@@ -18,7 +18,11 @@ const sources = [
 	{
 		id: "angers",
 		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/Irigo/gtfs.zip",
-		realtimeResourceHrefs: ["https://ara-api.enroute.mobi/irigo/gtfs/trip-updates"],
+		realtimeResourceHrefs: [
+		  "https://ara-api.enroute.mobi/irigo/gtfs/trip-updates",
+				"https://ara-api.enroute.mobi/irigo/gtfs/vehicle-positions",
+		],
+		mode: "NO-TU",
 		gtfsOptions: {
 			filterTrips: (trip) =>
 				[
@@ -46,6 +50,12 @@ const sources = [
 					"NavM",
 					"Tbus",
 				].includes(trip.route.id),
+		},
+		mapVehiclePosition: (vehicle) => {
+			 if (vehicle.vehicle.id.startsWith("vehicle")) {
+					 return [];
+				}
+			 return vehicle;
 		},
 		getNetworkRef: () => "IRIGO",
 	},
