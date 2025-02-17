@@ -203,7 +203,8 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				typeof journey !== "undefined"
 					? typeof vehiclePosition.currentStopSequence !== "undefined"
 						? journey.calls.filter((call) => call.sequence >= vehiclePosition.currentStopSequence!)
-						: typeof vehiclePosition.stopId !== "undefined"
+						: typeof vehiclePosition.stopId !== "undefined" &&
+								journey.calls.some(({ stop }) => stop.id === vehiclePosition.stopId)
 							? journey.calls.slice(journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId))
 							: getCalls(journey, now, () => Number.POSITIVE_INFINITY)
 					: createCallsFromTripUpdate(
