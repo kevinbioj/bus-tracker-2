@@ -19,8 +19,8 @@ const sources = [
 		id: "angers",
 		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/Irigo/gtfs.zip",
 		realtimeResourceHrefs: [
-		  "https://ara-api.enroute.mobi/irigo/gtfs/trip-updates",
-				"https://ara-api.enroute.mobi/irigo/gtfs/vehicle-positions",
+			"https://ara-api.enroute.mobi/irigo/gtfs/trip-updates",
+			"https://ara-api.enroute.mobi/irigo/gtfs/vehicle-positions",
 		],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -53,10 +53,10 @@ const sources = [
 				].includes(trip.route.id),
 		},
 		mapVehiclePosition: (vehicle) => {
-			 if (Number.isNaN(+vehicle.vehicle.id)) {
-					 return [];
-				}
-			 return vehicle;
+			if (Number.isNaN(+vehicle.vehicle.id)) {
+				return [];
+			}
+			return vehicle;
 		},
 		getNetworkRef: () => "IRIGO",
 	},
@@ -66,7 +66,10 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/irigo/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "IRIGO",
-		getVehicleRef: (descriptor) => descriptor?.label?.trim() || undefined,
+		getVehicleRef: (descriptor) => {
+			if (Number.isNaN(+descriptor?.label?.trim())) return undefined;
+			return +descriptor?.label?.trim();
+		},
 	},
 	{
 		id: "lemans",
