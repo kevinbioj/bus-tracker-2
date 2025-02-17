@@ -11,7 +11,7 @@ const sources = [
 		mode: "VP-ONLY",
 		excludeScheduled: true,
 		getNetworkRef: () => "TBM",
-		getVehicleRef: (vehicle) => vehicle?.id.split(":")[1],
+		getVehicleRef: (vehicle) => vehicle?.id.split(":")[1] ?? vehicle?.label,
 		getDestination: (journey) => {
 			const lastCall = journey.calls.at(-1);
 			if (typeof lastCall === "undefined" || lastCall.status === "SCHEDULED") return journey.trip.headsign;
