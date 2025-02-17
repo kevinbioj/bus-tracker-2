@@ -23,6 +23,7 @@ const sources = [
 				"https://ara-api.enroute.mobi/irigo/gtfs/vehicle-positions",
 		],
 		mode: "NO-TU",
+		excludeScheduled: true,
 		gtfsOptions: {
 			filterTrips: (trip) =>
 				[
@@ -52,7 +53,7 @@ const sources = [
 				].includes(trip.route.id),
 		},
 		mapVehiclePosition: (vehicle) => {
-			 if (vehicle.vehicle.id.startsWith("vehicle")) {
+			 if (Number.isNaN(+vehicle.vehicle.id)) {
 					 return [];
 				}
 			 return vehicle;
