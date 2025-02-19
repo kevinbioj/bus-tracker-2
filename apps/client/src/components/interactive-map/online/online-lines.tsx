@@ -31,7 +31,7 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 					>
 						<div className="flex items-center h-full gap-2">
 							{line.cartridgeHref !== null ? (
-								<img className="h-full" src={line.cartridgeHref} alt={line.number} />
+								<img className="h-full max-w-[25%]" src={line.cartridgeHref} alt={line.number} />
 							) : (
 								<p className="align-middle font-bold min-w-12 text-xl">{line.number}</p>
 							)}
