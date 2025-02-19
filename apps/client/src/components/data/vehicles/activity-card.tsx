@@ -13,14 +13,16 @@ export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
 
 	return (
 		<article
-			className="flex min-h-12 px-2 py-1 rounded-md"
+			className="flex h-14 px-2 py-1 rounded-md"
 			style={{
 				backgroundColor: line?.color ? `#${line.color}` : undefined,
 				color: line?.textColor ? `#${line.textColor}` : undefined,
 			}}
 		>
 			{line?.cartridgeHref ? (
-				<img className="h-full max-w-24 m-auto" alt={line.number} src={line.cartridgeHref} />
+				<div className="h-full max-w-16">
+					<img className="h-full" alt={line.number} src={line.cartridgeHref} />
+				</div>
 			) : (
 				<p className="font-bold min-w-12 my-auto pt-[1px] text-2xl text-center">{line?.number}</p>
 			)}
