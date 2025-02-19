@@ -20,7 +20,7 @@ export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
 			}}
 		>
 			{line?.cartridgeHref ? (
-				<img className="h-12 mx-auto" alt={line.number} src={line.cartridgeHref} />
+				<img className="h-full max-w-24 m-auto" alt={line.number} src={line.cartridgeHref} />
 			) : (
 				<p className="font-bold min-w-12 my-auto pt-[1px] text-2xl text-center">{line?.number}</p>
 			)}
