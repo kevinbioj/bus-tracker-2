@@ -27,10 +27,10 @@ type WSContent = {
 	Total: number;
 };
 
-export async function getVehicles(line: string, direction: "ALL" | "RET") {
+export async function getVehicles(lines: { Ligne: string; Sens: "ALL" | "RET" }[]) {
 	const response = await fetch(WS_ENDPOINT, {
 		body: JSON.stringify({
-			Lignes: [{ Ligne: line, Sens: direction }],
+			Lignes: lines,
 		}),
 		headers: { "Content-Type": "application/json" },
 		method: "POST",

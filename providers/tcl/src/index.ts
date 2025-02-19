@@ -21,19 +21,18 @@ await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
 
-const listIterable = lines.flatMap((line) => [
-	{ line, direction: "ALL" as const },
-	{ line, direction: "RET" as const },
-]);
 let currentIndex = 0;
 
 while (true) {
-	if (currentIndex >= listIterable.length) currentIndex = 0;
+	if (currentIndex >= lines.length) currentIndex = 0;
 
-	const { line, direction } = listIterable[currentIndex]!;
-	const updateLog = console.draft(`%s ► Fetching line ${line} in direction ${direction}`, Temporal.Now.instant());
+	const linesFilter = lines[currentIndex]!;
+	const id = `[${linesFilter.map(({ line, direction }) => `(${line}:${direction})`).join(",")}]`;
+	const updateLog = console.draft(`%s ► Fetching ${id}`, Temporal.Now.instant());
 
-	const { Vehicules, Total } = await getVehicles(line, direction);
+	const { Vehicules, Total } = await getVehicles(
+		linesFilter.map(({ line, direction }) => ({ Ligne: line, Sens: direction as "ALL" | "RET" })),
+	);
 
 	const mappedVehicles = Vehicules.map((vehicle) => ({
 		id: `TCL::VehicleTracking:${vehicle.NumeroCarrosserie}`,
@@ -42,7 +41,7 @@ while (true) {
 			number: vehicle.Ligne,
 			type: vehicle.Ligne.startsWith("T") ? "TRAMWAY" : "BUS",
 		},
-		direction: direction === "ALL" ? "OUTBOUND" : "INBOUND",
+		direction: vehicle.Sens === "ALL" ? "OUTBOUND" : "INBOUND",
 		destination: vehicle.Destination,
 		position: {
 			...convertPosition({ X: vehicle.X, Y: vehicle.Y }),
@@ -59,8 +58,8 @@ while (true) {
 
 	const success =
 		Total > Vehicules.length
-			? `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles on line ${line} direction ${direction} (${Total - Vehicules.length} were missed)`
-			: `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles on line ${line} direction ${direction}`;
+			? `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id} (${Total - Vehicules.length} were missed)`
+			: `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id}`;
 
 	updateLog(success);
 	currentIndex += 1;
