@@ -64,5 +64,5 @@ while (true) {
 
 	updateLog(success);
 	currentIndex += 1;
-	await setTimeout(1_000);
+	await setTimeout(500);
 }
