@@ -4,3 +4,4 @@ packages:
   - libraries/contracts
   - providers/gtfs
   - providers/twisto
+  - providers/tcl
