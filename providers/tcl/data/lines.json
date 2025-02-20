@@ -204,5 +204,29 @@
   [
     { "line": "19", "direction": "ALL" },
     { "line": "19", "direction": "RET" }
+  ],
+  [
+    { "line": "PL1", "direction": "ALL" },
+    { "line": "PL1", "direction": "RET" }
+  ],
+  [
+    { "line": "PL2", "direction": "ALL" },
+    { "line": "PL2", "direction": "RET" }
+  ],
+  [
+    { "line": "PL3", "direction": "ALL" },
+    { "line": "PL3", "direction": "RET" }
+  ],
+  [
+    { "line": "RT1", "direction": "ALL" },
+    { "line": "RT1", "direction": "RET" }
+  ],
+  [
+    { "line": "RT2", "direction": "ALL" },
+    { "line": "RT2", "direction": "RET" }
+  ],
+  [
+    { "line": "RT3", "direction": "ALL" },
+    { "line": "RT3", "direction": "RET" }
   ]
 ]
