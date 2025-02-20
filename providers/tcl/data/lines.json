@@ -218,10 +218,6 @@
     { "line": "22", "direction": "RET" }
   ],
   [
-    { "line": "23", "direction": "ALL" },
-    { "line": "23", "direction": "RET" }
-  ],
-  [
     { "line": "24", "direction": "ALL" },
     { "line": "24", "direction": "RET" }
   ],
@@ -236,18 +232,6 @@
   [
     { "line": "27", "direction": "ALL" },
     { "line": "27", "direction": "RET" }
-  ],
-  [
-    { "line": "28", "direction": "ALL" },
-    { "line": "28", "direction": "RET" }
-  ],
-  [
-    { "line": "29", "direction": "ALL" },
-    { "line": "29", "direction": "RET" }
-  ],
-  [
-    { "line": "30", "direction": "ALL" },
-    { "line": "30", "direction": "RET" }
   ],
   [
     { "line": "PL1", "direction": "ALL" },
