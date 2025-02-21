@@ -82,10 +82,6 @@
     { "line": "C15", "direction": "RET" }
   ],
   [
-    { "line": "C15E", "direction": "ALL" },
-    { "line": "C15E", "direction": "RET" }
-  ],
-  [
     { "line": "C16", "direction": "ALL" },
     { "line": "C16", "direction": "RET" }
   ],
@@ -106,8 +102,12 @@
     { "line": "C20", "direction": "RET" }
   ],
   [
+    { "line": "C15E", "direction": "ALL" },
+    { "line": "C15E", "direction": "RET" },
     { "line": "C20E", "direction": "ALL" },
-    { "line": "C20E", "direction": "RET" }
+    { "line": "C20E", "direction": "RET" },
+    { "line": "C24E", "direction": "ALL" },
+    { "line": "C24E", "direction": "RET" }
   ],
   [
     { "line": "C21", "direction": "ALL" },
@@ -116,10 +116,6 @@
   [
     { "line": "C24", "direction": "ALL" },
     { "line": "C24", "direction": "RET" }
-  ],
-  [
-    { "line": "C24E", "direction": "ALL" },
-    { "line": "C24E", "direction": "RET" }
   ],
   [
     { "line": "C25", "direction": "ALL" },
@@ -131,115 +127,73 @@
   ],
   [
     { "line": "1E", "direction": "ALL" },
-    { "line": "1E", "direction": "RET" }
-  ],
-  [
+    { "line": "1E", "direction": "RET" },
     { "line": "2", "direction": "ALL" },
     { "line": "2", "direction": "RET" }
   ],
   [
     { "line": "3", "direction": "ALL" },
-    { "line": "3", "direction": "RET" }
-  ],
-  [
+    { "line": "3", "direction": "RET" },
     { "line": "5", "direction": "ALL" },
-    { "line": "5", "direction": "RET" }
-  ],
-  [
+    { "line": "5", "direction": "RET" },
     { "line": "6", "direction": "ALL" },
     { "line": "6", "direction": "RET" }
   ],
   [
     { "line": "7", "direction": "ALL" },
-    { "line": "7", "direction": "RET" }
-  ],
-  [
+    { "line": "7", "direction": "RET" },
     { "line": "8", "direction": "ALL" },
-    { "line": "8", "direction": "RET" }
-  ],
-  [
+    { "line": "8", "direction": "RET" },
     { "line": "9", "direction": "ALL" },
     { "line": "9", "direction": "RET" }
   ],
   [
     { "line": "10", "direction": "ALL" },
-    { "line": "10", "direction": "RET" }
-  ],
-  [
+    { "line": "10", "direction": "RET" },
     { "line": "10E", "direction": "ALL" },
-    { "line": "10E", "direction": "RET" }
-  ],
-  [
+    { "line": "10E", "direction": "RET" },
     { "line": "11", "direction": "ALL" },
     { "line": "11", "direction": "RET" }
   ],
   [
     { "line": "12", "direction": "ALL" },
-    { "line": "12", "direction": "RET" }
-  ],
-  [
+    { "line": "12", "direction": "RET" },
     { "line": "14", "direction": "ALL" },
-    { "line": "14", "direction": "RET" }
-  ],
-  [
+    { "line": "14", "direction": "RET" },
     { "line": "15", "direction": "ALL" },
     { "line": "15", "direction": "RET" }
   ],
   [
     { "line": "15E", "direction": "ALL" },
-    { "line": "15E", "direction": "RET" }
-  ],
-  [
+    { "line": "15E", "direction": "RET" },
     { "line": "16", "direction": "ALL" },
-    { "line": "16", "direction": "RET" }
-  ],
-  [
+    { "line": "16", "direction": "RET" },
     { "line": "17", "direction": "ALL" },
     { "line": "17", "direction": "RET" }
   ],
   [
     { "line": "18", "direction": "ALL" },
-    { "line": "18", "direction": "RET" }
-  ],
-  [
+    { "line": "18", "direction": "RET" },
     { "line": "19", "direction": "ALL" },
-    { "line": "19", "direction": "RET" }
-  ],
-  [
+    { "line": "19", "direction": "RET" },
     { "line": "20", "direction": "ALL" },
     { "line": "20", "direction": "RET" }
   ],
   [
     { "line": "21", "direction": "ALL" },
-    { "line": "21", "direction": "RET" }
-  ],
-  [
+    { "line": "21", "direction": "RET" },
     { "line": "22", "direction": "ALL" },
-    { "line": "22", "direction": "RET" }
-  ],
-  [
+    { "line": "22", "direction": "RET" },
     { "line": "24", "direction": "ALL" },
     { "line": "24", "direction": "RET" }
   ],
   [
     { "line": "25", "direction": "ALL" },
-    { "line": "25", "direction": "RET" }
-  ],
-  [
+    { "line": "25", "direction": "RET" },
     { "line": "26", "direction": "ALL" },
-    { "line": "26", "direction": "RET" }
-  ],
-  [
+    { "line": "26", "direction": "RET" },
     { "line": "27", "direction": "ALL" },
     { "line": "27", "direction": "RET" }
-  ],
-  [
-    { "line": "PL1", "direction": "ALL" },
-    { "line": "PL1", "direction": "RET" },
-    { "line": "PL2", "direction": "ALL" },
-    { "line": "PL2", "direction": "RET" },
-    { "line": "PL3", "direction": "ALL" },
-    { "line": "PL3", "direction": "RET" }
   ],
   [
     { "line": "RT1", "direction": "ALL" },
