@@ -75,7 +75,7 @@ export function About() {
 					Envoyez-moi un e-mail à <Link to="mailto:contact@bus-tracker.fr">contact@bus-tracker.fr</Link> 😉
 				</p>
 				<Separator />
-				<DialogTitle className="text-center">Questions fréquentes</DialogTitle>
+				<DialogTitle>Questions fréquentes</DialogTitle>
 				<Accordion type="single" collapsible>
 					{qanda.map(({ question, answer }) => (
 						<AccordionItem key={question} value={question}>
