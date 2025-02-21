@@ -9,6 +9,7 @@ import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { createClient } from "redis";
 
+import { registerAnnouncementRoutes } from "./controllers/announcements.js";
 import { registerGirouetteRoutes } from "./controllers/girouettes.js";
 import { registerLineRoutes } from "./controllers/lines.js";
 import { registerNetworkRoutes } from "./controllers/networks.js";
@@ -65,6 +66,7 @@ console.log("► Listening on port %d.\n", port);
 export const hono = new Hono();
 hono.use(compress());
 hono.use(cors({ origin: "*" }));
+registerAnnouncementRoutes(hono);
 registerLineRoutes(hono);
 registerNetworkRoutes(hono, journeyStore);
 registerVehicleRoutes(hono, journeyStore);

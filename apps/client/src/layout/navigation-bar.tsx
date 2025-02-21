@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 
 import { About } from "~/components/about/about";
-import { Help } from "~/components/help/help";
+import { Announcements } from "~/components/announcements/announcements";
 import { Settings } from "~/components/settings/settings";
 import { Button } from "~/components/ui/button";
 
@@ -32,8 +32,8 @@ export function NavigationBar() {
 				))}
 			</nav>
 			<div className="space-x-1 sm:space-x-2">
+				<Announcements />
 				<Settings />
-				<Help />
 				<About />
 			</div>
 		</header>

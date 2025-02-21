@@ -43,6 +43,13 @@
       "when": 1736878900516,
       "tag": "0005_late_cerise",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1740166107443,
+      "tag": "0006_awesome_albert_cleary",
+      "breakpoints": true
     }
   ]
 }

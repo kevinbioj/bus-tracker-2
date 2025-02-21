@@ -1,5 +1,5 @@
 import { vehicleJourneyLineTypes } from "@bus-tracker/contracts";
-import type { InferSelectModel } from "drizzle-orm";
+import { type InferSelectModel, sql } from "drizzle-orm";
 import {
 	boolean,
 	char,
@@ -159,3 +159,17 @@ export const mercatoActivity = pgTable(
 );
 
 export type MercatoActivity = InferSelectModel<typeof mercatoActivity>;
+
+export const announcements = pgTable("announcement", {
+	id: serial("id").primaryKey(),
+	title: varchar("title").notNull(),
+	content: text("content"),
+	type: varchar({ enum: ["INFO", "OUTAGE"] })
+		.notNull()
+		.default("INFO"),
+	publishedAt: timestamp("published_at"),
+	updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+	createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
+export type Announcement = InferSelectModel<typeof announcements>;
