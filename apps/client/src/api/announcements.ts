@@ -13,6 +13,7 @@ export type Announcement = {
 };
 
 export const GetAnnouncementsQuery = queryOptions({
+	refetchInterval: 120_000,
 	queryKey: ["announcements"],
 	queryFn: () => {
 		const params = new URLSearchParams();

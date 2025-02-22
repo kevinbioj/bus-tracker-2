@@ -11,9 +11,18 @@ import { plausible } from "~/utils/plausible";
 
 export function Announcements() {
 	const { data: announcements } = useQuery(GetAnnouncementsQuery);
-	const [announcementsRead, setAnnouncementsRead] = useLocalStorage<string[]>("announcements-read", []);
+	const [announcementsRead, setAnnouncementsRead] = useLocalStorage<number[]>("announcements-read", []);
 
-	const trackAnnouncementRead = (id: string) => {
+	// If we have no announcement, we don't even display the icon.
+	if (typeof announcements === "undefined") return null;
+
+	const unreadAnnouncementsCount = announcements.reduce(
+		(count, { id }) => count + (announcementsRead.includes(id) ? 0 : 1),
+		0,
+	);
+
+	const trackAnnouncementRead = (value: string) => {
+		const id = +value;
 		if (announcementsRead.includes(id)) return;
 
 		setAnnouncementsRead([...announcementsRead, id]);
@@ -27,9 +36,9 @@ export function Announcements() {
 			<DialogTrigger asChild>
 				<Button className="relative" size="icon" variant="branding-outline">
 					<LucideMegaphone aria-label="Actualités" />
-					{typeof announcements !== "undefined" && announcements.length > 0 && (
-						<span className="absolute animate-in bg-white -top-2 -left-2 size-4 rounded-full text-black text-xs z-10">
-							{announcements.length}
+					{unreadAnnouncementsCount > 0 && (
+						<span className="absolute animate-pulse bg-green-600 -top-2 -left-2 size-4 rounded-full text-white text-xs z-10">
+							{unreadAnnouncementsCount}
 						</span>
 					)}
 				</Button>
@@ -39,11 +48,11 @@ export function Announcements() {
 					<DialogTitle>Actualités</DialogTitle>
 				</DialogHeader>
 				<Accordion onValueChange={trackAnnouncementRead} type="single" collapsible>
-					{announcements?.map((announcement) => (
+					{announcements.map((announcement) => (
 						<AccordionItem key={announcement.id} value={announcement.id.toString()}>
 							<AccordionTrigger className="relative">
 								<AnnouncementTitle announcement={announcement} />
-								{!announcementsRead.includes(announcement.id.toString()) && (
+								{!announcementsRead.includes(announcement.id) && (
 									<LucideCircle className="absolute top-2 -left-3 size-2 fill-green-600 stroke-green-600 animate-pulse" />
 								)}
 							</AccordionTrigger>
