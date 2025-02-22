@@ -19,6 +19,7 @@ export type TripUpdate = {
 export type VehiclePosition = {
 	currentStatus?: VehicleStopStatus;
 	currentStopSequence?: number;
+	occupancyStatus?: OccupancyStatus;
 	position: Position;
 	stopId?: string;
 	timestamp: number;
@@ -27,6 +28,17 @@ export type VehiclePosition = {
 };
 
 // ---
+
+export type OccupancyStatus =
+	| "EMPTY"
+	| "MANY_SEATS_AVAILABLE"
+	| "FEW_SEATS_AVAILABLE"
+	| "STANDING_ROOM_ONLY"
+	| "CRUSHED_STANDING_ROOM_ONLY"
+	| "FULL"
+	| "NOT_ACCEPTING_PASSENGERS"
+	| "NO_DATA_AVAILABLE"
+	| "NOT_BOARDABLE";
 
 export type Position = {
 	latitude: number;

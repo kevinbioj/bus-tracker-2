@@ -248,6 +248,9 @@ importers:
       temporal-polyfill:
         specifier: ^0.2.5
         version: 0.2.5
+      ts-pattern:
+        specifier: ^5.6.2
+        version: 5.6.2
     devDependencies:
       '@types/decompress':
         specifier: ^4.2.7

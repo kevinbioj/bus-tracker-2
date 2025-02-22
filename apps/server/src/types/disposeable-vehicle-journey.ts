@@ -18,6 +18,7 @@ export type DisposeableVehicleJourney = {
 		type: "GPS" | "COMPUTED";
 		recordedAt: string;
 	};
+	occupancy?: "LOW" | "MEDIUM" | "HIGH" | "NO_PASSENGERS";
 	networkId: number;
 	operatorId?: number;
 	vehicle?: { id?: number; number: string };

@@ -11,6 +11,8 @@ import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Button } from "~/components/ui/button";
 import { CustomTooltip } from "~/components/ui/custom-tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
+import { UsersIcon } from "~/icons/users";
+import { UsersSlashIcon } from "~/icons/users-slash";
 
 const positionIconDetails = {
 	GPS: {
@@ -27,6 +29,33 @@ const positionIconDetails = {
 		iconColor: "#E53E3E",
 		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
 		tooltipText: "Position théorique",
+	},
+} as const;
+
+const occupancyIconDetails = {
+	LOW: {
+		IconElement: UsersIcon,
+		iconClass: "fill-green-600",
+		tooltipClasses: "bg-green-600 dark:bg-green-700 text-white",
+		tooltipText: "Charge faible",
+	},
+	MEDIUM: {
+		IconElement: UsersIcon,
+		iconClass: "fill-orange-600",
+		tooltipClasses: "bg-orange-600 dark:bg-orange-700 text-white",
+		tooltipText: "Charge moyenne",
+	},
+	HIGH: {
+		IconElement: UsersIcon,
+		iconClass: "fill-red-600",
+		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
+		tooltipText: "Charge élevée",
+	},
+	NO_PASSENGERS: {
+		IconElement: UsersSlashIcon,
+		iconClass: "fill-red-600",
+		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
+		tooltipText: "Sans voyageur",
 	},
 } as const;
 
@@ -78,8 +107,13 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 			: positionIconDetails.SCHEDULED;
 	}, [journey]);
 
+	const occupancyInformation = useMemo(() => {
+		if (typeof journey.occupancy === "undefined") return;
+		return occupancyIconDetails[journey.occupancy];
+	}, [journey]);
+
 	return (
-		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] gap-2 px-2 py-1">
+		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] px-2 py-1">
 			{network?.hasVehiclesFeature ? (
 				<Button asChild className="" size="xs" variant="ghost">
 					<Link target="_blank" to={`/data/networks/${network?.id}`}>
@@ -92,13 +126,22 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 			<span className="my-auto text-center">
 				{vehicleLink}– {recordedAt}
 			</span>
-			<div className="flex justify-end">
+			<div className="flex justify-end gap-2">
+				{typeof occupancyInformation !== "undefined" && (
+					<CustomTooltip
+						className={clsx("font-bold", occupancyInformation.tooltipClasses)}
+						content={occupancyInformation.tooltipText}
+						place="left"
+					>
+						<occupancyInformation.IconElement className={clsx("size-5", occupancyInformation.iconClass)} />
+					</CustomTooltip>
+				)}
 				<CustomTooltip
 					className={clsx("font-bold", positionInformation.tooltipClasses)}
 					content={positionInformation.tooltipText}
 					place="left"
 				>
-					<SatelliteDishIcon className="h-5 w-5" color={positionInformation.iconColor} size={20} />
+					<SatelliteDishIcon className="size-5" color={positionInformation.iconColor} />
 				</CustomTooltip>
 			</div>
 		</div>

@@ -45,6 +45,10 @@ export const vehicleJourneyPositionSchema = z.object({
 
 export type VehicleJourneyPosition = z.infer<typeof vehicleJourneyPositionSchema>;
 
+export const vehicleJourneyOccupancy = ["LOW", "MEDIUM", "HIGH", "NO_PASSENGERS"] as const;
+
+export const vehicleJourneyOccupancyEnum = z.enum(vehicleJourneyOccupancy);
+
 export const vehicleJourneySchema = z.object({
 	id: z.string(),
 	line: vehicleJourneyLineSchema.optional(),
@@ -52,6 +56,7 @@ export const vehicleJourneySchema = z.object({
 	destination: z.string().optional(),
 	calls: z.array(vehicleJourneyCallSchema).optional(),
 	position: vehicleJourneyPositionSchema,
+	occupancy: vehicleJourneyOccupancyEnum.optional(),
 	networkRef: z.string(),
 	journeyRef: z.string().optional(),
 	operatorRef: z.string().optional(),

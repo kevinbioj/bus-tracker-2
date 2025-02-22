@@ -1,5 +1,6 @@
 import type { VehicleJourney } from "@bus-tracker/contracts";
 import { Temporal } from "temporal-polyfill";
+import { P, match } from "ts-pattern";
 
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
 import type { TripDescriptor, TripUpdate } from "../model/gtfs-rt.js";
@@ -265,6 +266,12 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						.toZonedDateTimeISO(journey?.trip.route.agency.timeZone ?? "Europe/Paris")
 						.toString({ timeZoneName: "never" }),
 				},
+				occupancy: match(vehiclePosition.occupancyStatus)
+					.with(P.union("EMPTY", "FEW_SEATS_AVAILABLE"), () => "LOW" as const)
+					.with(P.union("MANY_SEATS_AVAILABLE", "STANDING_ROOM_ONLY"), () => "MEDIUM" as const)
+					.with(P.union("CRUSHED_STANDING_ROOM_ONLY", "FULL"), () => "HIGH" as const)
+					.with(P.union("NOT_ACCEPTING_PASSENGERS", "NOT_BOARDABLE" as const), () => "NO_PASSENGERS" as const)
+					.otherwise(() => undefined),
 				journeyRef: typeof journey !== "undefined" ? `${networkRef}:ServiceJourney:${tripRef}` : undefined,
 				networkRef,
 				operatorRef,

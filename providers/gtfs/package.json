@@ -30,6 +30,7 @@
     "p-limit": "^6.2.0",
     "papaparse": "^5.5.2",
     "redis": "^4.7.0",
-    "temporal-polyfill": "^0.2.5"
+    "temporal-polyfill": "^0.2.5",
+    "ts-pattern": "^5.6.2"
   }
 }
