@@ -63,7 +63,7 @@ export function About() {
 					<LucideInfo aria-label="À propos" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent aria-describedby={undefined}>
+			<DialogContent aria-describedby={undefined} className="max-h-dvh overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>À propos de Bus Tracker</DialogTitle>
 				</DialogHeader>
@@ -75,11 +75,11 @@ export function About() {
 					Envoyez-moi un e-mail à <Link to="mailto:contact@bus-tracker.fr">contact@bus-tracker.fr</Link> 😉
 				</p>
 				<Separator />
-				<DialogTitle>Questions fréquentes</DialogTitle>
+				<DialogTitle className="text-center sm:text-left">Questions fréquentes</DialogTitle>
 				<Accordion type="single" collapsible>
 					{qanda.map(({ question, answer }) => (
 						<AccordionItem key={question} value={question}>
-							<AccordionTrigger>{question}</AccordionTrigger>
+							<AccordionTrigger className="text-start">{question}</AccordionTrigger>
 							<AccordionContent>{answer}</AccordionContent>
 						</AccordionItem>
 					))}
