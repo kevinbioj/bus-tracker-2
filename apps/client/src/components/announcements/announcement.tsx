@@ -9,13 +9,13 @@ type AnnouncementProps = {
 
 export function AnnouncementTitle({ announcement }: Readonly<AnnouncementProps>) {
 	return (
-		<div className="font-bold">
+		<div className="flex gap-2">
 			{announcement.type === "INFO" ? (
 				<LucideInfo className="inline mr-2 text-blue-500" />
 			) : (
 				<LucideCloudLightning className="inline mr-2 text-red-500" />
 			)}
-			<span className="text-black dark:text-white">{announcement.title}</span>
+			<span className="font-bold text-black text-start dark:text-white">{announcement.title}</span>
 		</div>
 	);
 }
