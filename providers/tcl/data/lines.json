@@ -206,5 +206,17 @@
   [
     { "line": "RT3", "direction": "ALL" },
     { "line": "RT3", "direction": "RET" }
+  ],
+  [
+    { "line": "TS", "direction": "ALL" },
+    { "line": "TS", "direction": "RET" }
+  ],
+  [
+    { "line": "BGS1", "direction": "ALL" },
+    { "line": "BGS1", "direction": "RET" }
+  ],
+  [
+    { "line": "BGS2", "direction": "ALL" },
+    { "line": "BGS2", "direction": "RET" }
   ]
 ]
