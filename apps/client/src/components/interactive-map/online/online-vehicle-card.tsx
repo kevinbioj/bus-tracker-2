@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { BusFront, PinIcon, ShipIcon, TramFront } from "lucide-react";
+import { PinIcon } from "lucide-react";
 import { useMap } from "react-leaflet";
 import { Link } from "react-router-dom";
 import { P, match } from "ts-pattern";
@@ -9,6 +9,7 @@ import { useActiveMarker } from "~/components/interactive-map/active-marker/acti
 import { Button } from "~/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { useLine } from "~/hooks/use-line";
+import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
 
 type OnlineVehicleCardProps = {
 	closeSheet: () => void;
@@ -49,23 +50,10 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 			>
 				<div className="flex justify-center">
 					{match(vehicle.type)
-						.with(P.union("SUBWAY", "TRAMWAY"), () => (
-							<TramFront
-								className="fill-neutral-200 dark:fill-neutral-800 h-6 my-auto w-6"
-								style={{ fill: line?.color ?? undefined }}
-							/>
-						))
-						.with("FERRY", () => (
-							<ShipIcon
-								className="fill-neutral-200 dark:fill-neutral-800 h-6 my-auto w-6"
-								style={{ fill: line?.color ?? undefined }}
-							/>
-						))
+						.with(P.union("SUBWAY", "TRAMWAY"), () => <TramwayIcon className="my-auto size-6" />)
+						.with("FERRY", () => <ShipIcon className="my-auto size-6" />)
 						.otherwise(() => (
-							<BusFront
-								className="fill-neutral-200 dark:fill-neutral-800 h-6 my-auto w-6"
-								style={{ fill: line?.color ?? undefined }}
-							/>
+							<BusIcon className="my-auto size-6" />
 						))}
 					<div
 						className="border-l-[1px] border-black dark:border-white mx-2 my-1"

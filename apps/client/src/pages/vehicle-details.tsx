@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Link, useParams } from "react-router-dom";
+import { match } from "ts-pattern";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
@@ -16,6 +17,7 @@ import {
 } from "~/components/ui/breadcrumb";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
+import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
 import tcInfosIcon from "~/icons/tc-infos.png";
 
 const getTcInfosLink = (tcId: number) => `https://tc-infos.fr/vehicule/${tcId}`;
@@ -28,6 +30,11 @@ export function VehicleDetails() {
 
 	const { data: vehicle } = useSuspenseQuery(GetVehicleQuery(+vehicleId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(vehicle.networkId));
+
+	const vehicleIcon = match(vehicle.type)
+		.with("SUBWAY", "TRAMWAY", "RAIL", () => <TramwayIcon className="align-top inline size-4" />)
+		.with("FERRY", () => <ShipIcon className="align-top inline size-4" />)
+		.otherwise(() => <BusIcon className="align-top inline size-4" />);
 
 	const vehicleDesignation = vehicle.designation ?? "Véhicule";
 
@@ -53,7 +60,7 @@ export function VehicleDetails() {
 							<BreadcrumbSeparator />
 							<BreadcrumbItem>
 								<BreadcrumbPage>
-									{vehicleDesignation} n°{vehicle.number}
+									{vehicleIcon} {vehicleDesignation} n°{vehicle.number}
 								</BreadcrumbPage>
 							</BreadcrumbItem>
 						</BreadcrumbList>

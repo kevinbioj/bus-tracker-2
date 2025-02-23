@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
-import { BusFront, ShipIcon, TramFront } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { P, match } from "ts-pattern";
 
 import type { Vehicle } from "~/api/vehicles";
 import { useLine } from "~/hooks/use-line";
+import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
 import { Zzz } from "~/icons/zzz";
 
 export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
@@ -31,22 +31,13 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 			<div className="flex justify-center">
 				{match(vehicle.type)
 					.with(P.union("SUBWAY", "TRAMWAY"), () => (
-						<TramFront
-							className="fill-neutral-200 dark:fill-neutral-800 h-6 my-auto w-6 sm:h-8 sm:w-8"
-							style={{ fill: line?.color ?? undefined }}
-						/>
+						<TramwayIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
 					))
 					.with("FERRY", () => (
-						<ShipIcon
-							className="fill-neutral-200 dark:fill-neutral-800 h-6 my-auto w-6 sm:h-8 sm:w-8"
-							style={{ fill: line?.color ?? undefined }}
-						/>
+						<ShipIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
 					))
 					.otherwise(() => (
-						<BusFront
-							className="fill-neutral-200 dark:fill-neutral-800 h-6 my-auto w-6 sm:h-8 sm:w-8"
-							style={{ fill: line?.color ?? undefined }}
-						/>
+						<BusIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
 					))}
 				<div
 					className="border-l-[1px] border-black dark:border-white mx-2 my-1"

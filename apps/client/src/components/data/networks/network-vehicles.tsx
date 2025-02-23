@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { BusFrontIcon, FilterIcon, ShipIcon, SortAscIcon, TrainFrontTunnelIcon, TramFrontIcon } from "lucide-react";
+import { FilterIcon, SortAscIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
@@ -11,13 +11,13 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { Separator } from "~/components/ui/separator";
+import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
 
 const filterableVehicleTypes = {
 	ALL: "Tous",
-	SUBWAY: <TrainFrontTunnelIcon />,
-	TRAMWAY: <TramFrontIcon />,
-	BUS: <BusFrontIcon />,
-	FERRY: <ShipIcon />,
+	TRAMWAY: <TramwayIcon className="size-5" />,
+	BUS: <BusIcon className="size-5" />,
+	FERRY: <ShipIcon className="size-5" />,
 } as const;
 
 type NetworkVehiclesProps = { networkId: number };
