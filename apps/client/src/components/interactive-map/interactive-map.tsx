@@ -1,6 +1,6 @@
 import type { LatLngExpression, Map as MapInstance } from "leaflet";
 import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, ScaleControl, TileLayer } from "react-leaflet";
 import { useLocalStorage } from "usehooks-ts";
 import { ActiveMarkerProvider } from "~/components/interactive-map/active-marker/active-marker";
 
@@ -47,6 +47,7 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readon
 			</ActiveMarkerProvider>
 			<LocationSaver />
 			<LocateControl />
+			<ScaleControl />
 		</MapContainer>
 	);
 }
