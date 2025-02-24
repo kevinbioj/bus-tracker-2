@@ -13,11 +13,11 @@
   },
   "devDependencies": {
     "@types/decompress": "^4.2.7",
-    "@types/node": "^22.13.1",
+    "@types/node": "^22.13.5",
     "@types/papaparse": "^5.3.15",
-    "tsx": "^4.19.2",
+    "tsx": "^4.19.3",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.6"
   },
   "dependencies": {
     "@bus-tracker/contracts": "workspace:*",
@@ -26,7 +26,7 @@
     "dotenv": "^16.4.7",
     "draftlog": "^1.0.13",
     "gtfs-realtime-bindings": "^1.1.1",
-    "ky": "^1.7.4",
+    "ky": "^1.7.5",
     "p-limit": "^6.2.0",
     "papaparse": "^5.5.2",
     "redis": "^4.7.0",
