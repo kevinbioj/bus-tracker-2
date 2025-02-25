@@ -69,10 +69,14 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 	const { data: network } = useQuery(GetNetworkQuery(journey.networkId));
 
 	const recordedAt = useDebouncedMemo(
-		() =>
-			displayAbsoluteTime
-				? dayjs(journey.position.recordedAt).format("HH:mm:ss")
-				: dayjs().to(journey.position.recordedAt, true),
+		() => {
+			if (displayAbsoluteTime) return dayjs(journey.position.recordedAt).format("HH:mm:ss");
+			if (dayjs().isBefore(journey.position.recordedAt)) return "avant-départ";
+
+			const duration = dayjs.duration(-dayjs().diff(journey.position.recordedAt));
+			if (Math.abs(duration.asSeconds()) < 10) return "à l'instant";
+			return duration.humanize(true);
+		},
 		3_000,
 		[journey],
 	);
