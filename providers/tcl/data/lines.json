@@ -159,13 +159,15 @@
     { "line": "12", "direction": "ALL" },
     { "line": "12", "direction": "RET" },
     { "line": "14", "direction": "ALL" },
-    { "line": "14", "direction": "RET" },
-    { "line": "15", "direction": "ALL" },
-    { "line": "15", "direction": "RET" }
+    { "line": "14", "direction": "RET" }
   ],
   [
+    { "line": "15", "direction": "ALL" },
+    { "line": "15", "direction": "RET" },
     { "line": "15E", "direction": "ALL" },
-    { "line": "15E", "direction": "RET" },
+    { "line": "15E", "direction": "RET" }
+  ],
+  [
     { "line": "16", "direction": "ALL" },
     { "line": "16", "direction": "RET" },
     { "line": "17", "direction": "ALL" },
