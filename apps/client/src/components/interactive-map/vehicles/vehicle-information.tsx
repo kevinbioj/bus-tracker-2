@@ -72,7 +72,7 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 		() =>
 			displayAbsoluteTime
 				? dayjs(journey.position.recordedAt).format("HH:mm:ss")
-				: dayjs().to(journey.position.recordedAt),
+				: dayjs().to(journey.position.recordedAt, true),
 		3_000,
 		[journey],
 	);
