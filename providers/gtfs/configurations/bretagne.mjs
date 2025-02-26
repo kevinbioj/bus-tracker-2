@@ -26,7 +26,31 @@ const sources = [
     staticResourceHref:
       "https://www.data.gouv.fr/fr/datasets/r/0cf733af-e58a-4b56-ab18-abbd09de7d02",
     realtimeResourceHrefs: [],
+    gtfsOptions: {
+      // QUB City comes in the next source
+      filterTrips: (trip) => trip.route.id !== "QCIT-648",
+    },
     getNetworkRef: () => "QUB",
+  },
+  {
+    id: "quimper-navette",
+    staticResourceHref:
+      "https://zenbus.net/gtfs/static/download.zip?dataset=quimper",
+    realtimeResourceHrefs: [
+      "https://zenbus.net/gtfs/rt/poll.proto?dataset=quimper",
+    ],
+    getNetworkRef: () => "QUB",
+    getVehicleRef: () => undefined,
+    mapLineRef: (lineRef) =>
+      lineRef.slice(
+        nthIndexOf(lineRef, ":", 2) + 1,
+        nthIndexOf(lineRef, ":", 3)
+      ),
+    mapStopRef: (stopRef) =>
+      stopRef.slice(
+        nthIndexOf(stopRef, ":", 3) + 1,
+        nthIndexOf(stopRef, ":", 4)
+      ),
   },
   {
     id: "rennes",
