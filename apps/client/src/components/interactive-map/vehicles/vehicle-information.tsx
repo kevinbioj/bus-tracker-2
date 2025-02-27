@@ -11,8 +11,10 @@ import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Button } from "~/components/ui/button";
 import { CustomTooltip } from "~/components/ui/custom-tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
-import { UsersIcon } from "~/icons/users";
-import { UsersSlashIcon } from "~/icons/users-slash";
+import { HighCrowdIcon } from "~/icons/crowd/high";
+import { LowCrowdIcon } from "~/icons/crowd/low";
+import { MediumCrowdIcon } from "~/icons/crowd/medium";
+import { NoPassengersIcon } from "~/icons/crowd/no-passengers";
 
 const positionIconDetails = {
 	GPS: {
@@ -34,28 +36,28 @@ const positionIconDetails = {
 
 const occupancyIconDetails = {
 	LOW: {
-		IconElement: UsersIcon,
-		iconClass: "fill-green-600",
+		IconElement: LowCrowdIcon,
+		iconClass: "fill-green-600 size-4",
 		tooltipClasses: "bg-green-600 dark:bg-green-700 text-white",
-		tooltipText: "Charge faible",
+		tooltipText: "Faible affluence",
 	},
 	MEDIUM: {
-		IconElement: UsersIcon,
-		iconClass: "fill-orange-600",
+		IconElement: MediumCrowdIcon,
+		iconClass: "fill-orange-600 size-5",
 		tooltipClasses: "bg-orange-600 dark:bg-orange-700 text-white",
-		tooltipText: "Charge moyenne",
+		tooltipText: "Affluence moyenne",
 	},
 	HIGH: {
-		IconElement: UsersIcon,
-		iconClass: "fill-red-600",
+		IconElement: HighCrowdIcon,
+		iconClass: "fill-red-600 size-5",
 		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
-		tooltipText: "Charge élevée",
+		tooltipText: "Forte affluence",
 	},
 	NO_PASSENGERS: {
-		IconElement: UsersSlashIcon,
-		iconClass: "fill-red-600",
+		IconElement: NoPassengersIcon,
+		iconClass: "fill-red-600 size-5",
 		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
-		tooltipText: "Sans voyageur",
+		tooltipText: "Ne prend pas de voyageur",
 	},
 } as const;
 
@@ -130,14 +132,14 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 			<span className="my-auto text-center">
 				{vehicleLink}– {recordedAt}
 			</span>
-			<div className="flex justify-end gap-2">
+			<div className="flex items-center justify-end gap-2">
 				{typeof occupancyInformation !== "undefined" && (
 					<CustomTooltip
 						className={clsx("font-bold", occupancyInformation.tooltipClasses)}
 						content={occupancyInformation.tooltipText}
 						place="left"
 					>
-						<occupancyInformation.IconElement className={clsx("size-5", occupancyInformation.iconClass)} />
+						<occupancyInformation.IconElement className={clsx("align-middle", occupancyInformation.iconClass)} />
 					</CustomTooltip>
 				)}
 				<CustomTooltip
