@@ -5,3 +5,12 @@ packages:
   - providers/gtfs
   - providers/twisto
   - providers/tcl
+
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - '@sentry-internal/node-cpu-profiler'
+  - '@sentry/cli'
+  - '@swc/core'
+  - esbuild
+  - protobufjs
+  - sharp

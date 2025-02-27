@@ -1,4 +1,5 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { useLocalStorage } from "usehooks-ts";
 
 import type { MapBounds } from "~/hooks/use-map-bounds";
 
@@ -39,8 +40,10 @@ export type DisposeableVehicleJourney = {
 	updatedAt: string;
 };
 
-export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?: string) =>
-	queryOptions({
+export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?: string) => {
+	const [hideScheduledTrips] = useLocalStorage("hide-scheduled-trips", false);
+
+	return queryOptions({
 		placeholderData: keepPreviousData,
 		refetchInterval: 15_000,
 		staleTime: 30_000,
@@ -51,6 +54,7 @@ export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?:
 			params.append("swLon", bounds.sw[1].toString());
 			params.append("neLat", bounds.ne[0].toString());
 			params.append("neLon", bounds.ne[1].toString());
+			params.append("includeScheduled", String(!hideScheduledTrips));
 			if (typeof includeMarker !== "undefined") {
 				params.append("includeMarker", includeMarker);
 			}
@@ -59,6 +63,7 @@ export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?:
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
 		},
 	});
+};
 
 export const GetVehicleJourneyQuery = (id: string, enabled?: boolean) =>
 	queryOptions({
