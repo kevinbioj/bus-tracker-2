@@ -15,7 +15,7 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 		neLat: z.coerce.number().min(-90).max(90),
 		neLon: z.coerce.number().min(-180).max(180),
 		includeMarker: z.string().optional(),
-		includeScheduled: z.boolean().optional().default(true),
+		includeScheduled: z.coerce.boolean().optional().default(true),
 	});
 
 	hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
