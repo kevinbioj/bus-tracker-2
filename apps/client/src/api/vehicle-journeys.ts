@@ -47,14 +47,14 @@ export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?:
 		placeholderData: keepPreviousData,
 		refetchInterval: 15_000,
 		staleTime: 30_000,
-		queryKey: ["vehicle-journeys", bounds],
+		queryKey: ["vehicle-journeys", bounds, hideScheduledTrips],
 		queryFn: () => {
 			const params = new URLSearchParams();
 			params.append("swLat", bounds.sw[0].toString());
 			params.append("swLon", bounds.sw[1].toString());
 			params.append("neLat", bounds.ne[0].toString());
 			params.append("neLon", bounds.ne[1].toString());
-			params.append("includeScheduled", String(!hideScheduledTrips));
+			if (hideScheduledTrips) params.append("excludeScheduled", "true");
 			if (typeof includeMarker !== "undefined") {
 				params.append("includeMarker", includeMarker);
 			}

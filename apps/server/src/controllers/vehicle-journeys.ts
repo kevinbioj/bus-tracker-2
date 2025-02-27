@@ -15,17 +15,19 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 		neLat: z.coerce.number().min(-90).max(90),
 		neLon: z.coerce.number().min(-180).max(180),
 		includeMarker: z.string().optional(),
-		includeScheduled: z.coerce.boolean().optional().default(true),
+		excludeScheduled: z.coerce.boolean().optional(),
 	});
 
 	hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
-		const { swLat, swLon, neLat, neLon, includeMarker, includeScheduled } = c.req.valid("query");
+		const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled } = c.req.valid("query");
+
+		console.log(excludeScheduled);
 
 		const boundedJourneys = store
 			.values()
 			.filter(({ calls, position }) => {
 				if (
-					!includeScheduled &&
+					excludeScheduled &&
 					position.type === "COMPUTED" &&
 					calls?.every((call) => typeof call.expectedTime === "undefined")
 				)
