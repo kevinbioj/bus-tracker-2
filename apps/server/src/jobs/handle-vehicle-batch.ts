@@ -8,8 +8,8 @@ import { importNetwork } from "../import/import-network.js";
 import { importVehicle } from "../import/import-vehicle.js";
 import type { JourneyStore } from "../store/journey-store.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
-
 import { nthIndexOf } from "../utils/nth-index-of.js";
+
 import { registerActivity } from "./register-activity.js";
 
 export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
@@ -38,7 +38,7 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 		}),
 	);
 
-	const limitRegister = pLimit(100);
+	const limitRegister = pLimit(10);
 	for (const vehicleJourney of vehicleJourneys) {
 		const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
 		if (timeSince.total("minutes") >= 10) return;

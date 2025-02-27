@@ -41,14 +41,15 @@ await redis.subscribe("journeys", async (message) => {
 	try {
 		const payload = JSON.parse(message);
 		if (!Array.isArray(payload)) throw new Error("Payload is not an array");
-		vehicleJourneys = payload.flatMap((entry) => {
-			const parsed = vehicleJourneySchema.safeParse(entry);
-			if (!parsed.success) {
-				Sentry.captureException(parsed.error, { extra: { entry }, tags: { section: "journey-decode" } });
-				return [];
-			}
-			return parsed.data;
-		});
+		vehicleJourneys = payload as VehicleJourney[];
+		// vehicleJourneys = payload.flatMap((entry) => {
+		// 	const parsed = vehicleJourneySchema.safeParse(entry);
+		// 	if (!parsed.success) {
+		// 		Sentry.captureException(parsed.error, { extra: { entry }, tags: { section: "journey-decode" } });
+		// 		return [];
+		// 	}
+		// 	return parsed.data;
+		// });
 	} catch (error) {
 		Sentry.captureException(error, {
 			extra: { message },
