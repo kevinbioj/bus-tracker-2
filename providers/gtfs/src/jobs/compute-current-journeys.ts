@@ -267,8 +267,8 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						.toString({ timeZoneName: "never" }),
 				},
 				occupancy: match(vehiclePosition.occupancyStatus)
-					.with(P.union("EMPTY", "FEW_SEATS_AVAILABLE"), () => "LOW" as const)
-					.with(P.union("MANY_SEATS_AVAILABLE", "STANDING_ROOM_ONLY"), () => "MEDIUM" as const)
+					.with(P.union("EMPTY", "MANY_SEATS_AVAILABLE"), () => "LOW" as const)
+					.with(P.union("FEW_SEATS_AVAILABLE", "STANDING_ROOM_ONLY"), () => "MEDIUM" as const)
 					.with(P.union("CRUSHED_STANDING_ROOM_ONLY", "FULL"), () => "HIGH" as const)
 					.with(P.union("NOT_ACCEPTING_PASSENGERS", "NOT_BOARDABLE" as const), () => "NO_PASSENGERS" as const)
 					.otherwise(() => undefined),
