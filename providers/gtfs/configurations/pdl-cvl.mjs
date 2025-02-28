@@ -87,6 +87,7 @@ const sources = [
       "https://ara-api.enroute.mobi/tao/gtfs/trip-updates",
       "https://ara-api.enroute.mobi/tao/gtfs/vehicle-positions",
     ],
+    mode: "NO-TU",
     excludeScheduled: true,
     getNetworkRef: () => "TAO",
     mapLineRef: (lineRef) => lineRef.slice("ORLEANS:Line:".length),
