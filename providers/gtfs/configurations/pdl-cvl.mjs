@@ -80,6 +80,21 @@ const sources = [
     getNetworkRef: () => "SETRAM",
   },
   {
+    id: "orleans",
+    staticResourceHref:
+      "https://chouette.enroute.mobi/api/v1/datas/keolis_orleans.gtfs.zip",
+    realtimeResourceHrefs: [
+      "https://ara-api.enroute.mobi/tao/gtfs/trip-updates",
+      "https://ara-api.enroute.mobi/tao/gtfs/vehicle-positions",
+    ],
+    excludeScheduled: true,
+    getNetworkRef: () => "TAO",
+    mapLineRef: (lineRef) => lineRef.slice("ORLEANS:Line:".length),
+    mapStopRef: (stopRef) => stopRef.slice("ORLEANS:StopArea:".length),
+    mapTripRef: (tripRef) =>
+      tripRef.replace(/(ORLEANS|chouette):VehicleJourney:/, ""),
+  },
+  {
     id: "nantes",
     staticResourceHref:
       "https://data.nantesmetropole.fr/explore/dataset/244400404_transports_commun_naolib_nantes_metropole_gtfs/files/0cc0469a72de54ee045cb66d1a21de9e/download/",
