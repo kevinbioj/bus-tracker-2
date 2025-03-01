@@ -25,7 +25,7 @@ const sources = [
 	},
 	{
 		id: "nimes",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/9f5fa77b-30b7-4520-a17c-db2122339612",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/a01493af-8fd7-49a0-b45e-c3990b0a23bb",
 		realtimeResourceHrefs: [
 			"https://transport.data.gouv.fr/resources/80732/download",
 			"https://transport.data.gouv.fr/resources/80731/download",
