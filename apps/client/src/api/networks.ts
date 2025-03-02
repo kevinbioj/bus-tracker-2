@@ -27,6 +27,7 @@ export type Line = {
 	cartridgeHref: string | null;
 	color: string | null;
 	textColor: string | null;
+	archivedAt: string | null;
 };
 
 export type NetworkWithDetails = Network & {

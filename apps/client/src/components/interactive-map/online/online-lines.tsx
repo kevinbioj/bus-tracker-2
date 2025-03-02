@@ -17,7 +17,9 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 
 	return (
 		<div className="flex flex-col gap-3">
-			{network.lines.map((line) => {
+			{network.lines.flatMap((line) => {
+				if (line.archivedAt !== null) return;
+
 				const lineVehicles = vehicles?.filter(({ activity }) => activity.lineId === line.id) ?? [];
 				return (
 					<Button
