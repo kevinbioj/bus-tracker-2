@@ -30,38 +30,44 @@ while (true) {
 	const id = `[${linesFilter.map(({ line, direction }) => `(${line}:${direction})`).join(",")}]`;
 	const updateLog = console.draft(`%s ► Fetching ${id}`, Temporal.Now.instant());
 
-	const { Vehicules, Total } = await getVehicles(
-		linesFilter.map(({ line, direction }) => ({ Ligne: line, Sens: direction as "ALL" | "RET" })),
-	);
+	try {
+		const { Vehicules, Total } = await getVehicles(
+			linesFilter.map(({ line, direction }) => ({ Ligne: line, Sens: direction as "ALL" | "RET" })),
+		);
 
-	const mappedVehicles = Vehicules.map((vehicle) => ({
-		id: `TCL::VehicleTracking:${vehicle.NumeroCarrosserie}`,
-		line: {
-			ref: `TCL:Line:${vehicle.Ligne}`,
-			number: vehicle.Ligne,
-			type: vehicle.Ligne.startsWith("T") ? "TRAMWAY" : "BUS",
-		},
-		direction: vehicle.Sens === "ALL" ? "OUTBOUND" : "INBOUND",
-		destination: vehicle.Destination,
-		position: {
-			...convertPosition({ X: vehicle.X, Y: vehicle.Y }),
-			atStop: false,
-			type: "GPS",
-			recordedAt: Temporal.Now.zonedDateTimeISO().toString({ timeZoneName: "never" }),
-		},
-		networkRef: "TCL",
-		vehicleRef: `TCL::Vehicle:${vehicle.NumeroCarrosserie}`,
-		updatedAt: Temporal.Now.instant().toString(),
-	}));
+		const mappedVehicles = Vehicules.map((vehicle) => ({
+			id: `TCL::VehicleTracking:${vehicle.NumeroCarrosserie}`,
+			line: {
+				ref: `TCL:Line:${vehicle.Ligne}`,
+				number: vehicle.Ligne,
+				type: vehicle.Ligne.startsWith("T") ? "TRAMWAY" : "BUS",
+			},
+			direction: vehicle.Sens === "ALL" ? "OUTBOUND" : "INBOUND",
+			destination: vehicle.Destination,
+			position: {
+				...convertPosition({ X: vehicle.X, Y: vehicle.Y }),
+				atStop: false,
+				type: "GPS",
+				recordedAt: Temporal.Now.zonedDateTimeISO().toString({ timeZoneName: "never" }),
+			},
+			networkRef: "TCL",
+			vehicleRef: `TCL::Vehicle:${vehicle.NumeroCarrosserie}`,
+			updatedAt: Temporal.Now.instant().toString(),
+		}));
 
-	await redis.publish(channel, JSON.stringify(mappedVehicles));
+		await redis.publish(channel, JSON.stringify(mappedVehicles));
 
-	const success =
-		Total > Vehicules.length
-			? `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id} (${Total - Vehicules.length} were missed)`
-			: `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id}`;
+		const success =
+			Total > Vehicules.length
+				? `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id} (${Total - Vehicules.length} were missed)`
+				: `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id}`;
 
-	updateLog(success);
-	currentIndex += 1;
-	await setTimeout(1500);
+		updateLog(success);
+		currentIndex += 1;
+	} catch (cause) {
+		const error = new Error("An error occurred while fetching data", { cause });
+		console.error(error);
+	} finally {
+		await setTimeout(1500);
+	}
 }
