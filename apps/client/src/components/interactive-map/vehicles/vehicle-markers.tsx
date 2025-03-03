@@ -57,7 +57,7 @@ export function VehicleMarkers() {
 				lat: activeMarkerData.position.latitude,
 				lng: activeMarkerData.position.longitude,
 			},
-			17,
+			15,
 			{ animate: true },
 		);
 
