@@ -23,7 +23,7 @@ export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonl
 	const { width } = useScreen();
 	const [popupWidth, setPopupWidth] = useState(Math.min(width - 50, 384));
 
-	const { data: journey, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible, true));
+	const { data: journey, isError, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible, true));
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on popupWidth changes
 	useEffect(() => {
@@ -41,7 +41,15 @@ export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonl
 
 	return (
 		<div ref={popupRef} style={{ width: popupWidth + 2 }}>
-			{typeof journey !== "undefined" ? (
+			{isError ? (
+				<p className="px-3 text-balance text-center">
+					<span className="font-bold text-lg">☠️ Entrée introuvable</span>
+					<br />
+					<span className="text-muted-foreground">
+						Cette entrée n'est plus d'actualité, elle devrait disparaitre au prochain rafraichissement de la carte.
+					</span>
+				</p>
+			) : typeof journey !== "undefined" ? (
 				<>
 					<VehicleGirouette journey={journey} visible={isPopupVisible} width={popupWidth} updateWidth={setPopupWidth} />
 					<VehicleInformation journey={journey} />

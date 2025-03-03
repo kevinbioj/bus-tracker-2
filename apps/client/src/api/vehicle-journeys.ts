@@ -69,6 +69,7 @@ export const GetVehicleJourneyQuery = (id: string, enabled?: boolean, refetch?: 
 	queryOptions({
 		enabled,
 		placeholderData: keepPreviousData,
+		retry: false,
 		refetchInterval: refetch ? 10_000 : undefined,
 		staleTime: 30_000,
 		queryKey: ["vehicle-journeys", id],
