@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { LucideLoader2 } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { useMap } from "react-leaflet";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { GetVehicleJourneyMarkersQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { useActiveMarker } from "~/components/interactive-map/active-marker/active-marker";
@@ -11,8 +11,10 @@ import { useMapBounds } from "~/hooks/use-map-bounds";
 
 export function VehicleMarkers() {
 	const map = useMap();
-	const { hash } = useLocation();
 	const bounds = useMapBounds();
+
+	const { hash } = useLocation();
+	const navigate = useNavigate();
 
 	const { activeMarker, setActiveMarker } = useActiveMarker();
 
@@ -62,7 +64,8 @@ export function VehicleMarkers() {
 		);
 
 		setActiveMarker(activeMarkerData.id);
-	}, [activeMarkerData, map.setView, setActiveMarker]);
+		navigate("#");
+	}, [activeMarkerData, map.setView, navigate, setActiveMarker]);
 
 	return (
 		<>
