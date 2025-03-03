@@ -2,19 +2,22 @@ import { useQuery } from "@tanstack/react-query";
 import { LucideLoader2 } from "lucide-react";
 import { useEffect, useMemo } from "react";
 import { useMap } from "react-leaflet";
+import { useLocation } from "react-router-dom";
 
-import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
+import { GetVehicleJourneyMarkersQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { useActiveMarker } from "~/components/interactive-map/active-marker/active-marker";
 import { VehicleMarker } from "~/components/interactive-map/vehicles/vehicle-marker";
 import { useMapBounds } from "~/hooks/use-map-bounds";
 
 export function VehicleMarkers() {
 	const map = useMap();
+	const { hash } = useLocation();
 	const bounds = useMapBounds();
 
 	const { activeMarker, setActiveMarker } = useActiveMarker();
 
 	const { data, isFetching } = useQuery(GetVehicleJourneyMarkersQuery(bounds, activeMarker));
+	const { data: activeMarkerData } = useQuery(GetVehicleJourneyQuery(hash.slice(1), hash.length > 0));
 
 	const loader = useMemo(
 		() => (
@@ -44,7 +47,22 @@ export function VehicleMarkers() {
 			map.removeEventListener("popupclose", onPopupClose);
 			map.removeEventListener("click", onClick);
 		};
-	});
+	}, [map, setActiveMarker]);
+
+	useEffect(() => {
+		if (typeof activeMarkerData === "undefined") return;
+
+		map.setView(
+			{
+				lat: activeMarkerData.position.latitude,
+				lng: activeMarkerData.position.longitude,
+			},
+			17,
+			{ animate: true },
+		);
+
+		setActiveMarker(activeMarkerData.id);
+	}, [activeMarkerData, map.setView, setActiveMarker]);
 
 	return (
 		<>

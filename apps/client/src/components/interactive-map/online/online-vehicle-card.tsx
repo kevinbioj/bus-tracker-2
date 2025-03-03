@@ -1,11 +1,11 @@
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { PinIcon } from "lucide-react";
-import { useMap } from "react-leaflet";
 import { Link } from "react-router-dom";
 import { P, match } from "ts-pattern";
 
+import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import type { Vehicle } from "~/api/vehicles";
-import { useActiveMarker } from "~/components/interactive-map/active-marker/active-marker";
 import { Button } from "~/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { useLine } from "~/hooks/use-line";
@@ -17,26 +17,14 @@ type OnlineVehicleCardProps = {
 };
 
 export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicleCardProps>) {
-	const map = useMap();
-	const { setActiveMarker } = useActiveMarker();
+	const queryClient = useQueryClient();
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 
 	const flyTo = () => {
-		if (typeof vehicle.activity?.position === "undefined") return;
+		if (typeof vehicle.activity.markerId === "undefined") return;
+
 		closeSheet();
-
-		map.setView(
-			{
-				lat: vehicle.activity.position.latitude,
-				lng: vehicle.activity.position.longitude,
-			},
-			17,
-			{ animate: true },
-		);
-
-		if (typeof vehicle.activity.markerId !== "undefined") {
-			setActiveMarker(vehicle.activity.markerId);
-		}
+		queryClient.prefetchQuery(GetVehicleJourneyQuery(vehicle.activity.markerId));
 	};
 
 	return (
@@ -79,8 +67,16 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button className="absolute bottom-0 right-0 rounded-md" onClick={flyTo} variant="inherit" size="icon">
-								<PinIcon />
+							<Button
+								asChild
+								className="absolute bottom-0 right-0 rounded-md"
+								onClick={flyTo}
+								variant="inherit"
+								size="icon"
+							>
+								<Link to={`#${vehicle.activity.markerId}`}>
+									<PinIcon />
+								</Link>
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent side="left">

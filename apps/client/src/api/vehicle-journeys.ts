@@ -65,11 +65,11 @@ export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?:
 	});
 };
 
-export const GetVehicleJourneyQuery = (id: string, enabled?: boolean) =>
+export const GetVehicleJourneyQuery = (id: string, enabled?: boolean, refetch?: boolean) =>
 	queryOptions({
 		enabled,
 		placeholderData: keepPreviousData,
-		refetchInterval: 10_000,
+		refetchInterval: refetch ? 10_000 : undefined,
 		staleTime: 30_000,
 		queryKey: ["vehicle-journeys", id],
 		queryFn: () => client.get(`vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),

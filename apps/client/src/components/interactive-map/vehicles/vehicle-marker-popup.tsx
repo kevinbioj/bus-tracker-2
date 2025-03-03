@@ -23,7 +23,7 @@ export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonl
 	const { width } = useScreen();
 	const [popupWidth, setPopupWidth] = useState(Math.min(width - 50, 384));
 
-	const { data: journey, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible));
+	const { data: journey, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible, true));
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on popupWidth changes
 	useEffect(() => {
