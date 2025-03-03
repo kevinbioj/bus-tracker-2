@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { LucideLoader2 } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import { useMap } from "react-leaflet";
 
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
@@ -13,7 +14,19 @@ export function VehicleMarkers() {
 
 	const { activeMarker, setActiveMarker } = useActiveMarker();
 
-	const { data } = useQuery(GetVehicleJourneyMarkersQuery(bounds, activeMarker));
+	const { data, isFetching } = useQuery(GetVehicleJourneyMarkersQuery(bounds, activeMarker));
+
+	const loader = useMemo(
+		() => (
+			<div
+				className="absolute data-[visible=true]:animate-in data-[visible=true]:fade-in border top-2 right-2 bg-background text-foreground p-1 rounded-md z-[1001] data-[visible=false]:hidden"
+				data-visible={isFetching}
+			>
+				<LucideLoader2 className="animate-spin size-6" strokeWidth={3} />
+			</div>
+		),
+		[isFetching],
+	);
 
 	useEffect(() => {
 		if (typeof map === "undefined") return;
@@ -33,7 +46,12 @@ export function VehicleMarkers() {
 		};
 	});
 
-	return data?.items.map((marker) => (
-		<VehicleMarker key={marker.id} activeMarker={activeMarker} setActiveMarker={setActiveMarker} marker={marker} />
-	));
+	return (
+		<>
+			{loader}
+			{data?.items.map((marker) => (
+				<VehicleMarker key={marker.id} activeMarker={activeMarker} setActiveMarker={setActiveMarker} marker={marker} />
+			))}
+		</>
+	);
 }

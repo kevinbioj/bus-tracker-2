@@ -1,3 +1,4 @@
+import { clsx } from "clsx";
 import type { LatLngExpression, Map as MapInstance } from "leaflet";
 import { useEffect, useRef } from "react";
 import { MapContainer, ScaleControl, TileLayer } from "react-leaflet";
@@ -31,7 +32,7 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readon
 	return (
 		<MapContainer
 			center={lastLocation ? [lastLocation[0], lastLocation[1]] : defaultCenter}
-			className={className}
+			className={clsx("relative", className)}
 			id="interactive-map"
 			ref={mapRef}
 			zoom={lastLocation?.[2] ?? defaultZoom}
