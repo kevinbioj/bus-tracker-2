@@ -1,224 +1,318 @@
 [
-  [{ "line": "T1", "direction": "ALL" }],
-  [{ "line": "T1", "direction": "RET" }],
-  [{ "line": "T2", "direction": "ALL" }],
-  [{ "line": "T2", "direction": "RET" }],
-  [
-    { "line": "T3", "direction": "ALL" },
-    { "line": "T3", "direction": "RET" }
-  ],
-  [
-    { "line": "T4", "direction": "ALL" },
-    { "line": "T4", "direction": "RET" }
-  ],
-  [
-    { "line": "T5", "direction": "ALL" },
-    { "line": "T5", "direction": "RET" }
-  ],
-  [
-    { "line": "T6", "direction": "ALL" },
-    { "line": "T6", "direction": "RET" }
-  ],
-  [
-    { "line": "T7", "direction": "ALL" },
-    { "line": "T7", "direction": "RET" }
-  ],
-  [
-    { "line": "C1", "direction": "ALL" },
-    { "line": "C1", "direction": "RET" }
-  ],
-  [
-    { "line": "C2", "direction": "ALL" },
-    { "line": "C2", "direction": "RET" }
-  ],
-  [{ "line": "C3", "direction": "ALL" }],
-  [{ "line": "C3", "direction": "RET" }],
-  [
-    { "line": "C4", "direction": "ALL" },
-    { "line": "C4", "direction": "RET" }
-  ],
-  [
-    { "line": "C5", "direction": "ALL" },
-    { "line": "C5", "direction": "RET" }
-  ],
-  [
-    { "line": "C6", "direction": "ALL" },
-    { "line": "C6", "direction": "RET" }
-  ],
-  [
-    { "line": "C7", "direction": "ALL" },
-    { "line": "C7", "direction": "RET" }
-  ],
-  [
-    { "line": "C8", "direction": "ALL" },
-    { "line": "C8", "direction": "RET" }
-  ],
-  [
-    { "line": "C9", "direction": "ALL" },
-    { "line": "C9", "direction": "RET" }
-  ],
-  [
-    { "line": "C10", "direction": "ALL" },
-    { "line": "C10", "direction": "RET" }
-  ],
-  [
-    { "line": "C11", "direction": "ALL" },
-    { "line": "C11", "direction": "RET" }
-  ],
-  [
-    { "line": "C12", "direction": "ALL" },
-    { "line": "C12", "direction": "RET" }
-  ],
-  [
-    { "line": "C13", "direction": "ALL" },
-    { "line": "C13", "direction": "RET" }
-  ],
-  [
-    { "line": "C14", "direction": "ALL" },
-    { "line": "C14", "direction": "RET" }
-  ],
-  [
-    { "line": "C15", "direction": "ALL" },
-    { "line": "C15", "direction": "RET" }
-  ],
-  [
-    { "line": "C16", "direction": "ALL" },
-    { "line": "C16", "direction": "RET" }
-  ],
-  [
-    { "line": "C17", "direction": "ALL" },
-    { "line": "C17", "direction": "RET" }
-  ],
-  [
-    { "line": "C18", "direction": "ALL" },
-    { "line": "C18", "direction": "RET" }
-  ],
-  [
-    { "line": "C19", "direction": "ALL" },
-    { "line": "C19", "direction": "RET" }
-  ],
-  [
-    { "line": "C20", "direction": "ALL" },
-    { "line": "C20", "direction": "RET" }
-  ],
-  [
-    { "line": "C15E", "direction": "ALL" },
-    { "line": "C15E", "direction": "RET" },
-    { "line": "C20E", "direction": "ALL" },
-    { "line": "C20E", "direction": "RET" },
-    { "line": "C24E", "direction": "ALL" },
-    { "line": "C24E", "direction": "RET" }
-  ],
-  [
-    { "line": "C21", "direction": "ALL" },
-    { "line": "C21", "direction": "RET" }
-  ],
-  [
-    { "line": "C24", "direction": "ALL" },
-    { "line": "C24", "direction": "RET" }
-  ],
-  [
-    { "line": "C25", "direction": "ALL" },
-    { "line": "C25", "direction": "RET" }
-  ],
-  [
-    { "line": "C26", "direction": "ALL" },
-    { "line": "C26", "direction": "RET" }
-  ],
-  [
-    { "line": "1E", "direction": "ALL" },
-    { "line": "1E", "direction": "RET" },
-    { "line": "2", "direction": "ALL" },
-    { "line": "2", "direction": "RET" }
-  ],
-  [
-    { "line": "3", "direction": "ALL" },
-    { "line": "3", "direction": "RET" },
-    { "line": "5", "direction": "ALL" },
-    { "line": "5", "direction": "RET" },
-    { "line": "6", "direction": "ALL" },
-    { "line": "6", "direction": "RET" }
-  ],
-  [
-    { "line": "7", "direction": "ALL" },
-    { "line": "7", "direction": "RET" },
-    { "line": "8", "direction": "ALL" },
-    { "line": "8", "direction": "RET" },
-    { "line": "9", "direction": "ALL" },
-    { "line": "9", "direction": "RET" }
-  ],
-  [
-    { "line": "10", "direction": "ALL" },
-    { "line": "10", "direction": "RET" },
-    { "line": "10E", "direction": "ALL" },
-    { "line": "10E", "direction": "RET" },
-    { "line": "11", "direction": "ALL" },
-    { "line": "11", "direction": "RET" }
-  ],
-  [
-    { "line": "12", "direction": "ALL" },
-    { "line": "12", "direction": "RET" },
-    { "line": "14", "direction": "ALL" },
-    { "line": "14", "direction": "RET" }
-  ],
-  [
-    { "line": "15", "direction": "ALL" },
-    { "line": "15", "direction": "RET" },
-    { "line": "15E", "direction": "ALL" },
-    { "line": "15E", "direction": "RET" }
-  ],
-  [
-    { "line": "16", "direction": "ALL" },
-    { "line": "16", "direction": "RET" },
-    { "line": "17", "direction": "ALL" },
-    { "line": "17", "direction": "RET" }
-  ],
-  [
-    { "line": "18", "direction": "ALL" },
-    { "line": "18", "direction": "RET" },
-    { "line": "19", "direction": "ALL" },
-    { "line": "19", "direction": "RET" },
-    { "line": "20", "direction": "ALL" },
-    { "line": "20", "direction": "RET" }
-  ],
-  [
-    { "line": "21", "direction": "ALL" },
-    { "line": "21", "direction": "RET" },
-    { "line": "22", "direction": "ALL" },
-    { "line": "22", "direction": "RET" },
-    { "line": "24", "direction": "ALL" },
-    { "line": "24", "direction": "RET" }
-  ],
-  [
-    { "line": "25", "direction": "ALL" },
-    { "line": "25", "direction": "RET" },
-    { "line": "26", "direction": "ALL" },
-    { "line": "26", "direction": "RET" },
-    { "line": "27", "direction": "ALL" },
-    { "line": "27", "direction": "RET" }
-  ],
-  [
-    { "line": "RT1", "direction": "ALL" },
-    { "line": "RT1", "direction": "RET" }
-  ],
-  [
-    { "line": "RT2", "direction": "ALL" },
-    { "line": "RT2", "direction": "RET" }
-  ],
-  [
-    { "line": "RT3", "direction": "ALL" },
-    { "line": "RT3", "direction": "RET" }
-  ],
-  [
-    { "line": "TS", "direction": "ALL" },
-    { "line": "TS", "direction": "RET" }
-  ],
-  [
-    { "line": "BGS1", "direction": "ALL" },
-    { "line": "BGS1", "direction": "RET" }
-  ],
-  [
-    { "line": "BGS2", "direction": "ALL" },
-    { "line": "BGS2", "direction": "RET" }
-  ]
+	[{ "line": "T1", "direction": "ALL" }],
+	[{ "line": "T1", "direction": "RET" }],
+	[{ "line": "T2", "direction": "ALL" }],
+	[{ "line": "T2", "direction": "RET" }],
+	[{ "line": "T3", "direction": "ALL" }, { "line": "T3", "direction": "RET" }],
+	[{ "line": "T4", "direction": "ALL" }, { "line": "T4", "direction": "RET" }],
+	[{ "line": "T5", "direction": "ALL" }, { "line": "T5", "direction": "RET" }],
+	[{ "line": "T6", "direction": "ALL" }, { "line": "T6", "direction": "RET" }],
+	[{ "line": "T7", "direction": "ALL" }, { "line": "T7", "direction": "RET" }],
+	[{ "line": "C1", "direction": "ALL" }, { "line": "C1", "direction": "RET" }],
+	[{ "line": "C2", "direction": "ALL" }, { "line": "C2", "direction": "RET" }],
+	[{ "line": "C3", "direction": "ALL" }],
+	[{ "line": "C3", "direction": "RET" }],
+	[{ "line": "C4", "direction": "ALL" }, { "line": "C4", "direction": "RET" }],
+	[{ "line": "C5", "direction": "ALL" }, { "line": "C5", "direction": "RET" }],
+	[{ "line": "C6", "direction": "ALL" }, { "line": "C6", "direction": "RET" }],
+	[{ "line": "C7", "direction": "ALL" }, { "line": "C7", "direction": "RET" }],
+	[{ "line": "C8", "direction": "ALL" }, { "line": "C8", "direction": "RET" }],
+	[{ "line": "C9", "direction": "ALL" }, { "line": "C9", "direction": "RET" }],
+	[
+		{ "line": "C10", "direction": "ALL" },
+		{ "line": "C10", "direction": "RET" }
+	],
+	[
+		{ "line": "C11", "direction": "ALL" },
+		{ "line": "C11", "direction": "RET" }
+	],
+	[
+		{ "line": "C12", "direction": "ALL" },
+		{ "line": "C12", "direction": "RET" }
+	],
+	[
+		{ "line": "C13", "direction": "ALL" },
+		{ "line": "C13", "direction": "RET" }
+	],
+	[
+		{ "line": "C14", "direction": "ALL" },
+		{ "line": "C14", "direction": "RET" }
+	],
+	[
+		{ "line": "C15", "direction": "ALL" },
+		{ "line": "C15", "direction": "RET" }
+	],
+	[
+		{ "line": "C16", "direction": "ALL" },
+		{ "line": "C16", "direction": "RET" }
+	],
+	[
+		{ "line": "C17", "direction": "ALL" },
+		{ "line": "C17", "direction": "RET" }
+	],
+	[
+		{ "line": "C18", "direction": "ALL" },
+		{ "line": "C18", "direction": "RET" }
+	],
+	[
+		{ "line": "C19", "direction": "ALL" },
+		{ "line": "C19", "direction": "RET" }
+	],
+	[
+		{ "line": "C20", "direction": "ALL" },
+		{ "line": "C20", "direction": "RET" }
+	],
+	[
+		{ "line": "C15E", "direction": "ALL" },
+		{ "line": "C15E", "direction": "RET" },
+		{ "line": "C20E", "direction": "ALL" },
+		{ "line": "C20E", "direction": "RET" },
+		{ "line": "C24E", "direction": "ALL" },
+		{ "line": "C24E", "direction": "RET" }
+	],
+	[
+		{ "line": "C21", "direction": "ALL" },
+		{ "line": "C21", "direction": "RET" }
+	],
+	[
+		{ "line": "C24", "direction": "ALL" },
+		{ "line": "C24", "direction": "RET" }
+	],
+	[
+		{ "line": "C25", "direction": "ALL" },
+		{ "line": "C25", "direction": "RET" }
+	],
+	[
+		{ "line": "C26", "direction": "ALL" },
+		{ "line": "C26", "direction": "RET" }
+	],
+	[
+		{ "line": "1E", "direction": "ALL" },
+		{ "line": "1E", "direction": "RET" },
+		{ "line": "2", "direction": "ALL" },
+		{ "line": "2", "direction": "RET" }
+	],
+	[
+		{ "line": "3", "direction": "ALL" },
+		{ "line": "3", "direction": "RET" },
+		{ "line": "5", "direction": "ALL" },
+		{ "line": "5", "direction": "RET" },
+		{ "line": "6", "direction": "ALL" },
+		{ "line": "6", "direction": "RET" }
+	],
+	[
+		{ "line": "7", "direction": "ALL" },
+		{ "line": "7", "direction": "RET" },
+		{ "line": "8", "direction": "ALL" },
+		{ "line": "8", "direction": "RET" },
+		{ "line": "9", "direction": "ALL" },
+		{ "line": "9", "direction": "RET" }
+	],
+	[
+		{ "line": "10", "direction": "ALL" },
+		{ "line": "10", "direction": "RET" },
+		{ "line": "10E", "direction": "ALL" },
+		{ "line": "10E", "direction": "RET" },
+		{ "line": "11", "direction": "ALL" },
+		{ "line": "11", "direction": "RET" }
+	],
+	[
+		{ "line": "12", "direction": "ALL" },
+		{ "line": "12", "direction": "RET" },
+		{ "line": "14", "direction": "ALL" },
+		{ "line": "14", "direction": "RET" }
+	],
+	[
+		{ "line": "15", "direction": "ALL" },
+		{ "line": "15", "direction": "RET" },
+		{ "line": "15E", "direction": "ALL" },
+		{ "line": "15E", "direction": "RET" }
+	],
+	[
+		{ "line": "16", "direction": "ALL" },
+		{ "line": "16", "direction": "RET" },
+		{ "line": "17", "direction": "ALL" },
+		{ "line": "17", "direction": "RET" }
+	],
+	[
+		{ "line": "18", "direction": "ALL" },
+		{ "line": "18", "direction": "RET" },
+		{ "line": "19", "direction": "ALL" },
+		{ "line": "19", "direction": "RET" },
+		{ "line": "20", "direction": "ALL" },
+		{ "line": "20", "direction": "RET" }
+	],
+	[
+		{ "line": "21", "direction": "ALL" },
+		{ "line": "21", "direction": "RET" },
+		{ "line": "22", "direction": "ALL" },
+		{ "line": "22", "direction": "RET" },
+		{ "line": "24", "direction": "ALL" },
+		{ "line": "24", "direction": "RET" }
+	],
+	[
+		{ "line": "25", "direction": "ALL" },
+		{ "line": "25", "direction": "RET" },
+		{ "line": "26", "direction": "ALL" },
+		{ "line": "26", "direction": "RET" },
+		{ "line": "27", "direction": "ALL" },
+		{ "line": "27", "direction": "RET" }
+	],
+	[
+		{ "line": "28", "direction": "ALL" },
+		{ "line": "28", "direction": "RET" },
+		{ "line": "29", "direction": "ALL" },
+		{ "line": "29", "direction": "RET" },
+		{ "line": "30", "direction": "ALL" },
+		{ "line": "30", "direction": "RET" },
+		{ "line": "31", "direction": "ALL" },
+		{ "line": "31", "direction": "RET" },
+		{ "line": "32", "direction": "ALL" },
+		{ "line": "32", "direction": "RET" },
+		{ "line": "33", "direction": "ALL" },
+		{ "line": "33", "direction": "RET" }
+	],
+	[
+		{ "line": "34", "direction": "ALL" },
+		{ "line": "34", "direction": "RET" },
+		{ "line": "35", "direction": "ALL" },
+		{ "line": "35", "direction": "RET" },
+		{ "line": "37", "direction": "ALL" },
+		{ "line": "37", "direction": "RET" },
+		{ "line": "38", "direction": "ALL" },
+		{ "line": "38", "direction": "RET" },
+		{ "line": "39", "direction": "ALL" },
+		{ "line": "39", "direction": "RET" },
+		{ "line": "40", "direction": "ALL" },
+		{ "line": "40", "direction": "RET" }
+	],
+	[
+		{ "line": "43", "direction": "ALL" },
+		{ "line": "43", "direction": "RET" },
+		{ "line": "45", "direction": "ALL" },
+		{ "line": "45", "direction": "RET" },
+		{ "line": "46", "direction": "ALL" },
+		{ "line": "46", "direction": "RET" },
+		{ "line": "47", "direction": "ALL" },
+		{ "line": "47", "direction": "RET" },
+		{ "line": "48", "direction": "ALL" },
+		{ "line": "48", "direction": "RET" },
+		{ "line": "49", "direction": "ALL" },
+		{ "line": "49", "direction": "RET" },
+		{ "line": "50", "direction": "ALL" },
+		{ "line": "50", "direction": "RET" }
+	],
+	[
+		{ "line": "52", "direction": "ALL" },
+		{ "line": "52", "direction": "RET" },
+		{ "line": "52E", "direction": "ALL" },
+		{ "line": "52E", "direction": "RET" },
+		{ "line": "54", "direction": "ALL" },
+		{ "line": "54", "direction": "RET" },
+		{ "line": "55", "direction": "ALL" },
+		{ "line": "55", "direction": "RET" },
+		{ "line": "57", "direction": "ALL" },
+		{ "line": "57", "direction": "RET" },
+		{ "line": "60", "direction": "ALL" },
+		{ "line": "60", "direction": "RET" },
+		{ "line": "61", "direction": "ALL" },
+		{ "line": "61", "direction": "RET" }
+	],
+	[
+		{ "line": "62", "direction": "ALL" },
+		{ "line": "62", "direction": "RET" },
+		{ "line": "63", "direction": "ALL" },
+		{ "line": "63", "direction": "RET" },
+		{ "line": "64", "direction": "ALL" },
+		{ "line": "64", "direction": "RET" },
+		{ "line": "65", "direction": "ALL" },
+		{ "line": "65", "direction": "RET" },
+		{ "line": "66", "direction": "ALL" },
+		{ "line": "66", "direction": "RET" },
+		{ "line": "67", "direction": "ALL" },
+		{ "line": "67", "direction": "RET" },
+		{ "line": "68", "direction": "ALL" },
+		{ "line": "68", "direction": "RET" }
+	],
+	[
+		{ "line": "69", "direction": "ALL" },
+		{ "line": "69", "direction": "RET" },
+		{ "line": "70", "direction": "ALL" },
+		{ "line": "70", "direction": "RET" },
+		{ "line": "64", "direction": "ALL" },
+		{ "line": "64", "direction": "RET" },
+		{ "line": "65", "direction": "ALL" },
+		{ "line": "65", "direction": "RET" },
+		{ "line": "66", "direction": "ALL" },
+		{ "line": "66", "direction": "RET" },
+		{ "line": "67", "direction": "ALL" },
+		{ "line": "67", "direction": "RET" },
+		{ "line": "68", "direction": "ALL" },
+		{ "line": "68", "direction": "RET" },
+		{ "line": "69", "direction": "ALL" },
+		{ "line": "69", "direction": "RET" },
+		{ "line": "70", "direction": "ALL" },
+		{ "line": "70", "direction": "RET" }
+	],
+	[
+		{ "line": "RT1", "direction": "ALL" },
+		{ "line": "RT1", "direction": "RET" }
+	],
+	[
+		{ "line": "RT2", "direction": "ALL" },
+		{ "line": "RT2", "direction": "RET" }
+	],
+	[
+		{ "line": "RT3", "direction": "ALL" },
+		{ "line": "RT3", "direction": "RET" }
+	],
+	[
+		{ "line": "RT4", "direction": "ALL" },
+		{ "line": "RT4", "direction": "RET" }
+	],
+	[
+		{ "line": "RT5", "direction": "ALL" },
+		{ "line": "RT5", "direction": "RET" }
+	],
+	[
+		{ "line": "RT6", "direction": "ALL" },
+		{ "line": "RT6", "direction": "RET" }
+	],
+	[
+		{ "line": "RMA", "direction": "ALL" },
+		{ "line": "RMA", "direction": "RET" }
+	],
+	[
+		{ "line": "RMB", "direction": "ALL" },
+		{ "line": "RMB", "direction": "RET" }
+	],
+	[
+		{ "line": "RMC", "direction": "ALL" },
+		{ "line": "RMC", "direction": "RET" }
+	],
+	[
+		{ "line": "RMD", "direction": "ALL" },
+		{ "line": "RMD", "direction": "RET" }
+	],
+	[
+		{ "line": "RF1", "direction": "ALL" },
+		{ "line": "RF1", "direction": "RET" }
+	],
+	[
+		{ "line": "RF2", "direction": "ALL" },
+		{ "line": "RF2", "direction": "RET" }
+	],
+	[
+		{ "line": "BR60", "direction": "ALL" },
+		{ "line": "BR60", "direction": "RET" }
+	],
+	[{ "line": "TS", "direction": "ALL" }, { "line": "TS", "direction": "RET" }],
+	[
+		{ "line": "BGS1", "direction": "ALL" },
+		{ "line": "BGS1", "direction": "RET" }
+	],
+	[
+		{ "line": "BGS2", "direction": "ALL" },
+		{ "line": "BGS2", "direction": "RET" }
+	]
 ]
