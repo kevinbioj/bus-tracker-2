@@ -22,7 +22,7 @@ export type VehicleWithActiveMonths = Vehicle & {
 
 export type VehicleActivity = {
 	status: "online" | "offline";
-	since: string;
+	since: string | null;
 	lineId?: number;
 	markerId?: string;
 	position?: { latitude: number; longitude: number };
