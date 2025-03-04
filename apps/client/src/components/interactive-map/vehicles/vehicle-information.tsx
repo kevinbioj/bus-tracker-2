@@ -98,9 +98,7 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 
 	const vehicleLink = journey.vehicle?.id ? (
 		<Button asChild className="gap-0.5 py-0.5" size="xs" variant="ghost">
-			<Link target="_blank" to={`/data/vehicles/${journey.vehicle.id}`}>
-				{vehicleNumber}
-			</Link>
+			<Link to={`/data/vehicles/${journey.vehicle.id}`}>{vehicleNumber}</Link>
 		</Button>
 	) : (
 		<>{vehicleNumber} </>
@@ -122,9 +120,7 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] px-2 py-1">
 			{network?.hasVehiclesFeature ? (
 				<Button asChild className="" size="xs" variant="ghost">
-					<Link target="_blank" to={`/data/networks/${network?.id}`}>
-						{networkIdentifier}
-					</Link>
+					<Link to={`/data/networks/${network?.id}`}>{networkIdentifier}</Link>
 				</Button>
 			) : (
 				networkIdentifier
