@@ -29,7 +29,7 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 
 	return (
 		<div
-			className={`flex flex-col relative rounded-md ${!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"}`}
+			className={`border border-border flex flex-col relative rounded-md shadow-md ${!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"}`}
 			style={{ backgroundColor: line?.color ?? undefined, color: line?.textColor ?? undefined }}
 		>
 			<Link
@@ -53,7 +53,7 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 					className="border-t-[1px] border-black dark:border-white mx-2"
 					style={{ borderColor: line?.textColor ?? undefined }}
 				/>
-				<div className="flex flex-col mt-2 w-full">
+				<div className="flex flex-col mt-2.5 w-full">
 					{vehicle.designation && <p className="font-bold text-center">{vehicle.designation}</p>}
 					{vehicle.activity?.status === "online" ? (
 						<p className="text-center">

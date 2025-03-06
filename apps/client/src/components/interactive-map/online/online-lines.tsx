@@ -23,7 +23,7 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 				const lineVehicles = vehicles?.filter(({ activity }) => activity.lineId === line.id) ?? [];
 				return (
 					<Button
-						className="flex justify-between items-center h-16 p-2 rounded-lg transition text-primary-foreground hover:brightness-90"
+						className="border border-border flex justify-between items-center h-16 p-2 rounded-lg transition text-primary-foreground hover:brightness-90"
 						key={line.id}
 						onClick={() => updateLine(line.id)}
 						style={{

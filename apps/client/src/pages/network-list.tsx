@@ -21,7 +21,7 @@ export function NetworkList() {
 				<div className="mt-3 flex flex-col gap-3">
 					{networksWithVehiclesFeature.map((network) => (
 						<Link
-							className="flex justify-between items-center h-16 px-4 py-2 rounded-lg transition-colors bg-primary hover:bg-primary/70 text-primary-foreground"
+							className="border border-border flex justify-between items-center h-16 px-4 py-2 rounded-lg shadow-md transition-colors bg-primary hover:bg-primary/70 text-primary-foreground"
 							key={network.id}
 							to={`/data/networks/${network.id}`}
 							style={{

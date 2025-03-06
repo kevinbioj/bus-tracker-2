@@ -33,7 +33,7 @@ export function OnlineNetworks({ updateNetwork }: Readonly<OnlineNetworksProps>)
 	const renderNetwork = (network: Network) => (
 		<div className="h-16 relative w-full" key={network.id}>
 			<Button
-				className="absolute top-4 left-1"
+				className="absolute top-3.5 left-1"
 				onClick={() => toggleFavoriteNetwork(network.id)}
 				size="icon"
 				variant="ghost"
@@ -41,7 +41,7 @@ export function OnlineNetworks({ updateNetwork }: Readonly<OnlineNetworksProps>)
 				{favoriteNetworkIds.includes(network.id) ? <StarIcon fill="#FFC500" /> : <StarIcon />}
 			</Button>
 			<Button
-				className="flex justify-between items-center h-16 pr-4 pl-12 py-2 rounded-lg transition-colors w-full bg-primary hover:bg-primary/70 text-primary-foreground"
+				className="border border-border flex justify-between items-center h-16 pr-4 pl-12 py-2 rounded-lg shadow-md transition-colors w-full bg-primary hover:bg-primary/70 text-primary-foreground"
 				onClick={() => updateNetwork(network.id)}
 				style={{
 					backgroundColor: network.color ?? undefined,

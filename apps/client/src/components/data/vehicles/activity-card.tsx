@@ -13,7 +13,7 @@ export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
 
 	return (
 		<article
-			className="flex h-14 px-2 py-1 rounded-md"
+			className="border border-border flex h-14 px-2 py-1 rounded-md"
 			style={{
 				backgroundColor: line?.color ? `#${line.color}` : undefined,
 				color: line?.textColor ? `#${line.textColor}` : undefined,

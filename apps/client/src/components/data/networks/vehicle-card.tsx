@@ -22,7 +22,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 
 	return (
 		<Link
-			className={`flex flex-col sm:flex-row py-1 px-2 rounded-md hover:brightness-90 ${
+			className={`border border-border flex flex-col sm:flex-row py-1 px-2 rounded-md hover:brightness-90 ${
 				!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"
 			}`}
 			to={`/data/vehicles/${vehicle.id}`}
