@@ -12,7 +12,7 @@ export function Settings() {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button size="icon" variant="branding-outline">
+				<Button size="icon" variant="on-branding-outline">
 					<LucideSettings aria-label="Paramètres" />
 				</Button>
 			</DialogTrigger>

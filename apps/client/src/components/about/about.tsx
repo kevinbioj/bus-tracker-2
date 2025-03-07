@@ -59,7 +59,7 @@ export function About() {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button size="icon" variant="branding-outline">
+				<Button size="icon" variant="on-branding-outline">
 					<LucideInfo aria-label="À propos" />
 				</Button>
 			</DialogTrigger>

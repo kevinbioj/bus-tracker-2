@@ -34,7 +34,7 @@ export function Announcements() {
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button className="relative" size="icon" variant="branding-outline">
+				<Button className="relative" size="icon" variant="on-branding-outline">
 					<LucideMegaphone aria-label="Actualités" />
 					{unreadAnnouncementsCount > 0 && (
 						<span className="absolute animate-pulse bg-green-600 -top-2 -left-2 size-4 rounded-full text-white text-xs z-10">

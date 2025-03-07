@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
+import { LucideSatellite, LucideSatelliteDish } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { match } from "ts-pattern";
 
@@ -74,6 +75,13 @@ export function VehicleDetails() {
 					) : null}
 				</div>
 				<Separator className="my-1" />
+				{vehicle.activity.markerId && (
+					<Button asChild className="my-2 w-full" variant="branding-outline">
+						<Link to={`/#${vehicle.activity.markerId}`}>
+							<LucideSatelliteDish /> Voir ce véhicule en direct
+						</Link>
+					</Button>
+				)}
 				<VehicleActivities vehicleId={vehicle.id} />
 			</main>
 		</>
