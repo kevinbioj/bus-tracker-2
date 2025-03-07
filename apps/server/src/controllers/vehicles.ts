@@ -132,6 +132,8 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 			.from(lineActivities)
 			.where(eq(lineActivities.vehicleId, vehicle.id));
 
+		const journey = journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
+
 		return c.json({
 			...vehicle,
 			activity: {
@@ -139,6 +141,13 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 				since:
 					(currentActivity ? currentActivity.since : vehicle.lastSeenAt)?.toZonedDateTimeISO(network.timezone) ?? null,
 				lineId: currentActivity?.lineId,
+				markerId: journey?.id,
+				position: journey
+					? {
+							latitude: journey.position.latitude,
+							longitude: journey.position.longitude,
+						}
+					: undefined,
 			},
 			activeMonths: activeMonths.map(({ month }) => month).toSorted((a, b) => a.localeCompare(b)),
 		});
