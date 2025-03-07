@@ -21,8 +21,6 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 	hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
 		const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled } = c.req.valid("query");
 
-		console.log(excludeScheduled);
-
 		const boundedJourneys = store
 			.values()
 			.filter(({ calls, position }) => {
