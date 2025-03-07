@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { LucideSatellite, LucideSatelliteDish } from "lucide-react";
+import { LucideSatelliteDish } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { match } from "ts-pattern";
 
