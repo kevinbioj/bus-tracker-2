@@ -1,5 +1,16 @@
 import { Temporal } from "temporal-polyfill";
 
+function nthIndexOf(input, pattern, n) {
+  const length = input.length;
+  let i = -1;
+  let j = n;
+  while (j-- && i++ < length) {
+    i = input.indexOf(pattern, i);
+    if (i < 0) break;
+  }
+  return i;
+}
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
   {
@@ -30,6 +41,28 @@ const sources = [
     getAheadTime: (journey) =>
       journey.trip?.route.type === "RAIL" ? 5 * 60 : 60,
     getNetworkRef: () => "IDFM",
+  },
+  {
+    id: "gpso",
+    staticResourceHref:
+      "https://zenbus.net/gtfs/static/download.zip?dataset=gpso-rt",
+    realtimeResourceHrefs: [
+      "https://zenbus.net/gtfs/rt/poll.proto?dataset=gpso-rt",
+    ],
+    mode: "NO-TU",
+    excludeScheduled: true,
+    getNetworkRef: () => "IDFM",
+    getVehicleRef: () => undefined,
+    mapLineRef: (lineRef) =>
+      lineRef.slice(
+        nthIndexOf(lineRef, ":", 2) + 1,
+        nthIndexOf(lineRef, ":", 3)
+      ),
+    mapStopRef: (stopRef) =>
+      stopRef.slice(
+        nthIndexOf(stopRef, ":", 3) + 1,
+        nthIndexOf(stopRef, ":", 4)
+      ),
   },
 ];
 
