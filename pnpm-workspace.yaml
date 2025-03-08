@@ -5,6 +5,7 @@ packages:
   - providers/gtfs
   - providers/twisto
   - providers/tcl
+  - providers/rtm
 
 onlyBuiltDependencies:
   - '@biomejs/biome'

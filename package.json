@@ -1,19 +1,20 @@
 {
-  "name": "bus-tracker",
-  "description": "Application for tracking public transport vehicles.",
-  "author": "Kevin BIOJOUT <coucou@kevinbioj.fr>",
-  "license": "GPL-3.0-only",
-  "scripts": {
-    "dev:client": "pnpm -C apps/client dev",
-    "dev:server": "pnpm -C apps/server dev",
-    "dev:gtfs": "pnpm -C providers/gtfs dev",
-    "dev:twisto": "pnpm -C providers/twisto dev",
-    "dev:tcl": "pnpm -C providers/tcl dev",
-    "lint": "biome lint",
-    "format": "biome format --write"
-  },
-  "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b",
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4"
-  }
+	"name": "bus-tracker",
+	"description": "Application for tracking public transport vehicles.",
+	"author": "Kevin BIOJOUT <coucou@kevinbioj.fr>",
+	"license": "GPL-3.0-only",
+	"scripts": {
+		"dev:client": "pnpm -C apps/client dev",
+		"dev:server": "pnpm -C apps/server dev",
+		"dev:gtfs": "pnpm -C providers/gtfs dev",
+		"dev:twisto": "pnpm -C providers/twisto dev",
+		"dev:tcl": "pnpm -C providers/tcl dev",
+		"dev:rtm": "pnpm -C providers/rtm dev",
+		"lint": "biome lint",
+		"format": "biome format --write"
+	},
+	"packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b",
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4"
+	}
 }
