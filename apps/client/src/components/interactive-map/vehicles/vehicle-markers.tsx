@@ -64,7 +64,7 @@ export function VehicleMarkers() {
 		);
 
 		setActiveMarker(activeMarkerData.id);
-		navigate("#");
+		navigate("#", { replace: true });
 	}, [activeMarkerData, map.setView, navigate, setActiveMarker]);
 
 	return (
