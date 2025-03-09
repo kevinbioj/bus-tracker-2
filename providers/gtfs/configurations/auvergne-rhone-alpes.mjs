@@ -1,6 +1,16 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
   {
+    id: "aubenas",
+    staticResourceHref:
+      "https://app.mecatran.com/utw/ws/gtfsfeed/static/aubenas?apiKey=6527571c533049035b6a0d41252853243b1f2a68",
+    realtimeResourceHrefs: [
+      "https://gtfs-rt.infra-hubup.fr/toutenbus/realtime",
+    ],
+    excludeScheduled: true,
+    getNetworkRef: () => "AUBENAS",
+  },
+  {
     id: "chamonix",
     staticResourceHref: "https://pysae.com/api/v2/groups/chamonix-bus/gtfs/pub",
     realtimeResourceHrefs: [
