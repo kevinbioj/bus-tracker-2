@@ -32,7 +32,7 @@ async function mainLoop() {
 		const line = lines.find((l) => l.LineId === vehicle.Line);
 
 		// Culot complet
-		const destination = line?.LineName.split(" - ")[+vehicle.Direction - 1];
+		const destination = line?.LineName.split(" - ")[vehicle.Direction === "1" ? 1 : 0];
 
 		return {
 			id: `RTM::VehicleTracking:${vehicleRef}`,
