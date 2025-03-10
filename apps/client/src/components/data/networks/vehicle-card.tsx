@@ -67,8 +67,14 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 								<>
 									{" "}
 									depuis le{" "}
-									<span className="font-bold tabular-nums">{dayjs(vehicle.activity.since).format("DD/MM")}</span> à{" "}
-									<span className="font-bold tabular-nums">{dayjs(vehicle.activity.since).format("HH:mm")}</span>
+									{dayjs().diff(vehicle.activity.since, "years") >= 1 ? (
+										<span className="font-bold tabular-nums">{dayjs(vehicle.activity.since).format("DD/MM/YYYY")}</span>
+									) : (
+										<>
+											<span className="font-bold tabular-nums">{dayjs(vehicle.activity.since).format("DD/MM")}</span> à{" "}
+											<span className="font-bold tabular-nums">{dayjs(vehicle.activity.since).format("HH:mm")}</span>
+										</>
+									)}
 								</>
 							)}
 						</p>
