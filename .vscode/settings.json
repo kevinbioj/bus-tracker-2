@@ -1,6 +1,6 @@
 {
-  "sonarlint.connectedMode.project": {
-    "connectionId": "kevinbioj",
-    "projectKey": "bus-tracker-app"
-  }
+	"sonarlint.connectedMode.project": {
+		"connectionId": "kevinbioj",
+		"projectKey": "bus-tracker-app"
+	}
 }
