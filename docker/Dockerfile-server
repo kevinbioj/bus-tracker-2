@@ -31,6 +31,7 @@ RUN pnpm deploy --legacy --filter=@bus-tracker/server --prod server-deployment
 
 FROM oven/bun:1.2.5-slim AS runtime
 WORKDIR /bus-tracker
+ENV NODE_ENV=production
 
 # Copy project artifacts
 COPY --from=builder /bus-tracker/server-deployment/node_modules ./server/node_modules/
