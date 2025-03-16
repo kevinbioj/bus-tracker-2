@@ -1,11 +1,11 @@
+import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
 import DraftLog from "draftlog";
-import { setTimeout } from "node:timers/promises";
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
 
-import { lines } from "./lines.js";
 import { fetchVehicles } from "./fetch-vehicles.js";
+import { lines } from "./lines.js";
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 
@@ -75,6 +75,7 @@ for (const line of lines) {
 		} satisfies VehicleJourney;
 	});
 
+	await redis.publish("journeys", JSON.stringify(vehicleJourneys));
 	updateLog(`%s ► Published ${vehicleJourneys.length} vehicle journeys for line '${line.id}'.`, Temporal.Now.instant());
 	await setTimeout(1500);
 }
