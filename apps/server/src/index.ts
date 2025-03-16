@@ -1,11 +1,9 @@
 import "dotenv/config.js";
 import "./sentry.js";
 
-import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
-import { serve } from "@hono/node-server";
-import * as Sentry from "@sentry/node";
+import type { VehicleJourney } from "@bus-tracker/contracts";
+import * as Sentry from "@sentry/bun";
 import { Hono } from "hono";
-import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { createClient } from "redis";
 
@@ -65,7 +63,6 @@ await redis.subscribe("journeys", async (message) => {
 console.log("► Listening on port %d.\n", port);
 
 export const hono = new Hono();
-hono.use(compress());
 hono.use(cors({ origin: "*" }));
 registerAnnouncementRoutes(hono);
 registerLineRoutes(hono);
@@ -73,4 +70,4 @@ registerNetworkRoutes(hono, journeyStore);
 registerVehicleRoutes(hono, journeyStore);
 registerVehicleJourneyRoutes(hono, journeyStore);
 registerGirouetteRoutes(hono);
-serve({ fetch: hono.fetch, port });
+export default { fetch: hono.fetch, port };
