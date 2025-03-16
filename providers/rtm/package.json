@@ -1,25 +1,25 @@
 {
-  "name": "@bus-tracker/processor-rtm",
-  "version": "0.0.0",
-  "main": "dist/index.js",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsx watch src/index.ts",
-    "start": "node --enable-source-maps .",
-    "test": "vitest --run .",
-    "test:watch": "vitest ."
-  },
-  "devDependencies": {
-    "@types/node": "^22.13.10",
-    "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
-  },
-  "dependencies": {
-    "@bus-tracker/contracts": "workspace:*",
-    "draftlog": "^1.0.13",
-    "redis": "^4.7.0",
-    "temporal-polyfill": "^0.2.5"
-  }
+	"name": "@bus-tracker/processor-idelis",
+	"version": "0.0.0",
+	"main": "dist/index.js",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsx watch src/index.ts",
+		"start": "node --enable-source-maps .",
+		"test": "vitest --run .",
+		"test:watch": "vitest ."
+	},
+	"devDependencies": {
+		"@types/node": "^22.13.10",
+		"tsx": "^4.19.3",
+		"typescript": "^5.8.2"
+	},
+	"dependencies": {
+		"@bus-tracker/contracts": "workspace:*",
+		"draftlog": "^1.0.13",
+		"redis": "^4.7.0",
+		"temporal-polyfill": "^0.2.5"
+	}
 }

@@ -1,31 +1,31 @@
 {
-  "name": "@bus-tracker/server",
-  "main": "dist/index.js",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "build": "tsc -b",
-    "dev": "bun run --hot src/index.ts",
-    "package": "pkg",
-    "start": "bun run src/index.ts",
-    "migrations:generate": "drizzle-kit generate",
-    "migrations:push": "drizzle-kit push"
-  },
-  "devDependencies": {
-    "@types/bun": "^1.2.5",
-    "drizzle-kit": "^0.30.5",
-    "typescript": "^5.8.2"
-  },
-  "dependencies": {
-    "@bus-tracker/contracts": "workspace:*",
-    "@sentry/bun": "^9.5.0",
-    "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.40.0",
-    "hono": "^4.7.4",
-    "p-limit": "^6.2.0",
-    "postgres": "^3.4.5",
-    "redis": "^4.7.0",
-    "temporal-polyfill": "^0.2.5",
-    "zod": "^3.24.2"
-  }
+	"name": "@bus-tracker/server",
+	"main": "dist/index.js",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "tsc -b",
+		"dev": "bun run --hot src/index.ts",
+		"package": "pkg",
+		"start": "bun run src/index.ts",
+		"migrations:generate": "drizzle-kit generate",
+		"migrations:push": "drizzle-kit push"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.2.5",
+		"drizzle-kit": "^0.30.5",
+		"typescript": "^5.8.2"
+	},
+	"dependencies": {
+		"@bus-tracker/contracts": "workspace:*",
+		"@sentry/bun": "^9.5.0",
+		"dotenv": "^16.4.7",
+		"drizzle-orm": "^0.40.0",
+		"hono": "^4.7.4",
+		"p-limit": "^6.2.0",
+		"postgres": "^3.4.5",
+		"redis": "^4.7.0",
+		"temporal-polyfill": "^0.2.5",
+		"zod": "^3.24.2"
+	}
 }

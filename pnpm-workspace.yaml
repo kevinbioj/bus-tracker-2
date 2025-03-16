@@ -2,6 +2,7 @@ packages:
   - apps/client
   - apps/server
   - libraries/contracts
+  - providers/idelis
   - providers/gtfs
   - providers/twisto
   - providers/tcl
