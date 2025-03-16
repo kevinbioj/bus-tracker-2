@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build": "tsc -b",
     "dev": "bun run --hot src/index.ts",
     "package": "pkg",
     "start": "bun run src/index.ts",
