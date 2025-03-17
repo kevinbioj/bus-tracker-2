@@ -20,7 +20,7 @@ await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
 
-while (1) {
+while (true) {
 	for (const line of lines) {
 		const updateLog = console.draft(`%s ► Fetching vehicles for line '${line.id}'...`, Temporal.Now.instant());
 
