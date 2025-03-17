@@ -1,5 +1,4 @@
 import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts";
-import pLimit from "p-limit";
 import { Temporal } from "temporal-polyfill";
 
 import type { Network } from "../database/schema.js";
@@ -38,46 +37,46 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 		}),
 	);
 
-	const limitRegister = pLimit(100);
+	// const limitRegister = pLimit(100);
 	for (const vehicleJourney of vehicleJourneys) {
 		const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
 		if (timeSince.total("minutes") >= 10) return;
-		limitRegister(async () => {
-			const network = networks.get(vehicleJourney.networkRef)!;
-			const line = vehicleJourney.line
-				? lines.find(({ references }) => references?.includes(vehicleJourney.line!.ref))
-				: undefined;
+		// limitRegister(async () => {
+		const network = networks.get(vehicleJourney.networkRef)!;
+		const line = vehicleJourney.line
+			? lines.find(({ references }) => references?.includes(vehicleJourney.line!.ref))
+			: undefined;
 
-			const disposeableJourney: DisposeableVehicleJourney = {
-				id: vehicleJourney.id,
-				lineId: line?.id,
-				direction: vehicleJourney.direction,
-				destination: vehicleJourney.destination,
-				calls: vehicleJourney.calls,
-				position: vehicleJourney.position,
-				occupancy: vehicleJourney.occupancy,
-				networkId: network.id,
-				operatorId: undefined,
-				vehicle: undefined,
-				serviceDate: vehicleJourney.serviceDate,
-				updatedAt: vehicleJourney.updatedAt,
-			};
+		const disposeableJourney: DisposeableVehicleJourney = {
+			id: vehicleJourney.id,
+			lineId: line?.id,
+			direction: vehicleJourney.direction,
+			destination: vehicleJourney.destination,
+			calls: vehicleJourney.calls,
+			position: vehicleJourney.position,
+			occupancy: vehicleJourney.occupancy,
+			networkId: network.id,
+			operatorId: undefined,
+			vehicle: undefined,
+			serviceDate: vehicleJourney.serviceDate,
+			updatedAt: vehicleJourney.updatedAt,
+		};
 
-			if (typeof vehicleJourney.vehicleRef !== "undefined") {
-				if (vehicleJourney.networkRef !== "SNCF") {
-					const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
-					disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
-					if (typeof vehicleJourney.line !== "undefined") {
-						registerActivity(disposeableJourney);
-					}
-				} else {
-					disposeableJourney.vehicle = {
-						number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
-					};
+		if (typeof vehicleJourney.vehicleRef !== "undefined") {
+			if (vehicleJourney.networkRef !== "SNCF") {
+				const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
+				disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
+				if (typeof vehicleJourney.line !== "undefined") {
+					registerActivity(disposeableJourney);
 				}
+			} else {
+				disposeableJourney.vehicle = {
+					number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
+				};
 			}
+		}
 
-			store.set(disposeableJourney.id, disposeableJourney);
-		});
+		store.set(disposeableJourney.id, disposeableJourney);
+		// });
 	}
 }
