@@ -48,26 +48,31 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 	hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
 		const { limit, page, networkId, operatorId, number, designation, sortBy, sortOrder } = c.req.valid("query");
 
+		const vehiclesListWhereClause = and(
+			networkId ? eq(vehicles.networkId, networkId) : undefined,
+			operatorId ? eq(vehicles.operatorId, operatorId) : undefined,
+			number ? ilike(vehicles.number, `%${number}%`) : undefined,
+			designation ? ilike(vehicles.designation, `%${designation}%`) : undefined,
+		);
+
 		const vehicleList = await database
 			.select()
 			.from(vehicles)
 			.offset(page * limit)
 			.limit(limit)
-			.where(
-				and(
-					networkId ? eq(vehicles.networkId, networkId) : undefined,
-					operatorId ? eq(vehicles.operatorId, operatorId) : undefined,
-					number ? ilike(vehicles.number, `%${number}%`) : undefined,
-					designation ? ilike(vehicles.designation, `%${designation}%`) : undefined,
-				),
-			)
+			.where(vehiclesListWhereClause)
 			.orderBy(sortOrder === "asc" ? asc(vehicles[sortBy]) : desc(vehicles[sortBy]));
 
 		const onlineVehicleList = Map.groupBy(
 			await database
 				.select({ vehicleId: vehicles.id, lineId: lineActivities.lineId, since: lineActivities.startedAt })
 				.from(vehicles)
-				.where(lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivities.updatedAt}))`, 600))
+				.where(
+					and(
+						vehiclesListWhereClause,
+						lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivities.updatedAt}))`, 600),
+					),
+				)
 				.innerJoin(lineActivities, eq(vehicles.id, lineActivities.vehicleId)),
 			(currentActivity) => currentActivity.vehicleId,
 		);
