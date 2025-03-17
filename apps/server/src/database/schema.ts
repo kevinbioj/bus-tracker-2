@@ -60,19 +60,23 @@ export const operators = pgTable("operator", {
 
 export type Operator = InferSelectModel<typeof operators>;
 
-export const lines = pgTable("line", {
-	id: serial("id").primaryKey(),
-	networkId: integer("network_id")
-		.notNull()
-		.references(() => networks.id),
-	references: varchar("ref").array(),
-	number: varchar("number").notNull(),
-	cartridgeHref: varchar("cartridge_href"),
-	color: char("color", { length: 6 }),
-	textColor: char("text_color", { length: 6 }),
-	sortOrder: integer("sort_order"),
-	archivedAt: timestamp("archived_at"),
-});
+export const lines = pgTable(
+	"line",
+	{
+		id: serial("id").primaryKey(),
+		networkId: integer("network_id")
+			.notNull()
+			.references(() => networks.id),
+		references: varchar("ref").array(),
+		number: varchar("number").notNull(),
+		cartridgeHref: varchar("cartridge_href"),
+		color: char("color", { length: 6 }),
+		textColor: char("text_color", { length: 6 }),
+		sortOrder: integer("sort_order"),
+		archivedAt: timestamp("archived_at"),
+	},
+	(table) => [index("network_idx").on(table.networkId)],
+);
 
 export type Line = InferSelectModel<typeof lines>;
 
@@ -109,9 +113,10 @@ export const vehicles = pgTable(
 		lastSeenAt: timestamp("last_seen_at", { precision: 0 }),
 		archivedAt: timestamp("archived_at", { precision: 0 }),
 	},
-	(table) => ({
-		networkIndex: index("vehicle_network_index").on(table.operatorId),
-	}),
+	(table) => [
+		index("vehicle_network_index").on(table.networkId),
+		index("vehicle_network_ref_index").on(table.networkId, table.ref),
+	],
 );
 
 export type Vehicle = InferSelectModel<typeof vehicles>;
@@ -130,9 +135,10 @@ export const lineActivities = pgTable(
 		startedAt: timestamp("started_at", { precision: 0 }).notNull(),
 		updatedAt: timestamp("updated_at", { precision: 0 }).notNull(),
 	},
-	(table) => ({
-		vehicleIndex: index("line_activity_vehicle_index").on(table.vehicleId),
-	}),
+	(table) => [
+		index("line_activity_vehicle_index").on(table.vehicleId),
+		index("line_activity_updatedAt_index").on(table.updatedAt),
+	],
 );
 
 export type LineActivity = InferSelectModel<typeof lineActivities>;
@@ -153,9 +159,7 @@ export const mercatoActivity = pgTable(
 		comment: text("comment"),
 		recordedAt: timestamp("recorded_at", { precision: 0 }).notNull(),
 	},
-	(table) => ({
-		vehicleIndex: index("mercato_activity_vehicle_index").on(table.vehicleId),
-	}),
+	(table) => [index("mercato_activity_vehicle_index").on(table.vehicleId)],
 );
 
 export type MercatoActivity = InferSelectModel<typeof mercatoActivity>;

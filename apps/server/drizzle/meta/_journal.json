@@ -1,55 +1,62 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1731097280022,
-			"tag": "0000_nappy_iceman",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1731323779508,
-			"tag": "0001_shiny_loners",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1732998881195,
-			"tag": "0002_fuzzy_kate_bishop",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "7",
-			"when": 1734728530427,
-			"tag": "0003_workable_zodiak",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "7",
-			"when": 1736771464213,
-			"tag": "0004_rapid_makkari",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "7",
-			"when": 1736878900516,
-			"tag": "0005_late_cerise",
-			"breakpoints": true
-		},
-		{
-			"idx": 6,
-			"version": "7",
-			"when": 1740166107443,
-			"tag": "0006_awesome_albert_cleary",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1731097280022,
+      "tag": "0000_nappy_iceman",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1731323779508,
+      "tag": "0001_shiny_loners",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1732998881195,
+      "tag": "0002_fuzzy_kate_bishop",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1734728530427,
+      "tag": "0003_workable_zodiak",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1736771464213,
+      "tag": "0004_rapid_makkari",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1736878900516,
+      "tag": "0005_late_cerise",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1740166107443,
+      "tag": "0006_awesome_albert_cleary",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1742245045397,
+      "tag": "0007_gray_jack_flag",
+      "breakpoints": true
+    }
+  ]
 }
