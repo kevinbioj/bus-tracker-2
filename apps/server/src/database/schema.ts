@@ -137,7 +137,7 @@ export const lineActivities = pgTable(
 	},
 	(table) => [
 		index("line_activity_vehicle_index").on(table.vehicleId),
-		index("line_activity_updatedAt_index").on(table.updatedAt),
+		index("line_activity_vehicle_service_date_index").on(table.vehicleId, table.serviceDate),
 	],
 );
 

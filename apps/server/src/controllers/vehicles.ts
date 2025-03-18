@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, lt, sql } from "drizzle-orm";
+import { and, asc, between, desc, eq, ilike, lt, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
@@ -181,7 +181,11 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 				.where(
 					and(
 						eq(lineActivities.vehicleId, vehicle.id),
-						eq(sql`DATE_TRUNC('month', ${lineActivities.serviceDate})`, month.toPlainDate({ day: 1 }).toString()),
+						between(
+							lineActivities.serviceDate,
+							month.toPlainDate({ day: 1 }).toString(),
+							month.toPlainDate({ day: month.daysInMonth }).toString(),
+						),
 					),
 				);
 
