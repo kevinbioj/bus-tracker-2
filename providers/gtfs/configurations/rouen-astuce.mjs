@@ -11,7 +11,9 @@ const sources = [
 		gtfsOptions: {
 			shapesStrategy: "IGNORE",
 		},
-		excludeScheduled: (trip) => !["06", "89", "98"].includes(trip.route.id),
+		// 2025-03-18: run trips in scheduled mode until real-time gets fixed
+		excludeScheduled: (trip) => +trip.route.id < 100,
+		// excludeScheduled: (trip) => !["06", "89", "98"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (journey?.trip.route.id === "06" || journey?.trip.route.id === "89") return "TNI";
