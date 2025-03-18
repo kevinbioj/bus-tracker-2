@@ -30,7 +30,7 @@ RUN pnpm deploy --legacy --filter=@bus-tracker/server --prod server-deployment
 # STAGE 2 - Run distribution app         #
 ##########################################
 
-FROM base AS builder
+FROM base AS runtime
 ENV NODE_ENV=production
 
 # Copy project artifacts
