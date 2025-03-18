@@ -54,7 +54,7 @@ async function mainLoop() {
 			},
 			networkRef: "RTM",
 			operatorRef,
-			vehicleRef: `RTM::Vehicle:${+vehicleRef!.slice(3)}`,
+			vehicleRef: `RTM:${operatorRef}:Vehicle:${+vehicleRef!.slice(3)}`,
 			updatedAt: recordedAt.toInstant().toString(),
 		};
 	});
