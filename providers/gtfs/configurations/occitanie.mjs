@@ -42,6 +42,7 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "TAM",
+		mapLineRef: (lineRef) => lineRef.split("-")[1],
 	},
 	{
 		id: "pays-or",
