@@ -26,8 +26,8 @@ async function mainLoop() {
 	const { recordedAt, vehicles } = await getVehicles();
 
 	const vehicleJourneys: VehicleJourney[] = vehicles.map((vehicle) => {
-		const lineRef = vehicle.Line.replace("RTM:LNE:", "");
-		const vehicleRef = +vehicle.Id.replace("RTM:VEH:05", "");
+		const lineRef = vehicle.Line.split(":")[2];
+		const [operatorRef, , vehicleRef] = vehicle.Id.split(":");
 
 		const line = lines.find((l) => l.LineId === vehicle.Line);
 
@@ -35,7 +35,7 @@ async function mainLoop() {
 		const destination = line?.LineName.split(" - ")[vehicle.Direction === "1" ? 1 : 0];
 
 		return {
-			id: `RTM::VehicleTracking:${vehicleRef}`,
+			id: `RTM:${operatorRef}:VehicleTracking:${vehicleRef}`,
 			line: {
 				ref: `RTM:Line:${lineRef}`,
 				number: line?.LineNumber ?? "?",
@@ -53,7 +53,8 @@ async function mainLoop() {
 				recordedAt: recordedAt.toString({ timeZoneName: "never" }),
 			},
 			networkRef: "RTM",
-			vehicleRef: `RTM::Vehicle:${vehicleRef}`,
+			operatorRef,
+			vehicleRef: `RTM::Vehicle:${+vehicleRef!.slice(3)}`,
 			updatedAt: recordedAt.toInstant().toString(),
 		};
 	});
