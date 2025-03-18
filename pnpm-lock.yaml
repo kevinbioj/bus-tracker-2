@@ -156,9 +156,12 @@ importers:
       '@bus-tracker/contracts':
         specifier: workspace:*
         version: link:../../libraries/contracts
-      '@sentry/bun':
+      '@hono/node-server':
+        specifier: ^1.13.8
+        version: 1.13.8(hono@4.7.4)
+      '@sentry/node':
         specifier: ^9.5.0
-        version: 9.5.0(@opentelemetry/api@1.9.0)(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.30.0)
+        version: 9.5.0
       dotenv:
         specifier: ^16.4.7
         version: 16.4.7
@@ -184,9 +187,9 @@ importers:
         specifier: ^3.24.2
         version: 3.24.2
     devDependencies:
-      '@types/bun':
-        specifier: ^1.2.5
-        version: 1.2.5
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.13.10
       drizzle-kit:
         specifier: ^0.30.5
         version: 0.30.5
@@ -1392,6 +1395,12 @@ packages:
   '@floating-ui/utils@0.2.9':
     resolution: {integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==}
 
+  '@hono/node-server@1.13.8':
+    resolution: {integrity: sha512-fsn8ucecsAXUoVxrUil0m13kOEq4mkX4/4QozCqmY+HpGfKl74OYSn8JcMA8GnG0ClfdRI4/ZSeG7zhFaVg+wg==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
+
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
     engines: {node: '>=12'}
@@ -2224,10 +2233,6 @@ packages:
     resolution: {integrity: sha512-HYSPW8GjknuYykJgOialKFyWg7ldmrbD1AKTIhksqdsNXLER07YeVWFAbe+xSYa1ZwwC8/s6vQJP9ZOoH1BaVg==}
     engines: {node: '>=18'}
 
-  '@sentry/bun@9.5.0':
-    resolution: {integrity: sha512-spDqTOJfz98+LcsAl+Ev+ZD3JDbptf33PGLmsfYhB4lZypNRotU62CUsGrWUAzbLoRn0L+4hhYivTlHCz33gVw==}
-    engines: {node: '>=18'}
-
   '@sentry/bundler-plugin-core@3.2.2':
     resolution: {integrity: sha512-YGrtmqQ2jMixccX2slVG/Lw7pCGJL3DGB3clmY9mO8QBEBIN3/gEANiHJVWwRidpUOS/0b7yVVGAdwZ87oPwTg==}
     engines: {node: '>= 14'}
@@ -2409,9 +2414,6 @@ packages:
 
   '@tanstack/virtual-core@3.13.2':
     resolution: {integrity: sha512-Qzz4EgzMbO5gKrmqUondCjiHcuu4B1ftHb0pjCut661lXZdGoHeze9f/M8iwsK1t5LGR6aNuNGU7mxkowaW6RQ==}
-
-  '@types/bun@1.2.5':
-    resolution: {integrity: sha512-w2OZTzrZTVtbnJew1pdFmgV99H0/L+Pvw+z1P67HaR18MHOzYnTYOi6qzErhK8HyT+DB782ADVPPE92Xu2/Opg==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -5850,6 +5852,10 @@ snapshots:
 
   '@floating-ui/utils@0.2.9': {}
 
+  '@hono/node-server@1.13.8(hono@4.7.4)':
+    dependencies:
+      hono: 4.7.4
+
   '@isaacs/cliui@8.0.2':
     dependencies:
       string-width: 5.1.2
@@ -6678,20 +6684,6 @@ snapshots:
       '@sentry-internal/replay-canvas': 9.5.0
       '@sentry/core': 9.5.0
 
-  '@sentry/bun@9.5.0(@opentelemetry/api@1.9.0)(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.30.0)':
-    dependencies:
-      '@sentry/core': 9.5.0
-      '@sentry/node': 9.5.0
-      '@sentry/opentelemetry': 9.5.0(@opentelemetry/api@1.9.0)(@opentelemetry/context-async-hooks@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/core@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.30.0)
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - '@opentelemetry/context-async-hooks'
-      - '@opentelemetry/core'
-      - '@opentelemetry/instrumentation'
-      - '@opentelemetry/sdk-trace-base'
-      - '@opentelemetry/semantic-conventions'
-      - supports-color
-
   '@sentry/bundler-plugin-core@3.2.2':
     dependencies:
       '@babel/core': 7.26.9
@@ -6893,10 +6885,6 @@ snapshots:
 
   '@tanstack/virtual-core@3.13.2': {}
 
-  '@types/bun@1.2.5':
-    dependencies:
-      bun-types: 1.2.5
-
   '@types/connect@3.4.38':
     dependencies:
       '@types/node': 22.13.10
@@ -6971,6 +6959,7 @@ snapshots:
   '@types/ws@8.5.14':
     dependencies:
       '@types/node': 22.13.10
+    optional: true
 
   '@vite-pwa/assets-generator@0.2.6':
     dependencies:
@@ -7229,6 +7218,7 @@ snapshots:
     dependencies:
       '@types/node': 22.13.10
       '@types/ws': 8.5.14
+    optional: true
 
   cac@6.7.14: {}
 

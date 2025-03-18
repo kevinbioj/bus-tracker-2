@@ -5,20 +5,21 @@
 	"private": true,
 	"scripts": {
 		"build": "tsc -b",
-		"dev": "bun run --hot src/index.ts",
+		"dev": "tsx watch src/index.ts",
 		"package": "pkg",
-		"start": "bun run src/index.ts",
+		"start": "node --enable-source-maps .",
 		"migrations:generate": "drizzle-kit generate",
 		"migrations:push": "drizzle-kit push"
 	},
 	"devDependencies": {
-		"@types/bun": "^1.2.5",
+		"@types/node": "^22.13.10",
 		"drizzle-kit": "^0.30.5",
 		"typescript": "^5.8.2"
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@sentry/bun": "^9.5.0",
+		"@hono/node-server": "^1.13.8",
+		"@sentry/node": "^9.5.0",
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.40.0",
 		"hono": "^4.7.4",

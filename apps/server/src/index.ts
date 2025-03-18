@@ -2,7 +2,8 @@ import "dotenv/config.js";
 import "./sentry.js";
 
 import type { VehicleJourney } from "@bus-tracker/contracts";
-import * as Sentry from "@sentry/bun";
+import { serve } from "@hono/node-server";
+import * as Sentry from "@sentry/node";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createClient } from "redis";
@@ -70,4 +71,4 @@ registerNetworkRoutes(hono, journeyStore);
 registerVehicleRoutes(hono, journeyStore);
 registerVehicleJourneyRoutes(hono, journeyStore);
 registerGirouetteRoutes(hono);
-export default { fetch: hono.fetch, port };
+serve({ fetch: hono.fetch, port });
