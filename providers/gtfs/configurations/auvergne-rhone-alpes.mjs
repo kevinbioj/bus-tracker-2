@@ -34,6 +34,17 @@ const sources = [
 		getNetworkRef: () => "STAS",
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
+	{
+		id: "tcl-metro",
+		staticResourceHref:
+			"https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_tcl.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
+		realtimeResourceHrefs: [],
+		gtfsOptions: {
+			filterTrips: (trip) => trip.route.type === "SUBWAY",
+		},
+		getNetworkRef: () => "TCL",
+		getAheadTime: () => 60,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
