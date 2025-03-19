@@ -12,9 +12,9 @@ const sources = [
 			shapesStrategy: "IGNORE",
 		},
 		// 2025-03-18: run trips in scheduled mode until real-time gets fixed
-		excludeScheduled: (trip) =>
-			["ELB", "IST", "INT", "HANGA"].some((id) => trip.service.id.includes(id)) && trip.route.id !== "06",
-		// excludeScheduled: (trip) => !["06", "89", "98"].includes(trip.route.id),
+		// excludeScheduled: (trip) =>
+		// 	["ELB", "IST", "INT", "HANGA"].some((id) => trip.service.id.includes(id)) && trip.route.id !== "06",
+		excludeScheduled: (trip) => !["06", "89", "98"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (journey?.trip.route.id === "06" || journey?.trip.route.id === "89") return "TNI";
