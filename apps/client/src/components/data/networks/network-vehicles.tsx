@@ -42,7 +42,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 	const [debouncedFilter] = useDebounceValue(() => filter, 100);
 
 	const filteredAndSortedVehicles = useMemo(() => {
-		const pattern = new RegExp(debouncedFilter.replaceAll("_", "\\d"));
+		const pattern = new RegExp(debouncedFilter.replaceAll("_", "\\d"), "i");
 		const sort = searchParams.get("sort");
 
 		return vehicles
