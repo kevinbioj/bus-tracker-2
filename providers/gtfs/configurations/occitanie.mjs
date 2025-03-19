@@ -69,6 +69,7 @@ const sources = [
 			"https://sete.ceccli.com/gtfs/TripUpdates.pb",
 			"https://sete.ceccli.com/gtfs/VehiclePositions.pb",
 		],
+		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "SAM",
 		mapVehiclePosition: (vehicle) => (vehicle.trip ? vehicle : undefined),
