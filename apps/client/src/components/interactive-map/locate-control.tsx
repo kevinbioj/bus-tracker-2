@@ -13,6 +13,7 @@ export function LocateControl() {
 			showPopup: false,
 			strings: { title: "Me géolocaliser" },
 			drawCircle: false,
+			showCompass: false,
 		}).addTo(map);
 
 		if (geolocateOnStart) {
