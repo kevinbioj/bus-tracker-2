@@ -2,8 +2,8 @@ import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts"
 import { Temporal } from "temporal-polyfill";
 
 import type { Network } from "../database/schema.js";
-import { importLine } from "../import/import-line.js";
-import { importNetwork } from "../import/import-network.js";
+import { importLines } from "../import/import-lines.js";
+import { importNetworks } from "../import/import-networks.js";
 import { importVehicle } from "../import/import-vehicle.js";
 import type { JourneyStore } from "../store/journey-store.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
@@ -19,23 +19,24 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 		new Set<string>(),
 	);
 
-	const networks = (await Promise.all(networkRefs.values().map((networkRef) => importNetwork(networkRef)))).reduce(
-		(acc, network) => acc.set(network.ref, network),
-		new Map<string, Network>(),
-	);
+	const networks = (await importNetworks(networkRefs)).reduce((map, network) => {
+		map.set(network.ref, network);
+		return map;
+	}, new Map<string, Network>());
 
-	const linesByRef = vehicleJourneys.reduce(
-		(acc, vehicleJourney) => (vehicleJourney.line ? acc.set(vehicleJourney.line.ref, vehicleJourney.line) : acc),
-		new Map<string, VehicleJourneyLine>(),
-	);
-
-	const lines = await Promise.all(
-		linesByRef.values().map((line) => {
-			const networkRef = line.ref.slice(0, line.ref.indexOf(":"));
-			const network = networks.get(networkRef)!;
-			return importLine(network, line, now);
-		}),
-	);
+	const lines = (
+		await Promise.all(
+			networks.values().map((network) => {
+				const lineDatas = vehicleJourneys.reduce((map, vehicleJourney) => {
+					if (typeof vehicleJourney.line !== "undefined" && !map.has(vehicleJourney.line.ref)) {
+						map.set(vehicleJourney.line.ref, vehicleJourney.line);
+					}
+					return map;
+				}, new Map<string, VehicleJourneyLine>());
+				return importLines(network, Array.from(lineDatas.values()), now);
+			}),
+		)
+	).flat();
 
 	// const limitRegister = pLimit(100);
 	for (const vehicleJourney of vehicleJourneys) {
