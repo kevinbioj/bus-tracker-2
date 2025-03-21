@@ -29,7 +29,7 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.id,
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
 		mapVehiclePosition: (vehiclePosition) => {
-				vehiclePosition.vehicle.timestamp += 3600;
+				vehiclePosition.timestamp += 3600;
 				return vehiclePosition;
 		},
 	},
