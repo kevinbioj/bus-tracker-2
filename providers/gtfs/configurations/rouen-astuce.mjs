@@ -2,11 +2,16 @@
 const sources = [
 	{
 		id: "tcar",
-		staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
+		staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE",
 		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
+			"https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
+			"https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
 		],
+		// staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
+		// realtimeResourceHrefs: [
+		// "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
+		// "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
+		// ],
 		mode: "NO-TU",
 		gtfsOptions: {
 			shapesStrategy: "IGNORE",
