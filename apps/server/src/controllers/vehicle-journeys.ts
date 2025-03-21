@@ -1,10 +1,8 @@
-import { inArray } from "drizzle-orm";
 import type { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
-import { database } from "../database/database.js";
-import { type Line, lines } from "../database/schema.js";
+import { fetchLines } from "../cache/line-cache.js";
 import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
 import type { JourneyStore } from "../store/journey-store.js";
 
@@ -43,17 +41,12 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 			}
 		}
 
-		const lineIds = boundedJourneys.reduce((set, { lineId }) => (lineId ? set.add(lineId) : set), new Set<number>());
-		const lineMap = (
-			await database
-				.select()
-				.from(lines)
-				.where(inArray(lines.id, Array.from(lineIds)))
-		).reduce((map, line) => map.set(line.id, line), new Map<number, Line>());
+		const lineIds = boundedJourneys.flatMap(({ lineId }) => lineId ?? []);
+		const lines = await fetchLines(Array.from(new Set(lineIds)));
 
 		const items = boundedJourneys.map(({ id, lineId, position }) => {
 			const { latitude, longitude, type } = position;
-			const line = lineId ? lineMap.get(lineId) : undefined;
+			const line = lineId ? lines.get(lineId) : undefined;
 			return {
 				id,
 				color: line?.textColor ? `#${line.textColor}` : undefined,
