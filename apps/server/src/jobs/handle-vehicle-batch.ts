@@ -28,7 +28,11 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 		await Promise.all(
 			networks.values().map((network) => {
 				const lineDatas = vehicleJourneys.reduce((map, vehicleJourney) => {
-					if (typeof vehicleJourney.line !== "undefined" && !map.has(vehicleJourney.line.ref)) {
+					if (
+						vehicleJourney.networkRef === network.ref &&
+						typeof vehicleJourney.line !== "undefined" &&
+						!map.has(vehicleJourney.line.ref)
+					) {
 						map.set(vehicleJourney.line.ref, vehicleJourney.line);
 					}
 					return map;
