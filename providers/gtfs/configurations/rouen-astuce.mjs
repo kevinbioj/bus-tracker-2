@@ -22,7 +22,7 @@ const sources = [
 			return "TCAR";
 		},
 		getVehicleRef: (vehicle) => vehicle?.id,
-		getDestination: (journey, vehicle) => vehicle?.label ?? journey.calls.at(-1)?.stop.name ?? "Spécial",
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
 	},
 	{
 		id: "tae",
