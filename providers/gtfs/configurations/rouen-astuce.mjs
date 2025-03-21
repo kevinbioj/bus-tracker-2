@@ -4,8 +4,10 @@ const sources = [
 		id: "tcar",
 		staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE",
 		realtimeResourceHrefs: [
-			"https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
-			"https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar-2/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar-2/vehicle-positions",
+			// "https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
+			// "https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
 		],
 		// staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
 		// realtimeResourceHrefs: [
@@ -29,8 +31,8 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.id,
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
 		mapVehiclePosition: (vehiclePosition) => {
-				vehiclePosition.timestamp += 3600;
-				return vehiclePosition;
+			vehiclePosition.timestamp += 3600;
+			return vehiclePosition;
 		},
 	},
 	{
