@@ -72,7 +72,17 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 
 					return (
 						<div className="flex gap-0.5 font-bold" key={call.stopOrder}>
-							<div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{call.stopName}</div>
+							<div
+								className="flex-1 flex gap-1 items-center overflow-hidden text-ellipsis whitespace-nowrap"
+								title={`${call.stopName}${call.platformName ? ` – ${call.platformName}` : ""}`}
+							>
+								<span>{call.stopName}</span>
+								{typeof call.platformName !== "undefined" && (
+									<div className="font-normal border-[0.5px] border-black dark:border-white text-[9px] leading-none w-max text-center px-1 pt-0.5 pb-[1px] uppercase">
+										{call.platformName}
+									</div>
+								)}
+							</div>
 							{tooltipProps ? (
 								<CustomTooltip {...tooltipProps} place="left" spacing={8}>
 									{children}

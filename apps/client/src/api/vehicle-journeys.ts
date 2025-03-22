@@ -23,6 +23,7 @@ export type DisposeableVehicleJourney = {
 		stopRef: string;
 		stopName: string;
 		stopOrder: number;
+		platformName?: string;
 		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 	}>;
 	position: {

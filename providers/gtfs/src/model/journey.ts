@@ -12,6 +12,7 @@ export type JourneyCall = {
 	expectedDepartureTime?: Temporal.ZonedDateTime;
 	stop: Stop;
 	sequence: number;
+	platform?: string;
 	distanceTraveled?: number;
 	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 };
@@ -107,6 +108,8 @@ export class Journey {
 			const timeUpdate = stopTimeUpdates?.find((stu) =>
 				stu.stopSequence ? stu.stopSequence === call.sequence : stu.stopId === call.stop.id,
 			);
+
+			call.platform = timeUpdate?.stopTimeProperties?.assignedStopId;
 
 			if (timeUpdate?.scheduleRelationship === "NO_DATA") {
 				arrivalDelay = undefined;

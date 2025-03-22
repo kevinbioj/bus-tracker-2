@@ -30,6 +30,7 @@ export const vehicleJourneyCallSchema = z.object({
 	stopRef: z.string(),
 	stopName: z.string(),
 	stopOrder: z.number().min(0),
+	platformName: z.string().optional(),
 	callStatus: vehicleJourneyCallStatusEnum,
 });
 

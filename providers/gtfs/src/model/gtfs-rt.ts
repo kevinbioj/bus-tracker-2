@@ -59,6 +59,9 @@ export type StopTimeUpdate = {
 	stopId: string;
 	stopSequence?: number;
 	scheduleRelationship?: StopScheduleRelationship;
+	stopTimeProperties?: {
+		assignedStopId?: string;
+	};
 };
 
 export type TripDescriptor = {

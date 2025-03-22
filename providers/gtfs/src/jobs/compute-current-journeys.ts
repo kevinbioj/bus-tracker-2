@@ -65,6 +65,7 @@ const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): Journey
 			expectedDepartureTime: departureTime,
 			sequence: stopTimeUpdate.stopSequence ?? index,
 			stop,
+			platform: stopTimeUpdate.stopTimeProperties?.assignedStopId,
 			status: "UNSCHEDULED",
 		};
 	});
@@ -346,6 +347,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 							stopName: call.stop.name,
 							stopOrder: call.sequence,
+							platformName: call.platform,
 							callStatus: call.status,
 						};
 					}),
