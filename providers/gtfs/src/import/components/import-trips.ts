@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import type { VehicleJourneyCallFlags } from "@bus-tracker/contracts";
 
 import { createPlainTime } from "../../cache/temporal-cache.js";
 import type { Route } from "../../model/route.js";
@@ -17,7 +18,7 @@ type TripRecord = CsvRecord<
 >;
 type StopTimeRecord = CsvRecord<
 	"trip_id" | "arrival_time" | "departure_time" | "stop_sequence" | "stop_id",
-	"shape_dist_traveled"
+	"shape_dist_traveled" | "pickup_type" | "drop_off_type"
 >;
 
 export async function importTrips(
@@ -80,6 +81,10 @@ export async function importTrips(
 			);
 		}
 
+		const flags: VehicleJourneyCallFlags[] = [];
+		if (stopTimeRecord.pickup_type === "1") flags.push("NO_PICKUP");
+		if (stopTimeRecord.drop_off_type === "1") flags.push("NO_DROP_OFF");
+
 		const arrivalHours = +stopTimeRecord.arrival_time.slice(0, 2);
 		const departureHours = +stopTimeRecord.departure_time.slice(0, 2);
 
@@ -88,6 +93,7 @@ export async function importTrips(
 		const stopTime = new StopTime(
 			+stopTimeRecord.stop_sequence,
 			stop,
+			flags,
 			createPlainTime(`${(arrivalHours % 24).toString().padStart(2, "0")}:${stopTimeRecord.arrival_time.slice(3)}`),
 			Math.floor(arrivalHours / 24),
 			mismatchingTimes

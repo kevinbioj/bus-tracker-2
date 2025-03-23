@@ -1,6 +1,6 @@
+import type { VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-tracker/contracts";
 import type { Temporal } from "temporal-polyfill";
 
-import type { VehicleJourneyPosition } from "@bus-tracker/contracts";
 import type { StopTimeUpdate } from "./gtfs-rt.js";
 import type { Stop } from "./stop.js";
 import type { Trip } from "./trip.js";
@@ -15,6 +15,7 @@ export type JourneyCall = {
 	platform?: string;
 	distanceTraveled?: number;
 	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
+	flags: VehicleJourneyCallFlags[];
 };
 
 export type JourneyPosition = {

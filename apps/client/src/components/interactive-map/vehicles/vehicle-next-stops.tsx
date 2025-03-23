@@ -1,7 +1,7 @@
 import type { VehicleJourneyCall } from "@bus-tracker/contracts";
 import { clsx } from "clsx";
 import dayjs from "dayjs";
-import { Rss } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Rss } from "lucide-react";
 import { P, match } from "ts-pattern";
 
 import { CustomTooltip } from "~/components/ui/custom-tooltip";
@@ -64,7 +64,8 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 									)
 							: null;
 
-					const hasPlatform = typeof call.platformName !== "undefined";
+					const hasExtra =
+						(typeof call.flags !== "undefined" && call.flags.length > 0) || typeof call.platformName !== "undefined";
 
 					const children = (
 						<div className={clsx("flex font-bold", accentColor)}>
@@ -82,16 +83,30 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 					return (
 						<div className="flex gap-1" key={call.stopOrder}>
 							<div
-								className={clsx("font-bold overflow-hidden text-ellipsis whitespace-nowrap", !hasPlatform && "flex-1")}
+								className={clsx("font-bold overflow-hidden text-ellipsis whitespace-nowrap", !hasExtra && "flex-1")}
 								title={call.stopName}
 							>
 								{call.stopName}
 							</div>
-							{hasPlatform && (
+							{hasExtra && (
 								<div className="flex-1">
-									<span className="border-[0.5px] border-foreground leading-none px-0.5 pt-[1px] text-[9px] text-nowrap uppercase">
-										{call.platformName}
-									</span>
+									{typeof call.platformName !== "undefined" && (
+										<span className="border-[0.5px] border-foreground leading-none px-0.5 pt-[1px] text-[9px] text-nowrap uppercase">
+											{call.platformName}
+										</span>
+									)}
+									{typeof call.flags !== "undefined" && call.flags.length > 0 && (
+										<span>
+											{match(call.flags)
+												.with(["NO_DROP_OFF"], () => (
+													<ArrowUpRight className="size-4 text-slate-500 dark:text-slate-400" />
+												))
+												.with(["NO_PICKUP"], () => (
+													<ArrowDownRight className="size-4 text-slate-500 dark:text-slate-400" />
+												))
+												.otherwise(() => null)}
+										</span>
+									)}
 								</div>
 							)}
 							{tooltipProps ? (

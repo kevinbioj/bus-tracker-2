@@ -67,6 +67,7 @@ const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): Journey
 			stop,
 			platform: stopTimeUpdate.stopTimeProperties?.assignedStopId,
 			status: "UNSCHEDULED",
+			flags: [],
 		};
 	});
 };
@@ -349,6 +350,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 							stopOrder: call.sequence,
 							platformName: call.platform,
 							callStatus: call.status,
+							flags: call.flags,
 						};
 					}),
 					position: journey.guessPosition(now),

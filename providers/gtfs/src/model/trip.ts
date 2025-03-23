@@ -61,6 +61,7 @@ export class Trip {
 					sequence: stopTime.sequence,
 					distanceTraveled: stopTime.distanceTraveled,
 					status: "SCHEDULED",
+					flags: stopTime.flags,
 				};
 			}),
 		);

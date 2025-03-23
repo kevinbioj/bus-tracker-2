@@ -17,12 +17,13 @@ export const vehicleJourneyLineSchema = z.object({
 		.string() /*.length(6)*/
 		.optional(),
 });
-
 export type VehicleJourneyLine = z.infer<typeof vehicleJourneyLineSchema>;
 
 export const vehicleJourneyCallStatusEnum = z.enum(["SCHEDULED", "UNSCHEDULED", "SKIPPED"]);
-
 export type VehicleJourneyCallStatus = z.infer<typeof vehicleJourneyCallStatusEnum>;
+
+export const vehicleJourneyCallFlagsEnum = z.enum(["NO_PICKUP", "NO_DROP_OFF"]);
+export type VehicleJourneyCallFlags = z.infer<typeof vehicleJourneyCallFlagsEnum>;
 
 export const vehicleJourneyCallSchema = z.object({
 	aimedTime: z.string().datetime({ offset: true }),
@@ -32,6 +33,7 @@ export const vehicleJourneyCallSchema = z.object({
 	stopOrder: z.number().min(0),
 	platformName: z.string().optional(),
 	callStatus: vehicleJourneyCallStatusEnum,
+	flags: z.array(vehicleJourneyCallFlagsEnum).optional(),
 });
 
 export type VehicleJourneyCall = z.infer<typeof vehicleJourneyCallSchema>;
