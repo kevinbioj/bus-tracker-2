@@ -128,7 +128,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 					<Separator />
 					<p
 						className={clsx(
-							"text-muted-foreground mt-2",
+							"text-muted-foreground text-sm mt-2",
 							filteredAndSortedVehicles.length > 0 ? "text-end" : "text-center",
 						)}
 					>
