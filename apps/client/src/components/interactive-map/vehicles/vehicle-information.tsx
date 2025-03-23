@@ -94,7 +94,7 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 		<span>{network?.name}</span>
 	);
 
-	const vehicleNumber = journey.vehicle ? `n°${journey.vehicle.number}` : "N/A";
+	const vehicleNumber = journey.vehicle ? `n°${journey.vehicle.number}` : undefined;
 
 	const vehicleLink = journey.vehicle?.id ? (
 		<Button asChild className="gap-0.5 py-0.5" size="xs" variant="ghost">
@@ -126,7 +126,8 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 				networkIdentifier
 			)}
 			<span className="my-auto text-center">
-				{vehicleLink}– {recordedAt}
+				{vehicleNumber ? <>{vehicleLink}– </> : <></>}
+				{recordedAt}
 			</span>
 			<div className="flex items-center justify-end gap-2">
 				{typeof occupancyInformation !== "undefined" && (
