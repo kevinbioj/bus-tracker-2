@@ -26,13 +26,16 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 									.with(
 										["SKIPPED", P.any],
 										() =>
-											({ className: "bg-red-600 dark:bg-red-700 text-white", content: "Arrêt non desservi" }) as const,
+											({
+												className: "bg-red-600 dark:bg-red-700 font-bold text-white",
+												content: "Arrêt non desservi",
+											}) as const,
 									)
 									.with(
 										["UNSCHEDULED", P.any],
 										() =>
 											({
-												className: "bg-yellow-700 dark:bg-yellow-500 text-white dark:text-black",
+												className: "bg-yellow-700 dark:bg-yellow-500 font-bold text-white dark:text-black",
 												content: "Desserte supplémentaire",
 											}) as const,
 									)
@@ -40,7 +43,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										["SCHEDULED", P.number.positive()],
 										([, delay]) =>
 											({
-												className: "bg-orange-600 dark:bg-orange-700 text-white",
+												className: "bg-orange-600 dark:bg-orange-700 font-bold text-white",
 												content: `Retard de ${delay} minute${delay > 1 ? "s" : ""}`,
 											}) as const,
 									)
@@ -48,17 +51,23 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										["SCHEDULED", P.number.negative()],
 										([, delay]) =>
 											({
-												className: "bg-red-600 dark:bg-red-700 text-white",
+												className: "bg-red-600 dark:bg-red-700 font-bold text-white",
 												content: `Avance de ${Math.abs(delay)} minute${delay < -1 ? "s" : ""}`,
 											}) as const,
 									)
 									.otherwise(
-										() => ({ className: "bg-green-600 dark:bg-green-700 text-white", content: "À l'heure" }) as const,
+										() =>
+											({
+												className: "bg-green-600 dark:bg-green-700 font-bold text-white",
+												content: "À l'heure",
+											}) as const,
 									)
 							: null;
 
+					const hasPlatform = typeof call.platformName !== "undefined";
+
 					const children = (
-						<div className={clsx("flex", accentColor)}>
+						<div className={clsx("flex font-bold", accentColor)}>
 							{typeof call.expectedTime !== "undefined" || call.callStatus === "SKIPPED" ? (
 								<Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} />
 							) : null}
@@ -71,18 +80,20 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 					);
 
 					return (
-						<div className="flex gap-0.5 font-bold" key={call.stopOrder}>
+						<div className="flex gap-1" key={call.stopOrder}>
 							<div
-								className="flex-1 flex gap-1 items-center overflow-hidden text-ellipsis whitespace-nowrap"
-								title={`${call.stopName}${call.platformName ? ` – ${call.platformName}` : ""}`}
+								className={clsx("font-bold overflow-hidden text-ellipsis whitespace-nowrap", !hasPlatform && "flex-1")}
+								title={call.stopName}
 							>
-								<span>{call.stopName}</span>
-								{typeof call.platformName !== "undefined" && (
-									<div className="font-normal border-[0.5px] border-black dark:border-white text-[9px] leading-none w-max text-center px-1 pt-0.5 pb-[1px] uppercase">
-										{call.platformName}
-									</div>
-								)}
+								{call.stopName}
 							</div>
+							{hasPlatform && (
+								<div className="flex-1">
+									<span className="border-[0.5px] border-foreground leading-none px-0.5 pt-[1px] text-[9px] text-nowrap uppercase">
+										{call.platformName}
+									</span>
+								</div>
+							)}
 							{tooltipProps ? (
 								<CustomTooltip {...tooltipProps} place="left" spacing={8}>
 									{children}
