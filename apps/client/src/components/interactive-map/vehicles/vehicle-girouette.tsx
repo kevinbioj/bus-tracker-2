@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { match } from "ts-pattern";
 
 import { GetJourneyGirouetteQuery } from "~/api/girouettes";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
@@ -45,7 +46,10 @@ export function VehicleGirouette({ journey, visible, width, updateWidth }: Reado
 							? {
 									backgroundColor: line.color ?? undefined,
 									textColor: line.textColor ?? undefined,
-									outlineColor: line.textColor === "#FFFFFF" ? "#000000" : "#FFFFFF",
+									outlineColor: match(line.textColor)
+										.with("#000000", () => "#FFFFFF")
+										.with("#FFFFFF", () => "#000000")
+										.otherwise(() => undefined),
 									font: line.number.length <= 3 ? "1508SUPX" : "1407SUPX",
 									scroll: line.number.length >= "KKKKK".length,
 									spacing: line.number.length >= 4 ? 0 : 1,
