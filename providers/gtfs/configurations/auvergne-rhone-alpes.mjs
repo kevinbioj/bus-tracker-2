@@ -18,6 +18,15 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
 	{
+		id: "clermont-f",
+		staticResourceHref:
+			"https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs",
+		realtimeResourceHrefs: [
+			"https://opendata.clermontmetropole.eu/explore/dataset/gtfsrt_tripupdates/files/2c6b5c63d7be78905779d28500e6ab7e/download/",
+		],
+		getNetworkRef: () => "T2C",
+	},
+	{
 		id: "grenoble",
 		staticResourceHref: "https://data.mobilites-m.fr/api/gtfs/SEM",
 		realtimeResourceHrefs: [],
