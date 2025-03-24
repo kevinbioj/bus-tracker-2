@@ -10,6 +10,15 @@ const sources = [
 		},
 		getNetworkRef: () => "REGION-NA",
 	},
+	{
+		id: "poitiers",
+		staticResourceHref:
+			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/2gwvlq16siyb7d9m3rqt1pb1/metadata-attachments/gtfs.zip",
+		realtimeResourceHrefs: [
+			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/2gwvlq16siyb7d9m3rqt1pb1/metadata-attachments/poitiers.pbf",
+		],
+		getNetworkRef: () => "VITALIS",
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
