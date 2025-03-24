@@ -75,6 +75,13 @@ const sources = [
 		getNetworkRef: () => "GRM",
 	},
 	{
+		id: "solea",
+		staticResourceHref:
+			"https://www.datagrandest.fr/metadata/fluo-grand-est/FR-200052264-T0014-0000/fluo-grand-est-sitram-gtfs.zip",
+		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/fluo-solea-mulhouse-gtfs-rt-service-alert"],
+		getNetworkRef: () => "SOLEA",
+	},
+	{
 		id: "strasbourg",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/cts.zip",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/cts/trip-updates"],
