@@ -1,87 +1,86 @@
 import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts";
+import pLimit from "p-limit";
 import { Temporal } from "temporal-polyfill";
 
-import type { Network } from "../database/schema.js";
+import type { Vehicle } from "../database/schema.js";
 import { importLines } from "../import/import-lines.js";
-import { importNetworks } from "../import/import-networks.js";
-import { importVehicle } from "../import/import-vehicle.js";
+import { importNetwork } from "../import/import-network.js";
+import { importVehicles } from "../import/import-vehicle.js";
 import type { JourneyStore } from "../store/journey-store.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { nthIndexOf } from "../utils/nth-index-of.js";
 
 import { registerActivity } from "./register-activity.js";
 
+const limitRegister = pLimit(50);
+
 export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
 
-	const networkRefs = vehicleJourneys.reduce(
-		(acc, vehicleJourney) => acc.add(vehicleJourney.networkRef),
-		new Set<string>(),
-	);
+	const vehicleJourneysByNetwork = Map.groupBy(vehicleJourneys, (vehicleJourney) => vehicleJourney.networkRef);
 
-	const networks = (await importNetworks(networkRefs)).reduce((map, network) => {
-		map.set(network.ref, network);
-		return map;
-	}, new Map<string, Network>());
+	for (const [networkRef, vehicleJourneys] of vehicleJourneysByNetwork) {
+		const network = await importNetwork(networkRef);
 
-	const lines = (
-		await Promise.all(
-			networks.values().map((network) => {
-				const lineDatas = vehicleJourneys.reduce((map, vehicleJourney) => {
-					if (
-						vehicleJourney.networkRef === network.ref &&
-						typeof vehicleJourney.line !== "undefined" &&
-						!map.has(vehicleJourney.line.ref)
-					) {
-						map.set(vehicleJourney.line.ref, vehicleJourney.line);
-					}
-					return map;
-				}, new Map<string, VehicleJourneyLine>());
-				return importLines(network, Array.from(lineDatas.values()), now);
-			}),
-		)
-	).flat();
-
-	// const limitRegister = pLimit(100);
-	for (const vehicleJourney of vehicleJourneys) {
-		const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
-		if (timeSince.total("minutes") >= 10) return;
-		// limitRegister(async () => {
-		const network = networks.get(vehicleJourney.networkRef)!;
-		const line = vehicleJourney.line
-			? lines.find(({ references }) => references?.includes(vehicleJourney.line!.ref))
-			: undefined;
-
-		const disposeableJourney: DisposeableVehicleJourney = {
-			id: vehicleJourney.id,
-			lineId: line?.id,
-			direction: vehicleJourney.direction,
-			destination: vehicleJourney.destination,
-			calls: vehicleJourney.calls,
-			position: vehicleJourney.position,
-			occupancy: vehicleJourney.occupancy,
-			networkId: network.id,
-			operatorId: undefined,
-			vehicle: undefined,
-			serviceDate: vehicleJourney.serviceDate,
-			updatedAt: vehicleJourney.updatedAt,
-		};
-
-		if (typeof vehicleJourney.vehicleRef !== "undefined") {
-			if (vehicleJourney.networkRef !== "SNCF") {
-				const vehicle = await importVehicle(network, vehicleJourney.vehicleRef);
-				disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
+		const [lineDatas, vehicleRefs] = vehicleJourneys.reduce(
+			([lineDataAcc, vehicleRefAcc], vehicleJourney) => {
 				if (typeof vehicleJourney.line !== "undefined") {
-					registerActivity(disposeableJourney);
+					lineDataAcc.set(vehicleJourney.line.ref, vehicleJourney.line);
 				}
-			} else {
-				disposeableJourney.vehicle = {
-					number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
-				};
-			}
-		}
 
-		store.set(disposeableJourney.id, disposeableJourney);
-		// });
+				if (networkRef !== "SNCF" && typeof vehicleJourney.vehicleRef !== "undefined") {
+					vehicleRefAcc.add(vehicleJourney.vehicleRef);
+				}
+
+				return [lineDataAcc, vehicleRefAcc];
+			},
+			[new Map<string, VehicleJourneyLine>(), new Set<string>()],
+		);
+
+		const lines = await importLines(network, Array.from(lineDatas.values()), now);
+		const vehicles = (await importVehicles(network, vehicleRefs)).reduce((map, vehicle) => {
+			map.set(vehicle.ref, vehicle);
+			return map;
+		}, new Map<string, Vehicle>());
+
+		for (const vehicleJourney of vehicleJourneys) {
+			const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
+			if (timeSince.total("minutes") >= 10) return;
+
+			limitRegister(async () => {
+				const line = vehicleJourney.line
+					? lines.find(({ references }) => references?.includes(vehicleJourney.line!.ref))
+					: undefined;
+
+				const disposeableJourney: DisposeableVehicleJourney = {
+					id: vehicleJourney.id,
+					lineId: line?.id,
+					direction: vehicleJourney.direction,
+					destination: vehicleJourney.destination,
+					calls: vehicleJourney.calls,
+					position: vehicleJourney.position,
+					occupancy: vehicleJourney.occupancy,
+					networkId: network.id,
+					operatorId: undefined,
+					vehicle: undefined,
+					serviceDate: vehicleJourney.serviceDate,
+					updatedAt: vehicleJourney.updatedAt,
+				};
+
+				if (typeof vehicleJourney.vehicleRef !== "undefined") {
+					const vehicle = vehicles.get(vehicleJourney.vehicleRef);
+					if (typeof vehicle !== "undefined") {
+						disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
+						registerActivity(disposeableJourney);
+					} else if (networkRef === "SNCF") {
+						disposeableJourney.vehicle = {
+							number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
+						};
+					}
+				}
+
+				store.set(disposeableJourney.id, disposeableJourney);
+			});
+		}
 	}
 }

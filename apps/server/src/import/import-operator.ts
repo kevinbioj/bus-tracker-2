@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { database } from "../database/database.js";
 import { operators } from "../database/schema.js";
 
-import { importNetworks } from "./import-networks.js";
+import { importNetworks } from "./import-network.js";
 
 export async function importOperator(networkRef: string, ref: string) {
 	const [network] = await importNetworks(new Set([networkRef]));

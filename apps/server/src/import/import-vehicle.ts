@@ -1,29 +1,37 @@
-import type { VehicleJourneyLineType } from "@bus-tracker/contracts";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import { database } from "../database/database.js";
 import { type Network, vehicles } from "../database/schema.js";
 import { nthIndexOf } from "../utils/nth-index-of.js";
 
-export async function importVehicle(network: Network, vehicleRef: string, type?: VehicleJourneyLineType) {
-	let [vehicle] = await database
+export async function importVehicles(network: Network, vehicleRefs: Set<string>) {
+	const existingVehicles = await database
 		.select()
 		.from(vehicles)
-		.where(and(eq(vehicles.networkId, network.id), eq(vehicles.ref, vehicleRef), isNull(vehicles.archivedAt)));
+		.where(
+			and(
+				eq(vehicles.networkId, network.id),
+				inArray(vehicles.ref, Array.from(vehicleRefs)),
+				isNull(vehicles.archivedAt),
+			),
+		);
 
-	if (typeof vehicle === "undefined") {
-		vehicle = (
-			await database
-				.insert(vehicles)
-				.values({
+	const missingVehicles = vehicleRefs.difference(new Set(existingVehicles.map(({ ref }) => ref)));
+	if (missingVehicles.size > 0) {
+		const addedVehicles = await database
+			.insert(vehicles)
+			.values(
+				Array.from(missingVehicles).map((ref) => ({
 					networkId: network.id,
-					ref: vehicleRef,
-					number: vehicleRef.slice(nthIndexOf(vehicleRef, ":", 3) + 1),
-					type,
-				})
-				.returning()
-		).at(0)!;
+					ref,
+					number: ref.slice(nthIndexOf(ref, ":", 3) + 1),
+					type: "UNKNOWN" as const,
+				})),
+			)
+			.returning();
+
+		existingVehicles.push(...addedVehicles);
 	}
 
-	return vehicle;
+	return existingVehicles;
 }
