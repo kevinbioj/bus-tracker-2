@@ -1,7 +1,8 @@
-import type { VehicleJourney, VehicleJourneyLineType } from "@bus-tracker/contracts";
+import type { VehicleJourney } from "@bus-tracker/contracts";
 import DraftLog from "draftlog";
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
+import { P, match } from "ts-pattern";
 
 import { getLines, getVehicles } from "./data.js";
 
@@ -23,7 +24,7 @@ const lines = await getLines();
 async function mainLoop() {
 	const updateLog = console.draft("%s ► Fetching vehicles...", Temporal.Now.instant());
 
-	const { recordedAt, vehicles } = await getVehicles();
+	const { recordedAt, vehicles } = await getVehicles(lines.map(({ LineId }) => LineId));
 
 	const vehicleJourneys: VehicleJourney[] = vehicles.map((vehicle) => {
 		const lineRef = vehicle.Line.split(":")[2];
@@ -39,7 +40,12 @@ async function mainLoop() {
 			line: {
 				ref: `RTM:Line:${lineRef}`,
 				number: line?.LineNumber ?? "?",
-				type: (line?.Mode.toUpperCase() ?? "UNKNOWN") as VehicleJourneyLineType,
+				type: match(line?.Color)
+					.with("Metro", () => "SUBWAY" as const)
+					.with("Tramway", () => "TRAMWAY" as const)
+					.with(P.union("Bus", "DayEveningBus", "SchoolBus", "NightBus"), () => "BUS" as const)
+					.with("Ferry", () => "FERRY" as const)
+					.otherwise(() => "UNKNOWN" as const),
 				color: line?.Color.slice(1),
 				textColor: "FFFFFF",
 			},
@@ -60,6 +66,7 @@ async function mainLoop() {
 	});
 
 	await redis.publish(channel, JSON.stringify(vehicleJourneys));
+
 	updateLog(`%s ► ${vehicleJourneys.length} vehicles have been fetched!`, Temporal.Now.instant());
 }
 

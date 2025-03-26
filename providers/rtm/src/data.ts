@@ -1,7 +1,5 @@
 import { Temporal } from "temporal-polyfill";
 
-import { lines } from "./constants.js";
-
 export type Line = {
 	LineNumber: string;
 	LineName: string;
@@ -33,10 +31,8 @@ export type Vehicle = {
 
 const vehiclesEndpoint = atob("aHR0cHM6Ly9jYXJ0ZS1pbnRlcmFjdGl2ZS5ydG0uZnIvV1Mvc2lyaS9WZWhpY2xlcw==");
 
-export async function getVehicles() {
-	const response = await fetch(
-		`${vehiclesEndpoint}?lines=${lines.map((line) => `RTM:LNE:${line}`).join(";")}&d=${Date.now()}`,
-	);
+export async function getVehicles(lines: string[]) {
+	const response = await fetch(`${vehiclesEndpoint}?lines=${lines.join(";")}&d=${Date.now()}`);
 	if (!response.ok) throw new Error(`Failed to fetch vehicles from API (HTTP ${response.status})`);
 
 	const vehicles = (await response.json()) as Vehicle[];
