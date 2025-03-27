@@ -91,6 +91,10 @@ export function About() {
 					•{" "}
 					<Link to="https://github.com/kevinbioj/bus-tracker-2" target="_blank">
 						GitHub
+					</Link>{" "}
+					•{" "}
+					<Link to="https://discord.gg/DpwtEU4qBg" target="_blank">
+						Discord
 					</Link>
 				</p>
 			</DialogContent>
