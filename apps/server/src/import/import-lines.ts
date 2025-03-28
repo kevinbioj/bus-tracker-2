@@ -6,6 +6,8 @@ import { database } from "../database/database.js";
 import { type Network, lines } from "../database/schema.js";
 
 export async function importLines(network: Network, linesData: VehicleJourneyLine[], recordedAt: Temporal.Instant) {
+	if (linesData.length === 0) return [];
+
 	const existingLines = await database
 		.select()
 		.from(lines)

@@ -5,6 +5,8 @@ import { type Network, vehicles } from "../database/schema.js";
 import { nthIndexOf } from "../utils/nth-index-of.js";
 
 export async function importVehicles(network: Network, vehicleRefs: Set<string>) {
+	if (vehicleRefs.size === 0) return [];
+
 	const existingVehicles = await database
 		.select()
 		.from(vehicles)
