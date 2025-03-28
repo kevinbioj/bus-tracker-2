@@ -1,7 +1,7 @@
 [![Logo](./documentation/images/logo-full-width.png)](https://bus-tracker.fr)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=bus-tracker-app&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=bus-tracker-app)
-[![Discord](https://dcbadge.limes.pink/api/server/DpwtEU4qBg(https://discord.gg/DpwtEU4qBg))](https://discord.gg/DpwtEU4qBg(https://discord.gg/DpwtEU4qBg))
+[![Discord](https://dcbadge.limes.pink/api/server/DpwtEU4qBg)](https://discord.gg/DpwtEU4qBg)
 
 
 **Bus Tracker** is an application for tracking public transport vehicles that
