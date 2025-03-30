@@ -101,11 +101,11 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
-		id: "oise-ro4",
-		staticResourceHref: "https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=RO4&dataFormat=GTFS",
+		id: "oise-rio4",
+		staticResourceHref: "https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=RIO4&dataFormat=GTFS",
 		realtimeResourceHrefs: [
-			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=RO4&dataFormat=GTFS-RT",
-			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=RO4&dataFormat=GTFS-RT",
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=RIO4&dataFormat=GTFS-RT",
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=RIO4&dataFormat=GTFS-RT",
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
