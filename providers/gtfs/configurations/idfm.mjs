@@ -23,7 +23,7 @@ const sources = [
 		isValidJourney: (journey) => {
 			const firstCall = journey.calls[0];
 			if (typeof firstCall === "undefined" || typeof firstCall.expectedTime === "undefined") return true;
-			return Temporal.Instant.from(firstCall.expectedTime).since(firstCall.aimedTime).total("minutes") < 1440;
+			return Temporal.Instant.from(firstCall.expectedTime).since(firstCall.aimedTime).total("minutes") < 1380;
 		},
 		getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
 		getNetworkRef: () => "IDFM",
