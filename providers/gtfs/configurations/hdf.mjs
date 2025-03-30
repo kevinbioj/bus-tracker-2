@@ -76,6 +76,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
+		getOperatorRef: () => "TRIO1",
 		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
@@ -87,6 +88,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
+		getOperatorRef: () => "KO2",
 		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
@@ -98,6 +100,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
+		getOperatorRef: () => "TRIO3",
 		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
@@ -109,6 +112,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
+		getOperatorRef: () => "RIO4",
 		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 ];
