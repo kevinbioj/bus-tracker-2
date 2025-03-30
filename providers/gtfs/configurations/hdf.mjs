@@ -26,7 +26,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "COROLIS",
-		getVehicleRef: (vehicle) => vehicle?.id.replace("TBM", ""),
+		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
 		id: "calais",
@@ -47,7 +47,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "TIC",
-		getVehicleRef: (vehicle) => vehicle?.id.replace("TAC", ""),
+		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
 		id: "creil",
@@ -59,7 +59,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "AXO",
-		getVehicleRef: (vehicle) => vehicle?.id.replace("RCR", ""),
+		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
 		id: "lens-bethune",
@@ -76,7 +76,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
-		getVehicleRef: (vehicle) => vehicle?.id.replace("TRI", ""),
+		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
 		id: "oise-ko2",
@@ -87,7 +87,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
-		getVehicleRef: (vehicle) => vehicle?.id.replace("KOI", ""),
+		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
 		id: "oise-trio3",
@@ -98,7 +98,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
-		getVehicleRef: (vehicle) => vehicle?.id.replace("TRI", ""),
+		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
 		id: "oise-ro4",
@@ -109,7 +109,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "OISE",
-		getVehicleRef: (vehicle) => vehicle?.id.replace("ROI", ""),
+		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 ];
 
