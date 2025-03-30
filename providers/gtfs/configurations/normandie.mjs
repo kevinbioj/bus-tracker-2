@@ -115,18 +115,18 @@ const sources = [
 			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
 		mode: "NO-TU",
-		gtfsOptions: { shapesStrategy: "IGNORE" },
+		gtfsOptions: { filterTrips: (trip) => trip.route.id !== "241", shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "SNGO",
 	},
-	//- SNgo! (navette Giverny) - OFF jusqu'au printemps
-	// {
-	// 	id: "sngo-giverny",
-	// 	staticResourceHref: "https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs/pub",
-	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs-rt"],
-	// 	excludeScheduled: true,
-	// 	getNetworkRef: () => "SNGO",
-	// 	getVehicleRef: (vehicle) => vehicle.label ?? undefined,
-	// },
+	//- SNgo! (navette Giverny)
+	{
+		id: "sngo-giverny",
+		staticResourceHref: "https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs-rt"],
+		excludeScheduled: true,
+		getNetworkRef: () => "SNGO",
+		getVehicleRef: (vehicle) => vehicle.label ?? undefined,
+	},
 	//- Astrobus
 	{
 		id: "astrobus",
