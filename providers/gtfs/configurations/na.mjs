@@ -19,6 +19,7 @@ const sources = [
 		getAheadTime: () => 5 * 60,
 		getNetworkRef: () => "REGION-NA",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 	{
 		id: "poitiers",
