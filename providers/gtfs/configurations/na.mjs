@@ -11,6 +11,16 @@ const sources = [
 		getNetworkRef: () => "REGION-NA",
 	},
 	{
+		id: "na-79",
+		staticResourceHref: "https://pysae.com/api/v2/groups/deux-sevres/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/deux-sevres/gtfs-rt"],
+		mode: "NO-TU",
+		mapLineRef: (lineRef) => `79-${lineRef}`,
+		getAheadTime: () => 5 * 60,
+		getNetworkRef: () => "REGION-NA",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
+	{
 		id: "poitiers",
 		staticResourceHref:
 			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/2gwvlq16siyb7d9m3rqt1pb1/metadata-attachments/gtfs.zip",
