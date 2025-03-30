@@ -25,6 +25,16 @@ const sources = [
 		getVehicleRef: (vehicle) => (vehicle ? +vehicle.id - 2 ** 28 : undefined),
 	},
 	{
+		id: "fougeres",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/665d6c43-598d-4d9d-aa98-206072f4dfa0",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/surf-fougeres-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/surf-fougeres-gtfs-rt-vehicle-position",
+		],
+		mode: "NO-TU,",
+		getNetworkRef: () => "SURF",
+	},
+	{
 		id: "lorient",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rdla-lorient/exports/medias.zip",
