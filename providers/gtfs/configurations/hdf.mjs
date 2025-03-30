@@ -67,6 +67,50 @@ const sources = [
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "TADAO",
 	},
+	{
+		id: "oise-trio1",
+		staticResourceHref: "https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=TRIO1&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TRIO1&dataFormat=GTFS-RT",
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=TRIO1&dataFormat=GTFS-RT",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "OISE",
+		getVehicleRef: (vehicle) => vehicle?.id.replace("TRI", ""),
+	},
+	{
+		id: "oise-ko2",
+		staticResourceHref: "https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=KO2&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=KO2&dataFormat=GTFS-RT",
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=KO2&dataFormat=GTFS-RT",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "OISE",
+		getVehicleRef: (vehicle) => vehicle?.id.replace("KOI", ""),
+	},
+	{
+		id: "oise-trio3",
+		staticResourceHref: "https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=TRIO3&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TRIO3&dataFormat=GTFS-RT",
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=TRIO3&dataFormat=GTFS-RT",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "OISE",
+		getVehicleRef: (vehicle) => vehicle?.id.replace("TRI", ""),
+	},
+	{
+		id: "oise-ro4",
+		staticResourceHref: "https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=RO4&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=RO4&dataFormat=GTFS-RT",
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=RO4&dataFormat=GTFS-RT",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "OISE",
+		getVehicleRef: (vehicle) => vehicle?.id.replace("ROI", ""),
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
