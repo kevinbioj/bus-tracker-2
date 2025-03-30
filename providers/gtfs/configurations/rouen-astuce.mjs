@@ -31,7 +31,7 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.id,
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
 		mapVehiclePosition: (vehiclePosition) => {
-			vehiclePosition.timestamp += 3600;
+			vehiclePosition.timestamp += 3600 * 2; // 30/03/2025 - daylight saving time, so we add another hour, of course (:
 			return vehiclePosition;
 		},
 	},
