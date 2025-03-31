@@ -53,7 +53,7 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 					: undefined;
 
 				const disposeableJourney: DisposeableVehicleJourney = {
-					id: vehicleJourney.id,
+					id: vehicleJourney.id.replaceAll("/", "_"),
 					lineId: line?.id,
 					direction: vehicleJourney.direction,
 					destination: vehicleJourney.destination,
