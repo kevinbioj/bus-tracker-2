@@ -1,6 +1,4 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import clsx from "clsx";
-import { LucideSatelliteDish } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { match } from "ts-pattern";
 
@@ -8,6 +6,8 @@ import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
 import { NetworkHeader } from "~/components/data/network-header";
 import { VehicleActivities } from "~/components/data/vehicles/vehicle-activities";
+import { VehicleCharacteristics } from "~/components/data/vehicles/vehicle-characteristics";
+import { VehicleLive } from "~/components/data/vehicles/vehicle-live";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -16,12 +16,8 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
-import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
-import tcInfosIcon from "~/icons/tc-infos.png";
-
-const getTcInfosLink = (tcId: number) => `https://tc-infos.fr/vehicule/${tcId}`;
 
 export function VehicleDetails() {
 	const { vehicleId } = useParams();
@@ -42,47 +38,37 @@ export function VehicleDetails() {
 	return (
 		<>
 			<title>{`${vehicleDesignation} n°${vehicle.number} – ${network.name} – Données – Bus Tracker`}</title>
-			<main className="p-3 max-w-screen-lg w-full mx-auto">
+			<main className="max-w-screen-xl p-3 w-full mx-auto">
 				<NetworkHeader network={network} />
-				<div className="relative">
-					<Breadcrumb className={clsx("mt-3", { "mr-10": typeof vehicle.tcId !== "undefined" })}>
-						<BreadcrumbList>
-							<BreadcrumbItem>
-								<BreadcrumbLink asChild>
-									<Link to="/data">Données</Link>
-								</BreadcrumbLink>
-							</BreadcrumbItem>
-							<BreadcrumbSeparator />
-							<BreadcrumbItem>
-								<BreadcrumbLink asChild>
-									<Link to={`/data/networks/${network.id}`}>{network.name}</Link>
-								</BreadcrumbLink>
-							</BreadcrumbItem>
-							<BreadcrumbSeparator />
-							<BreadcrumbItem>
-								<BreadcrumbPage>
-									{vehicleIcon} {vehicleDesignation} n°{vehicle.number}
-								</BreadcrumbPage>
-							</BreadcrumbItem>
-						</BreadcrumbList>
-					</Breadcrumb>
-					{vehicle.tcId ? (
-						<Button asChild className="absolute right-0 bottom-0" size="icon">
-							<Link target="_blank" to={getTcInfosLink(vehicle.tcId)}>
-								<img className="rounded-sm" src={tcInfosIcon} alt="Voir sur TC-Infos" />
-							</Link>
-						</Button>
-					) : null}
-				</div>
+				<Breadcrumb className="mt-3">
+					<BreadcrumbList>
+						<BreadcrumbItem>
+							<BreadcrumbLink asChild>
+								<Link to="/data">Données</Link>
+							</BreadcrumbLink>
+						</BreadcrumbItem>
+						<BreadcrumbSeparator />
+						<BreadcrumbItem>
+							<BreadcrumbLink asChild>
+								<Link to={`/data/networks/${network.id}`}>{network.name}</Link>
+							</BreadcrumbLink>
+						</BreadcrumbItem>
+						<BreadcrumbSeparator />
+						<BreadcrumbItem>
+							<BreadcrumbPage>
+								{vehicleIcon} Véhicule n°{vehicle.number}
+							</BreadcrumbPage>
+						</BreadcrumbItem>
+					</BreadcrumbList>
+				</Breadcrumb>
 				<Separator className="my-1" />
-				{vehicle.activity.markerId && (
-					<Button asChild className="my-2 w-full" variant="branding-outline">
-						<Link to={`/#${vehicle.activity.markerId}`}>
-							<LucideSatelliteDish /> Voir ce véhicule en direct
-						</Link>
-					</Button>
-				)}
-				<VehicleActivities vehicleId={vehicle.id} />
+				<div className="flex flex-col lg:flex-row lg:items-start gap-3 w-full">
+					<div>
+						<VehicleCharacteristics vehicle={vehicle} />
+						<VehicleLive vehicle={vehicle} />
+					</div>
+					<VehicleActivities vehicleId={vehicle.id} />
+				</div>
 			</main>
 		</>
 	);

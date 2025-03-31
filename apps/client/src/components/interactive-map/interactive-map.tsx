@@ -3,8 +3,8 @@ import type { LatLngExpression, Map as MapInstance } from "leaflet";
 import { useEffect, useRef } from "react";
 import { MapContainer, ScaleControl, TileLayer } from "react-leaflet";
 import { useLocalStorage } from "usehooks-ts";
-import { ActiveMarkerProvider } from "~/components/interactive-map/active-marker/active-marker";
 
+import { ActiveMarkerProvider } from "~/components/interactive-map/active-marker/active-marker";
 import { LocateControl } from "~/components/interactive-map/locate-control";
 import { LocationSaver } from "~/components/interactive-map/location-saver";
 import { OnlineControl } from "~/components/interactive-map/online/online-control";

@@ -25,9 +25,8 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 	const currentMonthIndex = vehicle.activeMonths.indexOf(month);
 
 	const { data: activities } = useSuspenseQuery(GetVehicleActivitiesQuery(vehicle.id, month));
-
 	return (activities?.timeline.length ?? 0) > 0 ? (
-		<>
+		<div className="flex-1">
 			<section>
 				<div className="bg-branding text-branding-foreground grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md">
 					{currentMonthIndex > 0 ? (
@@ -53,7 +52,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					)}
 				</div>
 			</section>
-			<section className="flex flex-col gap-3 mt-5 w-full">
+			<section className="flex flex-col gap-3 mt-2 w-full lg:max-h-[calc(100dvh-15.3rem)] lg:overflow-y-scroll">
 				{activities?.timeline
 					.sort(
 						({ date: dateA }, { date: dateB }) => dayjs(dateB, "DD/MM/YYYY").unix() - dayjs(dateA, "DD/MM/YYYY").unix(),
@@ -71,7 +70,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 						</div>
 					))}
 			</section>
-		</>
+		</div>
 	) : (
 		<p className="mt-3 text-center text-muted-foreground text-xl">
 			Ce véhicule n&apos;a pas encore été observé en circulation.

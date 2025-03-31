@@ -14,9 +14,11 @@ export function NetworkList() {
 	return (
 		<>
 			<title>Données – Bus Tracker</title>
-			<main className="p-3 max-w-screen-lg w-full mx-auto">
-				<h2 className="font-bold text-2xl">Données d'activités</h2>
-				<p className="text-muted-foreground">Sélectionnez un réseau pour continuer.</p>
+			<main className="p-3 max-w-screen-xl w-full mx-auto">
+				<h2 className="font-bold text-2xl">Données des véhicules</h2>
+				<p className="text-muted-foreground">
+					Seuls les réseaux pour lesquels le suivi des véhicules est disponible sont affichés.
+				</p>
 				<Separator />
 				<div className="mt-3 flex flex-col gap-3">
 					{networksWithVehiclesFeature.map((network) => (

@@ -61,6 +61,7 @@ export const GetVehiclesQuery = (networkId?: number) =>
 
 export const GetVehicleQuery = (vehicleId: number) =>
 	queryOptions({
+		refetchInterval: 20_000,
 		queryKey: ["vehicles", vehicleId],
 		queryFn: () => client.get(`vehicles/${vehicleId}`).then((response) => response.json<VehicleWithActiveMonths>()),
 	});

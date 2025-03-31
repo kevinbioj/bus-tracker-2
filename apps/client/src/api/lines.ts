@@ -13,8 +13,9 @@ export type Line = {
 	archivedAt: string;
 };
 
-export const GetLineQuery = (lineId: number) =>
+export const GetLineQuery = (lineId?: number) =>
 	queryOptions({
+		enabled: typeof lineId !== "undefined",
 		staleTime: 600_000,
 		queryKey: ["lines", lineId],
 		queryFn: () => client.get(`lines/${lineId}`).then((response) => response.json<Line>()),
