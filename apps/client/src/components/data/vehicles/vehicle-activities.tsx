@@ -39,7 +39,10 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					) : (
 						<div />
 					)}
-					<p className="font-bold my-auto text-2xl text-center">{dayjs(month).format("MMMM YYYY")}</p>
+					<p className="font-bold my-auto text-2xl text-center">
+						<span className="hidden lg:inline">activité de </span>
+						{dayjs(month).format("MMMM YYYY")}
+					</p>
 					{currentMonthIndex < vehicle.activeMonths.length - 1 ? (
 						<Link
 							className="transition-opacity hover:opacity-70"

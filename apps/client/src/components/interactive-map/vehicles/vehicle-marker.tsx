@@ -70,6 +70,7 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Readonl
 
 	return (
 		<ReactMoveableCircleMarker
+			className="relative"
 			color={marker.color ?? "#FFFFFF"}
 			duration={1000}
 			bubblingMouseEvents={false}
