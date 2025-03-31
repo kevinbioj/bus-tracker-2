@@ -12,6 +12,52 @@ function nthIndexOf(input, pattern, n) {
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "breizhgo-22",
+		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/BREIZHGO_CAR_22.gtfs.zip",
+		realtimeResourceHrefs: ["https://www.korrigo.bzh/ftp/OPENDATA/gtfsrt/TIBUS.GtfsRt.pb"],
+		getNetworkRef: () => "BREIZHGO",
+		mapLineRef: (lineRef) => `BZH22-${lineRef}`,
+	},
+	{
+		id: "breizhgo-29",
+		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-29/gtfs",
+		realtimeResourceHrefs: [
+			"https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
+			"https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
+		],
+		getNetworkRef: () => "BREIZHGO",
+		mapLineRef: (lineRef) => `BZH29-${lineRef}`,
+	},
+	{
+		id: "breizhgo-35",
+		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/BREIZHGO_CAR_35.gtfs.zip",
+		realtimeResourceHrefs: ["https://www.korrigo.bzh/ftp/OPENDATA/gtfsrt/BREIZHGO_CAR_35.GtfsRt.pb"],
+		getNetworkRef: () => "BREIZHGO",
+		mapLineRef: (lineRef) => `BZH35-${lineRef}`,
+	},
+	{
+		id: "breizhgo-56",
+		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/BREIZHGO_CAR_56.gtfs.zip",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "BREIZHGO",
+		mapLineRef: (lineRef) => `BZH56-${lineRef}`,
+	},
+	{
+		id: "breizhgo-ns",
+		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-lrr-ns/gtfs",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "BREIZHGO",
+		mapLineRef: (lineRef) => `BZHNS-${lineRef}`,
+	},
+	{
+		id: "breizhgo-rp",
+		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-lrr-rp/gtfs",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/breizhgo-lrr/gtfs-rt"],
+		getNetworkRef: () => "BREIZHGO",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		mapLineRef: (lineRef) => `BZHRP-${lineRef}`,
+	},
+	{
 		id: "brest",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/bibus/exports/medias.zip",
