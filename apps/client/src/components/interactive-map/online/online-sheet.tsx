@@ -34,7 +34,7 @@ export function OnlineSheet() {
 					<BusFrontIcon className="inline mb-0.5" />
 				</a>
 			</SheetTrigger>
-			<SheetContent aria-describedby={undefined} className="z-[1000]">
+			<SheetContent aria-describedby={undefined} className="">
 				<SheetHeader>
 					<SheetTitle>
 						<div className="flex items-center gap-2">
