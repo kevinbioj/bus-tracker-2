@@ -1,9 +1,16 @@
+import { Temporal } from "temporal-polyfill";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
 		id: "agen",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/c1415ff3-7457-4b51-aead-aacbf03a474e",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-urbain"],
+		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) =>
+			Temporal.Now.instant().since(Temporal.Instant.fromEpochSeconds(vehicle.timestamp)).total("minutes") < 60
+				? vehicle
+				: undefined,
 		getNetworkRef: () => "TEMPOBUS",
 		getVehicleRef: () => undefined,
 	},
@@ -11,6 +18,11 @@ const sources = [
 		id: "agen-scolaire",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/3fd582f2-e2ef-4ad7-894c-6f057b53b006",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-scolaire"],
+		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) =>
+			Temporal.Now.instant().since(Temporal.Instant.fromEpochSeconds(vehicle.timestamp)).total("minutes") < 60
+				? vehicle
+				: undefined,
 		getNetworkRef: () => "TEMPOBUS",
 		getVehicleRef: () => undefined,
 	},
