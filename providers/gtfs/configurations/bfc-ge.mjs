@@ -75,6 +75,14 @@ const sources = [
 		getNetworkRef: () => "GRM",
 	},
 	{
+		id: "reims-express",
+		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-4k4N/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-4k4N/gtfs-rt"],
+		excludeScheduled: true,
+		getNetworkRef: () => "GRM",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
+	{
 		id: "solea",
 		staticResourceHref:
 			"https://www.datagrandest.fr/metadata/fluo-grand-est/FR-200052264-T0014-0000/fluo-grand-est-sitram-gtfs.zip",
