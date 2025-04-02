@@ -25,9 +25,11 @@ type WSVehicule = {
 type WSContent = {
 	Vehicules: WSVehicule[];
 	Total: number;
+	ping: number;
 };
 
-export async function getVehicles(lines: { Ligne: string; Sens: "ALL" | "RET" }[]) {
+export async function getVehicles(lines: { Ligne: string; Sens: "ALL" | "RET" }[]): Promise<WSContent> {
+	const then = Date.now();
 	const response = await fetch(WS_ENDPOINT, {
 		body: JSON.stringify({
 			Lignes: lines,
@@ -35,6 +37,7 @@ export async function getVehicles(lines: { Ligne: string; Sens: "ALL" | "RET" }[
 		headers: { "Content-Type": "application/json" },
 		method: "POST",
 	});
+	const ping = Date.now() - then;
 
 	if (!response.ok) {
 		throw new Error(`Failed to fetch data from server (HTTP ${response.status})`);
@@ -49,5 +52,8 @@ export async function getVehicles(lines: { Ligne: string; Sens: "ALL" | "RET" }[
 	);
 
 	const serializedContent = decipher.update(payload.cipherText, "base64", "utf-8") + decipher.final("utf-8");
-	return JSON.parse(serializedContent) as WSContent;
+	return {
+		...JSON.parse(serializedContent),
+		ping,
+	};
 }

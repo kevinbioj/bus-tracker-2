@@ -31,7 +31,7 @@ while (true) {
 	const updateLog = console.draft(`%s ► Fetching ${id}`, Temporal.Now.instant());
 
 	try {
-		const { Vehicules, Total } = await getVehicles(
+		const { Vehicules, Total, ping } = await getVehicles(
 			linesFilter.map(({ line, direction }) => ({ Ligne: line, Sens: direction as "ALL" | "RET" })),
 		);
 
@@ -59,8 +59,8 @@ while (true) {
 
 		const success =
 			Total > Vehicules.length
-				? `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id} (${Total - Vehicules.length} were missed)`
-				: `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id}`;
+				? `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id} (${Total - Vehicules.length} were missed) (ping: ${ping}ms)`
+				: `${Temporal.Now.instant()} ✓ Processed ${Vehicules.length} vehicles for ${id} (ping: ${ping}ms)`;
 
 		updateLog(success);
 		currentIndex += 1;
@@ -68,6 +68,6 @@ while (true) {
 		const error = new Error("An error occurred while fetching data", { cause });
 		console.error(error);
 	} finally {
-		await setTimeout(1500);
+		await setTimeout(1000);
 	}
 }
