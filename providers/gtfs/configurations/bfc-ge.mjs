@@ -71,6 +71,9 @@ const sources = [
 		staticResourceHref:
 			"https://www.datagrandest.fr/metadata/fluo-grand-est/FR-200052264-T0031-0000/fluo-grand-est-rei-gtfs.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/fluo-citura-reims-gtfs-rt"],
+		gtfsOptions: {
+			filterTrips: (trip) => !["23", "C", "E1", "E2", "E3", "E4", "E5", "E6", "E7"].includes(trip.route.id),
+		},
 		excludeScheduled: true,
 		getNetworkRef: () => "GRM",
 	},
@@ -80,7 +83,10 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-4k4N/gtfs-rt"],
 		excludeScheduled: true,
 		getNetworkRef: () => "GRM",
-		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		getVehicleRef: (vehicle) => {
+			if (vehicle?.label === "newVehicle") return;
+			return vehicle?.label ?? undefined;
+		},
 	},
 	{
 		id: "solea",
