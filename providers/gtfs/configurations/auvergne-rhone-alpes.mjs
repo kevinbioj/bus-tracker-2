@@ -9,6 +9,13 @@ const sources = [
 		getNetworkRef: () => "AUBENAS",
 	},
 	{
+		id: "chambery",
+		staticResourceHref:
+			"https://mwe.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
+		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/synchrobus-chambery-gtfs-rt-trip-update"],
+		getNetworkRef: () => "SYNCHRO",
+	},
+	{
 		id: "chamonix",
 		staticResourceHref: "https://pysae.com/api/v2/groups/chamonix-bus/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/chamonix-bus/gtfs-rt"],
@@ -53,6 +60,13 @@ const sources = [
 		},
 		getNetworkRef: () => "TCL",
 		getAheadTime: () => 60,
+	},
+	{
+		id: "villefranche-s-saone",
+		staticResourceHref:
+			"https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_libellule.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "LILEBLLULE",
 	},
 ];
 
