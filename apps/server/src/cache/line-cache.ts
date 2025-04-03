@@ -10,7 +10,7 @@ const cache = new Map<number, CachedValue<Line>>();
 export async function fetchLines(ids: number[]) {
 	const cachedLines = ids.reduce((map, id) => {
 		const cachedLine = cache.get(id);
-		if (typeof cachedLine === "undefined" || Date.now() - cachedLine.lastUpdated < 60_000) {
+		if (typeof cachedLine === "undefined" || Date.now() - cachedLine.lastUpdated > 60_000) {
 			return map;
 		}
 
