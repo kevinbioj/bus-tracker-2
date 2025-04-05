@@ -28,6 +28,7 @@ export type Line = {
 	color: string | null;
 	textColor: string | null;
 	archivedAt: string | null;
+	onlineVehicleCount?: number;
 };
 
 export type NetworkWithDetails = Network & {

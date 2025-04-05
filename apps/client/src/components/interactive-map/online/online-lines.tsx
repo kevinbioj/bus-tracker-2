@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight } from "lucide-react";
 
 import { GetNetworkQuery } from "~/api/networks";
-import { GetVehiclesQuery } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
 
 type OnlineLinesProps = {
@@ -12,7 +11,6 @@ type OnlineLinesProps = {
 
 export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps>) {
 	const { data: network } = useQuery(GetNetworkQuery(networkId));
-	const { data: vehicles } = useQuery(GetVehiclesQuery(network?.id));
 	if (!network) return null;
 
 	return (
@@ -20,7 +18,6 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 			{network.lines.flatMap((line) => {
 				if (line.archivedAt !== null) return;
 
-				const lineVehicles = vehicles?.filter(({ activity }) => activity.lineId === line.id) ?? [];
 				return (
 					<Button
 						className="border border-border flex justify-between items-center h-16 p-2 rounded-lg transition text-primary-foreground hover:brightness-90"
@@ -37,10 +34,10 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 							) : (
 								<p className="align-middle font-bold min-w-12 text-xl">{line.number}</p>
 							)}
-							{lineVehicles.length > 0 ? (
+							{typeof line.onlineVehicleCount === "number" && line.onlineVehicleCount > 0 ? (
 								<p className="align-middle text-base text-wrap">
-									<span className="font-bold">{lineVehicles.length}</span> véhicule{lineVehicles.length > 1 ? "s" : ""}{" "}
-									en ligne
+									<span className="font-bold">{line.onlineVehicleCount}</span> véhicule
+									{line.onlineVehicleCount > 1 ? "s" : ""} en ligne
 								</p>
 							) : null}
 						</div>

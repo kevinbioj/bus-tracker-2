@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { client } from "./client";
+import type { Vehicle } from "./vehicles";
 
 export type Line = {
 	id: number;
@@ -16,7 +17,15 @@ export type Line = {
 export const GetLineQuery = (lineId?: number) =>
 	queryOptions({
 		enabled: typeof lineId !== "undefined",
-		staleTime: 600_000,
+		staleTime: 15_000,
 		queryKey: ["lines", lineId],
 		queryFn: () => client.get(`lines/${lineId}`).then((response) => response.json<Line>()),
+	});
+
+export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
+	queryOptions({
+		enabled: typeof lineId !== "undefined",
+		staleTime: 15_000,
+		queryKey: ["lines", lineId, "online"],
+		queryFn: () => client.get(`lines/${lineId}/online-vehicles`).then((response) => response.json<Vehicle[]>()),
 	});
