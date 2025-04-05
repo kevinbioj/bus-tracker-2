@@ -23,6 +23,11 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 		const [network] = await database.select().from(networks).where(eq(networks.id, id));
 		if (typeof network === "undefined") return c.json({ error: `No network found with id '${id}'.` }, 404);
 
+		const onlineNetworkVehicles = store
+			.values()
+			.filter((journey) => journey.networkId === network.id)
+			.toArray();
+
 		const operatorList = await database.select().from(operators).where(eq(operators.networkId, network.id));
 		const lineList = await database.select().from(lines).where(eq(lines.networkId, network.id));
 		return c.json({
@@ -33,7 +38,12 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 					const sortOrderDiff = (a.sortOrder ?? lineList.length) - (b.sortOrder ?? lineList.length);
 					return sortOrderDiff || Number.parseInt(a.number) - Number.parseInt(b.number);
 				})
-				.map(({ networkId, ...line }) => line),
+				.map(({ networkId, ...line }) => ({
+					...line,
+					onlineVehicleCount: onlineNetworkVehicles.filter(
+						(journey) => journey.lineId === line.id && typeof journey.vehicle?.id !== "undefined",
+					).length,
+				})),
 		});
 	});
 
