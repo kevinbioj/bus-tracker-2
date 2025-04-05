@@ -64,7 +64,7 @@ const sources = [
 	// },
 	{
 		id: "sete",
-		staticResourceHref: "https://drive.google.com/uc?export=download&id=1JPmGimO4tfQpzL8A0ixYnYrPDehYILWn",
+		staticResourceHref: "https://sete.ceccli.com/gtfs/TripUpdates.pb",
 		realtimeResourceHrefs: [
 			"https://sete.ceccli.com/gtfs/TripUpdates.pb",
 			"https://sete.ceccli.com/gtfs/VehiclePositions.pb",
