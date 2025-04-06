@@ -272,6 +272,8 @@
 	[
 		{ "line": "93", "direction": "ALL" },
 		{ "line": "93", "direction": "RET" },
+		{ "line": "95", "direction": "ALL" },
+		{ "line": "95", "direction": "RET" },
 		{ "line": "98", "direction": "ALL" },
 		{ "line": "98", "direction": "RET" },
 		{ "line": "98E", "direction": "ALL" },
@@ -359,7 +361,9 @@
 	],
 	[
 		{ "line": "BR60", "direction": "ALL" },
-		{ "line": "BR60", "direction": "RET" }
+		{ "line": "BR60", "direction": "RET" },
+		{ "line": "N100", "direction": "ALL" },
+		{ "line": "N100", "direction": "RET" }
 	],
 	[{ "line": "TS", "direction": "ALL" }, { "line": "TS", "direction": "RET" }],
 	[
