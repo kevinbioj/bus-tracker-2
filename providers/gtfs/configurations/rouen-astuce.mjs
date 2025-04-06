@@ -2,18 +2,18 @@
 const sources = [
 	{
 		id: "tcar",
-		staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE",
-		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar-2/trip-updates",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar-2/vehicle-positions",
-			// "https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
-			// "https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
-		],
-		// staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
+		// staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE",
 		// realtimeResourceHrefs: [
-		// "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
-		// "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
+		// "https://gtfs.bus-tracker.fr/gtfs-rt/tcar-2/trip-updates",
+		// "https://gtfs.bus-tracker.fr/gtfs-rt/tcar-2/vehicle-positions",
+		// "https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
+		// "https://www.reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
 		// ],
+		staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
+		],
 		mode: "NO-TU",
 		gtfsOptions: {
 			shapesStrategy: "IGNORE",
@@ -30,10 +30,10 @@ const sources = [
 		},
 		getVehicleRef: (vehicle) => vehicle?.id,
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
-		mapVehiclePosition: (vehiclePosition) => {
-			vehiclePosition.timestamp += 3600 * 2; // 30/03/2025 - daylight saving time, so we add another hour, of course (:
-			return vehiclePosition;
-		},
+		// mapVehiclePosition: (vehiclePosition) => {
+		// vehiclePosition.timestamp += 3600 * 2; // 30/03/2025 - daylight saving time, so we add another hour, of course (:
+		// return vehiclePosition;
+		// },
 	},
 	{
 		id: "tae",
