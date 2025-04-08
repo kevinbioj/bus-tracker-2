@@ -33,6 +33,11 @@ export const timestamp = customType<{
 	},
 });
 
+export const regions = pgTable("region", {
+	id: serial("id").primaryKey(),
+	name: varchar("name").notNull(),
+});
+
 export const networks = pgTable("network", {
 	id: serial("id").primaryKey(),
 	ref: varchar("ref").notNull().unique(),
@@ -44,6 +49,7 @@ export const networks = pgTable("network", {
 	color: char("color", { length: 6 }),
 	textColor: char("text_color", { length: 6 }),
 	hasVehiclesFeature: boolean("has_vehicles_feature").notNull().default(false),
+	regionId: integer("region_id").references(() => regions.id),
 });
 
 export type Network = InferSelectModel<typeof networks>;
