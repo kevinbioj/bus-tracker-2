@@ -36,6 +36,7 @@ export const timestamp = customType<{
 export const regions = pgTable("region", {
 	id: serial("id").primaryKey(),
 	name: varchar("name").notNull(),
+	sortOrder: integer("sort_order").notNull().unique(),
 });
 
 export const networks = pgTable("network", {
