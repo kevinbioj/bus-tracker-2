@@ -12,6 +12,7 @@ export type Network = {
 	color: string | null;
 	textColor: string | null;
 	hasVehiclesFeature: boolean;
+	regionId: number;
 };
 
 export type Operator = {
