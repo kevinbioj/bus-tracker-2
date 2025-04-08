@@ -42,19 +42,19 @@ export const registerLineRoutes = (hono: Hono, store: JourneyStore) => {
 				.from(lineActivities)
 				.where(and(inArray(lineActivities.vehicleId, onlineVehicleIds), eq(lineActivities.lineId, line.id)))
 				.orderBy(desc(lineActivities.startedAt))
-				.limit(vehicleList.length),
+				.limit(vehicleList.length * 2),
 			(activity) => activity.vehicleId,
 		);
 
 		return c.json(
 			vehicleList.map((vehicle) => {
 				const journey = store.values().find((journey) => journey.vehicle?.id === vehicle.id);
-				const sinceData = sinceList.get(vehicle.id)?.[0]!;
+				const sinceData = sinceList.get(vehicle.id)?.[0];
 				return {
 					...vehicle,
 					activity: {
 						status: "online",
-						since: sinceData.startedAt,
+						since: sinceData?.startedAt,
 						lineId: line.id,
 						markerId: journey?.id,
 						position: journey
