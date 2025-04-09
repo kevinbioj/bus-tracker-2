@@ -1,20 +1,20 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { FilterIcon, SortAscIcon } from "lucide-react";
+import { BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
+import { GetNetworkQuery } from "~/api/networks";
 
 import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
 import { VehiclesTable } from "~/components/data/networks/vehicles-table";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { Separator } from "~/components/ui/separator";
 import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
 
 const filterableVehicleTypes = {
-	ALL: "Tous",
+	ALL: <span className="text-muted-foreground">Type</span>,
 	TRAMWAY: <TramwayIcon className="size-5" />,
 	BUS: <BusIcon className="size-5" />,
 	FERRY: <ShipIcon className="size-5" />,
@@ -23,6 +23,7 @@ const filterableVehicleTypes = {
 type NetworkVehiclesProps = { networkId: number };
 
 export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
+	const { data: network } = useSuspenseQuery(GetNetworkQuery(networkId));
 	const { data: vehicles } = useSuspenseQuery(GetVehiclesQuery(networkId));
 
 	const availableNetworkTypeFilters = useMemo(() => {
@@ -35,7 +36,16 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 
 	const [searchParams, setSearchParams] = useSearchParams("");
 
+	const updateSearchParam = (key: string, value: string) => {
+		setSearchParams((searchParams) => {
+			const newSearchParams = new URLSearchParams(searchParams);
+			newSearchParams.set(key, value);
+			return newSearchParams;
+		});
+	};
+
 	const type = searchParams.get("type") ?? "ALL";
+	const operatorId = searchParams.get("operatorId") ?? "ALL";
 	const filter = searchParams.get("filter") ?? "";
 	const sort = searchParams.get("sort") ?? "number";
 
@@ -48,6 +58,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 		return vehicles
 			.filter((v) => {
 				if (type?.trim().length && type !== "ALL" && v.type !== type) return false;
+				if (operatorId !== "" && operatorId !== "ALL" && +operatorId !== v.operatorId) return false;
 				if (debouncedFilter === "") return true;
 				return pattern.test(v.number.toString()) || pattern.test(v.designation ?? "");
 			})
@@ -64,7 +75,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 
 				return +a.number - +b.number;
 			});
-	}, [debouncedFilter, searchParams, type, vehicles]);
+	}, [debouncedFilter, operatorId, searchParams, type, vehicles]);
 
 	const onlineVehicles = useMemo(
 		() => filteredAndSortedVehicles.filter(({ activity }) => typeof activity.lineId !== "undefined"),
@@ -81,15 +92,16 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 		<section>
 			{vehicles.length > 0 ? (
 				<>
-					<div className="flex justify-between gap-3 py-2">
-						<div className="flex flex-col gap-1 w-full max-w-72">
+					<div className="grid grid-cols-[1fr_4.5rem] gap-1 mt-2">
+						{/* Filters */}
+						<div className="flex flex-col gap-1">
 							<Label className="inline-flex items-center gap-1" htmlFor="filter">
 								<FilterIcon size={16} /> Filtrer par
 							</Label>
-							<div className="flex gap-2">
+							<div className="flex gap-1">
 								{availableNetworkTypeFilters.length > 2 && (
-									<Select value={type} onValueChange={(newType) => setSearchParams({ filter, sort, type: newType })}>
-										<SelectTrigger className="h-10 w-24">
+									<Select value={type} onValueChange={(newType) => updateSearchParam("type", newType)}>
+										<SelectTrigger className="h-10 w-[4.5rem]">
 											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
@@ -101,35 +113,62 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 										</SelectContent>
 									</Select>
 								)}
-								<Input
-									className="h-10"
-									placeholder="numéro ou désignation"
-									value={searchParams.get("filter") ?? ""}
-									onChange={(e) => setSearchParams({ filter: e.target.value, sort, type })}
-								/>
+								<div className="flex flex-1 gap-1 max-w-96">
+									{network.operators.length > 0 && (
+										<Select
+											value={operatorId}
+											onValueChange={(newOperatorId) => updateSearchParam("operatorId", newOperatorId)}
+										>
+											<SelectTrigger className="h-10 w-1/2">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="ALL">
+													<span className="text-muted-foreground">Opérateur</span>
+												</SelectItem>
+												{network.operators
+													.toSorted((a, b) => a.id - b.id)
+													.map((operator) => (
+														<SelectItem key={operator.id} value={operator.id.toString()}>
+															{operator.name}
+														</SelectItem>
+													))}
+											</SelectContent>
+										</Select>
+									)}
+									<Input
+										className="h-10 w-1/2"
+										placeholder="numéro ou désignation"
+										value={searchParams.get("filter") ?? ""}
+										onChange={(e) => updateSearchParam("filter", e.target.value)}
+									/>
+								</div>
 							</div>
 						</div>
+						{/* Sort */}
 						<div className="flex flex-col gap-1">
 							<Label className="inline-flex items-center gap-1" htmlFor="sort">
-								<SortAscIcon size={16} /> Trier par
+								<SortAscIcon size={16} /> Tri
 							</Label>
-							<Select value={sort} onValueChange={(newSort) => setSearchParams({ filter, sort: newSort, type })}>
-								<SelectTrigger className="h-10 min-w-28">
+							<Select value={sort} onValueChange={(newSort) => updateSearchParam("sort", newSort)}>
+								<SelectTrigger className="h-10">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="number">Numéro</SelectItem>
-									{/* <SelectItem value="line">Ligne</SelectItem> */}
-									<SelectItem value="activity">Activité</SelectItem>
+									<SelectItem value="number">
+										<BinaryIcon />
+									</SelectItem>
+									<SelectItem value="activity">
+										<ClockIcon />
+									</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 					</div>
-					<Separator />
 					<p
 						className={clsx(
-							"text-muted-foreground text-sm mt-2",
-							filteredAndSortedVehicles.length > 0 ? "text-end" : "text-center",
+							"text-muted-foreground text-sm",
+							filteredAndSortedVehicles.length > 0 ? "mt-2 text-end" : "mt-5 text-center",
 						)}
 					>
 						{activeVehiclesLabel}
@@ -137,7 +176,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 					<VehiclesTable data={filteredAndSortedVehicles} searchParams={searchParams} />
 				</>
 			) : (
-				<p className="text-center text-muted-foreground">Aucun véhicule n'est disponible pour ce réseau.</p>
+				<p className="mt-5 text-center text-muted-foreground">Aucun véhicule n'est disponible pour ce réseau.</p>
 			)}
 		</section>
 	);

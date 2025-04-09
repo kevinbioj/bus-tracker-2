@@ -27,7 +27,7 @@ export function NetworkDetails() {
 			<title>{`${network.name} – Données – Bus Tracker`}</title>
 			<main className="p-3 pb-0 max-w-screen-xl w-full mx-auto">
 				<NetworkHeader network={network} />
-				<Breadcrumb className="mt-3">
+				<Breadcrumb>
 					<BreadcrumbList>
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
