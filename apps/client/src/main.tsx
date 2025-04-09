@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
+import "./polyfills.js";
 import "./setup-dayjs";
 
 import App from "./App.jsx";
