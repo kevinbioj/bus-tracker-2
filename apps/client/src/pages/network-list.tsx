@@ -28,7 +28,7 @@ export function NetworkList() {
 				<Separator />
 				<Accordion
 					className="mt-3"
-					defaultValue={Array.from(relevantNetworksByRegion.keys().map((region) => region?.id.toString() ?? "-1"))}
+					defaultValue={Array.from(relevantNetworksByRegion.keys()).map((region) => region?.id.toString() ?? "-1")}
 					type="multiple"
 				>
 					{Array.from(relevantNetworksByRegion.entries())
