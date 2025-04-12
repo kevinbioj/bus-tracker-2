@@ -50,9 +50,13 @@ const sources = [
 	{
 		id: "breizhgo-ns",
 		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-lrr-ns/gtfs",
-		realtimeResourceHrefs: [],
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-vehicle-position",
+		],
 		getNetworkRef: () => "BREIZHGO",
 		mapLineRef: (lineRef) => `BZHNS-${lineRef}`,
+		isValidJourney: (journey) => journey.line?.ref.endsWith("BZHNS-LRR.143"),
 	},
 	{
 		id: "breizhgo-rp",
