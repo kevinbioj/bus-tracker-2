@@ -1,6 +1,7 @@
 import { Buffer } from "node:buffer";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 
+import { USER_AGENT } from "../constants.js";
 import type { GtfsRt, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
@@ -16,6 +17,7 @@ export async function downloadGtfsRt(
 	await Promise.allSettled(
 		realtimeFeedHrefs.map(async (realtimeFeedHref) => {
 			const response = await fetch(realtimeFeedHref, {
+				headers: { "User-Agent": USER_AGENT },
 				signal: AbortSignal.timeout(5_000),
 			});
 
