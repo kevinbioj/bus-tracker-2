@@ -40,6 +40,14 @@ const sources = [
 		getNetworkRef: () => "TAG",
 	},
 	{
+		id: "porte-isere",
+		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-9cc4/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-9cc4/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "RUBAN",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
+	{
 		id: "st-etienne",
 		staticResourceHref: "https://api.stas3.cityway.fr/dataflow/offre-tc/download?provider=STAS&dataFormat=GTFS",
 		realtimeResourceHrefs: [
