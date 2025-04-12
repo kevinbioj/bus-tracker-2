@@ -46,6 +46,7 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "RUBAN",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		getDestination: (journey) => journey?.trip?.headsign?.replace(`LIGNE ${journey?.trip?.route.name} - `, ""),
 	},
 	{
 		id: "st-etienne",
