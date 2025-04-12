@@ -44,7 +44,7 @@ const sources = [
 		],
 		getNetworkRef: () => "BREIZHGO",
 		isValidJourney: (journey) =>
-			typeof journey.destination !== "undefined" || journey.calls.some((call) => call.callStatus === "UNSCHEDULED"),
+			typeof journey.destination !== "undefined" || journey.calls?.some((call) => call.callStatus === "UNSCHEDULED"),
 		mapLineRef: (lineRef) => `BZH56-${lineRef}`,
 	},
 	{
@@ -143,7 +143,7 @@ const sources = [
 		getNetworkRef: () => "KICEO",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 		isValidJourney: (journey) =>
-			typeof journey.destination !== "undefined" || journey.calls.some((call) => call.callStatus === "UNSCHEDULED"),
+			typeof journey.destination !== "undefined" || journey.calls?.some((call) => call.callStatus === "UNSCHEDULED"),
 	},
 ];
 
