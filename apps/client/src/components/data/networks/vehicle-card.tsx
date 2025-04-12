@@ -43,7 +43,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 					className="border-l-[1px] border-black dark:border-white mx-2 my-1"
 					style={{ borderColor: line?.textColor ?? undefined }}
 				/>
-				<h3 className="flex font-bold gap-1.5 justify-center ml-1 tabular-nums text-2xl sm:my-auto sm:text-4xl sm:w-32">
+				<h3 className="flex font-bold gap-1.5 justify-center ml-1 tabular-nums text-2xl sm:my-auto sm:text-4xl sm:min-w-32">
 					{vehicle.number}
 				</h3>
 			</div>
