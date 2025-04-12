@@ -60,7 +60,7 @@ const sources = [
 	},
 	{
 		id: "breizhgo-rp",
-		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-lrr-rp/gtfs",
+		staticResourceHref: "https://pysae.com/api/v2/groups/breizhgo-lrr/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/breizhgo-lrr/gtfs-rt"],
 		getNetworkRef: () => "BREIZHGO",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
