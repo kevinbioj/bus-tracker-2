@@ -38,8 +38,12 @@ const sources = [
 	{
 		id: "breizhgo-56",
 		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/BREIZHGO_CAR_56.gtfs.zip",
-		realtimeResourceHrefs: [],
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-vehicle-position",
+		],
 		getNetworkRef: () => "BREIZHGO",
+		isValidJourney: (journey) => typeof journey.destination !== "undefined",
 		mapLineRef: (lineRef) => `BZH56-${lineRef}`,
 	},
 	{
@@ -133,6 +137,7 @@ const sources = [
 		],
 		getNetworkRef: () => "KICEO",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		isValidJourney: (journey) => typeof journey.destination !== "undefined",
 	},
 ];
 
