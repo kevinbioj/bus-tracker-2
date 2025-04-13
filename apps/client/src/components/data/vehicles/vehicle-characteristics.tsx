@@ -20,6 +20,7 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 
 	return (
 		<div className="border border-border px-3 py-2 rounded-md shadow-lg lg:w-80 w-full relative">
+			<h2 className="hidden">Informations du véhicule</h2>
 			<div className="flex justify-between gap-2">
 				<div>
 					<div className="font-bold text-lg">

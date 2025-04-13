@@ -27,6 +27,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 	const { data: activities } = useSuspenseQuery(GetVehicleActivitiesQuery(vehicle.id, month));
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<div className="flex-1">
+			<h2 className="hidden">Activités du véhicule</h2>
 			<section>
 				<div className="bg-branding text-branding-foreground grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md">
 					{currentMonthIndex > 0 ? (
@@ -34,7 +35,14 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 							className="transition-opacity hover:opacity-70"
 							to={`?month=${vehicle.activeMonths.at(currentMonthIndex - 1)}`}
 						>
-							<ChevronLeft className="mx-auto" color="white" width={32} height={32} strokeWidth={2.5} />
+							<ChevronLeft
+								aria-label="Période précédente"
+								className="mx-auto"
+								color="white"
+								width={32}
+								height={32}
+								strokeWidth={2.5}
+							/>
 						</Link>
 					) : (
 						<div />
@@ -48,7 +56,14 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 							className="transition-opacity hover:opacity-70"
 							to={`?month=${vehicle.activeMonths.at(currentMonthIndex + 1)}`}
 						>
-							<ChevronRight className="mx-auto" color="white" width={32} height={32} strokeWidth={2.5} />
+							<ChevronRight
+								aria-label="Période suivante"
+								className="mx-auto"
+								color="white"
+								width={32}
+								height={32}
+								strokeWidth={2.5}
+							/>
 						</Link>
 					) : (
 						<div />
@@ -62,9 +77,9 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					)
 					.map(({ date, activities }) => (
 						<div className="flex flex-col gap-2 items-center sm:flex-row sm:items-start" key={date}>
-							<h4 className="text-center text-xl sm:text-right sm:w-72">
+							<h3 className="text-center text-xl sm:text-right sm:w-72">
 								{dayjs(date, "DD/MM/YYYY").format("dddd DD MMMM")}
-							</h4>
+							</h3>
 							<div className="flex flex-col gap-2 w-full">
 								{activities.map((activity) => (
 									<ActivityCard activity={activity} key={activity.startedAt} />

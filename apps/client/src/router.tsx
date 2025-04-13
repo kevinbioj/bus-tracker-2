@@ -15,6 +15,7 @@ import { VehicleDetails } from "~/pages/vehicle-details";
 export const router = (queryClient: QueryClient) =>
 	createBrowserRouter([
 		{
+			hydrateFallbackElement: null,
 			element: (
 				<>
 					<NavigationBar />

@@ -101,7 +101,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 							<div className="flex gap-1">
 								{availableNetworkTypeFilters.length > 2 && (
 									<Select value={type} onValueChange={(newType) => updateSearchParam("type", newType)}>
-										<SelectTrigger className="h-10 w-[4.5rem]">
+										<SelectTrigger aria-label="Type" className="h-10 w-[4.5rem]">
 											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
@@ -119,7 +119,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 											value={operatorId}
 											onValueChange={(newOperatorId) => updateSearchParam("operatorId", newOperatorId)}
 										>
-											<SelectTrigger className="h-10 w-1/2">
+											<SelectTrigger aria-label="Opérateur" className="h-10 w-1/2">
 												<SelectValue />
 											</SelectTrigger>
 											<SelectContent>
@@ -151,7 +151,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 								<SortAscIcon size={16} /> Tri
 							</Label>
 							<Select value={sort} onValueChange={(newSort) => updateSearchParam("sort", newSort)}>
-								<SelectTrigger className="h-10">
+								<SelectTrigger aria-label="Trier" className="h-10">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
