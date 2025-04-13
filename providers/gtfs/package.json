@@ -1,6 +1,5 @@
 {
 	"name": "@bus-tracker/processor-gtfs",
-	"version": "0.0.0",
 	"main": "dist/index.js",
 	"type": "module",
 	"private": true,
@@ -12,25 +11,25 @@
 		"test:watch": "vitest ."
 	},
 	"devDependencies": {
+		"@bus-tracker/contracts": "workspace:*",
 		"@types/decompress": "^4.2.7",
-		"@types/node": "^22.13.10",
+		"@types/node": "^22.14.1",
 		"@types/papaparse": "^5.3.15",
 		"tsx": "^4.19.3",
-		"typescript": "^5.8.2",
-		"vitest": "^3.0.8"
+		"typescript": "^5.8.3",
+		"vitest": "^3.1.1"
 	},
 	"dependencies": {
-		"@bus-tracker/contracts": "workspace:*",
 		"croner": "^9.0.0",
 		"decompress": "^4.2.1",
-		"dotenv": "^16.4.7",
+		"dotenv": "^16.5.0",
 		"draftlog": "^1.0.13",
 		"gtfs-realtime-bindings": "^1.1.1",
-		"ky": "^1.7.5",
+		"ky": "^1.8.0",
 		"p-limit": "^6.2.0",
 		"papaparse": "^5.5.2",
 		"redis": "^4.7.0",
-		"temporal-polyfill": "^0.2.5",
-		"ts-pattern": "^5.6.2"
+		"temporal-polyfill": "^0.3.0",
+		"ts-pattern": "^5.7.0"
 	}
 }

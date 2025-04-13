@@ -11,14 +11,14 @@
 		"test:watch": "vitest ."
 	},
 	"devDependencies": {
-		"@types/node": "^22.13.10",
+		"@bus-tracker/contracts": "workspace:*",
+		"@types/node": "^22.14.1",
 		"tsx": "^4.19.3",
-		"typescript": "^5.8.2"
+		"typescript": "^5.8.3"
 	},
 	"dependencies": {
-		"@bus-tracker/contracts": "workspace:*",
 		"draftlog": "^1.0.13",
 		"redis": "^4.7.0",
-		"temporal-polyfill": "^0.2.5"
+		"temporal-polyfill": "^0.3.0"
 	}
 }

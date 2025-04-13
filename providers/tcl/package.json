@@ -1,6 +1,5 @@
 {
 	"name": "@bus-tracker/processor-tcl",
-	"version": "0.0.0",
 	"main": "dist/index.js",
 	"type": "module",
 	"private": true,
@@ -12,16 +11,16 @@
 		"test:watch": "vitest ."
 	},
 	"devDependencies": {
-		"@types/node": "^22.13.10",
+		"@bus-tracker/contracts": "workspace:*",
+		"@types/node": "^22.14.1",
 		"@types/proj4": "^2.5.6",
 		"tsx": "^4.19.3",
-		"typescript": "^5.8.2"
+		"typescript": "^5.8.3"
 	},
 	"dependencies": {
-		"@bus-tracker/contracts": "workspace:*",
 		"draftlog": "^1.0.13",
 		"proj4": "^2.15.0",
 		"redis": "^4.7.0",
-		"temporal-polyfill": "^0.2.5"
+		"temporal-polyfill": "^0.3.0"
 	}
 }
