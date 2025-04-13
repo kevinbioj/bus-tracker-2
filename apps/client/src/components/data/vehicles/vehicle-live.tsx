@@ -64,7 +64,7 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 				attributionControl={false}
 				ref={mapRef}
 			>
-				<p className="absolute bg-white font-bold top-0.5 left-0.5 px-2 pt-0.5 rounded-md text-black z-[400]">
+				<p className="absolute bg-white font-bold top-0.5 left-0.5 px-2 pt-0.5 rounded-md text-black z-400">
 					<CircleIcon className="align-text-bottom animate-pulse fill-red-500 stroke-none size-4 inline" /> CLIQUER POUR
 					VOIR EN DIRECT
 				</p>

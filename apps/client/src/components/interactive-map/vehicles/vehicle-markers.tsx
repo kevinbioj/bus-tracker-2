@@ -24,7 +24,7 @@ export function VehicleMarkers() {
 	const loader = useMemo(
 		() => (
 			<div
-				className="absolute data-[visible=true]:animate-in data-[visible=true]:fade-in border top-2 right-2 bg-background text-foreground p-1 rounded-md z-[1001] data-[visible=false]:hidden"
+				className="absolute data-[visible=true]:animate-in data-[visible=true]:fade-in border top-2 right-2 bg-background text-foreground p-1 rounded-md z-1001 data-[visible=false]:hidden"
 				data-visible={isFetching}
 			>
 				<LucideLoader2 className="animate-spin size-6" strokeWidth={3} />

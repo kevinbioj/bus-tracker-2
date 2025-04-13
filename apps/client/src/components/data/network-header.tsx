@@ -21,7 +21,7 @@ export function NetworkHeader({ network }: Readonly<NetworkHeaderProps>) {
 					<Separator className="hidden sm:block" orientation="vertical" />
 				</>
 			) : null}
-			<div className="flex-grow flex-col my-auto hidden sm:flex">
+			<div className="grow flex-col my-auto hidden sm:flex">
 				<h1 className="font-bold text-3xl">{network.name}</h1>
 				{network.authority ? <span>{network.authority}</span> : null}
 			</div>

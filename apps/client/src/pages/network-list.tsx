@@ -6,7 +6,7 @@ import { GetNetworksQuery } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Separator } from "~/components/ui/separator";
-import { cn } from "~/lib/utils";
+import { cn } from "~/utils/utils";
 
 export function NetworkList() {
 	const { data: regions } = useSuspenseQuery(GetRegionsQuery);
@@ -20,7 +20,7 @@ export function NetworkList() {
 	return (
 		<>
 			<title>Données – Bus Tracker</title>
-			<main className="p-3 max-w-screen-xl w-full mx-auto">
+			<main className="p-3 max-w-(--breakpoint-xl) w-full mx-auto">
 				<h2 className="font-bold text-2xl">Données des véhicules</h2>
 				<p className="text-muted-foreground">
 					Seuls les réseaux pour lesquels le suivi des véhicules est disponible sont affichés.
