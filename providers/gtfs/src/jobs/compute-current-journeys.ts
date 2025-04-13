@@ -17,21 +17,22 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 	const firstCall = journey.calls.at(0);
 	if (
 		typeof firstCall === "undefined" ||
-		at.epochSeconds + aheadTime < (firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime).epochSeconds
+		at.epochMilliseconds + aheadTime * 1000 <
+			(firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime).epochMilliseconds
 	)
 		return;
 
 	const lastCall = journey.calls.at(-1);
 	if (
 		typeof lastCall === "undefined" ||
-		at.epochSeconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochSeconds
+		at.epochMilliseconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochMilliseconds
 	)
 		return;
 
 	const ongoingCalls = journey.calls.filter((call, index) => {
 		return index === journey.calls.length - 1
-			? at.epochSeconds < (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds
-			: at.epochSeconds < (call.expectedDepartureTime ?? call.aimedDepartureTime).epochSeconds;
+			? at.epochMilliseconds < (call.expectedArrivalTime ?? call.aimedArrivalTime).epochMilliseconds
+			: at.epochMilliseconds < (call.expectedDepartureTime ?? call.aimedDepartureTime).epochMilliseconds;
 	});
 	if (ongoingCalls.length === 0) return;
 	return ongoingCalls;
@@ -42,8 +43,7 @@ const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): Journey
 	if (tripUpdate.stopTimeUpdate.some(({ stopId }) => !gtfs.stops.has(stopId))) return;
 
 	const timeZone =
-		gtfs.trips.values().next().value?.route.agency.timeZone ??
-		new Temporal.TimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+		gtfs.trips.values().next().value?.route.agency.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	return tripUpdate.stopTimeUpdate.flatMap((stopTimeUpdate, index) => {
 		if (typeof stopTimeUpdate.arrival?.time !== "number" && typeof stopTimeUpdate.departure?.time !== "number")
@@ -51,11 +51,11 @@ const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): Journey
 
 		const stop = gtfs.stops.get(stopTimeUpdate.stopId)!;
 
-		const arrivalTime = Temporal.Instant.fromEpochSeconds(
-			(stopTimeUpdate.arrival ?? stopTimeUpdate.departure)!.time!,
+		const arrivalTime = Temporal.Instant.fromEpochMilliseconds(
+			(stopTimeUpdate.arrival ?? stopTimeUpdate.departure)!.time! * 1000,
 		).toZonedDateTimeISO(timeZone);
-		const departureTime = Temporal.Instant.fromEpochSeconds(
-			(stopTimeUpdate.departure ?? stopTimeUpdate.arrival)!.time!,
+		const departureTime = Temporal.Instant.fromEpochMilliseconds(
+			(stopTimeUpdate.departure ?? stopTimeUpdate.arrival)!.time! * 1000,
 		).toZonedDateTimeISO(timeZone);
 
 		return {
@@ -116,7 +116,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			for (const tripUpdate of tripUpdates) {
 				if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
 
-				const updatedAt = Temporal.Instant.fromEpochSeconds(tripUpdate.timestamp);
+				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
 				// if (now.since(updatedAt).total("minutes") >= 10) continue;
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip);
@@ -143,7 +143,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			source.gtfs.journeys.sort((a, b) => {
 				const aStart = a.calls.at(0)!.expectedArrivalTime ?? a.calls.at(0)!.aimedArrivalTime;
 				const bStart = b.calls.at(0)!.expectedArrivalTime ?? b.calls.at(0)!.aimedArrivalTime;
-				return aStart.epochSeconds - bStart.epochSeconds;
+				return aStart.epochMilliseconds - bStart.epochMilliseconds;
 			});
 		}
 
@@ -153,7 +153,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 			let journey: Journey | undefined;
 
-			const updatedAt = Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp);
+			const updatedAt = Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000);
 
 			if (typeof vehiclePosition.trip !== "undefined") {
 				const trip = getTripFromDescriptor(source.gtfs, vehiclePosition.trip);
@@ -175,7 +175,9 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						source.gtfs.journeys.push(journey);
 					}
 
-					if (now.since(Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp)).total("minutes") >= 10) {
+					if (
+						now.since(Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000)).total("minutes") >= 10
+					) {
 						const lastCall = journey.calls.at(-1)!;
 						if (
 							Temporal.Instant.compare(now, (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).toInstant())
@@ -264,7 +266,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					longitude: vehiclePosition.position.longitude,
 					atStop: vehiclePosition.currentStatus === "STOPPED_AT",
 					type: "GPS",
-					recordedAt: Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp)
+					recordedAt: Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000)
 						.toZonedDateTimeISO(journey?.trip.route.agency.timeZone ?? "Europe/Paris")
 						.toString({ timeZoneName: "never" }),
 				},
@@ -280,7 +282,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				vehicleRef:
 					typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
 				serviceDate: journey?.date.toString(),
-				updatedAt: Temporal.Instant.fromEpochSeconds(vehiclePosition.timestamp).toString(),
+				updatedAt: Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000).toString(),
 			};
 
 			if (typeof source.options.isValidJourney === "undefined" || source.options.isValidJourney(vehicleJourney)) {

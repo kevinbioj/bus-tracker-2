@@ -40,22 +40,24 @@ export class Journey {
 
 		// Cas n°1 - la course n'a pas encore commencé
 		const firstCall = calls.at(0)!;
-		if (at.epochSeconds < (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime).epochSeconds) {
+		if (at.epochMilliseconds < (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime).epochMilliseconds) {
 			return Journey.getJourneyPositionAt(firstCall);
 		}
 
 		// Cas n°2 - la course est terminée
 		const lastCall = calls.at(-1)!;
-		if (at.epochSeconds >= (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime).epochSeconds) {
+		if (at.epochMilliseconds >= (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime).epochMilliseconds) {
 			return Journey.getJourneyPositionAt(lastCall);
 		}
 
 		// Cas n°3 - on est à l'arrêt
 		const monitoredCall = calls.findLast(
-			(call) => at.epochSeconds >= (call.expectedArrivalTime ?? call.aimedArrivalTime).epochSeconds,
+			(call) => at.epochMilliseconds >= (call.expectedArrivalTime ?? call.aimedArrivalTime).epochMilliseconds,
 		)!;
 
-		if (at.epochSeconds < (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochSeconds) {
+		if (
+			at.epochMilliseconds < (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochMilliseconds
+		) {
 			return Journey.getJourneyPositionAt(monitoredCall);
 		}
 
@@ -69,10 +71,10 @@ export class Journey {
 			return Journey.getJourneyPositionAt(monitoredCall);
 		}
 
-		const leftAt = (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochSeconds;
-		const arrivesAt = (nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime).epochSeconds;
+		const leftAt = (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochMilliseconds;
+		const arrivesAt = (nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime).epochMilliseconds;
 
-		const percentTraveled = (at.epochSeconds - leftAt) / (arrivesAt - leftAt);
+		const percentTraveled = (at.epochMilliseconds - leftAt) / (arrivesAt - leftAt);
 		const distanceTraveled =
 			monitoredCall.distanceTraveled + (nextCall.distanceTraveled - monitoredCall.distanceTraveled) * percentTraveled;
 
@@ -144,13 +146,13 @@ export class Journey {
 			const departureEvent = timeUpdate?.departure ?? timeUpdate?.arrival;
 
 			if (typeof arrivalEvent?.time === "number") {
-				arrivalDelay = arrivalEvent.time - call.aimedArrivalTime.epochSeconds;
+				arrivalDelay = arrivalEvent.time - Math.floor(call.aimedArrivalTime.epochMilliseconds / 1000);
 			} else if (typeof arrivalEvent?.delay === "number") {
 				arrivalDelay = arrivalEvent.delay;
 			}
 
 			if (typeof departureEvent?.time === "number") {
-				departureDelay = departureEvent.time - call.aimedDepartureTime.epochSeconds;
+				departureDelay = departureEvent.time - Math.floor(call.aimedDepartureTime.epochMilliseconds / 1000);
 			} else if (typeof departureEvent?.delay === "number") {
 				departureDelay = departureEvent.delay;
 			}

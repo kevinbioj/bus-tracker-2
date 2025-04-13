@@ -82,7 +82,7 @@ export class Source {
 					const journeys = dates.map((date) => trip.getScheduledJourney(date));
 					for (const journey of journeys) {
 						if (typeof journey === "undefined") continue;
-						if (now.epochSeconds > journey.calls.at(-1)!.aimedDepartureTime.epochSeconds) continue;
+						if (now.epochMilliseconds > journey.calls.at(-1)!.aimedDepartureTime.epochMilliseconds) continue;
 						gtfs.journeys.push(journey);
 					}
 				}
@@ -198,11 +198,11 @@ export class Source {
 	sweepJourneys() {
 		if (typeof this.gtfs === "undefined") return;
 
-		const now = Temporal.Now.instant().epochSeconds;
+		const now = Temporal.Now.instant().epochMilliseconds;
 		const oldJourneyCount = this.gtfs.journeys.length;
 		this.gtfs.journeys = this.gtfs.journeys.filter((journey) => {
 			const lastCall = journey.calls.at(-1)!;
-			return now <= (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochSeconds;
+			return now <= (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochMilliseconds;
 		});
 
 		console.log(

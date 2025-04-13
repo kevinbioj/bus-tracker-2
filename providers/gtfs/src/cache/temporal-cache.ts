@@ -26,7 +26,7 @@ export function createPlainTime(item: string) {
 
 // const zonedDateTimeCache = new Map<string, Temporal.ZonedDateTime>();
 
-export function createZonedDateTime(date: Temporal.PlainDate, time: Temporal.PlainTime, timeZone: Temporal.TimeZone) {
+export function createZonedDateTime(date: Temporal.PlainDate, time: Temporal.PlainTime, timeZone: string) {
 	// const key = `${date}_${time}_${timeZone}`;
 	// let zonedDateTime = zonedDateTimeCache.get(key);
 	// if (typeof zonedDateTime === "undefined") {
