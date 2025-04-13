@@ -7,7 +7,6 @@ import type { Vehicle } from "~/api/vehicles";
 import { useLine } from "~/hooks/use-line";
 import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
 import { Zzz } from "~/icons/zzz";
-import { cn } from "~/lib/utils";
 
 export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
@@ -52,8 +51,8 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 				className="border-t-[1px] sm:border-l-[1px] border-black dark:border-white mx-2"
 				style={{ borderColor: line?.textColor ?? undefined }}
 			/>
-			<div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 flex-1 mt-2 mx-2 sm:mt-0 sm:mx-0">
-				<div className={cn("h-12 min-w-16", line?.cartridgeHref ? "max-w-24" : "max-w-64")}>{activeLine}</div>
+			<div className="flex gap-2 flex-1 mt-2 mx-2 sm:mt-0 sm:mx-0">
+				<div className="h-12 min-w-16 max-w-24">{activeLine}</div>
 				<div className="flex flex-col justify-center">
 					{vehicle.designation && <p className="font-bold">{vehicle.designation}</p>}
 					{vehicle.activity?.status === "online" ? (
