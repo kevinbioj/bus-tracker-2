@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BusFrontIcon, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { P, match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { GetNetworkQuery } from "~/api/networks";
 import { OnlineLines } from "~/components/interactive-map/online/online-lines";
 
@@ -29,8 +29,12 @@ export function OnlineSheet() {
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
 			<SheetTrigger asChild>
-				{/* biome-ignore lint/a11y/useValidAnchor: required by Leaflet */}
-				<a aria-label="Véhicules en ligne" className="leaflet-bar-part leaflet-bar-part-single" href="#">
+				<a
+					aria-label="Véhicules en ligne"
+					className="leaflet-bar-part leaflet-bar-part-single"
+					// biome-ignore lint/a11y/useValidAnchor: required by Leaflet
+					href="#"
+				>
 					<BusFrontIcon className="inline mb-0.5" />
 				</a>
 			</SheetTrigger>
@@ -44,7 +48,7 @@ export function OnlineSheet() {
 								</Button>
 							) : null}
 							{typeof networkId === "undefined" ? (
-								<>Véhicules en ligne</>
+								"Véhicules en ligne"
 							) : (
 								<>
 									{network?.name}

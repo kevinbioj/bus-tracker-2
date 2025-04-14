@@ -32,7 +32,10 @@ while (true) {
 
 	try {
 		const { Vehicules, Total, ping } = await getVehicles(
-			linesFilter.map(({ line, direction }) => ({ Ligne: line, Sens: direction as "ALL" | "RET" })),
+			linesFilter.map(({ line, direction }) => ({
+				Ligne: line,
+				Sens: direction as "ALL" | "RET",
+			})),
 		);
 
 		const mappedVehicles = Vehicules.map((vehicle) => ({
@@ -48,7 +51,9 @@ while (true) {
 				...convertPosition({ X: vehicle.X, Y: vehicle.Y }),
 				atStop: false,
 				type: "GPS",
-				recordedAt: Temporal.Now.zonedDateTimeISO().toString({ timeZoneName: "never" }),
+				recordedAt: Temporal.Now.zonedDateTimeISO().toString({
+					timeZoneName: "never",
+				}),
 			},
 			networkRef: "TCL",
 			vehicleRef: `TCL::Vehicle:${vehicle.NumeroCarrosserie}`,

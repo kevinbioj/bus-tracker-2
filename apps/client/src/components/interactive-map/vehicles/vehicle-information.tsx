@@ -101,6 +101,7 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 			<Link to={`/data/vehicles/${journey.vehicle.id}`}>{vehicleNumber}</Link>
 		</Button>
 	) : (
+		// biome-ignore lint/complexity/noUselessFragments: biome not seeing the extra space
 		<>{vehicleNumber} </>
 	);
 
@@ -126,7 +127,7 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 				networkIdentifier
 			)}
 			<span className="my-auto text-center">
-				{vehicleNumber ? <>{vehicleLink}– </> : <></>}
+				{vehicleNumber ? <>{vehicleLink}– </> : null}
 				{recordedAt}
 			</span>
 			<div className="flex items-center justify-end gap-2">

@@ -30,7 +30,10 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 	return (
 		<div
 			className={`border border-border flex flex-col relative rounded-md shadow-md ${!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"}`}
-			style={{ backgroundColor: line?.color ?? undefined, color: line?.textColor ?? undefined }}
+			style={{
+				backgroundColor: line?.color ?? undefined,
+				color: line?.textColor ?? undefined,
+			}}
 		>
 			<Link
 				className="px-2 py-1 hover:brightness-90 transition bg-inherit rounded-md"

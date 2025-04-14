@@ -6,8 +6,16 @@ import { Settings } from "~/components/settings/settings";
 import { Button } from "~/components/ui/button";
 
 const links = [
-	{ href: "/", label: "Carte", isActive: (pathname: string) => pathname === "/" },
-	{ href: "/data", label: "Données", isActive: (pathname: string) => pathname.startsWith("/data") },
+	{
+		href: "/",
+		label: "Carte",
+		isActive: (pathname: string) => pathname === "/",
+	},
+	{
+		href: "/data",
+		label: "Données",
+		isActive: (pathname: string) => pathname.startsWith("/data"),
+	},
 ] as const;
 
 export function NavigationBar() {

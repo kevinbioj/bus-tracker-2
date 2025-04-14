@@ -65,7 +65,11 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 
 		const onlineVehicleList = Map.groupBy(
 			await database
-				.select({ vehicleId: vehicles.id, lineId: lineActivities.lineId, since: lineActivities.startedAt })
+				.select({
+					vehicleId: vehicles.id,
+					lineId: lineActivities.lineId,
+					since: lineActivities.startedAt,
+				})
 				.from(vehicles)
 				.where(
 					and(
@@ -120,7 +124,11 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 
 		const currentActivity = (
 			await database
-				.select({ vehicleId: vehicles.id, lineId: lineActivities.lineId, since: lineActivities.startedAt })
+				.select({
+					vehicleId: vehicles.id,
+					lineId: lineActivities.lineId,
+					since: lineActivities.startedAt,
+				})
 				.from(vehicles)
 				.where(
 					and(

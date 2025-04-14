@@ -36,8 +36,16 @@ const ledColors = {
 } as const;
 type LedColor = keyof typeof ledColors;
 
-type GirouetteDimensions = { height: number; rnWidth: number; destinationWidth: number };
-const defaultDimensions: GirouetteDimensions = { height: 17, rnWidth: 32, destinationWidth: 160 };
+type GirouetteDimensions = {
+	height: number;
+	rnWidth: number;
+	destinationWidth: number;
+};
+const defaultDimensions: GirouetteDimensions = {
+	height: 17,
+	rnWidth: 32,
+	destinationWidth: 160,
+};
 
 export type RouteNumberData = {
 	text: string;
@@ -145,7 +153,9 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<Rout
 			<span
 				className={clsx({ "animate-route-number": routeNumber.scroll })}
 				// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-				dangerouslySetInnerHTML={{ __html: routeNumber.text.trimEnd().replaceAll(" ", "&nbsp;") }}
+				dangerouslySetInnerHTML={{
+					__html: routeNumber.text.trimEnd().replaceAll(" ", "&nbsp;"),
+				}}
 			/>
 		</div>
 	);
@@ -196,7 +206,9 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 				const processedText = line.text.trimEnd().replaceAll(" ", "&nbsp;");
 				return (
 					<span
-						className={clsx("overflow-hidden whitespace-nowrap", { "animate-page": line.scroll })}
+						className={clsx("overflow-hidden whitespace-nowrap", {
+							"animate-page": line.scroll,
+						})}
 						// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
 						dangerouslySetInnerHTML={{ __html: processedText }}
 						key={line.text}

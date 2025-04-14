@@ -28,7 +28,9 @@ export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
 			)}
 			<div
 				className="border-l-[1px] mx-2"
-				style={{ borderColor: line?.textColor ? `#${line.textColor}` : undefined }}
+				style={{
+					borderColor: line?.textColor ? `#${line.textColor}` : undefined,
+				}}
 			/>
 			<p className="flex-1 my-auto text-2xl">
 				{ongoing ? (

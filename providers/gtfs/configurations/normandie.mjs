@@ -116,7 +116,10 @@ const sources = [
 			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
 		mode: "NO-TU",
-		gtfsOptions: { filterTrips: (trip) => trip.route.id !== "241", shapesStrategy: "IGNORE" },
+		gtfsOptions: {
+			filterTrips: (trip) => trip.route.id !== "241",
+			shapesStrategy: "IGNORE",
+		},
 		getNetworkRef: () => "SNGO",
 	},
 	//- SNgo! (navette Giverny)

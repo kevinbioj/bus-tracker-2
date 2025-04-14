@@ -32,7 +32,9 @@ console.log("► Running database migrations.");
 await migrateDatabase();
 
 console.log("► Connecting to Redis.");
-const redis = createClient({ url: process.env.REDIS_URL ?? "redis://localhost:6379" });
+const redis = createClient({
+	url: process.env.REDIS_URL ?? "redis://localhost:6379",
+});
 await redis.connect();
 
 await redis.subscribe("journeys", async (message) => {
@@ -44,7 +46,10 @@ await redis.subscribe("journeys", async (message) => {
 		vehicleJourneys = payload.flatMap((entry) => {
 			const parsed = vehicleJourneySchema.safeParse(entry);
 			if (!parsed.success) {
-				Sentry.captureException(parsed.error, { extra: { entry }, tags: { section: "journey-decode" } });
+				Sentry.captureException(parsed.error, {
+					extra: { entry },
+					tags: { section: "journey-decode" },
+				});
 				return [];
 			}
 			return parsed.data;

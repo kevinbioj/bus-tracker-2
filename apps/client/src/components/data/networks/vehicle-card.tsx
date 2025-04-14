@@ -26,7 +26,10 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 				!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"
 			}`}
 			to={`/data/vehicles/${vehicle.id}`}
-			style={{ backgroundColor: line?.color ?? undefined, color: line?.textColor ?? undefined }}
+			style={{
+				backgroundColor: line?.color ?? undefined,
+				color: line?.textColor ?? undefined,
+			}}
 		>
 			<div className="flex justify-center">
 				{match(vehicle.type)

@@ -72,7 +72,10 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 				if (typeof vehicleJourney.vehicleRef !== "undefined") {
 					const vehicle = vehicles.get(vehicleJourney.vehicleRef);
 					if (typeof vehicle !== "undefined") {
-						disposeableJourney.vehicle = { id: vehicle.id, number: vehicle.number };
+						disposeableJourney.vehicle = {
+							id: vehicle.id,
+							number: vehicle.number,
+						};
 						await registerActivity(disposeableJourney);
 					} else if (networkRef === "SNCF") {
 						disposeableJourney.vehicle = {
