@@ -58,10 +58,16 @@ const sources = [
 		mapLineRef: (lineRef) => `BZHNS-${lineRef}`,
 		mapTripUpdate: (tripUpdate) => {
 			delete tripUpdate.trip.tripId;
+			if (tripUpdate.trip.routeId === "LRR.143") {
+				tripUpdate.trip.routeId = "143";
+			}
 			return tripUpdate;
 		},
 		mapVehiclePosition: (vehicle) => {
 			delete vehicle.trip?.tripId;
+			if (vehicle.trip?.routeId === "LRR.143") {
+				vehicle.trip.routeId = "143";
+			}
 			return vehicle;
 		},
 		isValidJourney: (journey) => journey.line?.ref.endsWith("BZHNS-LRR.143"),
