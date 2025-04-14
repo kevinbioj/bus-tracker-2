@@ -70,7 +70,7 @@ const sources = [
 			}
 			return vehicle;
 		},
-		isValidJourney: (journey) => journey.line?.ref.endsWith("BZHNS-LRR.143"),
+		isValidJourney: (journey) => journey.line?.ref.endsWith("BZHNS-143"),
 	},
 	{
 		id: "breizhgo-rp",
