@@ -56,6 +56,14 @@ const sources = [
 		],
 		getNetworkRef: () => "BREIZHGO",
 		mapLineRef: (lineRef) => `BZHNS-${lineRef}`,
+		mapTripUpdate: (tripUpdate) => {
+			delete tripUpdate.trip.tripId;
+			return tripUpdate;
+		},
+		mapVehiclePosition: (vehicle) => {
+			delete vehicle.trip?.tripId;
+			return vehicle;
+		},
 		isValidJourney: (journey) => journey.line?.ref.endsWith("BZHNS-LRR.143"),
 	},
 	{

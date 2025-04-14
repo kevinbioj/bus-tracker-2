@@ -69,6 +69,7 @@ export type TripDescriptor = {
 	routeId?: string;
 	directionId?: number;
 	startDate?: string;
+	startTime?: string;
 	scheduleRelationship?: TripScheduleRelationship;
 };
 

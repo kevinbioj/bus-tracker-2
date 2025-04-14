@@ -1,10 +1,10 @@
 import type { VehicleJourney } from "@bus-tracker/contracts";
 import { Temporal } from "temporal-polyfill";
-import { P, match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
-import type { TripDescriptor, TripUpdate } from "../model/gtfs-rt.js";
 import type { Gtfs } from "../model/gtfs.js";
+import type { TripDescriptor, TripUpdate } from "../model/gtfs-rt.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
 import type { Source } from "../model/source.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
@@ -78,6 +78,21 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor) => {
 
 	if (typeof tripDescriptor.routeId !== "undefined" && trip.route.id !== tripDescriptor.routeId) return;
 	if (typeof tripDescriptor.directionId !== "undefined" && trip.direction !== tripDescriptor.directionId) return;
+
+	if (typeof tripDescriptor.startDate !== "undefined" && typeof tripDescriptor.startTime !== "undefined") {
+		const matchingTrip = gtfs.trips.values().find((trip) => {
+			if (!trip.service.runsOn(Temporal.PlainDate.from(tripDescriptor.startDate!))) return false;
+
+			const firstStop = trip.stopTimes.at(0);
+			if (typeof firstStop === "undefined") return false;
+
+			const startTime = `${(firstStop.arrivalTime.hour + 24 * firstStop.arrivalModulus).toString().padStart(2, "0")}:${firstStop.arrivalTime.minute.toString().padStart(2, "0")}:${firstStop.arrivalTime.second.toString().padStart(2, "0")}`;
+			return startTime === tripDescriptor.startTime;
+		});
+
+		return matchingTrip;
+	}
+
 	return trip;
 };
 
