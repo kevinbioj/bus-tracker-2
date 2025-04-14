@@ -117,11 +117,11 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 			.select()
 			.from(vehicles)
 			.innerJoin(networks, eq(networks.id, vehicles.networkId))
-			.innerJoin(operators, eq(operators.id, vehicles.operatorId))
+			.leftJoin(operators, eq(operators.id, vehicles.operatorId))
 			.where(eq(vehicles.id, id));
 		if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
-		const { vehicle, network } = data;
+		const { vehicle, network, operator } = data;
 
 		const currentActivity = (
 			await database
@@ -150,7 +150,7 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 
 		return c.json({
 			...vehicle,
-			operator: data.operator,
+			operator,
 			activity: {
 				status: currentActivity ? "online" : "offline",
 				since:
