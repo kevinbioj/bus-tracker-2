@@ -8,7 +8,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-urbain"],
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
-			Temporal.Now.instant().since(Temporal.Instant.fromEpochSeconds(vehicle.timestamp)).total("minutes") < 60
+			Temporal.Now.instant().since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000)).total("minutes") < 60
 				? vehicle
 				: undefined,
 		getNetworkRef: () => "TEMPOBUS",
@@ -20,7 +20,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-scolaire"],
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
-			Temporal.Now.instant().since(Temporal.Instant.fromEpochSeconds(vehicle.timestamp)).total("minutes") < 60
+			Temporal.Now.instant().since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000)).total("minutes") < 60
 				? vehicle
 				: undefined,
 		getNetworkRef: () => "TEMPOBUS",
