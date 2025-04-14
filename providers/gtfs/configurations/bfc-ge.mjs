@@ -82,6 +82,7 @@ const sources = [
 		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-4k4N/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-4k4N/gtfs-rt"],
 		excludeScheduled: true,
+		mode: "NO-TU",
 		getNetworkRef: () => "GRM",
 		getVehicleRef: (vehicle) => {
 			if (vehicle?.label === "newVehicle") return;
