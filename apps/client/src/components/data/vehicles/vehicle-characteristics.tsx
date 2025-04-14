@@ -28,7 +28,9 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 					</div>
 					{vehicle.designation !== null && <div>{vehicle.designation}</div>}
 					{vehicle.operator !== null && (
-						<div className="text-sm text-muted-foreground text-end">{vehicle.operator.name}</div>
+						<div className="mt-0.5 text-xs text-muted-foreground">
+							Opéré par <span className="font-bold">{vehicle.operator.name}</span>
+						</div>
 					)}
 				</div>
 				{vehicle.tcId ? (
