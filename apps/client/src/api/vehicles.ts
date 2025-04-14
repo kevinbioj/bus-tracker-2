@@ -2,11 +2,12 @@ import type { VehicleJourneyLineType } from "@bus-tracker/contracts";
 import { queryOptions } from "@tanstack/react-query";
 
 import { client } from "~/api/client";
+import { Operator } from "~/api/networks";
 
 export type Vehicle = {
 	id: number;
 	networkId: number;
-	operatorId: number | null;
+	operator: Operator | null;
 	ref: string;
 	number: string;
 	type: VehicleJourneyLineType;

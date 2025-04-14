@@ -4,7 +4,7 @@ import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
 import { database } from "../database/database.js";
-import { lineActivities, networks, vehicles } from "../database/schema.js";
+import { lineActivities, networks, operators, vehicles } from "../database/schema.js";
 import { paginationSchema } from "../helpers/pagination-schema.js";
 import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
 import type { JourneyStore } from "../store/journey-store.js";
@@ -117,6 +117,7 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 			.select()
 			.from(vehicles)
 			.innerJoin(networks, eq(networks.id, vehicles.networkId))
+			.innerJoin(operators, eq(operators.id, vehicles.operatorId))
 			.where(eq(vehicles.id, id));
 		if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
@@ -149,6 +150,7 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 
 		return c.json({
 			...vehicle,
+			operator: data.operator,
 			activity: {
 				status: currentActivity ? "online" : "offline",
 				since:

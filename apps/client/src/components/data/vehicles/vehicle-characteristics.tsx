@@ -27,6 +27,9 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 						{vehicleIcon} Véhicule n°{vehicle.number}
 					</div>
 					{vehicle.designation !== null && <div>{vehicle.designation}</div>}
+					{vehicle.operator !== null && (
+						<div className="text-sm text-muted-foreground text-end">{vehicle.operator.name}</div>
+					)}
 				</div>
 				{vehicle.tcId ? (
 					<Button asChild className="" size="icon">
