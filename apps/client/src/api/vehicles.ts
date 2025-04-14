@@ -7,6 +7,7 @@ import { Operator } from "~/api/networks";
 export type Vehicle = {
 	id: number;
 	networkId: number;
+	operatorId: number | null;
 	operator: Operator | null;
 	ref: string;
 	number: string;
