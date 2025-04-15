@@ -1,6 +1,7 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { useLocalStorage } from "usehooks-ts";
 
+import { GirouetteData } from "~/components/interactive-map/vehicles/girouette";
 import type { MapBounds } from "~/hooks/use-map-bounds";
 
 import { client } from "./client";
@@ -38,6 +39,7 @@ export type DisposeableVehicleJourney = {
 	operator?: number;
 	vehicle?: { id?: number; number: string };
 	serviceDate?: string;
+	girouette?: GirouetteData;
 	updatedAt: string;
 };
 

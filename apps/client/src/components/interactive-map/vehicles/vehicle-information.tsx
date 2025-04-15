@@ -68,7 +68,7 @@ type VehicleInformationProps = {
 export function VehicleInformation({ journey }: Readonly<VehicleInformationProps>) {
 	const [displayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
 
-	const { data: network } = useQuery(GetNetworkQuery(journey.networkId));
+	const { data: network } = useQuery(GetNetworkQuery(journey.networkId, !journey.girouette));
 
 	const recordedAt = useDebouncedMemo(
 		() => {

@@ -4,6 +4,7 @@ import * as z from "zod";
 
 import { fetchLines } from "../cache/line-cache.js";
 import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
+import { findGirouette } from "../services/girouette-service.js";
 import type { JourneyStore } from "../store/journey-store.js";
 
 export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) => {
@@ -74,6 +75,16 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 			return c.json({ error: `No journey was found with id "${id}".` });
 		}
 
-		return c.json(journey);
+		const girouette = await findGirouette({
+			networkId: journey.networkId,
+			lineId: journey.lineId,
+			directionId: journey.direction === "OUTBOUND" ? 0 : 1,
+			destination: journey.destination,
+		});
+
+		return c.json({
+			...journey,
+			girouette: girouette?.data,
+		});
 	});
 };

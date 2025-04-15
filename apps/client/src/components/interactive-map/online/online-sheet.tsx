@@ -16,7 +16,7 @@ export function OnlineSheet() {
 	const [networkId, setNetworkId] = useState<number>();
 	const [lineId, setLineId] = useState<number>();
 
-	const { data: network } = useQuery(GetNetworkQuery(networkId));
+	const { data: network } = useQuery(GetNetworkQuery(networkId, true));
 
 	const back = () => {
 		if (typeof lineId !== "undefined") {

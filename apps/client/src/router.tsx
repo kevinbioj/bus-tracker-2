@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { Outlet, createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Outlet } from "react-router-dom";
 
 import { GetNetworkQuery, GetNetworksQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
@@ -43,7 +43,7 @@ export const router = (queryClient: QueryClient) =>
 					element: <NetworkDetails />,
 					loader: async ({ params }) => {
 						const { networkId } = params;
-						await queryClient.ensureQueryData(GetNetworkQuery(+networkId!));
+						await queryClient.ensureQueryData(GetNetworkQuery(+networkId!, true));
 					},
 				},
 				{

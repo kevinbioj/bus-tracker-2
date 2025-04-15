@@ -57,21 +57,27 @@ export const GetNetworksQuery = queryOptions({
 			.sort((a, b) => a.name.localeCompare(b.name)),
 });
 
-export const GetNetworkQuery = (networkId?: number) =>
+export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetails?: T) =>
 	queryOptions({
 		enabled: typeof networkId !== "undefined",
-		queryKey: ["networks", networkId],
-		queryFn: () => client.get(`networks/${networkId}`).then((response) => response.json<NetworkWithDetails>()),
+		queryKey: ["networks", networkId, withDetails ?? false],
+		queryFn: () =>
+			client
+				.get(`networks/${networkId}?withDetails=${withDetails ?? false}`)
+				.then((response) => response.json<T extends true ? NetworkWithDetails : Network>()),
 		staleTime: 300_000,
-		select: ({ lines, ...network }) => ({
+		select: (network) => ({
 			...network,
 			color: network.color ? `#${network.color}` : null,
 			textColor: network.textColor ? `#${network.textColor}` : null,
-			lines: lines.map((line) => ({
-				...line,
-				color: line.color ? `#${line.color}` : null,
-				textColor: line.textColor ? `#${line.textColor}` : null,
-			})),
+			lines:
+				"lines" in network
+					? network.lines.map((line) => ({
+							...line,
+							color: line.color ? `#${line.color}` : null,
+							textColor: line.textColor ? `#${line.textColor}` : null,
+						}))
+					: undefined,
 		}),
 	});
 

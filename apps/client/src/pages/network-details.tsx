@@ -20,7 +20,7 @@ export function NetworkDetails() {
 		throw new Error("Expected networkId to be provided!");
 	}
 
-	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId));
+	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 
 	return (
 		<>

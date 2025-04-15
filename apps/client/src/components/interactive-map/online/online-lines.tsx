@@ -10,7 +10,7 @@ type OnlineLinesProps = {
 };
 
 export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps>) {
-	const { data: network } = useQuery(GetNetworkQuery(networkId));
+	const { data: network } = useQuery(GetNetworkQuery(networkId, true));
 	if (!network) return null;
 
 	return (

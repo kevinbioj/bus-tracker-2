@@ -23,7 +23,7 @@ const filterableVehicleTypes = {
 type NetworkVehiclesProps = { networkId: number };
 
 export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
-	const { data: network } = useSuspenseQuery(GetNetworkQuery(networkId));
+	const { data: network } = useSuspenseQuery(GetNetworkQuery(networkId, true));
 	const { data: vehicles } = useSuspenseQuery(GetVehiclesQuery(networkId));
 
 	const availableNetworkTypeFilters = useMemo(() => {
