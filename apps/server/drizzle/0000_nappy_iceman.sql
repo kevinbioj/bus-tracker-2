@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS "girouette" (
 	"network_id" integer NOT NULL,
 	"line_id" integer,
 	"direction_id" smallint,
-	"destinations" varchar[],
+	"destinations" varchar2(255)[],
 	"data" json NOT NULL,
 	"enabled" boolean DEFAULT true NOT NULL
 );
@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS "line_activity" (
 CREATE TABLE IF NOT EXISTS "line" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"network_id" integer NOT NULL,
-	"ref" varchar[],
-	"number" varchar NOT NULL,
-	"cartridge_href" varchar,
+	"ref" varchar2(255)[],
+	"number" varchar2(255) NOT NULL,
+	"cartridge_href" varchar2(255),
 	"color" char(6),
 	"text_color" char(6),
 	"archived_at" timestamp
@@ -39,10 +39,10 @@ CREATE TABLE IF NOT EXISTS "mercato_activity" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "network" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"ref" varchar NOT NULL,
-	"name" varchar NOT NULL,
-	"authority" varchar,
-	"logo_href" varchar,
+	"ref" varchar2(255) NOT NULL,
+	"name" varchar2(255) NOT NULL,
+	"authority" varchar2(255),
+	"logo_href" varchar2(255),
 	"color" char(6),
 	"text_color" char(6),
 	CONSTRAINT "network_ref_unique" UNIQUE("ref")
@@ -51,9 +51,9 @@ CREATE TABLE IF NOT EXISTS "network" (
 CREATE TABLE IF NOT EXISTS "operator" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"network_id" integer NOT NULL,
-	"ref" varchar NOT NULL,
-	"name" varchar NOT NULL,
-	"logo_href" varchar,
+	"ref" varchar2(255) NOT NULL,
+	"name" varchar2(255) NOT NULL,
+	"logo_href" varchar2(255),
 	CONSTRAINT "operator_ref_unique" UNIQUE("ref")
 );
 --> statement-breakpoint
@@ -61,9 +61,9 @@ CREATE TABLE IF NOT EXISTS "vehicle" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"network_id" integer NOT NULL,
 	"operator_id" integer,
-	"ref" varchar NOT NULL,
-	"number" varchar NOT NULL,
-	"designation" varchar,
+	"ref" varchar2(255) NOT NULL,
+	"number" varchar2(255) NOT NULL,
+	"designation" varchar2(255),
 	"tc_id" integer,
 	"last_seen_at" timestamp (0),
 	"archived_at" timestamp (0)
