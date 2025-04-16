@@ -17,8 +17,7 @@ export async function getLines() {
 	const response = await fetch(`${linesEndpoint}?${params.toString()}`);
 	if (!response.ok) throw new Error(`Failed to fetch lines from API (HTTP ${response.status})`);
 
-	const lines = ((await response.json()) as { data: Line[] }).data as Line[];
-	return lines;
+	return ((await response.json()) as { data: Line[] }).data;
 }
 
 export type Vehicle = {

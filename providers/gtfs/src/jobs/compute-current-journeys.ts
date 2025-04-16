@@ -136,7 +136,6 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
 
 				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
-				// if (now.since(updatedAt).total("minutes") >= 10) continue;
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip);
 				if (typeof trip === "undefined") continue;
