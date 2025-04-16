@@ -82,7 +82,10 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 							</h3>
 							<div className="flex flex-col gap-2 w-full">
 								{activities.map((activity) => (
-									<ActivityCard activity={activity} key={activity.startedAt} />
+									<ActivityCard
+										activity={activity}
+										key={`${activity.lineId}_${activity.startedAt}_${activity.updatedAt}`}
+									/>
 								))}
 							</div>
 						</div>
