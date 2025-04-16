@@ -79,7 +79,7 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 			networkId: journey.networkId,
 			lineId: journey.lineId,
 			directionId: journey.direction === "OUTBOUND" ? 0 : 1,
-			destination: journey.destination,
+			destination: journey.destination ?? journey.calls?.findLast((call) => call.callStatus !== "SKIPPED")?.stopName,
 		});
 
 		return c.json({
