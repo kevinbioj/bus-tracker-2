@@ -18,7 +18,7 @@ export const registerGirouetteRoutes = (hono: Hono) => {
 	hono.get("/girouettes", createQueryValidator(getGirouettesQuery), async (c) => {
 		const { networkId, lineId, directionId, destination } = c.req.valid("query");
 
-		const girouette = findGirouette({ networkId, lineId, directionId, destination });
+		const girouette = await findGirouette({ networkId, lineId, directionId, destination });
 		return c.json(girouette ? [girouette] : []);
 	});
 };
