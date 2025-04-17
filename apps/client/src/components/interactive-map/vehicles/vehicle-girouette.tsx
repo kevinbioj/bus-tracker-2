@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Girouette } from "~/components/interactive-map/vehicles/girouette";
@@ -35,8 +35,9 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 							? {
 									backgroundColor: line.color ?? undefined,
 									textColor: line.textColor ?? undefined,
-									outlineColor: match(line.textColor)
-										.with("#FFFFFF", () => "#000000")
+									outlineColor: match([line.textColor, line.color])
+										.with(["#FFFFFF", P.string], () => "#000000")
+										.with([null, null], () => undefined)
 										.otherwise(() => "#FFFFFF"),
 									font: line.number.length <= 3 ? "1508SUPX" : "1407SUPX",
 									scroll: line.number.length >= "KKKKK".length,
