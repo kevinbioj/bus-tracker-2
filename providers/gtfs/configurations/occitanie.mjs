@@ -56,12 +56,18 @@ const sources = [
 		getDestination: (journey) => journey?.calls.at(-1)?.stop.name,
 		getVehicleRef: (vehicleDescriptor) => vehicleDescriptor?.label?.replaceAll(" ", ""),
 	},
-	// {
-	// 	id: "perpignan",
-	// 	staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/2afffa1f-aa4a-4fe4-9802-4b5f82bb96c6",
-	// 	realtimeResourceHrefs: [],
-	// 	getNetworkRef: () => "SANKEO",
-	// },
+	{
+		id: "perpignan",
+		staticResourceHref:
+			"https://eur.mecatran.com/utw/ws/gtfsfeed/static/perpignan?apiKey=612f606b5e3b0a3e6e1f441a2c4a050f6a345b55",
+		realtimeResourceHrefs: [
+			"https://eur.mecatran.com/utw/ws/gtfsfeed/vehicles/perpignan?apiKey=612f606b5e3b0a3e6e1f441a2c4a050f6a345b55",
+			"https://eur.mecatran.com/utw/ws/gtfsfeed/realtime/perpignan?apiKey=612f606b5e3b0a3e6e1f441a2c4a050f6a345b55",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "SANKEO",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
 	{
 		id: "sete",
 		staticResourceHref: "https://sete.ceccli.com/gtfs/gtfs.zip",
