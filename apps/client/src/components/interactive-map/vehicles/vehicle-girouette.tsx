@@ -36,9 +36,8 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 									backgroundColor: line.color ?? undefined,
 									textColor: line.textColor ?? undefined,
 									outlineColor: match(line.textColor)
-										.with("#000000", () => "#FFFFFF")
 										.with("#FFFFFF", () => "#000000")
-										.otherwise(() => undefined),
+										.otherwise(() => "#FFFFFF"),
 									font: line.number.length <= 3 ? "1508SUPX" : "1407SUPX",
 									scroll: line.number.length >= "KKKKK".length,
 									spacing: line.number.length >= 4 ? 0 : 1,
