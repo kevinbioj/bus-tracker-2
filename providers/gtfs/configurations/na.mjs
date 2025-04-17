@@ -8,7 +8,9 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-urbain"],
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
-			Temporal.Now.instant().since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000)).total("minutes") < 60
+			Temporal.Now.instant()
+				.since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000))
+				.total("minutes") < 60
 				? vehicle
 				: undefined,
 		getNetworkRef: () => "TEMPOBUS",
@@ -20,11 +22,23 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-scolaire"],
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
-			Temporal.Now.instant().since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000)).total("minutes") < 60
+			Temporal.Now.instant()
+				.since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000))
+				.total("minutes") < 60
 				? vehicle
 				: undefined,
 		getNetworkRef: () => "TEMPOBUS",
 		getVehicleRef: () => undefined,
+	},
+	{
+		id: "basque-adour",
+		staticResourceHref:
+			"https://app.mecatran.com/utw/ws/gtfsfeed/static/txiktxak?apiKey=0f64273f070b7d4621002040646e180d374e5373",
+		realtimeResourceHrefs: [
+			"https://app.mecatran.com/utw/ws/gtfsfeed/realtime/txiktxak?apiKey=0f64273f070b7d4621002040646e180d374e5373",
+		],
+		getNetworkRef: () => "TXIKTXAK",
+		getAheadTime: () => 120,
 	},
 	{
 		id: "na-33",
