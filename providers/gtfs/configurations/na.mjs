@@ -38,6 +38,7 @@ const sources = [
 			"https://app.mecatran.com/utw/ws/gtfsfeed/realtime/txiktxak?apiKey=0f64273f070b7d4621002040646e180d374e5373",
 		],
 		getNetworkRef: () => "TXIKTXAK",
+		getVehicleRef: () => undefined,
 		getAheadTime: () => 120,
 	},
 	{
