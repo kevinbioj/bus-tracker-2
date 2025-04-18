@@ -108,6 +108,10 @@ export class Journey {
 		let departureDelay: number | undefined;
 
 		for (const call of this.calls) {
+			call.expectedArrivalTime = undefined;
+			call.expectedDepartureTime = undefined;
+			call.status = "SCHEDULED";
+
 			const timeUpdate = stopTimeUpdates?.find((stu) =>
 				stu.stopSequence ? stu.stopSequence === call.sequence : stu.stopId === call.stop.id,
 			);
@@ -117,9 +121,6 @@ export class Journey {
 			if (timeUpdate?.scheduleRelationship === "NO_DATA") {
 				arrivalDelay = undefined;
 				departureDelay = undefined;
-				call.expectedArrivalTime = undefined;
-				call.expectedDepartureTime = undefined;
-				call.status = "SCHEDULED";
 				continue;
 			}
 
