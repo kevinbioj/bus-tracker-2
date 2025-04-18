@@ -108,6 +108,7 @@ const sources = [
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rdla-lorient/exports/medias.zip",
 		realtimeResourceHrefs: ["https://feed-rdla-lorient.ratpdev.com/GTFS-RT"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "IZILO",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
