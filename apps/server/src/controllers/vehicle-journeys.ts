@@ -1,8 +1,11 @@
+import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
 import { fetchLines } from "../cache/line-cache.js";
+import { database } from "../database/database.js";
+import { vehicles } from "../database/schema.js";
 import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
 import { findGirouette } from "../services/girouette-service.js";
 import type { JourneyStore } from "../store/journey-store.js";
@@ -75,6 +78,15 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 			return c.json({ error: `No journey was found with id "${id}".` });
 		}
 
+		const vehicle = journey.vehicle?.id
+			? (
+					await database
+						.select({ designation: vehicles.designation })
+						.from(vehicles)
+						.where(eq(vehicles.id, journey.vehicle.id))
+				).at(0)
+			: undefined;
+
 		const girouette = await findGirouette({
 			networkId: journey.networkId,
 			lineId: journey.lineId,
@@ -84,6 +96,7 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 
 		return c.json({
 			...journey,
+			vehicle: journey.vehicle ? { ...journey.vehicle, designation: vehicle?.designation ?? undefined } : undefined,
 			girouette: girouette?.data,
 		});
 	});

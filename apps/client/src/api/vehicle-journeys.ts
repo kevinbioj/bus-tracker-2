@@ -37,7 +37,7 @@ export type DisposeableVehicleJourney = {
 	occupancy?: "LOW" | "MEDIUM" | "HIGH" | "NO_PASSENGERS";
 	networkId: number;
 	operator?: number;
-	vehicle?: { id?: number; number: string };
+	vehicle?: { id?: number; number: string; designation?: string };
 	serviceDate?: string;
 	girouette?: GirouetteData;
 	updatedAt: string;

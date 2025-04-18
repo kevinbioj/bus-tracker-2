@@ -10,6 +10,7 @@ import { GetNetworkQuery } from "~/api/networks";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Button } from "~/components/ui/button";
 import { CustomTooltip } from "~/components/ui/custom-tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 import { HighCrowdIcon } from "~/icons/crowd/high";
 import { LowCrowdIcon } from "~/icons/crowd/low";
@@ -127,7 +128,21 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 				networkIdentifier
 			)}
 			<span className="my-auto text-center">
-				{vehicleNumber ? <>{vehicleLink}– </> : null}
+				{vehicleNumber ? (
+					<>
+						{journey.vehicle?.designation ? (
+							<Tooltip>
+								<TooltipTrigger asChild>{vehicleLink}</TooltipTrigger>
+								<TooltipContent className="shadow-xl" side="top" sideOffset={2}>
+									{journey.vehicle.designation}
+								</TooltipContent>
+							</Tooltip>
+						) : (
+							vehicleLink
+						)}
+						–{" "}
+					</>
+				) : null}
 				{recordedAt}
 			</span>
 			<div className="flex items-center justify-end gap-2">
