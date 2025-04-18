@@ -1,3 +1,5 @@
+import { Temporal } from "temporal-polyfill";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -27,6 +29,29 @@ const sources = [
 		},
 		getVehicleRef: (vehicle) => vehicle?.id,
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
+		isValidJourney: (vehicleJourney) => {
+			// Étant donné que les données sont parfois partielles, on prend le premier arrêt avec du temps réel
+			// et on propage son avance-retard à l'envers... étant donné que c'est calculé de façon bête et
+			// méchante ça passe plutôt bien.
+			if (vehicleJourney.calls?.length && !vehicleJourney.calls.at(0).expectedTime) {
+				const firstMonitoredCallIndex = vehicleJourney.calls.findIndex((call) => call.expectedTime);
+				if (firstMonitoredCallIndex >= 0) {
+					const firstMonitoredCall = vehicleJourney.calls.at(firstMonitoredCallIndex);
+					const delay = Temporal.Instant.from(firstMonitoredCall.expectedTime)
+						.since(firstMonitoredCall.aimedTime)
+						.total("seconds");
+					for (let i = firstMonitoredCallIndex - 1; i >= 0; i -= 1) {
+						const call = vehicleJourney.calls.at(i);
+						call.expectedTime = Temporal.Instant.from(call.aimedTime)
+							.add({ seconds: delay })
+							.toZonedDateTimeISO("Europe/Paris")
+							.toString({ timeZoneName: "never" });
+					}
+				}
+			}
+
+			return true;
+		},
 	},
 	{
 		id: "tae",
