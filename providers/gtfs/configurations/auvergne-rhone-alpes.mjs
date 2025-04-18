@@ -71,6 +71,16 @@ const sources = [
 		getAheadTime: () => 60,
 	},
 	{
+		id: "tcl-rhone-express",
+		staticResourceHref:
+			"https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=SYTRAL_RHONE_EXPRESS&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.oura3.cityway.fr/dataflow/horaire-tr/download?provider=SYTRAL_RHONE_EXPRESS&dataFormat=GTFS-RT",
+		],
+		getNetworkRef: () => "TCL",
+		getAheadTime: () => 120,
+	},
+	{
 		id: "villefranche-s-saone",
 		staticResourceHref:
 			"https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_libellule.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
