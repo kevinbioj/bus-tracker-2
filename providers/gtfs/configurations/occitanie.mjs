@@ -32,9 +32,7 @@ const sources = [
 	},
 	{
 		id: "montpellier",
-		// 10 mars : switch sur une ancienne ressource car les nouvelles sont KO
-		staticResourceHref:
-			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/81754/81754.20250225.001117.685762.zip",
+		staticResourceHref: "https://data.montpellier3m.fr/sites/default/files/ressources/TAM_MMM_GTFS.zip",
 		realtimeResourceHrefs: [
 			"https://data.montpellier3m.fr/TAM_MMM_GTFSRT/TripUpdate.pb",
 			"https://data.montpellier3m.fr/TAM_MMM_GTFSRT/VehiclePosition.pb",
