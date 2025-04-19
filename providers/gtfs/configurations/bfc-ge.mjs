@@ -114,6 +114,16 @@ const sources = [
 		excludeScheduled: true,
 		getNetworkRef: () => "TCAT",
 	},
+	{
+		id: "vesoul",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/0d6e6c56-8926-49b3-87e2-13c6f57c136b",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/moova-vesoul-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/moova-vesoul-gtfs-rt-vehicle-position",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "MOOVA",
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
