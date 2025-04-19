@@ -34,6 +34,16 @@ const sources = [
 			journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name ?? journey?.trip.headsign,
 	},
 	{
+		id: "dole",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/a8c743ee-e2d4-408c-ac4b-6434b6eaadf9",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/tgd-dole-gtfs-rt-vehicle-position",
+			"https://proxy.transport.data.gouv.fr/resource/tgd-dole-gtfs-rt-trip-update",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "GRANDOLE",
+	},
+	{
 		id: "thionville",
 		staticResourceHref: "https://pysae.com/api/v2/groups/smitu/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/smitu/gtfs-rt"],
