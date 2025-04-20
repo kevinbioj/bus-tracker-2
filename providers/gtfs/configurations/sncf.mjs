@@ -14,7 +14,7 @@ const sources = [
 	{
 		id: "sncf-ter",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-ter.zip",
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-all-gtfs-rt-trip-updates"],
+		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ter-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		gtfsOptions: {
 			filterTrips: (trip) => trip.route.type !== "BUS",
@@ -36,7 +36,7 @@ const sources = [
 	{
 		id: "sncf-intercites",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-intercites.zip",
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-all-gtfs-rt-trip-updates"],
+		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ic-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		gtfsOptions: {
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
@@ -57,7 +57,7 @@ const sources = [
 	{
 		id: "sncf-tgv",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-tgv.zip",
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-all-gtfs-rt-trip-updates"],
+		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-tgv-gtfs-rt-trip-updates"],
 		excludeScheduled: true,
 		gtfsOptions: {
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
