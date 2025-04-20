@@ -32,13 +32,12 @@ const sources = [
 	},
 	{
 		id: "montpellier",
-		staticResourceHref: "https://data.montpellier3m.fr/sites/default/files/ressources/TAM_MMM_GTFS.zip",
+		staticResourceHref: "https://data.montpellier3m.fr/TAM_MMM_GTFSRT/GTFS.zip",
 		realtimeResourceHrefs: [
 			"https://data.montpellier3m.fr/TAM_MMM_GTFSRT/TripUpdate.pb",
 			"https://data.montpellier3m.fr/TAM_MMM_GTFSRT/VehiclePosition.pb",
 		],
 		mode: "NO-TU",
-		excludeScheduled: true,
 		getNetworkRef: () => "TAM",
 		mapLineRef: (lineRef) => lineRef.split("-")[1],
 	},
