@@ -24,6 +24,17 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
+		id: "arles",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/52216d2f-072e-4b7d-af0c-15d8d4e98b09",
+		realtimeResourceHrefs: [
+			"https://accm.2cloud.app/api/gtfsrt/2.0/tripupdates/LUMIPLAN-2021-4815-1108/bin",
+			"https://accm.2cloud.app/api/gtfsrt/2.0/vehiclepositions/LUMIPLAN-2021-4815-1108/bin",
+		],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "ENVIA",
+	},
+	{
 		id: "lio",
 		staticResourceHref:
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/lio?apiKey=2b160d626f783808095373766f18714901325e45&type=gtfs_lio",
