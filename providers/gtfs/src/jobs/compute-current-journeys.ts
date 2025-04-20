@@ -80,11 +80,15 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor) => {
 		return trip;
 	}
 
-	if (typeof tripDescriptor.startDate !== "undefined" && typeof tripDescriptor.startTime !== "undefined") {
+	if (
+		typeof tripDescriptor.routeId !== "undefined" &&
+		typeof tripDescriptor.directionId !== "number" &&
+		typeof tripDescriptor.startDate !== "undefined" &&
+		typeof tripDescriptor.startTime !== "undefined"
+	) {
 		const matchingTrip = gtfs.trips.values().find((trip) => {
-			if (typeof tripDescriptor.routeId !== "undefined" && trip.route.id !== tripDescriptor.routeId) return false;
-			if (typeof tripDescriptor.directionId !== "undefined" && trip.direction !== tripDescriptor.directionId)
-				return false;
+			if (trip.route.id !== tripDescriptor.routeId) return false;
+			if (trip.direction !== tripDescriptor.directionId) return false;
 			if (!trip.service.runsOn(Temporal.PlainDate.from(tripDescriptor.startDate!))) return false;
 
 			const firstStop = trip.stopTimes.at(0);
