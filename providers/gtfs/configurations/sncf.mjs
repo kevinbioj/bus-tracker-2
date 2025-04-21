@@ -32,7 +32,6 @@ const sources = [
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 3) + 1, lineRef.lastIndexOf(":")),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
-		mapTripRef: (tripRef) => tripRef.slice(0, tripRef.indexOf(":")),
 	},
 	{
 		id: "sncf-intercites",
@@ -54,7 +53,6 @@ const sources = [
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 3) + 1, lineRef.lastIndexOf(":")),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
-		mapTripRef: (tripRef) => tripRef.slice(0, tripRef.indexOf(":")),
 	},
 	{
 		id: "sncf-tgv",
@@ -76,7 +74,6 @@ const sources = [
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 3) + 1, lineRef.lastIndexOf(":")),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
-		mapTripRef: (tripRef) => tripRef.slice(0, tripRef.indexOf(":")),
 	},
 ];
 
