@@ -45,7 +45,8 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/vehicle-positions",
 		],
 		mode: "NO-TU",
-		excludeScheduled: (trip) => !["12", "13", "21"].includes(trip.route.id),
+		getAheadTime: () => 60,
+		excludeScheduled: (trip) => !["12", "13", "21", "Funi"].includes(trip.route.id),
 		getNetworkRef: () => "LIA",
 	},
 	//- Cap Cotentin
