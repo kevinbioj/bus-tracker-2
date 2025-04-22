@@ -74,7 +74,7 @@ while (true) {
 		return {
 			id: `DKBUS::VehicleTracking:${vehicle.numero}`,
 			line:
-				vehicle.ligne !== 0 && vehicle.course !== 0
+				vehicle.ligne !== 0 && vehicle.course !== 0 && vehicle.destination !== "DEPOT AUTOBUS"
 					? {
 							ref: `DKBUS:Line:${vehicle.ligne}`,
 							number: String(vehicle.ligne),
