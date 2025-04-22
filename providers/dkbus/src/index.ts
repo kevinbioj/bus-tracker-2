@@ -6,6 +6,7 @@ import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
 
 import { WS_ENDPOINT } from "./constants.js";
+import { fetchSiriData } from "./siri.js";
 import type { APIResponse } from "./types.js";
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
@@ -20,6 +21,11 @@ const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
+
+let siriData = await fetchSiriData();
+setInterval(async () => {
+	siriData = await fetchSiriData();
+}, 30_000);
 
 const parser = new XMLParser();
 
@@ -49,10 +55,28 @@ while (true) {
 
 		if (now.since(recordedAt).total("minutes") > 10) return [];
 
+		let journeyData = siriData.get(vehicle.course);
+		if (typeof journeyData !== "undefined" && now.toInstant().since(journeyData.recordedAt).total("minutes") > 5) {
+			journeyData = undefined;
+		}
+
+		const calls =
+			typeof journeyData !== "undefined"
+				? Array.isArray(journeyData.journey.EstimatedCalls.EstimatedCall)
+					? journeyData.journey.EstimatedCalls.EstimatedCall
+					: [journeyData.journey.EstimatedCalls.EstimatedCall]
+				: undefined;
+
+		const monitoredCallIndex =
+			calls?.findLastIndex(
+				(call) => call.VehicleAtStop || Temporal.Instant.compare(now.toInstant(), call.ExpectedArrivalTime) >= 0,
+			) ?? -1;
+		const monitoredCall = monitoredCallIndex > -1 ? calls![monitoredCallIndex] : undefined;
+
 		return {
 			id: `DKBUS::VehicleTracking:${vehicle.numero}`,
 			line:
-				vehicle.ligne !== 0
+				vehicle.ligne !== 0 && vehicle.course !== 0
 					? {
 							ref: `DKBUS:Line:${vehicle.ligne}`,
 							number: String(vehicle.ligne),
@@ -63,20 +87,22 @@ while (true) {
 			position: {
 				latitude: +vehicle.lat,
 				longitude: +vehicle.lng,
-				atStop: false,
+				atStop: monitoredCall?.VehicleAtStop ?? false,
 				type: "GPS",
 				recordedAt: recordedAt.toString({ timeZoneName: "never" }),
 			},
+			calls: calls?.slice(monitoredCallIndex + (monitoredCall?.VehicleAtStop ? 0 : 1)).map((call) => ({
+				aimedTime: call.AimedArrivalTime,
+				expectedTime: call.ExpectedArrivalTime,
+				stopOrder: call.Order % 100,
+				callStatus: "SCHEDULED",
+				stopName: call.StopPointName,
+				stopRef: call.StopPointRef,
+			})),
 			networkRef: "DKBUS",
 			vehicleRef: `DKBUS::Vehicle:${vehicle.numero}`,
 			updatedAt: recordedAt.toInstant().toString(),
 		} satisfies VehicleJourney;
-	});
-
-	vehicleJourneys.forEach((data) => {
-		if (data.line?.number === "20") {
-			console.log(data);
-		}
 	});
 
 	updateLog("%s ► 3/3 – Published %d vehicle journeys.", Temporal.Now.instant(), vehicles.length);
