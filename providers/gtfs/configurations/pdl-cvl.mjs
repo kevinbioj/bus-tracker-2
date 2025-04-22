@@ -150,6 +150,17 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.lastIndexOf(":") + 1),
 		mapTripRef: (tripRef) => tripRef.slice(tripRef.indexOf(":") + 1),
 	},
+	{
+		id: "vierzon",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/87091347-c7fa-4e63-8fb5-005891ece43b",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/le-vib-vierzon-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/le-vib-vierzon-gtfs-rt-vehicle-position",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "LEVIB",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
