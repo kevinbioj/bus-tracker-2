@@ -1,0 +1,81 @@
+import { setTimeout } from "node:timers/promises";
+import type { VehicleJourney } from "@bus-tracker/contracts";
+import DraftLog from "draftlog";
+import { XMLParser } from "fast-xml-parser";
+import { createClient } from "redis";
+import { Temporal } from "temporal-polyfill";
+
+import { WS_ENDPOINT } from "./constants.js";
+import type { APIResponse } from "./types.js";
+
+DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
+
+console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
+const redis = createClient({
+	url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
+	username: process.env.REDIS_USERNAME,
+	password: process.env.REDIS_PASSWORD,
+});
+const channel = process.env.REDIS_CHANNEL ?? "journeys";
+await redis.connect();
+console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
+console.log();
+
+const parser = new XMLParser();
+
+while (true) {
+	const updateLog = console.draft("%s ► 1/3 – Downloading latest data from provider...", Temporal.Now.instant());
+
+	const response = await fetch(WS_ENDPOINT);
+	const rawData = await response.text();
+	const payload = parser.parse(rawData) as APIResponse;
+
+	const now = Temporal.Now.zonedDateTimeISO();
+
+	const vehicles =
+		typeof payload.liste?.vehicule !== "undefined"
+			? Array.isArray(payload.liste.vehicule)
+				? payload.liste.vehicule
+				: [payload.liste.vehicule]
+			: [];
+
+	updateLog("%s ► 2/3 – Processing %d vehicles from provider...", Temporal.Now.instant(), vehicles.length);
+
+	const vehicleJourneys = vehicles.flatMap((vehicle) => {
+		if (typeof vehicle.jour === "undefined") return [];
+
+		const [date, time] = vehicle.jour.split(" ");
+		const recordedAt = Temporal.PlainDateTime.from(`${date}T${time}`).toZonedDateTime("Europe/Paris");
+
+		if (now.since(recordedAt).total("minutes") > 10) return [];
+
+		return {
+			id: `DKBUS::VehicleTracking:${vehicle.numero}`,
+			line:
+				vehicle.ligne !== 0
+					? {
+							ref: `DKBUS:Line:${vehicle.ligne}`,
+							number: String(vehicle.ligne),
+							type: "BUS",
+							color: vehicle.couleur !== 0 ? vehicle.couleur : "FFFFFF",
+							textColor: "000000",
+						}
+					: undefined,
+			destination: vehicle.destination !== 0 ? vehicle.destination : undefined,
+			position: {
+				latitude: +vehicle.lat,
+				longitude: +vehicle.lng,
+				atStop: false,
+				type: "GPS",
+				recordedAt: recordedAt.toString({ timeZoneName: "never" }),
+			},
+			networkRef: "DKBUS",
+			vehicleRef: `DKBUS::Vehicle:${vehicle.numero}`,
+			updatedAt: recordedAt.toInstant().toString(),
+		} satisfies VehicleJourney;
+	});
+
+	updateLog("%s ► 3/3 – Published %d vehicle journeys.", Temporal.Now.instant(), vehicles.length);
+	await redis.publish("journeys", JSON.stringify(vehicleJourneys));
+	await setTimeout(30_000);
+}

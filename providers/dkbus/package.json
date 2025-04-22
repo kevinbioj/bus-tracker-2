@@ -1,0 +1,25 @@
+{
+	"name": "@bus-tracker/processor-dkbus",
+	"main": "dist/index.js",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsx watch src/index.ts",
+		"start": "node --enable-source-maps --expose-gc .",
+		"test": "vitest --run .",
+		"test:watch": "vitest ."
+	},
+	"devDependencies": {
+		"@bus-tracker/contracts": "workspace:*",
+		"@types/node": "^22.14.1",
+		"tsx": "^4.19.3",
+		"typescript": "^5.8.3"
+	},
+	"dependencies": {
+		"draftlog": "^1.0.13",
+		"fast-xml-parser": "^5.2.0",
+		"redis": "^4.7.0",
+		"temporal-polyfill": "^0.3.0"
+	}
+}
