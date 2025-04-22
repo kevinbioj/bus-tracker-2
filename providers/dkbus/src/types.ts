@@ -22,6 +22,7 @@ export type SiriEstimatedCall = {
 	VehicleAtStop: boolean;
 	AimedArrivalTime: string;
 	ExpectedArrivalTime: string;
+	ArrivalStatus?: "arrived";
 };
 
 export type SiriVehicleJourney = {

@@ -68,9 +68,7 @@ while (true) {
 				: undefined;
 
 		const monitoredCallIndex =
-			calls?.findLastIndex(
-				(call) => call.VehicleAtStop || Temporal.Instant.compare(now.toInstant(), call.ExpectedArrivalTime) >= 0,
-			) ?? -1;
+			calls?.findLastIndex((call) => call.VehicleAtStop || call.ArrivalStatus === "arrived") ?? -1;
 		const monitoredCall = monitoredCallIndex > -1 ? calls![monitoredCallIndex] : undefined;
 
 		return {
