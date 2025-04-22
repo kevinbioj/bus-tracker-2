@@ -93,7 +93,9 @@ while (true) {
 			},
 			calls: calls?.slice(monitoredCallIndex + (monitoredCall?.VehicleAtStop ? 0 : 1)).map((call) => ({
 				aimedTime: call.AimedArrivalTime,
-				expectedTime: call.ExpectedArrivalTime,
+				expectedTime: Temporal.PlainDateTime.from(call.ExpectedArrivalTime.slice(0, -6))
+					.toZonedDateTime("Europe/Paris")
+					.toString({ timeZoneName: "never" }),
 				stopOrder: call.Order % 100,
 				callStatus: "SCHEDULED",
 				stopName: call.StopPointName,
