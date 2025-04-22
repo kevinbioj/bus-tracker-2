@@ -57,8 +57,6 @@ while (true) {
 							ref: `DKBUS:Line:${vehicle.ligne}`,
 							number: String(vehicle.ligne),
 							type: "BUS",
-							color: vehicle.couleur !== 0 ? vehicle.couleur : "FFFFFF",
-							textColor: "000000",
 						}
 					: undefined,
 			destination: vehicle.destination !== 0 ? vehicle.destination : undefined,
@@ -73,6 +71,12 @@ while (true) {
 			vehicleRef: `DKBUS::Vehicle:${vehicle.numero}`,
 			updatedAt: recordedAt.toInstant().toString(),
 		} satisfies VehicleJourney;
+	});
+
+	vehicleJourneys.forEach((data) => {
+		if (data.line?.number === "20") {
+			console.log(data);
+		}
 	});
 
 	updateLog("%s ► 3/3 – Published %d vehicle journeys.", Temporal.Now.instant(), vehicles.length);
