@@ -35,6 +35,14 @@ const sources = [
 		getNetworkRef: () => "ENVIA",
 	},
 	{
+		id: "castres",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=castreslignesurbaines",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=castreslignesurbaines"],
+		mode: "NO-TU",
+		getNetworkRef: () => "LIBELLUS",
+		getVehicleRef: () => undefined,
+	},
+	{
 		id: "lio",
 		staticResourceHref:
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/lio?apiKey=2b160d626f783808095373766f18714901325e45&type=gtfs_lio",
