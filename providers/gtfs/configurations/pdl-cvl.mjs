@@ -1,3 +1,14 @@
+function nthIndexOf(input, pattern, n) {
+	const length = input.length;
+	let i = -1;
+	let j = n;
+	while (j-- && i++ < length) {
+		i = input.indexOf(pattern, i);
+		if (i < 0) break;
+	}
+	return i;
+}
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -97,11 +108,76 @@ const sources = [
 			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/trip-updates/NAOLIBORG",
 			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
 		],
+		excludeScheduled: (trip) =>
+			[
+				"27",
+				"28",
+				"33",
+				"40",
+				"42",
+				"47",
+				"59",
+				"60",
+				"66",
+				"67",
+				"71",
+				"75",
+				"77",
+				"78",
+				"79",
+				"80",
+				"81",
+				"87",
+				"88",
+				"89",
+				"95",
+				"96",
+				"101",
+				"102",
+				"105",
+				"107",
+				"108",
+				"109",
+				"117",
+				"118",
+				"119",
+				"128",
+				"129",
+				"131",
+				"135",
+				"138",
+				"141",
+				"149",
+				"157",
+				"158",
+				"179",
+				"E1",
+				"E4",
+				"E5",
+				"E8",
+				"N1",
+				"N2",
+				"LCE",
+				"LCN",
+				"LCO",
+				"93",
+				"91",
+			].includes(trip.route.name),
 		getNetworkRef: () => "NAOLIB",
 		getVehicleRef: () => undefined,
 		mapLineRef: (lineRef) => lineRef.slice(lineRef.lastIndexOf(":") + 1),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.lastIndexOf(":") + 1),
 		mapTripRef: (tripRef) => tripRef.slice(tripRef.lastIndexOf(":") + 1),
+	},
+	{
+		id: "nantes-zenbus",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=tan",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=tan"],
+		mode: "NO-TU",
+		getNetworkRef: () => "NAOLIB",
+		getVehicleRef: () => undefined,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
 		id: "remi-28",
