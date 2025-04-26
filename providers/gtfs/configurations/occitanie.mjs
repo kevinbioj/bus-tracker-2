@@ -12,6 +12,15 @@ function nthIndexOf(input, pattern, n) {
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "airbus-tlz",
+		staticResourceHref: "https://pysae.com/api/v2/groups/airbus-toulouse/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/airbus-toulouse/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "AIRBUS-TLZ",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
+	{
 		id: "agde",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=agdecapbus68429531",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=agdecapbus68429531"],
