@@ -33,6 +33,7 @@ const sources = [
 			"https://lrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://lrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
+		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "NOMAD-CAR",
 	},
