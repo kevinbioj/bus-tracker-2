@@ -11,6 +11,13 @@ function nthIndexOf(input, pattern, n) {
 	return i;
 }
 
+const gpsoZenbusIdToVehicleLabel = new Map([
+	["222640001", "0068"],
+	["886400002", "0483"],
+	["218410002", "0487"],
+	["226790001", "0821"],
+]);
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -35,7 +42,13 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "IDFM",
-		getVehicleRef: () => undefined,
+		getOperatorRef: () => "GPSO",
+		getVehicleRef: (vehicle) =>
+			vehicle
+				? gpsoZenbusIdToVehicleLabel.get(
+						vehicle.id.slice(nthIndexOf(vehicle.id, ":", 2) + 1, nthIndexOf(vehicle.id, ":", 3)),
+					)
+				: undefined,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
