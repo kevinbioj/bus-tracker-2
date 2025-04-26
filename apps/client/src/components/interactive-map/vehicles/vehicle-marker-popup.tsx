@@ -2,12 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import type { LatLngExpression } from "leaflet";
 import { LoaderCircleIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { useScreen } from "usehooks-ts";
+import { useLocalStorage, useScreen } from "usehooks-ts";
 
 import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { VehicleGirouette } from "~/components/interactive-map/vehicles/vehicle-girouette";
 import { VehicleInformation } from "~/components/interactive-map/vehicles/vehicle-information";
 import { VehicleNextStops } from "~/components/interactive-map/vehicles/vehicle-next-stops";
+import { CopyToClipboard } from "~/components/ui/copy-to-clipboard";
+import { Separator } from "~/components/ui/separator";
 import { useDomVisibility } from "~/hooks/use-dom-visibility";
 
 type VehicleDetailsProps = {
@@ -24,6 +26,8 @@ export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonl
 
 	const { data: journey, isError, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible, true));
 	const popupWidth = journey?.girouette?.width ?? Math.min(width - 50, 384);
+
+	const [showDebugInfos] = useLocalStorage("show-debug-info", false);
 
 	useEffect(() => {
 		updatePopup();
@@ -53,6 +57,18 @@ export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonl
 					{typeof journey.calls !== "undefined" ? (
 						<VehicleNextStops calls={journey.calls} tooltipId={journey.id} />
 					) : null}
+					{showDebugInfos && (
+						<>
+							<Separator />
+							<div className="flex items-center gap-0.5 px-1 pt-0.5 -mb-2">
+								<span>ID</span>
+								<pre className="align-text-bottom inline-block bg-neutral-200 dark:bg-neutral-700 text-ellipsis overflow-hidden text-nowrap">
+									{journeyId}
+								</pre>
+								<CopyToClipboard data={journeyId} />
+							</div>
+						</>
+					)}
 				</>
 			) : (
 				<LoaderCircleIcon className="animate-spin m-auto p-1" size={64} />

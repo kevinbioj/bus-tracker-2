@@ -4,6 +4,7 @@ import { BypassMinZoomSetting } from "~/components/settings/bypass-min-zoom";
 import { DisplayNextCallsSetting } from "~/components/settings/display-next-calls";
 import { GeolocateOnStartSetting } from "~/components/settings/geolocate-on-start";
 import { HideScheduledTripsSetting } from "~/components/settings/hide-scheduled-trips";
+import { ShowDebugInfoSetting } from "~/components/settings/show-debug-info";
 import { DisplayAbsoluteTimeSetting } from "~/components/settings/use-absolute-time";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
@@ -26,6 +27,7 @@ export function Settings() {
 					<HideScheduledTripsSetting />
 					<DisplayAbsoluteTimeSetting />
 					<BypassMinZoomSetting />
+					<ShowDebugInfoSetting />
 				</div>
 			</DialogContent>
 		</Dialog>
