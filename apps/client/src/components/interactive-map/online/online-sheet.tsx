@@ -9,6 +9,7 @@ import { OnlineNetworks } from "~/components/interactive-map/online/online-netwo
 import { OnlineVehicles } from "~/components/interactive-map/online/online-vehicles";
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
+import { cn } from "~/utils/utils";
 
 export function OnlineSheet() {
 	const [open, setOpen] = useState(false);
@@ -40,22 +41,24 @@ export function OnlineSheet() {
 			</SheetTrigger>
 			<SheetContent aria-describedby={undefined} className="">
 				<SheetHeader>
-					<SheetTitle>
-						<div className="flex items-center gap-2">
-							{typeof networkId !== "undefined" ? (
-								<Button onClick={back} size="xs" variant="branding-default">
-									<ArrowLeft />
-								</Button>
-							) : null}
+					<SheetTitle className="flex items-center gap-2">
+						{typeof networkId !== "undefined" ? (
+							<Button onClick={back} size="xs" variant="branding-default">
+								<ArrowLeft />
+							</Button>
+						) : null}
+						<div className="flex items-center gap-0.5 flex-wrap leading-none">
 							{typeof networkId === "undefined" ? (
 								"Véhicules en ligne"
 							) : (
 								<>
-									{network?.name}
+									<span className={cn(lineId && "max-w-36 text-ellipsis overflow-x-hidden text-nowrap")}>
+										{network?.name}
+									</span>
 									{typeof lineId !== "undefined" ? (
 										<>
 											{" "}
-											<ChevronRight /> {network?.lines.find(({ id }) => id === lineId)?.number}
+											<ChevronRight className="size-4" /> {network?.lines.find(({ id }) => id === lineId)?.number}
 										</>
 									) : null}
 								</>
