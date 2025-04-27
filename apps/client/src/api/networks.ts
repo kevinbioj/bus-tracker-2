@@ -19,6 +19,7 @@ export type Operator = {
 	id: number;
 	ref: string;
 	name: string;
+	sortOrder: number;
 };
 
 export type Line = {

@@ -63,6 +63,7 @@ export const operators = pgTable("operator", {
 	ref: varchar("ref").notNull().unique(),
 	name: varchar("name").notNull(),
 	logoHref: varchar("logo_href"),
+	sortOrder: integer("sort_order").notNull().default(0),
 });
 
 export type Operator = InferSelectModel<typeof operators>;

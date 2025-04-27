@@ -127,7 +127,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 													<span className="text-muted-foreground">Opérateur</span>
 												</SelectItem>
 												{network.operators
-													.toSorted((a, b) => a.id - b.id)
+													.toSorted((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
 													.map((operator) => (
 														<SelectItem key={operator.id} value={operator.id.toString()}>
 															{operator.name}
