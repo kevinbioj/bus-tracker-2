@@ -4,12 +4,18 @@ import type { Agency } from "../../model/agency.js";
 import { Route, routeTypes } from "../../model/route.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 
+import type { ImportGtfsOptions } from "../import-gtfs.js";
+
 export type RouteRecord = CsvRecord<
 	"route_id" | "agency_id" | "route_short_name" | "route_type",
 	"route_color" | "route_text_color"
 >;
 
-export async function importRoutes(gtfsDirectory: string, agencies: Map<string, Agency>) {
+export async function importRoutes(
+	gtfsDirectory: string,
+	{ mapRouteId }: ImportGtfsOptions,
+	agencies: Map<string, Agency>,
+) {
 	const routes = new Map<string, Route>();
 
 	await readCsv<RouteRecord>(join(gtfsDirectory, "routes.txt"), (routeRecord) => {
@@ -20,7 +26,7 @@ export async function importRoutes(gtfsDirectory: string, agencies: Map<string, 
 		}
 
 		const route = new Route(
-			routeRecord.route_id,
+			mapRouteId?.(routeRecord.route_id) ?? routeRecord.route_id,
 			agency,
 			routeRecord.route_short_name,
 			routeRecord.route_type in routeTypes ? routeTypes[routeRecord.route_type as keyof typeof routeTypes] : "UNKNOWN",

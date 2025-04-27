@@ -95,17 +95,27 @@ const sources = [
 	//- DeepMob
 	{
 		id: "deepmob",
-		staticResourceHref:
-			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/80680/80680.20231227.130734.249189.zip",
+		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=DEEPMOB&dataFormat=GTFS",
 		realtimeResourceHrefs: [
 			"https://tud.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 			"https://tud.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 		],
+		gtfsOptions: {
+			mapRouteId: (routeId) => routeId.slice(nthIndexOf(routeId, ":", 2) + 1, nthIndexOf(routeId, ":", 3)),
+			mapTripId: (tripId) => tripId.slice(nthIndexOf(tripId, ":", 2) + 1, nthIndexOf(tripId, ":", 3)),
+			mapStopId: (stopId) => stopId.slice(nthIndexOf(stopId, ":", 2) + 1, nthIndexOf(stopId, ":", 3)),
+		},
+		mapTripUpdate: (tripUpdate) => {
+			if (tripUpdate.stopTimeUpdate) {
+				for (const stopTimeUpdate of tripUpdate.stopTimeUpdate) {
+					if (stopTimeUpdate.stopId === "18548") {
+						stopTimeUpdate.stopId = "18088";
+					}
+				}
+			}
+			return tripUpdate;
+		},
 		mode: "NO-TU",
-		mapLineRef: (lineRef) =>
-			lineRef.indexOf(":") >= 0 ? lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)) : lineRef,
-		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
-		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
 		getNetworkRef: () => "DEEPMOB",
 	},
 	//- SNgo!

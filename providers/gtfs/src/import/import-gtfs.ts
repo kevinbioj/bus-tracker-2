@@ -12,6 +12,8 @@ export type LoadShapesStrategy = "LOAD-IF-EXISTS" | "IGNORE";
 export type ImportGtfsOptions = {
 	filterTrips?: (trip: Trip) => boolean;
 	mapTripId?: (tripId: string) => string;
+	mapStopId?: (stopId: string) => string;
+	mapRouteId?: (routeId: string) => string;
 	shapesStrategy?: LoadShapesStrategy;
 	ignoreBlocks?: boolean;
 };
@@ -21,9 +23,9 @@ export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptio
 		importAgencies(gtfsDirectory),
 		importServices(gtfsDirectory),
 		importShapes(gtfsDirectory, options),
-		importStops(gtfsDirectory),
+		importStops(gtfsDirectory, options),
 	]);
-	const routes = await importRoutes(gtfsDirectory, agencies);
+	const routes = await importRoutes(gtfsDirectory, options, agencies);
 	const trips = await importTrips(gtfsDirectory, options, routes, services, shapes, stops);
 	return { routes, stops, trips, journeys: [] };
 }
