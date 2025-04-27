@@ -5,8 +5,8 @@ import { createPlainTime } from "../../cache/temporal-cache.js";
 import type { Route } from "../../model/route.js";
 import type { Service } from "../../model/service.js";
 import type { Shape } from "../../model/shape.js";
-import { StopTime } from "../../model/stop-time.js";
 import type { Stop } from "../../model/stop.js";
+import { StopTime } from "../../model/stop-time.js";
 import { Trip } from "../../model/trip.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 
@@ -23,7 +23,7 @@ type StopTimeRecord = CsvRecord<
 
 export async function importTrips(
 	gtfsDirectory: string,
-	{ filterTrips, mapTripId, ignoreBlocks }: ImportGtfsOptions,
+	{ filterTrips, mapTripId, mapRouteId, mapStopId, ignoreBlocks }: ImportGtfsOptions,
 	routes: Map<string, Route>,
 	services: Map<string, Service>,
 	shapes: Map<string, Shape>,
@@ -33,18 +33,21 @@ export async function importTrips(
 	const excludedTripIds = new Set<string>();
 
 	await readCsv<TripRecord>(join(gtfsDirectory, "trips.txt"), (tripRecord) => {
-		const route = routes.get(tripRecord.route_id);
+		const tripId = mapTripId?.(tripRecord.trip_id) ?? tripRecord.trip_id;
+		const routeId = mapRouteId?.(tripRecord.route_id) ?? tripRecord.route_id;
+
+		const route = routes.get(routeId);
 		if (typeof route === "undefined") {
-			throw new Error(`Unknown route with id '${tripRecord.route_id}' for trip '${tripRecord.trip_id}'.`);
+			throw new Error(`Unknown route with id '${routeId}' for trip '${tripId}'.`);
 		}
 
 		const service = services.get(tripRecord.service_id);
 		if (typeof service === "undefined") {
-			throw new Error(`Unknown service with id '${tripRecord.service_id}' for trip '${tripRecord.trip_id}'.`);
+			throw new Error(`Unknown service with id '${tripRecord.service_id}' for trip '${tripId}'.`);
 		}
 
 		const trip = new Trip(
-			mapTripId?.(tripRecord.trip_id) ?? tripRecord.trip_id,
+			tripId,
 			route,
 			service,
 			[],
@@ -65,19 +68,21 @@ export async function importTrips(
 
 	await readCsv<StopTimeRecord>(join(gtfsDirectory, "stop_times.txt"), (stopTimeRecord) => {
 		const tripId = mapTripId?.(stopTimeRecord.trip_id) ?? stopTimeRecord.trip_id;
+		const stopId = mapStopId?.(stopTimeRecord.stop_id) ?? stopTimeRecord.stop_id;
+
 		const trip = trips.get(tripId);
 		if (typeof trip === "undefined") {
 			if (excludedTripIds.has(tripId)) return;
 
 			throw new Error(
-				`Unknown trip with id '${stopTimeRecord.trip_id}' for {${stopTimeRecord.stop_sequence}/${stopTimeRecord.stop_id}/${stopTimeRecord.arrival_time}/${stopTimeRecord.departure_time}}.`,
+				`Unknown trip with id '${tripId}' for {${stopTimeRecord.stop_sequence}/${stopId}/${stopTimeRecord.arrival_time}/${stopTimeRecord.departure_time}}.`,
 			);
 		}
 
-		const stop = stops.get(stopTimeRecord.stop_id);
+		const stop = stops.get(stopId);
 		if (typeof stop === "undefined") {
 			throw new Error(
-				`Unknown stop with id '${stopTimeRecord.stop_id}' for {${stopTimeRecord.stop_sequence}/${stopTimeRecord.stop_id}/${stopTimeRecord.arrival_time}/${stopTimeRecord.departure_time}}.`,
+				`Unknown stop with id '${stopId}' for {${stopTimeRecord.stop_sequence}/${stopId}/${stopTimeRecord.arrival_time}/${stopTimeRecord.departure_time}}.`,
 			);
 		}
 
