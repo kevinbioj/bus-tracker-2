@@ -15,6 +15,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/semto-2/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "KAROUEST",
+		getDestination: (journey) => journey?.calls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 ];
