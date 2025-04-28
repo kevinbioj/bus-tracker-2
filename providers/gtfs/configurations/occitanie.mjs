@@ -93,20 +93,26 @@ const sources = [
 		id: "lio-gard",
 		staticResourceHref: "https://pysae.com/api/v2/groups/lio-gard/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/lio-gard/gtfs-rt"],
-		gtfsOptions: { filterTrips: (trip) => trip.route.id.split("|").length < 4 },
 		mode: "NO-TU",
 		mapLineRef: (lineRef) => lineRef.split("|")[0],
 		getNetworkRef: () => "LIO",
-		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		getVehicleRef: (vehicle) => {
+			if (typeof vehicle?.label !== "string") return;
+			if (vehicle.label.startsWith("LOT")) return;
+			return vehicle.label;
+		},
 	},
 	{
 		id: "lio-gard-keolis",
 		staticResourceHref: "https://pysae.com/api/v2/groups/lio-gard-keolis/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/lio-gard-keolis/gtfs-rt"],
-		gtfsOptions: { filterTrips: (trip) => !trip.route.id.startsWith("300") },
 		mode: "NO-TU",
 		getNetworkRef: () => "LIO",
-		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		getVehicleRef: (vehicle) => {
+			if (typeof vehicle?.label !== "string") return;
+			if (vehicle.label.startsWith("LOT")) return;
+			return vehicle.label;
+		},
 	},
 	{
 		id: "lio-lot",
@@ -115,7 +121,11 @@ const sources = [
 		mode: "NO-TU",
 		mapLineRef: (lineRef) => lineRef.split("|")[0],
 		getNetworkRef: () => "LIO",
-		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		getVehicleRef: (vehicle) => {
+			if (typeof vehicle?.label !== "string") return;
+			if (vehicle.label.startsWith("LOT")) return;
+			return vehicle.label;
+		},
 	},
 	{
 		id: "montpellier",
