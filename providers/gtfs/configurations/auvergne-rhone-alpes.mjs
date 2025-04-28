@@ -1,6 +1,12 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "annecy",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "SIBRA",
+	},
+	{
 		id: "aubenas",
 		staticResourceHref:
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/aubenas?apiKey=6527571c533049035b6a0d41252853243b1f2a68",

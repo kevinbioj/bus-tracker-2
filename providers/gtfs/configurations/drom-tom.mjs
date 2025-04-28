@@ -7,7 +7,15 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "CAR-JAUNE",
-		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "karouest",
+		staticResourceHref: "https://pysae.com/api/v2/semto-2/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/semto-2/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "KAROUEST",
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 ];
 
