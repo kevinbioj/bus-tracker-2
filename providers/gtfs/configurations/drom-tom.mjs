@@ -11,8 +11,8 @@ const sources = [
 	},
 	{
 		id: "karouest",
-		staticResourceHref: "https://pysae.com/api/v2/semto-2/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/semto-2/gtfs-rt"],
+		staticResourceHref: "https://pysae.com/api/v2/groups/semto-2/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/semto-2/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "KAROUEST",
 		getVehicleRef: (vehicle) => vehicle?.label,
