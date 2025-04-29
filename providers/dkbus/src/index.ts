@@ -49,6 +49,7 @@ while (true) {
 
 	const vehicleJourneys = vehicles.flatMap((vehicle) => {
 		if (typeof vehicle.jour === "undefined") return [];
+		if (vehicle.ligne === 0 || vehicle.course === 0 || vehicle.destination === "DEPOT AUTOBUS") return [];
 
 		const [date, time] = vehicle.jour.split(" ");
 		const recordedAt = Temporal.PlainDateTime.from(`${date}T${time}`).toZonedDateTime("Europe/Paris");
@@ -73,14 +74,11 @@ while (true) {
 
 		return {
 			id: `DKBUS::VehicleTracking:${vehicle.numero}`,
-			line:
-				vehicle.ligne !== 0 && vehicle.course !== 0 && vehicle.destination !== "DEPOT AUTOBUS"
-					? {
-							ref: `DKBUS:Line:${vehicle.ligne}`,
-							number: String(vehicle.ligne),
-							type: "BUS",
-						}
-					: undefined,
+			line: {
+				ref: `DKBUS:Line:${vehicle.ligne}`,
+				number: String(vehicle.ligne),
+				type: "BUS",
+			},
 			destination: vehicle.destination !== 0 ? vehicle.destination : undefined,
 			position: {
 				latitude: +vehicle.lat,
