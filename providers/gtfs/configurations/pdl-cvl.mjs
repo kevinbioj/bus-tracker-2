@@ -9,6 +9,8 @@ function nthIndexOf(input, pattern, n) {
 	return i;
 }
 
+const nantesZenbusVehicleIdToLabel = new Map([["zenbus:Vehicle:5201965212499968:LOC", "1111"]]);
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -175,7 +177,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=tan"],
 		mode: "NO-TU",
 		getNetworkRef: () => "NAOLIB",
-		getVehicleRef: () => undefined,
+		getVehicleRef: (vehicle) => (vehicle ? nantesZenbusVehicleIdToLabel.get(vehicle.id) : undefined),
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
