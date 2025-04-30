@@ -20,6 +20,13 @@ const sources = [
 		getNetworkRef: () => "PALMBUS",
 	},
 	{
+		id: "gap",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/cagtd_20250422.zip",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/cagtd/realtime"],
+		mode: "NO-TU",
+		getNetworkRef: () => "GAP",
+	},
+	{
 		id: "nice",
 		staticResourceHref: "https://transport.data.gouv.fr/resources/79642/download",
 		realtimeResourceHrefs: [],
