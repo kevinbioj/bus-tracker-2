@@ -25,6 +25,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/cagtd/realtime"],
 		mode: "NO-TU",
 		getNetworkRef: () => "GAP",
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
 		id: "nice",
