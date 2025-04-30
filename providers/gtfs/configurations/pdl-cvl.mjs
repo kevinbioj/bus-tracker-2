@@ -12,6 +12,7 @@ function nthIndexOf(input, pattern, n) {
 const nantesZenbusVehicleIdToLabel = new Map([
 	["zenbus:Vehicle:5182534931447808:LOC", "1086"],
 	["zenbus:Vehicle:5201965212499968:LOC", "1111"],
+	["zenbus:Vehicle:912900002:LOC", "1130"],
 ]);
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
