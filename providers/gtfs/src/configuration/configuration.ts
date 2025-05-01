@@ -1,9 +1,7 @@
-import type { RedisClientOptions } from "redis";
-
 import type { SourceOptions } from "../model/source.js";
 
 export type Configuration = {
 	computeDelayMs: number;
-	redisOptions: RedisClientOptions;
+	redisOptions: Parameters<typeof import("redis").createClient>[0];
 	sources: ({ id: string } & SourceOptions)[];
 };
