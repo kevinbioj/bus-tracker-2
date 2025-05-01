@@ -80,25 +80,25 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor) => {
 		return trip;
 	}
 
-	if (
-		typeof tripDescriptor.routeId !== "undefined" &&
-		typeof tripDescriptor.startDate !== "undefined" &&
-		typeof tripDescriptor.startTime !== "undefined"
-	) {
-		const matchingTrip = gtfs.trips.values().find((trip) => {
-			if (trip.route.id !== tripDescriptor.routeId) return false;
-			if (trip.direction !== (tripDescriptor.directionId ?? 0)) return false;
-			if (!trip.service.runsOn(Temporal.PlainDate.from(tripDescriptor.startDate!))) return false;
+	// if (
+	// 	typeof tripDescriptor.routeId !== "undefined" &&
+	// 	typeof tripDescriptor.startDate !== "undefined" &&
+	// 	typeof tripDescriptor.startTime !== "undefined"
+	// ) {
+	// 	const matchingTrip = gtfs.trips.values().find((trip) => {
+	// 		if (trip.route.id !== tripDescriptor.routeId) return false;
+	// 		if (trip.direction !== (tripDescriptor.directionId ?? 0)) return false;
+	// 		if (!trip.service.runsOn(Temporal.PlainDate.from(tripDescriptor.startDate!))) return false;
 
-			const firstStop = trip.stopTimes.at(0);
-			if (typeof firstStop === "undefined") return false;
+	// 		const firstStop = trip.stopTimes.at(0);
+	// 		if (typeof firstStop === "undefined") return false;
 
-			const startTime = `${(firstStop.arrivalTime.hour + 24 * firstStop.arrivalModulus).toString().padStart(2, "0")}:${firstStop.arrivalTime.minute.toString().padStart(2, "0")}:${firstStop.arrivalTime.second.toString().padStart(2, "0")}`;
-			return startTime === tripDescriptor.startTime;
-		});
+	// 		const startTime = `${(firstStop.arrivalTime.hour + 24 * firstStop.arrivalModulus).toString().padStart(2, "0")}:${firstStop.arrivalTime.minute.toString().padStart(2, "0")}:${firstStop.arrivalTime.second.toString().padStart(2, "0")}`;
+	// 		return startTime === tripDescriptor.startTime;
+	// 	});
 
-		return matchingTrip;
-	}
+	// 	return matchingTrip;
+	// }
 
 	return trip;
 };

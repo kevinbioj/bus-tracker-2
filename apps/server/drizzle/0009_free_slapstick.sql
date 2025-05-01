@@ -1,6 +1,6 @@
 CREATE TABLE "region" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"name" varchar2(255) NOT NULL
+	"name" varchar(255) NOT NULL
 );
 --> statement-breakpoint
 ALTER TABLE "network" ADD COLUMN "region_id" integer;--> statement-breakpoint
