@@ -19,7 +19,11 @@ if (connectionUrl.includes("{PASSWORD_FILE}")) {
 	connectionUrl = connectionUrl.replace("{PASSWORD_FILE}", password);
 }
 
-const connection = postgres(connectionUrl);
+const connection = postgres(connectionUrl, {
+	max: 95,
+	max_lifetime: 60_000,
+	idle_timeout: 60_000,
+});
 
 export const database = drizzle(connection, {
 	casing: "snake_case",
