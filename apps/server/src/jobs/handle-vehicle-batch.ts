@@ -12,7 +12,7 @@ import { nthIndexOf } from "../utils/nth-index-of.js";
 
 import { registerActivity } from "./register-activity.js";
 
-const limitRegister = pLimit(20);
+const limitRegister = pLimit(50);
 
 export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
