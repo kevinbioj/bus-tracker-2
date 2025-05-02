@@ -3,7 +3,7 @@ version: '3.9'
 services:
   database:
     image: postgres:17.4-alpine
-    command: -c 'max_connections=500' -c 'shared_buffers=1026MB' -c 'work_mem=16MB' -c 'maintenance_work_mem=256MB'
+    command: -c 'max_connections=200' -c 'shared_buffers=1024MB' -c 'work_mem=128MB' -c 'maintenance_work_mem=256MB'
     environment:
       - POSTGRES_USER=bustracker
       - POSTGRES_PASSWORD_FILE=/run/secrets/database_password
