@@ -13,12 +13,12 @@ import { nthIndexOf } from "../utils/nth-index-of.js";
 import { registerActivity } from "./register-activity.js";
 
 const updatedVehiclesCache = new Map<string, number>();
+const limitRegister = pLimit(70);
 
 export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
 
 	const vehicleJourneysByNetwork = Map.groupBy(vehicleJourneys, (vehicleJourney) => vehicleJourney.networkRef);
-	const limitRegister = pLimit(20);
 
 	for (const [networkRef, vehicleJourneys] of vehicleJourneysByNetwork) {
 		const network = await importNetwork(networkRef);
@@ -79,7 +79,7 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 						};
 
 						const lastUpdated = updatedVehiclesCache.get(vehicleJourney.vehicleRef);
-						if (typeof lastUpdated === "undefined" || Date.now() - lastUpdated > 60_000) {
+						if (typeof lastUpdated === "undefined" || Date.now() - lastUpdated > 120_000) {
 							updatedVehiclesCache.set(vehicleJourney.vehicleRef, Date.now());
 							await registerActivity(disposeableJourney);
 						}
