@@ -12,8 +12,8 @@ import { nthIndexOf } from "../utils/nth-index-of.js";
 
 import { registerActivity } from "./register-activity.js";
 
-const updatedVehiclesCache = new Map<string, number>();
-const limitRegister = pLimit(70);
+// const updatedVehiclesCache = new Map<string, number>();
+const limitRegister = pLimit(400);
 
 export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
@@ -78,11 +78,11 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 							number: vehicle.number,
 						};
 
-						const lastUpdated = updatedVehiclesCache.get(vehicleJourney.vehicleRef);
-						if (typeof lastUpdated === "undefined" || Date.now() - lastUpdated > 120_000) {
-							updatedVehiclesCache.set(vehicleJourney.vehicleRef, Date.now());
-							await registerActivity(disposeableJourney);
-						}
+						// const lastUpdated = updatedVehiclesCache.get(vehicleJourney.vehicleRef);
+						// if (typeof lastUpdated === "undefined" || Date.now() - lastUpdated > 120_000) {
+						// updatedVehiclesCache.set(vehicleJourney.vehicleRef, Date.now());
+						await registerActivity(disposeableJourney);
+						// }
 					} else if (networkRef === "SNCF") {
 						disposeableJourney.vehicle = {
 							number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
