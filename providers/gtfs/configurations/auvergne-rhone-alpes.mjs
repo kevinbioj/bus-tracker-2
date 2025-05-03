@@ -40,6 +40,12 @@ const sources = [
 		getNetworkRef: () => "T2C",
 	},
 	{
+		id: "cluses",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/04baa95c-c425-420f-91c2-de922008a540",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "ARVI",
+	},
+	{
 		id: "grenoble",
 		staticResourceHref: "https://data.mobilites-m.fr/api/gtfs/SEM",
 		realtimeResourceHrefs: [],
