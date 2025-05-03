@@ -121,7 +121,7 @@ const sources = [
 	//- SNgo!
 	{
 		id: "sngo",
-		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-normandie-interurbain/gtfs/67e18513428ede837748ddd3",
+		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-normandie-interurbain/gtfs/6810dd83637bd65d345df7e3",
 		// "https://www.data.gouv.fr/fr/datasets/r/71bf48f1-178e-4ce3-ba9d-361cc5be76a7",
 		realtimeResourceHrefs: [
 			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
