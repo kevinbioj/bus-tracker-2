@@ -8,7 +8,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!**/dist/**"]
+		"includes": ["**", "!**/dist/**", "!**/node_modules/**", "!**/.git/**"]
 	},
 	"formatter": {
 		"enabled": true,

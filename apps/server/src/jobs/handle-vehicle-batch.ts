@@ -13,7 +13,7 @@ import { nthIndexOf } from "../utils/nth-index-of.js";
 import { registerActivity } from "./register-activity.js";
 
 // const updatedVehiclesCache = new Map<string, number>();
-const limitRegister = pLimit(100);
+const limitRegister = pLimit(60);
 
 export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
