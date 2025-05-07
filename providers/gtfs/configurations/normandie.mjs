@@ -63,7 +63,12 @@ const sources = [
 	//- SEMO
 	{
 		id: "semo",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/98bbbf7c-10ff-48a0-afc2-c5f7b3dda5af",
+		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=SEMO&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
+			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
+		],
+		mode: "NO-TU",
 		getNetworkRef: () => "SEMO",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
