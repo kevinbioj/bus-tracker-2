@@ -92,7 +92,11 @@ const sources = [
 	{
 		id: "lemans",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/5339d96c-6d20-4a01-939a-40f7b56d6cc1",
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/setram-lemans-gtfs-rt-trip-update"],
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/setram-lemans-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/setram-lemans-gtfs-rt-vehicle-position",
+		],
+		mode: "NO-TU",
 		getNetworkRef: () => "SETRAM",
 	},
 	{
