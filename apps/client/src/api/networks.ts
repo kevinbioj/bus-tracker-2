@@ -81,9 +81,3 @@ export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetai
 					: undefined,
 		}),
 	});
-
-export const GetNetworkStatsQuery = (networkId: number) =>
-	queryOptions({
-		queryKey: ["networks", networkId, "stats"],
-		queryFn: () => client.get(`networks/${networkId}/stats`).then((response) => response.json<NetworkStats>()),
-	});

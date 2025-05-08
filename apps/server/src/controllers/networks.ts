@@ -63,28 +63,4 @@ export const registerNetworkRoutes = (hono: Hono, store: JourneyStore) => {
 			}
 		},
 	);
-
-	hono.get("/networks/:id/stats", createParamValidator(getNetworkByIdParamSchema), async (c) => {
-		const { id } = c.req.valid("param");
-
-		const [network] = await database.select().from(networks).where(eq(networks.id, id));
-		if (typeof network === "undefined") return c.json({ error: `No network found with id '${id}'.` }, 404);
-
-		const [vehicleCount] = await database
-			.select({ value: count() })
-			.from(vehicles)
-			.where(eq(vehicles.networkId, network.id));
-
-		const vehicleJourneys = store
-			.values()
-			.filter((journey) => journey.networkId === network.id)
-			.toArray();
-
-		return c.json({
-			network,
-			ongoingJourneyCount: vehicleJourneys.filter((journey) => typeof journey.lineId !== "undefined").length,
-			onlineVehicleCount: vehicleJourneys.filter((journey) => journey.position.type === "GPS").length,
-			totalVehicleCount: vehicleCount?.value ?? 0,
-		});
-	});
 };

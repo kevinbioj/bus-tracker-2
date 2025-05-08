@@ -152,7 +152,7 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<Rout
 		>
 			<span
 				className={clsx({ "animate-route-number": routeNumber.scroll })}
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: ain't coming from user input
 				dangerouslySetInnerHTML={{
 					__html: routeNumber.text.trimEnd().replaceAll(" ", "&nbsp;"),
 				}}
@@ -209,7 +209,7 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 						className={clsx("overflow-hidden whitespace-nowrap", {
 							"animate-page": line.scroll,
 						})}
-						// biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: ain't coming from user input
 						dangerouslySetInnerHTML={{ __html: processedText }}
 						key={line.text}
 						style={{

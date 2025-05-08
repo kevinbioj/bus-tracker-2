@@ -9,7 +9,6 @@ import { cors } from "hono/cors";
 import { createClient } from "redis";
 
 import { registerAnnouncementRoutes } from "./controllers/announcements.js";
-import { registerGirouetteRoutes } from "./controllers/girouettes.js";
 import { registerLineRoutes } from "./controllers/lines.js";
 import { registerNetworkRoutes } from "./controllers/networks.js";
 import { registerRegionRoutes } from "./controllers/regions.js";
@@ -76,5 +75,4 @@ registerNetworkRoutes(hono, journeyStore);
 registerVehicleRoutes(hono, journeyStore);
 registerVehicleJourneyRoutes(hono, journeyStore);
 registerRegionRoutes(hono);
-registerGirouetteRoutes(hono);
 serve({ fetch: hono.fetch, port });
