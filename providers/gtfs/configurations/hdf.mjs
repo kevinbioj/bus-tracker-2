@@ -62,8 +62,14 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
+		id: "douai",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/99cf5e2f-87c2-4ff1-bc0d-32f04cc213ab",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "EVEOLE",
+	},
+	{
 		id: "lens-bethune",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/d4efef07-b80d-4922-af53-1599f5b5628a",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/031c86b2-a1ca-4cc1-b926-77707423d9cb",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "TADAO",
 	},
