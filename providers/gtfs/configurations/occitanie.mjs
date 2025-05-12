@@ -33,6 +33,17 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
+		id: "ales",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/b9a0f32e-4386-454c-8759-b82653fa861e",
+		realtimeResourceHrefs: [
+			"https://alesy.plateforme-2cloud.com/api/gtfsrt/tripupdates/ALESY-6574-4401-7572/bin",
+			"https://alesy.plateforme-2cloud.com/api/gtfsrt/vehiclepositions/ALESY-6574-4401-7572/bin",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "ALESY",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "arles",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/52216d2f-072e-4b7d-af0c-15d8d4e98b09",
 		realtimeResourceHrefs: [
