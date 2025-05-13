@@ -269,8 +269,11 @@ const sources = [
 	//- Vikibus
 	{
 		id: "vikibus",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/b3e50a9c-bdca-42c5-b04b-aeba964b0df8",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/ccyn/current/revision/gtfs",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/ccyn/realtime"],
+		mode: "NO-TU",
 		getNetworkRef: () => "VIKIBUS",
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	//- Argentan Bus
 	{
