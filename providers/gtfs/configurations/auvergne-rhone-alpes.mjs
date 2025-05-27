@@ -93,6 +93,16 @@ const sources = [
 		getAheadTime: () => 120,
 	},
 	{
+		id: "valence",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/46bf6b5c-68c1-4198-a982-caeee88540a3",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/citea-valence-gtfs-rt-vehicle-position",
+			"https://proxy.transport.data.gouv.fr/resource/citea-valence-gtfs-rt-trip-update",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "CITEA",
+	},
+	{
 		id: "villefranche-s-saone",
 		staticResourceHref:
 			"https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_libellule.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
