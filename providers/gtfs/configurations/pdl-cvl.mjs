@@ -245,6 +245,14 @@ const sources = [
 		mapTripRef: (tripRef) => tripRef.slice(tripRef.indexOf(":") + 1),
 	},
 	{
+		id: "vendome",
+		staticResourceHref: "https://pysae.com/api/v2/groups/vendome/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/vendome/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "MOVE",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "vierzon",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/87091347-c7fa-4e63-8fb5-005891ece43b",
 		realtimeResourceHrefs: [
