@@ -190,7 +190,12 @@ const sources = [
 		staticResourceHref:
 			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
 		realtimeResourceHrefs: [],
-		mapLineRef: (lineRef) => lineRef.slice(5),
+		gtfsOptions: {
+			filterTrips: (trip) => {
+				trip.route.id = trip.route.name;
+				return true;
+			},
+		},
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 		getNetworkRef: () => "TISSEO",
 	},
