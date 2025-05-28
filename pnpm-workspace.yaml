@@ -6,6 +6,7 @@ packages:
   - providers/flowly
   - providers/idelis
   - providers/gtfs
+  - providers/hawk
   - providers/twisto
   - providers/tcl
   - providers/rtm
