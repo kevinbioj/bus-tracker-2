@@ -320,6 +320,9 @@ importers:
 
   providers/hawk:
     dependencies:
+      dayjs:
+        specifier: ^1.11.13
+        version: 1.11.13
       draftlog:
         specifier: ^1.0.13
         version: 1.0.13

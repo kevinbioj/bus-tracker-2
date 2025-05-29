@@ -1,10 +1,18 @@
 import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
+import dayjs from "dayjs";
+import customParseFormatPlugin from "dayjs/plugin/customParseFormat.js";
+import timezonePlugin from "dayjs/plugin/timezone.js";
+import utcPlugin from "dayjs/plugin/utc.js";
 import DraftLog from "draftlog";
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
 
 import type { Vehicle } from "./vehicle.js";
+
+dayjs.extend(customParseFormatPlugin);
+dayjs.extend(timezonePlugin);
+dayjs.extend(utcPlugin);
 
 if (process.argv.length < 3) {
 	console.error("Usage: hawk <network ref> <hawk id> <info token>");
@@ -59,6 +67,10 @@ while (true) {
 		const [, line, destination, lastPositionAt] = results;
 		console.log(`		${vehicle.ParcNumber} OK (LIGNE:${line} / DEST:${destination} / LAST POS.:${lastPositionAt})`);
 
+		const lastPositionAtDate = dayjs.tz(lastPositionAt, "DD/MM/YYYY HH:mm:ss", "Europe/Paris").toDate();
+
+		if (Date.now() - lastPositionAtDate.getTime() > 10 * 60_000) return [];
+
 		return {
 			id: `${networkRef}::VehicleTracking:${vehicle.ParcNumber}`,
 			line: {
@@ -74,7 +86,9 @@ while (true) {
 				longitude: +vehicle.Longitude,
 				atStop: false,
 				type: "GPS",
-				recordedAt: now.toZonedDateTimeISO("Europe/Paris").toString({ timeZoneName: "never" }),
+				recordedAt: Temporal.Instant.fromEpochMilliseconds(lastPositionAtDate.getTime())
+					.toZonedDateTimeISO("Europe/Paris")
+					.toString({ timeZoneName: "never" }),
 			},
 			networkRef: networkRef!,
 			vehicleRef: `${networkRef}::Vehicle:${vehicle.ParcNumber}`,
