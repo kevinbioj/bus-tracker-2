@@ -12,7 +12,7 @@ if (process.argv.length < 3) {
 }
 
 const popUpTextRegex =
-	/Ligne:\s*<span[^>]*>([\w\-]+)<\/span>.*?Destination:\s*([^<]+)<br>.*?Dernière position:\s*([\d\/:\s]+)/s;
+	/(?:{Route}:|Ligne:)\s*<[^>]*>\s*(\d+)<\/[^>]*>.*?(?:{RunDestination}:|Destination:)\s*([^<]+?)\s*\(\d+\).*?(?:{LastLoc}:|Dernière position:)\s*([\d/:\s]+)/s;
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 
@@ -45,7 +45,7 @@ while (true) {
 	const vehicles = (await response.json()) as Vehicle[];
 
 	const vehicleJourneys = vehicles.flatMap((vehicle) => {
-		if (vehicle.PopUpText.includes("Eteint")) {
+		if (vehicle.PopUpText.includes("Eteint") || vehicle.PopUpText.includes("SwitchedOff")) {
 			console.log(`		${vehicle.ParcNumber} > OFF`);
 			return [];
 		}
