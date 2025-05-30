@@ -79,7 +79,6 @@ async function computeCurrentJourneys() {
 	}
 
 	console.log();
-	global.gc?.();
 }
 
 await computeCurrentJourneys();

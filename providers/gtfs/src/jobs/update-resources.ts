@@ -14,5 +14,4 @@ export async function updateResources(sources: Source[]) {
 		}
 	}
 	console.log();
-	global.gc?.();
 }

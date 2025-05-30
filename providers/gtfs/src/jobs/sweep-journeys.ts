@@ -8,5 +8,4 @@ export function sweepJourneys(sources: Source[]) {
 		source.sweepJourneys();
 	}
 	console.log();
-	global.gc?.();
 }
