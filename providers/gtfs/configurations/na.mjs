@@ -6,6 +6,8 @@ const sources = [
 		id: "agen",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/c1415ff3-7457-4b51-aead-aacbf03a474e",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-urbain"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
 			Temporal.Now.instant()
@@ -20,6 +22,8 @@ const sources = [
 		id: "agen-scolaire",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/3fd582f2-e2ef-4ad7-894c-6f057b53b006",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-scolaire"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
 			Temporal.Now.instant()
@@ -37,6 +41,8 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://app.mecatran.com/utw/ws/gtfsfeed/realtime/txiktxak?apiKey=0f64273f070b7d4621002040646e180d374e5373",
 		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
 		getNetworkRef: () => "TXIKTXAK",
 		getVehicleRef: () => undefined,
 		getAheadTime: () => 120,
@@ -55,6 +61,8 @@ const sources = [
 		id: "na-79",
 		staticResourceHref: "https://pysae.com/api/v2/groups/deux-sevres/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/deux-sevres/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
 		mode: "NO-TU",
 		mapLineRef: (lineRef) => `79-${lineRef}`,
 		getAheadTime: () => 5 * 60,

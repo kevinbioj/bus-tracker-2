@@ -25,6 +25,7 @@ const sources = [
 		id: "chamonix",
 		staticResourceHref: "https://pysae.com/api/v2/groups/chamonix-bus/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/chamonix-bus/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "CHAMONIX",
@@ -55,6 +56,8 @@ const sources = [
 		id: "porte-isere",
 		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-9cc4/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-9cc4/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "RUBAN",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
@@ -67,30 +70,11 @@ const sources = [
 			"https://api.stas3.cityway.fr/dataflow/horaire-tc-tr/download?provider=STAS&dataFormat=GTFS-RT",
 			"https://api.stas3.cityway.fr/dataflow/vehicule-tc-tr/download?provider=STAS&dataFormat=GTFS-RT",
 		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "STAS",
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
-	},
-	{
-		id: "tcl-metro",
-		staticResourceHref:
-			"https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_tcl.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
-		realtimeResourceHrefs: [],
-		gtfsOptions: {
-			filterTrips: (trip) => trip.route.type === "SUBWAY",
-		},
-		getNetworkRef: () => "TCL",
-		getAheadTime: () => 60,
-	},
-	{
-		id: "tcl-rhone-express",
-		staticResourceHref:
-			"https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=SYTRAL_RHONE_EXPRESS&dataFormat=GTFS",
-		realtimeResourceHrefs: [
-			"https://api.oura3.cityway.fr/dataflow/horaire-tr/download?provider=SYTRAL_RHONE_EXPRESS&dataFormat=GTFS-RT",
-		],
-		getNetworkRef: () => "TCL",
-		getAheadTime: () => 120,
 	},
 	{
 		id: "valence",
@@ -99,6 +83,8 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/citea-valence-gtfs-rt-vehicle-position",
 			"https://proxy.transport.data.gouv.fr/resource/citea-valence-gtfs-rt-trip-update",
 		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "CITEA",
 	},

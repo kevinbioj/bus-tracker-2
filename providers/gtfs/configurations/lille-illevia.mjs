@@ -4,7 +4,7 @@ const sources = [
 		id: "lille",
 		staticResourceHref: "https://media.ilevia.fr/opendata/gtfs.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/ilevia-lille-gtfs-rt"],
-		// excludeScheduled: true,
+		excludeScheduled: true,
 		getNetworkRef: () => "ILLEVIA",
 	},
 ];
