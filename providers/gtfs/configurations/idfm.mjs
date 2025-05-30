@@ -23,8 +23,8 @@ const gpsoZenbusIdToVehicleLabel = new Map([
 const sources = [
 	{
 		id: "idfm",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
-		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/idfm/trip-updates"],
+		staticResourceHref: "https://clarifygdps.com/bridge/gtfs/fr-idf.zip",
+		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
 		gtfsOptions: {
 			filterTrips: (trip) => trip.route.name !== "TER",
 		},
