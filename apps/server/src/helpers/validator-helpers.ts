@@ -1,7 +1,7 @@
 import { validator } from "hono/validator";
-import type { ZodTypeDef } from "zod";
+import type { Schema, ZodTypeDef } from "zod";
 
-export const createQueryValidator = <O, D extends ZodTypeDef, I>(schema: Zod.Schema<O, D, I>) =>
+export const createQueryValidator = <O, D extends ZodTypeDef, I>(schema: Schema<O, D, I>) =>
 	validator("query", (values, c) => {
 		const parsed = schema.safeParse(values);
 		if (!parsed.success) {
@@ -15,7 +15,7 @@ export const createQueryValidator = <O, D extends ZodTypeDef, I>(schema: Zod.Sch
 		return parsed.data;
 	});
 
-export const createParamValidator = <O, D extends ZodTypeDef, I>(schema: Zod.Schema<O, D, I>) =>
+export const createParamValidator = <O, D extends ZodTypeDef, I>(schema: Schema<O, D, I>) =>
 	validator("param", (values, c) => {
 		const parsed = schema.safeParse(values);
 		if (!parsed.success) {
