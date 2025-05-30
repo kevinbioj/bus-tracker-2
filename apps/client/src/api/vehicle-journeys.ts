@@ -45,6 +45,7 @@ export type DisposeableVehicleJourney = {
 
 export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?: string) => {
 	const [hideScheduledTrips] = useLocalStorage("hide-scheduled-trips", false);
+	const [includeIdfm] = useLocalStorage("include-idfm", false);
 
 	return queryOptions({
 		placeholderData: keepPreviousData,
@@ -58,6 +59,7 @@ export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?:
 			params.append("neLat", bounds.ne[0].toString());
 			params.append("neLon", bounds.ne[1].toString());
 			if (hideScheduledTrips) params.append("excludeScheduled", "true");
+			if (includeIdfm) params.append("includeIdfm", "true");
 			if (typeof includeMarker !== "undefined") {
 				params.append("includeMarker", includeMarker);
 			}
