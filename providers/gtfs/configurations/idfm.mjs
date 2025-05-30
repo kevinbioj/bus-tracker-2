@@ -12,11 +12,15 @@ function nthIndexOf(input, pattern, n) {
 }
 
 const gpsoZenbusIdToVehicleLabel = new Map([
+	["887490002", "0066"],
+	["30020052", "0067"],
 	["222640001", "0068"],
 	["886400002", "0483"],
 	["218410002", "0487"],
 	["214760001", "0488"],
+	["240420002", "0529"],
 	["226790001", "0821"],
+	["258800001", "0822"],
 ]);
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
