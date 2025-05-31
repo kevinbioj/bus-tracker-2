@@ -9,7 +9,7 @@ export type Gtfs = {
 	routes: Map<string, Route>;
 	stops: Map<string, Stop>;
 	trips: Map<string, Trip>;
-	journeys: Journey[];
+	journeys: Map<string, Journey>;
 	// ---
 	importedAt: Temporal.Instant;
 	lastModified: string | null;

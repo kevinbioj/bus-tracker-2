@@ -9,9 +9,8 @@ import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";
 import { getStaleness } from "../utils/get-staleness.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
-
-import type { TripUpdate, VehicleDescriptor, VehiclePosition } from "./gtfs-rt.js";
 import type { Gtfs } from "./gtfs.js";
+import type { TripUpdate, VehicleDescriptor, VehiclePosition } from "./gtfs-rt.js";
 import type { Journey } from "./journey.js";
 import type { Trip } from "./trip.js";
 
@@ -83,13 +82,9 @@ export class Source {
 					for (const journey of journeys) {
 						if (typeof journey === "undefined") continue;
 						if (now.epochMilliseconds > journey.calls.at(-1)!.aimedDepartureTime.epochMilliseconds) continue;
-						gtfs.journeys.push(journey);
+						gtfs.journeys.set(`${journey.date.toString()}-${journey.trip.id}`, journey);
 					}
 				}
-
-				gtfs.journeys.sort((a, b) =>
-					Temporal.ZonedDateTime.compare(a.calls[0]!.aimedArrivalTime, b.calls[0]!.aimedArrivalTime),
-				);
 			}
 
 			updateLog(
@@ -97,7 +92,7 @@ export class Source {
 				sourceId,
 				updating ? "updated" : "imported",
 				watch.total(),
-				gtfs.journeys.length,
+				gtfs.journeys.size,
 			);
 			this.gtfs = gtfs;
 		} catch (cause) {
@@ -183,13 +178,13 @@ export class Source {
 				const journey = trip.getScheduledJourney(date);
 				if (typeof journey === "undefined") continue;
 
-				this.gtfs.journeys.push(journey);
+				this.gtfs.journeys.set(`${date.toString()}-${trip.id}`, journey);
 				computedJourneys += 1;
 			}
 
-			this.gtfs.journeys.sort((a, b) =>
-				Temporal.ZonedDateTime.compare(a.calls[0]!.aimedArrivalTime, b.calls[0]!.aimedArrivalTime),
-			);
+			// this.gtfs.journeys.sort((a, b) =>
+			// 	Temporal.ZonedDateTime.compare(a.calls[0]!.aimedArrivalTime, b.calls[0]!.aimedArrivalTime),
+			// );
 		}
 
 		updateLog("%s ✓ Computed %d journeys for date '%s' in %dms.", sourceId, computedJourneys, date, watch.total());
@@ -199,16 +194,19 @@ export class Source {
 		if (typeof this.gtfs === "undefined") return;
 
 		const now = Temporal.Now.instant().epochMilliseconds;
-		const oldJourneyCount = this.gtfs.journeys.length;
-		this.gtfs.journeys = this.gtfs.journeys.filter((journey) => {
+		const oldJourneyCount = this.gtfs.journeys.size;
+
+		for (const [id, journey] of this.gtfs.journeys) {
 			const lastCall = journey.calls.at(-1)!;
-			return now <= (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochMilliseconds;
-		});
+			if (now > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochMilliseconds) {
+				this.gtfs.journeys.delete(id);
+			}
+		}
 
 		console.log(
 			"%s ✓ Swept %d outdated vehicle journeys",
 			padSourceId(this.id),
-			oldJourneyCount - this.gtfs.journeys.length,
+			oldJourneyCount - this.gtfs.journeys.size,
 		);
 	}
 }

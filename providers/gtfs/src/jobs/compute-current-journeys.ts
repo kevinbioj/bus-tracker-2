@@ -153,19 +153,19 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 								updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
 							);
 
-				let journey = source.gtfs.journeys.find((journey) => journey.date.equals(startDate) && journey.trip === trip);
+				let journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);
 				if (typeof journey === "undefined") {
 					journey = trip.getScheduledJourney(startDate, true);
-					source.gtfs.journeys.push(journey);
+					source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
 				}
 				journey.updateJourney(tripUpdate.stopTimeUpdate ?? []);
 			}
 
-			source.gtfs.journeys.sort((a, b) => {
-				const aStart = a.calls.at(0)!.expectedArrivalTime ?? a.calls.at(0)!.aimedArrivalTime;
-				const bStart = b.calls.at(0)!.expectedArrivalTime ?? b.calls.at(0)!.aimedArrivalTime;
-				return aStart.epochMilliseconds - bStart.epochMilliseconds;
-			});
+			// source.gtfs.journeys.sort((a, b) => {
+			// 	const aStart = a.calls.at(0)!.expectedArrivalTime ?? a.calls.at(0)!.aimedArrivalTime;
+			// 	const bStart = b.calls.at(0)!.expectedArrivalTime ?? b.calls.at(0)!.aimedArrivalTime;
+			// 	return aStart.epochMilliseconds - bStart.epochMilliseconds;
+			// });
 		}
 
 		for (const vehiclePosition of vehiclePositions) {
@@ -190,10 +190,10 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 									updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
 								);
 
-					journey = source.gtfs.journeys.find((journey) => journey.date.equals(startDate) && journey.trip === trip);
+					journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);
 					if (typeof journey === "undefined") {
 						journey = trip.getScheduledJourney(startDate, true);
-						source.gtfs.journeys.push(journey);
+						source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
 					}
 
 					if (
@@ -312,7 +312,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 		}
 
 		if (source.options.mode !== "VP-ONLY") {
-			for (const journey of source.gtfs.journeys) {
+			for (const journey of source.gtfs.journeys.values()) {
 				if (handledJourneyIds.has(journey.id)) continue;
 				if (typeof journey.trip.block !== "undefined" && handledBlockIds.has(journey.trip.block)) continue;
 
@@ -391,6 +391,8 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				}
 			}
 		}
+
+		console.log("ok");
 
 		const computeTime = watch.step();
 		updateLog(

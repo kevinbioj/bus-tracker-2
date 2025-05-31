@@ -107,14 +107,16 @@ export class Journey {
 		let arrivalDelay: number | undefined;
 		let departureDelay: number | undefined;
 
+		const stopTimeUpdatesByStopId = Map.groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopId);
+		const stopTimeUpdatesByStopSequence = Map.groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopSequence);
+
 		for (const call of this.calls) {
 			call.expectedArrivalTime = undefined;
 			call.expectedDepartureTime = undefined;
 			call.status = "SCHEDULED";
 
-			const timeUpdate = stopTimeUpdates?.find((stu) =>
-				stu.stopSequence ? stu.stopSequence === call.sequence : stu.stopId === call.stop.id,
-			);
+			const timeUpdate = (stopTimeUpdatesByStopSequence.get(call.sequence) ??
+				stopTimeUpdatesByStopId.get(call.stop.id))?.[0];
 
 			call.platform = timeUpdate?.stopTimeProperties?.assignedStopId;
 
