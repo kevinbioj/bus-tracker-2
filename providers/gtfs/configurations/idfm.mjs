@@ -32,6 +32,7 @@ const sources = [
 		gtfsOptions: {
 			filterTrips: (trip) => trip.route.name !== "TER",
 		},
+		excludeScheduled: true,
 		isValidJourney: (journey) => {
 			const firstCall = journey.calls[0];
 			if (typeof firstCall === "undefined" || typeof firstCall.expectedTime === "undefined") return true;
@@ -61,7 +62,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	computeDelayMs: 60_000,
+	computeDelayMs: 30_000,
 	redisOptions: {
 		url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
 		username: process.env.REDIS_USERNAME,
