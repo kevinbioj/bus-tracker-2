@@ -18,7 +18,7 @@ export function createJourneyStore() {
 						now.since(lastCall.expectedTime ?? lastCall.aimedTime).total("minutes") >= 5) &&
 					now.since(journey.position.recordedAt).total("minutes") >= 10;
 			} else {
-				shouldDelete = now.since(journey.updatedAt).total("minutes") >= 2;
+				shouldDelete = now.since(journey.updatedAt).total("minutes") >= 10;
 			}
 
 			if (shouldDelete) {
