@@ -392,8 +392,6 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			}
 		}
 
-		console.log("ok");
-
 		const computeTime = watch.step();
 		updateLog(
 			"%s     ✓ Computed %d journeys in %dms (%dms download - %dms compute).",
