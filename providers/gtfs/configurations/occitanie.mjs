@@ -9,6 +9,8 @@ function nthIndexOf(input, pattern, n) {
 	return i;
 }
 
+const agdeZenbusVehicles = new Map([["zenbus:Vehicle:308550002:LOC", "153065"]]);
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -29,7 +31,7 @@ const sources = [
 		mode: "VP-ONLY",
 		excludeScheduled: true,
 		getNetworkRef: () => "CAPBUS",
-		getVehicleRef: () => undefined,
+		getVehicleRef: (vehicle) => (vehicle?.id ? agdeZenbusVehicles.get(vehicle.id) : undefined),
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
