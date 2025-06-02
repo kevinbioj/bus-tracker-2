@@ -32,14 +32,22 @@ await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
 
+let isBusy = false;
+
 await initializeResources(configuration.sources);
-setInterval(() => updateResources(configuration.sources), 600_000);
-setInterval(() => sweepJourneys(configuration.sources), 36_000_000);
+setInterval(() => {
+	isBusy = true;
+	updateResources(configuration.sources);
+	isBusy = false;
+}, 600_000);
+setInterval(() => {
+	isBusy = true;
+	sweepJourneys(configuration.sources);
+	isBusy = false;
+}, 3600_000);
 new Cron("0 0 0 * * *", () => computeNextJourneys(configuration.sources));
 
 // ---
-
-let isBusy = false;
 
 async function computeCurrentJourneys() {
 	const watch = createStopWatch();
