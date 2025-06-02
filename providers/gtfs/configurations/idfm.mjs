@@ -62,7 +62,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	computeDelayMs: 30_000,
+	computeDelayMs: 60_000,
 	redisOptions: {
 		url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
 		username: process.env.REDIS_USERNAME,

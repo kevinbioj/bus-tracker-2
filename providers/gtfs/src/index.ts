@@ -1,5 +1,6 @@
 import "dotenv";
 
+import { setTimeout } from "node:timers/promises";
 import { Cron } from "croner";
 import DraftLog from "draftlog";
 import pLimit from "p-limit";
@@ -32,32 +33,35 @@ await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
 
-let isBusy = false;
-
-await initializeResources(configuration.sources);
-setInterval(() => {
-	isBusy = true;
-	updateResources(configuration.sources);
-	isBusy = false;
-}, 600_000);
-setInterval(() => {
-	isBusy = true;
-	sweepJourneys(configuration.sources);
-	isBusy = false;
-}, 3600_000);
 new Cron("0 0 0 * * *", () => computeNextJourneys(configuration.sources));
 
-// ---
+let lastUpdateAt = Date.now();
+let lastSweepAt = Date.now();
+
+await initializeResources(configuration.sources);
+while (true) {
+	if (Date.now() - lastUpdateAt > 600_000) {
+		await updateResources(configuration.sources);
+		lastUpdateAt = Date.now();
+	}
+
+	if (Date.now() - lastSweepAt > 3600_000) {
+		sweepJourneys(configuration.sources);
+		lastSweepAt = Date.now();
+	}
+
+	const startedAt = Date.now();
+	await computeCurrentJourneys();
+	const computeDuration = Date.now() - startedAt;
+
+	// Wait at least 10s between each computation
+	const timeToWait = Math.max(10_000, configuration.computeDelayMs - computeDuration);
+	await setTimeout(timeToWait);
+}
 
 async function computeCurrentJourneys() {
 	const watch = createStopWatch();
 
-	if (isBusy) {
-		console.warn("%s ► Ignoring cycle as previous one hasn't ended yet.", Temporal.Now.instant());
-		return;
-	}
-
-	isBusy = true;
 	const computeLimit = 6;
 	const computeLimitFn = pLimit(computeLimit);
 	const updateLog = console.draft("%s ► Computing vehicle journeys to publish.", Temporal.Now.instant());
@@ -95,8 +99,4 @@ async function computeCurrentJourneys() {
 	}
 
 	console.log();
-	isBusy = false;
 }
-
-await computeCurrentJourneys();
-setInterval(computeCurrentJourneys, configuration.computeDelayMs);
