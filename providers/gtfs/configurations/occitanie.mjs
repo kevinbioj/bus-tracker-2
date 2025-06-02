@@ -9,7 +9,10 @@ function nthIndexOf(input, pattern, n) {
 	return i;
 }
 
-const agdeZenbusVehicles = new Map([["zenbus:Vehicle:308550002:LOC", "153065"]]);
+const agdeZenbusVehicles = new Map([
+	["zenbus:Vehicle:318570002:LOC", "123036"],
+	["zenbus:Vehicle:308550002:LOC", "153065"],
+]);
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
