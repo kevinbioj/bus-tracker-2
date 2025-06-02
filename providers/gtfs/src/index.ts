@@ -39,9 +39,17 @@ new Cron("0 0 0 * * *", () => computeNextJourneys(configuration.sources));
 
 // ---
 
+let isBusy = false;
+
 async function computeCurrentJourneys() {
 	const watch = createStopWatch();
 
+	if (isBusy) {
+		console.warn("%s ► Ignoring cycle as previous one hasn't ended yet.", Temporal.Now.instant());
+		return;
+	}
+
+	isBusy = true;
 	const computeLimit = 6;
 	const computeLimitFn = pLimit(computeLimit);
 	const updateLog = console.draft("%s ► Computing vehicle journeys to publish.", Temporal.Now.instant());
@@ -79,6 +87,7 @@ async function computeCurrentJourneys() {
 	}
 
 	console.log();
+	isBusy = false;
 }
 
 await computeCurrentJourneys();
