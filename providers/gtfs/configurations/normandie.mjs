@@ -269,7 +269,7 @@ const sources = [
 	//- Vikibus
 	{
 		id: "vikibus",
-		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/ccyn/current/revision/gtfs",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/ccyn.zip",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/ccyn/realtime"],
 		mode: "NO-TU",
 		getNetworkRef: () => "VIKIBUS",
