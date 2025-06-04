@@ -23,6 +23,8 @@ const gpsoZenbusIdToVehicleLabel = new Map([
 	["258800001", "0822"],
 ]);
 
+const saclayZenbusIdToVehicleLabel = new Map();
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -53,6 +55,23 @@ const sources = [
 		getVehicleRef: (vehicle) =>
 			vehicle
 				? gpsoZenbusIdToVehicleLabel.get(
+						vehicle.id.slice(nthIndexOf(vehicle.id, ":", 2) + 1, nthIndexOf(vehicle.id, ":", 3)),
+					)
+				: undefined,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+	},
+	{
+		id: "saclay",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=caee",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=caee"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "IDFM",
+		getOperatorRef: () => "SACLAY",
+		getVehicleRef: (vehicle) =>
+			vehicle
+				? saclayZenbusIdToVehicleLabel.get(
 						vehicle.id.slice(nthIndexOf(vehicle.id, ":", 2) + 1, nthIndexOf(vehicle.id, ":", 3)),
 					)
 				: undefined,
