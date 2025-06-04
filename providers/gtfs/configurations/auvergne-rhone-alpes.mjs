@@ -53,6 +53,14 @@ const sources = [
 		getNetworkRef: () => "TAG",
 	},
 	{
+		id: "morzine-avoriaz",
+		staticResourceHref: "https://pysae.com/api/v2/groups/skibus_morzine-avoriaz/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/skibus_morzine-avoriaz/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "MORZINE-AVORIAZ",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "porte-isere",
 		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-9cc4/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-9cc4/gtfs-rt"],
