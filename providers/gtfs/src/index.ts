@@ -40,6 +40,8 @@ let lastSweepAt = Date.now();
 
 await initializeResources(configuration.sources);
 while (true) {
+	console.log("%s ► Entering loop cycle.", Temporal.Now.instant());
+
 	if (Date.now() - lastUpdateAt > 600_000) {
 		await updateResources(configuration.sources);
 		lastUpdateAt = Date.now();
@@ -51,12 +53,32 @@ while (true) {
 	}
 
 	const startedAt = Date.now();
-	await computeCurrentJourneys();
+	try {
+		let timedOut = false;
+
+		await Promise.race([
+			computeCurrentJourneys(),
+			(async () => {
+				await setTimeout(30_000);
+				timedOut = true;
+			})(),
+		]);
+
+		if (timedOut) {
+			console.error("Time out when computing journeys, restarting processor.");
+			process.exit(1);
+		}
+	} catch (e) {
+		console.error("Failed to compute current journeys", e);
+	}
 	const computeDuration = Date.now() - startedAt;
 
-	// Wait at least 10s between each computation
-	const timeToWait = Math.max(10_000, configuration.computeDelayMs - computeDuration);
-	await setTimeout(timeToWait);
+	// Wait at least 10s and at most 120s between each computation
+	const timeToWait = Math.min(120_000, Math.max(10_000, configuration.computeDelayMs - computeDuration));
+	console.log("%s ► Done loop cycle, waiting for %dms.", Temporal.Now.instant(), timeToWait);
+	try {
+		await setTimeout(timeToWait);
+	} catch {}
 }
 
 async function computeCurrentJourneys() {
