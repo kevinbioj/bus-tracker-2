@@ -62,11 +62,13 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 	return (
 		<div className="flex flex-col gap-3">
 			{linesWithVehicles.flatMap(renderLine)}
-			{linesWithVehicles.length > 0 && <Separator />}
-			<div className="bg-muted text-muted-foreground text-xs text-center p-2 rounded-md">
-				<Info className="inline size-4 align-text-bottom mr-1" /> Aucun véhicule identifiable ne circule sur{" "}
-				{linesWithVehicles.length > 0 ? "ces lignes" : "ce réseau"}.
-			</div>
+			{linesWithVehicles.length > 0 && linesWithoutVehicles.length > 0 && <Separator />}
+			{linesWithoutVehicles.length > 0 && (
+				<div className="bg-muted text-muted-foreground text-xs text-center p-2 rounded-md">
+					<Info className="inline size-4 align-text-bottom mr-1" /> Aucun véhicule identifiable ne circule sur{" "}
+					{linesWithVehicles.length > 0 ? "ces lignes" : "ce réseau"}.
+				</div>
+			)}
 			{linesWithoutVehicles.flatMap(renderLine)}
 		</div>
 	);
