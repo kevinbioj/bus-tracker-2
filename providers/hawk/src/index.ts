@@ -20,7 +20,7 @@ if (process.argv.length < 3) {
 }
 
 const popUpTextRegex =
-	/(?:{Route}:|Ligne:)\s*<[^>]*>\s*(\d+)<\/[^>]*>.*?(?:{RunDestination}:|Destination:)\s*([^<]+?)\s*\(\d+\).*?(?:{LastLoc}:|Dernière position:)\s*([\d/:\s]+)/s;
+	/(?:{Route}:|Ligne:)\s*<[^>]*>\s*([\w\d]+)<\/[^>]*>.*?(?:{RunDestination}:|Destination:)\s*([^<]+?)\s*\(\d+\).*?(?:{LastLoc}:|Dernière position:)\s*([\d/:\s]+)/is;
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 
