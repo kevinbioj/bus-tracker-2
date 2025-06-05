@@ -40,7 +40,7 @@ const [, , networkRef, hawkId, info] = process.argv;
 while (true) {
 	const updateLog = console.draft("%s ► Fetching vehicles from Hawk <%s>...", Temporal.Now.instant());
 	const response = await fetch(
-		`https://hawk.hanoverdisplays.com/${hawkId}/api/vehicles/poi?info=${info}&isSAEIVMode=true&culture=fr-FR&hasOperator=false&hasTransporter=false&isUsingMetricSystem=true&hasCapacity=false&userId=1&driverInfo=1&ShowAssignedOnly=false`,
+		`https://hawk.hanoverdisplays.com/${hawkId}/api/vehicles/poi?info=${info}&isSAEIVMode=true&culture=fr-FR&hasOperator=false&hasTransporter=false&isUsingMetricSystem=true&hasCapacity=false&userId=1&driverInfo=1&ShowAssignedOnly=false&assignment_state_exists=false`,
 	);
 	if (!response.ok) {
 		updateLog("%s ► Failed to fetch data from Hawk (status %d).", Temporal.Now.instant(), response.status);
