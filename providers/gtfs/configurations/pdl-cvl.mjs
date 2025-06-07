@@ -250,6 +250,16 @@ const sources = [
 		getVehicleRef: (vehicle) => +vehicle?.label || undefined,
 	},
 	{
+		id: "roche-sur-yon",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/impulsyon/current/revision/gtfs",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/impulsyon/realtime"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		getNetworkRef: () => "IMPULSYON",
+		getVehicleRef: (vehicle) => vehicle?.label,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+	},
+	{
 		id: "tours",
 		staticResourceHref:
 			"https://data.tours-metropole.fr/api/v2/catalog/datasets/horaires-temps-reel-gtfsrt-reseau-filbleu-tmvl/alternative_exports/filbleu_gtfszip",
