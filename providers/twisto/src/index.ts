@@ -1,8 +1,7 @@
 import { setTimeout } from "node:timers/promises";
-import { Cron } from "croner";
-
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
+
 import { fetchMonitoredLines } from "./jobs/fetch-monitored-lines.js";
 import { fetchMonitoredVehicles } from "./jobs/fetch-monitored-vehicles.js";
 
@@ -17,26 +16,25 @@ await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
 
-console.log("► Fetching monitored lines.");
-let monitoredLines = await fetchMonitoredLines();
-console.log(`✓ ${monitoredLines.length} monitored lines have been registered`);
-
-new Cron("0 * * * *", async () => {
-	console.log("%s ► Updating monitored lines.", Temporal.Now.instant());
-	try {
-		monitoredLines = await fetchMonitoredLines();
-		console.log("%s ✓ %d have been registered", Temporal.Now.instant(), monitoredLines.length);
-	} catch (cause) {
-		console.error("%s ✘ Failed to update monitored lines", Temporal.Now.instant(), cause);
-	}
-});
-
-await setTimeout(1_000);
+let monitoredLines: string[] = [];
+let lastMonitoredLinesUpdate: number | undefined;
 
 while (true) {
+	if (typeof lastMonitoredLinesUpdate === "undefined" || Date.now() - lastMonitoredLinesUpdate > 7200_000) {
+		console.log("%s ► Fetching monitored lines.", Temporal.Now.instant());
+		try {
+			monitoredLines = await fetchMonitoredLines();
+			lastMonitoredLinesUpdate = Date.now();
+			console.log("%s ✓ %d have been registered", Temporal.Now.instant(), monitoredLines.length);
+		} catch (cause) {
+			console.error("%s ✘ Failed to update monitored lines", Temporal.Now.instant(), cause);
+		}
+		await setTimeout(60_000);
+	}
+
 	console.log("%s ► Fetching active vehicle journeys...", Temporal.Now.instant());
-	const vehicleJourneys = await fetchMonitoredVehicles(monitoredLines);
+	const vehicleJourneys = await fetchMonitoredVehicles(monitoredLines.slice(1));
 	await redis.publish(channel, JSON.stringify(vehicleJourneys));
 	console.log("%s ✓ Sent %d vehicle journeys.", Temporal.Now.instant(), vehicleJourneys.length);
-	await setTimeout(30_000);
+	await setTimeout(60_000);
 }
