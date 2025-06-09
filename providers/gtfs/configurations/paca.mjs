@@ -32,6 +32,18 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "menton",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/72609821-2459-47fb-a63b-3dbbc0d96c92",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/zest-menton-riviera-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/zest-menton-riviera-gtfs-rt-vehicle-position",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "ZESTBUS",
+	},
+	{
 		id: "nice",
 		staticResourceHref: "https://transport.data.gouv.fr/resources/79642/download",
 		realtimeResourceHrefs: [],
