@@ -41,6 +41,10 @@ const sources = [
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) => {
+			vehicle.vehicle.id = vehicle.vehicle.label;
+			return vehicle;
+		},
 		getNetworkRef: () => "ZESTBUS",
 	},
 	{
