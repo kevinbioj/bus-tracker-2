@@ -33,7 +33,7 @@ while (true) {
 	}
 
 	console.log("%s ► Fetching active vehicle journeys...", Temporal.Now.instant());
-	const vehicleJourneys = await fetchMonitoredVehicles(monitoredLines.slice(1));
+	const vehicleJourneys = await fetchMonitoredVehicles(monitoredLines);
 	await redis.publish(channel, JSON.stringify(vehicleJourneys));
 	console.log("%s ✓ Sent %d vehicle journeys.", Temporal.Now.instant(), vehicleJourneys.length);
 	await setTimeout(60_000);
