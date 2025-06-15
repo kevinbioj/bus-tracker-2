@@ -16,6 +16,7 @@ onlyBuiltDependencies:
   - '@sentry-internal/node-cpu-profiler'
   - '@sentry/cli'
   - '@swc/core'
+  - '@tailwindcss/oxide'
   - esbuild
   - protobufjs
   - sharp
