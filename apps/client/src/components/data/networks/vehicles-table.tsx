@@ -26,12 +26,10 @@ export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProp
 		overscan: 5,
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we force component height to be recomputed on viewport dimensions changes.
 	useEffect(() => {
 		virtualizer.measure();
 	}, [isDesktop, virtualizer]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we reset position when searchParams changes
 	useEffect(() => {
 		virtualizer.scrollToIndex(0, { behavior: "smooth" });
 	}, [searchParams]);

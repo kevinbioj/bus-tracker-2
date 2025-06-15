@@ -29,12 +29,10 @@ export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonl
 
 	const [showDebugInfos] = useLocalStorage("show-debug-info", false);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on girouette width changes
 	useEffect(() => {
 		updatePopup();
 	}, [journey?.girouette?.width, updatePopup]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to update on position changes
 	useEffect(() => {
 		if (isPopupVisible) {
 			refetch();

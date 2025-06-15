@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Info } from "lucide-react";
 
-import { GetNetworkQuery, Line } from "~/api/networks";
+import { GetNetworkQuery, type Line } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { cn } from "~/utils/utils";

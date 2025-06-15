@@ -1,9 +1,9 @@
-import { count, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import * as z from "zod";
 
 import { database } from "../database/database.js";
-import { lines, networks, operators, vehicles } from "../database/schema.js";
+import { lines, networks, operators } from "../database/schema.js";
 import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
 import type { JourneyStore } from "../store/journey-store.js";
 

@@ -3,8 +3,8 @@ import { ArrowRight, StarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLocalStorage } from "usehooks-ts";
 
-import { GetNetworksQuery, Network } from "~/api/networks";
-import { GetRegionsQuery, Region } from "~/api/regions";
+import { GetNetworksQuery, type Network } from "~/api/networks";
+import { GetRegionsQuery, type Region } from "~/api/regions";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Separator } from "~/components/ui/separator";
 import { cn } from "~/utils/utils";
