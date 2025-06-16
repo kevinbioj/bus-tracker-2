@@ -275,7 +275,9 @@ const sources = [
 		id: "saumur",
 		staticResourceHref: "https://mobi-iti-pdl.okina.fr/static/mobiiti_saumur_val_de_loire/gtfs_imported-id_saumur.zip",
 		realtimeResourceHrefs: [],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "OGALO",
+		getDestination: (journey) => journey?.calls.at(-1)?.stop.name,
 	},
 	{
 		id: "tours",
