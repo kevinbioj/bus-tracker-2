@@ -117,6 +117,15 @@ const sources = [
 		},
 	},
 	{
+		id: "cholet",
+		staticResourceHref:
+			"https://app.mecatran.com/utw/ws/gtfsfeed/static/choletbus?apiKey=0b0f0b6035007b7f1243311973401c294e6a0143",
+		realtimeResourceHrefs: [
+			"https://app.mecatran.com/utw/ws/gtfsfeed/realtime/choletbus?apiKey=0b0f0b6035007b7f1243311973401c294e6a0143",
+		],
+		getNetworkRef: () => "CHOLETBUS",
+	},
+	{
 		id: "orleans",
 		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/keolis_orleans.gtfs.zip",
 		realtimeResourceHrefs: [
