@@ -272,6 +272,12 @@ const sources = [
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 	{
+		id: "saumur",
+		staticResourceHref: "https://mobi-iti-pdl.okina.fr/static/mobiiti_saumur_val_de_loire/gtfs_imported-id_saumur.zip",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "OGALO",
+	},
+	{
 		id: "tours",
 		staticResourceHref:
 			"https://data.tours-metropole.fr/api/v2/catalog/datasets/horaires-temps-reel-gtfsrt-reseau-filbleu-tmvl/alternative_exports/filbleu_gtfszip",
