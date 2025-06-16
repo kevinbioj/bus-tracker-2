@@ -137,6 +137,16 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
+		id: "quimperle",
+		staticResourceHref: "https://pysae.com/api/v2/groups/quimperle/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/quimperle/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "TBK",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "rennes",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/star.zip",
 		realtimeResourceHrefs: [
