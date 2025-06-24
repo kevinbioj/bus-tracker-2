@@ -17,6 +17,7 @@ const nantesZenbusVehicleIdToLabel = new Map([
 	["zenbus:Vehicle:5200553242001408:LOC", "1054"],
 	["zenbus:Vehicle:5132913748213760:LOC", "1057"],
 	["zenbus:Vehicle:4867052192923648:LOC", "1058"],
+	["zenbus:Vehicle:4801682455134208:LOC", "1059"],
 	["zenbus:Vehicle:895000002:LOC", "1061"],
 	["zenbus:Vehicle:5122400943341568:LOC", "1062"],
 	["zenbus:Vehicle:892980002:LOC", "1064"],
