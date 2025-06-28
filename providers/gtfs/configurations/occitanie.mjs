@@ -280,6 +280,7 @@ const sources = [
 				"318",
 				"320",
 				"321",
+				"NVACC",
 			].includes(trip.route.name),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 		getNetworkRef: () => "TISSEO",
