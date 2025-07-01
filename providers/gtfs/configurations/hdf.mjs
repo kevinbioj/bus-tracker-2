@@ -72,7 +72,7 @@ const sources = [
 	},
 	{
 		id: "douai",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/99cf5e2f-87c2-4ff1-bc0d-32f04cc213ab",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/7b4bf9e6-50c5-47d1-855d-7da6c149a16e",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "EVEOLE",
 	},
