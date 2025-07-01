@@ -72,13 +72,13 @@ const sources = [
 	},
 	{
 		id: "douai",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/7b4bf9e6-50c5-47d1-855d-7da6c149a16e",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/99cf5e2f-87c2-4ff1-bc0d-32f04cc213ab",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "EVEOLE",
 	},
 	{
 		id: "lens-bethune",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/031c86b2-a1ca-4cc1-b926-77707423d9cb",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/99f29f9e-0dee-473d-9f9c-188e9d1ce9e5",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "TADAO",
 	},
