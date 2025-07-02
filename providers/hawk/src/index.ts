@@ -19,8 +19,9 @@ if (process.argv.length < 3) {
 	process.exit(1);
 }
 
-const popUpTextRegex =
-	/(?:{Route}:|Ligne:)\s*<[^>]*>\s*([\w\d]+)<\/[^>]*>.*?(?:{RunDestination}:|Destination:)\s*([^<]+?)\s*\(\d+\).*?(?:{LastLoc}:|Dernière position:)\s*([\d/:\s]+)/is;
+const lineRegex = /(?:{Route}:|Ligne:)[^<]*(?:<[^>]*>)*[^<]*(?:<text[^>]*>([\w\d]+)<\/text>|>([\w\d]+)<\/[^>]+>)/i;
+const destinationRegex = /(?:{RunDestination}:|Destination:)\s*([^<\n]+)/i;
+const lastLocRegex = /(?:{LastLoc}:|Dernière position:)\s*([\d]{2}\/[\d]{2}\/[\d]{4} [\d]{2}:[\d]{2}:[\d]{2})/i;
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 
@@ -58,14 +59,20 @@ while (true) {
 			return [];
 		}
 
-		const results = popUpTextRegex.exec(vehicle.PopUpText);
-		if (results === null) {
+		const lineResult = lineRegex.exec(vehicle.PopUpText);
+		const destinationResult = destinationRegex.exec(vehicle.PopUpText);
+		const lastLocResult = lastLocRegex.exec(vehicle.PopUpText);
+		if (lineResult === null || destinationResult === null || lastLocResult === null) {
 			console.log(`		${vehicle.ParcNumber} > Failed to extract info ("${vehicle.PopUpText}")`);
 			return [];
 		}
 
-		const [, line, destination, lastPositionAt] = results;
+		const [, line] = lineResult;
+		const [, destination] = destinationResult;
+		const [, lastPositionAt] = lastLocResult;
 		console.log(`		${vehicle.ParcNumber} OK (LIGNE:${line} / DEST:${destination} / LAST POS.:${lastPositionAt})`);
+
+		console.log(lastPositionAt);
 
 		const lastPositionAtDate = dayjs.tz(lastPositionAt, "DD/MM/YYYY HH:mm:ss", "Europe/Paris").toDate();
 
