@@ -19,7 +19,7 @@ if (process.argv.length < 3) {
 	process.exit(1);
 }
 
-const lineRegex = /(?:{Route}:|Ligne:)[^<]*(?:<text[^>]*>([^<]+)<\/text>|<[^>]*>([^<]+)<\/[^>]*>)/i;
+const lineRegex = /(?:{Route}:|Ligne:)(?:\s*<\/?[^>]+>)*\s*(?:<[^>]+>)?([\w\d-]+)(?:<\/[^>]+>)?/i;
 const destinationRegex = /(?:{RunDestination}:|Destination:)\s*([^<\n]+)/i;
 const lastLocRegex = /(?:{LastLoc}:|Dernière position:)\s*([\d]{2}\/[\d]{2}\/[\d]{4} [\d]{2}:[\d]{2}:[\d]{2})/i;
 
