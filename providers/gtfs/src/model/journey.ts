@@ -115,8 +115,13 @@ export class Journey {
 			call.expectedDepartureTime = undefined;
 			call.status = "SCHEDULED";
 
-			const timeUpdate = (stopTimeUpdatesByStopSequence.get(call.sequence) ??
+			let timeUpdate = (stopTimeUpdatesByStopSequence.get(call.sequence) ??
 				stopTimeUpdatesByStopId.get(call.stop.id))?.[0];
+
+			// Prevent wrong time assignation on circular lines when all stop events aren't provided
+			if (typeof timeUpdate?.stopSequence === "number" && timeUpdate.stopSequence !== call.sequence) {
+				timeUpdate = undefined;
+			}
 
 			call.platform = timeUpdate?.stopTimeProperties?.assignedStopId;
 
