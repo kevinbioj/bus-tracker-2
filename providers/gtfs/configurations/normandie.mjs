@@ -69,6 +69,7 @@ const sources = [
 			// "https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/semo/vehicle-positions",
 		],
+		mode: "NO-TU",
 		getNetworkRef: () => "SEMO",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
@@ -78,7 +79,7 @@ const sources = [
 	//- Transurbain
 	{
 		id: "transurbain",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/ec78df83-2e60-4284-acc3-86a0baa76bf0",
+		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=TRANSURBAIN&dataFormat=GTFS",
 		realtimeResourceHrefs: [
 			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TRANSURBAIN&dataFormat=GTFS-RT",
 			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=TRANSURBAIN&dataFormat=GTFS-RT",
