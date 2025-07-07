@@ -55,7 +55,7 @@ const sources = [
 		gtfsOptions: {
 			shapesStrategy: "IGNORE",
 		},
-		getNetworkRef: () => "REGION-NA",
+		getNetworkRef: () => "NA-33",
 	},
 	{
 		id: "na-79",
@@ -64,9 +64,8 @@ const sources = [
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
-		mapLineRef: (lineRef) => `79-${lineRef}`,
 		getAheadTime: () => 5 * 60,
-		getNetworkRef: () => "REGION-NA",
+		getNetworkRef: () => "NA-79",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
