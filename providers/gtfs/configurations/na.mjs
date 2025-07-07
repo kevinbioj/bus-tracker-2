@@ -48,16 +48,6 @@ const sources = [
 		getAheadTime: () => 120,
 	},
 	{
-		id: "na-33",
-		staticResourceHref:
-			"https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/gironde-aggregated-gtfs.zip",
-		realtimeResourceHrefs: ["https://citram.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions"],
-		gtfsOptions: {
-			shapesStrategy: "IGNORE",
-		},
-		getNetworkRef: () => "NA-33",
-	},
-	{
 		id: "na-79",
 		staticResourceHref: "https://pysae.com/api/v2/groups/deux-sevres/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/deux-sevres/gtfs-rt"],
