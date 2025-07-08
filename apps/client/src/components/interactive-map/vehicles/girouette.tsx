@@ -118,7 +118,23 @@ type RouteNumberProps = {
 };
 
 function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<RouteNumberProps>) {
+	const [halfPattern, setHalfPattern] = useState<RouteNumberData["halfPattern"]>();
+
+	useEffect(() => {
+		if (typeof routeNumber.halfPattern === "undefined") return;
+
+		let showingHalfPattern = false;
+
+		const interval = setInterval(() => {
+			setHalfPattern(showingHalfPattern ? undefined : routeNumber.halfPattern);
+			showingHalfPattern = !showingHalfPattern;
+		}, 1500);
+
+		return () => clearInterval(interval);
+	}, []);
+
 	if (typeof routeNumber === "undefined") return null;
+
 	const fontFamily = routeNumber.font ?? "1513B3E1";
 	const height = (dimensions.height * width) / (dimensions.rnWidth + dimensions.destinationWidth);
 	const onePixel = width / (dimensions.rnWidth + dimensions.destinationWidth);
@@ -138,9 +154,9 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<Rout
 				lineHeight: `${virtualHeight}px`,
 				paddingLeft: `${spacing}px`,
 				//- Colors
-				...(routeNumber.halfPattern
+				...(halfPattern
 					? {
-							background: `linear-gradient(to ${match(routeNumber.halfPattern)
+							background: `linear-gradient(to ${match(halfPattern)
 								.with("tl", () => "top left")
 								.with("tr", () => "top right")
 								.with("bl", () => "bottom left")
