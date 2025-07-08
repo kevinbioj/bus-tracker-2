@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import { type ComponentPropsWithoutRef, useEffect, useState } from "react";
+import { match } from "ts-pattern";
 
 const paneBgColor = "#1D1D1B";
 
@@ -57,6 +58,7 @@ export type RouteNumberData = {
 	backgroundColor?: string;
 	outlineColor?: string;
 	textColor?: string;
+	halfPattern?: "tl" | "tr" | "bl" | "br";
 };
 
 type PageLine = {
@@ -136,7 +138,16 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<Rout
 				lineHeight: `${virtualHeight}px`,
 				paddingLeft: `${spacing}px`,
 				//- Colors
-				backgroundColor: routeNumber.backgroundColor ?? paneBgColor,
+				...(routeNumber.halfPattern
+					? {
+							background: `linear-gradient(to ${match(routeNumber.halfPattern)
+								.with("tl", () => "top left")
+								.with("tr", () => "top right")
+								.with("bl", () => "bottom left")
+								.with("br", () => "bottom right")
+								.exhaustive()}, ${routeNumber.backgroundColor ?? paneBgColor} 50%, ${paneBgColor} 50%)`,
+						}
+					: { backgroundColor: routeNumber.backgroundColor ?? paneBgColor }),
 				color: routeNumber.textColor ?? ledColors[ledColor],
 				//- Outline (if applicable)
 				...(routeNumber.outlineColor
