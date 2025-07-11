@@ -285,6 +285,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				position: {
 					latitude: vehiclePosition.position.latitude,
 					longitude: vehiclePosition.position.longitude,
+					bearing: vehiclePosition.position.bearing,
 					atStop: vehiclePosition.currentStatus === "STOPPED_AT",
 					type: "GPS",
 					recordedAt: Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000)
