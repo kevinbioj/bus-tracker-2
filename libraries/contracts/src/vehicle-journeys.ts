@@ -41,6 +41,7 @@ export type VehicleJourneyCall = z.infer<typeof vehicleJourneyCallSchema>;
 export const vehicleJourneyPositionSchema = z.object({
 	latitude: z.number(),
 	longitude: z.number(),
+	bearing: z.number().optional(),
 	atStop: z.boolean(),
 	type: z.enum(["GPS", "COMPUTED"]),
 	recordedAt: z.string().datetime({ offset: true }),

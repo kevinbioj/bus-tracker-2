@@ -52,13 +52,13 @@ export const registerVehicleJourneyRoutes = (hono: Hono, store: JourneyStore) =>
 		const lines = await fetchLines(Array.from(new Set(lineIds)));
 
 		const items = boundedJourneys.map(({ id, lineId, position }) => {
-			const { latitude, longitude, type } = position;
+			const { latitude, longitude, bearing, type } = position;
 			const line = lineId ? lines.get(lineId) : undefined;
 			return {
 				id,
 				color: line?.textColor ? `#${line.textColor}` : undefined,
 				fillColor: line?.color ? `#${line.color}` : undefined,
-				position: { latitude, longitude, type },
+				position: { latitude, longitude, bearing, type },
 			};
 		});
 

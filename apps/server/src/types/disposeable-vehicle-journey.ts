@@ -14,6 +14,7 @@ export type DisposeableVehicleJourney = {
 	position: {
 		latitude: number;
 		longitude: number;
+		bearing?: number;
 		atStop: boolean;
 		type: "GPS" | "COMPUTED";
 		recordedAt: string;
