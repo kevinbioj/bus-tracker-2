@@ -88,7 +88,7 @@ const sources = [
 	},
 	{
 		id: "tni",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/e39d7fe1-8c0c-4273-9236-d7c458add7a0",
+		staticResourceHref: "http://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TNI&dataFormat=GTFS",
 		realtimeResourceHrefs: [
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
@@ -107,14 +107,14 @@ const sources = [
 		getDestination: (journey) => `${journey.calls.at(0)?.stop.name} > ${journey.calls.at(-1)?.stop.name}`,
 		getOperatorRef: () => "TNI",
 	},
-	{
-		id: "hanga",
-		staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE&companyCode=ASTUCE:004",
-		realtimeResourceHrefs: [],
-		getNetworkRef: () => "ASTUCE",
-		getOperatorRef: (journey) => (["204", "214"].includes(journey?.trip.route.id) ? "TNI" : "HANGA"),
-		getDestination: (journey) => journey?.trip.stopTimes.at(-1).stop.name,
-	},
+	// {
+	// 	id: "hanga",
+	// 	staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE&companyCode=ASTUCE:004",
+	// 	realtimeResourceHrefs: [],
+	// 	getNetworkRef: () => "ASTUCE",
+	// 	getOperatorRef: (journey) => (["204", "214"].includes(journey?.trip.route.id) ? "TNI" : "HANGA"),
+	// 	getDestination: (journey) => journey?.trip.stopTimes.at(-1).stop.name,
+	// },
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
