@@ -61,7 +61,13 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "ALEOP",
-		getVehicleRef: (descriptor) => descriptor?.label,
+		getVehicleRef: (descriptor) => {
+			const label = descriptor?.label;
+			if (typeof label === "undefined") return;
+			if (label.includes("→") || label.includes(">")) return;
+			if (/\d/.exec(label) === null) return;
+			return label;
+		},
 		getDestination: (journey) => journey?.trip.headsign?.replace("→", ">"),
 	},
 	{
