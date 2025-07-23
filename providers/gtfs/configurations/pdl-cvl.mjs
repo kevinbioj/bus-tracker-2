@@ -57,10 +57,11 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-vehicle-position",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/aleop-300/vehicle-positions",
 		],
+		gtfsOptions: { shapesStrategy: "IGNORE" }, // shape distances unavailable
+		excludeScheduled: true,
 		mode: "NO-TU",
-		getNetworkRef: () => "ALEOP",
+		getNetworkRef: (journey) => journey.trip.route.agency.id.replace("_", "-"),
 		getVehicleRef: (descriptor) => {
 			const label = descriptor?.label;
 			if (typeof label === "undefined") return;
@@ -335,7 +336,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	computeDelayMs: 30_000,
+	computeDelayMs: 15_000,
 	redisOptions: {
 		url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
 		username: process.env.REDIS_USERNAME,
