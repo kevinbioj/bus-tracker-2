@@ -97,6 +97,7 @@ while (true) {
 				stopName: call.StopPointName,
 				stopRef: call.StopPointRef,
 			})),
+			occupancy: vehicle.comptage > 60 ? "HIGH" : vehicle.comptage > 30 ? "MEDIUM" : "LOW",
 			networkRef: "DKBUS",
 			vehicleRef: `DKBUS::Vehicle:${vehicle.numero}`,
 			updatedAt: recordedAt.toInstant().toString(),
