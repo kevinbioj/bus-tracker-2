@@ -10,8 +10,17 @@ function nthIndexOf(input, pattern, n) {
 }
 
 const agdeZenbusVehicles = new Map([
+	["zenbus:Vehicle:338850002:LOC", "109335"],
+	["zenbus:Vehicle:316640004:LOC", "109334"],
+	["zenbus:Vehicle:308550002:LOC", "109337"],
 	["zenbus:Vehicle:318570002:LOC", "123036"],
 	["zenbus:Vehicle:308550002:LOC", "153065"],
+	["zenbus:Vehicle:302650002:LOC", "177017"],
+	["zenbus:Vehicle:302660001:LOC", "189115"],
+	["zenbus:Vehicle:338850001:LOC", "207014"],
+	["zenbus:Vehicle:314610001:LOC", "207015"],
+	["zenbus:Vehicle:322530001:LOC", "207017"],
+	["zenbus:Vehicle:298720001:LOC", "207018"],
 ]);
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
