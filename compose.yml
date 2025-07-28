@@ -1,12 +1,12 @@
 services:
   redis:
-    image: redis/redis-stack:7.4.0-v3
+    image: redis/redis-stack:7.4.0-v6
     ports:
       - 6379:6379
       - 8001:8001
 
   postgres:
-    image: postgres:17.4
+    image: postgres:17.5
     environment:
       POSTGRES_USER: bustracker
       POSTGRES_PASSWORD: QsPkHJ0696UDf6UX

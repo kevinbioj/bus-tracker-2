@@ -13,22 +13,22 @@
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@types/decompress": "^4.2.7",
-		"@types/node": "^24.0.1",
+		"@types/node": "^24.1.0",
 		"@types/papaparse": "^5.3.16",
 		"tsx": "^4.20.3",
 		"typescript": "^5.8.3",
-		"vitest": "^3.2.3"
+		"vitest": "^3.2.4"
 	},
 	"dependencies": {
-		"croner": "^9.0.0",
+		"croner": "^9.1.0",
 		"decompress": "^4.2.1",
-		"dotenv": "^16.5.0",
+		"dotenv": "^17.2.1",
 		"draftlog": "^1.0.13",
 		"gtfs-realtime-bindings": "^1.1.1",
 		"p-limit": "^6.2.0",
 		"papaparse": "^5.5.3",
-		"redis": "^5.5.6",
+		"redis": "^5.6.1",
 		"temporal-polyfill": "^0.3.0",
-		"ts-pattern": "^5.7.1"
+		"ts-pattern": "^5.8.0"
 	}
 }
