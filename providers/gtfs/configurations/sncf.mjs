@@ -12,59 +12,17 @@ function nthIndexOf(input, pattern, n) {
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
-		id: "sncf-ter",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-ter.zip",
-		// realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-all-gtfs-rt-trip-updates"],
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ter-gtfs-rt-trip-updates"],
-		excludeScheduled: true,
-		gtfsOptions: {
-			filterTrips: (trip) => trip.route.type !== "BUS",
-			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
-			ignoreBlocks: true,
-		},
-		getAheadTime: () => 5 * 60,
-		mapTripUpdate: (tripUpdate) => {
-			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
-			return tripUpdate;
-		},
-		getNetworkRef: () => "SNCF",
-		getVehicleRef: (_, journey) => journey?.trip.headsign,
-		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
-		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 3) + 1, lineRef.lastIndexOf(":")),
-		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
-	},
-	{
-		id: "sncf-intercites",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-intercites.zip",
-		// realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-all-gtfs-rt-trip-updates"],
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-ic-gtfs-rt-trip-updates"],
+		id: "sncf",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf.zip",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/sncf-all-gtfs-rt-trip-updates?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
 		excludeScheduled: true,
 		gtfsOptions: {
 			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
 			ignoreBlocks: true,
 		},
-		getAheadTime: () => 20 * 60,
-		mapTripUpdate: (tripUpdate) => {
-			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
-			return tripUpdate;
-		},
-		getNetworkRef: () => "SNCF",
-		getVehicleRef: (_, journey) => journey?.trip.headsign,
-		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
-		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 3) + 1, lineRef.lastIndexOf(":")),
-		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
-	},
-	{
-		id: "sncf-tgv",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf-tgv.zip",
-		// realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-all-gtfs-rt-trip-updates"],
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-tgv-gtfs-rt-trip-updates"],
-		excludeScheduled: true,
-		gtfsOptions: {
-			mapTripId: (tripId) => tripId.slice(0, tripId.indexOf(":")),
-			ignoreBlocks: true,
-		},
-		getAheadTime: () => 20 * 60,
+		getAheadTime: () => 10 * 60,
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.indexOf(":"));
 			return tripUpdate;
