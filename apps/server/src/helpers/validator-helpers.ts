@@ -1,7 +1,9 @@
 import { validator } from "hono/validator";
-import type { ZodObject,core } from "zod";
+import type { ZodObject, core } from "zod";
 
-export const createQueryValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(schema: ZodObject<Shape, Config>) =>
+export const createQueryValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(
+	schema: ZodObject<Shape, Config>,
+) =>
 	validator("query", (values, c) => {
 		const parsed = schema.safeParse(values);
 		if (!parsed.success) {
@@ -15,7 +17,9 @@ export const createQueryValidator = <Shape extends core.$ZodShape, Config extend
 		return parsed.data;
 	});
 
-export const createParamValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(schema: ZodObject<Shape, Config>) =>
+export const createParamValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(
+	schema: ZodObject<Shape, Config>,
+) =>
 	validator("param", (values, c) => {
 		const parsed = schema.safeParse(values);
 		if (!parsed.success) {

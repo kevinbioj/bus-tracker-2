@@ -102,7 +102,6 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 			<Link to={`/data/vehicles/${journey.vehicle.id}`}>{vehicleNumber}</Link>
 		</Button>
 	) : (
-		// biome-ignore lint/complexity/noUselessFragments: biome not seeing the extra space
 		<>{vehicleNumber} </>
 	);
 

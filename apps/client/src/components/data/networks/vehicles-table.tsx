@@ -26,10 +26,12 @@ export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProp
 		overscan: 5,
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: need to react on isDesktop changes
 	useEffect(() => {
 		virtualizer.measure();
 	}, [isDesktop, virtualizer]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: need to react on searchParams changes
 	useEffect(() => {
 		virtualizer.scrollToIndex(0, { behavior: "smooth" });
 	}, [searchParams]);

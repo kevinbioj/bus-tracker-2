@@ -131,7 +131,7 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<Rout
 		}, 1500);
 
 		return () => clearInterval(interval);
-	}, [routeNumber.halfPattern, setHalfPattern]);
+	}, [routeNumber.halfPattern]);
 
 	if (typeof routeNumber === "undefined") return null;
 

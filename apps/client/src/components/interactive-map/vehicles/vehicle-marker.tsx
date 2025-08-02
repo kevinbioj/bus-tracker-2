@@ -39,6 +39,16 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Readonl
 		}
 	}, [marker]);
 
+	const adjustPan = useCallback((ref: RefObject<MoveableCircleMarker | null>) => {
+		if (ref.current === null) return;
+		const { _popup } = ref.current as unknown as {
+			_popup: { options: { autoPan: boolean }; _adjustPan: () => void };
+		};
+		_popup.options.autoPan = true;
+		_popup._adjustPan();
+		_popup.options.autoPan = false;
+	}, []);
+
 	useEffect(() => {
 		if (ref.current === null) return;
 
@@ -49,17 +59,7 @@ export function VehicleMarker({ activeMarker, setActiveMarker, marker }: Readonl
 				adjustPan(ref);
 			}
 		}
-	}, [activeMarker, marker]);
-
-	const adjustPan = useCallback((ref: RefObject<MoveableCircleMarker | null>) => {
-		if (ref.current === null) return;
-		const { _popup } = ref.current as unknown as {
-			_popup: { options: { autoPan: boolean }; _adjustPan: () => void };
-		};
-		_popup.options.autoPan = true;
-		_popup._adjustPan();
-		_popup.options.autoPan = false;
-	}, []);
+	}, [adjustPan, activeMarker, marker]);
 
 	const updatePopup = () => {
 		if (ref.current === null) return;
