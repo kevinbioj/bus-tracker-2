@@ -55,7 +55,7 @@ const sources = [
 	},
 	{
 		id: "tae",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/tae.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tae.zip",
 		realtimeResourceHrefs: ["https://gtfs.tae76.fr/gtfs-rt.bin"],
 		excludeScheduled: (trip) => trip.route.name !== "I",
 		mapTripUpdate: (tripUpdate) => {
@@ -77,8 +77,7 @@ const sources = [
 	},
 	{
 		id: "tgr",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/tcar-tgr.zip",
-		// staticResourceHref: "https://pysae.com/api/v2/groups/tcar/gtfs/pub",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tgr.zip",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: (trip) => trip.route.name === "06",
@@ -88,7 +87,7 @@ const sources = [
 	},
 	{
 		id: "tni",
-		staticResourceHref: "http://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TNI&dataFormat=GTFS",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tni.zip",
 		realtimeResourceHrefs: [
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
