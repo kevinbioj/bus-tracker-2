@@ -43,7 +43,7 @@ export function Announcements() {
 					)}
 				</Button>
 			</DialogTrigger>
-			<DialogContent aria-describedby={undefined} className="">
+			<DialogContent aria-describedby={undefined} className="max-h-[calc(100svh-4rem)] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>Actualités</DialogTitle>
 				</DialogHeader>
