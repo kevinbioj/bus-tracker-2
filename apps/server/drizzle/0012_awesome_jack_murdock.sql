@@ -1,0 +1,1 @@
+ALTER TABLE "line" ADD COLUMN "girouette_number" varchar;

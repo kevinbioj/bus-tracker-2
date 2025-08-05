@@ -77,6 +77,7 @@ export const lines = pgTable(
 			.references(() => networks.id),
 		references: varchar("ref").array(),
 		number: varchar("number").notNull(),
+		girouetteNumber: varchar("girouette_number"),
 		cartridgeHref: varchar("cartridge_href"),
 		color: char("color", { length: 6 }),
 		textColor: char("text_color", { length: 6 }),

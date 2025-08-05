@@ -23,6 +23,8 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 	const line = useLine(girouette ? undefined : journey.networkId, journey.lineId);
 	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName ?? "Destination inconnue";
 
+	const defaultRouteNumber = line?.girouetteNumber ?? line?.number ?? "";
+
 	return (
 		<div className="border-[1px] border-neutral-800">
 			{girouette ? (
@@ -39,10 +41,10 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 										.with(["#FFFFFF", P.string], () => "#000000")
 										.with([null, null], () => undefined)
 										.otherwise(() => "#FFFFFF"),
-									font: line.number.length <= 3 ? "1508SUPX" : "1407SUPX",
-									scroll: line.number.length >= "KKKKK".length,
-									spacing: line.number.length >= 4 ? 0 : 1,
-									text: line.number ?? "",
+									font: defaultRouteNumber.length <= 3 ? "1508SUPX" : "1407SUPX",
+									scroll: defaultRouteNumber.length >= "KKKKK".length,
+									spacing: defaultRouteNumber.length >= 4 ? 0 : 1,
+									text: defaultRouteNumber ?? "",
 								}
 							: undefined
 					}

@@ -26,6 +26,7 @@ export type Line = {
 	id: number;
 	ref: string;
 	number: string;
+	girouetteNumber: string | null;
 	cartridgeHref: string | null;
 	color: string | null;
 	textColor: string | null;
