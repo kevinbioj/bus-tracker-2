@@ -39,7 +39,7 @@ export function OnlineSheet() {
 					<BusFrontIcon className="inline mb-0.5" />
 				</a>
 			</SheetTrigger>
-			<SheetContent aria-describedby={undefined} className="">
+			<SheetContent aria-describedby={undefined} className="max-w-[90vw] w-full px-3">
 				<SheetHeader>
 					<SheetTitle className="flex items-center gap-2">
 						{typeof networkId !== "undefined" ? (

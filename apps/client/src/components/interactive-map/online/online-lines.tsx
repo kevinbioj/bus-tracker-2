@@ -60,7 +60,7 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 	);
 
 	return (
-		<div className="flex flex-col gap-3">
+		<div className="flex flex-col gap-1">
 			{linesWithVehicles.flatMap(renderLine)}
 			{linesWithVehicles.length > 0 && linesWithoutVehicles.length > 0 && <Separator />}
 			{linesWithoutVehicles.length > 0 && (

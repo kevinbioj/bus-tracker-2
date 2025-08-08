@@ -14,7 +14,7 @@ export function OnlineVehicles({ closeSheet, lineId }: Readonly<OnlineVehiclesPr
 
 	const lineVehicles = vehicles.filter((vehicle) => vehicle.activity.lineId === lineId);
 	return lineVehicles.length > 0 ? (
-		<div className="flex flex-col gap-3">
+		<div className="space-y-1">
 			{lineVehicles
 				.toSorted((a, b) => +a.number - +b.number)
 				.map((vehicle) => (
