@@ -12,14 +12,14 @@
 	},
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@types/node": "^24.1.0",
+		"@types/node": "^24.2.1",
 		"tsx": "^4.20.3",
-		"typescript": "^5.8.3"
+		"typescript": "^5.9.2"
 	},
 	"dependencies": {
 		"dayjs": "^1.11.13",
 		"draftlog": "^1.0.13",
-		"redis": "^5.6.1",
+		"redis": "^5.8.0",
 		"temporal-polyfill": "^0.3.0"
 	}
 }
