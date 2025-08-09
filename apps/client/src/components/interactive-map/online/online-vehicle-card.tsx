@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { PinIcon } from "lucide-react";
+import { LocateIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { P, match } from "ts-pattern";
 
@@ -78,7 +78,7 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 								size="icon"
 							>
 								<Link to={`#${vehicle.activity.markerId}`}>
-									<PinIcon />
+									<LocateIcon />
 								</Link>
 							</Button>
 						</TooltipTrigger>
