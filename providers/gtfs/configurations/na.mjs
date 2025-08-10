@@ -1,5 +1,16 @@
 import { Temporal } from "temporal-polyfill";
 
+function nthIndexOf(input, pattern, n) {
+	const length = input.length;
+	let i = -1;
+	let j = n;
+	while (j-- && i++ < length) {
+		i = input.indexOf(pattern, i);
+		if (i < 0) break;
+	}
+	return i;
+}
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -46,6 +57,19 @@ const sources = [
 		getNetworkRef: () => "TXIKTXAK",
 		getVehicleRef: () => undefined,
 		getAheadTime: () => 120,
+	},
+	{
+		id: "la-rochelle",
+		staticResourceHref:
+			"https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/ca_la_rochelle-aggregated-gtfs.zip",
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/yelo"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "YELO",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
 		id: "na-79",
