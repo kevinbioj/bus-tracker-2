@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { LocateIcon } from "lucide-react";
+import { LocateFixedIcon, LocateIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { P, match } from "ts-pattern";
 
@@ -72,13 +72,14 @@ export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicl
 						<TooltipTrigger asChild>
 							<Button
 								asChild
-								className="absolute bottom-0 right-0 rounded-md"
+								className="absolute bottom-0 right-0 rounded-md group"
 								onClick={flyTo}
 								variant="inherit"
 								size="icon"
 							>
 								<Link to={`#${vehicle.activity.markerId}`}>
-									<LocateIcon />
+									<LocateFixedIcon className="absolute opacity-0 group-hover:opacity-100 transition-opacity z-10" />
+									<LocateIcon className="absolute opacity-100 group-hover:opacity-0 transition-opacity" />
 								</Link>
 							</Button>
 						</TooltipTrigger>
