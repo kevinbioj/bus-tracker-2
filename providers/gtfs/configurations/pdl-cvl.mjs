@@ -239,6 +239,19 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
+		id: "la-rochelle",
+		staticResourceHref:
+			"https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/ca_la_rochelle-aggregated-gtfs.zip",
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/yelo"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "YELO",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+	},
+	{
 		id: "remi-28",
 		staticResourceHref: "https://www.transdev-centrevaldeloire.com/cvl/open-data/remi-28/gtfs",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/eure-et-loir-mobilite/gtfs-rt"],
