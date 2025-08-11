@@ -49,8 +49,8 @@ const sources = [
 	},
 	{
 		id: "nice",
-		staticResourceHref: "https://transport.data.gouv.fr/resources/79642/download",
-		realtimeResourceHrefs: [],
+		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/OpendataRLA/gtfs.zip",
+		realtimeResourceHrefs: ["https://ara-api.enroute.mobi/rla/gtfs/trip-updates"],
 		getNetworkRef: () => "LIGNES-AZUR",
 	},
 	{
