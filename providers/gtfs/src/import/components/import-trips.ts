@@ -3,7 +3,7 @@ import type { VehicleJourneyCallFlags } from "@bus-tracker/contracts";
 
 import { createPlainTime } from "../../cache/temporal-cache.js";
 import type { Route } from "../../model/route.js";
-import type { Service } from "../../model/service.js";
+import { Service } from "../../model/service.js";
 import type { Shape } from "../../model/shape.js";
 import type { Stop } from "../../model/stop.js";
 import { StopTime } from "../../model/stop-time.js";
@@ -11,6 +11,7 @@ import { Trip } from "../../model/trip.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
+import { Temporal } from "temporal-polyfill";
 
 type TripRecord = CsvRecord<
 	"trip_id" | "route_id" | "service_id" | "direction_id",
@@ -41,9 +42,10 @@ export async function importTrips(
 			throw new Error(`Unknown route with id '${routeId}' for trip '${tripId}'.`);
 		}
 
-		const service = services.get(tripRecord.service_id);
+		let service = services.get(tripRecord.service_id);
 		if (typeof service === "undefined") {
-			throw new Error(`Unknown service with id '${tripRecord.service_id}' for trip '${tripId}'.`);
+			service = new Service(tripRecord.service_id);
+			services.set(service.id, service);
 		}
 
 		const trip = new Trip(
