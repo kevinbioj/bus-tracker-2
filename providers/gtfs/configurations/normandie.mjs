@@ -205,7 +205,7 @@ const sources = [
 	//- Némus
 	{
 		id: "flers",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/388da89c-d15b-4496-810a-be250be9a26a",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/d8b9a49f-db3b-4b53-b0a0-345072ce1249",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/flers-nemus-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/flers-nemus-gtfs-rt-vehicle-position",
