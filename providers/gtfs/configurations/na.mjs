@@ -92,6 +92,16 @@ const sources = [
 		],
 		getNetworkRef: () => "VITALIS",
 	},
+	{
+		id: "respire",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=iledere75923021",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=iledere75923021"],
+		mode: "NO-TU",
+		getNetworkRef: () => "RESPIRE",
+		getVehicleRef: () => undefined,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
