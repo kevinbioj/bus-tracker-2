@@ -21,7 +21,7 @@ const sources = [
 	},
 	{
 		id: "gap",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/cagtd_20250422.zip",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/cagtd/current/revision/gtfs",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/cagtd/realtime"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
