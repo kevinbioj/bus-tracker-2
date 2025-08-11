@@ -99,6 +99,7 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "RESPIRE",
 		getVehicleRef: () => undefined,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
