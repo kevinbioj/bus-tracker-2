@@ -18,10 +18,7 @@ const sources = [
 	},
 	{
 		id: "dijon",
-		// 2025-08-11: using n-1 gtfs as n has missing services
-		staticResourceHref:
-			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/80742/80742.20250627.140907.083882.zip",
-		// staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/e0dbd217-15cd-4e28-9459-211a27511a34",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/e0dbd217-15cd-4e28-9459-211a27511a34",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/divia-dijon-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/divia-dijon-gtfs-rt-vehicle-position",
