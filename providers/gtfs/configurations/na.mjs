@@ -68,6 +68,8 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "YELO",
 		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) =>
+			vehicle?.label ?? journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1),
 	},
