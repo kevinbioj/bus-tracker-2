@@ -10,9 +10,7 @@ const sources = [
 	// },
 	{
 		id: "cannes",
-		// need to investigate weird decompression bug
-		staticResourceHref: "https://gtfs.bus-tracker.fr/palmbus-20250318.zip",
-		// staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/47bc8088-6c72-43ad-a959-a5bbdd1aa14f",
+		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/47bc8088-6c72-43ad-a959-a5bbdd1aa14f",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/palmbus-cannes-gtfs-rt-vehicle-position",
 			"https://proxy.transport.data.gouv.fr/resource/palmbus-cannes-gtfs-rt-trip-update",
