@@ -11,7 +11,6 @@ import { Trip } from "../../model/trip.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
-import { Temporal } from "temporal-polyfill";
 
 type TripRecord = CsvRecord<
 	"trip_id" | "route_id" | "service_id" | "direction_id",
