@@ -97,6 +97,16 @@ const sources = [
 		getNetworkRef: () => "CITEA",
 	},
 	{
+		id: "valloire",
+		staticResourceHref: "https://pysae.com/api/v2/groups/valloire/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/valloire/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "VALLOIRE",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "villefranche-s-saone",
 		staticResourceHref:
 			"https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_libellule.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
