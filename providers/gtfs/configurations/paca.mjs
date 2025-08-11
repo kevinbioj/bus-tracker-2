@@ -1,13 +1,13 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
-	{
-		id: "avigon",
-		staticResourceHref: "https://exs.tcra2.cityway.fr/gtfs.aspx?key=UID&operatorCode=TCRA",
-		realtimeResourceHrefs: ["https://export.tcra2.cityway.fr/GtfsRt/GtfsRT.TCRA.pb"],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
-		excludeScheduled: true,
-		getNetworkRef: () => "ORIZO",
-	},
+	// {
+	// 	id: "avignon",
+	// 	staticResourceHref: "https://exs.tcra2.cityway.fr/gtfs.aspx?key=UID&operatorCode=TCRA",
+	// 	realtimeResourceHrefs: ["https://export.tcra2.cityway.fr/GtfsRt/GtfsRT.TCRA.pb"],
+	// 	gtfsOptions: { shapesStrategy: "IGNORE" },
+	// 	excludeScheduled: true,
+	// 	getNetworkRef: () => "ORIZO",
+	// },
 	{
 		id: "cannes",
 		// need to investigate weird decompression bug
