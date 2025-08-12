@@ -84,6 +84,7 @@ export function OnlineNetworks({ updateNetwork }: Readonly<OnlineNetworksProps>)
 			<Accordion className="mt-2" type="multiple">
 				{regions
 					.filter((region) => relevantNetworksByRegion.get(region)?.length)
+					.sort((a, b) => a.sortOrder - b.sortOrder)
 					.map((region) => (
 						<AccordionItem key={region.id} value={region.id.toString()}>
 							<AccordionTrigger>{region.name}</AccordionTrigger>
