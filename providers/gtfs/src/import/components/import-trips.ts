@@ -91,8 +91,17 @@ export async function importTrips(
 		if (stopTimeRecord.pickup_type === "1") flags.push("NO_PICKUP");
 		if (stopTimeRecord.drop_off_type === "1") flags.push("NO_DROP_OFF");
 
-		const arrivalHours = +stopTimeRecord.arrival_time.slice(0, 2);
-		const departureHours = +stopTimeRecord.departure_time.slice(0, 2);
+		const [arrivalHours, arrivalMinutes, arrivalSeconds] = stopTimeRecord.arrival_time.split(":") as [
+			string,
+			string,
+			string,
+		];
+
+		const [departureHours, departureMinutes, departureSeconds] = stopTimeRecord.departure_time.split(":") as [
+			string,
+			string,
+			string,
+		];
 
 		const mismatchingTimes = stopTimeRecord.arrival_time !== stopTimeRecord.departure_time;
 
@@ -100,14 +109,16 @@ export async function importTrips(
 			+stopTimeRecord.stop_sequence,
 			stop,
 			flags,
-			createPlainTime(`${(arrivalHours % 24).toString().padStart(2, "0")}:${stopTimeRecord.arrival_time.slice(3)}`),
-			Math.floor(arrivalHours / 24),
+			createPlainTime(
+				`${(+arrivalHours % 24).toString().padStart(2, "0")}:${arrivalMinutes.padStart(2, "0")}:${arrivalSeconds.padStart(2, "0")}`,
+			),
+			Math.floor(+arrivalHours / 24),
 			mismatchingTimes
 				? createPlainTime(
-						`${(departureHours % 24).toString().padStart(2, "0")}:${stopTimeRecord.departure_time.slice(3)}`,
+						`${(+departureHours % 24).toString().padStart(2, "0")}:${departureMinutes.padStart(2, "0")}:${departureSeconds.padStart(2, "0")}`,
 					)
 				: undefined,
-			mismatchingTimes ? Math.floor(departureHours / 24) : undefined,
+			mismatchingTimes ? Math.floor(+departureHours / 24) : undefined,
 			typeof stopTimeRecord.shape_dist_traveled !== "undefined" ? +stopTimeRecord.shape_dist_traveled : undefined,
 		);
 
