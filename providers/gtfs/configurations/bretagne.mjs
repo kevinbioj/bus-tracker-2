@@ -148,7 +148,7 @@ const sources = [
 	},
 	{
 		id: "rennes",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/star.zip",
+		staticResourceHref: "https://eu.ftp.opendatasoft.com/star/gtfs/GTFS_STAR_BUS_METRO_EN_COURS.zip",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/star-rennes-integration-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/star-rennes-integration-gtfs-rt-vehicle-position",
