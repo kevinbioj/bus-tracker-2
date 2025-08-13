@@ -66,8 +66,7 @@ const sources = [
 		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=SEMO&dataFormat=GTFS",
 		realtimeResourceHrefs: [
 			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
-			// "https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/semo/vehicle-positions",
+			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
 		],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
