@@ -1,3 +1,4 @@
+import { useUmami } from "@danielgtmn/umami-react";
 import { useQuery } from "@tanstack/react-query";
 import { LucideCircle, LucideMegaphone } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
@@ -7,11 +8,12 @@ import { AnnouncementContent, AnnouncementTitle } from "~/components/announcemen
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
-import { plausible } from "~/utils/plausible";
 
 export function Announcements() {
 	const { data: announcements } = useQuery(GetAnnouncementsQuery);
 	const [announcementsRead, setAnnouncementsRead] = useLocalStorage<number[]>("announcements-read", []);
+
+	const { track } = useUmami();
 
 	// If we have no announcement, we don't even display the icon.
 	if (typeof announcements === "undefined") return null;
@@ -26,9 +28,7 @@ export function Announcements() {
 		if (announcementsRead.includes(id)) return;
 
 		setAnnouncementsRead([...announcementsRead, id]);
-		plausible.trackEvent("announcement-read", {
-			props: { id },
-		});
+		track("announcement-read", { announcementId: id });
 	};
 
 	return (

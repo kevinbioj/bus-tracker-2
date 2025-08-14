@@ -26,6 +26,7 @@
 		"vite-tsconfig-paths": "^5.1.4"
 	},
 	"dependencies": {
+		"@danielgtmn/umami-react": "^1.0.0",
 		"@radix-ui/react-accordion": "^1.2.11",
 		"@radix-ui/react-dialog": "^1.1.14",
 		"@radix-ui/react-label": "^2.1.7",
@@ -45,7 +46,6 @@
 		"leaflet": "^1.9.4",
 		"leaflet.locatecontrol": "^0.84.2",
 		"lucide-react": "^0.539.0",
-		"plausible-tracker": "^0.3.9",
 		"react": "^19.1.1",
 		"react-dom": "^19.1.1",
 		"react-leaflet": "^5.0.0",
