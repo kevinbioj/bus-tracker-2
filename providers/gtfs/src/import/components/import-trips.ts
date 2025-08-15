@@ -13,8 +13,8 @@ import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 import type { ImportGtfsOptions } from "../import-gtfs.js";
 
 type TripRecord = CsvRecord<
-	"trip_id" | "route_id" | "service_id" | "direction_id",
-	"trip_headsign" | "block_id" | "shape_id"
+	"trip_id" | "route_id" | "service_id",
+	"direction_id" | "trip_headsign" | "block_id" | "shape_id"
 >;
 type StopTimeRecord = CsvRecord<
 	"trip_id" | "arrival_time" | "departure_time" | "stop_sequence" | "stop_id",
@@ -52,7 +52,7 @@ export async function importTrips(
 			route,
 			service,
 			[],
-			+tripRecord.direction_id as 0 | 1,
+			+(tripRecord.direction_id ?? 0) as 0 | 1,
 			tripRecord.trip_headsign || undefined,
 			typeof tripRecord.block_id !== "undefined" && tripRecord.block_id.length > 0 && !ignoreBlocks
 				? tripRecord.block_id
