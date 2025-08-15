@@ -33,6 +33,16 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 3) + 1, lineRef.lastIndexOf(":")),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 	},
+	{
+		id: "trenitalia",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/trenitalia-france.zip",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/trenitalia-gtfs-rt?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		getNetworkRef: () => "TRENITALIA-FR",
+		getVehicleRef: () => undefined,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
