@@ -60,6 +60,16 @@ const sources = [
 		getNetworkRef: () => "GRANDOLE",
 	},
 	{
+		id: "luneville",
+		staticResourceHref: "https://pysae.com/api/v2/groups/luneo/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/luneo/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "LUNEO",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "thionville",
 		staticResourceHref: "https://pysae.com/api/v2/groups/smitu/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/smitu/gtfs-rt"],
