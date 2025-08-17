@@ -27,12 +27,29 @@ const saclayZenbusIdToVehicleLabel = new Map();
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
+	// {
+	// 	id: "idfm",
+	// 	staticResourceHref: "https://clarifygdps.com/bridge/gtfs/fr-idf.zip",
+	// 	realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
+	// 	gtfsOptions: {
+	// 		filterTrips: (trip) => trip.route.name !== "TER",
+	// 	},
+	// 	excludeScheduled: true,
+	// 	isValidJourney: (journey) => {
+	// 		const firstCall = journey.calls[0];
+	// 		if (typeof firstCall === "undefined" || typeof firstCall.expectedTime === "undefined") return true;
+	// 		return Temporal.Instant.from(firstCall.expectedTime).since(firstCall.aimedTime).total("minutes") < 1380;
+	// 	},
+	// 	getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
+	// 	getNetworkRef: () => "IDFM",
+	// 	getVehicleRef: () => undefined,
+	// },
 	{
 		id: "idfm",
-		staticResourceHref: "https://clarifygdps.com/bridge/gtfs/fr-idf.zip",
-		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
+		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/idfm/trip-updates"],
 		gtfsOptions: {
-			filterTrips: (trip) => trip.route.name !== "TER",
+			filterTrips: (trip) => trip.route.type === "RAIL",
 		},
 		excludeScheduled: true,
 		isValidJourney: (journey) => {
