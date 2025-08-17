@@ -13,9 +13,9 @@
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@types/decompress": "^4.2.7",
-		"@types/node": "^24.2.1",
+		"@types/node": "^24.3.0",
 		"@types/papaparse": "^5.3.16",
-		"tsx": "^4.20.3",
+		"tsx": "^4.20.4",
 		"typescript": "^5.9.2",
 		"vitest": "^3.2.4"
 	},
@@ -25,9 +25,9 @@
 		"dotenv": "^17.2.1",
 		"draftlog": "^1.0.13",
 		"gtfs-realtime-bindings": "^1.1.1",
-		"p-limit": "^6.2.0",
+		"p-limit": "^7.0.0",
 		"papaparse": "^5.5.3",
-		"redis": "^5.8.0",
+		"redis": "^5.8.1",
 		"temporal-polyfill": "^0.3.0",
 		"ts-pattern": "^5.8.0"
 	}
