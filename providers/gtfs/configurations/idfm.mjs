@@ -49,9 +49,8 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/idfm/trip-updates"],
 		gtfsOptions: {
-			filterTrips: (trip) => trip.route.type === "RAIL",
+			filterTrips: (trip) => trip.route.name !== "TER" && trip.route.type === "RAIL",
 		},
-		excludeScheduled: true,
 		isValidJourney: (journey) => {
 			const firstCall = journey.calls[0];
 			if (typeof firstCall === "undefined" || typeof firstCall.expectedTime === "undefined") return true;
