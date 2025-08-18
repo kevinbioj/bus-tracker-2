@@ -192,7 +192,7 @@ export const editors = pgTable("editor", {
 	username: varchar().notNull(),
 	token: varchar().unique().notNull(),
 	enabled: boolean().default(true),
-	allowedNetworks: json().notNull().default([]),
+	allowedNetworks: json("allowed_networks").notNull().default([]),
 	lastSeenAt: timestamp("last_seen_at"),
 	createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
@@ -209,7 +209,7 @@ export const editionLogs = pgTable("edition_log", {
 		.references(() => networks.id),
 	lineId: integer("line_id").references(() => lines.id),
 	vehicleId: integer("vehicle_id").references(() => vehicles.id),
-	updatedFields: json().notNull(),
+	updatedFields: json("updated_fields").notNull(),
 	recordedAt: timestamp("recorded_at").notNull().default(sql`now()`),
 });
 

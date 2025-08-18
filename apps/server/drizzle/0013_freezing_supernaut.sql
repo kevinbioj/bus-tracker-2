@@ -4,7 +4,7 @@ CREATE TABLE "edition_log" (
 	"network_id" integer NOT NULL,
 	"line_id" integer,
 	"vehicle_id" integer,
-	"updatedFields" json NOT NULL,
+	"updated_fields" json NOT NULL,
 	"recorded_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -13,7 +13,7 @@ CREATE TABLE "editor" (
 	"username" varchar NOT NULL,
 	"token" varchar NOT NULL,
 	"enabled" boolean DEFAULT true,
-	"allowedNetworks" json DEFAULT '[]'::json NOT NULL,
+	"allowed_networks" json DEFAULT '[]'::json NOT NULL,
 	"last_seen_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "editor_token_unique" UNIQUE("token")

@@ -1,4 +1,4 @@
-import { vehicleJourneyLineTypeEnum, type VehicleJourneyLineType } from "@bus-tracker/contracts";
+import { vehicleJourneyLineTypeEnum } from "@bus-tracker/contracts";
 import { and, asc, between, desc, eq, ilike, lt, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
@@ -291,7 +291,7 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 				updatedFields,
 			});
 
-			return c.status(204);
+			return c.body(null, 204);
 		},
 	);
 };
