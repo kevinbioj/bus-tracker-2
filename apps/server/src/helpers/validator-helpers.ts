@@ -32,3 +32,19 @@ export const createParamValidator = <Shape extends core.$ZodShape, Config extend
 		}
 		return parsed.data;
 	});
+
+export const createJsonValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(
+	schema: ZodObject<Shape, Config>,
+) =>
+	validator("json", (values, c) => {
+		const parsed = schema.safeParse(values);
+		if (!parsed.success) {
+			c.status(400);
+			return c.json({
+				code: 400,
+				message: 'JSON payload is invalid, please check "issues" for more information.',
+				issues: parsed.error.issues,
+			});
+		}
+		return parsed.data;
+	});

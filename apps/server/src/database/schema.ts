@@ -186,3 +186,31 @@ export const announcements = pgTable("announcement", {
 });
 
 export type Announcement = InferSelectModel<typeof announcements>;
+
+export const editors = pgTable("editor", {
+	id: serial("id").primaryKey(),
+	username: varchar().notNull(),
+	token: varchar().unique().notNull(),
+	enabled: boolean().default(true),
+	allowedNetworks: json().notNull().default([]),
+	lastSeenAt: timestamp("last_seen_at"),
+	createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
+export type Editor = InferSelectModel<typeof editors>;
+
+export const editionLogs = pgTable("edition_log", {
+	id: serial("id").primaryKey(),
+	editorId: integer("editor_id")
+		.notNull()
+		.references(() => editors.id),
+	networkId: integer("network_id")
+		.notNull()
+		.references(() => networks.id),
+	lineId: integer("line_id").references(() => lines.id),
+	vehicleId: integer("vehicle_id").references(() => vehicles.id),
+	updatedFields: json().notNull(),
+	recordedAt: timestamp("recorded_at").notNull().default(sql`now()`),
+});
+
+export type EditionLog = InferSelectModel<typeof editionLogs>;

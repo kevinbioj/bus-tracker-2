@@ -1,12 +1,13 @@
+import { vehicleJourneyLineTypeEnum, type VehicleJourneyLineType } from "@bus-tracker/contracts";
 import { and, asc, between, desc, eq, ilike, lt, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
 import { database } from "../database/database.js";
-import { lineActivities, networks, operators, vehicles } from "../database/schema.js";
+import { editionLogs, editors, lineActivities, networks, operators, vehicles } from "../database/schema.js";
 import { paginationSchema } from "../helpers/pagination-schema.js";
-import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
+import { createJsonValidator, createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
 import type { JourneyStore } from "../store/journey-store.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
@@ -42,6 +43,17 @@ const getVehicleActivitiesQuerySchema = z.object({
 			(yearMonth) => Temporal.PlainYearMonth.compare(yearMonth, currentMonth()) <= 0,
 			"The selected month must be the same or before as the current month.",
 		),
+});
+
+const updateVehicleBodySchema = z.object({
+	number: z.string().min(1, "Expected 'number' to be non-empty."),
+	designation: z.string().nullable(),
+	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier."),
+	type: z.enum(Object.values(vehicleJourneyLineTypeEnum) as VehicleJourneyLineType[], {
+		error: `Expected 'type' to be one of: ${Object.values(vehicleJourneyLineTypeEnum)
+			.map((type) => `'${type}'`)
+			.join(", ")}.`,
+	}),
 });
 
 export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) => {
@@ -225,6 +237,65 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 					return { date, activities };
 				}),
 			});
+		},
+	);
+
+	hono.put(
+		"/vehicles/:id",
+		createParamValidator(getVehicleByIdParamSchema),
+		createJsonValidator(updateVehicleBodySchema),
+		async (c) => {
+			const { id } = c.req.valid("param");
+
+			const [vehicle] = await database.select().from(vehicles).where(eq(vehicles.id, id));
+			if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+
+			const editorToken = c.req.header("X-Editor-Token");
+			if (typeof editorToken === "undefined") {
+				return c.json({ error: "Expected editor token in 'X-Editor-Token' header" }, 401);
+			}
+
+			const [editor] = await database
+				.select()
+				.from(editors)
+				.where(and(eq(editors.token, editorToken), eq(editors.enabled, true)));
+			if (typeof editor === "undefined") {
+				return c.json({ error: "No active editor found with the supplied token" }, 401);
+			}
+
+			if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
+				return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
+			}
+
+			const data = c.req.valid("json");
+			const updatedFields: { field: string; oldValue: string | number | null; newValue: string | number | null }[] = [];
+
+			if (vehicle.number !== data.number) {
+				updatedFields.push({ field: "number", oldValue: vehicle.number, newValue: data.number });
+			}
+
+			if (vehicle.designation !== data.designation) {
+				updatedFields.push({ field: "designation", oldValue: vehicle.designation, newValue: data.designation });
+			}
+
+			if (vehicle.tcId !== data.tcId) {
+				updatedFields.push({ field: "tcId", oldValue: vehicle.tcId, newValue: data.tcId });
+			}
+
+			if (vehicle.type !== data.type) {
+				updatedFields.push({ field: "type", oldValue: vehicle.type, newValue: data.type });
+			}
+
+			await database.update(vehicles).set(data).where(eq(vehicles.id, vehicle.id));
+
+			await database.insert(editionLogs).values({
+				editorId: editor.id,
+				networkId: vehicle.networkId,
+				vehicleId: vehicle.id,
+				updatedFields,
+			});
+
+			return c.status(204);
 		},
 	);
 };
