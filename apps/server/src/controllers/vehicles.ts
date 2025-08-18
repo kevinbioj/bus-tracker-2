@@ -49,11 +49,7 @@ const updateVehicleBodySchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
 	designation: z.string().nullable(),
 	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier."),
-	type: z.enum(Object.values(vehicleJourneyLineTypeEnum) as VehicleJourneyLineType[], {
-		error: `Expected 'type' to be one of: ${Object.values(vehicleJourneyLineTypeEnum)
-			.map((type) => `'${type}'`)
-			.join(", ")}.`,
-	}),
+	type: vehicleJourneyLineTypeEnum,
 });
 
 export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) => {
