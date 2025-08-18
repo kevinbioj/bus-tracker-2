@@ -18,5 +18,6 @@ onlyBuiltDependencies:
   - '@swc/core'
   - '@tailwindcss/oxide'
   - esbuild
+  - msw
   - protobufjs
   - sharp

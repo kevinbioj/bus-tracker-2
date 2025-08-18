@@ -1,5 +1,5 @@
 import type { VehicleJourneyLineType } from "@bus-tracker/contracts";
-import { queryOptions } from "@tanstack/react-query";
+import { mutationOptions, queryOptions } from "@tanstack/react-query";
 
 import { client } from "~/api/client";
 import type { Operator } from "~/api/networks";
@@ -16,6 +16,13 @@ export type Vehicle = {
 	tcId: number | null;
 	archivedAt: string | null;
 	activity: VehicleActivity;
+};
+
+export type UpdateVehicleData = {
+	number: string;
+	designation: string | null;
+	tcId: number | null;
+	type: VehicleJourneyLineType;
 };
 
 export type VehicleWithActiveMonths = Vehicle & {
@@ -77,5 +84,15 @@ export const GetVehicleActivitiesQuery = (vehicleId: number, month?: string) =>
 			return client
 				.get(`vehicles/${vehicleId}/activities?${params.toString()}`)
 				.then((response) => response.json<VehicleTimeline>());
+		},
+	});
+
+export const UpdateVehicleMutation = (vehicleId: number) =>
+	mutationOptions({
+		mutationFn: async ({ token, json }: { token: string; json: UpdateVehicleData }) => {
+			await client.put(`vehicles/${vehicleId}`, {
+				headers: { "X-Editor-Token": token },
+				json,
+			});
 		},
 	});

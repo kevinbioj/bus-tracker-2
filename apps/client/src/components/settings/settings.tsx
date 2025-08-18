@@ -2,6 +2,7 @@ import { LucideSettings } from "lucide-react";
 
 import { BypassMinZoomSetting } from "~/components/settings/bypass-min-zoom";
 import { DisplayNextCallsSetting } from "~/components/settings/display-next-calls";
+import { EditorTokenInput } from "~/components/settings/editor-token-input";
 import { GeolocateOnStartSetting } from "~/components/settings/geolocate-on-start";
 import { HideScheduledTripsSetting } from "~/components/settings/hide-scheduled-trips";
 import { IncludeIdfmSetting } from "~/components/settings/include-idfm";
@@ -31,6 +32,8 @@ export function Settings() {
 					<IncludeIdfmSetting />
 					<ShowDebugInfoSetting />
 				</div>
+				<hr />
+				<EditorTokenInput />
 			</DialogContent>
 		</Dialog>
 	);
