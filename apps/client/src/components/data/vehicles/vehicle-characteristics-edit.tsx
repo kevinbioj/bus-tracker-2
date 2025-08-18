@@ -194,7 +194,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 												<SelectValue placeholder="Aucune connexion TC-Infos" />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent>
+										<SelectContent className="z-[9999]">
 											{vehicleJourneyLineTypes.map((type) => (
 												<SelectItem key={type} value={type}>
 													{lineTypeLabels[type]}
