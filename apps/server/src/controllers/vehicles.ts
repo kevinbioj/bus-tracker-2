@@ -48,7 +48,7 @@ const getVehicleActivitiesQuerySchema = z.object({
 const updateVehicleBodySchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
 	designation: z.string().nullable(),
-	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier."),
+	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier.").nullable(),
 	type: vehicleJourneyLineTypeEnum,
 });
 
