@@ -294,4 +294,24 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 			return c.body(null, 204);
 		},
 	);
+
+	hono.get("/vehicles/:id/editable", createParamValidator(getVehicleByIdParamSchema), async (c) => {
+		const { id } = c.req.valid("param");
+
+		const [vehicle] = await database.select().from(vehicles).where(eq(vehicles.id, id));
+		if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+
+		const editorToken = c.req.header("X-Editor-Token");
+
+		const [editor] =
+			typeof editorToken !== "undefined"
+				? await database
+						.select()
+						.from(editors)
+						.where(and(eq(editors.token, editorToken), eq(editors.enabled, true)))
+				: [];
+
+		const editable = Array.isArray(editor?.allowedNetworks) && editor.allowedNetworks.includes(vehicle.networkId);
+		return c.body(editable.toString(), 200);
+	});
 };

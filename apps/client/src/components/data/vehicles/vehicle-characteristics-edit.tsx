@@ -1,13 +1,18 @@
-import { vehicleJourneyLineTypeEnum, vehicleJourneyLineTypes } from "@bus-tracker/contracts";
+import {
+	type VehicleJourneyLineType,
+	vehicleJourneyLineTypeEnum,
+	vehicleJourneyLineTypes,
+} from "@bus-tracker/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangleIcon, PencilIcon } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocalStorage } from "usehooks-ts";
 import * as z from "zod";
 import { useSnackbar } from "notistack";
 
-import { UpdateVehicleMutation, type Vehicle } from "~/api/vehicles";
+import { IsVehicleEditableQuery, UpdateVehicleMutation, type Vehicle } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -22,7 +27,6 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { useState } from "react";
 
 const updateVehicleFormSchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
@@ -33,6 +37,16 @@ const updateVehicleFormSchema = z.object({
 
 type UpdateVehicleFormData = z.infer<typeof updateVehicleFormSchema>;
 
+const lineTypeLabels: Record<VehicleJourneyLineType, string> = {
+	BUS: "Bus",
+	COACH: "Coach",
+	FERRY: "Ferry",
+	RAIL: "Train",
+	SUBWAY: "Métro",
+	TRAMWAY: "Tramway",
+	UNKNOWN: "Autre",
+};
+
 type VehicleCharacteristicsEditProps = {
 	vehicle: Vehicle;
 };
@@ -41,6 +55,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 	const [open, setOpen] = useState(false);
 	const [editorToken] = useLocalStorage<string | null>("editor-token", null);
 	const queryClient = useQueryClient();
+	const { data: isEditable } = useQuery(IsVehicleEditableQuery(vehicle.id, editorToken));
 	const { isPending: updatingVehicle, mutateAsync: updateVehicle } = useMutation(UpdateVehicleMutation(vehicle.id));
 	const snackbar = useSnackbar();
 
@@ -48,7 +63,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 		resolver: zodResolver(updateVehicleFormSchema),
 	});
 
-	if (editorToken === null) return null;
+	if (editorToken === null || !isEditable) return null;
 
 	const onOpenChange = (open: boolean) => {
 		if (open)
@@ -98,9 +113,14 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 					<DialogTitle>
 						Édition du véhicule <pre className="inline">{vehicle.ref}</pre>
 					</DialogTitle>
-					<DialogDescription className="text-xs">
+					<DialogDescription className="text-start text-xs">
 						<AlertTriangleIcon className="align-text-bottom inline size-4" /> Merci de prendre connaissance{" "}
-						<a className="font-bold hover:underline" href="https://google.fr" target="_blank" rel="noopener">
+						<a
+							className="font-bold hover:underline"
+							href="https://discord.com/channels/1354896116490965316/1407062689531826349/1407068670106009732"
+							target="_blank"
+							rel="noopener"
+						>
 							des règles de contribution
 						</a>{" "}
 						avant toute action.
@@ -136,7 +156,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 										/>
 									</FormControl>
 									<FormDescription className="text-xs">
-										Merci de reprendre autant que possible les dénominations TC-Infos.
+										Merci d'être complet dans la dénomination du véhicule.
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
@@ -177,7 +197,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 										<SelectContent>
 											{vehicleJourneyLineTypes.map((type) => (
 												<SelectItem key={type} value={type}>
-													{type}
+													{lineTypeLabels[type]}
 												</SelectItem>
 											))}
 										</SelectContent>
@@ -186,7 +206,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 								</FormItem>
 							)}
 						/>
-						<DialogFooter>
+						<DialogFooter className="gap-2">
 							<DialogClose asChild>
 								<Button disabled={updatingVehicle} type="button">
 									Annuler
