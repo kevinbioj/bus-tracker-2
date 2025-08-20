@@ -324,7 +324,22 @@ const sources = [
 				"COOP",
 				"Navette Grau-du-Roi",
 			].includes(trip.route.id),
-		getNetworkRef: () => "LIO",
+		getNetworkRef: (journey) => {
+			if (journey.trip.route.agency.name === "Herault Transport") return "HERAULT-TRANSPORT";
+			if (journey.trip.route.agency.name === "liO Occitanie 09") return "LIO-09";
+			if (journey.trip.route.agency.name === "liO Occitanie 11") return "LIO-11";
+			if (journey.trip.route.agency.name === "liO Occitanie 12") return "LIO-12";
+			if (journey.trip.route.agency.name === "liO Occitanie 30") return "LIO-30";
+			if (journey.trip.route.agency.name === "liO Occitanie 31") return "LIO-31";
+			if (journey.trip.route.agency.name === "liO Occitanie 32") return "LIO-32";
+			if (journey.trip.route.agency.name === "liO Occitanie 46") return "LIO-46";
+			if (journey.trip.route.agency.name === "liO Occitanie 48") return "LIO-48";
+			if (journey.trip.route.agency.name === "liO Occitanie 65") return "LIO-65";
+			if (journey.trip.route.agency.name === "liO Occitanie 66") return "LIO-66";
+			if (journey.trip.route.agency.name === "liO Occitanie 81") return "LIO-81";
+			if (journey.trip.route.agency.name === "liO Occitanie 82") return "LIO-82";
+			return "LIO";
+		},
 	},
 	{
 		id: "lio-gard",
@@ -334,7 +349,7 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		mapLineRef: (lineRef) => lineRef.split("|")[0],
-		getNetworkRef: () => "LIO",
+		getNetworkRef: () => "LIO-30",
 		getVehicleRef: (vehicle) => {
 			if (typeof vehicle?.label !== "string") return;
 			if (vehicle.label.startsWith("LOT")) return;
@@ -348,7 +363,7 @@ const sources = [
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
-		getNetworkRef: () => "LIO",
+		getNetworkRef: () => "LIO-30",
 		getVehicleRef: (vehicle) => {
 			if (typeof vehicle?.label !== "string") return;
 			if (vehicle.label.startsWith("LOT")) return;
@@ -363,7 +378,7 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		mapLineRef: (lineRef) => lineRef.split("|")[0],
-		getNetworkRef: () => "LIO",
+		getNetworkRef: () => "LIO-46",
 		getVehicleRef: (vehicle) => {
 			if (typeof vehicle?.label !== "string") return;
 			if (vehicle.label.startsWith("LOT")) return;
