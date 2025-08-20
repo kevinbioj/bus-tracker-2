@@ -39,6 +39,7 @@ type UpdateVehicleFormData = z.infer<typeof updateVehicleFormSchema>;
 
 const lineTypeLabels: Record<VehicleJourneyLineType, string> = {
 	BUS: "Bus",
+	TROLLEY: "Trolley",
 	COACH: "Coach",
 	FERRY: "Ferry",
 	RAIL: "Train",

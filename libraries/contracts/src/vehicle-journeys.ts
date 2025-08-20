@@ -1,6 +1,15 @@
 import * as z from "zod";
 
-export const vehicleJourneyLineTypes = ["TRAMWAY", "SUBWAY", "RAIL", "BUS", "FERRY", "COACH", "UNKNOWN"] as const;
+export const vehicleJourneyLineTypes = [
+	"TRAMWAY",
+	"SUBWAY",
+	"RAIL",
+	"TROLLEY",
+	"BUS",
+	"FERRY",
+	"COACH",
+	"UNKNOWN",
+] as const;
 
 export const vehicleJourneyLineTypeEnum = z.enum(vehicleJourneyLineTypes);
 
