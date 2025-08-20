@@ -96,8 +96,8 @@
 					"primaryKey": false,
 					"notNull": false
 				},
-				"updatedFields": {
-					"name": "updatedFields",
+				"updated_fields": {
+					"name": "updated_fields",
 					"type": "json",
 					"primaryKey": false,
 					"notNull": true
@@ -184,8 +184,8 @@
 					"notNull": false,
 					"default": true
 				},
-				"allowedNetworks": {
-					"name": "allowedNetworks",
+				"allowed_networks": {
+					"name": "allowed_networks",
 					"type": "json",
 					"primaryKey": false,
 					"notNull": true,
