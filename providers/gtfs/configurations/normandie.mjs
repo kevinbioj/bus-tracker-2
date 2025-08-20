@@ -127,16 +127,16 @@ const sources = [
 	//- SNgo!
 	{
 		id: "sngo",
-		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-normandie-interurbain/gtfs/6810dd83637bd65d345df7e3",
-		// "https://www.data.gouv.fr/fr/datasets/r/71bf48f1-178e-4ce3-ba9d-361cc5be76a7",
+		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=SNGO&dataFormat=GTFS",
 		realtimeResourceHrefs: [
 			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://tnvs.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
 		mode: "NO-TU",
 		gtfsOptions: {
-			filterTrips: (trip) => trip.route.id !== "241",
-			shapesStrategy: "IGNORE",
+			mapRouteId: (routeId) => routeId.slice(nthIndexOf(routeId, ":", 2) + 1, nthIndexOf(routeId, ":", 3)),
+			mapTripId: (tripId) => tripId.slice(nthIndexOf(tripId, ":", 2) + 1, nthIndexOf(tripId, ":", 3)),
+			mapStopId: (stopId) => stopId.slice(nthIndexOf(stopId, ":", 2) + 1, nthIndexOf(stopId, ":", 3)),
 		},
 		getNetworkRef: () => "SNGO",
 	},
