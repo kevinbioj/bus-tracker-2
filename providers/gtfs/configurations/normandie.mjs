@@ -136,7 +136,7 @@ const sources = [
 		gtfsOptions: {
 			mapRouteId: (routeId) => routeId.slice(nthIndexOf(routeId, ":", 2) + 1, nthIndexOf(routeId, ":", 3)),
 			mapTripId: (tripId) => tripId.slice(nthIndexOf(tripId, ":", 2) + 1, nthIndexOf(tripId, ":", 3)),
-			mapStopId: (stopId) => stopId.slice(nthIndexOf(stopId, ":", 2) + 1, nthIndexOf(stopId, ":", 3)),
+			mapStopId: (stopId) => stopId.slice(nthIndexOf(stopId, ":", 3) + 1, nthIndexOf(stopId, ":", 4)),
 		},
 		getNetworkRef: () => "SNGO",
 	},
