@@ -13,10 +13,11 @@ const sources = [
 		gtfsOptions: {
 			shapesStrategy: "IGNORE",
 		},
-		excludeScheduled: (trip) => !["06", "89"].includes(trip.route.id),
+		excludeScheduled: (trip) => !["002-001-06", "06", "002-001-89", "89"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
-			if (journey?.trip.route.id === "06" || journey?.trip.route.id === "89") return "TNI";
+			if (typeof journey !== "undefined" && ["002-001-06", "06", "002-001-89", "89"].includes(journey.trip.route.id))
+				return "TNI";
 			if (typeof vehicle !== "undefined" && +vehicle.id >= 670 && +vehicle.id <= 685) return "TNI";
 			return "TCAR";
 		},
@@ -45,6 +46,7 @@ const sources = [
 
 			return true;
 		},
+		mapLineRef: (lineRef) => (lineRef.indexOf("-") >= 0 ? lineRef.slice(lineRef.lastIndexOf("-") + 1) : lineRef),
 	},
 	{
 		id: "tae",
