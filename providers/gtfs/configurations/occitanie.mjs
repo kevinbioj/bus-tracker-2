@@ -338,7 +338,7 @@ const sources = [
 			if (journey.trip.route.agency.name === "liO Occitanie 66") return "LIO-66";
 			if (journey.trip.route.agency.name === "liO Occitanie 81") return "LIO-81";
 			if (journey.trip.route.agency.name === "liO Occitanie 82") return "LIO-82";
-			return "LIO";
+			return null; // will be ignored
 		},
 	},
 	{
