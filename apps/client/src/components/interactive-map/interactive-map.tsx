@@ -33,7 +33,6 @@ export function InteractiveMap({ className, defaultCenter, defaultZoom }: Readon
 		<MapContainer
 			center={lastLocation ? [lastLocation[0], lastLocation[1]] : defaultCenter}
 			className={clsx("relative", className)}
-			id="interactive-map"
 			ref={mapRef}
 			zoom={lastLocation?.[2] ?? defaultZoom}
 			minZoom={bypassMinZoom ? undefined : 9}
