@@ -145,6 +145,7 @@ export const lineActivities = pgTable(
 		updatedAt: timestamp("updated_at", { precision: 0 }).notNull(),
 	},
 	(table) => [
+		index("line_activity_line_indeex").on(table.lineId),
 		index("line_activity_vehicle_index").on(table.vehicleId),
 		index("line_activity_vehicle_service_date_index").on(table.vehicleId, table.serviceDate),
 	],

@@ -1,0 +1,1 @@
+CREATE INDEX "line_activity_line_indeex" ON "line_activity" USING btree ("line_id");
