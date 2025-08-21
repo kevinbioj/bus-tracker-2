@@ -52,10 +52,10 @@ const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): Journey
 		const stop = gtfs.stops.get(stopTimeUpdate.stopId)!;
 
 		const arrivalTime = Temporal.Instant.fromEpochMilliseconds(
-			(stopTimeUpdate.arrival ?? stopTimeUpdate.departure)!.time! * 1000,
+			(stopTimeUpdate?.arrival?.time ?? stopTimeUpdate.departure?.time)! * 1000,
 		).toZonedDateTimeISO(timeZone);
 		const departureTime = Temporal.Instant.fromEpochMilliseconds(
-			(stopTimeUpdate.departure ?? stopTimeUpdate.arrival)!.time! * 1000,
+			(stopTimeUpdate?.departure?.time ?? stopTimeUpdate.arrival?.time)! * 1000,
 		).toZonedDateTimeISO(timeZone);
 
 		return {
