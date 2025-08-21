@@ -4,15 +4,14 @@ import {
 	vehicleJourneyLineTypes,
 } from "@bus-tracker/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangleIcon, PencilIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useLocalStorage } from "usehooks-ts";
 import * as z from "zod";
 import { useSnackbar } from "notistack";
 
-import { IsVehicleEditableQuery, UpdateVehicleMutation, type Vehicle } from "~/api/vehicles";
+import { UpdateVehicleMutation, type Vehicle } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -27,6 +26,7 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { useEditor } from "~/hooks/use-editor";
 
 const updateVehicleFormSchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
@@ -53,18 +53,21 @@ type VehicleCharacteristicsEditProps = {
 };
 
 export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacteristicsEditProps>) {
-	const [open, setOpen] = useState(false);
-	const [editorToken] = useLocalStorage<string | null>("editor-token", null);
-	const queryClient = useQueryClient();
-	const { data: isEditable } = useQuery(IsVehicleEditableQuery(vehicle.id, editorToken));
-	const { isPending: updatingVehicle, mutateAsync: updateVehicle } = useMutation(UpdateVehicleMutation(vehicle.id));
+	const { editor, editorToken } = useEditor();
+
 	const snackbar = useSnackbar();
+
+	const queryClient = useQueryClient();
+	const { isPending: updatingVehicle, mutateAsync: updateVehicle } = useMutation(UpdateVehicleMutation(vehicle.id));
+
+	const [open, setOpen] = useState(false);
 
 	const form = useForm<UpdateVehicleFormData>({
 		resolver: zodResolver(updateVehicleFormSchema),
 	});
 
-	if (editorToken === null || !isEditable) return null;
+	const editable = editorToken !== null && (editor?.allowedNetworks.includes(vehicle.networkId) ?? false);
+	if (!editable) return null;
 
 	const onOpenChange = (open: boolean) => {
 		if (open)

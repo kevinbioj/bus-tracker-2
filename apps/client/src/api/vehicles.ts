@@ -96,18 +96,3 @@ export const UpdateVehicleMutation = (vehicleId: number) =>
 			});
 		},
 	});
-
-export const IsVehicleEditableQuery = (vehicleId: number, token: string | null) =>
-	queryOptions({
-		queryKey: ["vehicles", vehicleId, "editable", token],
-		queryFn: async () => {
-			if (token === null) return false;
-
-			const response = await client.get(`vehicles/${vehicleId}/editable`, {
-				headers: { "X-Editor-Token": token },
-			});
-
-			const payload = await response.text();
-			return payload === "true";
-		},
-	});

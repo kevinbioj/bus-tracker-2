@@ -5,9 +5,10 @@ import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
 import { database } from "../database/database.js";
-import { editionLogs, editors, lineActivities, networks, operators, vehicles } from "../database/schema.js";
+import { editionLogs, lineActivities, networks, operators, vehicles } from "../database/schema.js";
 import { paginationSchema } from "../helpers/pagination-schema.js";
 import { createJsonValidator, createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
+import { editorMiddleware } from "../middlewares/editor-middleware.js";
 import type { JourneyStore } from "../store/journey-store.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
@@ -238,6 +239,7 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 
 	hono.put(
 		"/vehicles/:id",
+		editorMiddleware,
 		createParamValidator(getVehicleByIdParamSchema),
 		createJsonValidator(updateVehicleBodySchema),
 		async (c) => {
@@ -246,18 +248,7 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 			const [vehicle] = await database.select().from(vehicles).where(eq(vehicles.id, id));
 			if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
-			const editorToken = c.req.header("X-Editor-Token");
-			if (typeof editorToken === "undefined") {
-				return c.json({ error: "Expected editor token in 'X-Editor-Token' header" }, 401);
-			}
-
-			const [editor] = await database
-				.select()
-				.from(editors)
-				.where(and(eq(editors.token, editorToken), eq(editors.enabled, true)));
-			if (typeof editor === "undefined") {
-				return c.json({ error: "No active editor found with the supplied token" }, 401);
-			}
+			const editor = c.get("editor");
 
 			if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
 				return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
@@ -294,24 +285,4 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 			return c.body(null, 204);
 		},
 	);
-
-	hono.get("/vehicles/:id/editable", createParamValidator(getVehicleByIdParamSchema), async (c) => {
-		const { id } = c.req.valid("param");
-
-		const [vehicle] = await database.select().from(vehicles).where(eq(vehicles.id, id));
-		if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
-
-		const editorToken = c.req.header("X-Editor-Token");
-
-		const [editor] =
-			typeof editorToken !== "undefined"
-				? await database
-						.select()
-						.from(editors)
-						.where(and(eq(editors.token, editorToken), eq(editors.enabled, true)))
-				: [];
-
-		const editable = Array.isArray(editor?.allowedNetworks) && editor.allowedNetworks.includes(vehicle.networkId);
-		return c.body(editable.toString(), 200);
-	});
 };

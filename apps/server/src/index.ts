@@ -18,6 +18,7 @@ import { migrateDatabase } from "./database/migrate.js";
 import { handleVehicleBatch } from "./jobs/handle-vehicle-batch.js";
 import { port } from "./options.js";
 import { createJourneyStore } from "./store/journey-store.js";
+import { registerEditorRoutes } from "./controllers/editors.js";
 
 console.log(`,-----.                  ,--------.                   ,--.                           ,---.                                       
 |  |) /_ ,--.,--. ,---.  '--.  .--',--.--.,--,--.,---.|  |,-. ,---. ,--.--. ,-----. '   .-' ,---. ,--.--.,--.  ,--.,---. ,--.--. 
@@ -70,6 +71,7 @@ console.log("► Listening on port %d.\n", port);
 export const hono = new Hono();
 hono.use(cors({ origin: "*" }));
 registerAnnouncementRoutes(hono);
+registerEditorRoutes(hono);
 registerLineRoutes(hono, journeyStore);
 registerNetworkRoutes(hono, journeyStore);
 registerVehicleRoutes(hono, journeyStore);
