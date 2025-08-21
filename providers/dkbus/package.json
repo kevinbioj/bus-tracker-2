@@ -19,7 +19,7 @@
 	"dependencies": {
 		"draftlog": "^1.0.13",
 		"fast-xml-parser": "^5.2.5",
-		"redis": "^5.8.1",
+		"redis": "^5.8.2",
 		"temporal-polyfill": "^0.3.0"
 	}
 }

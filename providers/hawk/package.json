@@ -19,7 +19,7 @@
 	"dependencies": {
 		"dayjs": "^1.11.13",
 		"draftlog": "^1.0.13",
-		"redis": "^5.8.1",
+		"redis": "^5.8.2",
 		"temporal-polyfill": "^0.3.0"
 	}
 }

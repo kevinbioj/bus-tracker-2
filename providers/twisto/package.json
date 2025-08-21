@@ -20,8 +20,8 @@
 		"croner": "^9.1.0",
 		"draftlog": "^1.0.13",
 		"fast-xml-parser": "^5.2.5",
-		"ky": "^1.8.2",
-		"redis": "^5.8.1",
+		"ky": "^1.9.0",
+		"redis": "^5.8.2",
 		"temporal-polyfill": "^0.3.0"
 	}
 }
