@@ -48,7 +48,11 @@ const sources = [
 	{
 		id: "nice",
 		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/OpendataRLA/gtfs.zip",
-		realtimeResourceHrefs: ["https://ara-api.enroute.mobi/rla/gtfs/trip-updates"],
+		realtimeResourceHrefs: [
+			"https://ara-api.enroute.mobi/rla/gtfs/trip-updates",
+			"https://ara-api.enroute.mobi/rla/gtfs/vehicle-positions",
+		],
+		mode: "NO-TU",
 		getNetworkRef: () => "LIGNES-AZUR",
 	},
 	{
