@@ -1,3 +1,14 @@
+function nthIndexOf(input, pattern, n) {
+	const length = input.length;
+	let i = -1;
+	let j = n;
+	while (j-- && i++ < length) {
+		i = input.indexOf(pattern, i);
+		if (i < 0) break;
+	}
+	return i;
+}
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	// {
@@ -18,6 +29,18 @@ const sources = [
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		getNetworkRef: () => "PALMBUS",
+	},
+	{
+		id: "cavaillon",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=cavaillon",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=cavaillon"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "CAVAILLON",
+		getVehicleRef: () => undefined,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
 		id: "gap",
