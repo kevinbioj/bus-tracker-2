@@ -73,6 +73,18 @@ const sources = [
 		getNetworkRef: () => "ENVIA",
 	},
 	{
+		id: "auch",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=auch-alliance",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=auch-alliance"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "AUCH",
+		getVehicleRef: () => undefined,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+	},
+	{
 		id: "castres",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=castreslignesurbaines",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=castreslignesurbaines"],
