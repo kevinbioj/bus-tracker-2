@@ -172,6 +172,22 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			// 👏 https://transport.data.gouv.fr/resources/81925
 			if (typeof vehiclePosition.position === "undefined") continue;
 
+			// nomad-car-geo3d patch
+			if (source.id === "nomad-car-geo3d") {
+				const tripUpdate = tripUpdates.find((tripUpdate) => tripUpdate.trip.tripId === vehiclePosition.trip?.tripId);
+				if (typeof tripUpdate !== "undefined") {
+					const nextStop = tripUpdate.stopTimeUpdate?.find(
+						(stopTimeUpdate) =>
+							stopTimeUpdate.scheduleRelationship === "SCHEDULED" && typeof stopTimeUpdate.departure === "undefined",
+					);
+					if (typeof nextStop !== "undefined") {
+						vehiclePosition.currentStatus = "IN_TRANSIT_TO";
+						vehiclePosition.currentStopSequence = nextStop.stopSequence;
+						vehiclePosition.stopId = nextStop.stopId;
+					}
+				}
+			}
+
 			let journey: Journey | undefined;
 
 			const updatedAt = Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000);
