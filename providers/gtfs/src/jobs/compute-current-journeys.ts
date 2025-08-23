@@ -278,6 +278,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 									stopName: call.stop.name,
 									stopOrder: call.sequence,
 									callStatus: call.status,
+									flags: call.flags,
 								};
 							}) ?? [])
 						: undefined,
