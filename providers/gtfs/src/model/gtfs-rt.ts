@@ -78,6 +78,7 @@ export type TripScheduleRelationship = "SCHEDULED" | "CANCELED";
 export type VehicleDescriptor = {
 	id: string;
 	label?: string;
+	licensePlate?: string;
 };
 
 export type VehicleStopStatus = "INCOMING_AT" | "STOPPED_AT" | "IN_TRANSIT_TO";
