@@ -70,9 +70,25 @@ const sources = [
 		getNetworkRef: (journey) => journey.trip.route.agency.id.replace("_", "-"),
 		getVehicleRef: (descriptor) => {
 			const label = descriptor?.label;
+
+			// We filter out shitness
 			if (typeof label === "undefined") return;
 			if (label.includes("→") || label.includes(">")) return;
 			if (/\d/.exec(label) === null) return;
+
+			// Some (same) parc numbers are used by different operators in the same network 🤦
+			// so we use licensePlate which should always be here, but still label if not
+			if (+label >= 217 && +label <= 226 && +label !== 224) return descriptor.licensePlate ?? descriptor.label;
+
+			// 5 vehicles are identified by their number or by their license plate depending on the Moon's phase
+			const normalizedLicensePlate = (descriptor?.licensePlate ?? descriptor.label).replace(/[- ]/g, "");
+			if (
+				typeof normalizedLicensePlate !== "undefined" &&
+				["DJ328QV", "DJ359QV", "DJ384QV", "DJ394QV"].includes(normalizedLicensePlate)
+			) {
+				return normalizedLicensePlate;
+			}
+
 			return label;
 		},
 		getDestination: (journey) => journey?.trip.headsign?.replace("→", ">"),
