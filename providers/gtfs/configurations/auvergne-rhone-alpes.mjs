@@ -107,6 +107,15 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "vienne",
+		staticResourceHref:
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/vienne-mobi/exports/medias.zip",
+		realtimeResourceHrefs: ["https://feed-vienne-mobi.ratpdev.com/GTFS-RT/gtfs-rt.bin"],
+		mode: "NO-TU",
+		getNetworkRef: () => "VIENNE",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "villefranche-s-saone",
 		staticResourceHref:
 			"https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_libellule.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
