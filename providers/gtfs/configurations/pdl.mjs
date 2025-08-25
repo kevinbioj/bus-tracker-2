@@ -82,7 +82,8 @@ const sources = [
 
 			// 5 vehicles are identified by their number or by their license plate depending on the Moon's phase
 			const normalizedLicensePlate = (
-				typeof descriptor.licensePlate === "undefined" || descriptor.licensePlate === "1"
+				typeof descriptor.licensePlate === "undefined" ||
+				(+descriptor.licensePlate >= 1 && +descriptor.licensePlate <= 5)
 					? descriptor.label
 					: descriptor.licensePlate
 			).replace(/[- ]/g, "");
