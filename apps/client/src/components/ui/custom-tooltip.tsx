@@ -32,9 +32,8 @@ export function CustomTooltip({ children, content, place, spacing = 5, ...toolti
 					transform: "transformX(-50%)",
 				}))
 				.with("right", () => ({
-					top: "50%",
 					left: `calc(100% + ${spacing}px)`,
-					transform: "transformX(-50%)",
+					transform: "transformY(-50%)",
 				}))
 				.exhaustive(),
 		[place, spacing],
@@ -52,7 +51,7 @@ export function CustomTooltip({ children, content, place, spacing = 5, ...toolti
 			<span
 				className={twMerge(
 					clsx(
-						"absolute whitespace-nowrap rounded-md bg-neutral-300 px-1 py-0.5 text-black text-xs shadow-lg dark:bg-neutral-700 dark:text-white",
+						"z-[999] absolute whitespace-nowrap rounded-md bg-neutral-300 px-1 py-0.5 text-black text-xs shadow-lg dark:bg-neutral-700 dark:text-white",
 						!open && "hidden",
 						className,
 					),
