@@ -20,6 +20,23 @@ const filterableVehicleTypes = {
 	FERRY: <ShipIcon className="size-5" />,
 } as const;
 
+const numberSort = (a: Vehicle, b: Vehicle) => {
+	const numberifiedA = parseInt(a.number, 10);
+	const numberifiedB = parseInt(b.number, 10);
+
+	if (Number.isNaN(numberifiedA)) {
+		if (Number.isNaN(numberifiedB)) {
+			return a.number.localeCompare(b.number);
+		}
+		return 1;
+	}
+
+	if (Number.isNaN(numberifiedB)) {
+		return -1;
+	}
+	return numberifiedA - numberifiedB;
+};
+
 type NetworkVehiclesProps = { networkId: number };
 
 export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
@@ -65,7 +82,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 			.sort((a, b) => {
 				if (sort === "activity") {
 					if (typeof a.activity.lineId !== "undefined" && typeof b.activity.lineId !== "undefined")
-						return +a.number - +b.number;
+						return numberSort(a, b);
 					if (typeof a.activity.lineId === "number") return -1;
 					if (typeof b.activity.lineId === "number") return 1;
 					if (a.activity.since === null) return 1;
@@ -73,7 +90,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 					return b.activity.since.localeCompare(a.activity.since);
 				}
 
-				return +a.number - +b.number;
+				return numberSort(a, b);
 			});
 	}, [debouncedFilter, operatorId, searchParams, type, vehicles]);
 
