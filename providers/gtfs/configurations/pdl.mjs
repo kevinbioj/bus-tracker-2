@@ -67,7 +67,7 @@ const sources = [
 		gtfsOptions: { shapesStrategy: "IGNORE" }, // shape distances unavailable
 		excludeScheduled: true,
 		mode: "NO-TU",
-		getNetworkRef: (journey) => journey.trip.route.agency.id.replace("_", "-"),
+		getNetworkRef: (journey) => journey?.trip?.route.agency.id.replace("_", "-") ?? "ALEOP",
 		getVehicleRef: (descriptor) => {
 			const label = descriptor?.label;
 
