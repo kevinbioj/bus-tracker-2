@@ -17,6 +17,10 @@ export function OnlineNetworks({ updateNetwork }: Readonly<OnlineNetworksProps>)
 	const { data: networks } = useQuery(GetNetworksQuery);
 
 	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
+	const [expandedRegionAccordions, setExpandedRegionAccordions] = useLocalStorage<string[]>(
+		"expanded-region-accordions",
+		() => regions?.map(({ id }) => id.toString()) ?? [],
+	);
 
 	if (!regions || !networks) return null;
 
@@ -84,7 +88,12 @@ export function OnlineNetworks({ updateNetwork }: Readonly<OnlineNetworksProps>)
 	return (
 		<div>
 			<div className="space-y-2">{favoriteNetworks.map(renderNetwork)}</div>
-			<Accordion className="mt-2" type="multiple">
+			<Accordion
+				className="mt-2"
+				type="multiple"
+				value={expandedRegionAccordions}
+				onValueChange={setExpandedRegionAccordions}
+			>
 				{regions
 					.filter((region) => relevantNetworksByRegion.get(region)?.length)
 					.sort((a, b) => a.sortOrder - b.sortOrder)

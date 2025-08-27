@@ -14,6 +14,10 @@ export function NetworkList() {
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
 	const [favoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
+	const [expandedRegionAccordions, setExpandedRegionAccordions] = useLocalStorage<string[]>(
+		"expanded-region-accordions",
+		regions.map(({ id }) => id.toString()),
+	);
 
 	const favoriteNetworks = networks.filter(({ id }) => favoriteNetworkIds.includes(id));
 
@@ -33,11 +37,9 @@ export function NetworkList() {
 				<Separator />
 				<Accordion
 					className="mt-3"
-					defaultValue={[
-						"0",
-						...Array.from(relevantNetworksByRegion.keys()).map((region) => region?.id.toString() ?? "-1"),
-					]}
 					type="multiple"
+					value={["0", ...expandedRegionAccordions]}
+					onValueChange={setExpandedRegionAccordions}
 				>
 					{favoriteNetworks.length > 0 && (
 						<NetworksAccordion
@@ -78,9 +80,11 @@ type NetworksAccordionProps = {
 
 function NetworksAccordion({ region, networks }: NetworksAccordionProps) {
 	return (
-		<AccordionItem className="border-b-0 mb-5" key={region?.id ?? -1} value={region?.id.toString() ?? "-1"}>
-			<AccordionTrigger className="font-bold text-xl">{region?.name ?? "Autres réseaux"}</AccordionTrigger>
-			<AccordionContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 pb-0 rounded-lg">
+		<AccordionItem key={region?.id ?? -1} value={region?.id.toString() ?? "-1"}>
+			<AccordionTrigger className={cn("text-xl", region?.id === 0 && "hover:no-underline")}>
+				{region?.name ?? "Autres réseaux"}
+			</AccordionTrigger>
+			<AccordionContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 pb-0 rounded-lg mb-5">
 				{networks.map((network) => (
 					<Link
 						className="flex border justify-between items-center h-16 pr-2 py-2 rounded-lg shadow-md transition-colors text-primary-foreground relative bg-primary/25 hover:bg-primary/50"
