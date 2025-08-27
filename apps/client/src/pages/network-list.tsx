@@ -80,12 +80,10 @@ function NetworksAccordion({ region, networks }: NetworksAccordionProps) {
 	return (
 		<AccordionItem className="border-b-0 mb-5" key={region?.id ?? -1} value={region?.id.toString() ?? "-1"}>
 			<AccordionTrigger className="font-bold text-xl">{region?.name ?? "Autres réseaux"}</AccordionTrigger>
-			<AccordionContent className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-2 gap-3 pb-0 rounded-lg">
+			<AccordionContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 pb-0 rounded-lg">
 				{networks.map((network) => (
 					<Link
-						className={
-							"flex border justify-between items-center h-16 px-4 py-2 rounded-lg shadow-md transition-colors bg-primary hover:bg-primary/70 text-primary-foreground"
-						}
+						className="flex border justify-between items-center h-16 pr-2 py-2 rounded-lg shadow-md transition-colors text-primary-foreground relative bg-primary/25 hover:bg-primary/50"
 						key={network.id}
 						title={network.authority ? `${network.name} – ${network.authority}` : network.name}
 						to={`/data/networks/${network.id}`}
@@ -94,24 +92,28 @@ function NetworksAccordion({ region, networks }: NetworksAccordionProps) {
 							color: network.textColor ?? undefined,
 						}}
 					>
-						{network.logoHref ? (
-							<>
-								<div className="h-full w-full lg:w-40">
-									<picture>
-										{network.darkModeLogoHref !== null ? (
-											<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-										) : null}
-										<img className="h-full object-contain mx-auto" src={network.logoHref} alt="" />
-									</picture>
-								</div>
-								<Separator className="mx-4 bg-foreground dark:bg-foreground hidden lg:block" orientation="vertical" />
-							</>
-						) : null}
-						<div className={cn("flex-col flex-1", network.logoHref ? "hidden lg:flex" : "flex")}>
-							<h3 className="font-bold text-center lg:text-start text-xl">{network.name}</h3>
-							{network.authority ? <p className="hidden lg:block">{network.authority}</p> : null}
+						<div className="flex-1 text-center overflow-auto text-wrap px-2">
+							<h3 className="font-bold text-lg leading-tight">{network.name}</h3>
+							{network.authority !== null && <p className="text-xs">{network.authority}</p>}
 						</div>
 						<ArrowRight />
+						{network.logoHref && (
+							<>
+								<span
+									className={cn(
+										"absolute inset-2 -z-10 bg-center bg-no-repeat bg-contain blur-xs",
+										network.darkModeLogoHref && "dark:hidden",
+									)}
+									style={{ backgroundImage: `url("${network.logoHref}")` }}
+								/>
+								{network.darkModeLogoHref && (
+									<span
+										className="absolute inset-2 -z-10 bg-center bg-no-repeat bg-contain blur-xs dark:block"
+										style={{ backgroundImage: `url("${network.darkModeLogoHref}")` }}
+									/>
+								)}
+							</>
+						)}
 					</Link>
 				))}
 			</AccordionContent>

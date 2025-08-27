@@ -51,10 +51,13 @@ export function OnlineNetworks({ updateNetwork }: Readonly<OnlineNetworksProps>)
 					{isFavorite ? <StarIcon className="fill-yellow-400 stroke-yellow-600" /> : <StarIcon />}
 				</Button>
 				<Button
-					className="border border-border  drop-shadow-mdflex justify-between items-center h-16 pr-4 pl-12 py-2 rounded-lg shadow-md transition-colors w-full relative overflow-hidden bg-primary/30 text-neutral-800 dark:text-neutral-200 hover:text-primary-foreground hover:bg-primary/10"
+					className="border border-border  drop-shadow-mdflex justify-between items-center h-16 pr-4 pl-12 py-2 rounded-lg shadow-md transition-colors w-full relative overflow-hidden bg-primary/25 text-neutral-800 dark:text-neutral-200 hover:text-primary-foreground hover:bg-primary/50"
 					onClick={() => updateNetwork(network.id)}
 				>
-					<h3 className="flex-1 font-bold text-center text-lg overflow-auto text-wrap">{network.name}</h3>
+					<div className="flex-1 text-center overflow-auto text-wrap px-2">
+						<h3 className="font-bold text-lg leading-tight">{network.name}</h3>
+						{network.authority !== null && <p className="text-xs">{network.authority}</p>}
+					</div>{" "}
 					<ArrowRight />
 					{network.logoHref && (
 						<>
