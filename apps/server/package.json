@@ -14,20 +14,20 @@
 	"devDependencies": {
 		"@types/node": "^24.3.0",
 		"drizzle-kit": "^0.31.4",
-		"tsx": "^4.20.4",
+		"tsx": "^4.20.5",
 		"typescript": "^5.9.2"
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@hono/node-server": "^1.19.0",
-		"@sentry/node": "^10.5.0",
+		"@sentry/node": "^10.7.0",
 		"dotenv": "^17.2.1",
-		"drizzle-orm": "^0.44.4",
-		"hono": "^4.9.2",
+		"drizzle-orm": "^0.44.5",
+		"hono": "^4.9.4",
 		"p-limit": "^7.1.0",
 		"postgres": "^3.4.7",
 		"redis": "^5.8.2",
 		"temporal-polyfill": "^0.3.0",
-		"zod": "^4.0.17"
+		"zod": "^4.1.3"
 	}
 }
