@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { ArrowRight, Info } from "lucide-react";
 
 import { GetNetworkQuery, type Line } from "~/api/networks";
@@ -16,7 +17,7 @@ export function OnlineLines({ networkId, updateLine }: Readonly<OnlineLinesProps
 	if (!network) return null;
 
 	const [linesWithVehicles, linesWithoutVehicles] = network.lines
-		.filter((line) => line.archivedAt === null)
+		.filter((line) => line.archivedAt === null || dayjs().isBefore(line.archivedAt))
 		.reduce<[Line[], Line[]]>(
 			([withVehicles, withoutVehicles], line) => {
 				if (typeof line.onlineVehicleCount === "number" && line.onlineVehicleCount > 0) {
