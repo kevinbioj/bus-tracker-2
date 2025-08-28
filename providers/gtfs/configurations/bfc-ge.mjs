@@ -77,6 +77,7 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "CITELINE",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		mapLineRef: (lineRef) => lineRef.slice(0, -3),
 	},
 	{
 		id: "metz",
