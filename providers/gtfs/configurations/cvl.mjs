@@ -7,6 +7,8 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/amelys/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/amelys/vehicle-positions",
 		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "MONTARGIS",
 	},
