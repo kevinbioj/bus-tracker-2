@@ -1,6 +1,16 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "montargis",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/c1c2e220-667c-4062-ba32-ec5079c55757",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/amelys/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/amelys/vehicle-positions",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "MONTARGIS",
+	},
+	{
 		id: "orleans",
 		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/keolis_orleans.gtfs.zip",
 		realtimeResourceHrefs: [
