@@ -7,11 +7,12 @@ import type { ImportGtfsOptions } from "../import-gtfs.js";
 
 type StopRecord = CsvRecord<"stop_id" | "stop_name" | "stop_lat" | "stop_lon", "location_type">;
 
-export async function importStops(gtfsDirectory: string, { mapStopId }: ImportGtfsOptions) {
+export async function importStops(gtfsDirectory: string, { importAllStops, mapStopId }: ImportGtfsOptions) {
 	const stops = new Map<string, Stop>();
 
 	await readCsv<StopRecord>(join(gtfsDirectory, "stops.txt"), (stopRecord) => {
 		if (
+			!importAllStops &&
 			typeof stopRecord.location_type !== "undefined" &&
 			stopRecord.location_type !== "" &&
 			stopRecord.location_type !== "0"

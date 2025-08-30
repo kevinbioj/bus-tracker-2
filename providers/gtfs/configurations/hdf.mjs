@@ -52,6 +52,7 @@ const sources = [
 				if (trip.direction === 2) trip.direction = 1;
 				return true;
 			},
+			importAllStops: true,
 		},
 		mode: "NO-TU",
 		getNetworkRef: () => "HOP-BUS",
