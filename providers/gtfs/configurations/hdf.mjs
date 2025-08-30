@@ -43,6 +43,21 @@ const sources = [
 		getVehicleRef: () => undefined,
 	},
 	{
+		id: "coeur-flandres",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/hopbus/current/revision/gtfs",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/hopbus/realtime"],
+		gtfsOptions: {
+			filterTrips: (trip) => {
+				if (["216", "217", "218"].includes(trip.route.id)) return false;
+				if (trip.direction === 2) trip.direction = 1;
+				return true;
+			},
+		},
+		mode: "NO-TU",
+		getNetworkRef: () => "HOP-BUS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "compiegne",
 		staticResourceHref:
 			"https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=TIC_URB&dataFormat=GTFS&dataProfil=OPENDATA",
