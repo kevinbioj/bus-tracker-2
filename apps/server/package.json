@@ -19,7 +19,7 @@
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@hono/node-server": "^1.19.0",
+		"@hono/node-server": "^1.19.1",
 		"@sentry/node": "^10.8.0",
 		"dotenv": "^17.2.1",
 		"drizzle-orm": "^0.44.5",
