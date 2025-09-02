@@ -17,6 +17,16 @@ const sources = [
 		getNetworkRef: () => "BEAUNE",
 	},
 	{
+		id: "coeur-de-loire",
+		staticResourceHref: "https://pysae.com/api/v2/groups/coeur-de-loire/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/coeur-de-loire/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "COEUR-LOIRE",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "dijon",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/e0dbd217-15cd-4e28-9459-211a27511a34",
 		realtimeResourceHrefs: [
