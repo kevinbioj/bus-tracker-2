@@ -23,7 +23,7 @@
 		"@sentry/node": "^10.8.0",
 		"dotenv": "^17.2.1",
 		"drizzle-orm": "^0.44.5",
-		"hono": "^4.9.5",
+		"hono": "^4.9.6",
 		"p-limit": "^7.1.1",
 		"postgres": "^3.4.7",
 		"redis": "^5.8.2",
