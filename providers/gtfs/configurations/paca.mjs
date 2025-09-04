@@ -80,19 +80,13 @@ const sources = [
 		id: "nimes",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/15aeb8a5-1cca-4bb9-ae5f-b6e67e4ff2ab",
 		realtimeResourceHrefs: [
-			"https://transport.data.gouv.fr/resources/80732/download",
-			"https://transport.data.gouv.fr/resources/80731/download",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tango/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tango/vehicle-positions",
 		],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "TANGO",
-		mapTripUpdate: (tripUpdate) => {
-			for (const stopTimeUpdate of tripUpdate.stopTimeUpdate) {
-				stopTimeUpdate.stopId = stopTimeUpdate.stopId.slice(stopTimeUpdate.stopId.indexOf(":") + 1);
-			}
-			return tripUpdate;
-		},
 	},
 	{
 		id: "toulon",
