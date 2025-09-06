@@ -76,7 +76,7 @@ export function VehicleCharacteristicsArchive({ vehicle }: VehicleCharacteristic
 							Casser l'association <span className="font-mono">{vehicle.ref}</span> du véhicule
 						</Label>
 					</div>
-					<DialogFooter>
+					<DialogFooter className="gap-3">
 						<DialogClose asChild>
 							<Button type="button" variant="secondary">
 								Annuler
