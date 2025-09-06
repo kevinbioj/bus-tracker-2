@@ -13,6 +13,7 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
+import { cn } from "~/utils/utils";
 
 const filterableVehicleTypes = {
 	ALL: <span className="text-muted-foreground">Type</span>,
@@ -117,7 +118,12 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 		<section>
 			{vehicles.length > 0 ? (
 				<>
-					<div className="grid grid-cols-[1fr_4.5rem_2.3rem] gap-1 mt-2">
+					<div
+						className={cn(
+							"grid gap-1 mt-2",
+							hasArchivedVehicles ? "grid-cols-[1fr_4.5rem_2.3rem]" : "grid-cols-[1fr_4.5rem]",
+						)}
+					>
 						{/* Filters */}
 						<div className="flex flex-col gap-1">
 							<Label className="inline-flex items-center gap-1" htmlFor="filter">
@@ -190,14 +196,16 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 							</Select>
 						</div>
 						{/* Archive */}
-						<Button
-							className="mt-auto h-10"
-							onClick={() => setShowArchived(!showArchived)}
-							size="icon"
-							variant={showArchived ? "branding-default" : "secondary"}
-						>
-							<ArchiveIcon />
-						</Button>
+						{hasArchivedVehicles && (
+							<Button
+								className="mt-auto h-10"
+								onClick={() => setShowArchived(!showArchived)}
+								size="icon"
+								variant={showArchived ? "branding-default" : "secondary"}
+							>
+								<ArchiveIcon />
+							</Button>
+						)}
 					</div>
 					<p
 						className={clsx(
