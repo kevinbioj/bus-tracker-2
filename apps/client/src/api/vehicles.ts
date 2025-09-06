@@ -25,6 +25,10 @@ export type UpdateVehicleData = {
 	type: VehicleJourneyLineType;
 };
 
+export type ArchiveVehicleData = {
+	wipeReference: boolean;
+};
+
 export type VehicleWithActiveMonths = Vehicle & {
 	activeMonths: string[];
 };
@@ -91,6 +95,16 @@ export const UpdateVehicleMutation = (vehicleId: number) =>
 	mutationOptions({
 		mutationFn: async ({ token, json }: { token: string; json: UpdateVehicleData }) => {
 			await client.put(`vehicles/${vehicleId}`, {
+				headers: { "X-Editor-Token": token },
+				json,
+			});
+		},
+	});
+
+export const ArchiveVehicleMutation = (vehicleId: number) =>
+	mutationOptions({
+		mutationFn: async ({ token, json }: { token: string; json: ArchiveVehicleData }) => {
+			await client.post(`vehicles/${vehicleId}/archive`, {
 				headers: { "X-Editor-Token": token },
 				json,
 			});

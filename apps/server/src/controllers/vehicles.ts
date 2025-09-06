@@ -1,7 +1,8 @@
 import { vehicleJourneyLineTypeEnum } from "@bus-tracker/contracts";
-import { and, asc, between, desc, eq, ilike, lt, sql } from "drizzle-orm";
+import { and, asc, between, desc, eq, ilike, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
+import { match } from "ts-pattern";
 import * as z from "zod";
 
 import { database } from "../database/database.js";
@@ -28,6 +29,10 @@ const searchVehiclesSchema = paginationSchema.extend({
 	designation: z.string().optional(),
 	sortBy: z.enum(["number", "designation"]).default("number"),
 	sortOrder: z.enum(["asc", "desc"]).default("asc"),
+	archived: z
+		.enum(["true", "false"])
+		.transform((value) => value === "true")
+		.optional(),
 });
 
 const getVehicleByIdParamSchema = z.object({
@@ -53,15 +58,24 @@ const updateVehicleBodySchema = z.object({
 	type: vehicleJourneyLineTypeEnum,
 });
 
+const archiveVehicleBodySchema = z.object({
+	wipeReference: z.boolean(),
+});
+
 export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) => {
 	hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
-		const { limit, page, networkId, operatorId, number, designation, sortBy, sortOrder } = c.req.valid("query");
+		const { limit, page, networkId, operatorId, number, designation, sortBy, sortOrder, archived } =
+			c.req.valid("query");
 
 		const vehiclesListWhereClause = and(
 			networkId ? eq(vehicles.networkId, networkId) : undefined,
 			operatorId ? eq(vehicles.operatorId, operatorId) : undefined,
 			number ? ilike(vehicles.number, `%${number}%`) : undefined,
 			designation ? ilike(vehicles.designation, `%${designation}%`) : undefined,
+			match(archived)
+				.with(true, () => isNotNull(vehicles.archivedAt))
+				.with(false, () => isNull(vehicles.archivedAt))
+				.otherwise(() => undefined),
 		);
 
 		const vehicleList = await database
@@ -245,7 +259,10 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 		async (c) => {
 			const { id } = c.req.valid("param");
 
-			const [vehicle] = await database.select().from(vehicles).where(eq(vehicles.id, id));
+			const [vehicle] = await database
+				.select()
+				.from(vehicles)
+				.where(and(eq(vehicles.id, id)));
 			if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
 			const editor = c.get("editor");
@@ -280,6 +297,52 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 				networkId: vehicle.networkId,
 				vehicleId: vehicle.id,
 				updatedFields,
+			});
+
+			return c.body(null, 204);
+		},
+	);
+
+	hono.post(
+		"/vehicles/:id/archive",
+		editorMiddleware,
+		createParamValidator(getVehicleByIdParamSchema),
+		createJsonValidator(archiveVehicleBodySchema),
+		async (c) => {
+			const { id } = c.req.valid("param");
+			const { wipeReference } = c.req.valid("json");
+
+			const [vehicle] = await database
+				.select()
+				.from(vehicles)
+				.where(and(eq(vehicles.id, id)));
+			if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+
+			const editor = c.get("editor");
+
+			if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
+				return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
+			}
+
+			if (vehicle.archivedAt !== null) {
+				return c.json({ error: "This vehicle has already been archived" }, 400);
+			}
+
+			const fields = {
+				archivedAt: Temporal.Now.instant(),
+				ref: wipeReference ? `${vehicle.ref}:ARCHIVED` : vehicle.ref,
+			};
+
+			await database.update(vehicles).set(fields).where(eq(vehicles.id, vehicle.id));
+
+			await database.insert(editionLogs).values({
+				editorId: editor.id,
+				networkId: vehicle.networkId,
+				vehicleId: vehicle.id,
+				updatedFields: [
+					{ type: "archivedAt", oldValue: null, newValue: fields.archivedAt },
+					...(wipeReference ? [{ type: "ref", oldValue: vehicle.ref, newValue: fields.ref }] : []),
+				],
 			});
 
 			return c.body(null, 204);

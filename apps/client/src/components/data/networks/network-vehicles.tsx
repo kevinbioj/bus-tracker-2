@@ -1,13 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
-import { useMemo } from "react";
+import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 
 import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
 import { VehiclesTable } from "~/components/data/networks/vehicles-table";
+import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
@@ -40,8 +41,12 @@ const numberSort = (a: Vehicle, b: Vehicle) => {
 type NetworkVehiclesProps = { networkId: number };
 
 export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
+	const [showArchived, setShowArchived] = useState(false);
+
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(networkId, true));
 	const { data: vehicles } = useSuspenseQuery(GetVehiclesQuery(networkId));
+
+	const hasArchivedVehicles = useMemo(() => vehicles.some((vehicle) => vehicle.archivedAt !== null), [vehicles]);
 
 	const availableNetworkTypeFilters = useMemo(() => {
 		const networkVehicleTypes = new Set(vehicles.map(({ type }) => type));
@@ -74,6 +79,8 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 
 		return vehicles
 			.filter((v) => {
+				if (showArchived && v.archivedAt === null) return false;
+				if (!showArchived && v.archivedAt !== null) return false;
 				if (type?.trim().length && type !== "ALL" && v.type !== type) return false;
 				if (operatorId !== "" && operatorId !== "ALL" && +operatorId !== v.operatorId) return false;
 				if (debouncedFilter === "") return true;
@@ -92,7 +99,7 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 
 				return numberSort(a, b);
 			});
-	}, [debouncedFilter, operatorId, searchParams, type, vehicles]);
+	}, [debouncedFilter, operatorId, showArchived, searchParams, type, vehicles]);
 
 	const onlineVehicles = useMemo(
 		() => filteredAndSortedVehicles.filter(({ activity }) => typeof activity.lineId !== "undefined"),
@@ -100,16 +107,17 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 	);
 
 	const activeVehiclesLabel = useMemo(() => {
-		if (filteredAndSortedVehicles.length === 0) return "Aucun véhicule n'existe avec ces critères de recherche.";
-		if (onlineVehicles.length === 0) return `Aucun véhicule sur ${filteredAndSortedVehicles.length} en circulation.`;
-		return `${onlineVehicles.length}/${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation.`;
-	}, [filteredAndSortedVehicles, onlineVehicles]);
+		if (showArchived) return `${onlineVehicles.length} véhicules archivés`;
+		if (filteredAndSortedVehicles.length === 0) return "Aucun véhicule n'existe avec ces critères de recherche";
+		if (onlineVehicles.length === 0) return `Aucun véhicule sur ${filteredAndSortedVehicles.length} en circulation`;
+		return `${onlineVehicles.length}/${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation`;
+	}, [filteredAndSortedVehicles, onlineVehicles, showArchived]);
 
 	return (
 		<section>
 			{vehicles.length > 0 ? (
 				<>
-					<div className="grid grid-cols-[1fr_4.5rem] gap-1 mt-2">
+					<div className="grid grid-cols-[1fr_4.5rem_2.3rem] gap-1 mt-2">
 						{/* Filters */}
 						<div className="flex flex-col gap-1">
 							<Label className="inline-flex items-center gap-1" htmlFor="filter">
@@ -181,6 +189,15 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 								</SelectContent>
 							</Select>
 						</div>
+						{/* Archive */}
+						<Button
+							className="mt-auto h-10"
+							onClick={() => setShowArchived(!showArchived)}
+							size="icon"
+							variant={showArchived ? "branding-default" : "secondary"}
+						>
+							<ArchiveIcon />
+						</Button>
 					</div>
 					<p
 						className={clsx(

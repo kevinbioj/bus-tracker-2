@@ -27,6 +27,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { useEditor } from "~/hooks/use-editor";
+import { VehicleCharacteristicsArchive } from "~/components/data/vehicles/vehicle-characteristics-archive";
 
 const updateVehicleFormSchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
@@ -112,7 +113,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 					<PencilIcon />
 				</Button>
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent aria-describedby={undefined}>
 				<DialogHeader>
 					<DialogTitle>
 						Édition du véhicule <pre className="inline">{vehicle.ref}</pre>
@@ -216,6 +217,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 									Annuler
 								</Button>
 							</DialogClose>
+							<VehicleCharacteristicsArchive vehicle={vehicle} />
 							<Button disabled={updatingVehicle} type="submit" variant="branding-default">
 								Sauvegarder
 							</Button>

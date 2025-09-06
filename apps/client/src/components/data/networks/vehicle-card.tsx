@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ArchiveIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { match, P } from "ts-pattern";
@@ -12,13 +13,14 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 
 	const activeLine = useMemo(() => {
+		if (vehicle.archivedAt !== null) return <ArchiveIcon className="h-full mx-auto" />;
 		if (typeof line === "undefined") return <Zzz className="h-full mx-auto" />;
 		return line.cartridgeHref ? (
 			<img className="h-full mx-auto object-contain" src={line.cartridgeHref} alt={line.number} />
 		) : (
 			<p className="flex items-center justify-center h-full font-bold text-2xl">{line.number}</p>
 		);
-	}, [line]);
+	}, [line, vehicle]);
 
 	return (
 		<Link
@@ -65,7 +67,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 						</p>
 					) : (
 						<p>
-							Hors-ligne
+							{vehicle.archivedAt ? "Archivé" : "Hors-ligne"}
 							{vehicle.activity.since !== null && (
 								<>
 									{" "}

@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+import { ArchiveIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { match } from "ts-pattern";
 
@@ -31,6 +33,13 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 					{vehicle.operator !== null && (
 						<div className="mt-0.5 text-xs text-muted-foreground">
 							Opéré par <span className="font-bold">{vehicle.operator.name}</span>
+						</div>
+					)}
+					{vehicle.archivedAt !== null && (
+						<div className="mt-2 text-muted-foreground">
+							<ArchiveIcon className="align-text-top inline size-4" /> Ce véhicule a été archivé le{" "}
+							<span className="font-bold">{dayjs(vehicle.archivedAt).format("L")}</span> à{" "}
+							<span className="font-bold">{dayjs(vehicle.archivedAt).format("LT")}</span>.
 						</div>
 					)}
 				</div>
