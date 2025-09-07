@@ -15,70 +15,45 @@ const sources = [
 		id: "breizhgo-22",
 		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/BREIZHGO_CAR_22.gtfs.zip",
 		realtimeResourceHrefs: ["https://www.korrigo.bzh/ftp/OPENDATA/gtfsrt/TIBUS.GtfsRt.pb"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "BREIZHGO",
-		mapLineRef: (lineRef) => `BZH22-${lineRef}`,
 	},
 	{
 		id: "breizhgo-29",
-		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-29/gtfs",
+		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/29.gtfs.zip",
 		realtimeResourceHrefs: [
 			"https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "BREIZHGO",
-		mapLineRef: (lineRef) => `BZH29-${lineRef}`,
 	},
 	{
 		id: "breizhgo-35",
 		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/BREIZHGO_CAR_35.gtfs.zip",
 		realtimeResourceHrefs: ["https://www.korrigo.bzh/ftp/OPENDATA/gtfsrt/BREIZHGO_CAR_35.GtfsRt.pb"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "BREIZHGO",
-		mapLineRef: (lineRef) => `BZH35-${lineRef}`,
 	},
 	{
 		id: "breizhgo-56",
 		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/BREIZHGO_CAR_56.gtfs.zip",
-		realtimeResourceHrefs: [
-			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-trip-update",
-			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-vehicle-position",
-		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "BREIZHGO",
-		isValidJourney: (journey) =>
-			typeof journey.destination !== "undefined" || journey.calls?.some((call) => call.callStatus === "UNSCHEDULED"),
-		mapLineRef: (lineRef) => `BZH56-${lineRef}`,
 	},
 	{
 		id: "breizhgo-ns",
 		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-lrr-ns/gtfs",
-		realtimeResourceHrefs: [
-			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-trip-update",
-			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-vehicle-position",
-		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "BREIZHGO",
-		mapLineRef: (lineRef) => `BZHNS-${lineRef}`,
-		mapTripUpdate: (tripUpdate) => {
-			delete tripUpdate.trip.tripId;
-			if (tripUpdate.trip.routeId === "LRR.143") {
-				tripUpdate.trip.routeId = "143";
-			}
-			return tripUpdate;
-		},
-		mapVehiclePosition: (vehicle) => {
-			delete vehicle.trip?.tripId;
-			if (vehicle.trip?.routeId === "LRR.143") {
-				vehicle.trip.routeId = "143";
-			}
-			return vehicle;
-		},
-		isValidJourney: (journey) => journey.line?.ref.endsWith("BZHNS-143"),
 	},
 	{
 		id: "breizhgo-rp",
 		staticResourceHref: "https://pysae.com/api/v2/groups/breizhgo-lrr/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/breizhgo-lrr/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "BREIZHGO",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
-		mapLineRef: (lineRef) => `BZHRP-${lineRef}`,
 	},
 	{
 		id: "brest",
