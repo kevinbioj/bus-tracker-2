@@ -1,80 +1,80 @@
 /** biome-ignore-all lint/complexity/noImportantStyles: no choice with leaflet... */
 
 .leaflet-control-container {
-  color: black !important;
+	color: black !important;
 }
 
 .leaflet-bar {
-  border-width: 1px !important;
+	border-width: 1px !important;
 }
 
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-  border-width: 1px;
+	border-width: 1px;
 }
 
 .leaflet-fade-anim .leaflet-popup {
-  transition-duration: 0.15s !important;
+	transition-duration: 0.15s !important;
 }
 
 .leaflet-container {
-  font-family: inherit;
+	font-family: inherit;
 }
 
 .leaflet-container a {
-  color: unset;
+	color: unset;
 }
 
 .leaflet-popup-content {
-  margin: 0 !important;
-  padding: 0 0 10px 0 !important;
-  width: max-content !important;
+	margin: 0 !important;
+	padding: 0 0 10px 0 !important;
+	width: max-content !important;
 }
 
 .leaflet-popup-content-wrapper {
-  border-radius: 0px !important;
-  border-bottom-left-radius: 8px !important;
-  border-bottom-right-radius: 8px !important;
-  padding: 0 !important;
+	border-radius: 0px !important;
+	border-bottom-left-radius: 8px !important;
+	border-bottom-right-radius: 8px !important;
+	padding: 0 !important;
 }
 
 @media (prefers-color-scheme: dark) {
-  .leaflet-control-locate-location-arrow {
-    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="white" d="M445 4 29 195c-48 23-32 93 19 93h176v176c0 51 70 67 93 19L508 67c16-38-25-79-63-63z"/></svg>') !important;
-  }
+	.leaflet-control-locate-location-arrow {
+		background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="white" d="M445 4 29 195c-48 23-32 93 19 93h176v176c0 51 70 67 93 19L508 67c16-38-25-79-63-63z"/></svg>') !important;
+	}
 
-  .leaflet-control-locate-spinner {
-    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="white" d="M304 48a48 48 0 1 1-96 0 48 48 0 0 1 96 0zm-48 368a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm208-208a48 48 0 1 0 0 96 48 48 0 0 0 0-96zM96 256a48 48 0 1 0-96 0 48 48 0 0 0 96 0zm13 99a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm294 0a48 48 0 1 0 0 96 48 48 0 0 0 0-96zM109 61a48 48 0 1 0 0 96 48 48 0 0 0 0-96z"/></svg>') !important;
-  }
+	.leaflet-control-locate-spinner {
+		background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="white" d="M304 48a48 48 0 1 1-96 0 48 48 0 0 1 96 0zm-48 368a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm208-208a48 48 0 1 0 0 96 48 48 0 0 0 0-96zM96 256a48 48 0 1 0-96 0 48 48 0 0 0 96 0zm13 99a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm294 0a48 48 0 1 0 0 96 48 48 0 0 0 0-96zM109 61a48 48 0 1 0 0 96 48 48 0 0 0 0-96z"/></svg>') !important;
+	}
 
-  .leaflet-control-zoom-in,
-  .leaflet-control-zoom-out,
-  .leaflet-control-locate,
-  .leaflet-bar-part {
-    background-color: rgb(23, 23, 23) !important;
-  }
+	.leaflet-control-zoom-in,
+	.leaflet-control-zoom-out,
+	.leaflet-control-locate,
+	.leaflet-bar-part {
+		background-color: rgb(23, 23, 23) !important;
+	}
 
-  .leaflet-control-zoom-in:hover,
-  .leaflet-control-zoom-out:hover,
-  .leaflet-control-locate:hover,
-  .leaflet-bar-part:hover {
-    background-color: rgb(50, 50, 50) !important;
-  }
+	.leaflet-control-zoom-in:hover,
+	.leaflet-control-zoom-out:hover,
+	.leaflet-control-locate:hover,
+	.leaflet-bar-part:hover {
+		background-color: rgb(50, 50, 50) !important;
+	}
 
-  .leaflet-popup-content-wrapper,
-  .leaflet-popup-tip {
-    background-color: rgb(23, 23, 23) !important;
-    border-color: rgb(128, 128, 128);
-    color: white !important;
-  }
+	.leaflet-popup-content-wrapper,
+	.leaflet-popup-tip {
+		background-color: rgb(23, 23, 23) !important;
+		border-color: rgb(128, 128, 128);
+		color: white !important;
+	}
 
-  .leaflet-bar {
-    border-color: white !important;
-    color: white;
-  }
+	.leaflet-bar {
+		border-color: white !important;
+		color: white;
+	}
 
-  .leaflet-control-attribution {
-    background-color: rgba(0, 0, 0, 0.7) !important;
-    color: white !important;
-  }
+	.leaflet-control-attribution {
+		background-color: rgba(0, 0, 0, 0.7) !important;
+		color: white !important;
+	}
 }

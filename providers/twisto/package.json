@@ -12,7 +12,7 @@
 	},
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@types/node": "^24.3.0",
+		"@types/node": "^24.3.1",
 		"tsx": "^4.20.5",
 		"typescript": "^5.9.2"
 	},
@@ -20,7 +20,7 @@
 		"croner": "^9.1.0",
 		"draftlog": "^1.0.13",
 		"fast-xml-parser": "^5.2.5",
-		"ky": "^1.9.1",
+		"ky": "^1.10.0",
 		"redis": "^5.8.2",
 		"temporal-polyfill": "^0.3.0"
 	}

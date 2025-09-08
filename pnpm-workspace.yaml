@@ -11,6 +11,8 @@ packages:
   - providers/tcl
   - providers/rtm
 
+allowUnusedPatches: true
+
 onlyBuiltDependencies:
   - '@biomejs/biome'
   - '@sentry-internal/node-cpu-profiler'
@@ -24,5 +26,4 @@ onlyBuiltDependencies:
 
 patchedDependencies:
   '@danielgtmn/umami-react@1.0.1': patches/@danielgtmn__umami-react@1.0.1.patch
-
-allowNonAppliedPatches: true
+  '@danielgtmn/umami-react@1.1.1': patches/@danielgtmn__umami-react@1.1.1.patch
