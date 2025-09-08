@@ -5,9 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
-  '@danielgtmn/umami-react@1.0.1':
-    hash: 0a2f3248022900b0f719fd27dc1c9e71d21639cefb470a1f33ba7048451294ca
-    path: patches/@danielgtmn__umami-react@1.0.1.patch
   '@danielgtmn/umami-react@1.1.1':
     hash: f422cf45339fbe483a01f9b73b529980c844d44f8b12c4507089ba8aa669238e
     path: patches/@danielgtmn__umami-react@1.1.1.patch
