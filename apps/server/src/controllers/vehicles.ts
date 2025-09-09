@@ -1,16 +1,22 @@
 import { vehicleJourneyLineTypeEnum } from "@bus-tracker/contracts";
 import { and, asc, between, desc, eq, ilike, isNotNull, isNull, lt, sql } from "drizzle-orm";
-import type { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
 import { match } from "ts-pattern";
 import * as z from "zod";
 
 import { database } from "../database/database.js";
-import { editionLogs, lineActivities, networks, operators, vehicles } from "../database/schema.js";
+import {
+	editionLogsTable,
+	lineActivitiesTable,
+	networksTable,
+	operatorsTable,
+	vehiclesTable,
+} from "../database/schema.js";
 import { paginationSchema } from "../helpers/pagination-schema.js";
 import { createJsonValidator, createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
 import { editorMiddleware } from "../middlewares/editor-middleware.js";
-import type { JourneyStore } from "../store/journey-store.js";
+import { hono } from "../server.js";
+import { journeyStore } from "../store/journey-store.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
 
@@ -62,122 +68,60 @@ const archiveVehicleBodySchema = z.object({
 	wipeReference: z.boolean(),
 });
 
-export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) => {
-	hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
-		const { limit, page, networkId, operatorId, number, designation, sortBy, sortOrder, archived } =
-			c.req.valid("query");
+hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
+	const { limit, page, networkId, operatorId, number, designation, sortBy, sortOrder, archived } = c.req.valid("query");
 
-		const vehiclesListWhereClause = and(
-			networkId ? eq(vehicles.networkId, networkId) : undefined,
-			operatorId ? eq(vehicles.operatorId, operatorId) : undefined,
-			number ? ilike(vehicles.number, `%${number}%`) : undefined,
-			designation ? ilike(vehicles.designation, `%${designation}%`) : undefined,
-			match(archived)
-				.with(true, () => isNotNull(vehicles.archivedAt))
-				.with(false, () => isNull(vehicles.archivedAt))
-				.otherwise(() => undefined),
-		);
+	const vehiclesListWhereClause = and(
+		networkId ? eq(vehiclesTable.networkId, networkId) : undefined,
+		operatorId ? eq(vehiclesTable.operatorId, operatorId) : undefined,
+		number ? ilike(vehiclesTable.number, `%${number}%`) : undefined,
+		designation ? ilike(vehiclesTable.designation, `%${designation}%`) : undefined,
+		match(archived)
+			.with(true, () => isNotNull(vehiclesTable.archivedAt))
+			.with(false, () => isNull(vehiclesTable.archivedAt))
+			.otherwise(() => undefined),
+	);
 
-		const vehicleList = await database
-			.select()
-			.from(vehicles)
-			.offset(page * limit)
-			.limit(limit)
-			.where(vehiclesListWhereClause)
-			.orderBy(sortOrder === "asc" ? asc(vehicles[sortBy]) : desc(vehicles[sortBy]));
+	const vehicleList = await database
+		.select()
+		.from(vehiclesTable)
+		.offset(page * limit)
+		.limit(limit)
+		.where(vehiclesListWhereClause)
+		.orderBy(sortOrder === "asc" ? asc(vehiclesTable[sortBy]) : desc(vehiclesTable[sortBy]));
 
-		const onlineVehicleList = Map.groupBy(
-			await database
-				.select({
-					vehicleId: vehicles.id,
-					lineId: lineActivities.lineId,
-					since: lineActivities.startedAt,
-				})
-				.from(vehicles)
-				.where(
-					and(
-						vehiclesListWhereClause,
-						lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivities.updatedAt}))`, 600),
-					),
-				)
-				.innerJoin(lineActivities, eq(vehicles.id, lineActivities.vehicleId)),
-			(currentActivity) => currentActivity.vehicleId,
-		);
+	const onlineVehicleList = Map.groupBy(
+		await database
+			.select({
+				vehicleId: vehiclesTable.id,
+				lineId: lineActivitiesTable.lineId,
+				since: lineActivitiesTable.startedAt,
+			})
+			.from(vehiclesTable)
+			.where(
+				and(
+					vehiclesListWhereClause,
+					lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivitiesTable.updatedAt}))`, 600),
+				),
+			)
+			.innerJoin(lineActivitiesTable, eq(vehiclesTable.id, lineActivitiesTable.vehicleId)),
+		(currentActivity) => currentActivity.vehicleId,
+	);
 
-		const vehicleWithActivityList = vehicleList.map(({ lastSeenAt, ...vehicle }) => {
-			// Ce n'est pas possible, dans un monde normal et pour un même véhicule,
-			// de tourner sur plusieurs lignes en même temps. Si jamais c'est le cas,
-			// et bien on prendra le dernier début puis le reste ira se faire voir 👍
-			const currentActivity = onlineVehicleList
-				.get(vehicle.id)
-				?.toSorted((a, b) => Temporal.Instant.compare(b.since, a.since))
-				.at(0);
-			const journey = journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
-			return {
-				...vehicle,
-				activity: {
-					status: currentActivity ? "online" : "offline",
-					since: currentActivity ? currentActivity.since : lastSeenAt,
-					lineId: currentActivity?.lineId,
-					markerId: journey?.id,
-					position: journey
-						? {
-								latitude: journey.position.latitude,
-								longitude: journey.position.longitude,
-							}
-						: undefined,
-				},
-			};
-		});
-
-		return c.json(vehicleWithActivityList);
-	});
-
-	hono.get("/vehicles/:id", createParamValidator(getVehicleByIdParamSchema), async (c) => {
-		const { id } = c.req.valid("param");
-
-		const [data] = await database
-			.select()
-			.from(vehicles)
-			.innerJoin(networks, eq(networks.id, vehicles.networkId))
-			.leftJoin(operators, eq(operators.id, vehicles.operatorId))
-			.where(eq(vehicles.id, id));
-		if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
-
-		const { vehicle, network, operator } = data;
-
-		const currentActivity = (
-			await database
-				.select({
-					vehicleId: vehicles.id,
-					lineId: lineActivities.lineId,
-					since: lineActivities.startedAt,
-				})
-				.from(vehicles)
-				.where(
-					and(
-						eq(vehicles.id, vehicle.id),
-						lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivities.updatedAt}))`, 600),
-					),
-				)
-				.innerJoin(lineActivities, eq(vehicles.id, lineActivities.vehicleId))
-				.orderBy(desc(lineActivities.startedAt))
-		).at(0);
-
-		const activeMonths = await database
-			.select({ month: sql<string>`DISTINCT TO_CHAR(started_at, 'YYYY-MM')` })
-			.from(lineActivities)
-			.where(eq(lineActivities.vehicleId, vehicle.id));
-
+	const vehicleWithActivityList = vehicleList.map(({ lastSeenAt, ...vehicle }) => {
+		// Ce n'est pas possible, dans un monde normal et pour un même véhicule,
+		// de tourner sur plusieurs lignes en même temps. Si jamais c'est le cas,
+		// et bien on prendra le dernier début puis le reste ira se faire voir 👍
+		const currentActivity = onlineVehicleList
+			.get(vehicle.id)
+			?.toSorted((a, b) => Temporal.Instant.compare(b.since, a.since))
+			.at(0);
 		const journey = journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
-
-		return c.json({
+		return {
 			...vehicle,
-			operator,
 			activity: {
 				status: currentActivity ? "online" : "offline",
-				since:
-					(currentActivity ? currentActivity.since : vehicle.lastSeenAt)?.toZonedDateTimeISO(network.timezone) ?? null,
+				since: currentActivity ? currentActivity.since : lastSeenAt,
 				lineId: currentActivity?.lineId,
 				markerId: journey?.id,
 				position: journey
@@ -187,165 +131,224 @@ export const registerVehicleRoutes = (hono: Hono, journeyStore: JourneyStore) =>
 						}
 					: undefined,
 			},
-			activeMonths: activeMonths.map(({ month }) => month).toSorted((a, b) => a.localeCompare(b)),
-		});
+		};
 	});
 
-	hono.get(
-		"/vehicles/:id/activities",
-		createParamValidator(getVehicleByIdParamSchema),
-		createQueryValidator(getVehicleActivitiesQuerySchema),
-		async (c) => {
-			const { id } = c.req.valid("param");
-			const { month } = c.req.valid("query");
+	return c.json(vehicleWithActivityList);
+});
 
-			const [data] = await database
-				.select()
-				.from(vehicles)
-				.innerJoin(networks, eq(networks.id, vehicles.networkId))
-				.where(eq(vehicles.id, id));
-			if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+hono.get("/vehicles/:id", createParamValidator(getVehicleByIdParamSchema), async (c) => {
+	const { id } = c.req.valid("param");
 
-			const { vehicle, network } = data;
+	const [data] = await database
+		.select()
+		.from(vehiclesTable)
+		.innerJoin(networksTable, eq(networksTable.id, vehiclesTable.networkId))
+		.leftJoin(operatorsTable, eq(operatorsTable.id, vehiclesTable.operatorId))
+		.where(eq(vehiclesTable.id, id));
+	if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
-			const lineActivityList = await database
-				.select()
-				.from(lineActivities)
-				.where(
-					and(
-						eq(lineActivities.vehicleId, vehicle.id),
-						between(
-							lineActivities.serviceDate,
-							month.toPlainDate({ day: 1 }).toString(),
-							month.toPlainDate({ day: month.daysInMonth }).toString(),
-						),
+	const { vehicle, network, operator } = data;
+
+	const currentActivity = (
+		await database
+			.select({
+				vehicleId: vehiclesTable.id,
+				lineId: lineActivitiesTable.lineId,
+				since: lineActivitiesTable.startedAt,
+			})
+			.from(vehiclesTable)
+			.where(
+				and(
+					eq(vehiclesTable.id, vehicle.id),
+					lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivitiesTable.updatedAt}))`, 600),
+				),
+			)
+			.innerJoin(lineActivitiesTable, eq(vehiclesTable.id, lineActivitiesTable.vehicleId))
+			.orderBy(desc(lineActivitiesTable.startedAt))
+	).at(0);
+
+	const activeMonths = await database
+		.select({ month: sql<string>`DISTINCT TO_CHAR(started_at, 'YYYY-MM')` })
+		.from(lineActivitiesTable)
+		.where(eq(lineActivitiesTable.vehicleId, vehicle.id));
+
+	const journey = journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
+
+	return c.json({
+		...vehicle,
+		operator,
+		activity: {
+			status: currentActivity ? "online" : "offline",
+			since:
+				(currentActivity ? currentActivity.since : vehicle.lastSeenAt)?.toZonedDateTimeISO(network.timezone) ?? null,
+			lineId: currentActivity?.lineId,
+			markerId: journey?.id,
+			position: journey
+				? {
+						latitude: journey.position.latitude,
+						longitude: journey.position.longitude,
+					}
+				: undefined,
+		},
+		activeMonths: activeMonths.map(({ month }) => month).toSorted((a, b) => a.localeCompare(b)),
+	});
+});
+
+hono.get(
+	"/vehicles/:id/activities",
+	createParamValidator(getVehicleByIdParamSchema),
+	createQueryValidator(getVehicleActivitiesQuerySchema),
+	async (c) => {
+		const { id } = c.req.valid("param");
+		const { month } = c.req.valid("query");
+
+		const [data] = await database
+			.select()
+			.from(vehiclesTable)
+			.innerJoin(networksTable, eq(networksTable.id, vehiclesTable.networkId))
+			.where(eq(vehiclesTable.id, id));
+		if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+
+		const { vehicle, network } = data;
+
+		const lineActivityList = await database
+			.select()
+			.from(lineActivitiesTable)
+			.where(
+				and(
+					eq(lineActivitiesTable.vehicleId, vehicle.id),
+					between(
+						lineActivitiesTable.serviceDate,
+						month.toPlainDate({ day: 1 }).toString(),
+						month.toPlainDate({ day: month.daysInMonth }).toString(),
 					),
+				),
+			);
+
+		const lineActivitiesByDay = Map.groupBy(lineActivityList, (lineActivity) => lineActivity.serviceDate);
+
+		const dates = [...new Set(lineActivitiesByDay.keys())]
+			.map((date) => Temporal.PlainDate.from(date))
+			.toSorted((a, b) => Temporal.PlainYearMonth.compare(b, a));
+
+		return c.json({
+			timeline: dates.map((date) => {
+				const lineActivitiesThatDay =
+					lineActivitiesByDay.get(date.toString())?.map((lineActivity) => ({
+						type: "LINE_ACTIVITY" as const,
+						lineId: lineActivity.lineId,
+						startedAt: Temporal.Instant.from(lineActivity.startedAt)
+							.toZonedDateTimeISO(network.timezone)
+							.toString({ timeZoneName: "never" }),
+						updatedAt: Temporal.Instant.from(lineActivity.updatedAt)
+							.toZonedDateTimeISO(network.timezone)
+							.toString({ timeZoneName: "never" }),
+					})) ?? [];
+
+				const activities = [...lineActivitiesThatDay].sort((a, b) =>
+					Temporal.Instant.compare(b.startedAt, a.startedAt),
 				);
+				return { date, activities };
+			}),
+		});
+	},
+);
 
-			const lineActivitiesByDay = Map.groupBy(lineActivityList, (lineActivity) => lineActivity.serviceDate);
+hono.put(
+	"/vehicles/:id",
+	editorMiddleware({ required: true }),
+	createParamValidator(getVehicleByIdParamSchema),
+	createJsonValidator(updateVehicleBodySchema),
+	async (c) => {
+		const { id } = c.req.valid("param");
 
-			const dates = [...new Set(lineActivitiesByDay.keys())]
-				.map((date) => Temporal.PlainDate.from(date))
-				.toSorted((a, b) => Temporal.PlainYearMonth.compare(b, a));
+		const [vehicle] = await database
+			.select()
+			.from(vehiclesTable)
+			.where(and(eq(vehiclesTable.id, id)));
+		if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
-			return c.json({
-				timeline: dates.map((date) => {
-					const lineActivitiesThatDay =
-						lineActivitiesByDay.get(date.toString())?.map((lineActivity) => ({
-							type: "LINE_ACTIVITY" as const,
-							lineId: lineActivity.lineId,
-							startedAt: Temporal.Instant.from(lineActivity.startedAt)
-								.toZonedDateTimeISO(network.timezone)
-								.toString({ timeZoneName: "never" }),
-							updatedAt: Temporal.Instant.from(lineActivity.updatedAt)
-								.toZonedDateTimeISO(network.timezone)
-								.toString({ timeZoneName: "never" }),
-						})) ?? [];
+		const editor = c.get("editor");
 
-					const activities = [...lineActivitiesThatDay].sort((a, b) =>
-						Temporal.Instant.compare(b.startedAt, a.startedAt),
-					);
-					return { date, activities };
-				}),
-			});
-		},
-	);
+		if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
+			return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
+		}
 
-	hono.put(
-		"/vehicles/:id",
-		editorMiddleware,
-		createParamValidator(getVehicleByIdParamSchema),
-		createJsonValidator(updateVehicleBodySchema),
-		async (c) => {
-			const { id } = c.req.valid("param");
+		const data = c.req.valid("json");
+		const updatedFields: { field: string; oldValue: string | number | null; newValue: string | number | null }[] = [];
 
-			const [vehicle] = await database
-				.select()
-				.from(vehicles)
-				.where(and(eq(vehicles.id, id)));
-			if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+		if (vehicle.number !== data.number) {
+			updatedFields.push({ field: "number", oldValue: vehicle.number, newValue: data.number });
+		}
 
-			const editor = c.get("editor");
+		if (vehicle.designation !== data.designation) {
+			updatedFields.push({ field: "designation", oldValue: vehicle.designation, newValue: data.designation });
+		}
 
-			if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
-				return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
-			}
+		if (vehicle.tcId !== data.tcId) {
+			updatedFields.push({ field: "tcId", oldValue: vehicle.tcId, newValue: data.tcId });
+		}
 
-			const data = c.req.valid("json");
-			const updatedFields: { field: string; oldValue: string | number | null; newValue: string | number | null }[] = [];
+		if (vehicle.type !== data.type) {
+			updatedFields.push({ field: "type", oldValue: vehicle.type, newValue: data.type });
+		}
 
-			if (vehicle.number !== data.number) {
-				updatedFields.push({ field: "number", oldValue: vehicle.number, newValue: data.number });
-			}
+		await database.update(vehiclesTable).set(data).where(eq(vehiclesTable.id, vehicle.id));
 
-			if (vehicle.designation !== data.designation) {
-				updatedFields.push({ field: "designation", oldValue: vehicle.designation, newValue: data.designation });
-			}
+		await database.insert(editionLogsTable).values({
+			editorId: editor.id,
+			networkId: vehicle.networkId,
+			vehicleId: vehicle.id,
+			updatedFields,
+		});
 
-			if (vehicle.tcId !== data.tcId) {
-				updatedFields.push({ field: "tcId", oldValue: vehicle.tcId, newValue: data.tcId });
-			}
+		return c.body(null, 204);
+	},
+);
 
-			if (vehicle.type !== data.type) {
-				updatedFields.push({ field: "type", oldValue: vehicle.type, newValue: data.type });
-			}
+hono.post(
+	"/vehicles/:id/archive",
+	editorMiddleware({ required: true }),
+	createParamValidator(getVehicleByIdParamSchema),
+	createJsonValidator(archiveVehicleBodySchema),
+	async (c) => {
+		const { id } = c.req.valid("param");
+		const { wipeReference } = c.req.valid("json");
 
-			await database.update(vehicles).set(data).where(eq(vehicles.id, vehicle.id));
+		const [vehicle] = await database
+			.select()
+			.from(vehiclesTable)
+			.where(and(eq(vehiclesTable.id, id)));
+		if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
-			await database.insert(editionLogs).values({
-				editorId: editor.id,
-				networkId: vehicle.networkId,
-				vehicleId: vehicle.id,
-				updatedFields,
-			});
+		const editor = c.get("editor");
 
-			return c.body(null, 204);
-		},
-	);
+		if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
+			return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
+		}
 
-	hono.post(
-		"/vehicles/:id/archive",
-		editorMiddleware,
-		createParamValidator(getVehicleByIdParamSchema),
-		createJsonValidator(archiveVehicleBodySchema),
-		async (c) => {
-			const { id } = c.req.valid("param");
-			const { wipeReference } = c.req.valid("json");
+		if (vehicle.archivedAt !== null) {
+			return c.json({ error: "This vehicle has already been archived" }, 400);
+		}
 
-			const [vehicle] = await database
-				.select()
-				.from(vehicles)
-				.where(and(eq(vehicles.id, id)));
-			if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+		const fields = {
+			archivedAt: Temporal.Now.instant(),
+			ref: wipeReference ? `${vehicle.ref}:ARCHIVED` : vehicle.ref,
+		};
 
-			const editor = c.get("editor");
+		await database.update(vehiclesTable).set(fields).where(eq(vehiclesTable.id, vehicle.id));
 
-			if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
-				return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
-			}
+		await database.insert(editionLogsTable).values({
+			editorId: editor.id,
+			networkId: vehicle.networkId,
+			vehicleId: vehicle.id,
+			updatedFields: [
+				{ type: "archivedAt", oldValue: null, newValue: fields.archivedAt },
+				...(wipeReference ? [{ type: "ref", oldValue: vehicle.ref, newValue: fields.ref }] : []),
+			],
+		});
 
-			if (vehicle.archivedAt !== null) {
-				return c.json({ error: "This vehicle has already been archived" }, 400);
-			}
-
-			const fields = {
-				archivedAt: Temporal.Now.instant(),
-				ref: wipeReference ? `${vehicle.ref}:ARCHIVED` : vehicle.ref,
-			};
-
-			await database.update(vehicles).set(fields).where(eq(vehicles.id, vehicle.id));
-
-			await database.insert(editionLogs).values({
-				editorId: editor.id,
-				networkId: vehicle.networkId,
-				vehicleId: vehicle.id,
-				updatedFields: [
-					{ type: "archivedAt", oldValue: null, newValue: fields.archivedAt },
-					...(wipeReference ? [{ type: "ref", oldValue: vehicle.ref, newValue: fields.ref }] : []),
-				],
-			});
-
-			return c.body(null, 204);
-		},
-	);
-};
+		return c.body(null, 204);
+	},
+);

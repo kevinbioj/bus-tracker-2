@@ -3,22 +3,26 @@ import { and, arrayOverlaps, eq, gte, isNull, or } from "drizzle-orm";
 import type { Temporal } from "temporal-polyfill";
 
 import { database } from "../database/database.js";
-import { type Network, lines } from "../database/schema.js";
+import { type NetworkEntity, linesTable } from "../database/schema.js";
 
-export async function importLines(network: Network, linesData: VehicleJourneyLine[], recordedAt: Temporal.Instant) {
+export async function importLines(
+	network: NetworkEntity,
+	linesData: VehicleJourneyLine[],
+	recordedAt: Temporal.Instant,
+) {
 	if (linesData.length === 0) return [];
 
 	const existingLines = await database
 		.select()
-		.from(lines)
+		.from(linesTable)
 		.where(
 			and(
-				eq(lines.networkId, network.id),
+				eq(linesTable.networkId, network.id),
 				arrayOverlaps(
-					lines.references,
+					linesTable.references,
 					linesData.map(({ ref }) => ref),
 				),
-				or(isNull(lines.archivedAt), gte(lines.archivedAt, recordedAt)),
+				or(isNull(linesTable.archivedAt), gte(linesTable.archivedAt, recordedAt)),
 			),
 		);
 
@@ -28,7 +32,7 @@ export async function importLines(network: Network, linesData: VehicleJourneyLin
 
 	if (missingLines.length > 0) {
 		const addedLines = await database
-			.insert(lines)
+			.insert(linesTable)
 			.values(
 				missingLines.map((line) => ({
 					networkId: network.id,

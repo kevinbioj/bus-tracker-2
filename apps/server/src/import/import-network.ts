@@ -1,13 +1,13 @@
 import { eq } from "drizzle-orm";
 
 import { database } from "../database/database.js";
-import { networks } from "../database/schema.js";
+import { networksTable } from "../database/schema.js";
 
 export async function importNetwork(ref: string) {
-	let [network] = await database.select().from(networks).where(eq(networks.ref, ref));
+	let [network] = await database.select().from(networksTable).where(eq(networksTable.ref, ref));
 
 	if (typeof network === "undefined") {
-		network = (await database.insert(networks).values({ ref, name: ref }).returning())[0]!;
+		network = (await database.insert(networksTable).values({ ref, name: ref }).returning())[0]!;
 	}
 
 	return network;

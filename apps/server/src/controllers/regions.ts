@@ -1,11 +1,10 @@
-import type { Hono } from "hono";
+import { asc } from "drizzle-orm";
 
 import { database } from "../database/database.js";
-import { regions } from "../database/schema.js";
+import { regionsTable } from "../database/schema.js";
+import { hono } from "../server.js";
 
-export const registerRegionRoutes = (hono: Hono) => {
-	hono.get("/regions", async (c) => {
-		const regionList = await database.select().from(regions);
-		return c.json(regionList);
-	});
-};
+hono.get("/regions", async (c) => {
+	const regionList = await database.select().from(regionsTable).orderBy(asc(regionsTable.sortOrder));
+	return c.json(regionList);
+});

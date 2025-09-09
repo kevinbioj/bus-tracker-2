@@ -1,11 +1,11 @@
 import { inArray } from "drizzle-orm";
 
 import { database } from "../database/database.js";
-import { type Line, lines } from "../database/schema.js";
+import { type LineEntity, linesTable } from "../database/schema.js";
 
 import type { CachedValue } from "./cache.js";
 
-const cache = new Map<number, CachedValue<Line>>();
+const cache = new Map<number, CachedValue<LineEntity>>();
 
 export async function fetchLines(ids: number[]) {
 	const cachedLines = ids.reduce((map, id) => {
@@ -16,11 +16,11 @@ export async function fetchLines(ids: number[]) {
 
 		map.set(id, cachedLine.data);
 		return map;
-	}, new Map<number, Line>());
+	}, new Map<number, LineEntity>());
 
 	const missingLineIds = ids.filter((id) => !cachedLines.has(id));
 	if (missingLineIds.length > 0) {
-		const missingLines = await database.select().from(lines).where(inArray(lines.id, missingLineIds));
+		const missingLines = await database.select().from(linesTable).where(inArray(linesTable.id, missingLineIds));
 
 		for (const missingLine of missingLines) {
 			cache.set(missingLine.id, {

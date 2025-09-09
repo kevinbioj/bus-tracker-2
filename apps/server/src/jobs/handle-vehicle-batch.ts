@@ -2,20 +2,19 @@ import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts"
 import pLimit from "p-limit";
 import { Temporal } from "temporal-polyfill";
 
-import type { Vehicle } from "../database/schema.js";
+import type { VehicleEntity } from "../database/schema.js";
 import { importLines } from "../import/import-lines.js";
 import { importNetwork } from "../import/import-network.js";
 import { importVehicles } from "../import/import-vehicle.js";
-import type { JourneyStore } from "../store/journey-store.js";
+import { journeyStore } from "../store/journey-store.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { nthIndexOf } from "../utils/nth-index-of.js";
 
 import { registerActivity } from "./register-activity.js";
 
-// const updatedVehiclesCache = new Map<string, number>();
 const limitRegister = pLimit(60);
 
-export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: VehicleJourney[]) {
+export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
 
 	const vehicleJourneysByNetwork = Map.groupBy(vehicleJourneys, (vehicleJourney) => vehicleJourney.networkRef);
@@ -42,7 +41,7 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 		const vehicles = (await importVehicles(network, vehicleRefs)).reduce((map, vehicle) => {
 			map.set(vehicle.ref, vehicle);
 			return map;
-		}, new Map<string, Vehicle>());
+		}, new Map<string, VehicleEntity>());
 
 		for (const vehicleJourney of vehicleJourneys) {
 			const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
@@ -68,7 +67,7 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 					updatedAt: vehicleJourney.updatedAt,
 				};
 
-				store.set(disposeableJourney.id, disposeableJourney);
+				journeyStore.set(disposeableJourney.id, disposeableJourney);
 
 				if (typeof vehicleJourney.vehicleRef !== "undefined") {
 					const vehicle = vehicles.get(vehicleJourney.vehicleRef);
@@ -78,11 +77,7 @@ export async function handleVehicleBatch(store: JourneyStore, vehicleJourneys: V
 							number: vehicle.number,
 						};
 
-						// const lastUpdated = updatedVehiclesCache.get(vehicleJourney.vehicleRef);
-						// if (typeof lastUpdated === "undefined" || Date.now() - lastUpdated > 120_000) {
-						// updatedVehiclesCache.set(vehicleJourney.vehicleRef, Date.now());
 						await registerActivity(disposeableJourney);
-						// }
 					} else if (networkRef === "SNCF") {
 						disposeableJourney.vehicle = {
 							number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),

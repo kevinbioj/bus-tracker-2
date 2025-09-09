@@ -33,13 +33,15 @@ export const timestamp = customType<{
 	},
 });
 
-export const regions = pgTable("region", {
+export const regionsTable = pgTable("region", {
 	id: serial("id").primaryKey(),
 	name: varchar("name").notNull(),
 	sortOrder: integer("sort_order").notNull().unique(),
 });
 
-export const networks = pgTable("network", {
+export type RegionEntity = InferSelectModel<typeof regionsTable>;
+
+export const networksTable = pgTable("network", {
 	id: serial("id").primaryKey(),
 	ref: varchar("ref").notNull().unique(),
 	name: varchar("name").notNull(),
@@ -50,31 +52,31 @@ export const networks = pgTable("network", {
 	color: char("color", { length: 6 }),
 	textColor: char("text_color", { length: 6 }),
 	hasVehiclesFeature: boolean("has_vehicles_feature").notNull().default(false),
-	regionId: integer("region_id").references(() => regions.id),
+	regionId: integer("region_id").references(() => regionsTable.id),
 });
 
-export type Network = InferSelectModel<typeof networks>;
+export type NetworkEntity = InferSelectModel<typeof networksTable>;
 
-export const operators = pgTable("operator", {
+export const operatorsTable = pgTable("operator", {
 	id: serial("id").primaryKey(),
 	networkId: integer("network_id")
 		.notNull()
-		.references(() => networks.id),
+		.references(() => networksTable.id),
 	ref: varchar("ref").notNull().unique(),
 	name: varchar("name").notNull(),
 	logoHref: varchar("logo_href"),
 	sortOrder: integer("sort_order").notNull().default(0),
 });
 
-export type Operator = InferSelectModel<typeof operators>;
+export type OperatorEntity = InferSelectModel<typeof operatorsTable>;
 
-export const lines = pgTable(
+export const linesTable = pgTable(
 	"line",
 	{
 		id: serial("id").primaryKey(),
 		networkId: integer("network_id")
 			.notNull()
-			.references(() => networks.id),
+			.references(() => networksTable.id),
 		references: varchar("ref").array(),
 		number: varchar("number").notNull(),
 		girouetteNumber: varchar("girouette_number"),
@@ -87,30 +89,30 @@ export const lines = pgTable(
 	(table) => [index("network_idx").on(table.networkId)],
 );
 
-export type Line = InferSelectModel<typeof lines>;
+export type LineEntity = InferSelectModel<typeof linesTable>;
 
-export const girouettes = pgTable("girouette", {
+export const girouettesTable = pgTable("girouette", {
 	id: serial("id").primaryKey(),
 	networkId: integer("network_id")
 		.notNull()
-		.references(() => networks.id),
-	lineId: integer("line_id").references(() => lines.id),
+		.references(() => networksTable.id),
+	lineId: integer("line_id").references(() => linesTable.id),
 	directionId: smallint("direction_id"),
 	destinations: varchar("destinations").array(),
 	data: json("data").notNull(),
 	enabled: boolean("enabled").notNull().default(true),
 });
 
-export type Girouette = InferSelectModel<typeof girouettes>;
+export type GirouetteEntity = InferSelectModel<typeof girouettesTable>;
 
-export const vehicles = pgTable(
+export const vehiclesTable = pgTable(
 	"vehicle",
 	{
 		id: serial("id").primaryKey(),
 		networkId: integer("network_id")
 			.notNull()
-			.references(() => networks.id),
-		operatorId: integer("operator_id").references(() => operators.id),
+			.references(() => networksTable.id),
+		operatorId: integer("operator_id").references(() => operatorsTable.id),
 		ref: varchar("ref").notNull(),
 		type: varchar("type", {
 			enum: vehicleJourneyLineTypes,
@@ -128,18 +130,18 @@ export const vehicles = pgTable(
 	],
 );
 
-export type Vehicle = InferSelectModel<typeof vehicles>;
+export type VehicleEntity = InferSelectModel<typeof vehiclesTable>;
 
-export const lineActivities = pgTable(
+export const lineActivitiesTable = pgTable(
 	"line_activity",
 	{
 		id: serial("id").primaryKey(),
 		vehicleId: integer("vehicle_id")
 			.notNull()
-			.references(() => vehicles.id),
+			.references(() => vehiclesTable.id),
 		lineId: integer("line_id")
 			.notNull()
-			.references(() => lines.id),
+			.references(() => linesTable.id),
 		serviceDate: date("service_date", { mode: "string" }).notNull(),
 		startedAt: timestamp("started_at", { precision: 0 }).notNull(),
 		updatedAt: timestamp("updated_at", { precision: 0 }).notNull(),
@@ -151,30 +153,9 @@ export const lineActivities = pgTable(
 	],
 );
 
-export type LineActivity = InferSelectModel<typeof lineActivities>;
+export type LineActivityEntity = InferSelectModel<typeof lineActivitiesTable>;
 
-export const mercatoActivity = pgTable(
-	"mercato_activity",
-	{
-		id: serial("id").primaryKey(),
-		vehicleId: integer("vehicle_id")
-			.notNull()
-			.references(() => vehicles.id),
-		fromNetworkId: integer("from_network_id")
-			.notNull()
-			.references(() => networks.id),
-		toNetworkId: integer("to_network_id")
-			.notNull()
-			.references(() => networks.id),
-		comment: text("comment"),
-		recordedAt: timestamp("recorded_at", { precision: 0 }).notNull(),
-	},
-	(table) => [index("mercato_activity_vehicle_index").on(table.vehicleId)],
-);
-
-export type MercatoActivity = InferSelectModel<typeof mercatoActivity>;
-
-export const announcements = pgTable("announcement", {
+export const announcementsTable = pgTable("announcement", {
 	id: serial("id").primaryKey(),
 	title: varchar("title").notNull(),
 	content: text("content"),
@@ -186,9 +167,9 @@ export const announcements = pgTable("announcement", {
 	createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
-export type Announcement = InferSelectModel<typeof announcements>;
+export type AnnouncementEntity = InferSelectModel<typeof announcementsTable>;
 
-export const editors = pgTable("editor", {
+export const editorsTable = pgTable("editor", {
 	id: serial("id").primaryKey(),
 	username: varchar().notNull(),
 	token: varchar().unique().notNull(),
@@ -198,20 +179,20 @@ export const editors = pgTable("editor", {
 	createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
-export type Editor = InferSelectModel<typeof editors>;
+export type EditorEntity = InferSelectModel<typeof editorsTable>;
 
-export const editionLogs = pgTable("edition_log", {
+export const editionLogsTable = pgTable("edition_log", {
 	id: serial("id").primaryKey(),
 	editorId: integer("editor_id")
 		.notNull()
-		.references(() => editors.id),
+		.references(() => editorsTable.id),
 	networkId: integer("network_id")
 		.notNull()
-		.references(() => networks.id),
-	lineId: integer("line_id").references(() => lines.id),
-	vehicleId: integer("vehicle_id").references(() => vehicles.id),
+		.references(() => networksTable.id),
+	lineId: integer("line_id").references(() => linesTable.id),
+	vehicleId: integer("vehicle_id").references(() => vehiclesTable.id),
 	updatedFields: json("updated_fields").notNull(),
 	recordedAt: timestamp("recorded_at").notNull().default(sql`now()`),
 });
 
-export type EditionLog = InferSelectModel<typeof editionLogs>;
+export type EditionLogEntity = InferSelectModel<typeof editionLogsTable>;

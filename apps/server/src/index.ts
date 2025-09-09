@@ -4,29 +4,26 @@ import "./sentry.js";
 import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { serve } from "@hono/node-server";
 import * as Sentry from "@sentry/node";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { createClient } from "redis";
 
-import { registerAnnouncementRoutes } from "./controllers/announcements.js";
-import { registerLineRoutes } from "./controllers/lines.js";
-import { registerNetworkRoutes } from "./controllers/networks.js";
-import { registerRegionRoutes } from "./controllers/regions.js";
-import { registerVehicleJourneyRoutes } from "./controllers/vehicle-journeys.js";
-import { registerVehicleRoutes } from "./controllers/vehicles.js";
+import { hono } from "./server.js";
 import { migrateDatabase } from "./database/migrate.js";
 import { handleVehicleBatch } from "./jobs/handle-vehicle-batch.js";
 import { port } from "./options.js";
-import { createJourneyStore } from "./store/journey-store.js";
-import { registerEditorRoutes } from "./controllers/editors.js";
+
+import "./controllers/announcements.js";
+import "./controllers/editors.js";
+import "./controllers/lines.js";
+import "./controllers/networks.js";
+import "./controllers/regions.js";
+import "./controllers/vehicle-journeys.js";
+import "./controllers/vehicles.js";
 
 console.log(`,-----.                  ,--------.                   ,--.                           ,---.                                       
 |  |) /_ ,--.,--. ,---.  '--.  .--',--.--.,--,--.,---.|  |,-. ,---. ,--.--. ,-----. '   .-' ,---. ,--.--.,--.  ,--.,---. ,--.--. 
 |  .-.  \\|  ||  |(  .-'     |  |   |  .--' ,-.  | .--'|     /| .-. :|  .--' '-----' \`.  \`-.| .-. :|  .--' \\  \`'  /| .-. :|  .--' 
 |  '--' /'  ''  '.-'  \`)    |  |   |  |  \\ '-'  \\ \`--.|  \\  \\   --.|   |            .-'    \\   --.|  |     \\    / \\   --.|  |    
 \`------'  \`----' \`----'     \`--'   \`--'   \`--\`--'\`---'\`--'\`--'\`----'\`--'            \`-----' \`----'\`--'      \`--'   \`----'\`--'    \n`);
-
-const journeyStore = createJourneyStore();
 
 console.log("► Running database migrations.");
 await migrateDatabase();
@@ -63,18 +60,8 @@ await redis.subscribe("journeys", async (message) => {
 		return;
 	}
 
-	await handleVehicleBatch(journeyStore, vehicleJourneys);
+	await handleVehicleBatch(vehicleJourneys);
 });
 
 console.log("► Listening on port %d.\n", port);
-
-export const hono = new Hono();
-hono.use(cors({ origin: "*" }));
-registerAnnouncementRoutes(hono);
-registerEditorRoutes(hono);
-registerLineRoutes(hono, journeyStore);
-registerNetworkRoutes(hono, journeyStore);
-registerVehicleRoutes(hono, journeyStore);
-registerVehicleJourneyRoutes(hono, journeyStore);
-registerRegionRoutes(hono);
 serve({ fetch: hono.fetch, port });

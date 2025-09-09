@@ -1,7 +1,7 @@
 import { and, arrayContains, eq, isNull, or, sql } from "drizzle-orm";
 
 import { database } from "../database/database.js";
-import { girouettes } from "../database/schema.js";
+import { girouettesTable } from "../database/schema.js";
 
 type FindGirouetteInput = {
 	networkId: number;
@@ -13,21 +13,21 @@ type FindGirouetteInput = {
 export async function findGirouette({ networkId, lineId, directionId, destination }: FindGirouetteInput) {
 	const girouetteList = await database
 		.select()
-		.from(girouettes)
+		.from(girouettesTable)
 		.where(
 			and(
-				eq(girouettes.enabled, true),
-				eq(girouettes.networkId, networkId),
-				typeof lineId !== "undefined" ? eq(girouettes.lineId, lineId) : isNull(girouettes.lineId),
+				eq(girouettesTable.enabled, true),
+				eq(girouettesTable.networkId, networkId),
+				typeof lineId !== "undefined" ? eq(girouettesTable.lineId, lineId) : isNull(girouettesTable.lineId),
 				typeof directionId !== "undefined"
-					? or(eq(girouettes.directionId, directionId), isNull(girouettes.directionId))
-					: isNull(girouettes.directionId),
+					? or(eq(girouettesTable.directionId, directionId), isNull(girouettesTable.directionId))
+					: isNull(girouettesTable.directionId),
 				typeof destination !== "undefined"
 					? or(
-							arrayContains(girouettes.destinations, [destination]),
-							eq(sql`cardinality(${girouettes.destinations})`, 0),
+							arrayContains(girouettesTable.destinations, [destination]),
+							eq(sql`cardinality(${girouettesTable.destinations})`, 0),
 						)
-					: eq(sql`cardinality(${girouettes.destinations})`, 0),
+					: eq(sql`cardinality(${girouettesTable.destinations})`, 0),
 			),
 		);
 
