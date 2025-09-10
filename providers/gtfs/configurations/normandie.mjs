@@ -59,6 +59,8 @@ const sources = [
 		excludeScheduled: true,
 		getNetworkRef: () => "CAP-COTENTIN",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+		getDestination: (journey) =>
+			journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name ?? "Destination inconnue",
 	},
 	//- SEMO
 	{
