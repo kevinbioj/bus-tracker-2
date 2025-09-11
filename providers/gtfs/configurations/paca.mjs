@@ -38,7 +38,6 @@ const sources = [
 		getNetworkRef: () => "CAVAILLON",
 		getVehicleRef: (vehicle) => vehicle?.label,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
-		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
 		id: "gap",
