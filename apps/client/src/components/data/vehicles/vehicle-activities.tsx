@@ -94,7 +94,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 		</div>
 	) : (
 		<p className="mt-3 text-center text-muted-foreground text-xl">
-			Ce véhicule n&apos;a pas encore été observé en circulation.
+			Ce véhicule n&apos;a pas encore été observé en service commercial.
 		</p>
 	);
 }

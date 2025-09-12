@@ -108,7 +108,8 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 	);
 
 	const activeVehiclesLabel = useMemo(() => {
-		if (showArchived) return `${onlineVehicles.length} véhicules archivés`;
+		if (showArchived)
+			return `${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} archivé${filteredAndSortedVehicles.length > 1 ? "s" : ""}`;
 		if (filteredAndSortedVehicles.length === 0) return "Aucun véhicule n'existe avec ces critères de recherche";
 		if (onlineVehicles.length === 0) return `Aucun véhicule sur ${filteredAndSortedVehicles.length} en circulation`;
 		return `${onlineVehicles.length}/${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation`;

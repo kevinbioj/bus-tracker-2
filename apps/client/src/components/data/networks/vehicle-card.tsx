@@ -1,6 +1,13 @@
 import dayjs from "dayjs";
 import { ArchiveIcon } from "lucide-react";
 import { useMemo } from "react";
+import {
+	TbCash as CashIcon,
+	TbEngine as EngineIcon,
+	TbFireExtinguisher as FireExtinguisherIcon,
+	TbArrowRight as ArrowRightIcon,
+	TbSkull as SkullIcon,
+} from "react-icons/tb";
 import { Link } from "react-router-dom";
 import { match, P } from "ts-pattern";
 
@@ -13,8 +20,18 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 
 	const activeLine = useMemo(() => {
-		if (vehicle.archivedAt !== null) return <ArchiveIcon className="h-full mx-auto" />;
+		if (vehicle.archivedAt !== null) {
+			return match(vehicle.archivedFor)
+				.with("FAILURE", () => <EngineIcon className="size-full" />)
+				.with("FIRE", () => <FireExtinguisherIcon className="size-full" />)
+				.with("RETIRED", () => <SkullIcon className="size-full" />)
+				.with("SOLD", () => <CashIcon className="size-full" />)
+				.with("TRANSFER", () => <ArrowRightIcon className="size-full" />)
+				.otherwise(() => <ArchiveIcon className="size-full" />);
+		}
+
 		if (typeof line === "undefined") return <Zzz className="h-full mx-auto" />;
+
 		return line.cartridgeHref ? (
 			<img className="h-full mx-auto object-contain" src={line.cartridgeHref} alt={line.number} />
 		) : (
@@ -67,17 +84,40 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 						</p>
 					) : (
 						<p>
-							{vehicle.archivedAt ? "Archivé" : "Hors-ligne"}
-							{vehicle.activity.since !== null && (
+							{vehicle.archivedAt ? (
 								<>
-									{" "}
-									depuis le{" "}
-									{dayjs().diff(vehicle.activity.since, "years") >= 1 ? (
-										<span className="font-bold tabular-nums">{dayjs(vehicle.activity.since).format("DD/MM/YYYY")}</span>
+									Archivé le{" "}
+									{dayjs().diff(vehicle.archivedAt, "years") >= 1 ? (
+										<span className="font-bold tabular-nums">{dayjs(vehicle.archivedAt).format("DD/MM/YYYY")}</span>
 									) : (
 										<>
-											<span className="font-bold tabular-nums">{dayjs(vehicle.activity.since).format("DD/MM")}</span> à{" "}
-											<span className="font-bold tabular-nums">{dayjs(vehicle.activity.since).format("HH:mm")}</span>
+											<span className="font-bold tabular-nums">{dayjs(vehicle.archivedAt).format("DD/MM")}</span> à{" "}
+											<span className="font-bold tabular-nums">{dayjs(vehicle.archivedAt).format("HH:mm")}</span>
+										</>
+									)}
+								</>
+							) : (
+								<>
+									Hors-ligne
+									{vehicle.activity.since !== null && (
+										<>
+											{" "}
+											depuis le{" "}
+											{dayjs().diff(vehicle.activity.since, "years") >= 1 ? (
+												<span className="font-bold tabular-nums">
+													{dayjs(vehicle.activity.since).format("DD/MM/YYYY")}
+												</span>
+											) : (
+												<>
+													<span className="font-bold tabular-nums">
+														{dayjs(vehicle.activity.since).format("DD/MM")}
+													</span>{" "}
+													à{" "}
+													<span className="font-bold tabular-nums">
+														{dayjs(vehicle.activity.since).format("HH:mm")}
+													</span>
+												</>
+											)}
 										</>
 									)}
 								</>

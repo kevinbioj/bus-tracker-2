@@ -1,5 +1,12 @@
 import dayjs from "dayjs";
 import { ArchiveIcon } from "lucide-react";
+import {
+	TbCash as CashIcon,
+	TbEngine as EngineIcon,
+	TbFireExtinguisher as FireExtinguisherIcon,
+	TbArrowRight as ArrowRightIcon,
+	TbSkull as SkullIcon,
+} from "react-icons/tb";
 import { Link } from "react-router-dom";
 import { match } from "ts-pattern";
 
@@ -37,8 +44,24 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 					)}
 					{vehicle.archivedAt !== null && (
 						<div className="mt-2 text-muted-foreground">
-							<ArchiveIcon className="align-text-top inline size-4" /> Ce véhicule a été archivé le{" "}
-							<span className="font-bold">{dayjs(vehicle.archivedAt).format("L")}</span> à{" "}
+							{match(vehicle.archivedFor)
+								.with("FAILURE", () => <EngineIcon className="align-text-bottom inline size-6" />)
+								.with("FIRE", () => <FireExtinguisherIcon className="align-text-bottom inline size-6" />)
+								.with("RETIRED", () => <SkullIcon className="align-text-bottom inline size-6" />)
+								.with("SOLD", () => <CashIcon className="align-text-bottom inline size-6" />)
+								.with("TRANSFER", () => <ArrowRightIcon className="align-text-bottom inline size-6" />)
+								.otherwise(() => (
+									<ArchiveIcon className="align-text-bottom inline size-6" />
+								))}{" "}
+							Ce véhicule{" "}
+							{match(vehicle.archivedFor)
+								.with("FAILURE", () => "a subi une casse irrémédiable")
+								.with("FIRE", () => "a été victime d'un incendie")
+								.with("RETIRED", () => "a été réformé")
+								.with("SOLD", () => "a été vendu")
+								.with("TRANSFER", () => "a été transféré")
+								.otherwise(() => "a été archivé")}{" "}
+							le <span className="font-bold">{dayjs(vehicle.archivedAt).format("L")}</span> à{" "}
 							<span className="font-bold">{dayjs(vehicle.archivedAt).format("LT")}</span>.
 						</div>
 					)}
