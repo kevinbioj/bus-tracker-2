@@ -4,6 +4,9 @@ import { mutationOptions, queryOptions } from "@tanstack/react-query";
 import { client } from "~/api/client";
 import type { Operator } from "~/api/networks";
 
+export const vehicleArchiveReasons = ["FAILURE", "FIRE", "RETIRED", "SOLD", "TRANSFER", "OTHER"] as const;
+export type VehicleArchiveReason = (typeof vehicleArchiveReasons)[number];
+
 export type Vehicle = {
 	id: number;
 	networkId: number;
@@ -15,6 +18,7 @@ export type Vehicle = {
 	designation: string | null;
 	tcId: number | null;
 	archivedAt: string | null;
+	archivedFor: VehicleArchiveReason | null;
 	activity: VehicleActivity;
 };
 
@@ -26,6 +30,7 @@ export type UpdateVehicleData = {
 };
 
 export type ArchiveVehicleData = {
+	reason: VehicleArchiveReason | null;
 	wipeReference: boolean;
 };
 

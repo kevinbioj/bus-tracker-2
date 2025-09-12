@@ -10,6 +10,7 @@ import {
 	lineActivitiesTable,
 	networksTable,
 	operatorsTable,
+	vehicleArchiveReasons,
 	vehiclesTable,
 } from "../database/schema.js";
 import { paginationSchema } from "../helpers/pagination-schema.js";
@@ -65,6 +66,7 @@ const updateVehicleBodySchema = z.object({
 });
 
 const archiveVehicleBodySchema = z.object({
+	reason: z.enum(vehicleArchiveReasons),
 	wipeReference: z.boolean(),
 });
 
@@ -314,7 +316,7 @@ hono.post(
 	createJsonValidator(archiveVehicleBodySchema),
 	async (c) => {
 		const { id } = c.req.valid("param");
-		const { wipeReference } = c.req.valid("json");
+		const { reason, wipeReference } = c.req.valid("json");
 
 		const [vehicle] = await database
 			.select()
@@ -334,6 +336,7 @@ hono.post(
 
 		const fields = {
 			archivedAt: Temporal.Now.instant(),
+			archivedFor: reason,
 			ref: wipeReference ? `${vehicle.ref}:ARCHIVED` : vehicle.ref,
 		};
 
@@ -345,6 +348,7 @@ hono.post(
 			vehicleId: vehicle.id,
 			updatedFields: [
 				{ type: "archivedAt", oldValue: null, newValue: fields.archivedAt },
+				{ type: "archivedFor", oldValue: null, newValue: reason },
 				...(wipeReference ? [{ type: "ref", oldValue: vehicle.ref, newValue: fields.ref }] : []),
 			],
 		});

@@ -131,6 +131,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 						avant toute action.
 					</DialogDescription>
 				</DialogHeader>
+				<VehicleCharacteristicsArchive vehicle={vehicle} />
 				<Form {...form}>
 					<form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
 						<FormField
@@ -217,7 +218,6 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 									Annuler
 								</Button>
 							</DialogClose>
-							<VehicleCharacteristicsArchive vehicle={vehicle} />
 							<Button disabled={updatingVehicle} type="submit" variant="branding-default">
 								Sauvegarder
 							</Button>

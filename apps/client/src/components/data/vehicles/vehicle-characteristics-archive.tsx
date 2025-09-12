@@ -1,37 +1,54 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
-import { useId, useState } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
 
-import { ArchiveVehicleMutation, type Vehicle } from "~/api/vehicles";
+import { ArchiveVehicleMutation, type VehicleArchiveReason, type Vehicle, vehicleArchiveReasons } from "~/api/vehicles";
+import { FormCheckbox } from "~/components/form/form-checkbox";
+import { FormSelect } from "~/components/form/form-select";
 import { Button } from "~/components/ui/button";
-import { Checkbox } from "~/components/ui/checkbox";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "~/components/ui/dialog";
-import { Label } from "~/components/ui/label";
+import { Form } from "~/components/ui/form";
 import { useEditor } from "~/hooks/use-editor";
+
+const schema = z.object({
+	reason: z.enum(vehicleArchiveReasons),
+	wipeReference: z.boolean(),
+});
+
+const vehicleArchiveReasonLabels: Record<VehicleArchiveReason, string> = {
+	FAILURE: "Casse matérielle",
+	FIRE: "Incendie",
+	RETIRED: "Réforme",
+	SOLD: "Vente",
+	TRANSFER: "Transfert",
+	OTHER: "Autre",
+};
 
 type VehicleCharacteristicsArchiveProps = {
 	vehicle: Vehicle;
 };
 
 export function VehicleCharacteristicsArchive({ vehicle }: VehicleCharacteristicsArchiveProps) {
-	const { editorToken } = useEditor();
-
-	const [open, setOpen] = useState(false);
-	const [removeVehicleRef, setRemoveVehicleRef] = useState(false);
-	const { enqueueSnackbar } = useSnackbar();
-	const removeVehicleRefId = useId();
-
 	const queryClient = useQueryClient();
+	const { enqueueSnackbar } = useSnackbar();
+	const { editorToken } = useEditor();
+	const [open, setOpen] = useState(false);
+
+	const form = useForm({
+		defaultValues: { reason: "OTHER" as const, wipeReference: false },
+		resolver: zodResolver(schema),
+	});
+
 	const { mutateAsync: archiveVehicle } = useMutation(ArchiveVehicleMutation(vehicle.id));
 
-	const handleArchive = async () => {
+	const onSubmit = async (json: z.infer<typeof schema>) => {
 		if (editorToken === null) return;
 
 		try {
-			await archiveVehicle({
-				json: { wipeReference: removeVehicleRef },
-				token: editorToken,
-			});
+			await archiveVehicle({ json, token: editorToken });
 
 			enqueueSnackbar({ message: "Ce véhicule a été archivé avec succès.", variant: "success" });
 
@@ -65,27 +82,40 @@ export function VehicleCharacteristicsArchive({ vehicle }: VehicleCharacteristic
 						Cocher la case ci-dessous <span className="font-bold">uniquement</span> en cas de réforme définitive du
 						véhicule.
 					</div>
-					<div className="flex gap-2">
-						<Checkbox
-							id={removeVehicleRefId}
-							className="data-[state=checked]:bg-destructive"
-							checked={removeVehicleRef}
-							onCheckedChange={(c) => setRemoveVehicleRef(!!c)}
-						/>
-						<Label htmlFor={removeVehicleRefId}>
-							Casser l'association <span className="font-mono">{vehicle.ref}</span> du véhicule
-						</Label>
-					</div>
-					<DialogFooter className="gap-3">
-						<DialogClose asChild>
-							<Button type="button" variant="secondary">
-								Annuler
-							</Button>
-						</DialogClose>
-						<Button onClick={handleArchive} type="button" variant="destructive">
-							Archiver
-						</Button>
-					</DialogFooter>
+					<Form {...form}>
+						<form onSubmit={form.handleSubmit(onSubmit)}>
+							<FormCheckbox
+								control={form.control}
+								name="wipeReference"
+								label={
+									<>
+										Casser l'association <span className="font-mono">{vehicle.ref}</span> du véhicule
+									</>
+								}
+								itemProps={{ className: "mb-5" }}
+								inputProps={{
+									className: "data-[state=checked]:bg-destructive data-[state=checked]:text-destructive-foreground",
+								}}
+							/>
+							<FormSelect
+								control={form.control}
+								name="reason"
+								label="Raison de l'archivage"
+								options={Object.entries(vehicleArchiveReasonLabels).map(([value, label]) => ({ label, value }))}
+								itemProps={{ className: "mb-5" }}
+							/>
+							<DialogFooter className="gap-3">
+								<DialogClose asChild>
+									<Button type="button" variant="secondary">
+										Annuler
+									</Button>
+								</DialogClose>
+								<Button type="submit" variant="destructive">
+									Archiver
+								</Button>
+							</DialogFooter>
+						</form>
+					</Form>
 				</DialogContent>
 			</Dialog>
 		</>

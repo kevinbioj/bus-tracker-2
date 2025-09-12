@@ -105,6 +105,8 @@ export const girouettesTable = pgTable("girouette", {
 
 export type GirouetteEntity = InferSelectModel<typeof girouettesTable>;
 
+export const vehicleArchiveReasons = ["FAILURE", "FIRE", "RETIRED", "SOLD", "TRANSFER", "OTHER"] as const;
+
 export const vehiclesTable = pgTable(
 	"vehicle",
 	{
@@ -123,6 +125,7 @@ export const vehiclesTable = pgTable(
 		tcId: integer("tc_id"),
 		lastSeenAt: timestamp("last_seen_at", { precision: 0 }),
 		archivedAt: timestamp("archived_at", { precision: 0 }),
+		archivedFor: varchar("archived_for", { enum: vehicleArchiveReasons }),
 	},
 	(table) => [
 		index("vehicle_network_index").on(table.networkId),
