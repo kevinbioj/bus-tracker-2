@@ -26,6 +26,7 @@ const fontProperties = {
 	// Special fonts
 	METRO: { height: 16, spacing: 0, extraSpacing: false },
 	"1510N2E1-TCAR": { height: 15, spacing: 2, extraSpacing: false },
+	"1513B3E1-TCAR": { height: 15, spacing: 2, extraSpacing: false },
 } as const;
 
 type Font = keyof typeof fontProperties;
@@ -135,7 +136,8 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<Rout
 
 	if (typeof routeNumber === "undefined") return null;
 
-	const fontFamily = routeNumber.font ?? "1513B3E1";
+	const fontFamily =
+		typeof routeNumber.font !== "undefined" && routeNumber.font in fontProperties ? routeNumber.font : "1513B3E1";
 	const height = (dimensions.height * width) / (dimensions.rnWidth + dimensions.destinationWidth);
 	const onePixel = width / (dimensions.rnWidth + dimensions.destinationWidth);
 	const spacing =
@@ -227,7 +229,12 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 			}}
 		>
 			{lines.filter(Boolean).map((line) => {
-				const fontFamily = line.font ?? (oneLine ? "1513B3E1" : "0808B2E1");
+				const fontFamily =
+					typeof line.font !== "undefined" && line.font in fontProperties
+						? line.font
+						: oneLine
+							? "1513B3E1"
+							: "0808B2E1";
 				const spacing = onePixel * (line.spacing ?? fontProperties[fontFamily].spacing);
 				const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 				const processedText = line.text.trimEnd().replaceAll(" ", "&nbsp;");
