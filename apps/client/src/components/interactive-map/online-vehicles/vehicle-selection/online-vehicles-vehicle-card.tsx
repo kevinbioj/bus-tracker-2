@@ -11,19 +11,19 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/comp
 import { useLine } from "~/hooks/use-line";
 import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
 
-type OnlineVehicleCardProps = {
-	closeSheet: () => void;
+type OnlineVehiclesVehicleCard = {
 	vehicle: Vehicle;
+	onVehicleSelect: () => void;
 };
 
-export function OnlineVehicleCard({ closeSheet, vehicle }: Readonly<OnlineVehicleCardProps>) {
+export function OnlineVehiclesVehicleCard({ vehicle, onVehicleSelect }: Readonly<OnlineVehiclesVehicleCard>) {
 	const queryClient = useQueryClient();
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 
 	const flyTo = () => {
 		if (typeof vehicle.activity.markerId === "undefined") return;
 
-		closeSheet();
+		onVehicleSelect();
 		queryClient.prefetchQuery(GetVehicleJourneyQuery(vehicle.activity.markerId));
 	};
 

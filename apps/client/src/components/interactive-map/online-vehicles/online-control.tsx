@@ -2,7 +2,7 @@ import L from "leaflet";
 import React, { useEffect } from "react";
 import { useMap } from "react-leaflet";
 
-import { OnlineSheet } from "~/components/interactive-map/online/online-sheet";
+import { OnlineVehiclesSheetManagement } from "~/components/interactive-map/online-vehicles/online-vehicles-sheet-management";
 
 export function OnlineControl() {
 	// biome-ignore lint/suspicious/noExplicitAny: to be properly typed later...
@@ -32,7 +32,7 @@ export function OnlineControl() {
 
 	return (
 		<div ref={controlContainerRef} className="leaflet-control-locate leaflet-control leaflet-bar">
-			<OnlineSheet />
+			<OnlineVehiclesSheetManagement />
 		</div>
 	);
 }

@@ -7,7 +7,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { ActiveMarkerProvider } from "~/components/interactive-map/active-marker/active-marker";
 import { LocateControl } from "~/components/interactive-map/locate-control";
 import { LocationSaver } from "~/components/interactive-map/location-saver";
-import { OnlineControl } from "~/components/interactive-map/online/online-control";
+import { OnlineControl } from "~/components/interactive-map/online-vehicles/online-control";
 import { VehicleMarkers } from "~/components/interactive-map/vehicles/vehicle-markers";
 
 type InteractiveMapProps = {
