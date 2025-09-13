@@ -43,15 +43,15 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 						</div>
 					)}
 					{vehicle.archivedAt !== null && (
-						<div className="mt-2 text-muted-foreground">
+						<div className="mt-2 text-xs">
 							{match(vehicle.archivedFor)
-								.with("FAILURE", () => <EngineIcon className="align-text-bottom inline size-6" />)
-								.with("FIRE", () => <FireExtinguisherIcon className="align-text-bottom inline size-6" />)
-								.with("RETIRED", () => <SkullIcon className="align-text-bottom inline size-6" />)
-								.with("SOLD", () => <CashIcon className="align-text-bottom inline size-6" />)
-								.with("TRANSFER", () => <ArrowRightIcon className="align-text-bottom inline size-6" />)
+								.with("FAILURE", () => <EngineIcon className="align-text-bottom inline size-4" />)
+								.with("FIRE", () => <FireExtinguisherIcon className="align-text-bottom inline size-4" />)
+								.with("RETIRED", () => <SkullIcon className="align-text-bottom inline size-4" />)
+								.with("SOLD", () => <CashIcon className="align-text-bottom inline size-4" />)
+								.with("TRANSFER", () => <ArrowRightIcon className="align-text-bottom inline size-4" />)
 								.otherwise(() => (
-									<ArchiveIcon className="align-text-bottom inline size-6" />
+									<ArchiveIcon className="align-text-bottom inline size-4" />
 								))}{" "}
 							Ce véhicule{" "}
 							{match(vehicle.archivedFor)
