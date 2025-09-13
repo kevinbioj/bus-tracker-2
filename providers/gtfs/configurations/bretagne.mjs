@@ -119,6 +119,7 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "TBK",
+		mapLineRef: (lineRef) => lineRef.split("-")[0],
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
