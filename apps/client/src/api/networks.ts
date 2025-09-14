@@ -59,7 +59,7 @@ export const GetNetworksQuery = queryOptions({
 			.sort((a, b) => a.name.localeCompare(b.name)),
 });
 
-export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetails?: T) =>
+export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetails?: T, continuousRefetch?: boolean) =>
 	queryOptions({
 		enabled: typeof networkId !== "undefined",
 		queryKey: ["networks", networkId, withDetails ?? false],
@@ -68,6 +68,7 @@ export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetai
 				.get(`networks/${networkId}?withDetails=${withDetails ?? false}`)
 				.then((response) => response.json<T extends true ? NetworkWithDetails : Network>()),
 		staleTime: 300_000,
+		refetchInterval: continuousRefetch ? 10_000 : undefined,
 		select: (network) => ({
 			...network,
 			color: network.color ? `#${network.color}` : null,

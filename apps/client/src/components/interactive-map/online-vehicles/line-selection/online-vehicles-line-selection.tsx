@@ -17,7 +17,7 @@ type OnlineVehiclesLineSelection = {
 };
 
 export function OnlineVehiclesLineSelection({ network, onClose, onLineChange }: OnlineVehiclesLineSelection) {
-	const { data: networkWithLines } = useQuery(GetNetworkQuery(network?.id, true));
+	const { data: networkWithLines } = useQuery(GetNetworkQuery(network?.id, true, true));
 
 	const [linesWithVehicles, linesWithoutVehicles] = useMemo(
 		() =>
