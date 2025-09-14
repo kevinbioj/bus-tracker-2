@@ -38,9 +38,14 @@ export function OnlineVehiclesVehicleSelection({
 						<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
 							<ArrowLeft className="size-full" />
 						</Button>
-						<SheetTitle>
-							<span className="max-w-36 text-ellipsis overflow-x-hidden text-nowrap">{network?.name}</span>{" "}
-							<ChevronRight className="align-text-bottom inline size-5" /> {line?.number}
+						<SheetTitle className="text-start">
+							<span className="align-middle max-w-36 inline-block text-ellipsis overflow-x-hidden text-nowrap">
+								{network?.name}
+							</span>{" "}
+							<ChevronRight className="align-text-bottom inline size-5" />{" "}
+							<span className="align-middle max-w-24 inline-block text-ellipsis overflow-x-hidden text-nowrap">
+								{line?.number}
+							</span>
 						</SheetTitle>
 					</div>
 				</SheetHeader>

@@ -5,12 +5,21 @@ import { OnlineVehiclesLineSelection } from "~/components/interactive-map/online
 import { OnlineVehiclesNetworkSelection } from "~/components/interactive-map/online-vehicles/network-selection/online-vehicles-network-selection";
 import { OnlineVehiclesVehicleSelection } from "~/components/interactive-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-selection";
 
+let doubleCloseGuard = false;
+
 export function OnlineVehiclesSheetManagement() {
 	const [open, setOpen] = useState(false);
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>();
 	const [selectedLine, setSelectedLine] = useState<Line>();
 
 	const handleClose = () => {
+		if (doubleCloseGuard) return;
+
+		doubleCloseGuard = true;
+		setTimeout(() => {
+			doubleCloseGuard = false;
+		}, 100);
+
 		if (typeof selectedLine !== "undefined") return setSelectedLine(undefined);
 		if (typeof selectedNetwork !== "undefined") return setSelectedNetwork(undefined);
 		setOpen(false);
