@@ -28,6 +28,7 @@ export function OnlineVehiclesVehicleSelection({
 	return (
 		<Sheet open={typeof line !== "undefined"} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent
+				aria-describedby={undefined}
 				className="max-w-[90vw] p-3 w-full z-[7000] pointer-events-auto"
 				withBackdrop={false}
 				withCloseButton={false}

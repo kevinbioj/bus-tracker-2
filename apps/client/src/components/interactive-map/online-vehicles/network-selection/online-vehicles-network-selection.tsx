@@ -43,7 +43,7 @@ export function OnlineVehiclesNetworkSelection({
 					<BusFrontIcon className="inline mb-0.5" />
 				</a>
 			</SheetTrigger>
-			<SheetContent className="max-w-[90vw] w-full p-3 overflow-y-auto z-[5000]">
+			<SheetContent aria-describedby={undefined} className="max-w-[90vw] w-full p-3 overflow-y-auto z-[5000]">
 				<SheetHeader className="mb-1">
 					<SheetTitle className="text-start">Véhicules en ligne</SheetTitle>
 				</SheetHeader>

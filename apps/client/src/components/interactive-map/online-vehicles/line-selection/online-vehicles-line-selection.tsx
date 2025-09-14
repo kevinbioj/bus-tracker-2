@@ -69,7 +69,12 @@ export function OnlineVehiclesLineSelection({ network, onClose, onLineChange }: 
 
 	return (
 		<Sheet open={typeof network !== "undefined"} onOpenChange={(open) => !open && onClose()}>
-			<SheetContent className="max-w-[90vw] w-full p-3 z-[6000]" withBackdrop={false} withCloseButton={false}>
+			<SheetContent
+				aria-describedby={undefined}
+				className="max-w-[90vw] w-full p-3 z-[6000]"
+				withBackdrop={false}
+				withCloseButton={false}
+			>
 				<SheetHeader className={cn("mb-1.5", typeof network === "undefined" && "hidden")}>
 					<div className="flex items-center gap-2">
 						<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
