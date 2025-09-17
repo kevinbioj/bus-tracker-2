@@ -32,7 +32,7 @@ export function VehicleCharacteristicsActions({ vehicle }: VehicleCharacteristic
 						<MoreHorizontalIcon />
 					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
+				<DropdownMenuContent align="end" className="z-1000">
 					<DropdownMenuItem onClick={() => setActiveDialog("edit")}>
 						<PencilIcon /> Éditer
 					</DropdownMenuItem>
