@@ -36,12 +36,14 @@ export function VehicleCharacteristicsActions({ vehicle }: VehicleCharacteristic
 					<DropdownMenuItem onClick={() => setActiveDialog("edit")}>
 						<PencilIcon /> Éditer
 					</DropdownMenuItem>
-					<DropdownMenuItem
-						className="text-red-600 hover:!text-red-600 hover:!bg-red-600/20"
-						onClick={() => setActiveDialog("archive")}
-					>
-						<Trash2Icon /> Archiver
-					</DropdownMenuItem>
+					{vehicle.archivedAt === null && (
+						<DropdownMenuItem
+							className="text-red-600 hover:!text-red-600 hover:!bg-red-600/20"
+							onClick={() => setActiveDialog("archive")}
+						>
+							<Trash2Icon /> Archiver
+						</DropdownMenuItem>
+					)}
 				</DropdownMenuContent>
 			</DropdownMenu>
 			<VehicleCharacteristicsEdit

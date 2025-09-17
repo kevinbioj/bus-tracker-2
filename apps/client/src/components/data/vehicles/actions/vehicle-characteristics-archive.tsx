@@ -44,6 +44,8 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 
 	const { mutateAsync: archiveVehicle } = useMutation(ArchiveVehicleMutation(vehicle.id));
 
+	if (vehicle.archivedAt !== null) return null;
+
 	const onSubmit = async (json: z.infer<typeof schema>) => {
 		if (editorToken === null) return;
 
