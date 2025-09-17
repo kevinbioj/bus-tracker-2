@@ -5,11 +5,11 @@ import {
 } from "@bus-tracker/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangleIcon, PencilIcon } from "lucide-react";
-import { useState } from "react";
+import { AlertTriangleIcon } from "lucide-react";
+import { useSnackbar } from "notistack";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useSnackbar } from "notistack";
 
 import { UpdateVehicleMutation, type Vehicle } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
@@ -21,13 +21,11 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
 } from "~/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { useEditor } from "~/hooks/use-editor";
-import { VehicleCharacteristicsArchive } from "~/components/data/vehicles/vehicle-characteristics-archive";
 
 const updateVehicleFormSchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
@@ -50,39 +48,37 @@ const lineTypeLabels: Record<VehicleJourneyLineType, string> = {
 };
 
 type VehicleCharacteristicsEditProps = {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
 	vehicle: Vehicle;
 };
 
-export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacteristicsEditProps>) {
-	const { editor, editorToken } = useEditor();
+export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Readonly<VehicleCharacteristicsEditProps>) {
+	const { editorToken } = useEditor();
 
 	const snackbar = useSnackbar();
 
 	const queryClient = useQueryClient();
 	const { isPending: updatingVehicle, mutateAsync: updateVehicle } = useMutation(UpdateVehicleMutation(vehicle.id));
 
-	const [open, setOpen] = useState(false);
-
 	const form = useForm<UpdateVehicleFormData>({
 		resolver: zodResolver(updateVehicleFormSchema),
 	});
 
-	const editable = editorToken !== null && (editor?.allowedNetworks.includes(vehicle.networkId) ?? false);
-	if (!editable) return null;
+	useEffect(() => {
+		if (!open) return;
 
-	const onOpenChange = (open: boolean) => {
-		if (open)
-			form.reset({
-				number: vehicle.number,
-				designation: vehicle.designation,
-				tcId: vehicle.tcId,
-				type: vehicle.type,
-			});
-
-		setOpen(open);
-	};
+		form.reset({
+			number: vehicle.number,
+			designation: vehicle.designation,
+			tcId: vehicle.tcId,
+			type: vehicle.type,
+		});
+	}, [form, open, vehicle]);
 
 	const onSubmit = async (json: UpdateVehicleFormData) => {
+		if (editorToken === null) return;
+
 		try {
 			await updateVehicle({ token: editorToken, json });
 			snackbar.enqueueSnackbar("Informations du véhicule enregistrées !", {
@@ -103,16 +99,11 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 
 		queryClient.invalidateQueries({ queryKey: ["network-vehicles", vehicle.networkId] });
 		queryClient.invalidateQueries({ queryKey: ["vehicles", vehicle.id] });
-		setOpen(false);
+		onOpenChange(false);
 	};
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogTrigger asChild>
-				<Button size="icon">
-					<PencilIcon />
-				</Button>
-			</DialogTrigger>
 			<DialogContent aria-describedby={undefined}>
 				<DialogHeader>
 					<DialogTitle>
@@ -131,7 +122,6 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 						avant toute action.
 					</DialogDescription>
 				</DialogHeader>
-				<VehicleCharacteristicsArchive vehicle={vehicle} />
 				<Form {...form}>
 					<form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
 						<FormField
@@ -197,7 +187,7 @@ export function VehicleCharacteristicsEdit({ vehicle }: Readonly<VehicleCharacte
 									<Select onValueChange={field.onChange} defaultValue={field.value}>
 										<FormControl>
 											<SelectTrigger>
-												<SelectValue placeholder="Aucune connexion TC-Infos" />
+												<SelectValue />
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent className="z-[9999]">

@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 import { match } from "ts-pattern";
 
 import type { Vehicle } from "~/api/vehicles";
-import { VehicleCharacteristicsEdit } from "~/components/data/vehicles/vehicle-characteristics-edit";
+import { VehicleCharacteristicsActions } from "~/components/data/vehicles/actions/vehicle-characteristics-action-menu";
 import { Button } from "~/components/ui/button";
 import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
 import tcInfosIcon from "~/icons/tc-infos.png";
@@ -67,7 +67,6 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 					)}
 				</div>
 				<div className="flex gap-2">
-					<VehicleCharacteristicsEdit vehicle={vehicle} />
 					{vehicle.tcId ? (
 						<Button asChild className="" size="icon">
 							<Link target="_blank" to={getTcInfosLink(vehicle.tcId)}>
@@ -75,6 +74,7 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 							</Link>
 						</Button>
 					) : null}
+					<VehicleCharacteristicsActions vehicle={vehicle} />
 				</div>
 			</div>
 		</div>
