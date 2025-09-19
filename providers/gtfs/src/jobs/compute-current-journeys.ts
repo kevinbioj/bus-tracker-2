@@ -362,7 +362,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				if (activeJourneys.has(key)) continue;
 
 				const calls = getCalls(journey, now, source.options.getAheadTime);
-				if (typeof calls === "undefined" || calls.length < 2) continue;
+				if (typeof calls === "undefined" || calls.length === 0) continue;
 
 				if (typeof journey.trip.block !== "undefined") {
 					handledBlockIds.add(journey.trip.block);
