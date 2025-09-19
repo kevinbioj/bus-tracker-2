@@ -178,8 +178,8 @@ const sources = [
 		staticResourceHref:
 			"https://data.nantesmetropole.fr/explore/dataset/244400404_transports_commun_naolib_nantes_metropole_gtfs/files/0cc0469a72de54ee045cb66d1a21de9e/download/",
 		realtimeResourceHrefs: [
-			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/trip-updates/NAOLIBORG",
-			"https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
+			`https://api.staging.okina.fr/gateway/semgtfsrt/realtime/trip-updates/NAOLIBORG?api-key=${process.env.GRAVITEE_NAOLIBORG_API_KEY}`,
+			// "https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
 		],
 		excludeScheduled: (trip) =>
 			[
