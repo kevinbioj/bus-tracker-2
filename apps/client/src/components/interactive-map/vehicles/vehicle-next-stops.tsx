@@ -99,14 +99,10 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										<span>
 											{match(call.flags)
 												.with(["NO_DROP_OFF"], () => (
-													<CustomTooltip content="Montée uniquement" place="right" spacing={8}>
-														<ArrowUpRight className="inline size-4 text-slate-500 dark:text-slate-400" />
-													</CustomTooltip>
+													<ArrowUpRight className="inline size-4 text-slate-500 dark:text-slate-400" />
 												))
 												.with(["NO_PICKUP"], () => (
-													<CustomTooltip content="Descente uniquement" place="right" spacing={8}>
-														<ArrowDownRight className="inline size-4 text-slate-500 dark:text-slate-400" />
-													</CustomTooltip>
+													<ArrowDownRight className="inline size-4 text-slate-500 dark:text-slate-400" />
 												))
 												.otherwise(() => null)}
 										</span>
