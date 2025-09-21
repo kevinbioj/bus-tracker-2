@@ -12,7 +12,7 @@ RUN npm install -g corepack@latest
 RUN corepack enable
 
 # Fetch dependencies
-COPY patches/ ./patches/
+# COPY patches/ ./patches/
 COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm fetch
 

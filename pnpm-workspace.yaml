@@ -23,6 +23,3 @@ onlyBuiltDependencies:
   - msw
   - protobufjs
   - sharp
-
-patchedDependencies:
-  '@danielgtmn/umami-react@1.1.1': patches/@danielgtmn__umami-react@1.1.1.patch
