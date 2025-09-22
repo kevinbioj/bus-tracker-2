@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangleIcon } from "lucide-react";
 import { useSnackbar } from "notistack";
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -62,19 +61,19 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 	const { isPending: updatingVehicle, mutateAsync: updateVehicle } = useMutation(UpdateVehicleMutation(vehicle.id));
 
 	const form = useForm<UpdateVehicleFormData>({
+		defaultValues: {
+			designation: vehicle.designation,
+			number: vehicle.number,
+			tcId: vehicle.tcId,
+			type: vehicle.type,
+		},
 		resolver: zodResolver(updateVehicleFormSchema),
 	});
 
-	useEffect(() => {
-		if (!open) return;
-
-		form.reset({
-			number: vehicle.number,
-			designation: vehicle.designation,
-			tcId: vehicle.tcId,
-			type: vehicle.type,
-		});
-	}, [form, open, vehicle]);
+	const handleOpenChange = (open: boolean) => {
+		if (!open) form.reset();
+		onOpenChange(open);
+	};
 
 	const onSubmit = async (json: UpdateVehicleFormData) => {
 		if (editorToken === null) return;
@@ -103,7 +102,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent aria-describedby={undefined}>
 				<DialogHeader>
 					<DialogTitle>
