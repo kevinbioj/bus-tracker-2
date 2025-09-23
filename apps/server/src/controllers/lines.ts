@@ -1,10 +1,10 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
-import { database } from "../database/database.js";
-import { lineActivitiesTable, linesTable, vehiclesTable } from "../database/schema.js";
-import { createParamValidator } from "../helpers/validator-helpers.js";
-import { journeyStore } from "../store/journey-store.js";
+import { createParamValidator } from "../api/validator-helpers.js";
+import { database } from "../core/database/database.js";
+import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
+import { journeyStore } from "../core/store/journey-store.js";
 
 import { hono } from "../server.js";
 

@@ -4,7 +4,8 @@ import { Temporal } from "temporal-polyfill";
 import { match } from "ts-pattern";
 import * as z from "zod";
 
-import { database } from "../database/database.js";
+import { createJsonValidator, createParamValidator, createQueryValidator } from "../api/validator-helpers.js";
+import { database } from "../core/database/database.js";
 import {
 	editionLogsTable,
 	lineActivitiesTable,
@@ -12,16 +13,22 @@ import {
 	operatorsTable,
 	vehicleArchiveReasons,
 	vehiclesTable,
-} from "../database/schema.js";
-import { paginationSchema } from "../helpers/pagination-schema.js";
-import { createJsonValidator, createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
-import { editorMiddleware } from "../middlewares/editor-middleware.js";
+} from "../core/database/schema.js";
+import { journeyStore } from "../core/store/journey-store.js";
+import { editorMiddleware } from "./middlewares/editor-middleware.js";
+
 import { hono } from "../server.js";
-import { journeyStore } from "../store/journey-store.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
 
-const searchVehiclesSchema = paginationSchema.extend({
+const searchVehiclesSchema = z.object({
+	limit: z.coerce
+		.number()
+		.int("Limit must be an integer")
+		.min(10, "Limit must be within [10; 10000]")
+		.max(10000, "Limit must be within [10; 100000]")
+		.default(10000),
+	page: z.coerce.number().int("Page must be an integer").min(0, "Page must be a positive integer").default(0),
 	networkId: z.coerce
 		.number()
 		.int("Network id must be an integer")

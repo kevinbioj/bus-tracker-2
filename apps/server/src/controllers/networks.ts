@@ -1,11 +1,12 @@
 import { eq } from "drizzle-orm";
 import * as z from "zod";
 
-import { database } from "../database/database.js";
-import { linesTable, networksTable, operatorsTable } from "../database/schema.js";
-import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
+import { createParamValidator, createQueryValidator } from "../api/validator-helpers.js";
+import { database } from "../core/database/database.js";
+import { linesTable, networksTable, operatorsTable } from "../core/database/schema.js";
+import { journeyStore } from "../core/store/journey-store.js";
+
 import { hono } from "../server.js";
-import { journeyStore } from "../store/journey-store.js";
 
 const getNetworkByIdParamSchema = z.object({
 	id: z.coerce.number().min(0),

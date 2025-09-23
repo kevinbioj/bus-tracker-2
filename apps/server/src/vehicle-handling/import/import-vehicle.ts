@@ -1,8 +1,8 @@
 import { and, eq, inArray } from "drizzle-orm";
 
-import { database } from "../database/database.js";
-import { type NetworkEntity, vehiclesTable } from "../database/schema.js";
-import { nthIndexOf } from "../utils/nth-index-of.js";
+import { database } from "../../core/database/database.js";
+import { type NetworkEntity, vehiclesTable } from "../../core/database/schema.js";
+import { nthIndexOf } from "../../utils/nth-index-of.js";
 
 export async function importVehicles(network: NetworkEntity, vehicleRefs: Set<string>) {
 	if (vehicleRefs.size === 0) return [];

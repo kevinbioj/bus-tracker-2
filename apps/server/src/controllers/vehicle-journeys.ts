@@ -2,12 +2,12 @@ import { eq } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
-import { fetchLines } from "../cache/line-cache.js";
-import { database } from "../database/database.js";
-import { vehiclesTable } from "../database/schema.js";
-import { createParamValidator, createQueryValidator } from "../helpers/validator-helpers.js";
-import { findGirouette } from "../services/girouette-service.js";
-import { journeyStore } from "../store/journey-store.js";
+import { createParamValidator, createQueryValidator } from "../api/validator-helpers.js";
+import { fetchLines } from "../core/cache/line-cache.js";
+import { database } from "../core/database/database.js";
+import { vehiclesTable } from "../core/database/schema.js";
+import { journeyStore } from "../core/store/journey-store.js";
+import { findGirouette } from "../core/services/girouette-service.js";
 
 import { hono } from "../server.js";
 

@@ -158,13 +158,13 @@ export const lineActivitiesTable = pgTable(
 
 export type LineActivityEntity = InferSelectModel<typeof lineActivitiesTable>;
 
+export const announcementType = ["INFO", "OUTAGE"] as const;
+
 export const announcementsTable = pgTable("announcement", {
 	id: serial("id").primaryKey(),
 	title: varchar("title").notNull(),
 	content: text("content"),
-	type: varchar({ enum: ["INFO", "OUTAGE"] })
-		.notNull()
-		.default("INFO"),
+	type: varchar({ enum: announcementType }).notNull().default("INFO"),
 	publishedAt: timestamp("published_at"),
 	updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 	createdAt: timestamp("created_at").notNull().default(sql`now()`),
@@ -172,11 +172,16 @@ export const announcementsTable = pgTable("announcement", {
 
 export type AnnouncementEntity = InferSelectModel<typeof announcementsTable>;
 
+const editorRole = ["ADMIN", "EDITOR"] as const;
+
+export type EditorRole = (typeof editorRole)[number];
+
 export const editorsTable = pgTable("editor", {
 	id: serial("id").primaryKey(),
 	username: varchar().notNull(),
 	token: varchar().unique().notNull(),
 	enabled: boolean().default(true),
+	role: varchar({ enum: editorRole }).notNull().default("EDITOR"),
 	allowedNetworks: json("allowed_networks").notNull().default([]),
 	lastSeenAt: timestamp("last_seen_at"),
 	createdAt: timestamp("created_at").notNull().default(sql`now()`),

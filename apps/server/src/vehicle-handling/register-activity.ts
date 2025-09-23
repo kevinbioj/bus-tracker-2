@@ -1,8 +1,8 @@
 import { and, eq, gte } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 
-import { database } from "../database/database.js";
-import { lineActivitiesTable, vehiclesTable } from "../database/schema.js";
+import { database } from "../core/database/database.js";
+import { lineActivitiesTable, vehiclesTable } from "../core/database/schema.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 
 const ACTIVITY_THRESHOLD_MNS = 90;

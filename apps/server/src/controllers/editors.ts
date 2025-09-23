@@ -1,4 +1,4 @@
-import { editorMiddleware } from "../middlewares/editor-middleware.js";
+import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
 import { hono } from "../server.js";
 

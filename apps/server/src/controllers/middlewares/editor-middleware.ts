@@ -2,8 +2,8 @@ import { and, eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
 import { Temporal } from "temporal-polyfill";
 
-import { database } from "../database/database.js";
-import { editorsTable, type EditorEntity } from "../database/schema.js";
+import { database } from "../../core/database/database.js";
+import { editorsTable, type EditorEntity } from "../../core/database/schema.js";
 
 type EditorMiddlewareProps<Required extends boolean> = {
 	required?: Required;

@@ -2,14 +2,14 @@ import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts"
 import pLimit from "p-limit";
 import { Temporal } from "temporal-polyfill";
 
-import type { VehicleEntity } from "../database/schema.js";
-import { importLines } from "../import/import-lines.js";
-import { importNetwork } from "../import/import-network.js";
-import { importVehicles } from "../import/import-vehicle.js";
-import { journeyStore } from "../store/journey-store.js";
+import type { VehicleEntity } from "../core/database/schema.js";
+import { journeyStore } from "../core/store/journey-store.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { nthIndexOf } from "../utils/nth-index-of.js";
 
+import { importLines } from "./import/import-lines.js";
+import { importNetwork } from "./import/import-network.js";
+import { importVehicles } from "./import/import-vehicle.js";
 import { registerActivity } from "./register-activity.js";
 
 const limitRegister = pLimit(60);

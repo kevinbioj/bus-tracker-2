@@ -2,8 +2,8 @@ import type { VehicleJourneyLine } from "@bus-tracker/contracts";
 import { and, arrayOverlaps, eq, gte, isNull, or } from "drizzle-orm";
 import type { Temporal } from "temporal-polyfill";
 
-import { database } from "../database/database.js";
-import { type NetworkEntity, linesTable } from "../database/schema.js";
+import { database } from "../../core/database/database.js";
+import { type NetworkEntity, linesTable } from "../../core/database/schema.js";
 
 export async function importLines(
 	network: NetworkEntity,

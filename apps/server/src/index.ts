@@ -6,11 +6,11 @@ import { serve } from "@hono/node-server";
 import * as Sentry from "@sentry/node";
 import { createClient } from "redis";
 
-import { hono } from "./server.js";
-import api from "./api/index.js";
-import { migrateDatabase } from "./database/migrate.js";
-import { handleVehicleBatch } from "./jobs/handle-vehicle-batch.js";
+import { migrateDatabase } from "./core/database/migrate.js";
+import { handleVehicleBatch } from "./vehicle-handling/handle-vehicle-batch.js";
+
 import { port } from "./options.js";
+import { hono } from "./server.js";
 
 import "./controllers/announcements.js";
 import "./controllers/editors.js";
@@ -19,8 +19,6 @@ import "./controllers/networks.js";
 import "./controllers/regions.js";
 import "./controllers/vehicle-journeys.js";
 import "./controllers/vehicles.js";
-
-hono.route("/v2", api);
 
 console.log(`,-----.                  ,--------.                   ,--.                           ,---.                                       
 |  |) /_ ,--.,--. ,---.  '--.  .--',--.--.,--,--.,---.|  |,-. ,---. ,--.--. ,-----. '   .-' ,---. ,--.--.,--.  ,--.,---. ,--.--. 

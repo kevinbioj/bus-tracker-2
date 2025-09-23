@@ -1,9 +1,9 @@
 import { and, desc, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 
-import { database } from "../database/database.js";
-import { announcementsTable } from "../database/schema.js";
-import { createQueryValidator } from "../helpers/validator-helpers.js";
+import { createQueryValidator } from "../api/validator-helpers.js";
+import { database } from "../core/database/database.js";
+import { announcementsTable } from "../core/database/schema.js";
 
 import { hono } from "../server.js";
 

@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
-import { database } from "../database/database.js";
-import { operatorsTable } from "../database/schema.js";
+import { database } from "../../core/database/database.js";
+import { operatorsTable } from "../../core/database/schema.js";
 
 import { importNetwork } from "./import-network.js";
 

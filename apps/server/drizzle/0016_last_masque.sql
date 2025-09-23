@@ -1,0 +1,1 @@
+ALTER TABLE "editor" ADD COLUMN "role" varchar DEFAULT 'EDITOR' NOT NULL;
