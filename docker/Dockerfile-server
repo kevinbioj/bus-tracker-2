@@ -38,5 +38,6 @@ ENV NODE_ENV=production
 COPY --from=builder /bus-tracker/server-deployment/node_modules ./server/node_modules/
 COPY --from=builder /bus-tracker/server-deployment/drizzle ./server/drizzle/
 COPY --from=builder /bus-tracker/server-deployment/dist ./server/
+COPY --from=builder /bus-tracker/server-deployment/.env ./server/.env
 
-CMD ["node", "--enable-source-maps", "/bus-tracker/server/index.js"]
+CMD ["node", "--env-file", "/bus-tracker/server/.env", "--enable-source-maps", "/bus-tracker/server/index.js"]

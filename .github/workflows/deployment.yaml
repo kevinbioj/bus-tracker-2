@@ -33,6 +33,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      
+      - name: Copy environment files
+        run: |
+          echo "${{ secrets.SERVER_ENV }}" > apps/server/.env
 
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v3
