@@ -39,7 +39,10 @@ announcementsApp.get("/:id", byIdParamValidator, async (c) => {
 	const [item] = await database.select().from(announcementsTable).where(eq(announcementsTable.id, +id));
 
 	if (typeof item === "undefined") {
-		return c.json({ code: 404, message: `No announcement found with id '${id}'.` }, 404);
+		return c.json(
+			{ status: 404, code: "ANNOUNCEMENT_NOT_FOUND", message: `No announcement found with id '${id}'.` },
+			404,
+		);
 	}
 
 	const announcement = announcementEntityToAnnouncementDto(item);
@@ -69,7 +72,7 @@ announcementsApp.post(
 		const [item] = await database.insert(announcementsTable).values(fields).returning();
 
 		if (typeof item === "undefined") {
-			return c.json({ code: 500, message: "Failed to create announcement" }, 500);
+			return c.json({ status: 500, code: "INTERNAL_ERROR", message: "An internal error occurred." }, 500);
 		}
 
 		const announcement = announcementEntityToAnnouncementDto(item);
@@ -106,7 +109,10 @@ announcementsApp.put(
 			.returning();
 
 		if (typeof item === "undefined") {
-			return c.json({ code: 404, message: `No announcement found with id '${id}'.` }, 404);
+			return c.json(
+				{ status: 404, code: "ANNOUNCEMENT_NOT_FOUND", message: `No announcement found with id '${id}'.` },
+				404,
+			);
 		}
 
 		const announcement = announcementEntityToAnnouncementDto(item);
@@ -120,7 +126,10 @@ announcementsApp.delete("/:id", authMiddleware({ role: "ADMIN" }), byIdParamVali
 	const [item] = await database.delete(announcementsTable).where(eq(announcementsTable.id, +id)).returning();
 
 	if (typeof item === "undefined") {
-		return c.json({ code: 404, message: `No announcement found with id '${id}'.` }, 404);
+		return c.json(
+			{ status: 404, code: "ANNOUNCEMENT_NOT_FOUND", message: `No announcement found with id '${id}'.` },
+			404,
+		);
 	}
 
 	return c.body(null, 204);

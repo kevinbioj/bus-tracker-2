@@ -179,10 +179,11 @@ export type EditorRole = (typeof editorRole)[number];
 export const editorsTable = pgTable("editor", {
 	id: serial("id").primaryKey(),
 	username: varchar().notNull(),
+	discordId: varchar("discord_id"),
 	token: varchar().unique().notNull(),
 	enabled: boolean().default(true),
 	role: varchar({ enum: editorRole }).notNull().default("EDITOR"),
-	allowedNetworks: json("allowed_networks").notNull().default([]),
+	manageableNetworks: json("manageable_networks").notNull().default([]),
 	lastSeenAt: timestamp("last_seen_at"),
 	createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });

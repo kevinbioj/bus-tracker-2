@@ -1,10 +1,11 @@
-import { and, asc, eq, gt, isNull, or } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, or, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { Temporal } from "temporal-polyfill";
 import { z } from "zod";
 
 import { database } from "../../core/database/database.js";
 import {
+	editorsTable,
 	linesTable,
 	networksTable,
 	operatorsTable,
@@ -85,7 +86,9 @@ networksApp.get(
 			.leftJoin(regionsTable, eq(regionsTable.id, networksTable.regionId))
 			.where(eq(networksTable.id, id));
 
-		if (typeof item === "undefined") return c.json({ error: `No network found with id '${id}'.` }, 404);
+		if (typeof item === "undefined") {
+			return c.json({ status: 404, code: "NETWORK_NOT_FOUND", message: `No network found with id '${id}'.` }, 404);
+		}
 
 		let lines: LineEntity[] | undefined;
 		let operators: OperatorEntity[] | undefined;
@@ -122,6 +125,33 @@ networksApp.get(
 		return c.json(network, 200);
 	},
 );
+
+networksApp.get("/:id/contributors", byIdParamValidator, async (c) => {
+	const { id } = c.req.valid("param");
+
+	const [network] = await database.select().from(networksTable).where(eq(networksTable.id, id));
+
+	if (typeof network === "undefined") {
+		return c.json({ status: 404, code: "NETWORK_NOT_FOUND", message: `No network found with id '${id}'.` }, 404);
+	}
+
+	const data = await database
+		.select()
+		.from(editorsTable)
+		.where(
+			and(
+				eq(editorsTable.enabled, true),
+				sql`${editorsTable.manageableNetworks}::jsonb @> ${sql.raw(`'[${id}]'::jsonb`)}`,
+			),
+		);
+
+	const contributors = data.map((item) => ({
+		id: item.id,
+		username: item.username,
+	}));
+
+	return c.json(contributors, 200);
+});
 
 networksApp.put(
 	"/:id",
@@ -161,10 +191,11 @@ networksApp.put(
 				hasVehiclesFeature: fields.vehicleHistoryFeature,
 				regionId: fields.regionId,
 			})
+			.where(eq(networksTable.id, id))
 			.returning();
 
 		if (typeof item === "undefined") {
-			return c.json({ code: 404, message: `No network found with id '${id}'.` }, 404);
+			return c.json({ status: 404, code: "NETWORK_NOT_FOUND", message: `No network found with id '${id}'.` }, 404);
 		}
 
 		const network = networkEntityToNetworkDto(item, null);
