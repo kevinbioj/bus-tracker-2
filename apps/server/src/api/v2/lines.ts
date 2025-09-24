@@ -19,7 +19,7 @@ const lineEntityToLineDto = (line: LineEntity) => ({
 	id: line.id,
 	number: line.number,
 	order: line.sortOrder,
-	cartridge: { href: line.cartridgeHref },
+	cartridgeHref: line.cartridgeHref,
 	colors: { foreground: line.textColor, background: line.color },
 	girouette: { routeNumberText: line.girouetteNumber },
 	archivedAt: line.archivedAt,

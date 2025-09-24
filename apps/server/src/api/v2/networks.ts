@@ -42,6 +42,7 @@ const networkEntityToNetworkDto = (
 		id: line.id,
 		number: line.number,
 		order: line.sortOrder,
+		cartridgeHref: line.cartridgeHref,
 		colors: { foreground: line.textColor, background: line.color },
 		onlineVehicleCount: onlineVehicleCountMap?.get(line.id) ?? 0,
 	})),
@@ -107,7 +108,7 @@ networksApp.get(
 			const lineIds = new Set(lines.map(({ id }) => id));
 			for (const vehicle of journeyStore.values()) {
 				if (typeof vehicle.lineId === "undefined" || !lineIds.has(vehicle.lineId)) continue;
-				onlineVehicleCountMap.set(vehicle.lineId, onlineVehicleCountMap.get(vehicle.lineId) ?? 0);
+				onlineVehicleCountMap.set(vehicle.lineId, (onlineVehicleCountMap.get(vehicle.lineId) ?? 0) + 1);
 			}
 		}
 
