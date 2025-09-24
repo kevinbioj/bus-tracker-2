@@ -36,6 +36,9 @@ export default defineConfig({
 				],
 			},
 			registerType: "autoUpdate",
+			workbox: {
+				navigateFallbackDenylist: [/^\/api/],
+			},
 		}),
 		sentryVitePlugin({
 			org: "bus-tracker",
