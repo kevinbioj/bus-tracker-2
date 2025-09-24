@@ -38,15 +38,13 @@ const networkEntityToNetworkDto = (
 	...(region
 		? { region: region ? { id: region.id, name: region.name, order: region.sortOrder } : null }
 		: { regionId: network.regionId }),
-	lines: lines
-		?.filter((line) => line.archivedAt)
-		.map((line) => ({
-			id: line.id,
-			number: line.number,
-			order: line.sortOrder,
-			colors: { foreground: line.textColor, background: line.color },
-			onlineVehicleCount: onlineVehicleCountMap?.get(line.id) ?? 0,
-		})),
+	lines: lines?.map((line) => ({
+		id: line.id,
+		number: line.number,
+		order: line.sortOrder,
+		colors: { foreground: line.textColor, background: line.color },
+		onlineVehicleCount: onlineVehicleCountMap?.get(line.id) ?? 0,
+	})),
 	operators: operators?.map((operator) => ({
 		id: operator.id,
 		name: operator.name,
