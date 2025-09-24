@@ -280,7 +280,7 @@ hono.put(
 
 		const editor = c.get("editor");
 
-		if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
+		if (!Array.isArray(editor.manageableNetworks) || !editor.manageableNetworks.includes(vehicle.networkId)) {
 			return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
 		}
 
@@ -333,7 +333,7 @@ hono.post(
 
 		const editor = c.get("editor");
 
-		if (!Array.isArray(editor.allowedNetworks) || !editor.allowedNetworks.includes(vehicle.networkId)) {
+		if (!Array.isArray(editor.manageableNetworks) || !editor.manageableNetworks.includes(vehicle.networkId)) {
 			return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
 		}
 
