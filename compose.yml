@@ -4,6 +4,8 @@ services:
     ports:
       - 6379:6379
       - 8001:8001
+    volumes:
+      - redis_data:/data
 
   postgres:
     image: postgres:17.6
@@ -17,3 +19,4 @@ services:
 
 volumes:
   database_data:
+  redis_data:

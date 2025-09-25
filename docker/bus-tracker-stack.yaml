@@ -18,6 +18,8 @@ services:
     image: redis:7.4.5-alpine
     ports:
       - 6379:6379
+    volumes:
+      - redis_data:/data
 
   server:
     image: ghcr.io/kevinbioj/bus-tracker-2/server:sha-${GITHUB_SHA}
@@ -44,4 +46,8 @@ secrets:
 volumes:
   database_data:
     name: bus-tracker_database-data
+    external: true
+
+  redis_data:
+    name: bus-tracker_redis-data
     external: true
