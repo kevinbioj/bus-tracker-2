@@ -60,7 +60,7 @@ while (true) {
 					type: vehicle.Ligne.startsWith("T") ? "TRAMWAY" : "BUS",
 				},
 				direction: vehicle.Sens === "ALL" ? "OUTBOUND" : "INBOUND",
-				destination: vehicle.Destination,
+				destination: `${vehicle.Destination}*`,
 				position: {
 					...convertPosition({ X: vehicle.X, Y: vehicle.Y }),
 					atStop: false,
