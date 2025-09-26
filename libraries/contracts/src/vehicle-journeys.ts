@@ -5,6 +5,7 @@ export const vehicleJourneyLineTypes = [
 	"SUBWAY",
 	"RAIL",
 	"TROLLEY",
+	"FUNICULAR",
 	"BUS",
 	"FERRY",
 	"COACH",

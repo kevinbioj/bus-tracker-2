@@ -43,6 +43,7 @@ const lineTypeLabels: Record<VehicleJourneyLineType, string> = {
 	RAIL: "Train",
 	SUBWAY: "Métro",
 	TRAMWAY: "Tramway",
+	FUNICULAR: "Funiculaire",
 	UNKNOWN: "Autre",
 };
 

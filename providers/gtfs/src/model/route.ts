@@ -6,6 +6,7 @@ export const routeTypes = {
 	"2": "RAIL",
 	"3": "BUS",
 	"4": "FERRY",
+	"7": "FUNICULAR",
 	"700": "COACH",
 	"-1": "UNKNOWN",
 } as const;
