@@ -318,6 +318,16 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
 	},
+	//- Paluel navettes
+	{
+		id: "paluel-navettes",
+		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-navettes-paluel/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-navettes-paluel/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "PALUEL-NAVETTES",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
