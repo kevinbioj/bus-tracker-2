@@ -4,8 +4,7 @@ const sources = [
 		id: "tcl",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/tcl.zip",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/tcl"],
-		excludeScheduled: (trip) =>
-			!["SUBWAY", "FUNICULAR"].includes(trip.route.type) && !trip.route.name.startsWith("NAVI"),
+		excludeScheduled: (trip) => !["SUBWAY", "FUNICULAR", "FERRY"].includes(trip.route.type),
 		mode: "NO-TU",
 		getNetworkRef: () => "TCL",
 	},
