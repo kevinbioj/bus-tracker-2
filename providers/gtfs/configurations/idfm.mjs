@@ -94,6 +94,17 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
+	{
+		id: "clichy",
+		staticResourceHref: "https://pysae.com/api/v2/groups/clichy/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/clichy/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		mapLineRef: (lineRef) => `CLICHY-${lineRef}`,
+		getNetworkRef: () => "IDFM",
+		getOperatorRef: () => "CLICHY",
+		getVehicleRef: (vehicle) => (vehicle ? vehicle.label : undefined),
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
