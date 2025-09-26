@@ -75,8 +75,12 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 	const [debouncedFilter] = useDebounceValue(() => filter, 100);
 
 	const filteredAndSortedVehicles = useMemo(() => {
-		const pattern = new RegExp(debouncedFilter.replaceAll("_", "\\d"), "i");
 		const sort = searchParams.get("sort");
+		let pattern: RegExp | string = debouncedFilter;
+
+		try {
+			pattern = new RegExp(debouncedFilter.replaceAll("_", "\\d"), "i");
+		} catch {}
 
 		return vehicles
 			.filter((v) => {
@@ -85,7 +89,9 @@ export function NetworkVehicles({ networkId }: Readonly<NetworkVehiclesProps>) {
 				if (type?.trim().length && type !== "ALL" && v.type !== type) return false;
 				if (operatorId !== "" && operatorId !== "ALL" && +operatorId !== v.operatorId) return false;
 				if (debouncedFilter === "") return true;
-				return pattern.test(v.number.toString()) || pattern.test(v.designation ?? "");
+				return pattern instanceof RegExp
+					? pattern.test(v.number.toString()) || pattern.test(v.designation ?? "")
+					: v.number.toString().includes(pattern);
 			})
 			.sort((a, b) => {
 				if (sort === "activity") {
