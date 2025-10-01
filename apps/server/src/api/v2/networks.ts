@@ -10,6 +10,7 @@ import {
 	networksTable,
 	operatorsTable,
 	regionsTable,
+	vehiclesTable,
 	type LineEntity,
 	type NetworkEntity,
 	type OperatorEntity,
@@ -20,10 +21,11 @@ import { journeyStore } from "../../core/store/journey-store.js";
 import { authMiddleware } from "../auth-middleware.js";
 import { byIdParamValidator } from "../common-validators.js";
 import { createJsonValidator, createQueryValidator } from "../validator-helpers.js";
+import { computeVehicleActiveness } from "../compute-vehicle-activeness.js";
 
 const networksApp = new Hono();
 
-const networkEntityToNetworkDto = (
+export const networkEntityToNetworkDto = (
 	network: NetworkEntity,
 	region?: RegionEntity | null,
 	lines?: LineEntity[],
@@ -152,6 +154,36 @@ networksApp.get("/:id/contributors", byIdParamValidator, async (c) => {
 	return c.json(contributors, 200);
 });
 
+networksApp.get("/:id/vehicles", byIdParamValidator, async (c) => {
+	const { id } = c.req.valid("param");
+
+	const [network] = await database
+		.select({ id: networksTable.id })
+		.from(networksTable)
+		.where(eq(networksTable.id, +id));
+
+	if (typeof network === "undefined") {
+		return c.json({ status: 404, code: "NETWORK_NOT_FOUND", message: `No network found with id '${id}'.` }, 404);
+	}
+
+	const vehicles = await database.select().from(vehiclesTable).where(eq(vehiclesTable.networkId, network.id));
+
+	const vehiclesWithActivity = await Promise.all(
+		vehicles.map(async (vehicle) => ({
+			id: vehicle.id,
+			number: vehicle.number,
+			designation: vehicle.designation,
+			type: vehicle.type,
+			operatorId: vehicle.operatorId,
+			activity: await computeVehicleActiveness(vehicle),
+			archivedAt: vehicle.archivedAt ?? undefined,
+			archivedFor: vehicle.archivedAt ? vehicle.archivedFor : undefined,
+		})),
+	);
+
+	return c.json(vehiclesWithActivity, 200);
+});
+
 networksApp.put(
 	"/:id",
 	authMiddleware({ role: "ADMIN" }),
@@ -177,6 +209,10 @@ networksApp.put(
 				.where(eq(regionsTable.id, fields.regionId));
 
 			if (typeof region === "undefined") {
+				return c.json(
+					{ status: 400, code: "UNKNOWN_REGION_ID", message: `No region found with id '${fields.regionId}'.` },
+					400,
+				);
 			}
 		}
 
