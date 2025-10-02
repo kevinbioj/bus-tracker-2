@@ -85,12 +85,17 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 	);
 
 	const networkIdentifier = network?.logoHref ? (
-		<picture className="min-w-12 w-fit">
-			{network.darkModeLogoHref !== null ? (
-				<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-			) : null}
-			<img className="h-5 object-contain m-auto" src={network.logoHref} alt="" />
-		</picture>
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<picture className="min-w-12 w-fit">
+					{network.darkModeLogoHref !== null ? (
+						<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+					) : null}
+					<img className="h-5 object-contain m-auto" src={network.logoHref} alt="" />
+				</picture>
+			</TooltipTrigger>
+			<TooltipContent>{network.name}</TooltipContent>
+		</Tooltip>
 	) : (
 		<span>{network?.name}</span>
 	);
