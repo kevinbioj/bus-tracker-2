@@ -29,12 +29,12 @@ while (true) {
 		} catch (cause) {
 			console.error("%s ✘ Failed to update monitored lines", Temporal.Now.instant(), cause);
 		}
-		await setTimeout(60_000);
+		await setTimeout(600_000 + 5000); // 5s additional time
 	}
 
 	console.log("%s ► Fetching active vehicle journeys...", Temporal.Now.instant());
 	const vehicleJourneys = await fetchMonitoredVehicles(monitoredLines);
 	await redis.publish(channel, JSON.stringify(vehicleJourneys));
 	console.log("%s ✓ Sent %d vehicle journeys.", Temporal.Now.instant(), vehicleJourneys.length);
-	await setTimeout(60_000);
+	await setTimeout(600_000 + 5000); // 5s additional time
 }
