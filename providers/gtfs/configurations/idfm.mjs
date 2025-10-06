@@ -38,6 +38,12 @@ const sources = [
 			filterTrips: (trip) => trip.route.name !== "TER",
 		},
 		excludeScheduled: true,
+		mapTripUpdate: (tripUpdate) => {
+			if (typeof tripUpdate.vehicle?.id === "string") {
+				delete tripUpdate.vehicle.id;
+			}
+			return tripUpdate;
+		},
 		isValidJourney: (journey) => {
 			const firstCall = journey.calls[0];
 			if (typeof firstCall === "undefined" || typeof firstCall.expectedTime === "undefined") return true;
