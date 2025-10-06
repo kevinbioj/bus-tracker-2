@@ -30,6 +30,11 @@ while (true) {
 			console.error("%s ✘ Failed to update monitored lines", Temporal.Now.instant(), cause);
 		}
 		await setTimeout(600_000 + 5000); // 5s additional time
+
+		// Initial lines fetch did not work
+		if (typeof lastMonitoredLinesUpdate === "undefined") {
+			continue;
+		}
 	}
 
 	console.log("%s ► Fetching active vehicle journeys...", Temporal.Now.instant());
