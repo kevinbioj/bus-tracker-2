@@ -1,14 +1,18 @@
 import { useState } from "react";
 
 import type { Line, Network } from "~/api/networks";
-import { OnlineVehiclesLineSelection } from "~/components/interactive-map/online-vehicles/line-selection/online-vehicles-line-selection";
-import { OnlineVehiclesNetworkSelection } from "~/components/interactive-map/online-vehicles/network-selection/online-vehicles-network-selection";
-import { OnlineVehiclesVehicleSelection } from "~/components/interactive-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-selection";
+import { OnlineVehiclesLineSelection } from "~/components/vehicles-map/online-vehicles/line-selection/online-vehicles-line-selection";
+import { OnlineVehiclesNetworkSelection } from "~/components/vehicles-map/online-vehicles/network-selection/online-vehicles-network-selection";
+import { OnlineVehiclesVehicleSelection } from "~/components/vehicles-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-selection";
 
 let doubleCloseGuard = false;
 
-export function OnlineVehiclesSheetManagement() {
-	const [open, setOpen] = useState(false);
+type OnlineVehiclesSheetManagement = {
+	open: boolean;
+	setOpen: (open: boolean) => void;
+};
+
+export function OnlineVehiclesSheetManagement({ open, setOpen }: OnlineVehiclesSheetManagement) {
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>();
 	const [selectedLine, setSelectedLine] = useState<Line>();
 

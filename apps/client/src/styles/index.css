@@ -1,5 +1,6 @@
 @import url("./girouettes.css");
 @import url("./leaflet.css");
+@import url("./maplibregl.css");
 
 @import "tailwindcss";
 @import "tw-animate-css";

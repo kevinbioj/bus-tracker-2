@@ -1,7 +1,7 @@
 import { match, P } from "ts-pattern";
 
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
-import { Girouette } from "~/components/interactive-map/vehicles/girouette";
+import { Girouette } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 import { useLine } from "~/hooks/use-line";
 
 const guessFont = (text: string) => {
@@ -26,7 +26,7 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 	const defaultRouteNumber = line?.girouetteNumber ?? line?.number ?? "";
 
 	return (
-		<div className="border-[1px] border-neutral-800">
+		<div className="border-b-[1px] border-black">
 			{girouette ? (
 				<Girouette ledColor="WHITE" width={width} {...girouette} />
 			) : (

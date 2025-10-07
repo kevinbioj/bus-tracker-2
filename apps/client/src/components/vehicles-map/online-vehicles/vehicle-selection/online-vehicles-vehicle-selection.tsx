@@ -3,7 +3,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 
 import { GetLineOnlineVehiclesQuery } from "~/api/lines";
 import type { Line, Network } from "~/api/networks";
-import { OnlineVehiclesVehicleCard } from "~/components/interactive-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-card";
+import { OnlineVehiclesVehicleCard } from "~/components/vehicles-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-card";
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 

@@ -1,8 +1,7 @@
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
-import { useLocalStorage } from "usehooks-ts";
+import type { LngLatBounds } from "react-map-gl/maplibre";
 
-import type { GirouetteData } from "~/components/interactive-map/vehicles/girouette";
-import type { MapBounds } from "~/hooks/use-map-bounds";
+import type { GirouetteData } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 
 import { client } from "./client";
 
@@ -43,9 +42,10 @@ export type DisposeableVehicleJourney = {
 	updatedAt: string;
 };
 
-export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?: string) => {
-	const [hideScheduledTrips] = useLocalStorage("hide-scheduled-trips", false);
-	const [includeIdfm] = useLocalStorage("include-idfm", false);
+export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds) => {
+	const activeMarkerId = localStorage.getItem("active-feature");
+	const hideScheduledTrips = localStorage.getItem("hide-scheduled-trips") === "true";
+	const includeIdfm = localStorage.getItem("include-idfm") === "true";
 
 	return queryOptions({
 		placeholderData: keepPreviousData,
@@ -54,15 +54,13 @@ export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?:
 		queryKey: ["vehicle-journeys", bounds, hideScheduledTrips],
 		queryFn: () => {
 			const params = new URLSearchParams();
-			params.append("swLat", bounds.sw[0].toString());
-			params.append("swLon", bounds.sw[1].toString());
-			params.append("neLat", bounds.ne[0].toString());
-			params.append("neLon", bounds.ne[1].toString());
+			params.append("swLat", bounds.getSouthWest().lat.toString());
+			params.append("swLon", bounds.getSouthWest().lng.toString());
+			params.append("neLat", bounds.getNorthEast().lat.toString());
+			params.append("neLon", bounds.getNorthEast().lng.toString());
 			if (hideScheduledTrips) params.append("excludeScheduled", "true");
 			if (includeIdfm) params.append("includeIdfm", "true");
-			if (typeof includeMarker !== "undefined") {
-				params.append("includeMarker", includeMarker);
-			}
+			if (activeMarkerId !== null) params.append("includeMarker", activeMarkerId);
 			return client
 				.get(`vehicle-journeys/markers?${params}`)
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
@@ -70,9 +68,9 @@ export const GetVehicleJourneyMarkersQuery = (bounds: MapBounds, includeMarker?:
 	});
 };
 
-export const GetVehicleJourneyQuery = (id: string, enabled?: boolean, refetch?: boolean) =>
+export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
 	queryOptions({
-		enabled,
+		enabled: id !== null,
 		placeholderData: keepPreviousData,
 		retry: false,
 		refetchInterval: refetch ? 5_000 : undefined,

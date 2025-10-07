@@ -1,48 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
-import type { LatLngExpression } from "leaflet";
 import { LoaderCircleIcon } from "lucide-react";
-import { useEffect, useRef } from "react";
 import { useLocalStorage, useScreen } from "usehooks-ts";
 
 import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
-import { VehicleGirouette } from "~/components/interactive-map/vehicles/vehicle-girouette";
-import { VehicleInformation } from "~/components/interactive-map/vehicles/vehicle-information";
-import { VehicleNextStops } from "~/components/interactive-map/vehicles/vehicle-next-stops";
+import { VehicleGirouette } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-girouette";
+import { VehicleInformation } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-information";
+import { VehicleNextStops } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-next-stops";
 import { CopyToClipboard } from "~/components/ui/copy-to-clipboard";
 import { Separator } from "~/components/ui/separator";
-import { useDomVisibility } from "~/hooks/use-dom-visibility";
 
 type VehicleDetailsProps = {
 	journeyId: string;
-	position: LatLngExpression;
-	updatePopup: () => void;
 };
 
-export function VehicleMarkerPopup({ journeyId, position, updatePopup }: Readonly<VehicleDetailsProps>) {
-	const popupRef = useRef(null);
-	const isPopupVisible = useDomVisibility(popupRef);
-
+export function VehicleMarkerPopup({ journeyId }: Readonly<VehicleDetailsProps>) {
 	const { width } = useScreen();
 
-	const { data: journey, isError, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, isPopupVisible, true));
+	const { data: journey, isError } = useQuery(GetVehicleJourneyQuery(journeyId, true));
 	const popupWidth = journey?.girouette?.width ?? Math.min(width - 50, 384);
 
 	const [showDebugInfos] = useLocalStorage("show-debug-info", false);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: need to react on width changes
-	useEffect(() => {
-		updatePopup();
-	}, [journey?.girouette?.width, updatePopup]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: need to react on popup visibility
-	useEffect(() => {
-		if (isPopupVisible) {
-			refetch();
-		}
-	}, [position]);
-
 	return (
-		<div ref={popupRef} style={{ width: popupWidth + 2 }}>
+		<div className="font-[Achemine] leading-tight mb-1.5 text-[13px]" style={{ width: popupWidth }}>
 			{isError ? (
 				<p className="px-3 text-balance text-center">
 					<span className="font-bold text-lg">☠️ Entrée introuvable</span>

@@ -1,0 +1,18 @@
+.maplibregl-popup {
+    z-index: 999;
+}
+
+.maplibregl-popup-tip {
+    border-top-color: #444444 !important;
+}
+
+.maplibregl-popup-content {
+    border: 1px solid #444444;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    padding: 0;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+}

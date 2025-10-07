@@ -12,7 +12,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 	if (calls.length === 0) return null;
 	return (
 		<div className="px-2 -my-0.5">
-			<div className="flex max-h-24 flex-col gap-1 overflow-y-auto py-0.5">
+			<div className="flex max-h-24 flex-col gap-1 overflow-y-auto overscroll-contain py-0.5">
 				{calls.map((call) => {
 					const accentColor = match([call.callStatus, call.expectedTime])
 						.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")

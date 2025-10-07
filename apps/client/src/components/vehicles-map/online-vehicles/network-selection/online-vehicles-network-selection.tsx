@@ -5,7 +5,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
-import { OnlineVehiclesNetworkCard } from "~/components/interactive-map/online-vehicles/network-selection/online-vehicles-network-card";
+import { OnlineVehiclesNetworkCard } from "~/components/vehicles-map/online-vehicles/network-selection/online-vehicles-network-card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 
