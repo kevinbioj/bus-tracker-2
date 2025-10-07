@@ -7,6 +7,7 @@ export type APIVehicle = {
 	numero: number;
 	lng: string | number;
 	lat: string | number;
+	cap: string | number;
 	comptage: number;
 };
 

@@ -83,6 +83,7 @@ while (true) {
 			position: {
 				latitude: +vehicle.lat,
 				longitude: +vehicle.lng,
+				bearing: +(Array.isArray(vehicle.cap) ? vehicle.cap[0] : vehicle.cap) || undefined,
 				atStop: monitoredCall?.VehicleAtStop ?? false,
 				type: "GPS",
 				recordedAt: recordedAt.toString({ timeZoneName: "never" }),
