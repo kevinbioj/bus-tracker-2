@@ -1,6 +1,8 @@
 import type { VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-tracker/contracts";
 import type { Temporal } from "temporal-polyfill";
 
+import { getDirection } from "../utils/get-direction.js";
+
 import type { StopTimeUpdate } from "./gtfs-rt.js";
 import type { Stop } from "./stop.js";
 import type { Trip } from "./trip.js";
@@ -27,6 +29,8 @@ export type JourneyPosition = {
 };
 
 export class Journey {
+	private bearing: number | undefined;
+
 	constructor(
 		readonly id: string,
 		readonly trip: Trip,
@@ -36,18 +40,18 @@ export class Journey {
 
 	guessPosition(at: Temporal.Instant): VehicleJourneyPosition {
 		const calls = this.calls.filter((call) => call.status !== "SKIPPED");
-		if (calls.length < 2) return Journey.getJourneyPositionAt(this.calls.at(0)!);
+		if (calls.length < 2) return this.getJourneyPositionAt(this.calls.at(0)!);
 
 		// Cas n°1 - la course n'a pas encore commencé
 		const firstCall = calls.at(0)!;
 		if (at.epochMilliseconds < (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime).epochMilliseconds) {
-			return Journey.getJourneyPositionAt(firstCall);
+			return this.getJourneyPositionAt(firstCall);
 		}
 
 		// Cas n°2 - la course est terminée
 		const lastCall = calls.at(-1)!;
 		if (at.epochMilliseconds >= (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime).epochMilliseconds) {
-			return Journey.getJourneyPositionAt(lastCall);
+			return this.getJourneyPositionAt(lastCall);
 		}
 
 		// Cas n°3 - on est à l'arrêt
@@ -58,7 +62,7 @@ export class Journey {
 		if (
 			at.epochMilliseconds < (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochMilliseconds
 		) {
-			return Journey.getJourneyPositionAt(monitoredCall);
+			return this.getJourneyPositionAt(monitoredCall);
 		}
 
 		// Autrement - on est en voyage
@@ -68,7 +72,7 @@ export class Journey {
 			typeof monitoredCall.distanceTraveled === "undefined" ||
 			typeof nextCall?.distanceTraveled === "undefined"
 		) {
-			return Journey.getJourneyPositionAt(monitoredCall);
+			return this.getJourneyPositionAt(monitoredCall);
 		}
 
 		const leftAt = (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochMilliseconds;
@@ -88,9 +92,17 @@ export class Journey {
 			(distanceTraveled - currentShapePoint.distanceTraveled) /
 			(nextShapePoint.distanceTraveled - currentShapePoint.distanceTraveled);
 
+		this.bearing = getDirection(
+			currentShapePoint.longitude,
+			currentShapePoint.latitude,
+			nextShapePoint.longitude,
+			nextShapePoint.latitude,
+		);
+
 		return {
 			latitude: currentShapePoint.latitude + (nextShapePoint.latitude - currentShapePoint.latitude) * ratio,
 			longitude: currentShapePoint.longitude + (nextShapePoint.longitude - currentShapePoint.longitude) * ratio,
+			bearing: this.bearing,
 			atStop: false,
 			type: "COMPUTED",
 			recordedAt: at.toZonedDateTimeISO(this.trip.route.agency.timeZone).toString({ timeZoneName: "never" }),
@@ -179,12 +191,11 @@ export class Journey {
 		}
 	}
 
-	// ---
-
-	private static getJourneyPositionAt(call: JourneyCall): VehicleJourneyPosition {
+	private getJourneyPositionAt(call: JourneyCall): VehicleJourneyPosition {
 		return {
 			latitude: call.stop.latitude,
 			longitude: call.stop.longitude,
+			bearing: this.bearing,
 			atStop: true,
 			type: "COMPUTED",
 			recordedAt: (call.expectedArrivalTime ?? call.aimedArrivalTime).toString({
