@@ -9,7 +9,7 @@ export type VehicleJourneyMarker = {
 	id: string;
 	color?: string;
 	fillColor?: string;
-	position: { latitude: number; longitude: number; type: "GPS" | "COMPUTED" };
+	position: { latitude: number; longitude: number; bearing?: number; type: "GPS" | "COMPUTED" };
 };
 
 export type DisposeableVehicleJourney = {
@@ -42,31 +42,28 @@ export type DisposeableVehicleJourney = {
 	updatedAt: string;
 };
 
-export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds) => {
-	const activeMarkerId = localStorage.getItem("active-feature");
-	const hideScheduledTrips = localStorage.getItem("hide-scheduled-trips") === "true";
-	const includeIdfm = localStorage.getItem("include-idfm") === "true";
-
-	return queryOptions({
+export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds) =>
+	queryOptions({
 		placeholderData: keepPreviousData,
 		refetchInterval: 10_000,
 		staleTime: 20_000,
-		queryKey: ["vehicle-journeys", bounds, hideScheduledTrips],
+		queryKey: ["vehicle-journeys"],
 		queryFn: () => {
+			const activeMarkerId = localStorage.getItem("active-feature");
+			const hideScheduledTrips = localStorage.getItem("hide-scheduled-trips") === "true";
+
 			const params = new URLSearchParams();
-			params.append("swLat", bounds.getSouthWest().lat.toString());
-			params.append("swLon", bounds.getSouthWest().lng.toString());
-			params.append("neLat", bounds.getNorthEast().lat.toString());
-			params.append("neLon", bounds.getNorthEast().lng.toString());
+			params.append("swLat", Math.max(bounds.getSouthWest().lat, -90).toString());
+			params.append("swLon", Math.max(bounds.getSouthWest().lng, -180).toString());
+			params.append("neLat", Math.min(bounds.getNorthEast().lat, 90).toString());
+			params.append("neLon", Math.min(bounds.getNorthEast().lng, 180).toString());
 			if (hideScheduledTrips) params.append("excludeScheduled", "true");
-			if (includeIdfm) params.append("includeIdfm", "true");
 			if (activeMarkerId !== null) params.append("includeMarker", activeMarkerId);
 			return client
 				.get(`vehicle-journeys/markers?${params}`)
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
 		},
 	});
-};
 
 export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
 	queryOptions({

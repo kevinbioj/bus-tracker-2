@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type maplibregl from "maplibre-gl";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
@@ -16,6 +16,9 @@ export function VehiclesMarkersData({ source }: VehiclesMarkersDataProps) {
 
 	const { data, isFetching, refetch } = useQuery(GetVehicleJourneyMarkersQuery(bounds));
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: need to refetch on bounds change
+	useEffect(() => void refetch(), [bounds, refetch]);
+
 	const features = useMemo<CircleMarkerFeature<VehicleJourneyMarker>[]>(
 		() =>
 			(data?.items ?? []).map((item) => ({
@@ -27,6 +30,7 @@ export function VehiclesMarkersData({ source }: VehiclesMarkersDataProps) {
 				},
 				properties: {
 					...item,
+					bearing: item.position.bearing,
 					color: item.color ?? "#FFFFFF",
 					fillColor: item.fillColor ?? "#000000",
 				},

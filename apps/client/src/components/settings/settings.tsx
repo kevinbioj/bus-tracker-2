@@ -1,11 +1,8 @@
 import { LucideSettings } from "lucide-react";
 
-import { BypassMinZoomSetting } from "~/components/settings/bypass-min-zoom";
 import { DisplayNextCallsSetting } from "~/components/settings/display-next-calls";
 import { EditorTokenInput } from "~/components/settings/editor-token-input";
-import { GeolocateOnStartSetting } from "~/components/settings/geolocate-on-start";
 import { HideScheduledTripsSetting } from "~/components/settings/hide-scheduled-trips";
-import { IncludeIdfmSetting } from "~/components/settings/include-idfm";
 import { ShowDebugInfoSetting } from "~/components/settings/show-debug-info";
 import { DisplayAbsoluteTimeSetting } from "~/components/settings/use-absolute-time";
 import { Button } from "~/components/ui/button";
@@ -24,12 +21,11 @@ export function Settings() {
 					<DialogTitle>Paramètres de l'application</DialogTitle>
 				</DialogHeader>
 				<div className="mt-3 flex flex-col gap-4">
-					<GeolocateOnStartSetting />
+					{/* <GeolocateOnStartSetting /> */}
 					<DisplayNextCallsSetting />
 					<HideScheduledTripsSetting />
 					<DisplayAbsoluteTimeSetting />
-					<BypassMinZoomSetting />
-					<IncludeIdfmSetting />
+					{/* <BypassMinZoomSetting /> */}
 					<ShowDebugInfoSetting />
 				</div>
 				<hr />

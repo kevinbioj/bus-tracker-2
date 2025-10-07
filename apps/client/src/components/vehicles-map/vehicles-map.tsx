@@ -42,7 +42,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 			mapOptions={{
 				center: initialLocation.position,
 				// style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-				style: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+				style: "https://tiles.openfreemap.org/styles/liberty",
 				zoom: initialLocation.zoom,
 			}}
 			ref={onMap}
