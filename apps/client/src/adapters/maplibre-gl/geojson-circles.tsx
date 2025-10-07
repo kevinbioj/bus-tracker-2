@@ -61,9 +61,8 @@ export function GeojsonCircles<T extends { id: string; bearing?: number }>({
 				const feature = temporaryCollection.features[i];
 				const nextFeature = nextFeatures.get(feature.properties.id);
 				if (typeof nextFeature !== "undefined") {
-					// biome-ignore lint/correctness/noUnusedVariables: we exclude bearing from this
 					const { bearing, ...properties } = nextFeature.properties;
-					feature.properties = { ...feature.properties, ...properties };
+					feature.properties = { bearing, ...feature.properties, ...properties };
 					continue;
 				}
 
