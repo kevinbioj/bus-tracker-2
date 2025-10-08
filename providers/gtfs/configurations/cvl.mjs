@@ -1,6 +1,19 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "chateauroux",
+		staticResourceHref:
+			"https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20251001_zip",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/chateauroux/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/chateauroux/trip-updates",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "CHATEAUROUX",
+	},
+	{
 		id: "montargis",
 		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/c1c2e220-667c-4062-ba32-ec5079c55757",
 		realtimeResourceHrefs: [
