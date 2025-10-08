@@ -12,6 +12,7 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "CHATEAUROUX",
+		getDestination: (journey) => journey?.trip.headsign?.replace(/^L\d+\s+/, ""),
 	},
 	{
 		id: "montargis",
