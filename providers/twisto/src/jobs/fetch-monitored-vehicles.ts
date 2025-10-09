@@ -29,6 +29,7 @@ export type SiriVehicleActivity = {
 		OriginName: string;
 		OriginAimedDepartureTime: string;
 		VehicleJourneyName: string;
+		Bearing: number;
 		VehicleLocation?: {
 			Longitude: number;
 			Latitude: number;
@@ -140,6 +141,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 			position: {
 				latitude: +vehicle.MonitoredVehicleJourney.VehicleLocation!.Latitude,
 				longitude: +vehicle.MonitoredVehicleJourney.VehicleLocation!.Longitude,
+				bearing: +vehicle.MonitoredVehicleJourney.Bearing,
 				atStop: false,
 				type: "GPS",
 				recordedAt: recordedAt.toString({ timeZoneName: "never" }),
