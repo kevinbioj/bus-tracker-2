@@ -36,7 +36,7 @@ const sources = [
 		staticResourceHref:
 			"https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs",
 		realtimeResourceHrefs: [
-			"https://opendata.clermontmetropole.eu/explore/dataset/gtfsrt_tripupdates/files/2c6b5c63d7be78905779d28500e6ab7e/download/",
+			"https://proxy.transport.data.gouv.fr/resource/t2c-clermont-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
 		getNetworkRef: () => "T2C",
 	},
