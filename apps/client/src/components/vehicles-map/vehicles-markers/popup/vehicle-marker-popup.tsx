@@ -1,25 +1,33 @@
-import { useQuery } from "@tanstack/react-query";
+import { useIsFetching, useQuery } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
+import { useEffect } from "react";
 import { useLocalStorage, useScreen } from "usehooks-ts";
+import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 
-import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import { GetVehicleJourneyMarkersQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import { CopyToClipboard } from "~/components/ui/copy-to-clipboard";
+import { Separator } from "~/components/ui/separator";
 import { VehicleGirouette } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-girouette";
 import { VehicleInformation } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-information";
 import { VehicleNextStops } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-next-stops";
-import { CopyToClipboard } from "~/components/ui/copy-to-clipboard";
-import { Separator } from "~/components/ui/separator";
 
 type VehicleDetailsProps = {
 	journeyId: string;
 };
 
 export function VehicleMarkerPopup({ journeyId }: Readonly<VehicleDetailsProps>) {
+	const bounds = useMapBounds();
 	const { width } = useScreen();
 
-	const { data: journey, isError } = useQuery(GetVehicleJourneyQuery(journeyId, true));
+	const isFetchingMarkers = useIsFetching(GetVehicleJourneyMarkersQuery(bounds));
+	const { data: journey, isError, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, true));
 	const popupWidth = journey?.girouette?.width ?? Math.min(width - 50, 384);
 
 	const [showDebugInfos] = useLocalStorage("show-debug-info", false);
+
+	useEffect(() => {
+		if (isFetchingMarkers) refetch();
+	}, [isFetchingMarkers, refetch]);
 
 	return (
 		<div className="font-[Achemine] leading-tight mb-1.5 text-[13px]" style={{ width: popupWidth }}>
