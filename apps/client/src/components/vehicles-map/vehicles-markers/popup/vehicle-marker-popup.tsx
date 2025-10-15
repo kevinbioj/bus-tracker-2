@@ -1,9 +1,9 @@
-import { useIsFetching, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
 import { useEffect } from "react";
 import { useLocalStorage, useScreen } from "usehooks-ts";
-import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 
+import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetVehicleJourneyMarkersQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { CopyToClipboard } from "~/components/ui/copy-to-clipboard";
 import { Separator } from "~/components/ui/separator";
@@ -19,15 +19,23 @@ export function VehicleMarkerPopup({ journeyId }: Readonly<VehicleDetailsProps>)
 	const bounds = useMapBounds();
 	const { width } = useScreen();
 
-	const isFetchingMarkers = useIsFetching(GetVehicleJourneyMarkersQuery(bounds));
-	const { data: journey, isError, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, true));
+	const { dataUpdatedAt: markersUpdatedAt } = useQuery(GetVehicleJourneyMarkersQuery(bounds));
+	const {
+		data: journey,
+		dataUpdatedAt: journeyUpdatedAt,
+		isError,
+		refetch,
+	} = useQuery(GetVehicleJourneyQuery(journeyId, false));
 	const popupWidth = journey?.girouette?.width ?? Math.min(width - 50, 384);
 
 	const [showDebugInfos] = useLocalStorage("show-debug-info", false);
 
+	// refetch popup data whenever markers move
 	useEffect(() => {
-		if (isFetchingMarkers) refetch();
-	}, [isFetchingMarkers, refetch]);
+		if (markersUpdatedAt > journeyUpdatedAt) {
+			refetch({ cancelRefetch: false });
+		}
+	}, [markersUpdatedAt, journeyUpdatedAt, refetch]);
 
 	return (
 		<div className="font-[Achemine] leading-tight mb-1.5 text-[13px]" style={{ width: popupWidth }}>
