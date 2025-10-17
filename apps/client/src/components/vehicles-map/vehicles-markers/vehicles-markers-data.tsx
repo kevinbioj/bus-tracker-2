@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type maplibregl from "maplibre-gl";
 import { useEffect, useMemo } from "react";
+import { useDebounceValue } from "usehooks-ts";
 
 import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
@@ -12,7 +13,7 @@ type VehiclesMarkersDataProps = {
 };
 
 export function VehiclesMarkersData({ source }: VehiclesMarkersDataProps) {
-	const bounds = useMapBounds();
+	const [bounds] = useDebounceValue(useMapBounds(), 250);
 
 	const { data, isFetching, refetch } = useQuery(GetVehicleJourneyMarkersQuery(bounds));
 

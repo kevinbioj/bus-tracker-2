@@ -23,6 +23,7 @@ type MapCircleMarkersPopup = {
 export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkersPopup) {
 	const map = useMap();
 	const containerRef = useRef(document.createElement("div"));
+	const isMapDragged = useRef(false);
 
 	const [popup] = useState(
 		() =>
@@ -35,6 +36,9 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 	const activeFeatureRef = useRef<CircleMarkerFeature>(null);
 
 	const adjustPan = useCallback(() => {
+		// do not force if user is dragging the map
+		if (isMapDragged.current) return;
+
 		const mapCanvas = map.getCanvas();
 		const mapRect = mapCanvas.getBoundingClientRect();
 		const popupEl = popup.getElement();
@@ -55,7 +59,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 		if (dx !== 0 || dy !== 0) {
 			map.panBy([dx, dy], {
-				duration: 250,
+				duration: 100,
 				easing: (t) => t * (2 - t),
 			});
 		}
@@ -90,6 +94,23 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 		popup.on("open", onOpen);
 		return () => void popup.off("open", onOpen);
 	}, [activeFeature, adjustPan, popup]);
+
+	useEffect(() => {
+		const onDragStart = () => {
+			isMapDragged.current = true;
+		};
+
+		const onDragEnd = () => {
+			isMapDragged.current = false;
+		};
+
+		map.on("dragstart", onDragStart);
+		map.on("dragend", onDragEnd);
+		return () => {
+			map.off("dragstart", onDragStart);
+			map.off("dragend", onDragEnd);
+		};
+	});
 
 	useEffect(() => {
 		const onMouseEnter = () => {
@@ -146,8 +167,8 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			adjustPan();
 		};
 
-		const onSourceData = (e: { source: CircleMarkerSource; sourceDataType: "content" | string }) => {
-			if (e.sourceDataType !== "content") return;
+		const onSourceData = (e: { sourceId: string; source: CircleMarkerSource; sourceDataType: "content" | string }) => {
+			if (e.sourceId !== "vehicles" || e.sourceDataType !== "content") return;
 
 			const source = e.source;
 			const feature = source.data.features.find((feature) => feature.properties.id === activeFeature?.id);
