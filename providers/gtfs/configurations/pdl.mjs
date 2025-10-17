@@ -10,6 +10,7 @@ function nthIndexOf(input, pattern, n) {
 }
 
 const nantesZenbusVehicleIdToLabel = new Map([
+	["zenbus:Vehicle:4885658863665152:LOC", "1006"],
 	["zenbus:Vehicle:4865174679846912:LOC", "1007"],
 	["zenbus:Vehicle:6490944494895104:LOC", "1045"],
 	["zenbus:Vehicle:5138349385842688:LOC", "1050"],
@@ -22,7 +23,8 @@ const nantesZenbusVehicleIdToLabel = new Map([
 	["zenbus:Vehicle:5072728132419584:LOC", "1056"],
 	["zenbus:Vehicle:5132913748213760:LOC", "1057"],
 	["zenbus:Vehicle:4867052192923648:LOC", "1058"],
-	["zenbus:Vehicle:4801682455134208:LOC", "1059"],
+	// ["zenbus:Vehicle:4801682455134208:LOC", "1059"], // old Zenbus tablet id
+	["zenbus:Vehicle:4863123157680128:LOC", "1059"],
 	["zenbus:Vehicle:895000002:LOC", "1061"],
 	["zenbus:Vehicle:5122400943341568:LOC", "1062"],
 	["zenbus:Vehicle:904980019:LOC", "1063"],
@@ -31,6 +33,7 @@ const nantesZenbusVehicleIdToLabel = new Map([
 	["zenbus:Vehicle:880900025:LOC", "1073"],
 	["zenbus:Vehicle:897200002:LOC", "1074"],
 	["zenbus:Vehicle:905030002:LOC", "1080"],
+	["zenbus:Vehicle:884990002:LOC", "1081"],
 	["zenbus:Vehicle:883370002:LOC", "1082"],
 	["zenbus:Vehicle:4905426115100672:LOC", "1083"],
 	["zenbus:Vehicle:885170002:LOC", "1084"],
@@ -49,7 +52,8 @@ const nantesZenbusVehicleIdToLabel = new Map([
 	["zenbus:Vehicle:900890002:LOC", "1101"],
 	["zenbus:Vehicle:900940030:LOC", "1102"],
 	["zenbus:Vehicle:880900026:LOC", "1103"],
-	["zenbus:Vehicle:4895557152669696:LOC", "1104"],
+	// ["zenbus:Vehicle:4895557152669696:LOC", "1104"],
+	["zenbus:Vehicle:4807134115004416:LOC", "1104"],
 	["zenbus:Vehicle:912870002:LOC", "1105"],
 	["zenbus:Vehicle:5173084644442112:LOC", "1106"],
 	["zenbus:Vehicle:6015853221904384:LOC", "1107"],
