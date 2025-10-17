@@ -2,7 +2,7 @@ import type { VehicleJourneyCall } from "@bus-tracker/contracts";
 import { clsx } from "clsx";
 import dayjs from "dayjs";
 import { ArrowDownRight, ArrowUpRight, Rss } from "lucide-react";
-import { P, match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import { CustomTooltip } from "~/components/ui/custom-tooltip";
 
@@ -14,6 +14,8 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 		<div className="px-2 -my-0.5">
 			<div className="flex max-h-24 flex-col gap-1 overflow-y-auto overscroll-contain py-0.5">
 				{calls.map((call) => {
+					const timeWithoutZone = (call.expectedTime ?? call.aimedTime).slice(0, -6);
+
 					const accentColor = match([call.callStatus, call.expectedTime])
 						.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")
 						.with(["SCHEDULED", P.string], () => "text-green-700 dark:text-green-500")
@@ -75,7 +77,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 							<span
 								className={clsx("select-none hover:cursor-default", call.callStatus === "SKIPPED" && "line-through")}
 							>
-								{dayjs(call.expectedTime ?? call.aimedTime).format("HH:mm")}
+								{dayjs(timeWithoutZone).format("HH:mm")}
 							</span>
 						</div>
 					);
