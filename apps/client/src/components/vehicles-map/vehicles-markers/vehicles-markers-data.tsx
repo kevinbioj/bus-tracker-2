@@ -8,6 +8,11 @@ import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetVehicleJourneyMarkersQuery, type VehicleJourneyMarker } from "~/api/vehicle-journeys";
 import { VehiclesMarkersStatusControl } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-status-control";
 
+const noise = ([lon, lat]: [number, number]): [number, number] => [
+	lon + ((Math.random() * 2 - 1) * 2.5) / 111111,
+	lat + ((Math.random() * 2 - 1) * 2.5) / 75000,
+];
+
 type VehiclesMarkersDataProps = {
 	source: maplibregl.GeoJSONSource;
 };
@@ -22,20 +27,23 @@ export function VehiclesMarkersData({ source }: VehiclesMarkersDataProps) {
 
 	const features = useMemo<CircleMarkerFeature<VehicleJourneyMarker>[]>(
 		() =>
-			(data?.items ?? []).map((item) => ({
-				type: "Feature",
-				id: -1,
-				geometry: {
-					type: "Point",
-					coordinates: [item.position.longitude, item.position.latitude],
-				},
-				properties: {
-					...item,
-					bearing: item.position.bearing,
-					color: item.color ?? "#FFFFFF",
-					fillColor: item.fillColor ?? "#000000",
-				},
-			})),
+			(data?.items ?? []).map((item) => {
+				const coordinates: [number, number] = [item.position.longitude, item.position.latitude];
+				return {
+					type: "Feature",
+					id: -1,
+					geometry: {
+						type: "Point",
+						coordinates: item.position.type === "COMPUTED" ? noise(coordinates) : coordinates,
+					},
+					properties: {
+						...item,
+						bearing: item.position.bearing,
+						color: item.color ?? "#FFFFFF",
+						fillColor: item.fillColor ?? "#000000",
+					},
+				};
+			}),
 		[data],
 	);
 
