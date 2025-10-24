@@ -5,10 +5,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* biome-ignore lint/suspicious/noUnknownAtRules: tailwind-managed */
 @custom-variant hover (&:hover);
 
-/* biome-ignore lint/suspicious/noUnknownAtRules: tailwind-managed */
 @theme inline {
 	--animate-route-number: route-number 3s linear infinite;
 	--animate-page: page 6s linear infinite;
@@ -164,11 +162,9 @@
 
 @layer base {
 	* {
-		/* biome-ignore lint/suspicious/noUnknownAtRules: tailwind-managed */
 		@apply border-border;
 	}
 	body {
-		/* biome-ignore lint/suspicious/noUnknownAtRules: tailwind-managed */
 		@apply bg-background text-foreground;
 	}
 }

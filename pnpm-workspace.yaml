@@ -11,15 +11,9 @@ packages:
   - providers/tcl
   - providers/rtm
 
-allowUnusedPatches: true
-
 onlyBuiltDependencies:
-  - '@biomejs/biome'
-  - '@sentry-internal/node-cpu-profiler'
   - '@sentry/cli'
   - '@swc/core'
-  - '@tailwindcss/oxide'
   - esbuild
-  - msw
   - protobufjs
   - sharp

@@ -8,6 +8,11 @@
 		},
 		"enabled": true
 	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		}
+	},
 	"files": {
 		"ignoreUnknown": false,
 		"includes": ["**", "!**/dist", "!**/node_modules", "!**/.git"]
