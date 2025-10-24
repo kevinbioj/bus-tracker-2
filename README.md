@@ -26,10 +26,11 @@ Before running the project, please ensure:
 
 Now, to run the project:
 1. Start the compose services: `docker compose up -d`
-2. Start the server app: `pnpm dev:server`
-3. Start the client app: `pnpm dev:client`
-4. Start one or more providers (e.g.: `pnpm dev:gtfs configurations/rouen-astuce.mjs`)
-5. Head to [http://localhost:3000](http://localhost:3000)
+2. Build `@bus-tracker/contracts`: `pnpm -C libraries/contracts build`
+3. Start the server app: `pnpm dev:server`
+4. Start the client app: `pnpm dev:client`
+5. Start one or more providers (e.g.: `pnpm dev:gtfs configurations/rouen-astuce.mjs`)
+6. Head to [http://localhost:3000](http://localhost:3000)
 
 ## Tech architecture
 
