@@ -1,4 +1,3 @@
-import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -41,12 +40,9 @@ export default defineConfig({
 			},
 			registerType: "autoUpdate",
 			workbox: {
+				maximumFileSizeToCacheInBytes: 4_194_304,
 				navigateFallbackDenylist: [/^\/api/],
 			},
-		}),
-		sentryVitePlugin({
-			org: "bus-tracker",
-			project: "client",
 		}),
 	],
 	server: {
@@ -58,8 +54,5 @@ export default defineConfig({
 				rewrite: (path) => path.replace(/^\/api/, ""),
 			},
 		},
-	},
-	build: {
-		sourcemap: true,
 	},
 });

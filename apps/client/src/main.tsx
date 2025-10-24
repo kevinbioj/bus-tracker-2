@@ -1,4 +1,5 @@
-import dayjs from "dayjs";
+import type { PostHogConfig } from "posthog-js";
+import { PostHogProvider } from "posthog-js/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -8,22 +9,14 @@ import "./setup-dayjs";
 import App from "./App.jsx";
 import "./styles/index.css";
 
-import relativeTime from "dayjs/plugin/relativeTime";
-
-// 2025-08-27: Disabled until pointless errors are filtered out
-// if (import.meta.env.PROD) {
-// 	Sentry.init({
-// 		dsn: "https://111a5d771b7db84170a379cea2023fa1@o4507544469176320.ingest.de.sentry.io/4508479587549264",
-// 		integrations: [Sentry.browserTracingIntegration()],
-// 		tracesSampleRate: 0.3,
-// 		tracePropagationTargets: [/^https:\/\/(?:www\.)?bus-tracker\.fr\/api/],
-// 	});
-// }
-
-dayjs.extend(relativeTime);
+const posthogOptions = {
+	api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+} satisfies Partial<PostHogConfig>;
 
 createRoot(document.getElementById("root")!).render(
 	<StrictMode>
-		<App />
+		<PostHogProvider apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY} options={posthogOptions}>
+			<App />
+		</PostHogProvider>
 	</StrictMode>,
 );

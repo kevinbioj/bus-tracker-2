@@ -1,4 +1,3 @@
-import UmamiAnalytics from "@danielgtmn/umami-react";
 import type { QueryClient } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { createBrowserRouter, Outlet } from "react-router-dom";
@@ -19,11 +18,6 @@ export const router = (queryClient: QueryClient) =>
 			hydrateFallbackElement: null,
 			element: (
 				<>
-					<UmamiAnalytics
-						url="https://analytics.bus-tracker.fr"
-						websiteId="f4a89135-764e-4bbb-ad87-1fabf11aee12"
-						lazyLoad
-					/>
 					<NavigationBar />
 					<LoadingIndicator />
 					<Suspense>

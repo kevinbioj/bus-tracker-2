@@ -1,6 +1,6 @@
-import { useUmami } from "@danielgtmn/umami-react";
 import { useQuery } from "@tanstack/react-query";
 import { LucideCircle, LucideMegaphone } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { GetAnnouncementsQuery } from "~/api/announcements";
@@ -13,7 +13,7 @@ export function Announcements() {
 	const { data: announcements } = useQuery(GetAnnouncementsQuery);
 	const [announcementsRead, setAnnouncementsRead] = useLocalStorage<number[]>("announcements-read", []);
 
-	const { track } = useUmami();
+	const posthog = usePostHog();
 
 	// If we have no announcement, we don't even display the icon.
 	if (typeof announcements === "undefined") return null;
@@ -28,7 +28,7 @@ export function Announcements() {
 		if (announcementsRead.includes(id)) return;
 
 		setAnnouncementsRead([...announcementsRead, id]);
-		track("announcement-read", { announcementId: id });
+		posthog.capture("announcement-read", { id });
 	};
 
 	return (
