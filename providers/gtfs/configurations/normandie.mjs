@@ -256,7 +256,7 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "IBUS",
-		getVehicleRef: () => undefined,
+		getVehicleRef: () => "227033",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
