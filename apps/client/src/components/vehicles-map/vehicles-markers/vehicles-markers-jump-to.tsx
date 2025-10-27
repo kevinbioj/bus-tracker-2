@@ -42,7 +42,7 @@ export function JumpTo({ openPopup }: JumpToProps) {
 					}
 
 					const source = e.source;
-					const feature = source.data.features.find((feature) => feature.properties.id === journey.id);
+					const feature = source.data?.features?.find((feature) => feature.properties.id === journey.id);
 					if (typeof feature === "undefined") return;
 
 					openPopup(feature, "selected");

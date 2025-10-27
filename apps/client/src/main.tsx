@@ -9,12 +9,14 @@ import "./setup-dayjs";
 import App from "./App.jsx";
 import "./styles/index.css";
 
-posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
-	api_host: import.meta.env.VITE_PUBLIC_POSTHOG_API_HOST,
-	defaults: "2025-05-24",
-	respect_dnt: true,
-	ui_host: import.meta.env.VITE_PUBLIC_POSTHOG_UI_HOST,
-});
+if (import.meta.env.VITE_PUBLIC_POSTHOG_KEY !== undefined) {
+	posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
+		api_host: import.meta.env.VITE_PUBLIC_POSTHOG_API_HOST,
+		defaults: "2025-05-24",
+		respect_dnt: true,
+		ui_host: import.meta.env.VITE_PUBLIC_POSTHOG_UI_HOST,
+	});
+}
 
 posthog.register({
 	build_hash: import.meta.env.VITE_BUILD_HASH,

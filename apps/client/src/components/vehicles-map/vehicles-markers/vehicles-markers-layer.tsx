@@ -83,7 +83,9 @@ export function VehiclesMarkers() {
 		return () => {
 			abort = true;
 			map.off("load", onLoad);
-			map.removeImage(imageId);
+			if (map.style?._loaded && map.getImage(imageId) !== undefined) {
+				map.removeImage(imageId);
+			}
 		};
 	}, [map]);
 

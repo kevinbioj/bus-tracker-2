@@ -171,7 +171,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			if (e.sourceId !== "vehicles" || e.sourceDataType !== "content") return;
 
 			const source = e.source;
-			const feature = source.data.features.find((feature) => feature.properties.id === activeFeature?.id);
+			const feature = source.data?.features?.find((feature) => feature.properties.id === activeFeature?.id);
 			if (typeof feature === "undefined") {
 				if (activeFeature !== null) {
 					closePopup();
