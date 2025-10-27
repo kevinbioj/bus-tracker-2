@@ -28,7 +28,7 @@ const initialData: maplibregl.SourceSpecification = {
 	data: { type: "FeatureCollection", features: [] },
 };
 
-const vehiclesLayer: maplibregl.AddLayerObject = {
+const vehiclesLayerObject: maplibregl.AddLayerObject = {
 	id: "vehicles",
 	source: "vehicles",
 	type: "circle",
@@ -40,7 +40,7 @@ const vehiclesLayer: maplibregl.AddLayerObject = {
 	},
 };
 
-const arrowsLayer: maplibregl.AddLayerObject = {
+const arrowsLayerObject: maplibregl.AddLayerObject = {
 	id: "vehicles-arrows",
 	source: "vehicles",
 	type: "symbol",
@@ -62,32 +62,36 @@ const arrowsLayer: maplibregl.AddLayerObject = {
 
 export function VehiclesMarkers() {
 	const map = useMap();
-	const source = useMapSource<maplibregl.GeoJSONSource>("vehicles", initialData);
-	useMapLayer(arrowsLayer);
-	const layer = useMapLayer(vehiclesLayer);
+	const vehiclesSource = useMapSource<maplibregl.GeoJSONSource>("vehicles", initialData);
+	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
+	useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
 
 	useEffect(() => {
 		let abort = false;
+		const imageId = "arrow-icon";
 
 		const onLoad = async () => {
 			if (abort) return;
 			const arrowIcon = createArrowIcon("black");
 			const bitmap = await createImageBitmap(arrowIcon);
-			map.addImage("arrow-icon", bitmap, { sdf: true });
+			map.addImage(imageId, bitmap, { sdf: true });
 		};
 
-		map.on("load", onLoad);
+		if (map.style._loaded) onLoad();
+		else map.on("load", onLoad);
+
 		return () => {
 			abort = true;
 			map.off("load", onLoad);
+			map.removeImage(imageId);
 		};
 	}, [map]);
 
-	if (layer === null || source === null) return null;
+	if (vehiclesLayer === null || vehiclesSource === null) return null;
 	return (
 		<>
-			<VehiclesMarkersData source={source} />
-			<VehiclesMarkersPopupRoot layer={layer} />
+			<VehiclesMarkersData source={vehiclesSource} />
+			<VehiclesMarkersPopupRoot layer={vehiclesLayer} />
 		</>
 	);
 }

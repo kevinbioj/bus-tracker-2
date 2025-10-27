@@ -3,19 +3,34 @@ import { useEffect, useState } from "react";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 
-export function useMapLayer(layerOptions: maplibregl.AddLayerObject) {
+export function useMapLayer(layerOptions: maplibregl.AddLayerObject, beforeId?: string) {
 	const map = useMap();
 	const [layer, setLayer] = useState<maplibregl.StyleLayer | null>(null);
 
 	useEffect(() => {
+		let abort = false;
+
 		const onLoad = () => {
-			if (!map.getLayer(layerOptions.id)) map.addLayer(layerOptions);
-			setLayer(map.getLayer(layerOptions.id)! ?? null);
+			if (abort) return;
+
+			map.addLayer(layerOptions, beforeId);
+			setLayer(map.getLayer(layerOptions.id)!);
 		};
 
-		map.once("load", onLoad);
-		return () => setLayer(null);
-	}, [layerOptions, map]);
+		if (map.style._loaded) onLoad();
+		else map.on("load", onLoad);
+
+		return () => {
+			abort = true;
+			map.off("load", onLoad);
+
+			if (map.style !== undefined && map.getLayer(layerOptions.id) !== undefined) {
+				map.removeLayer(layerOptions.id);
+			}
+
+			setLayer(null);
+		};
+	}, [beforeId, layerOptions, map]);
 
 	return layer;
 }
