@@ -33,6 +33,16 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
 	{
+		id: "boulogne",
+		staticResourceHref:
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/boulogne/exports/medias.zip",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/marineo-boulonnais-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		getNetworkRef: () => "MARINEO",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "calais",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=sitac-calais-rt",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=sitac-calais-rt"],
