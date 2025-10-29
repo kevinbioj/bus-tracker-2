@@ -11,6 +11,7 @@ import MapPage from "~/pages/map";
 import { NetworkDetails } from "~/pages/network-details";
 import { NetworkList } from "~/pages/network-list";
 import { VehicleDetails } from "~/pages/vehicle-details";
+import { PurpleScreenOfDeath } from "~/psod";
 
 export const router = (queryClient: QueryClient) =>
 	createBrowserRouter([
@@ -26,6 +27,7 @@ export const router = (queryClient: QueryClient) =>
 					<WelcomeBack />
 				</>
 			),
+			errorElement: <PurpleScreenOfDeath />,
 			children: [
 				{
 					path: "/",
