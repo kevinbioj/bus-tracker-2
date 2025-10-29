@@ -75,8 +75,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=gpso-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => "IDFM",
-		getOperatorRef: () => "GPSO",
+		getNetworkRef: () => "GPSO",
 		getVehicleRef: (vehicle) =>
 			vehicle
 				? gpsoZenbusIdToVehicleLabel.get(
@@ -92,8 +91,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=caee"],
 		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => "IDFM",
-		getOperatorRef: () => "SACLAY",
+		getNetworkRef: () => "SACLAY",
 		getVehicleRef: (vehicle) =>
 			vehicle
 				? saclayZenbusIdToVehicleLabel.get(
@@ -109,10 +107,44 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/clichy/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
-		mapLineRef: (lineRef) => `CLICHY-${lineRef}`,
-		getNetworkRef: () => "IDFM",
-		getOperatorRef: () => "CLICHY",
-		getVehicleRef: (vehicle) => (vehicle ? vehicle.label : undefined),
+		getNetworkRef: () => "CLICHY",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "houilles",
+		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-ph48/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-ph48/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "HOUILLES",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "thiais",
+		staticResourceHref: "https://pysae.com/api/v2/groups/navette-thiais-587/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/navette-thiais-587/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "THIAIS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "vallee-sud-bus",
+		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-cr92/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-cr92/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "VALLEE-SUD-BUS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "traverse-brancion-commerce",
+		staticResourceHref: "https://pysae.com/api/v2/groups/traverse-brancion-commerce/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/traverse-brancion-commerce/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "TRAVERSE-BRANCION-COMMERCE",
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 ];
 
