@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouteError } from "react-router-dom";
 
 import { Button } from "~/components/ui/button";
+import { Link } from "~/components/ui/link";
 
 export function PurpleScreenOfDeath() {
 	const posthog = usePostHog();
@@ -33,25 +34,26 @@ export function PurpleScreenOfDeath() {
 					<h1 className="font-bold text-2xl text-center">Oh oh...</h1>
 				</div>
 				<div className="flex flex-col gap-8 text-center text-sm">
-					<div className="flex flex-col items-center gap-3">
+					<div className="flex flex-col items-center gap-1">
 						<p>
 							Il semblerait que quelque chose se soit mal passé !<br />
 							Relancer l'application devrait régler le problème 👍
 						</p>
 						<Button asChild variant="on-branding-default">
-							<a href="/">Rafraichir l'application</a>
+							<a href="/">Relancer l'application</a>
 						</Button>
 					</div>
-					<div className="flex flex-col items-center gap-3">
+					<div className="flex flex-col items-center gap-1">
 						<p>Si votre problème persiste, vous pouvez tenter de réinitialiser vos réglages.</p>
 						<Button onClick={resetApp} variant="on-branding-default">
 							Réinitialiser l'app
 						</Button>
 					</div>
 					<p>
-						Votre erreur a été remontée pour être analysée (et corrigée dans la mesure du possible).
+						Les données relatives à cet événement ont été remontées pour analyse.
 						<br />
-						Veuillez nous excuser pour la gêne occasionnée.
+						Si cela perdure dans le temps, contactez-nous à l'adresse{" "}
+						<Link to="mailto:contact@bus-tracker.fr">contact@bus-tracker.fr</Link>.
 					</p>
 				</div>
 			</div>
