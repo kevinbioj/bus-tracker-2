@@ -129,7 +129,7 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/star-rennes-integration-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/star-rennes-integration-gtfs-rt-vehicle-position",
 		],
-		excludeScheduled: true,
+		excludeScheduled: (trip) => trip.route.type !== "SUBWAY",
 		mode: "NO-TU",
 		getNetworkRef: () => "STAR",
 	},
