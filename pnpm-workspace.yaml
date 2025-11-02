@@ -14,6 +14,7 @@ packages:
 onlyBuiltDependencies:
   - '@sentry/cli'
   - '@swc/core'
+  - core-js
   - esbuild
   - protobufjs
   - sharp
