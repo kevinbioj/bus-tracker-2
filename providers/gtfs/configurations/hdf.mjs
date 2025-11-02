@@ -14,7 +14,7 @@ const sources = [
 	},
 	{
 		id: "arras",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/e3ff01b4-bac9-40b6-83a3-4b91ce0045b5",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/4ded8fb3-a38d-45c5-b4a7-a2f6ac17ba4f",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "ARTIS",
 	},
@@ -104,7 +104,7 @@ const sources = [
 	},
 	{
 		id: "lens-bethune",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/99f29f9e-0dee-473d-9f9c-188e9d1ce9e5",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/7b4bf9e6-50c5-47d1-855d-7da6c149a16e",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "TADAO",
 	},
