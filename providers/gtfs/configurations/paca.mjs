@@ -106,18 +106,30 @@ const sources = [
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/region-sud-zou-proximite-gtfs-rt-trip-update",
+			"https://mybusfinder.fr/gtfsrt/zou-prox/vehicle_positions.pb",
 		],
 		excludeScheduled: true,
 		getNetworkRef: () => "ZOU",
 		getVehicleRef: (descriptor) => +descriptor?.label || undefined,
+		mapVehiclePosition: (vehicle) => {
+			vehicle.vehicle.id = vehicle.vehicle.label;
+			return vehicle;
+		},
 	},
 	{
 		id: "zou-express",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3743/resource/5153/download/",
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/region-sud-zou-express-gtfs-rt-trip-update"],
 		excludeScheduled: true,
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/region-sud-zou-express-gtfs-rt-trip-update",
+			"https://mybusfinder.fr/gtfsrt/zou-exp/vehicle_positions.pb",
+		],
 		getNetworkRef: () => "ZOU",
 		getVehicleRef: (descriptor) => +descriptor?.label || undefined,
+		mapVehiclePosition: (vehicle) => {
+			vehicle.vehicle.id = vehicle.vehicle.label;
+			return vehicle;
+		},
 	},
 ];
 
