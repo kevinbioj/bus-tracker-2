@@ -17,3 +17,10 @@ if (typeof Map.groupBy === "undefined") {
 		return map;
 	};
 }
+
+if (typeof Array.prototype.toSorted === "undefined") {
+	Array.prototype.toSorted = function toSorted(compareFn) {
+		const shallow = this.slice();
+		return shallow.sort(compareFn);
+	};
+}
