@@ -86,6 +86,20 @@ const sources = [
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 	{
+		id: "niort",
+		staticResourceHref:
+			"https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/ca_du_niortais-aggregated-gtfs.zip",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/niort/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/niort/vehicle-positions",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "NIORT",
+		mapLineRef: (lineRef) => lineRef.split(":")[2],
+	},
+	{
 		id: "poitiers",
 		staticResourceHref:
 			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/2gwvlq16siyb7d9m3rqt1pb1/metadata-attachments/gtfs.zip",
