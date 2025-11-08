@@ -18,22 +18,28 @@ const getVehicleJourneyMarkersQuery = z.object({
 	neLon: z.coerce.number().min(-180).max(180),
 	includeMarker: z.string().optional(),
 	excludeScheduled: z.coerce.boolean().optional(),
+	lineId: z.coerce.number().optional(),
 });
 
 hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
-	const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled } = c.req.valid("query");
+	const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled, lineId } = c.req.valid("query");
 
 	const boundedJourneys = journeyStore
 		.values()
-		.filter(({ calls, position }) => {
+		.filter((journey) => {
 			if (
 				excludeScheduled &&
-				position.type === "COMPUTED" &&
-				calls?.every((call) => typeof call.expectedTime === "undefined")
-			)
+				journey.position.type === "COMPUTED" &&
+				journey.calls?.every((call) => typeof call.expectedTime === "undefined")
+			) {
 				return false;
+			}
 
-			const { latitude, longitude } = position;
+			if (lineId !== undefined && lineId !== journey.lineId) {
+				return false;
+			}
+
+			const { latitude, longitude } = journey.position;
 			return swLat <= latitude && latitude <= neLat && swLon <= longitude && longitude <= neLon;
 		})
 		.toArray();
