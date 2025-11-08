@@ -1,6 +1,20 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "blois",
+		staticResourceHref: "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/BLOIS.zip",
+		realtimeResourceHrefs: [
+			"https://app.mecatran.com/utw/ws/gtfsfeed/realtime/blois?apiKey=7a0d1031460836674e76041e7a78011813347f04",
+			"https://app.mecatran.com/utw/ws/gtfsfeed/vehicles/blois?apiKey=7a0d1031460836674e76041e7a78011813347f04",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "AZALYS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+	},
+	{
 		id: "chateauroux",
 		staticResourceHref:
 			"https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20251001_zip",
