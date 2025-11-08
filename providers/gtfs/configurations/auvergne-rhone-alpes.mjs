@@ -15,6 +15,13 @@ const sources = [
 		getNetworkRef: () => "AUBENAS",
 	},
 	{
+		id: "aura-38",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/aura-38.zip",
+		realtimeResourceHrefs: ["https://www.itinisere.fr/ftp/GtfsRT/GtfsRT.CG38.pb"],
+		getNetworkRef: () => "AURA-38",
+		getAheadTime: () => 5 * 60,
+	},
+	{
 		id: "chambery",
 		staticResourceHref:
 			"https://mwe.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
