@@ -29,6 +29,18 @@ const sources = [
 		getDestination: (journey) => journey?.trip.headsign?.replace(/^L\d+\s+/, ""),
 	},
 	{
+		id: "dreux",
+		staticResourceHref: "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AO/DREUX.zip",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/dreux/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/dreux/vehicle-positions",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "LINEAD",
+	},
+	{
 		id: "montargis",
 		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/c1c2e220-667c-4062-ba32-ec5079c55757",
 		realtimeResourceHrefs: [
