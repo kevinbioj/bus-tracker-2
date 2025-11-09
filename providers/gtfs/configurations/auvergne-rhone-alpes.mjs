@@ -114,6 +114,19 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "vichy",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/4653683f-48a6-4f84-b313-058687fc5d04",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/vichy/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/vichy/vehicle-positions",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "MOBIVIE",
+		mapLineRef: (lineRef) => lineRef.split("-")[0],
+	},
+	{
 		id: "vienne",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/vienne-mobi/exports/medias.zip",
