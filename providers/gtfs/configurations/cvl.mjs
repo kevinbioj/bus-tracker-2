@@ -42,7 +42,7 @@ const sources = [
 	},
 	{
 		id: "montargis",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/c1c2e220-667c-4062-ba32-ec5079c55757",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/39240e80-d3f4-4702-ba93-520fae414649",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/amelys/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/amelys/vehicle-positions",
