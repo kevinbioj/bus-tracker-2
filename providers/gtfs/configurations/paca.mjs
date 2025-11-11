@@ -46,6 +46,13 @@ const sources = [
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) => {
+			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
+				vehicle.trip = undefined;
+			}
+
+			return vehicle;
+		},
 		getNetworkRef: () => "GAP",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},

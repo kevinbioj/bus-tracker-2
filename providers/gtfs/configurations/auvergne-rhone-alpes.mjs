@@ -12,6 +12,13 @@ const sources = [
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/aubenas?apiKey=6527571c533049035b6a0d41252853243b1f2a68",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/toutenbus/realtime"],
 		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) => {
+			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
+				vehicle.trip = undefined;
+			}
+
+			return vehicle;
+		},
 		getNetworkRef: () => "AUBENAS",
 	},
 	{

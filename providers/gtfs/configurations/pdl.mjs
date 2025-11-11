@@ -266,6 +266,13 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/impulsyon/realtime"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) => {
+			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
+				vehicle.trip = undefined;
+			}
+
+			return vehicle;
+		},
 		getNetworkRef: () => "IMPULSYON",
 		getVehicleRef: (vehicle) => vehicle?.label,
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,

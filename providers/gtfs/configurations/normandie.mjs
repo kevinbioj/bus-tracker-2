@@ -278,6 +278,13 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/ccyn/realtime"],
 		excludeScheduled: true,
 		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) => {
+			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
+				vehicle.trip = undefined;
+			}
+
+			return vehicle;
+		},
 		getNetworkRef: () => "VIKIBUS",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},

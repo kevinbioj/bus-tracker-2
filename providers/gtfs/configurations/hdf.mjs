@@ -65,6 +65,13 @@ const sources = [
 			importAllStops: true,
 		},
 		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) => {
+			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
+				vehicle.trip = undefined;
+			}
+
+			return vehicle;
+		},
 		getNetworkRef: () => "HOP-BUS",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
