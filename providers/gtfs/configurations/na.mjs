@@ -100,6 +100,17 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.split(":")[2],
 	},
 	{
+		id: "niort-int",
+		staticResourceHref: "https://pysae.com/api/v2/groups/tanlib/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tanlib/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "NIORT",
+		getVehicleRef: (vehicle) => vehicle?.label,
+		mapLineRef: (lineRef) => `INT-${lineRef}`,
+	},
+	{
 		id: "poitiers",
 		staticResourceHref:
 			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/2gwvlq16siyb7d9m3rqt1pb1/metadata-attachments/gtfs.zip",
