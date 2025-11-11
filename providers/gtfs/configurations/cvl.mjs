@@ -26,7 +26,8 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "CHATEAUROUX",
-		getDestination: (journey) => journey?.trip.headsign?.replace(/^L\d+\s+/, ""),
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 	},
 	{
 		id: "dreux",
@@ -39,6 +40,8 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "LINEAD",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 	},
 	{
 		id: "montargis",
@@ -51,6 +54,8 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "MONTARGIS",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 	},
 	{
 		id: "orleans",

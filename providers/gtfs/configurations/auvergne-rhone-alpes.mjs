@@ -124,6 +124,8 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "MOBIVIE",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 		mapLineRef: (lineRef) => lineRef.split("-")[0],
 	},
 	{

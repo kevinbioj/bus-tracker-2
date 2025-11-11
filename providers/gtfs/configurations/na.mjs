@@ -97,6 +97,8 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "NIORT",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 		mapLineRef: (lineRef) => lineRef.split(":")[2],
 	},
 	{
