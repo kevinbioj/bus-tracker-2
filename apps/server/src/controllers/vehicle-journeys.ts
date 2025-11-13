@@ -38,7 +38,7 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 				return false;
 			}
 
-			if (lineId !== undefined && journey.lineId !== undefined && !lineId.includes(journey.lineId)) {
+			if (Array.isArray(lineId) && (journey.lineId === undefined || !lineId.includes(journey.lineId))) {
 				return false;
 			}
 
