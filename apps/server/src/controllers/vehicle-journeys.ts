@@ -18,7 +18,10 @@ const getVehicleJourneyMarkersQuery = z.object({
 	neLon: z.coerce.number().min(-180).max(180),
 	includeMarker: z.string().optional(),
 	excludeScheduled: z.coerce.boolean().optional(),
-	lineId: z.coerce.number().optional(),
+	lineId: z
+		.union([z.coerce.number(), z.array(z.coerce.number())])
+		.optional()
+		.transform((values) => (typeof values === "number" ? [values] : values)),
 });
 
 hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
@@ -35,7 +38,7 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 				return false;
 			}
 
-			if (lineId !== undefined && lineId !== journey.lineId) {
+			if (lineId !== undefined && journey.lineId !== undefined && !lineId.includes(journey.lineId)) {
 				return false;
 			}
 
