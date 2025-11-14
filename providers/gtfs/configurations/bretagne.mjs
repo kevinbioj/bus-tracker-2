@@ -90,6 +90,19 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
 	{
+		id: "morlaix",
+		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/LINEOTIM_Complet.gtfs.zip",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/morlaix/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/morlaix/vehicle-positions",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		getNetworkRef: () => "MORLAIX",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
+	},
+	{
 		id: "quimper",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/0cf733af-e58a-4b56-ab18-abbd09de7d02",
 		realtimeResourceHrefs: [],
@@ -134,6 +147,12 @@ const sources = [
 		getNetworkRef: () => "STAR",
 	},
 	{
+		id: "saint-brieuc",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/9bccfc79-5d35-4fc3-8296-526b791fc950",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "TUB",
+	},
+	{
 		id: "saint-malo",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/3bd31fbe-93f4-432d-ade7-ee8d69897880",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/mat-saint-malo-gtfs-rt-trip-update"],
@@ -156,6 +175,19 @@ const sources = [
 				["CREACEO", "MATINEO", "MOBICEO"].some((ref) => journey.line?.ref.endsWith(ref))) ||
 			typeof journey.destination !== "undefined" ||
 			journey.calls?.some((call) => call.callStatus === "UNSCHEDULED"),
+	},
+	{
+		id: "vitre",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/282974b2-bf13-41f2-a0bf-feb0682e594e",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/vitre/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/vitre/vehicle-positions",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		getNetworkRef: () => "VITRE",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 	},
 ];
 
