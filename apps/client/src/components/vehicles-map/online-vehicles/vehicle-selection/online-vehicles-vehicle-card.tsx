@@ -77,7 +77,7 @@ export function OnlineVehiclesVehicleCard({ vehicle, onVehicleSelect }: Readonly
 								variant="inherit"
 								size="icon"
 							>
-								<Link to={`#${vehicle.activity.markerId}`}>
+								<Link to={{ pathname: "/", search: `marker-id=${vehicle.activity.markerId}` }}>
 									<LocateFixedIcon className="absolute opacity-0 group-hover:opacity-100 transition-opacity z-10" />
 									<LocateIcon className="absolute opacity-100 group-hover:opacity-0 transition-opacity" />
 								</Link>

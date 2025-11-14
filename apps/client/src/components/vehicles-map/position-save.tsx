@@ -15,10 +15,15 @@ export function PositionSave() {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: setCurrentLocation is a state setter
 	useEffect(() => {
 		const onMoveEnd = () => {
+			const { lng, lat } = map.getCenter();
+			const zoom = +map.getZoom().toFixed(0);
+
 			setCurrentLocation({
-				position: map.getCenter(),
-				zoom: map.getZoom(),
+				position: { lng, lat },
+				zoom,
 			});
+
+			window.history.replaceState(null, "", `#${lng},${lat},${zoom}`);
 		};
 
 		map.on("moveend", onMoveEnd);

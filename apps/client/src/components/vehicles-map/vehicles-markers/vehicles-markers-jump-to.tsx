@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import type { CircleMarkerFeature, CircleMarkerSource } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
@@ -12,13 +12,12 @@ type JumpToProps = {
 
 export function JumpTo({ openPopup }: JumpToProps) {
 	const map = useMap();
-	const location = useLocation();
-	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
 
-	const markerId = location.hash.slice(1);
+	const markerId = searchParams.get("marker-id");
 
 	useEffect(() => {
-		if (markerId.length === 0) return;
+		if (markerId === null) return;
 
 		let abort = false;
 
@@ -36,18 +35,16 @@ export function JumpTo({ openPopup }: JumpToProps) {
 
 				let done = false;
 				const onSourceData = (e: { source: CircleMarkerSource; sourceDataType: "content" | string }) => {
-					if (abort) {
-						map.off("sourcedata", onSourceData);
-						return;
-					}
-
 					const source = e.source;
 					const feature = source.data?.features?.find((feature) => feature.properties.id === journey.id);
 					if (typeof feature === "undefined") return;
 
 					openPopup(feature, "selected");
 					map.off("sourcedata", onSourceData);
-					navigate({ hash: "" });
+					setSearchParams((searchParams) => {
+						searchParams.delete("marker-id");
+						return searchParams;
+					});
 					done = true;
 				};
 
@@ -55,7 +52,10 @@ export function JumpTo({ openPopup }: JumpToProps) {
 				setTimeout(() => {
 					if (done) return;
 					map.off("sourcedata", onSourceData);
-					navigate({ hash: "" });
+					setSearchParams((searchParams) => {
+						searchParams.delete("marker-id");
+						return searchParams;
+					});
 				}, 5000);
 			} catch (e) {
 				console.error(e);
@@ -68,7 +68,7 @@ export function JumpTo({ openPopup }: JumpToProps) {
 		return () => {
 			abort = true;
 		};
-	}, [map, markerId, navigate, openPopup]);
+	}, [map, markerId, openPopup, setSearchParams]);
 
 	return null;
 }

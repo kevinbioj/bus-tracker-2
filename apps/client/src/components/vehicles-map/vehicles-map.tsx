@@ -1,5 +1,6 @@
 import maplibregl from "maplibre-gl";
-import { useState, type ComponentPropsWithoutRef } from "react";
+import { type ComponentPropsWithoutRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -11,7 +12,17 @@ import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehi
 type VehiclesMapProps = ComponentPropsWithoutRef<"div">;
 
 export function VehiclesMap(props: VehiclesMapProps) {
+	const location = useLocation();
+
 	const [initialLocation] = useState(() => {
+		// location in url has priority over local storage location
+		if (location.hash) {
+			const [lng, lat, zoom] = location.hash.slice(1).split(",").map(Number);
+			if (!Number.isNaN(lng) && !Number.isNaN(lat) && !Number.isNaN(zoom)) {
+				return { position: { lng, lat }, zoom };
+			}
+		}
+
 		const rawCurrentLocation = localStorage.getItem("current-location");
 		if (rawCurrentLocation === null) return DEFAULT_LOCATION;
 

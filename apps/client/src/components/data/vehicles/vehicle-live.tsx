@@ -46,7 +46,7 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 	return (
 		<Link
 			className="block border border-border rounded-md shadow-lg min-w-64 h-32 lg:h-auto lg:aspect-square mt-3"
-			to={`/#${vehicle.activity.markerId}`}
+			to={{ pathname: "/", search: `marker-id=${vehicle.activity.markerId}` }}
 		>
 			<style>{`
 				.leafletContainer {
