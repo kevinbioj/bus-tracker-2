@@ -56,7 +56,7 @@ const sources = [
 	},
 	{
 		id: "cluses",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/04baa95c-c425-420f-91c2-de922008a540",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/0602751c-36aa-445d-88e2-aa4c51c13205",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "ARVI",
 	},
