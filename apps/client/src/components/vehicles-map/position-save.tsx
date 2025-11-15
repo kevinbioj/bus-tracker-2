@@ -14,6 +14,8 @@ export function PositionSave() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: setCurrentLocation is a state setter
 	useEffect(() => {
+		let timeoutId: number | undefined;
+
 		const onMoveEnd = () => {
 			const { lng, lat } = map.getCenter();
 			const zoom = +map.getZoom().toFixed(0);
@@ -23,11 +25,18 @@ export function PositionSave() {
 				zoom,
 			});
 
-			window.history.replaceState(null, "", `#${lng},${lat},${zoom}`);
+			if (timeoutId !== undefined) {
+				clearTimeout(timeoutId);
+			}
+
+			timeoutId = setTimeout(() => window.history.replaceState(null, "", `#${lng},${lat},${zoom}`), 500);
 		};
 
 		map.on("moveend", onMoveEnd);
-		return () => void map.off("moveend", onMoveEnd);
+		return () => {
+			void map.off("moveend", onMoveEnd);
+			clearTimeout(timeoutId);
+		};
 	}, [map]);
 
 	return null;
