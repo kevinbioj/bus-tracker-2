@@ -81,6 +81,17 @@ const sources = [
 		getNetworkRef: () => "SURF",
 	},
 	{
+		id: "guingamp-paimpol",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/52057eec-3786-444c-8696-8473c4c6888e",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/axeo-guingamp-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			"https://proxy.transport.data.gouv.fr/resource/axeo-guingamp-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "GUINGAMP-PAIMPOL",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "lorient",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rdla-lorient/exports/medias.zip",
