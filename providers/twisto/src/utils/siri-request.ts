@@ -1,6 +1,8 @@
 import { XMLParser } from "fast-xml-parser";
 import ky from "ky";
 
+import { apiKey } from "../config.js";
+
 const parser = new XMLParser({
 	removeNSPrefix: true,
 });
@@ -10,6 +12,7 @@ export async function siriRequest(endpoint: string, body: string) {
 		body,
 		headers: {
 			"Content-Type": "application/xml",
+			"X-Gravitee-Api-Key": apiKey,
 		},
 	});
 
