@@ -38,7 +38,7 @@ export function VehiclesMarkersData({ source }: VehiclesMarkersDataProps) {
 					},
 					properties: {
 						...item,
-						bearing: item.position.bearing,
+						bearing: item.position.bearing ?? null,
 						color: item.color ?? "#FFFFFF",
 						fillColor: item.fillColor ?? "#000000",
 					},
