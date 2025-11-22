@@ -14,6 +14,24 @@ function nthIndexOf(input, pattern, n) {
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "30direct-bordeaux",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=bordeaux-navettes-aeroport",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=bordeaux-navettes-aeroport"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		mapVehiclePosition: (vehicle) =>
+			Temporal.Now.instant()
+				.since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000))
+				.total("minutes") < 60
+				? vehicle
+				: undefined,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+		getNetworkRef: () => "30D-BORDEAUX",
+		getVehicleRef: () => undefined,
+	},
+	{
 		id: "agen",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/c1415ff3-7457-4b51-aead-aacbf03a474e",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-urbain"],
