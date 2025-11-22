@@ -3,6 +3,7 @@
 }
 
 .maplibregl-popup-tip {
+	/* biome-ignore lint/complexity/noImportantStyles: required to override it */
 	border-top-color: #444444 !important;
 }
 
