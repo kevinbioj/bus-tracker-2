@@ -11,6 +11,8 @@ function nthIndexOf(input, pattern, n) {
 	return i;
 }
 
+const d30bdxZenbusVehiclesMap = new Map([["zenbus:Vehicle:4810821377982464:LOC", "256002"]]);
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -30,7 +32,7 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		getNetworkRef: () => "30D-BORDEAUX",
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
-		getVehicleRef: () => undefined,
+		getVehicleRef: (vehicle) => (vehicle?.id ? d30bdxZenbusVehiclesMap.get(vehicle.id) : undefined),
 	},
 	{
 		id: "agen",
