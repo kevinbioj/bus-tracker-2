@@ -11,7 +11,11 @@ function nthIndexOf(input, pattern, n) {
 	return i;
 }
 
-const d30bdxZenbusVehiclesMap = new Map([["zenbus:Vehicle:4810821377982464:LOC", "256002"]]);
+const d30bdxZenbusVehiclesMap = new Map([
+	["zenbus:Vehicle:4805196849872896:LOC", "196030"],
+	["zenbus:Vehicle:4874152314929152:LOC", "256001"],
+	["zenbus:Vehicle:4810821377982464:LOC", "256002"],
+]);
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
