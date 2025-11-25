@@ -17,7 +17,7 @@ export function SheetOverlay({
 	className,
 	withBackdrop = true,
 	...props
-}: React.ComponentProps<typeof SheetPrimitive.Overlay> & { withBackdrop: boolean }) {
+}: React.ComponentProps<typeof SheetPrimitive.Overlay> & { withBackdrop?: boolean }) {
 	return (
 		<SheetPrimitive.Overlay
 			className={cn(
@@ -52,15 +52,20 @@ export const sheetVariants = cva(
 
 export function SheetContent({
 	className,
+	container,
 	children,
 	side = "right",
 	withBackdrop = true,
 	withCloseButton = true,
 	...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> &
-	VariantProps<typeof sheetVariants> & { withBackdrop?: boolean; withCloseButton?: boolean }) {
+	VariantProps<typeof sheetVariants> & {
+		container?: HTMLDivElement | null;
+		withBackdrop?: boolean;
+		withCloseButton?: boolean;
+	}) {
 	return (
-		<SheetPortal>
+		<SheetPortal container={container}>
 			<SheetOverlay withBackdrop={withBackdrop} />
 			<SheetPrimitive.Content className={cn(sheetVariants({ side }), className)} data-slot="sheet-content" {...props}>
 				{children}

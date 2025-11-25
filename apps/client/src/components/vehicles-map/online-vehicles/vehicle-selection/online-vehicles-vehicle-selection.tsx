@@ -6,8 +6,10 @@ import type { Line, Network } from "~/api/networks";
 import { OnlineVehiclesVehicleCard } from "~/components/vehicles-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-card";
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
+import { Skeleton } from "~/components/ui/skeleton";
 
 type OnlineVehiclesVehicleSelection = {
+	container: HTMLDivElement | null;
 	network?: Network;
 	line?: Line;
 	onClose: () => void;
@@ -15,21 +17,22 @@ type OnlineVehiclesVehicleSelection = {
 };
 
 export function OnlineVehiclesVehicleSelection({
+	container,
 	network,
 	line,
 	onClose,
 	onVehicleSelect,
 }: OnlineVehiclesVehicleSelection) {
 	const { data: vehicles } = useQuery(GetLineOnlineVehiclesQuery(line?.id));
-	if (typeof vehicles === "undefined") return null;
 
-	const lineVehicles = vehicles.filter((vehicle) => vehicle.activity.lineId === line?.id);
+	const lineVehicles = vehicles?.filter((vehicle) => vehicle.activity.lineId === line?.id);
 
 	return (
 		<Sheet open={typeof line !== "undefined"} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent
 				aria-describedby={undefined}
-				className="max-w-[90vw] p-3 w-full z-[7000] pointer-events-auto"
+				className="max-w-[90vw] p-3 w-full"
+				container={container}
 				withBackdrop={false}
 				withCloseButton={false}
 			>
@@ -49,17 +52,22 @@ export function OnlineVehiclesVehicleSelection({
 						</SheetTitle>
 					</div>
 				</SheetHeader>
-				{lineVehicles.length > 0 ? (
-					<div className="h-[96%] overflow-y-auto space-y-1 py-1.5">
-						{lineVehicles
-							.toSorted((a, b) => +a.number - +b.number)
-							.map((vehicle) => (
-								<OnlineVehiclesVehicleCard key={vehicle.id} vehicle={vehicle} onVehicleSelect={onVehicleSelect} />
-							))}
-					</div>
-				) : (
-					<p className="mt-3 text-center text-muted-foreground">Aucun véhicule ne circule sur cette ligne.</p>
-				)}
+				<div className="flex flex-col gap-1 overflow-y-auto py-1.5">
+					{lineVehicles ? (
+						lineVehicles.length > 0 ? (
+							lineVehicles
+								.toSorted((a, b) => +a.number - +b.number)
+								.map((vehicle) => (
+									<OnlineVehiclesVehicleCard key={vehicle.id} vehicle={vehicle} onVehicleSelect={onVehicleSelect} />
+								))
+						) : (
+							<p className="mt-3 text-center text-muted-foreground">Aucun véhicule ne circule sur cette ligne.</p>
+						)
+					) : (
+						// biome-ignore lint/suspicious/noArrayIndexKey: this is safe here
+						Array.from({ length: 10 }).map((_, index) => <Skeleton className="h-[101px] w-full" key={index} />)
+					)}
+				</div>
 			</SheetContent>
 		</Sheet>
 	);

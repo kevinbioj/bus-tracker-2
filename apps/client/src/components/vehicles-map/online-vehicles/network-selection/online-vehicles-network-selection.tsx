@@ -10,12 +10,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 
 type OnlineVehiclesNetworkSelection = {
+	container: HTMLDivElement | null;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onNetworkSelect: (network: Network) => void;
 };
 
 export function OnlineVehiclesNetworkSelection({
+	container,
 	open,
 	onOpenChange,
 	onNetworkSelect,
@@ -43,7 +45,11 @@ export function OnlineVehiclesNetworkSelection({
 					<BusFrontIcon className="inline mb-0.5" />
 				</a>
 			</SheetTrigger>
-			<SheetContent aria-describedby={undefined} className="max-w-[90vw] w-full p-3 overflow-y-auto z-[5000]">
+			<SheetContent
+				aria-describedby={undefined}
+				className="max-w-[90vw] w-full p-3 overflow-y-auto"
+				container={container}
+			>
 				<SheetHeader className="mb-1">
 					<SheetTitle className="text-start">Véhicules en ligne</SheetTitle>
 				</SheetHeader>

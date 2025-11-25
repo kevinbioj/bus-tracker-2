@@ -8,16 +8,23 @@ import { GetNetworkQuery, type Network } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
+import { Skeleton } from "~/components/ui/skeleton";
 import { cn } from "~/utils/utils";
 
 type OnlineVehiclesLineSelection = {
+	container: HTMLDivElement | null;
 	network?: Network;
 	onClose: () => void;
 	onLineChange: (line?: Line) => void;
 };
 
-export function OnlineVehiclesLineSelection({ network, onClose, onLineChange }: OnlineVehiclesLineSelection) {
-	const { data: networkWithLines } = useQuery(GetNetworkQuery(network?.id, true, true));
+export function OnlineVehiclesLineSelection({
+	container,
+	network,
+	onClose,
+	onLineChange,
+}: OnlineVehiclesLineSelection) {
+	const { data: networkWithLines, isLoading } = useQuery(GetNetworkQuery(network?.id, true, true));
 
 	const [linesWithVehicles, linesWithoutVehicles] = useMemo(
 		() =>
@@ -40,7 +47,7 @@ export function OnlineVehiclesLineSelection({ network, onClose, onLineChange }: 
 	const renderLine = (line: Line) => (
 		<Button
 			className={cn(
-				"border border-border flex justify-between items-center h-16 p-2 rounded-lg transition text-primary-foreground hover:brightness-90",
+				"border border-border flex justify-between items-center h-16 min-h-16 p-2 rounded-lg transition text-primary-foreground hover:brightness-90",
 				!line.onlineVehicleCount && "brightness-90 cursor-not-allowed",
 			)}
 			key={line.id}
@@ -71,11 +78,12 @@ export function OnlineVehiclesLineSelection({ network, onClose, onLineChange }: 
 		<Sheet open={typeof network !== "undefined"} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent
 				aria-describedby={undefined}
-				className="max-w-[90vw] w-full p-3 z-[6000]"
+				className="max-w-[90vw] w-full p-3"
+				container={container}
 				withBackdrop={false}
 				withCloseButton={false}
 			>
-				<SheetHeader className={cn("mb-1.5", typeof network === "undefined" && "hidden")}>
+				<SheetHeader className="mb-1.5">
 					<div className="flex items-center gap-2">
 						<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
 							<ArrowLeft className="size-full" />
@@ -84,15 +92,24 @@ export function OnlineVehiclesLineSelection({ network, onClose, onLineChange }: 
 					</div>
 				</SheetHeader>
 				<div className="flex flex-col gap-1 h-[96%] overflow-y-auto py-1.5">
-					{linesWithVehicles.flatMap(renderLine)}
-					{linesWithVehicles.length > 0 && linesWithoutVehicles.length > 0 && <Separator />}
-					{linesWithoutVehicles.length > 0 && (
-						<div className="bg-muted text-muted-foreground text-xs text-center p-2 rounded-md">
-							<Info className="inline size-4 align-text-bottom mr-1" /> Aucun véhicule identifiable ne circule sur{" "}
-							{linesWithVehicles.length > 0 ? "ces lignes" : "ce réseau"}.
-						</div>
+					{isLoading ? (
+						Array.from({ length: 10 }).map((_, index) => (
+							// biome-ignore lint/suspicious/noArrayIndexKey: safe here
+							<Skeleton className="h-16 w-full" key={index} />
+						))
+					) : (
+						<>
+							{linesWithVehicles.flatMap(renderLine)}
+							{linesWithVehicles.length > 0 && linesWithoutVehicles.length > 0 && <Separator />}
+							{linesWithoutVehicles.length > 0 && (
+								<div className="bg-muted text-muted-foreground text-xs text-center p-2 rounded-md">
+									<Info className="inline size-4 align-text-bottom mr-1" /> Aucun véhicule identifiable ne circule sur{" "}
+									{linesWithVehicles.length > 0 ? "ces lignes" : "ce réseau"}.
+								</div>
+							)}
+							{linesWithoutVehicles.flatMap(renderLine)}
+						</>
 					)}
-					{linesWithoutVehicles.flatMap(renderLine)}
 				</div>
 			</SheetContent>
 		</Sheet>

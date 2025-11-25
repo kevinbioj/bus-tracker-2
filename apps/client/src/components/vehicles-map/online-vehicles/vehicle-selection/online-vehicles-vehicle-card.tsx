@@ -47,13 +47,13 @@ export function OnlineVehiclesVehicleCard({ vehicle, onVehicleSelect }: Readonly
 							<BusIcon className="my-auto size-6" />
 						))}
 					<div
-						className="border-l-[1px] border-black dark:border-white mx-2 my-1"
+						className="border-l border-black dark:border-white mx-2 my-1"
 						style={{ borderColor: line?.textColor ?? undefined }}
 					/>
 					<h3 className="flex font-bold gap-1.5 justify-center ml-1 tabular-nums text-2xl">{vehicle.number}</h3>
 				</div>
 				<div
-					className="border-t-[1px] border-black dark:border-white mx-2"
+					className="border-t border-black dark:border-white mx-2"
 					style={{ borderColor: line?.textColor ?? undefined }}
 				/>
 				<div className="flex flex-col mt-2.5 w-full">
