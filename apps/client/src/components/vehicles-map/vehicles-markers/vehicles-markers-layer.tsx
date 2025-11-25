@@ -53,7 +53,7 @@ const arrowsLayerObject: maplibregl.AddLayerObject = {
 		"icon-rotate": ["get", "bearing"],
 		"icon-offset": [0, -20],
 	},
-	filter: ["has", "bearing"],
+	filter: ["!=", ["get", "bearing"], null],
 	paint: {
 		"icon-color": ["get", "fillColor"],
 		"icon-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 1],
