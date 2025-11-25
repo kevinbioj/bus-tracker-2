@@ -52,7 +52,7 @@ export function OnlineVehiclesVehicleSelection({
 						</SheetTitle>
 					</div>
 				</SheetHeader>
-				<div className="flex flex-col gap-1 overflow-y-auto py-1.5">
+				<div className="flex flex-col gap-1 max-h-[96%] overflow-y-auto py-1.5">
 					{lineVehicles ? (
 						lineVehicles.length > 0 ? (
 							lineVehicles
