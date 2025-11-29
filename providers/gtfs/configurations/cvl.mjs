@@ -15,6 +15,14 @@ const sources = [
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 	{
+		id: "bourges",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/bourges-agglobus.zip",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/agglobus-bourges-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		getNetworkRef: () => "BOURGES",
+	},
+	{
 		id: "chateauroux",
 		staticResourceHref:
 			"https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20251001_zip",
