@@ -6,9 +6,13 @@ const sources = [
 		id: "tcar",
 		staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
 		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?id_format=TCAR",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions?id_format=TCAR",
+			"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
+			"https://api.mrn.cityway.fr/dataflow/vehicle-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
 		],
+		// realtimeResourceHrefs: [
+		// 	"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?id_format=TCAR",
+		// 	"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions?id_format=TCAR",
+		// ],
 		mode: "NO-TU",
 		gtfsOptions: {
 			shapesStrategy: "IGNORE",
@@ -21,7 +25,7 @@ const sources = [
 			if (typeof vehicle !== "undefined" && +vehicle.id >= 670 && +vehicle.id <= 685) return "TNI";
 			return "TCAR";
 		},
-		getVehicleRef: (vehicle) => vehicle?.id,
+		getVehicleRef: (vehicle) => vehicle?.id.split(":")[3],
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
 		isValidJourney: (vehicleJourney) => {
 			// Étant donné que les données sont parfois partielles, on prend le premier arrêt avec du temps réel
