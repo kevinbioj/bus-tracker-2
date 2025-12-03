@@ -50,7 +50,7 @@
 		"lucide-react": "^0.554.0",
 		"maplibre-gl": "^5.13.0",
 		"notistack": "^3.0.2",
-		"posthog-js": "^1.297.2",
+		"posthog-js": "^1.299.0",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",
 		"react-hook-form": "^7.66.1",
