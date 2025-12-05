@@ -305,7 +305,8 @@ const sources = [
 					getNetworkRef: (journey) => {
 						if (
 							journey?.trip.route.agency.id === "alto:Operator:40708" ||
-							journey?.trip.route.agency.id === "boubet:Operator:1831"
+							journey?.trip.route.agency.id === "boubet:Operator:1831" ||
+							journey?.trip.route.agency.id === "boubet:Operator:2"
 						) {
 							return "ALTOBUS";
 						}

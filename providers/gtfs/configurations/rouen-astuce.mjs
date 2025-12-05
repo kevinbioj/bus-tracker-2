@@ -4,11 +4,16 @@ import { Temporal } from "temporal-polyfill";
 const sources = [
 	{
 		id: "tcar",
-		staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
+		staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=TCAR&operatorCode=ASTUCE",
 		realtimeResourceHrefs: [
-			"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
-			"https://api.mrn.cityway.fr/dataflow/vehicle-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
+			"https://reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
+			"https://reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
 		],
+		// staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
+		// realtimeResourceHrefs: [
+		// 	"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
+		// 	"https://api.mrn.cityway.fr/dataflow/vehicle-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
+		// ],
 		// realtimeResourceHrefs: [
 		// 	"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?id_format=TCAR",
 		// 	"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions?id_format=TCAR",
