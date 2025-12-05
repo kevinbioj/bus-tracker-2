@@ -46,7 +46,7 @@ export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProp
 							className="absolute py-1 top-0 left-0 w-full"
 							data-index={virtualItem.index}
 							key={vehicle.id}
-							ref={(node) => virtualizer.measureElement(node)}
+							ref={virtualizer.measureElement}
 							style={{
 								transform: `translateY(${virtualItem.start}px)`,
 							}}
