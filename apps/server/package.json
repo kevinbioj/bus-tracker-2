@@ -13,24 +13,24 @@
 	},
 	"devDependencies": {
 		"@types/node": "^24.10.1",
-		"drizzle-kit": "^0.31.7",
-		"tsx": "^4.20.6",
+		"drizzle-kit": "^0.31.8",
+		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@hono/node-server": "^1.19.6",
 		"@hono/oauth-providers": "^0.8.5",
-		"@sentry/node": "^10.26.0",
+		"@sentry/node": "^10.29.0",
 		"dotenv": "^17.2.3",
-		"drizzle-orm": "^0.44.7",
-		"hono": "^4.10.6",
+		"drizzle-orm": "^0.45.0",
+		"hono": "^4.10.7",
 		"hono-sessions": "^0.8.0",
 		"p-limit": "^7.2.0",
 		"postgres": "^3.4.7",
 		"redis": "^5.10.0",
 		"temporal-polyfill": "^0.3.0",
 		"ts-pattern": "^5.9.0",
-		"zod": "^4.1.12"
+		"zod": "^4.1.13"
 	}
 }
