@@ -70,6 +70,16 @@ const sources = [
 		getNetworkRef: () => "GRANDOLE",
 	},
 	{
+		id: "fluo68",
+		staticResourceHref: "https://pysae.com/api/v2/groups/fluo68-transdev/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/fluo68-transdev/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "FLUO-68",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "luneville",
 		staticResourceHref: "https://pysae.com/api/v2/groups/luneo/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/luneo/gtfs-rt"],
