@@ -3,11 +3,11 @@ import DraftLog from "draftlog";
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
 
-import { convertPosition } from "./convert-position.js";
-import { getVehicles } from "./get-vehicles.js";
-import type { TclGtfsRt } from "./types.js";
-
 import lines from "../data/lines.json" with { type: "json" };
+
+import { convertPosition } from "./convert-position.js";
+import { fetchOnlineGtfsrtVehicleIds } from "./fetch-online-gtfsrt-vehicle-ids.js";
+import { getVehicles } from "./get-vehicles.js";
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 
@@ -22,22 +22,15 @@ await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
 
+let onlineGtfsRtVehicles: number[] = await fetchOnlineGtfsrtVehicleIds();
+setInterval(async () => {
+	onlineGtfsRtVehicles = await fetchOnlineGtfsrtVehicleIds();
+}, 60_000);
+
 let currentIndex = 0;
 
 while (true) {
 	if (currentIndex >= lines.length) currentIndex = 0;
-
-	const onlineGtfsRtVehicles: number[] = await fetch("https://gtfs.bus-tracker.fr/gtfs-rt/tcl?format=json")
-		.then((response) => response.json() as Promise<TclGtfsRt>)
-		.then((feed) =>
-			feed.entity
-				.filter(
-					(entity) =>
-						typeof entity.vehicle !== "undefined" && Math.floor(Date.now() / 1000) - entity.vehicle.timestamp < 600,
-				)
-				.map((entity) => +entity.vehicle!.vehicle.id),
-		)
-		.catch(() => []);
 
 	const linesFilter = lines[currentIndex]!;
 	const id = `[${linesFilter.map(({ line, direction }) => `(${line}:${direction})`).join(",")}]`;
