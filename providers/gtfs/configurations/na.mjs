@@ -87,7 +87,7 @@ const sources = [
 		id: "la-rochelle",
 		staticResourceHref:
 			"https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/ca_la_rochelle-aggregated-gtfs.zip",
-		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/yelo"],
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/yelo/"],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",

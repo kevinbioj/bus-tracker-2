@@ -1,7 +1,7 @@
 import type { TclGtfsRt } from "./types.js";
 
 export async function fetchOnlineGtfsrtVehicleIds() {
-	const response = await fetch("https://gtfs.bus-tracker.fr/gtfs-rt/tcl?format=json");
+	const response = await fetch("https://gtfs.bus-tracker.fr/gtfs-rt/tcl/?format=json");
 	if (!response.ok) {
 		return [];
 	}
