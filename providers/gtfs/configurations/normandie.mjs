@@ -49,6 +49,8 @@ const sources = [
 		getAheadTime: () => 60,
 		excludeScheduled: (trip) => !["12", "13", "21", "Funi"].includes(trip.route.id),
 		getNetworkRef: () => "LIA",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 	},
 	//- Cap Cotentin
 	{
