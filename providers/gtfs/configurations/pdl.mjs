@@ -248,6 +248,10 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.slice(lineRef.lastIndexOf(":") + 1),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.lastIndexOf(":") + 1),
 		mapTripRef: (tripRef) => tripRef.slice(tripRef.lastIndexOf(":") + 1),
+		mapTripUpdate: (tripUpdate) => {
+			tripUpdate.trip.tripId = `NAOLIBORG:VehicleJourney:${tripUpdate.trip.tripId.split(":").slice(2).join(":").trim()}`;
+			return tripUpdate;
+		},
 	},
 	{
 		id: "nantes-zenbus",
