@@ -241,7 +241,6 @@ const sources = [
 			`https://api.okina.fr/gateway/semgtfsrt/realtime/trip-updates/NAOLIBORG?api-key=${process.env.GRAVITEE_NAOLIBORG_API_KEY}`,
 			// "https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
 		],
-		gtfsOptions: { ignoreBlocks: true },
 		excludeScheduled: (trip) => nantesExcludedLines.includes(trip.route.name),
 		getNetworkRef: () => "NAOLIB",
 		getVehicleRef: () => undefined,
@@ -251,6 +250,7 @@ const sources = [
 		mapTripRef: (tripRef) => tripRef.slice(tripRef.lastIndexOf(":") + 1),
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.trip.tripId = `NAOLIBORG:VehicleJourney:${tripUpdate.trip.tripId.split(":").slice(2).join(":").trim()}`;
+			tripUpdate.vehicle = undefined;
 			return tripUpdate;
 		},
 	},
