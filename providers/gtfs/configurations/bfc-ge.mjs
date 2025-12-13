@@ -119,8 +119,7 @@ const sources = [
 	},
 	{
 		id: "nancy",
-		staticResourceHref:
-			"https://transport.data.gouv.fr/resources/83710/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/stan.zip",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/fluo-stan-nancy-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
