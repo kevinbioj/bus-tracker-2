@@ -175,8 +175,8 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0(@vite-pwa/assets-generator@1.0.2)(rolldown-vite@7.2.11(@types/node@25.0.2)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0))(workbox-build@7.3.0(@types/babel__core@7.20.5))(workbox-window@7.3.0)
       vite-tsconfig-paths:
-        specifier: ^6.0.1
-        version: 6.0.1(rolldown-vite@7.2.11(@types/node@25.0.2)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0))(typescript@5.9.3)
+        specifier: ^5.1.4
+        version: 5.1.4(rolldown-vite@7.2.11(@types/node@25.0.2)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0))(typescript@5.9.3)
 
   apps/server:
     dependencies:
@@ -5038,8 +5038,8 @@ packages:
       '@vite-pwa/assets-generator':
         optional: true
 
-  vite-tsconfig-paths@6.0.1:
-    resolution: {integrity: sha512-OQuYkfCQhc2T+n//0N7/oogTosgiSyZQ7dydrpUlH5SbnFTtplpekdY4GMi6jDwEpiwWlqeUJMyPfC2ePM1+2A==}
+  vite-tsconfig-paths@5.1.4:
+    resolution: {integrity: sha512-cYj0LRuLV2c2sMqhqhGpaO3LretdtMn/BVX4cPLanIZuwwrkVl+lK84E/miEXkCHWXuq65rhNN4rXsBcOB3S4w==}
     peerDependencies:
       vite: '*'
     peerDependenciesMeta:
@@ -9755,7 +9755,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite-tsconfig-paths@6.0.1(rolldown-vite@7.2.11(@types/node@25.0.2)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0))(typescript@5.9.3):
+  vite-tsconfig-paths@5.1.4(rolldown-vite@7.2.11(@types/node@25.0.2)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.44.1)(tsx@4.21.0))(typescript@5.9.3):
     dependencies:
       debug: 4.4.3
       globrex: 0.1.2
