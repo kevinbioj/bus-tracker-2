@@ -8,7 +8,7 @@ export function useMapSource<T extends maplibregl.Source>(id: string, specificat
 	const [source, setSource] = useState<T | null>(null);
 
 	const removeSource = useCallback(() => {
-		if (map.style === undefined) return;
+		if (!Array.isArray(map.style?._layers)) return;
 
 		for (const layerId in map.style._layers) {
 			const layer = map.style._layers[layerId];
