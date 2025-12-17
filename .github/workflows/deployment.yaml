@@ -94,7 +94,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy stack to the server
-        uses: kevinbioj/docker-stack-deploy@v1.3.0-custom
+        uses: kitconcept/docker-stack-deploy@1cd6c45b8147a0084cb1468dc5f28481eb4a0087
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
