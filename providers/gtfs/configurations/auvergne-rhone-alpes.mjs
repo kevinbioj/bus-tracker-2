@@ -22,11 +22,20 @@ const sources = [
 		getNetworkRef: () => "AUBENAS",
 	},
 	{
+		id: "aura-express-x73",
+		staticResourceHref: "https://pysae.com/api/v2/groups/x73/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/x73/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "AURA-EXPRESS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "aura-38",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/aura-38.zip",
 		realtimeResourceHrefs: ["https://www.itinisere.fr/ftp/GtfsRT/GtfsRT.CG38.pb"],
 		getNetworkRef: () => "AURA-38",
 		getAheadTime: () => 5 * 60,
+		mapLineRef: (lineRef) => lineRef.split("-")[0],
 	},
 	{
 		id: "chambery",
