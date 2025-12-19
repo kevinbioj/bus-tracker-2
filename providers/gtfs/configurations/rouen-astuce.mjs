@@ -9,24 +9,25 @@ const sources = [
 		// 	"https://reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
 		// 	"https://reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
 		// ],
-		staticResourceHref: "https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=TCAR&dataFormat=GTFS",
+		staticResourceHref:
+			"https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=ASTUCE&dataFormat=GTFS&dataProfil=ASTUCE",
 		// realtimeResourceHrefs: [
 		// 	"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
 		// 	"https://api.mrn.cityway.fr/dataflow/vehicle-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
 		// ],
 		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?id_format=TCAR",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions?id_format=TCAR",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
 		],
 		mode: "NO-TU",
 		gtfsOptions: {
+			filterTrips: (trip) => trip.route.id.startsWith("TCAR"),
 			shapesStrategy: "IGNORE",
 		},
-		excludeScheduled: (trip) => !["002-001-06", "06", "002-001-89", "89"].includes(trip.route.id),
+		excludeScheduled: (trip) => !["TCAR:06", "TCAR:89"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
-			if (typeof journey !== "undefined" && ["002-001-06", "06", "002-001-89", "89"].includes(journey.trip.route.id))
-				return "TNI";
+			if (typeof journey !== "undefined" && ["TCAR:06", "TCAR:89"].includes(journey.trip.route.id)) return "TNI";
 			if (typeof vehicle !== "undefined" && +vehicle.id >= 670 && +vehicle.id <= 685) return "TNI";
 			return "TCAR";
 		},
@@ -56,11 +57,13 @@ const sources = [
 
 			return true;
 		},
-		mapLineRef: (lineRef) => (lineRef.indexOf("-") >= 0 ? lineRef.slice(lineRef.lastIndexOf("-") + 1) : lineRef),
-		// mapVehiclePosition: (vehicle) => {
-		// 	vehicle.timestamp += 3600;
-		// 	return vehicle;
-		// }
+		mapLineRef: (lineRef) => lineRef.replace("TCAR:", ""),
+		// mapLineRef: (lineRef) => (lineRef.indexOf("-") >= 0 ? lineRef.slice(lineRef.lastIndexOf("-") + 1) : lineRef),
+		mapVehiclePosition: (vehicle) => {
+			vehicle.vehicle.id = vehicle.vehicle.id.replace("TCAR:", "");
+			// vehicle.timestamp += 3600;
+			return vehicle;
+		},
 	},
 	{
 		id: "tae",
