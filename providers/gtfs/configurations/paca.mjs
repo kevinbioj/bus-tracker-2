@@ -40,6 +40,16 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 	},
 	{
+		id: "draguignan",
+		staticResourceHref: "https://pysae.com/api/v2/groups/draguignan/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/draguignan/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "DRAGUIGNAN",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "gap",
 		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/cagtd/current/revision/gtfs",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/cagtd/realtime"],
