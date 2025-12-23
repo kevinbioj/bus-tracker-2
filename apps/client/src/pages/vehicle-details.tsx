@@ -38,7 +38,7 @@ export function VehicleDetails() {
 	return (
 		<>
 			<title>{`${vehicleDesignation} n°${vehicle.number} – ${network.name} – Données – Bus Tracker`}</title>
-			<main className="max-w-(--breakpoint-2xl) p-3 w-full mx-auto">
+			<main className="max-w-(--breakpoint-xl) p-3 w-full mx-auto">
 				<NetworkHeader network={network} />
 				<Breadcrumb className="mt-3">
 					<BreadcrumbList>
