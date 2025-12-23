@@ -1,0 +1,1 @@
+ALTER TABLE "network" RENAME COLUMN "embed_map_bounds" TO "embed_map_center";

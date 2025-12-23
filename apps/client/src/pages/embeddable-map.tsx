@@ -38,8 +38,9 @@ export default function EmbeddableMapPage() {
 			<MapComponent
 				containerProps={{ className: "h-dvh relative" }}
 				mapOptions={{
-					maxBounds: data.embedMapBounds ?? undefined,
+					center: data.embedMapCenter ? [data.embedMapCenter[0], data.embedMapCenter[1]] : undefined,
 					style: "https://tiles.openfreemap.org/styles/liberty",
+					zoom: data.embedMapCenter ? data.embedMapCenter[2] : undefined,
 				}}
 				ref={onMap}
 			>

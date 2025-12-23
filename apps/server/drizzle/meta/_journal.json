@@ -134,6 +134,13 @@
       "when": 1766501456362,
       "tag": "0018_hot_rhino",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1766511106663,
+      "tag": "0019_colorful_shen",
+      "breakpoints": true
     }
   ]
 }

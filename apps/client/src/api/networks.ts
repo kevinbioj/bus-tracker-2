@@ -1,5 +1,4 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { LngLatBoundsLike } from "maplibre-gl";
 
 import { client } from "~/api/client";
 
@@ -14,7 +13,7 @@ export type Network = {
 	textColor: string | null;
 	hasVehiclesFeature: boolean;
 	regionId: number;
-	embedMapBounds: LngLatBoundsLike | null;
+	embedMapCenter: [number, number, number];
 };
 
 export type Operator = {
