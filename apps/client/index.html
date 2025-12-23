@@ -56,11 +56,17 @@
       content="Localisez vos trains, bus, tramways, métros et bateaux dans toute la France grâce à Bus Tracker"
     />
     <title>Bus Tracker</title>
+    <style>
+      .embed-hidden {
+        display: none;
+      }
+    </style>
   </head>
   <body class="bg-background">
     <div id="root">
       <header
         class="bg-branding text-branding-foreground flex gap-4 h-[60px] p-3 sticky top-0 z-[450]"
+        id="header"
       >
         <img class="h-full" src="/logo.svg" alt="" />
         <span
@@ -70,6 +76,11 @@
         </span>
       </header>
     </div>
+    <script>
+      if (location.pathname.startsWith('/embed')) {
+        document.getElementById('header').classList.add("embed-hidden");
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
