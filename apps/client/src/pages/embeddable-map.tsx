@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
@@ -10,11 +10,12 @@ import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehi
 
 export default function EmbeddableMapPage() {
 	const { networkId } = useParams();
-	const [searchParams] = useSearchParams();
 
 	const { data } = useSuspenseQuery(GetNetworkQuery(+networkId!));
 
 	const onMap = (map: maplibregl.Map) => {
+		const searchParams = new URLSearchParams(location.search);
+
 		const navigationControl = new maplibregl.NavigationControl();
 		map.addControl(navigationControl, "top-left");
 
