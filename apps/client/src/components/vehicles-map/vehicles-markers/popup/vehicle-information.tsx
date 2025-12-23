@@ -63,10 +63,11 @@ const occupancyIconDetails = {
 } as const;
 
 type VehicleInformationProps = {
+	disableLinks?: boolean;
 	journey: DisposeableVehicleJourney;
 };
 
-export function VehicleInformation({ journey }: Readonly<VehicleInformationProps>) {
+export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleInformationProps>) {
 	const [displayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
 
 	const { data: network } = useQuery(GetNetworkQuery(journey.networkId, !journey.girouette));
@@ -102,13 +103,14 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 
 	const vehicleNumber = journey.vehicle ? `n°${journey.vehicle.number}` : undefined;
 
-	const vehicleLink = journey.vehicle?.id ? (
-		<Button asChild className="gap-0.5 py-0.5" size="xs" variant="ghost">
-			<Link to={`/data/vehicles/${journey.vehicle.id}`}>{vehicleNumber}</Link>
-		</Button>
-	) : (
-		<>{vehicleNumber} </>
-	);
+	const vehicleLink =
+		journey.vehicle?.id && !disableLinks ? (
+			<Button asChild className="gap-0.5 py-0.5" size="xs" variant="ghost">
+				<Link to={`/data/vehicles/${journey.vehicle.id}`}>{vehicleNumber}</Link>
+			</Button>
+		) : (
+			<>{vehicleNumber} </>
+		);
 
 	const positionInformation = useMemo(() => {
 		if (journey.position.type === "GPS") return positionIconDetails.GPS;
@@ -126,7 +128,7 @@ export function VehicleInformation({ journey }: Readonly<VehicleInformationProps
 		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] px-2 py-1">
 			{network?.hasVehiclesFeature ? (
 				<Button asChild className="" size="xs" variant="ghost">
-					<Link to={`/data/networks/${network?.id}`}>{networkIdentifier}</Link>
+					{disableLinks ? networkIdentifier : <Link to={`/data/networks/${network?.id}`}>{networkIdentifier}</Link>}
 				</Button>
 			) : (
 				networkIdentifier

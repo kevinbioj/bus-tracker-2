@@ -5,7 +5,11 @@ import { useMap } from "~/adapters/maplibre-gl/map";
 import { OnlineVehiclesSheetManagement } from "~/components/vehicles-map/online-vehicles/online-vehicles-sheet-management";
 import { BusIcon } from "~/icons/means-of-transport";
 
-export function OnlineControl() {
+type OnlineControlProps = {
+	fixedNetworkId?: number;
+};
+
+export function OnlineControl({ fixedNetworkId }: OnlineControlProps) {
 	const map = useMap();
 	const activatorRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
@@ -28,7 +32,7 @@ export function OnlineControl() {
 					<BusIcon className="m-auto p-1" />
 				</button>
 			</div>
-			<OnlineVehiclesSheetManagement open={open} setOpen={setOpen} />
+			<OnlineVehiclesSheetManagement fixedNetworkId={fixedNetworkId} open={open} setOpen={setOpen} />
 		</>
 	);
 }

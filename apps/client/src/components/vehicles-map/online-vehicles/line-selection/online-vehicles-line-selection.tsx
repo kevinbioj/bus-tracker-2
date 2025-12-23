@@ -16,6 +16,7 @@ type OnlineVehiclesLineSelection = {
 	network?: Network;
 	onClose: () => void;
 	onLineChange: (line?: Line) => void;
+	withBackdrop?: boolean;
 };
 
 export function OnlineVehiclesLineSelection({
@@ -23,6 +24,7 @@ export function OnlineVehiclesLineSelection({
 	network,
 	onClose,
 	onLineChange,
+	withBackdrop = false,
 }: OnlineVehiclesLineSelection) {
 	const { data: networkWithLines, isLoading } = useQuery(GetNetworkQuery(network?.id, true, true));
 
@@ -80,7 +82,7 @@ export function OnlineVehiclesLineSelection({
 				aria-describedby={undefined}
 				className="max-w-[90vw] w-full p-3"
 				container={container}
-				withBackdrop={false}
+				withBackdrop={withBackdrop}
 				withCloseButton={false}
 			>
 				<SheetHeader className="mb-1.5">

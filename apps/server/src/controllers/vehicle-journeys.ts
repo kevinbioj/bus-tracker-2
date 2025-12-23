@@ -18,6 +18,10 @@ const getVehicleJourneyMarkersQuery = z.object({
 	neLon: z.coerce.number().min(-180).max(180),
 	includeMarker: z.string().optional(),
 	excludeScheduled: z.coerce.boolean().optional(),
+	networkId: z
+		.union([z.coerce.number(), z.array(z.coerce.number())])
+		.optional()
+		.transform((values) => (typeof values === "number" ? [values] : values)),
 	lineId: z
 		.union([z.coerce.number(), z.array(z.coerce.number())])
 		.optional()
@@ -25,7 +29,7 @@ const getVehicleJourneyMarkersQuery = z.object({
 });
 
 hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
-	const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled, lineId } = c.req.valid("query");
+	const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled, lineId, networkId } = c.req.valid("query");
 
 	const boundedJourneys = journeyStore
 		.values()
@@ -35,6 +39,10 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 				journey.position.type === "COMPUTED" &&
 				journey.calls?.every((call) => typeof call.expectedTime === "undefined")
 			) {
+				return false;
+			}
+
+			if (Array.isArray(networkId) && (journey.networkId === undefined || !networkId.includes(journey.networkId))) {
 				return false;
 			}
 

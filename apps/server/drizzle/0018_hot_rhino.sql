@@ -1,0 +1,1 @@
+ALTER TABLE "network" ADD COLUMN "embed_map_bounds" jsonb;

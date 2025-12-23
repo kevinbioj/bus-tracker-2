@@ -10,6 +10,7 @@ import { Skeleton } from "~/components/ui/skeleton";
 
 type OnlineVehiclesVehicleSelection = {
 	container: HTMLDivElement | null;
+	embedMode?: boolean;
 	network?: Network;
 	line?: Line;
 	onClose: () => void;
@@ -18,6 +19,7 @@ type OnlineVehiclesVehicleSelection = {
 
 export function OnlineVehiclesVehicleSelection({
 	container,
+	embedMode,
 	network,
 	line,
 	onClose,
@@ -58,7 +60,12 @@ export function OnlineVehiclesVehicleSelection({
 							lineVehicles
 								.toSorted((a, b) => +a.number - +b.number)
 								.map((vehicle) => (
-									<OnlineVehiclesVehicleCard key={vehicle.id} vehicle={vehicle} onVehicleSelect={onVehicleSelect} />
+									<OnlineVehiclesVehicleCard
+										embedMode={embedMode}
+										key={vehicle.id}
+										vehicle={vehicle}
+										onVehicleSelect={onVehicleSelect}
+									/>
 								))
 						) : (
 							<p className="mt-3 text-center text-muted-foreground">Aucun véhicule ne circule sur cette ligne.</p>

@@ -1,15 +1,4 @@
 @font-face {
-	font-family: Achemine;
-	src: url("../fonts/achemine-regular-webfont.woff2");
-}
-
-@font-face {
-	font-family: Achemine;
-	font-weight: bold;
-	src: url("../fonts/achemine-bold-webfont.woff2");
-}
-
-@font-face {
 	font-display: block;
 	font-family: "0808B2E1";
 	src: url("../fonts/girouette/0808B2E1.ttf");

@@ -1,12 +1,15 @@
 import { FrownIcon } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { useEffect } from "react";
-import { useRouteError } from "react-router-dom";
+import { useLocation, useRouteError } from "react-router-dom";
 
 import { Button } from "~/components/ui/button";
 import { Link } from "~/components/ui/link";
 
 export function PurpleScreenOfDeath() {
+	const { pathname } = useLocation();
+	const embeddedNetworkId = pathname.startsWith("/embed/") ? pathname.split("/")[2] : undefined;
+
 	const posthog = usePostHog();
 	const error = useRouteError();
 
@@ -19,7 +22,7 @@ export function PurpleScreenOfDeath() {
 
 	const resetApp = () => {
 		localStorage.clear();
-		location.href = "/";
+		location.href = embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/";
 	};
 
 	return (
@@ -40,7 +43,7 @@ export function PurpleScreenOfDeath() {
 							Relancer l'application devrait régler le problème 👍
 						</p>
 						<Button asChild variant="on-branding-default">
-							<a href="/">Relancer l'application</a>
+							<a href={embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/"}>Relancer l'application</a>
 						</Button>
 					</div>
 					<div className="flex flex-col items-center gap-1">

@@ -42,21 +42,22 @@ export type DisposeableVehicleJourney = {
 	updatedAt: string;
 };
 
-export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds) =>
+export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetworkId?: number) =>
 	queryOptions({
 		placeholderData: keepPreviousData,
 		refetchInterval: 10_000,
 		staleTime: 20_000,
-		queryKey: ["vehicle-journeys"],
+		queryKey: ["vehicle-journeys", embeddedNetworkId],
 		queryFn: () => {
 			const activeMarkerId = localStorage.getItem("active-feature");
-			const hideScheduledTrips = localStorage.getItem("hide-scheduled-trips") === "true";
+			const hideScheduledTrips = embeddedNetworkId ? false : localStorage.getItem("hide-scheduled-trips") === "true";
 
 			const params = new URLSearchParams();
 			params.append("swLat", Math.max(bounds.getSouthWest().lat, -90).toString());
 			params.append("swLon", Math.max(bounds.getSouthWest().lng, -180).toString());
 			params.append("neLat", Math.min(bounds.getNorthEast().lat, 90).toString());
 			params.append("neLon", Math.min(bounds.getNorthEast().lng, 180).toString());
+			if (embeddedNetworkId) params.append("networkId", String(embeddedNetworkId));
 			if (hideScheduledTrips) params.append("excludeScheduled", "true");
 			if (activeMarkerId !== null) params.append("includeMarker", activeMarkerId);
 			return client

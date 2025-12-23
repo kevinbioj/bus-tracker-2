@@ -1,16 +1,20 @@
+import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 
-import type { Line, Network } from "~/api/networks";
+import { GetNetworkQuery, type Line, type Network } from "~/api/networks";
 import { OnlineVehiclesLineSelection } from "~/components/vehicles-map/online-vehicles/line-selection/online-vehicles-line-selection";
 import { OnlineVehiclesNetworkSelection } from "~/components/vehicles-map/online-vehicles/network-selection/online-vehicles-network-selection";
 import { OnlineVehiclesVehicleSelection } from "~/components/vehicles-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-selection";
 
 type OnlineVehiclesSheetManagement = {
+	fixedNetworkId?: number;
 	open: boolean;
 	setOpen: (open: boolean) => void;
 };
 
-export function OnlineVehiclesSheetManagement({ open, setOpen }: OnlineVehiclesSheetManagement) {
+export function OnlineVehiclesSheetManagement({ fixedNetworkId, open, setOpen }: OnlineVehiclesSheetManagement) {
+	const { data: fixedNetwork } = useQuery(GetNetworkQuery(fixedNetworkId));
+
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>();
 	const [selectedLine, setSelectedLine] = useState<Line>();
 
@@ -43,21 +47,25 @@ export function OnlineVehiclesSheetManagement({ open, setOpen }: OnlineVehiclesS
 
 	return (
 		<>
-			<OnlineVehiclesNetworkSelection
-				container={networkSelectionContainer.current}
-				open={open}
-				onOpenChange={setOpen}
-				onNetworkSelect={setSelectedNetwork}
-			/>
+			{fixedNetwork ? null : (
+				<OnlineVehiclesNetworkSelection
+					container={networkSelectionContainer.current}
+					open={open}
+					onOpenChange={setOpen}
+					onNetworkSelect={setSelectedNetwork}
+				/>
+			)}
 			<OnlineVehiclesLineSelection
 				container={lineSelectionContainer.current}
-				network={open ? selectedNetwork : undefined}
+				network={open ? (fixedNetwork ?? selectedNetwork) : undefined}
 				onClose={handleClose}
 				onLineChange={(line) => setSelectedLine(line)}
+				withBackdrop={Boolean(fixedNetworkId)}
 			/>
 			<OnlineVehiclesVehicleSelection
 				container={vehicleSelectionContainer.current}
-				network={open ? selectedNetwork : undefined}
+				embedMode={Boolean(fixedNetworkId)}
+				network={open ? (fixedNetwork ?? selectedNetwork) : undefined}
 				line={open ? selectedLine : undefined}
 				onClose={handleClose}
 				onVehicleSelect={() => {

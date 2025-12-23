@@ -13,10 +13,11 @@ const popupOptions: maplibregl.PopupOptions = {
 };
 
 type VehiclesMarkersPopupRootProps = {
+	embedMode?: boolean;
 	layer: maplibregl.StyleLayer;
 };
 
-export function VehiclesMarkersPopupRoot({ layer }: VehiclesMarkersPopupRootProps) {
+export function VehiclesMarkersPopupRoot({ embedMode, layer }: VehiclesMarkersPopupRootProps) {
 	return (
 		<GeojsonPopup layer={layer} popupOptions={popupOptions}>
 			{({ activeFeature, openPopup }) => {
@@ -27,7 +28,9 @@ export function VehiclesMarkersPopupRoot({ layer }: VehiclesMarkersPopupRootProp
 
 				return (
 					<>
-						{activeFeature !== null && <VehicleMarkerPopup key={activeFeature.id} journeyId={activeFeature.id} />}
+						{activeFeature !== null && (
+							<VehicleMarkerPopup embedMode={embedMode} key={activeFeature.id} journeyId={activeFeature.id} />
+						)}
 						<JumpTo openPopup={openPopup} />
 					</>
 				);

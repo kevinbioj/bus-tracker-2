@@ -8,6 +8,7 @@ import {
 	index,
 	integer,
 	json,
+	jsonb,
 	pgTable,
 	serial,
 	smallint,
@@ -53,6 +54,7 @@ export const networksTable = pgTable("network", {
 	textColor: char("text_color", { length: 6 }),
 	hasVehiclesFeature: boolean("has_vehicles_feature").notNull().default(false),
 	regionId: integer("region_id").references(() => regionsTable.id),
+	embedMapBounds: jsonb("embed_map_bounds"),
 });
 
 export type NetworkEntity = InferSelectModel<typeof networksTable>;

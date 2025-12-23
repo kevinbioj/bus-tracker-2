@@ -7,6 +7,7 @@ import { GetVehicleQuery } from "~/api/vehicles";
 import { LoadingIndicator } from "~/components/loading-indicator";
 import { WelcomeBack } from "~/components/welcome-back";
 import { NavigationBar } from "~/layout/navigation-bar";
+import EmbeddableMapPage from "~/pages/embeddable-map";
 import MapPage from "~/pages/map";
 import { NetworkDetails } from "~/pages/network-details";
 import { NetworkList } from "~/pages/network-list";
@@ -15,6 +16,15 @@ import { PurpleScreenOfDeath } from "~/psod";
 
 export const router = (queryClient: QueryClient) =>
 	createBrowserRouter([
+		{
+			path: "/embed/:networkId",
+			errorElement: <PurpleScreenOfDeath />,
+			element: (
+				<Suspense>
+					<EmbeddableMapPage />
+				</Suspense>
+			),
+		},
 		{
 			hydrateFallbackElement: null,
 			element: (

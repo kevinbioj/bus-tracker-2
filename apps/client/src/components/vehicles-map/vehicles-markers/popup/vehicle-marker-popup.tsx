@@ -12,10 +12,11 @@ import { VehicleInformation } from "~/components/vehicles-map/vehicles-markers/p
 import { VehicleNextStops } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-next-stops";
 
 type VehicleDetailsProps = {
+	embedMode?: boolean;
 	journeyId: string;
 };
 
-export function VehicleMarkerPopup({ journeyId }: Readonly<VehicleDetailsProps>) {
+export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDetailsProps>) {
 	const bounds = useMapBounds();
 	const { width } = useScreen();
 
@@ -50,7 +51,7 @@ export function VehicleMarkerPopup({ journeyId }: Readonly<VehicleDetailsProps>)
 			) : typeof journey !== "undefined" ? (
 				<>
 					<VehicleGirouette journey={journey} width={popupWidth} />
-					<VehicleInformation journey={journey} />
+					<VehicleInformation disableLinks={embedMode} journey={journey} />
 					{typeof journey.calls !== "undefined" ? (
 						<VehicleNextStops calls={journey.calls} tooltipId={journey.id} />
 					) : null}

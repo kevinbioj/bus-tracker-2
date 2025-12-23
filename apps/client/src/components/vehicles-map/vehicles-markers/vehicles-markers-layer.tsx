@@ -60,7 +60,11 @@ const arrowsLayerObject: maplibregl.AddLayerObject = {
 	},
 };
 
-export function VehiclesMarkers() {
+type VehicleMarkersProps = {
+	embeddedNetworkId?: number;
+};
+
+export function VehiclesMarkers({ embeddedNetworkId }: VehicleMarkersProps) {
 	const map = useMap();
 	const vehiclesSource = useMapSource<maplibregl.GeoJSONSource>("vehicles", initialData);
 	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
@@ -92,8 +96,8 @@ export function VehiclesMarkers() {
 	if (vehiclesLayer === null || vehiclesSource === null) return null;
 	return (
 		<>
-			<VehiclesMarkersData source={vehiclesSource} />
-			<VehiclesMarkersPopupRoot layer={vehiclesLayer} />
+			<VehiclesMarkersData networkId={embeddedNetworkId} source={vehiclesSource} />
+			<VehiclesMarkersPopupRoot embedMode={Boolean(embeddedNetworkId)} layer={vehiclesLayer} />
 		</>
 	);
 }
