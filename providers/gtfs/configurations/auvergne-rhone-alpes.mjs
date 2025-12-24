@@ -54,6 +54,26 @@ const sources = [
 		getNetworkRef: () => "AUBENAS",
 	},
 	{
+		id: 'aura-e18',
+		staticResourceHref: 'https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e',
+		realtimeResourceHrefs: [
+			'https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY',
+			'https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY'
+		],
+		mode: 'NO-TU',
+		excludeScheduled: true,
+		getNetworkRef: () => 'AURA-07',
+		mapVehiclePosition: (vehicle) => {
+			if (!vehicle.trip?.routeId?.startsWith('E')) {
+				return;
+			}
+
+			delete vehicle.position.bearing;
+			vehicle.vehicle.id = vehicle.vehicle.label;
+			return vehicle;
+		}
+	},
+	{
 		id: "aura-express-x73",
 		staticResourceHref: "https://pysae.com/api/v2/groups/x73/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/x73/gtfs-rt"],
@@ -126,6 +146,10 @@ const sources = [
 			return tripUpdate;
 		},
 		mapVehiclePosition: (vehicle) => {
+			if (vehicle.trip?.routeId?.startsWith('E')) {
+				return;
+			}
+
 			delete vehicle.position.bearing;
 			vehicle.vehicle.id = vehicle.vehicle.label;
 
