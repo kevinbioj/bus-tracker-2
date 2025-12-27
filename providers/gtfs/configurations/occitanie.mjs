@@ -399,14 +399,23 @@ const sources = [
 	},
 	{
 		id: "montpellier",
-		staticResourceHref: "https://data.montpellier3m.fr/TAM_MMM_GTFSRT/GTFS.zip",
+		staticResourceHref: "https://data.montpellier3m.fr/GTFS/Urbain/GTFS.zip",
 		realtimeResourceHrefs: [
-			"https://data.montpellier3m.fr/TAM_MMM_GTFSRT/TripUpdate.pb",
-			"https://data.montpellier3m.fr/TAM_MMM_GTFSRT/VehiclePosition.pb",
+			"https://data.montpellier3m.fr/GTFS/Urbain/VehiclePosition.pb",
+			"https://data.montpellier3m.fr/GTFS/Urbain/TripUpdate.pb",
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "TAM",
-		mapLineRef: (lineRef) => lineRef.split("-")[1],
+	},
+	{
+		id: "montpellier-sub",
+		staticResourceHref: "https://data.montpellier3m.fr/GTFS/Suburbain/GTFS.zip",
+		realtimeResourceHrefs: [
+			"https://data.montpellier3m.fr/GTFS/Suburbain/VehiclePosition.pb",
+			"https://data.montpellier3m.fr/GTFS/Suburbain/TripUpdate.pb",
+		],
+		mode: 'NO-TU',
+		getNetworkRef: () => 'TAM',
 	},
 	{
 		id: "pays-or",
