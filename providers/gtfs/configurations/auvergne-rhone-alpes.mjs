@@ -1,34 +1,34 @@
 const montelimarRouteIdConverter = new Map([
-	['1', 'CAMA_L1'],
-	['2', 'CAMA_L2'],
-	['3', 'CAMA_L3'],
-	['4', 'CAMA_L4'],
-	['10', 'CAMA_L10'],
-	['11', 'CAMA_L11'],
-	['12', 'CAMA_L12'],
-	['13', 'CAMA_L13'],
-	['14', 'CAMA_L14'],
-	['15', 'CAMA_L15'],
-	['16', 'CAMA_L16'],
-	['17', 'CAMA_L17'],
-	['21', 'CAMA_L21'],
-	['22', 'CAMA_L22'],
-	['23', 'CAMA_L23'],
-	['29', 'CAMA_L29'],
-	['31', 'CAMA_L31'],
-	['32', 'CAMA_L32'],
-	['33', 'CAMA_L33'],
-	['34', 'CAMA_L34'],
-	['35', 'CAMA_L35'],
-	['51', 'CAMA_L51'],
-	['52', 'CAMA_L52'],
-	['54', 'CAMA_L54'],
-	['D', 'CAMA_LD'],
-	['D1', 'CAMA_LD1'],
-	['D2', 'CAMA_LD2'],
-	['D31', 'CAMA_LD31'],
-	['D34', 'CAMA_LD34'],
-])
+	["1", "CAMA_L1"],
+	["2", "CAMA_L2"],
+	["3", "CAMA_L3"],
+	["4", "CAMA_L4"],
+	["10", "CAMA_L10"],
+	["11", "CAMA_L11"],
+	["12", "CAMA_L12"],
+	["13", "CAMA_L13"],
+	["14", "CAMA_L14"],
+	["15", "CAMA_L15"],
+	["16", "CAMA_L16"],
+	["17", "CAMA_L17"],
+	["21", "CAMA_L21"],
+	["22", "CAMA_L22"],
+	["23", "CAMA_L23"],
+	["29", "CAMA_L29"],
+	["31", "CAMA_L31"],
+	["32", "CAMA_L32"],
+	["33", "CAMA_L33"],
+	["34", "CAMA_L34"],
+	["35", "CAMA_L35"],
+	["51", "CAMA_L51"],
+	["52", "CAMA_L52"],
+	["54", "CAMA_L54"],
+	["D", "CAMA_LD"],
+	["D1", "CAMA_LD1"],
+	["D2", "CAMA_LD2"],
+	["D31", "CAMA_LD31"],
+	["D34", "CAMA_LD34"],
+]);
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
@@ -54,24 +54,24 @@ const sources = [
 		getNetworkRef: () => "AUBENAS",
 	},
 	{
-		id: 'aura-e18',
-		staticResourceHref: 'https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e',
+		id: "aura-e18",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e",
 		realtimeResourceHrefs: [
-			'https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY',
-			'https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY'
+			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
-		mode: 'NO-TU',
+		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => 'AURA-07',
+		getNetworkRef: () => "AURA-07",
 		mapVehiclePosition: (vehicle) => {
-			if (!vehicle.trip?.routeId?.startsWith('E')) {
+			if (!vehicle.trip?.routeId?.startsWith("E")) {
 				return;
 			}
 
 			delete vehicle.position.bearing;
 			vehicle.vehicle.id = vehicle.vehicle.label;
 			return vehicle;
-		}
+		},
 	},
 	{
 		id: "aura-express-x73",
@@ -128,17 +128,17 @@ const sources = [
 		getNetworkRef: () => "TAG",
 	},
 	{
-		id: 'montelimar',
-		staticResourceHref: 'https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e',
+		id: "montelimar",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e",
 		realtimeResourceHrefs: [
-			'https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY',
-			'https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY'
+			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
-		mode: 'NO-TU',
+		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => 'MONTELIMAR',
+		getNetworkRef: () => "MONTELIMAR",
 		mapTripUpdate: (tripUpdate) => {
-			tripUpdate.trip.tripId = tripUpdate.trip.tripId.split('--')[0];
+			tripUpdate.trip.tripId = tripUpdate.trip.tripId.split("--")[0];
 			if (tripUpdate.trip.routeId && montelimarRouteIdConverter.has(tripUpdate.trip.routeId)) {
 				tripUpdate.trip.routeId = montelimarRouteIdConverter.get(tripUpdate.trip.routeId);
 			}
@@ -146,7 +146,7 @@ const sources = [
 			return tripUpdate;
 		},
 		mapVehiclePosition: (vehicle) => {
-			if (vehicle.trip?.routeId?.startsWith('E')) {
+			if (vehicle.trip?.routeId?.startsWith("E")) {
 				return;
 			}
 
@@ -154,14 +154,14 @@ const sources = [
 			vehicle.vehicle.id = vehicle.vehicle.label;
 
 			if (vehicle.trip) {
-				vehicle.trip.tripId = vehicle.trip.tripId.split('--')[0];
+				vehicle.trip.tripId = vehicle.trip.tripId.split("--")[0];
 				if (vehicle.trip.routeId && montelimarRouteIdConverter.has(vehicle.trip.routeId)) {
 					vehicle.trip.routeId = montelimarRouteIdConverter.get(vehicle.trip.routeId);
 				}
 			}
 
 			return vehicle;
-		}
+		},
 	},
 	{
 		id: "morzine-avoriaz",

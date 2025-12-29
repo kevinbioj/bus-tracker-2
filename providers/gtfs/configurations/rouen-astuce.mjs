@@ -27,8 +27,29 @@ const sources = [
 		excludeScheduled: (trip) => !["TCAR:06", "TCAR:89"].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
-			if (typeof journey !== "undefined" && ["TCAR:06", "TCAR:89"].includes(journey.trip.route.id)) return "TNI";
-			if (typeof vehicle !== "undefined" && +vehicle.id >= 670 && +vehicle.id <= 685) return "TNI";
+			if (
+				typeof journey !== "undefined" &&
+				[
+					"TCAR:06",
+					"TCAR:13",
+					"TCAR:14",
+					"TCAR:28",
+					"TCAR:33",
+					"TCAR:35",
+					"TCAR:36",
+					"TCAR:37",
+					"TCAR:38",
+					"TCAR:42",
+					"TCAR:44",
+					"TCAR:89",
+				].includes(journey.trip.route.id)
+			)
+				return "TNI";
+			if (
+				typeof vehicle !== "undefined" &&
+				([421, 422, 434, 435].includes(+vehicle.id) || (+vehicle.id >= 670 && +vehicle.id <= 685))
+			)
+				return "TNI";
 			return "TCAR";
 		},
 		getVehicleRef: (vehicle) => vehicle?.id,

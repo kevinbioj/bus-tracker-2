@@ -414,8 +414,8 @@ const sources = [
 			"https://data.montpellier3m.fr/GTFS/Suburbain/VehiclePosition.pb",
 			"https://data.montpellier3m.fr/GTFS/Suburbain/TripUpdate.pb",
 		],
-		mode: 'NO-TU',
-		getNetworkRef: () => 'TAM',
+		mode: "NO-TU",
+		getNetworkRef: () => "TAM",
 	},
 	{
 		id: "pays-or",
