@@ -538,6 +538,7 @@ const sources = [
 		mapLineRef: (lineRef) => `GTFS:${lineRef.slice(lineRef.indexOf(':') + 1)}`,
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 		getNetworkRef: () => "TISSEO",
+		getVehicleRef: () => undefined,
 	},
 ];
 
