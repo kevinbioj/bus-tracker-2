@@ -465,6 +465,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://api.tisseo.fr/opendata/gtfsrt/GtfsRt.pb"],
 		excludeScheduled: (trip) =>
 			[
+				"TELEO",
 				"25",
 				"26",
 				"31",
