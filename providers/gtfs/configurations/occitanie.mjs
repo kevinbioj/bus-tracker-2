@@ -462,13 +462,7 @@ const sources = [
 		id: "toulouse",
 		staticResourceHref:
 			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
-		realtimeResourceHrefs: [],
-		gtfsOptions: {
-			filterTrips: (trip) => {
-				trip.route.id = trip.route.name;
-				return true;
-			},
-		},
+		realtimeResourceHrefs: ["https://api.tisseo.fr/opendata/gtfsrt/GtfsRt.pb"],
 		excludeScheduled: (trip) =>
 			[
 				"25",
@@ -539,6 +533,7 @@ const sources = [
 				"402",
 				"NVACC",
 			].includes(trip.route.name),
+		mapLineRef: (lineRef) => `GTFS:${lineRef.slice(lineRef.indexOf(':') + 1)}`,
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 		getNetworkRef: () => "TISSEO",
 	},
