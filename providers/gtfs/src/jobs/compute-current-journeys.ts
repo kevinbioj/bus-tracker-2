@@ -158,7 +158,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					journey = trip.getScheduledJourney(startDate, true);
 					source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
 				}
-				journey.updateJourney(tripUpdate.stopTimeUpdate ?? []);
+				journey.updateJourney(tripUpdate.stopTimeUpdate ?? [], source.options.appendTripUpdateInformation);
 			}
 
 			// source.gtfs.journeys.sort((a, b) => {

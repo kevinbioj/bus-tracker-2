@@ -115,7 +115,7 @@ export class Journey {
 		);
 	}
 
-	updateJourney(stopTimeUpdates: StopTimeUpdate[]) {
+	updateJourney(stopTimeUpdates: StopTimeUpdate[], appendTripUpdateInformation?: boolean) {
 		let arrivalDelay: number | undefined;
 		let departureDelay: number | undefined;
 
@@ -123,9 +123,11 @@ export class Journey {
 		const stopTimeUpdatesByStopSequence = Map.groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopSequence);
 
 		for (const call of this.calls) {
-			call.expectedArrivalTime = undefined;
-			call.expectedDepartureTime = undefined;
-			call.status = "SCHEDULED";
+			if (!appendTripUpdateInformation) {
+				call.expectedArrivalTime = undefined;
+				call.expectedDepartureTime = undefined;
+				call.status = "SCHEDULED";
+			}
 
 			let timeUpdate = (stopTimeUpdatesByStopSequence.get(call.sequence) ??
 				stopTimeUpdatesByStopId.get(call.stop.id))?.[0];
