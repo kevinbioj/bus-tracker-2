@@ -535,7 +535,7 @@ const sources = [
 				"402",
 				"NVACC",
 			].includes(trip.route.name),
-		mapLineRef: (lineRef) => `GTFS:${lineRef.slice(lineRef.indexOf(':') + 1)}`,
+		mapLineRef: (lineRef) => `GTFS:${lineRef.slice(lineRef.indexOf(":") + 1)}`,
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 		getNetworkRef: () => "TISSEO",
 		getVehicleRef: () => undefined,

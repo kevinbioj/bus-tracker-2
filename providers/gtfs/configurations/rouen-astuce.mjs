@@ -9,12 +9,13 @@ const sources = [
 		// 	"https://reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
 		// 	"https://reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
 		// ],
-		staticResourceHref:
-			"https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=ASTUCE&dataFormat=GTFS&dataProfil=ASTUCE",
+		// staticResourceHref:
+		// 	"https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=ASTUCE&dataFormat=GTFS&dataProfil=ASTUCE",
 		// realtimeResourceHrefs: [
 		// 	"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
 		// 	"https://api.mrn.cityway.fr/dataflow/vehicle-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
 		// ],
+		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-global.zip",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
@@ -24,7 +25,19 @@ const sources = [
 			filterTrips: (trip) => trip.route.id.startsWith("TCAR"),
 			shapesStrategy: "IGNORE",
 		},
-		excludeScheduled: (trip) => !["TCAR:06", "TCAR:89"].includes(trip.route.id),
+		excludeScheduled: (trip) =>
+			![
+				"TCAR:06",
+				"TCAR:45",
+				"TCAR:46",
+				"TCAR:47",
+				"TCAR:48",
+				"TCAR:49",
+				"TCAR:50",
+				"TCAR:60",
+				"TCAR:89",
+				"TCAR:99",
+			].includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (
@@ -41,6 +54,13 @@ const sources = [
 					"TCAR:38",
 					"TCAR:42",
 					"TCAR:44",
+					"TCAR:45",
+					"TCAR:46",
+					"TCAR:47",
+					"TCAR:48",
+					"TCAR:49",
+					"TCAR:50",
+					"TCAR:60",
 					"TCAR:89",
 				].includes(journey.trip.route.id)
 			)
