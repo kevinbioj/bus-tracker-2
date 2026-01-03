@@ -22,7 +22,13 @@ const sources = [
 		],
 		mode: "NO-TU",
 		gtfsOptions: {
-			filterTrips: (trip) => trip.route.id.startsWith("TCAR"),
+			filterTrips: (trip) => {
+				if (trip.route.id === 'TCAR:99') {
+					trip.block = 'CALYPSO';
+				}
+
+				return trip.route.id.startsWith("TCAR");
+			},
 		},
 		excludeScheduled: (trip) =>
 			![
