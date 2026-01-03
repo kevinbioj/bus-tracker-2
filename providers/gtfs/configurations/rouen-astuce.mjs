@@ -23,7 +23,6 @@ const sources = [
 		mode: "NO-TU",
 		gtfsOptions: {
 			filterTrips: (trip) => trip.route.id.startsWith("TCAR"),
-			shapesStrategy: "IGNORE",
 		},
 		excludeScheduled: (trip) =>
 			![
