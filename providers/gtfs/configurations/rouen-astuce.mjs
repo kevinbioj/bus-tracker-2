@@ -30,6 +30,7 @@ const sources = [
 				return trip.route.id.startsWith("TCAR");
 			},
 		},
+		getAheadTime: (journey) => journey?.trip.route.id === 'TCAR:99' ? 5 * 60 : undefined,
 		excludeScheduled: (trip) =>
 			![
 				"TCAR:06",
