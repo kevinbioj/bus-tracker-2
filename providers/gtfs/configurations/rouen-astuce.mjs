@@ -1,5 +1,10 @@
 import { Temporal } from "temporal-polyfill";
 
+const tcarSchedulableLineIds = ["06", "45", "46", "47", "48", "49", "50", "60", "89"];
+// biome-ignore format: keep it one-liner is good
+const tniOperatedLineIds = ['06', '13', '14', '27', '28', '33', '35', '36', '37', '38', '42', '44', '45', '46', '47', '48', '49', '50', '60', '89'];
+const isTniVehicle = (id) => (id >= 421 && id <= 435) || (id >= 670 && id <= 685) || (id >= 734 && id <= 736);
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -23,63 +28,31 @@ const sources = [
 		mode: "NO-TU",
 		gtfsOptions: {
 			filterTrips: (trip) => {
-				if (trip.route.id === 'TCAR:99') {
-					trip.block = 'CALYPSO';
+				if (trip.route.id.replace("TCAR:", "") === "99") {
+					trip.block = "CALYPSO";
 				}
 
 				return trip.route.id.startsWith("TCAR");
 			},
 		},
-		getAheadTime: (journey) => journey?.trip.route.id === 'TCAR:99' ? 5 * 60 : undefined,
-		excludeScheduled: (trip) =>
-			![
-				"TCAR:06",
-				"TCAR:45",
-				"TCAR:46",
-				"TCAR:47",
-				"TCAR:48",
-				"TCAR:49",
-				"TCAR:50",
-				"TCAR:60",
-				"TCAR:89",
-				"TCAR:99",
-			].includes(trip.route.id),
+		getAheadTime: (journey) => (journey?.trip.route.id.replace("TCAR:", "") === "99" ? 5 * 60 : undefined),
+		excludeScheduled: (trip) => !tcarSchedulableLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (
 				typeof journey !== "undefined" &&
-				[
-					"TCAR:06",
-					"TCAR:13",
-					"TCAR:14",
-					"TCAR:28",
-					"TCAR:33",
-					"TCAR:35",
-					"TCAR:36",
-					"TCAR:37",
-					"TCAR:38",
-					"TCAR:42",
-					"TCAR:44",
-					"TCAR:45",
-					"TCAR:46",
-					"TCAR:47",
-					"TCAR:48",
-					"TCAR:49",
-					"TCAR:50",
-					"TCAR:60",
-					"TCAR:89",
-				].includes(journey.trip.route.id)
-			)
+				tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(journey.trip.route.id)
+			) {
 				return "TNI";
-			if (
-				typeof vehicle !== "undefined" &&
-				([421, 422, 434, 435].includes(+vehicle.id) || (+vehicle.id >= 670 && +vehicle.id <= 685))
-			)
+			}
+
+			if (typeof vehicle !== "undefined" && isTniVehicle(+vehicle.id)) {
 				return "TNI";
+			}
+
 			return "TCAR";
 		},
 		getVehicleRef: (vehicle) => vehicle?.id,
-		// getVehicleRef: (vehicle) => vehicle?.id.split(":")[3],
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
 		isValidJourney: (vehicleJourney) => {
 			// Étant donné que les données sont parfois partielles, on prend le premier arrêt avec du temps réel
@@ -105,7 +78,6 @@ const sources = [
 			return true;
 		},
 		mapLineRef: (lineRef) => lineRef.replace("TCAR:", ""),
-		// mapLineRef: (lineRef) => (lineRef.indexOf("-") >= 0 ? lineRef.slice(lineRef.lastIndexOf("-") + 1) : lineRef),
 		mapVehiclePosition: (vehicle) => {
 			vehicle.vehicle.id = vehicle.vehicle.id.replace("TCAR:", "");
 			// vehicle.timestamp += 3600;
