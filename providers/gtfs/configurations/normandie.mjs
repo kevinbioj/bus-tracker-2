@@ -294,32 +294,18 @@ const sources = [
 		getNetworkRef: () => "VIKIBUS",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
-	//- Boubet
-	...(process.env.BOUBET_API_KEY
+	//- Altobus
+	...(process.env.ALTOBUS_API_KEY
 		? [
 				{
-					id: "boubet",
-					staticResourceHref: `https://alto-gtfs.maxtrip.fr/api/v1/Export/Gtfs/Merge/alto/false/boubet/true?apikey=${process.env.BOUBET_API_KEY}`,
+					id: "altobus",
+					staticResourceHref: `https://alto.maxtrip.fr/api/v1/Export/Gtfs/alto?apiKey=${process.env.ALTOBUS_API_KEY}`,
 					realtimeResourceHrefs: [
-						`https://alto-gtfs.maxtrip.fr/api/v1/Export/GtfsRealtime/Merge/alto/false/boubet/true?apikey=${process.env.BOUBET_API_KEY}`,
+						`https://alto.maxtrip.fr/api/v1/Export/GtfsRealtime/alto?apiKey=${process.env.ALTOBUS_API_KEY}`,
 					],
+					excludeScheduled: true,
 					mode: "NO-TU",
-					getNetworkRef: (journey) => {
-						if (
-							journey?.trip.route.agency.id === "alto:Operator:40708" ||
-							journey?.trip.route.agency.id === "boubet:Operator:1831" ||
-							journey?.trip.route.agency.id === "boubet:Operator:2"
-						) {
-							return "ALTOBUS";
-						}
-
-						if (journey?.trip.route.agency.id === "boubet:Operator:3576") {
-							return "BAGNOLES";
-						}
-
-						return "UNKNOWN";
-					},
-					isValidJourney: (vehicleJourney) => vehicleJourney.networkRef !== "UNKNOWN",
+					getNetworkRef: () => "ALTOBUS",
 					getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 					getVehicleRef: (vehicle) => vehicle?.id,
 				},
