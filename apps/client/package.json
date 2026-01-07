@@ -40,7 +40,7 @@
 		"@radix-ui/react-tooltip": "^1.2.8",
 		"@react-leaflet/core": "^3.0.0",
 		"@tanstack/react-query": "^5.90.16",
-		"@tanstack/react-virtual": "^3.13.15",
+		"@tanstack/react-virtual": "^3.13.17",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"dayjs": "^1.11.19",
@@ -50,19 +50,19 @@
 		"lucide-react": "^0.562.0",
 		"maplibre-gl": "^5.15.0",
 		"notistack": "^3.0.2",
-		"posthog-js": "^1.313.0",
+		"posthog-js": "^1.315.1",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
-		"react-hook-form": "^7.69.0",
+		"react-hook-form": "^7.70.0",
 		"react-icons": "^5.5.0",
 		"react-leaflet": "^5.0.0",
 		"react-map-gl": "^8.1.0",
-		"react-router-dom": "^7.11.0",
+		"react-router-dom": "^7.12.0",
 		"react-top-loading-bar": "^3.0.2",
 		"tailwind-merge": "^3.4.0",
 		"ts-pattern": "^5.9.0",
 		"tw-merge": "0.0.1-alpha.3",
 		"usehooks-ts": "^3.1.1",
-		"zod": "^4.3.4"
+		"zod": "^4.3.5"
 	}
 }

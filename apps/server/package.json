@@ -27,10 +27,10 @@
 		"hono": "^4.11.3",
 		"hono-sessions": "^0.8.0",
 		"p-limit": "^7.2.0",
-		"postgres": "^3.4.7",
+		"postgres": "^3.4.8",
 		"redis": "^5.10.0",
 		"temporal-polyfill": "^0.3.0",
 		"ts-pattern": "^5.9.0",
-		"zod": "^4.3.4"
+		"zod": "^4.3.5"
 	}
 }
