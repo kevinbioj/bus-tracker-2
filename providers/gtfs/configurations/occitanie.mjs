@@ -85,6 +85,17 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
+		id: "beziers",
+		staticResourceHref:
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rdbm/exports/medias.zip",
+		realtimeResourceHrefs: [
+			"https://h34.hanoverdisplays.com/beziers/gtfsrt/api-1.0/gtfs-rt/vehicle-positions",
+			"https://h34.hanoverdisplays.com/beziers/gtfsrt/api-1.0/gtfs-rt/trip-updates",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "BEEMOB",
+	},
+	{
 		id: "castres",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=castreslignesurbaines",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=castreslignesurbaines"],
