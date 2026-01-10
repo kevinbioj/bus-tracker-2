@@ -70,6 +70,7 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 		const line = lineId ? lines.get(lineId) : undefined;
 		return {
 			id,
+			lineNumber: line?.number,
 			color: line?.textColor ? `#${line.textColor}` : undefined,
 			fillColor: line?.color ? `#${line.color}` : undefined,
 			position: { latitude, longitude, bearing, type },
