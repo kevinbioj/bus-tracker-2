@@ -434,6 +434,14 @@ const sources = [
 		getNetworkRef: () => "TAM",
 	},
 	{
+		id: "narbonne",
+		staticResourceHref:
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/narbonne/exports/scolaires-sans-tad.zip",
+		realtimeResourceHrefs: ["https://feed-citibus-narbonne.ratpdev.com/GTFS-RT/gtfs-rt.bin"],
+		mode: "NO-TU",
+		getNetworkRef: () => "NARBONNE",
+	},
+	{
 		id: "pays-or",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/bbbd5a29-2fbf-47ae-84fd-6d1ebb758eeb",
 		realtimeResourceHrefs: [
