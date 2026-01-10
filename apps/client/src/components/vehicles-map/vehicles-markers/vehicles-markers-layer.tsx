@@ -60,6 +60,27 @@ const arrowsLayerObject: maplibregl.AddLayerObject = {
 	},
 };
 
+const textLayerObject: maplibregl.AddLayerObject = {
+	id: "vehicles-text",
+	type: "symbol",
+	source: "vehicles",
+	filter: ["!=", ["get", "lineNumber"], null],
+	layout: {
+		"text-field": ["get", "lineNumber"],
+		"text-size": 12,
+		"text-anchor": "top",
+		"text-offset": [0, 1],
+		"text-allow-overlap": false,
+		"text-ignore-placement": false,
+	},
+	paint: {
+		"text-color": ["coalesce", ["get", "fillColor"], "#000000"],
+		"text-halo-color": ["coalesce", ["get", "color"], "#FFFFFF"],
+		"text-halo-width": 1.5,
+		"text-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 1],
+	},
+};
+
 type VehicleMarkersProps = {
 	embeddedNetworkId?: number;
 };
@@ -69,6 +90,7 @@ export function VehiclesMarkers({ embeddedNetworkId }: VehicleMarkersProps) {
 	const vehiclesSource = useMapSource<maplibregl.GeoJSONSource>("vehicles", initialData);
 	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
 	useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
+	useMapLayer(textLayerObject);
 
 	useEffect(() => {
 		let abort = false;
