@@ -1,6 +1,20 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "alterneo",
+		staticResourceHref: "https://transport.data.gouv.fr/resources/80676/download",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/alterneo-civis-gtfs-rt-trip-update",
+			"https://proxy.transport.data.gouv.fr/resource/alterneo-civis-gtfs-rt-vehicle-position",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "ALTERNEO",
+		getDestination: (journey) =>
+			journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name ?? journey?.trip.headsign,
+	},
+	{
 		id: "car-jaune",
 		staticResourceHref: "https://pysae.com/api/v2/groups/car-jaune/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/car-jaune/gtfs-rt"],
