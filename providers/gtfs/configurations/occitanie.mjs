@@ -94,6 +94,11 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "BEEMOB",
+		mapVehiclePosition: (vehicle) => {
+			vehicle.vehicle.id = vehicle.vehicle.label;
+			vehicle.position.bearing = undefined;
+			return vehicle;
+		},
 	},
 	{
 		id: "castres",
