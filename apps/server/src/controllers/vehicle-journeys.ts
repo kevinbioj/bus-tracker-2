@@ -65,12 +65,13 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 	const lineIds = boundedJourneys.flatMap(({ lineId }) => lineId ?? []);
 	const lines = await fetchLines(Array.from(new Set(lineIds)));
 
-	const items = boundedJourneys.map(({ id, lineId, position }) => {
+	const items = boundedJourneys.map(({ id, lineId, position, vehicle }) => {
 		const { latitude, longitude, bearing, type } = position;
 		const line = lineId ? lines.get(lineId) : undefined;
 		return {
 			id,
 			lineNumber: line?.number,
+			vehicleNumber: vehicle?.number,
 			color: line?.textColor ? `#${line.textColor}` : undefined,
 			fillColor: line?.color ? `#${line.color}` : undefined,
 			position: { latitude, longitude, bearing, type },
