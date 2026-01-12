@@ -7,6 +7,19 @@ import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { VehiclesMarkersData } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-data";
 import { VehiclesMarkersPopupRoot } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-popup-root";
 
+function createSquareIcon(color = "#000000") {
+	const canvas = document.createElement("canvas");
+	const size = 32;
+	canvas.width = size;
+	canvas.height = size;
+	const ctx = canvas.getContext("2d")!;
+	ctx.fillStyle = color;
+	ctx.beginPath();
+	ctx.roundRect(0, 0, size, size, 5);
+	ctx.fill();
+	return canvas;
+}
+
 function createArrowIcon(color = "#000000") {
 	const canvas = document.createElement("canvas");
 	const size = 32;
@@ -66,17 +79,21 @@ const textLayerObject: maplibregl.AddLayerObject = {
 	source: "vehicles",
 	filter: ["!=", ["get", "lineNumber"], null],
 	layout: {
+		"icon-image": "square-icon",
+		"icon-text-fit": "both",
+		"icon-text-fit-padding": [1, 3, 1, 3],
 		"text-field": ["get", "lineNumber"],
 		"text-size": 12,
 		"text-anchor": "top",
+		"icon-offset": [0, 1],
 		"text-offset": [0, 1],
 		"text-allow-overlap": false,
 		"text-ignore-placement": false,
 	},
 	paint: {
-		"text-color": ["coalesce", ["get", "fillColor"], "#000000"],
-		"text-halo-color": ["coalesce", ["get", "color"], "#FFFFFF"],
-		"text-halo-width": 1.5,
+		"text-color": ["coalesce", ["get", "color"], "#000000"],
+		"icon-color": ["coalesce", ["get", "fillColor"], "#FFFFFF"],
+		"icon-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 0.7],
 		"text-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 1],
 	},
 };
@@ -94,13 +111,18 @@ export function VehiclesMarkers({ embeddedNetworkId }: VehicleMarkersProps) {
 
 	useEffect(() => {
 		let abort = false;
-		const imageId = "arrow-icon";
+		const arrowImageId = "arrow-icon";
+		const squareImageId = "square-icon";
 
 		const onLoad = async () => {
 			if (abort) return;
 			const arrowIcon = createArrowIcon("black");
-			const bitmap = await createImageBitmap(arrowIcon);
-			map.addImage(imageId, bitmap, { sdf: true });
+			const arrowBitmap = await createImageBitmap(arrowIcon);
+			map.addImage(arrowImageId, arrowBitmap, { sdf: true });
+
+			const squareIcon = createSquareIcon("black");
+			const squareBitmap = await createImageBitmap(squareIcon);
+			map.addImage(squareImageId, squareBitmap, { sdf: true });
 		};
 
 		if (map.style._loaded) onLoad();
@@ -109,8 +131,9 @@ export function VehiclesMarkers({ embeddedNetworkId }: VehicleMarkersProps) {
 		return () => {
 			abort = true;
 			map.off("load", onLoad);
-			if (map.style?._loaded && map.getImage(imageId) !== undefined) {
-				map.removeImage(imageId);
+			if (map.style?._loaded && map.getImage(arrowImageId) !== undefined) {
+				map.removeImage(arrowImageId);
+				map.removeImage(squareImageId);
 			}
 		};
 	}, [map]);
