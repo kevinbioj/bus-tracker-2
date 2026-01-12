@@ -7,6 +7,8 @@ import { client } from "./client";
 
 export type VehicleJourneyMarker = {
 	id: string;
+	lineNumber?: string;
+	vehicleNumber?: string;
 	color?: string;
 	fillColor?: string;
 	position: { latitude: number; longitude: number; bearing?: number; type: "GPS" | "COMPUTED" };
