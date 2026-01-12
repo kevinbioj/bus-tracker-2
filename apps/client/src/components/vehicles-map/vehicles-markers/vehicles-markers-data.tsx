@@ -43,10 +43,11 @@ export function VehiclesMarkersData({ networkId, source }: VehiclesMarkersDataPr
 						bearing: item.position.bearing ?? null,
 						color: item.color ?? "#FFFFFF",
 						fillColor: item.fillColor ?? "#000000",
-						previewText: [
-							...(item.lineNumber ? [item.lineNumber] : []),
-							...(previewVehicleNumber && item.vehicleNumber ? [`n°${item.vehicleNumber}`] : []),
-						].join(" | "),
+						previewText:
+							[
+								...(item.lineNumber ? [item.lineNumber] : []),
+								...(previewVehicleNumber && item.vehicleNumber ? [`n°${item.vehicleNumber}`] : []),
+							].join(" | ") || null,
 					},
 				};
 			}),
