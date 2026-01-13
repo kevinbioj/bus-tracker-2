@@ -10,12 +10,12 @@ import { VehiclesMarkersPopupRoot } from "~/components/vehicles-map/vehicles-mar
 function createSquareIcon(color = "#000000") {
 	const canvas = document.createElement("canvas");
 	const size = 32;
-	canvas.width = size;
+	canvas.width = size * 3;
 	canvas.height = size;
 	const ctx = canvas.getContext("2d")!;
 	ctx.fillStyle = color;
 	ctx.beginPath();
-	ctx.roundRect(0, 0, size, size, 5);
+	ctx.roundRect(0, 0, size * 3, size, 3);
 	ctx.fill();
 	return canvas;
 }
@@ -93,9 +93,9 @@ const textLayerObject: maplibregl.AddLayerObject = {
 	},
 	paint: {
 		"icon-color": ["coalesce", ["get", "fillColor"], "#FFFFFF"],
-		"icon-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 0.8],
+		"icon-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.1, 0.7],
 		"text-color": ["coalesce", ["get", "color"], "#000000"],
-		"text-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 1],
+		"text-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.1, 1],
 	},
 };
 
