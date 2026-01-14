@@ -113,25 +113,17 @@ const sources = [
 	},
 	{
 		id: "quimper",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/0cf733af-e58a-4b56-ab18-abbd09de7d02",
-		realtimeResourceHrefs: [],
-		gtfsOptions: {
-			// QUB City comes in the next source
-			filterTrips: (trip) => trip.route.id !== "QCIT-648",
+		staticResourceHref:
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/qbo/exports/medias.zip",
+		realtimeResourceHrefs: [
+			"https://feed-qub-quimper.ratpdev.com/GTFS-RT_tripUpdate/gtfs-rt.bin",
+			"https://feed-qub-quimper.ratpdev.com/GTFS-RT_vehiclePosition/gtfs-rt.bin",
+		],
+		getNetworkRef: () => "QUB",
+		mapVehiclePosition: (vehicle) => {
+			vehicle.vehicle.id = vehicle.vehicle.label;
+			return vehicle;
 		},
-		getNetworkRef: () => "QUB",
-	},
-	{
-		id: "quimper-navette",
-		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=quimper",
-		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=quimper"],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
-		excludeScheduled: true,
-		mode: "NO-TU",
-		getNetworkRef: () => "QUB",
-		getVehicleRef: () => undefined,
-		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
-		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
 		id: "quimperle",
