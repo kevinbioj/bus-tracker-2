@@ -1,6 +1,6 @@
 import { Temporal } from "temporal-polyfill";
 
-const tcarSchedulableLineIds = ["06", "45", "46", "47", "48", "49", "50", "60", "89"];
+// const tcarSchedulableLineIds = ["06", "45", "46", "47", "48", "49", "50", "60", "89"];
 // biome-ignore format: keep it one-liner is good
 const tniOperatedLineIds = ['06', '13', '14', '27', '28', '33', '35', '36', '37', '38', '42', '44', '45', '46', '47', '48', '49', '50', '60', '89'];
 const isTniVehicle = (id) => (id >= 421 && id <= 435) || (id >= 670 && id <= 685) || (id >= 734 && id <= 736);
@@ -36,7 +36,7 @@ const sources = [
 			},
 		},
 		getAheadTime: (journey) => (journey?.trip.route.id.replace("TCAR:", "") === "99" ? 5 * 60 : undefined),
-		excludeScheduled: (trip) => !tcarSchedulableLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id),
+		excludeScheduled: (trip) => !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (
@@ -106,16 +106,16 @@ const sources = [
 		getOperatorRef: () => "TAE",
 		isValidJourney: (vehicleJourney) => typeof vehicleJourney.vehicleRef !== "undefined",
 	},
-	{
-		id: "tgr",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tgr.zip",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
-		mode: "NO-TU",
-		excludeScheduled: (trip) => trip.route.name === "06",
-		getNetworkRef: () => "ASTUCE",
-		getOperatorRef: () => "TNI",
-		getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
-	},
+	// {
+	// 	id: "tgr",
+	// 	staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tgr.zip",
+	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
+	// 	mode: "NO-TU",
+	// 	excludeScheduled: (trip) => trip.route.name === "06",
+	// 	getNetworkRef: () => "ASTUCE",
+	// 	getOperatorRef: () => "TNI",
+	// 	getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
+	// },
 	{
 		id: "tni",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tni.zip",
