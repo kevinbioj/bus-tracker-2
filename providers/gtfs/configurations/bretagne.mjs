@@ -119,8 +119,10 @@ const sources = [
 			"https://feed-qub-quimper.ratpdev.com/GTFS-RT_tripUpdate/gtfs-rt.bin",
 			"https://feed-qub-quimper.ratpdev.com/GTFS-RT_vehiclePosition/gtfs-rt.bin",
 		],
+		mode: "NO-TU",
 		getNetworkRef: () => "QUB",
 		mapVehiclePosition: (vehicle) => {
+			vehicle.position.bearing = undefined; // always at 0
 			vehicle.vehicle.id = vehicle.vehicle.label;
 			return vehicle;
 		},
