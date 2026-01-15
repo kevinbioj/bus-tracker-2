@@ -179,3 +179,9 @@
 	font-weight: bold;
 	src: url("../fonts/achemine-bold-webfont.woff2");
 }
+
+@font-face {
+	font-family: "Achemine Bold";
+	font-weight: bold;
+	src: url("../fonts/achemine-bold-webfont.woff2");
+}
