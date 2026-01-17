@@ -125,7 +125,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	}, [journey]);
 
 	return (
-		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] px-2 py-1">
+		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] px-1.5 py-1">
 			{network?.hasVehiclesFeature ? (
 				<Button asChild className="" size="xs" variant="ghost">
 					{disableLinks ? networkIdentifier : <Link to={`/data/networks/${network?.id}`}>{networkIdentifier}</Link>}
