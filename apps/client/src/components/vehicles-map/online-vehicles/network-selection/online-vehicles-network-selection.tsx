@@ -54,13 +54,21 @@ export function OnlineVehiclesNetworkSelection({
 					<SheetTitle className="text-start">Véhicules en ligne</SheetTitle>
 				</SheetHeader>
 				<div className="h-[96%] overflow-y-auto">
-					{favoriteNetworkIds.map((networkId) => {
-						const network = networks?.find(({ id }) => id === networkId);
-						if (typeof network === "undefined") return null;
-						return (
-							<OnlineVehiclesNetworkCard key={networkId} network={network} onClick={() => onNetworkSelect(network)} />
-						);
-					})}
+					{favoriteNetworkIds.length > 0 ? (
+						<div className="space-y-2">
+							{favoriteNetworkIds.map((networkId) => {
+								const network = networks?.find(({ id }) => id === networkId);
+								if (typeof network === "undefined") return null;
+								return (
+									<OnlineVehiclesNetworkCard
+										key={networkId}
+										network={network}
+										onClick={() => onNetworkSelect(network)}
+									/>
+								);
+							})}
+						</div>
+					) : null}
 					<Accordion type="multiple" value={expandedRegionAccordions} onValueChange={setExpandedRegionAccordions}>
 						{regions?.map((region) => {
 							const relevantNetworks = networksByRegion.get(region.id)?.filter((network) => network.hasVehiclesFeature);
