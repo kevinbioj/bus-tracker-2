@@ -53,7 +53,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 			mapOptions={{
 				center: initialLocation.position,
 				// style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-				style: "https://tiles.openfreemap.org/styles/liberty",
+				style: "/map-styles/liberty-fr.json",
 				zoom: initialLocation.zoom,
 			}}
 			ref={onMap}
