@@ -1,14 +1,3 @@
-function nthIndexOf(input, pattern, n) {
-	const length = input.length;
-	let i = -1;
-	let j = n;
-	while (j-- && i++ < length) {
-		i = input.indexOf(pattern, i);
-		if (i < 0) break;
-	}
-	return i;
-}
-
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -157,9 +146,13 @@ const sources = [
 	},
 	{
 		id: "saint-malo",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/3bd31fbe-93f4-432d-ade7-ee8d69897880",
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/mat-saint-malo-gtfs-rt-trip-update"],
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/3bd31fbe-93f4-432d-ade7-ee8d69897880",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/mat-st-malo-gtfs-rt?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		mode: "NO-TU",
 		getNetworkRef: () => "MAT",
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
 		id: "vannes",
