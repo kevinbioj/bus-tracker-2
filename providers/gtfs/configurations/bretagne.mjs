@@ -151,6 +151,7 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/mat-st-malo-gtfs-rt?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
 		mode: "NO-TU",
+		excludeScheduled: true,
 		getNetworkRef: () => "MAT",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
