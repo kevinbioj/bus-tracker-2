@@ -17,6 +17,7 @@ export type ImportGtfsOptions = {
 	importAllStops?: boolean;
 	shapesStrategy?: LoadShapesStrategy;
 	ignoreBlocks?: boolean;
+	postLoad?: (resource: Awaited<ReturnType<typeof importGtfs>>) => unknown;
 };
 
 export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptions = {}) {
@@ -28,5 +29,7 @@ export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptio
 	]);
 	const routes = await importRoutes(gtfsDirectory, options, agencies);
 	const trips = await importTrips(gtfsDirectory, options, routes, services, shapes, stops);
-	return { routes, stops, trips, journeys: new Map() };
+	const gtfs = { routes, stops, trips, journeys: new Map() };
+	options.postLoad?.(gtfs);
+	return gtfs;
 }

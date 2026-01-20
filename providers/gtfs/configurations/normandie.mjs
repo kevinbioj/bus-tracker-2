@@ -113,6 +113,33 @@ const sources = [
 			mapRouteId: (routeId) => routeId.slice(nthIndexOf(routeId, ":", 2) + 1, nthIndexOf(routeId, ":", 3)),
 			mapTripId: (tripId) => tripId.slice(nthIndexOf(tripId, ":", 2) + 1, nthIndexOf(tripId, ":", 3)),
 			mapStopId: (stopId) => stopId.slice(nthIndexOf(stopId, ":", 3) + 1, nthIndexOf(stopId, ":", 4)),
+			postLoad: (gtfs) => {
+				// we load line 500 stops
+				gtfs.stops.set("18003", { id: "18003", name: "Cité CTA", latitude: 49.888527, longitude: 1.138145 });
+				gtfs.stops.set("18002", { id: "18002", name: "Archelles", latitude: 49.882573, longitude: 1.141027 });
+				gtfs.stops.set("18006", { id: "18006", name: "Gare d'Arques", latitude: 49.880917, longitude: 1.133751 });
+				gtfs.stops.set("18008", { id: "18008", name: "Saint-Julien", latitude: 49.881272, longitude: 1.129485 });
+				gtfs.stops.set("18012", { id: "18012", name: "Place Lombardie", latitude: 49.881768, longitude: 1.126333 });
+				gtfs.stops.set("18016", { id: "18016", name: "Rue du 11 Novembre", latitude: 49.886195, longitude: 1.123094 });
+				gtfs.stops.set("18018", { id: "18018", name: "Rond-Point du Pont", latitude: 49.88952, longitude: 1.119379 });
+				gtfs.stops.set("18014", { id: "18014", name: "Maison Rouge", latitude: 49.893518, longitude: 1.115705 });
+				gtfs.stops.set("18220", { id: "18220", name: "Bel Horizon", latitude: 49.896363, longitude: 1.11058 });
+				gtfs.stops.set("18217", { id: "18217", name: "Cité Petit", latitude: 49.898806, longitude: 1.105222 });
+				gtfs.stops.set("18447", { id: "18447", name: "L'Éolienne", latitude: 49.902986, longitude: 1.095419 });
+				gtfs.stops.set("18222", {
+					id: "18222",
+					name: "Mairie de Rouxmesnil",
+					latitude: 49.904603,
+					longitude: 1.092942,
+				});
+				gtfs.stops.set("18215", { id: "18215", name: "La Cavée", latitude: 49.906801, longitude: 1.090195 });
+				gtfs.stops.set("18225", { id: "18225", name: "Rosendal", latitude: 49.910038, longitude: 1.085237 });
+				gtfs.stops.set("18082", { id: "18082", name: "Saint-Pierre", latitude: 49.913661, longitude: 1.081603 });
+				gtfs.stops.set("18031", { id: "18031", name: "Chanzy", latitude: 49.917598, longitude: 1.077191 });
+				gtfs.stops.set("18030", { id: "18030", name: "Hôtel de Ville", latitude: 49.92351, longitude: 1.076644 });
+				gtfs.stops.set("18256", { id: "18256", name: "Collège Delvincourt", latitude: 49.907529, longitude: 1.06885 });
+				gtfs.stops.set("18246", { id: "18246", name: "Collège Braque", latitude: 49.912088, longitude: 1.072183 });
+			},
 		},
 		mapTripUpdate: (tripUpdate) => {
 			if (tripUpdate.stopTimeUpdate) {
