@@ -169,6 +169,14 @@ const sources = [
 			mapStopId: (stopId) => stopId.slice(nthIndexOf(stopId, ":", 3) + 1, nthIndexOf(stopId, ":", 4)),
 		},
 		getNetworkRef: () => "SNGO",
+		mapTripUpdate: (tripUpdate) => {
+			// no vehicle data = trip ain't actually performed
+			if (typeof tripUpdate.vehicle?.id !== "string") {
+				return undefined;
+			}
+
+			return tripUpdate;
+		},
 	},
 	//- SNgo! (navette Giverny)
 	{
