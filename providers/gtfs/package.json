@@ -13,7 +13,7 @@
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@types/decompress": "^4.2.7",
-		"@types/node": "^25.0.8",
+		"@types/node": "^25.0.9",
 		"@types/papaparse": "^5.5.2",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
