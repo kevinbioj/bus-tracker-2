@@ -36,7 +36,11 @@ const sources = [
 			},
 		},
 		getAheadTime: (journey) => (journey?.trip.route.id.replace("TCAR:", "") === "99" ? 5 * 60 : undefined),
-		excludeScheduled: (trip) => !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id),
+		excludeScheduled: (trip) =>
+			!(
+				(trip.route.id === "43" && trip.headsign === "Place du Vivier HOUPPEVILLE") ||
+				trip.headsign === "Place Colbert MONT-SAINT-AIGNAN"
+			) && !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id),
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (
