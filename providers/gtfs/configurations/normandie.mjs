@@ -378,7 +378,7 @@ const sources = [
 	//- LeBus (Pont-Audemer)
 	{
 		id: "lebus",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/e8fe8980-c502-466c-9054-ddb28d367e4f",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/pontaudemer.zip",
 		getNetworkRef: () => "LEBUS",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
