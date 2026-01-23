@@ -1,3 +1,10 @@
+const isTramwayRoute = (routeId) => {
+	if (["L58", "L59"].includes(routeId)) return false;
+
+	const routeIdAsNumber = +routeId.slice(1);
+	return routeIdAsNumber >= 1 && routeIdAsNumber <= 99;
+};
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -9,6 +16,13 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "PID",
 		getVehicleRef: (vehicle) => vehicle?.label,
+		mapVehiclePosition: (vehicle) => {
+			if (isTramwayRoute(vehicle.trip.routeId)) {
+				vehicle.vehicle.label = `tram-${vehicle.vehicle.label}`;
+			}
+
+			return vehicle;
+		},
 	},
 ];
 
