@@ -9,17 +9,6 @@ const isTniVehicle = (id) => (id >= 421 && id <= 435) || (id >= 670 && id <= 685
 const sources = [
 	{
 		id: "tcar",
-		// staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=TCAR&operatorCode=ASTUCE",
-		// realtimeResourceHrefs: [
-		// 	"https://reseau-astuce.fr/ftp/gtfsrt/Astuce.TripUpdate.pb",
-		// 	"https://reseau-astuce.fr/ftp/gtfsrt/Astuce.VehiclePosition.pb",
-		// ],
-		// staticResourceHref:
-		// 	"https://api.mrn.cityway.fr/dataflow/offre-tc/download?provider=ASTUCE&dataFormat=GTFS&dataProfil=ASTUCE",
-		// realtimeResourceHrefs: [
-		// 	"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
-		// 	"https://api.mrn.cityway.fr/dataflow/vehicle-tc-tr/download?provider=TCAR&dataFormat=GTFS-RT",
-		// ],
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-global.zip",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
@@ -28,19 +17,19 @@ const sources = [
 		mode: "NO-TU",
 		gtfsOptions: {
 			filterTrips: (trip) => {
-				if (trip.route.id.replace("TCAR:", "") === "99") {
-					trip.block = "CALYPSO";
-				}
-
+				if (trip.route.id === "TCAR:99") trip.block = "CALYPSO";
 				return trip.route.id.startsWith("TCAR");
 			},
 		},
-		getAheadTime: (journey) => (journey?.trip.route.id.replace("TCAR:", "") === "99" ? 5 * 60 : undefined),
-		excludeScheduled: (trip) =>
-			!(
-				(trip.route.id === "43" && trip.headsign === "Place du Vivier HOUPPEVILLE") ||
-				trip.headsign === "Place Colbert MONT-SAINT-AIGNAN"
-			) && !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id),
+		getAheadTime: (journey) => (journey?.trip.route.id === "TCAR:99" ? 5 * 60 : undefined),
+		excludeScheduled: (trip) => {
+			if (trip.route.id === "TCAR:43") {
+				return !["Place Colbert MONT-SAINT-AIGNAN", "Place du Vivier HOUPPEVILLE"].includes(trip.headsign);
+			}
+
+			if (/^TCAR:2\d\d$/.test(trip.route.id)) return false;
+			return !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id);
+		},
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (
@@ -92,9 +81,8 @@ const sources = [
 		id: "tae",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tae.zip",
 		realtimeResourceHrefs: ["https://gtfs.tae76.fr/gtfs-rt.bin"],
-		excludeScheduled: (trip) => trip.route.name !== "I",
 		mapTripUpdate: (tripUpdate) => {
-			if (typeof tripUpdate.vehicle?.id === "undefined") return;
+			if (!tripUpdate.vehicle?.id) return;
 			if (tripUpdate.stopTimeUpdate?.some(({ arrival }) => arrival?.delay > 5400)) return;
 			return tripUpdate;
 		},
@@ -108,7 +96,6 @@ const sources = [
 			journey?.calls.some((c) => !!(c.expectedArrivalTime ?? c.expectedDepartureTime)) ? 15 * 60 : 0,
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TAE",
-		isValidJourney: (vehicleJourney) => typeof vehicleJourney.vehicleRef !== "undefined",
 	},
 	// {
 	// 	id: "tgr",
