@@ -394,6 +394,20 @@ const sources = [
 		getNetworkRef: () => "PALUEL-NAVETTES",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
+	//- Bacs 76
+	{
+		id: "bac76",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/bac76.zip",
+		realtimeResourceHrefs: [],
+		gtfsOptions: {
+			filterTrips: (trip) => {
+				trip.block = trip.route.id;
+				return trip;
+			},
+		},
+		getNetworkRef: () => "BAC-76",
+		getDestination: (journey) => journey?.calls.at(-1)?.stop.name,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
