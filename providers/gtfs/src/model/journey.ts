@@ -2,6 +2,7 @@ import type { VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-track
 import type { Temporal } from "temporal-polyfill";
 
 import { getDirection } from "../utils/get-direction.js";
+import { groupBy } from "../utils/group-by.js";
 
 import type { StopTimeUpdate } from "./gtfs-rt.js";
 import type { Stop } from "./stop.js";
@@ -119,8 +120,11 @@ export class Journey {
 		let arrivalDelay: number | undefined;
 		let departureDelay: number | undefined;
 
-		const stopTimeUpdatesByStopId = Map.groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopId);
-		const stopTimeUpdatesByStopSequence = Map.groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopSequence);
+		const stopTimeUpdatesByStopSequence = groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopSequence);
+		const stopTimeUpdatesByStopId =
+			Object.keys(stopTimeUpdatesByStopSequence).length > 0
+				? undefined
+				: groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopId);
 
 		for (const call of this.calls) {
 			if (!appendTripUpdateInformation) {
@@ -129,8 +133,7 @@ export class Journey {
 				call.status = "SCHEDULED";
 			}
 
-			let timeUpdate = (stopTimeUpdatesByStopSequence.get(call.sequence) ??
-				stopTimeUpdatesByStopId.get(call.stop.id))?.[0];
+			let timeUpdate = stopTimeUpdatesByStopSequence[call.sequence] ?? stopTimeUpdatesByStopId?.[call.stop.id];
 
 			// Prevent wrong time assignation on circular lines when all stop events aren't provided
 			if (typeof timeUpdate?.stopSequence === "number" && timeUpdate.stopSequence !== call.sequence) {
