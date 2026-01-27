@@ -185,10 +185,10 @@ importers:
         version: link:../../libraries/contracts
       '@hono/node-server':
         specifier: ^1.19.9
-        version: 1.19.9(hono@4.11.6)
+        version: 1.19.9(hono@4.11.7)
       '@hono/oauth-providers':
         specifier: ^0.8.5
-        version: 0.8.5(hono@4.11.6)
+        version: 0.8.5(hono@4.11.7)
       '@sentry/node':
         specifier: ^10.36.0
         version: 10.36.0
@@ -199,8 +199,8 @@ importers:
         specifier: ^0.45.1
         version: 0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.15.6)(postgres@3.4.8)
       hono:
-        specifier: ^4.11.6
-        version: 4.11.6
+        specifier: ^4.11.7
+        version: 4.11.7
       hono-sessions:
         specifier: ^0.8.0
         version: 0.8.0
@@ -3934,8 +3934,8 @@ packages:
   hono-sessions@0.8.0:
     resolution: {integrity: sha512-44nDuxcGTlk1hKE+7vH8KnNleKYnr8p3i/vkT8640jU8V0F1Tm873F5NdfXpctZax3CtnQ4cUKyEF1axXdkZrw==}
 
-  hono@4.11.6:
-    resolution: {integrity: sha512-ofIiiHyl34SV6AuhE3YT2mhO5HRWokce+eUYE82TsP6z0/H3JeJcjVWEMSIAiw2QkjDOEpES/lYsg8eEbsLtdw==}
+  hono@4.11.7:
+    resolution: {integrity: sha512-l7qMiNee7t82bH3SeyUCt9UF15EVmaBvsppY2zQtrbIhl/yzBTny+YUxsVjSjQ6gaqaeVtZmGocom8TzBlA4Yw==}
     engines: {node: '>=16.9.0'}
 
   ico-endec@0.1.6:
@@ -6434,13 +6434,13 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@hono/node-server@1.19.9(hono@4.11.6)':
+  '@hono/node-server@1.19.9(hono@4.11.7)':
     dependencies:
-      hono: 4.11.6
+      hono: 4.11.7
 
-  '@hono/oauth-providers@0.8.5(hono@4.11.6)':
+  '@hono/oauth-providers@0.8.5(hono@4.11.7)':
     dependencies:
-      hono: 4.11.6
+      hono: 4.11.7
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.71.1(react@19.2.4))':
     dependencies:
@@ -8776,11 +8776,11 @@ snapshots:
 
   hono-sessions@0.8.0:
     dependencies:
-      hono: 4.11.6
+      hono: 4.11.7
       iron-webcrypto: 1.2.1
       ohash: 2.0.11
 
-  hono@4.11.6: {}
+  hono@4.11.7: {}
 
   ico-endec@0.1.6: {}
 
