@@ -1,9 +1,7 @@
 import "dotenv/config.js";
-import "./sentry.js";
 
 import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { serve } from "@hono/node-server";
-import * as Sentry from "@sentry/node";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
@@ -44,19 +42,12 @@ await redis.subscribe("journeys", async (message) => {
 		vehicleJourneys = payload.flatMap((entry) => {
 			const parsed = vehicleJourneySchema.safeParse(entry);
 			if (!parsed.success) {
-				Sentry.captureException(parsed.error, {
-					extra: { entry },
-					tags: { section: "journey-decode" },
-				});
+				console.error(parsed.error);
 				return [];
 			}
 			return parsed.data;
 		});
 	} catch (error) {
-		Sentry.captureException(error, {
-			extra: { message },
-			tags: { section: "journey-decode" },
-		});
 		console.error(error);
 		return;
 	}
