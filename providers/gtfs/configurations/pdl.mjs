@@ -289,6 +289,13 @@ const sources = [
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 	{
+		id: "saint-nazaire",
+		staticResourceHref:
+			"https://app.mecatran.com/utw/ws/gtfsfeed/static/stran-merge?apiKey=2e6071036d276153761f0c090b4a45420e047612&type=gtfs_stran",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "SAINT-NAZAIRE",
+	},
+	{
 		id: "saumur",
 		staticResourceHref: "https://mobi-iti-pdl.okina.fr/static/mobiiti_saumur_val_de_loire/gtfs_imported-id_saumur.zip",
 		realtimeResourceHrefs: [],
