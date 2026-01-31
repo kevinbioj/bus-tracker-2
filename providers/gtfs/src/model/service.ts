@@ -1,5 +1,3 @@
-import { Temporal } from "temporal-polyfill";
-
 import { createPlainDate } from "../cache/temporal-cache.js";
 
 export class Service {

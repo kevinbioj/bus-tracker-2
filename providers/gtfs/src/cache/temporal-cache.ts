@@ -1,5 +1,3 @@
-import { Temporal } from "temporal-polyfill";
-
 const plainDateCache = new Map<string, Temporal.PlainDate>();
 
 export function createPlainDate(item: string) {

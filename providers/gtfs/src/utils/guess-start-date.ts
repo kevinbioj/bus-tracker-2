@@ -1,5 +1,3 @@
-import { Temporal } from "temporal-polyfill";
-
 export function guessStartDate(
 	startTime: Temporal.PlainTime,
 	startModulus: number,

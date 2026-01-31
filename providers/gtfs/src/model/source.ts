@@ -2,7 +2,6 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { VehicleJourney } from "@bus-tracker/contracts";
-import { Temporal } from "temporal-polyfill";
 
 import { downloadGtfs } from "../download/download-gtfs.js";
 import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";

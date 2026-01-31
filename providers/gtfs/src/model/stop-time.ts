@@ -1,5 +1,3 @@
-import type { Temporal } from "temporal-polyfill";
-
 import type { VehicleJourneyCallFlags } from "@bus-tracker/contracts";
 import type { Stop } from "./stop.js";
 

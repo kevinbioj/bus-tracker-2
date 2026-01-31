@@ -1,5 +1,3 @@
-import type { Temporal } from "temporal-polyfill";
-
 import { createZonedDateTime } from "../cache/temporal-cache.js";
 
 import { Journey } from "./journey.js";

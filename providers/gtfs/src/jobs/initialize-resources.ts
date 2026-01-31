@@ -1,5 +1,4 @@
 import pLimit from "p-limit";
-import { Temporal } from "temporal-polyfill";
 
 import type { Source } from "../model/source.js";
 import { createStopWatch } from "../utils/stop-watch.js";

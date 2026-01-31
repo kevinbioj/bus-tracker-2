@@ -5,7 +5,6 @@ import { Cron } from "croner";
 import DraftLog from "draftlog";
 import pLimit from "p-limit";
 import { createClient } from "redis";
-import { Temporal } from "temporal-polyfill";
 
 import { loadConfiguration } from "./configuration/load-configuration.js";
 import { computeVehicleJourneys } from "./jobs/compute-current-journeys.js";

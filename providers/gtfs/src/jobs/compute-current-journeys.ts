@@ -1,5 +1,4 @@
 import type { VehicleJourney } from "@bus-tracker/contracts";
-import { Temporal } from "temporal-polyfill";
 import { match, P } from "ts-pattern";
 
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";

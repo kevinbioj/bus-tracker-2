@@ -1,5 +1,3 @@
-import type { Temporal } from "temporal-polyfill";
-
 import type { Journey } from "./journey.js";
 import type { Route } from "./route.js";
 import type { Stop } from "./stop.js";

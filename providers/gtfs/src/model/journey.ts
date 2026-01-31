@@ -1,5 +1,4 @@
 import type { VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-tracker/contracts";
-import type { Temporal } from "temporal-polyfill";
 
 import { getDirection } from "../utils/get-direction.js";
 import { groupBy } from "../utils/group-by.js";
