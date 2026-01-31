@@ -368,7 +368,7 @@ const sources = [
 	//- Amibus
 	{
 		id: "amibus",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/cdd4681c-dfcb-46c1-8802-2aae4f296618",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/vire-normandie.zip",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "AMIBUS-VIRE",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
