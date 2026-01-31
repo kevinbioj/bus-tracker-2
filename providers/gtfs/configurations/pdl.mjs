@@ -235,6 +235,13 @@ const sources = [
 		getNetworkRef: () => "CHOLETBUS",
 	},
 	{
+		id: "laval",
+		staticResourceHref:
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rd-laval/exports/pan.zip",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "LAVAL",
+	},
+	{
 		id: "nantes",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/naolib.zip",
 		realtimeResourceHrefs: [
