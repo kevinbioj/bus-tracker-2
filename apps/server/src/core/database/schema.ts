@@ -19,7 +19,10 @@ import { Temporal } from "temporal-polyfill";
 
 export const timestamp = customType<{
 	data: Temporal.Instant;
-	driverData: string;
+	// on postgres, dates are returned as string
+	/* driverData: string; */
+	// on bun's SQL, dates are returned as Date
+	driverData: Date;
 	config: { precision?: number };
 }>({
 	dataType(config) {
@@ -27,10 +30,10 @@ export const timestamp = customType<{
 		return `timestamp${precision}`;
 	},
 	fromDriver(value) {
-		return Temporal.Instant.from(`${value.replace(" ", "T")}Z`);
+		return Temporal.Instant.from(value.toISOString());
 	},
 	toDriver(value) {
-		return value.toString();
+		return new Date(value.epochMilliseconds);
 	},
 });
 
