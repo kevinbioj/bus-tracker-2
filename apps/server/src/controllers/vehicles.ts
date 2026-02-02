@@ -1,5 +1,5 @@
 import { vehicleJourneyLineTypeEnum } from "@bus-tracker/contracts";
-import { and, asc, between, desc, eq, ilike, isNotNull, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, between, desc, eq, ilike, isNotNull, isNull, gt, sql, inArray } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 import { match } from "ts-pattern";
 import * as z from "zod";
@@ -94,28 +94,28 @@ hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
 	const vehicleList = await database
 		.select()
 		.from(vehiclesTable)
-		.offset(page * limit)
-		.limit(limit)
 		.where(vehiclesListWhereClause)
-		.orderBy(sortOrder === "asc" ? asc(vehiclesTable[sortBy]) : desc(vehiclesTable[sortBy]));
+		.orderBy(sortOrder === "asc" ? asc(vehiclesTable[sortBy]) : desc(vehiclesTable[sortBy]))
+		.offset(page * limit)
+		.limit(limit);
 
-	const onlineVehicleList = Map.groupBy(
-		await database
-			.select({
-				vehicleId: vehiclesTable.id,
-				lineId: lineActivitiesTable.lineId,
-				since: lineActivitiesTable.startedAt,
-			})
-			.from(vehiclesTable)
-			.where(
-				and(
-					vehiclesListWhereClause,
-					lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivitiesTable.updatedAt}))`, 600),
-				),
-			)
-			.innerJoin(lineActivitiesTable, eq(vehiclesTable.id, lineActivitiesTable.vehicleId)),
-		(currentActivity) => currentActivity.vehicleId,
-	);
+	// To avoid scanning large tables, fetch recent activities only for the vehicles we've just queried
+	const vehicleIds = vehicleList.map((v) => v.id);
+	const recentActivities = await database
+		.select({
+			vehicleId: lineActivitiesTable.vehicleId,
+			lineId: lineActivitiesTable.lineId,
+			since: lineActivitiesTable.startedAt,
+		})
+		.from(lineActivitiesTable)
+		.where(
+			and(
+				inArray(lineActivitiesTable.vehicleId, vehicleIds),
+				gt(lineActivitiesTable.updatedAt, sql`NOW() - INTERVAL '10 minutes'`),
+			),
+		);
+
+	const onlineVehicleList = Map.groupBy(recentActivities, (currentActivity) => currentActivity.vehicleId);
 
 	const vehicleWithActivityList = vehicleList.map(({ lastSeenAt, ...vehicle }) => {
 		// Ce n'est pas possible, dans un monde normal et pour un même véhicule,
@@ -162,19 +162,19 @@ hono.get("/vehicles/:id", createParamValidator(getVehicleByIdParamSchema), async
 	const currentActivity = (
 		await database
 			.select({
-				vehicleId: vehiclesTable.id,
+				vehicleId: lineActivitiesTable.vehicleId,
 				lineId: lineActivitiesTable.lineId,
 				since: lineActivitiesTable.startedAt,
 			})
-			.from(vehiclesTable)
+			.from(lineActivitiesTable)
 			.where(
 				and(
-					eq(vehiclesTable.id, vehicle.id),
-					lt(sql`EXTRACT(EPOCH from (CURRENT_TIMESTAMP - ${lineActivitiesTable.updatedAt}))`, 600),
+					eq(lineActivitiesTable.vehicleId, vehicle.id),
+					gt(lineActivitiesTable.updatedAt, sql`NOW() - INTERVAL '10 minutes'`),
 				),
 			)
-			.innerJoin(lineActivitiesTable, eq(vehiclesTable.id, lineActivitiesTable.vehicleId))
 			.orderBy(desc(lineActivitiesTable.startedAt))
+			.limit(1)
 	).at(0);
 
 	const activeMonths = await database
