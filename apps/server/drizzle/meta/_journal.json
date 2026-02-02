@@ -148,6 +148,13 @@
       "when": 1770057741949,
       "tag": "0020_special_pixie",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1770062801004,
+      "tag": "0021_chilly_the_hood",
+      "breakpoints": true
     }
   ]
 }

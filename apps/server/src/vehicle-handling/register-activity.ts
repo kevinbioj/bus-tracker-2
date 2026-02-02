@@ -18,8 +18,8 @@ export async function registerActivity(vehicleJourney: DisposeableVehicleJourney
 		.where(
 			and(
 				eq(lineActivitiesTable.vehicleId, vehicleJourney.vehicle.id),
-				eq(lineActivitiesTable.lineId, vehicleJourney.lineId),
 				gte(lineActivitiesTable.updatedAt, recordedAt.subtract({ minutes: ACTIVITY_THRESHOLD_MNS })),
+				eq(lineActivitiesTable.lineId, vehicleJourney.lineId),
 			),
 		);
 

@@ -45,7 +45,7 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 
 		for (const vehicleJourney of vehicleJourneys) {
 			const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
-			if (timeSince.total("minutes") >= 10) return;
+			if (timeSince.total("minutes") >= 10) continue;
 
 			limitRegister(async () => {
 				const line = vehicleJourney.line
