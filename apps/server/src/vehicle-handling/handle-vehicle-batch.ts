@@ -1,18 +1,15 @@
 import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts";
-import pLimit from "p-limit";
 import { Temporal } from "temporal-polyfill";
 
-import type { VehicleEntity } from "../core/database/schema.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
+import { keyBy } from "../utils/key-by.js";
 import { nthIndexOf } from "../utils/nth-index-of.js";
 
 import { importLines } from "./import/import-lines.js";
 import { importNetwork } from "./import/import-network.js";
 import { importVehicles } from "./import/import-vehicle.js";
-import { registerActivity } from "./register-activity.js";
-
-const limitRegister = pLimit(240);
+import { registerActivities } from "./register-activities.js";
 
 export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
@@ -37,54 +34,51 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 			[new Map<string, VehicleJourneyLine>(), new Set<string>()],
 		);
 
-		const lines = await importLines(network, Array.from(lineDatas.values()), now);
-		const vehicles = (await importVehicles(network, vehicleRefs)).reduce((map, vehicle) => {
-			map.set(vehicle.ref, vehicle);
-			return map;
-		}, new Map<string, VehicleEntity>());
+		const lines = keyBy(await importLines(network, Array.from(lineDatas.values()), now), (line) => line.references!);
+		const vehicles = keyBy(await importVehicles(network, vehicleRefs), (vehicle) => vehicle.ref);
+
+		const registerableActivities = [];
 
 		for (const vehicleJourney of vehicleJourneys) {
 			const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
 			if (timeSince.total("minutes") >= 10) continue;
 
-			limitRegister(async () => {
-				const line = vehicleJourney.line
-					? lines.find(({ references }) => references?.includes(vehicleJourney.line!.ref))
-					: undefined;
+			const line = vehicleJourney.line ? lines.get(vehicleJourney.line!.ref) : undefined;
 
-				const disposeableJourney: DisposeableVehicleJourney = {
-					id: vehicleJourney.id.replaceAll("/", "_"),
-					lineId: line?.id,
-					direction: vehicleJourney.direction,
-					destination: vehicleJourney.destination,
-					calls: vehicleJourney.calls,
-					position: vehicleJourney.position,
-					occupancy: vehicleJourney.occupancy,
-					networkId: network.id,
-					operatorId: undefined,
-					vehicle: undefined,
-					serviceDate: vehicleJourney.serviceDate,
-					updatedAt: vehicleJourney.updatedAt,
-				};
+			const disposeableJourney: DisposeableVehicleJourney = {
+				id: vehicleJourney.id.replaceAll("/", "_"),
+				lineId: line?.id,
+				direction: vehicleJourney.direction,
+				destination: vehicleJourney.destination,
+				calls: vehicleJourney.calls,
+				position: vehicleJourney.position,
+				occupancy: vehicleJourney.occupancy,
+				networkId: network.id,
+				operatorId: undefined,
+				vehicle: undefined,
+				serviceDate: vehicleJourney.serviceDate,
+				updatedAt: vehicleJourney.updatedAt,
+			};
 
-				journeyStore.set(disposeableJourney.id, disposeableJourney);
+			journeyStore.set(disposeableJourney.id, disposeableJourney);
 
-				if (typeof vehicleJourney.vehicleRef !== "undefined") {
-					const vehicle = vehicles.get(vehicleJourney.vehicleRef);
-					if (typeof vehicle !== "undefined") {
-						disposeableJourney.vehicle = {
-							id: vehicle.id,
-							number: vehicle.number,
-						};
+			if (typeof vehicleJourney.vehicleRef !== "undefined") {
+				const vehicle = vehicles.get(vehicleJourney.vehicleRef);
+				if (typeof vehicle !== "undefined") {
+					disposeableJourney.vehicle = {
+						id: vehicle.id,
+						number: vehicle.number,
+					};
 
-						await registerActivity(disposeableJourney);
-					} else if (networkRef === "SNCF") {
-						disposeableJourney.vehicle = {
-							number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
-						};
-					}
+					registerableActivities.push(disposeableJourney);
+				} else if (networkRef === "SNCF") {
+					disposeableJourney.vehicle = {
+						number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
+					};
 				}
-			});
+			}
 		}
+
+		registerActivities(registerableActivities);
 	}
 }

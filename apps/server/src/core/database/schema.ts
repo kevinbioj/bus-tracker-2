@@ -1,5 +1,5 @@
 import { vehicleJourneyLineTypes } from "@bus-tracker/contracts";
-import { type InferSelectModel, sql } from "drizzle-orm";
+import { desc, type InferSelectModel, sql } from "drizzle-orm";
 import {
 	boolean,
 	char,
@@ -154,7 +154,8 @@ export const lineActivitiesTable = pgTable(
 	(table) => [
 		index("line_activity_line_indeex").on(table.lineId),
 		index("line_activity_vehicle_index").on(table.vehicleId),
-		index("line_activity_vehicle_updated_at_index").on(table.vehicleId, table.updatedAt),
+		index("line_activity_vehicle_updated_at_desc_index").on(table.vehicleId, desc(table.updatedAt)),
+		index("line_activity_vehicle_line_updated_at_desc_index").on(table.vehicleId, table.lineId, desc(table.updatedAt)),
 	],
 );
 

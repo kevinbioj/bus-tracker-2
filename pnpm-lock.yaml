@@ -198,9 +198,6 @@ importers:
       hono-sessions:
         specifier: ^0.8.0
         version: 0.8.0
-      p-limit:
-        specifier: ^7.2.0
-        version: 7.2.0
       postgres:
         specifier: ^3.4.8
         version: 3.4.8
