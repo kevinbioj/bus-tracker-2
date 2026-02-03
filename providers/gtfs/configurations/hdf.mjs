@@ -53,6 +53,19 @@ const sources = [
 		getVehicleRef: () => undefined,
 	},
 	{
+		id: "clermont",
+		staticResourceHref:
+			"https://api.oisemob.cityway.fr/dataflow/offre-tc/download?provider=LEBUS&dataFormat=GTFS&dataProfil=OPENDATA",
+		realtimeResourceHrefs: [
+			"https://api.oisemob.cityway.fr/dataflow/horaire-tc-tr/download?provider=LEBUS&dataFormat=gtfs-rt",
+			"https://api.oisemob.cityway.fr/dataflow/vehicule-tc-tr/download?provider=LEBUS&dataFormat=gtfs-rt",
+		],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "CLERMONT-60",
+	},
+	{
 		id: "coeur-flandres",
 		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/hopbus/current/revision/gtfs",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/hopbus/realtime"],
