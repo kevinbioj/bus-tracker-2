@@ -1,4 +1,5 @@
-import { sql } from "drizzle-orm";
+import { DrizzleQueryError, type SQL, sql } from "drizzle-orm";
+import { PostgresError } from "postgres";
 import { Temporal } from "temporal-polyfill";
 
 import { database } from "../core/database/database.js";
@@ -11,6 +12,28 @@ type RegisterActivityInput = {
 	lineId: number;
 	serviceDate: Temporal.PlainDate;
 	recordedAt: Temporal.Instant;
+};
+
+const performRegistration = async (sqlRows: SQL<unknown>, retryCount = 3) => {
+	try {
+		await database.execute(sql`
+			SELECT register_activities(
+				ARRAY[${sqlRows}],
+				${ACTIVITY_THRESHOLD_MNS}
+			)
+		`);
+	} catch (error) {
+		if (error instanceof DrizzleQueryError && error.cause instanceof PostgresError && error.cause.code === "40P01") {
+			if (retryCount === 0) {
+				return;
+			}
+
+			await performRegistration(sqlRows, retryCount - 1);
+			return;
+		}
+
+		console.error(error);
+	}
 };
 
 export async function registerActivities(vehicleJourneys: DisposeableVehicleJourney[]) {
@@ -36,17 +59,14 @@ export async function registerActivities(vehicleJourneys: DisposeableVehicleJour
 	}
 
 	const sqlRows = sql.join(
-		activities.map(
-			(a) =>
-				sql`ROW(${a.vehicleId}, ${a.lineId}, ${a.recordedAt.toString()}, ${a.serviceDate.toString()})::activity_input`,
-		),
+		activities
+			.toSorted((a, b) => a.vehicleId - b.vehicleId)
+			.map(
+				(a) =>
+					sql`ROW(${a.vehicleId}, ${a.lineId}, ${a.recordedAt.toString()}, ${a.serviceDate.toString()})::activity_input`,
+			),
 		sql`,`,
 	);
 
-	await database.execute(sql`
-		SELECT register_activities(
-			ARRAY[${sqlRows}],
-			${ACTIVITY_THRESHOLD_MNS}
-		)
-	`);
+	await performRegistration(sqlRows);
 }
