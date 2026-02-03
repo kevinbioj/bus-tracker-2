@@ -12,7 +12,7 @@ import { importNetwork } from "./import/import-network.js";
 import { importVehicles } from "./import/import-vehicle.js";
 import { registerActivity } from "./register-activity.js";
 
-const limitRegister = pLimit(60);
+const limitRegister = pLimit(240);
 
 export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
