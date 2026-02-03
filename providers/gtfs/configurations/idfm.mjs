@@ -146,6 +146,15 @@ const sources = [
 		getNetworkRef: () => "TRAVERSE-BRANCION-COMMERCE",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
+	{
+		id: "keolis-seine-oise-est",
+		staticResourceHref: "https://api.pysae.com/api/v4/groups/keolis-seine-oise-est-8Bw7/gtfs/pub",
+		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/keolis-seine-oise-est-8Bw7/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "KEOLIS-SEINE-OISE-EST",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
