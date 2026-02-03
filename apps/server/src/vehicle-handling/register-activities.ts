@@ -1,5 +1,5 @@
 import { DrizzleQueryError, type SQL, sql } from "drizzle-orm";
-import { PostgresError } from "postgres";
+import pg from "postgres";
 import { Temporal } from "temporal-polyfill";
 
 import { database } from "../core/database/database.js";
@@ -23,7 +23,7 @@ const performRegistration = async (sqlRows: SQL<unknown>, retryCount = 3) => {
 			)
 		`);
 	} catch (error) {
-		if (error instanceof DrizzleQueryError && error.cause instanceof PostgresError && error.cause.code === "40P01") {
+		if (error instanceof DrizzleQueryError && error.cause instanceof pg.PostgresError && error.cause.code === "40P01") {
 			if (retryCount === 0) {
 				return;
 			}
