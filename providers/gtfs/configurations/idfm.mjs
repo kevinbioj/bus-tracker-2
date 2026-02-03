@@ -116,7 +116,9 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-ph48/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => "HOUILLES",
+		mapLineRef: (lineRef) => `KEOLIS-PH48_${lineRef}`,
+		getNetworkRef: () => "IDFM-ARGENTEUIL-BOUCLES-SEINE",
+		getOperatorRef: () => "KEOLIS-PH48",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
@@ -152,7 +154,9 @@ const sources = [
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/keolis-seine-oise-est-8Bw7/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => "KEOLIS-SEINE-OISE-EST",
+		mapLineRef: (lineRef) => `KSOE_${lineRef}`,
+		getNetworkRef: () => "IDFM-POISSY-LES-MUREAUX",
+		getOperatorRef: () => "KSOE",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 ];
