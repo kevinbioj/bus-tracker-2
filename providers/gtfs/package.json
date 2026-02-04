@@ -13,19 +13,19 @@
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@types/decompress": "^4.2.7",
-		"@types/node": "^25.1.0",
+		"@types/node": "^25.2.0",
 		"@types/papaparse": "^5.5.2",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.18"
 	},
 	"dependencies": {
-		"croner": "^9.1.0",
+		"croner": "^10.0.1",
 		"decompress": "^4.2.1",
 		"dotenv": "^17.2.3",
 		"draftlog": "^1.0.13",
 		"gtfs-realtime-bindings": "^1.1.1",
-		"p-limit": "^7.2.0",
+		"p-limit": "^7.3.0",
 		"papaparse": "^5.5.3",
 		"redis": "^5.10.0",
 		"temporal-polyfill": "^0.3.0",

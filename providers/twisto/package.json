@@ -12,12 +12,12 @@
 	},
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@types/node": "^25.1.0",
+		"@types/node": "^25.2.0",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
-		"croner": "^9.1.0",
+		"croner": "^10.0.1",
 		"draftlog": "^1.0.13",
 		"fast-xml-parser": "^5.3.4",
 		"ky": "^1.14.3",
