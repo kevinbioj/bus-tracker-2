@@ -18,6 +18,7 @@ import { journeyStore } from "../core/store/journey-store.js";
 import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
 import { hono } from "../server.js";
+import { keyBy } from "../utils/key-by.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
 
@@ -99,8 +100,6 @@ hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
 		.offset(page * limit)
 		.limit(limit);
 
-	// To avoid scanning large tables, fetch recent activities only for the vehicles we've just queried
-	const vehicleIds = vehicleList.map((v) => v.id);
 	const recentActivities = await database
 		.select({
 			vehicleId: lineActivitiesTable.vehicleId,
@@ -110,35 +109,29 @@ hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
 		.from(lineActivitiesTable)
 		.where(
 			and(
-				inArray(lineActivitiesTable.vehicleId, vehicleIds),
+				inArray(
+					lineActivitiesTable.vehicleId,
+					vehicleList.map((v) => v.id),
+				),
 				gt(lineActivitiesTable.updatedAt, sql`NOW() - INTERVAL '10 minutes'`),
 			),
-		);
+		)
+		.orderBy(desc(lineActivitiesTable.updatedAt));
 
-	const onlineVehicleList = Map.groupBy(recentActivities, (currentActivity) => currentActivity.vehicleId);
+	const lastActivityByVehicleId = keyBy(recentActivities, (currentActivity) => currentActivity.vehicleId, "ignore");
 
 	const vehicleWithActivityList = vehicleList.map(({ lastSeenAt, ...vehicle }) => {
 		// Ce n'est pas possible, dans un monde normal et pour un même véhicule,
 		// de tourner sur plusieurs lignes en même temps. Si jamais c'est le cas,
 		// et bien on prendra le dernier début puis le reste ira se faire voir 👍
-		const currentActivity = onlineVehicleList
-			.get(vehicle.id)
-			?.toSorted((a, b) => Temporal.Instant.compare(b.since, a.since))
-			.at(0);
-		const journey = journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
+		const currentActivity = lastActivityByVehicleId.get(vehicle.id);
+
 		return {
 			...vehicle,
 			activity: {
 				status: currentActivity ? "online" : "offline",
 				since: currentActivity ? currentActivity.since : lastSeenAt,
 				lineId: currentActivity?.lineId,
-				markerId: journey?.id,
-				position: journey
-					? {
-							latitude: journey.position.latitude,
-							longitude: journey.position.longitude,
-						}
-					: undefined,
 			},
 		};
 	});

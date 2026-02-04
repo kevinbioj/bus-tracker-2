@@ -7,6 +7,7 @@ import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database
 import { journeyStore } from "../core/store/journey-store.js";
 
 import { hono } from "../server.js";
+import { keyBy } from "../utils/key-by.js";
 
 const getLineByIdParamSchema = z.object({
 	id: z.coerce.number().min(0),
@@ -27,16 +28,16 @@ hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSche
 	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
 	if (typeof line === "undefined") return c.json({ error: `No line found with id '${id}'.` }, 404);
 
-	const onlineVehicleIds = journeyStore
-		.values()
-		.flatMap((journey) =>
-			journey.lineId === line.id && typeof journey.vehicle?.id !== "undefined" ? [journey.vehicle.id] : [],
-		)
-		.toArray();
+	const onlineJourneys = keyBy(
+		journeyStore.values().filter((journey) => journey.lineId === line.id && typeof journey.vehicle?.id !== "undefined"),
+		(journey) => journey.vehicle?.id ?? -1,
+	);
+
+	const onlineVehicleIds = Array.from(onlineJourneys.keys());
 
 	const vehicleList = await database.select().from(vehiclesTable).where(inArray(vehiclesTable.id, onlineVehicleIds));
 
-	const sinceList = Map.groupBy(
+	const sinceList = keyBy(
 		await database
 			.select()
 			.from(lineActivitiesTable)
@@ -44,12 +45,13 @@ hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSche
 			.orderBy(desc(lineActivitiesTable.startedAt))
 			.limit(vehicleList.length * 2),
 		(activity) => activity.vehicleId,
+		"ignore",
 	);
 
 	return c.json(
 		vehicleList.map((vehicle) => {
-			const journey = journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
-			const sinceData = sinceList.get(vehicle.id)?.[0];
+			const journey = onlineJourneys.get(vehicle.id);
+			const sinceData = sinceList.get(vehicle.id);
 			return {
 				...vehicle,
 				activity: {

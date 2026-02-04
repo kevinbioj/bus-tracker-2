@@ -176,6 +176,13 @@
       "when": 1770111514045,
       "tag": "0024_melodic_wrecking_crew",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1770200279475,
+      "tag": "0025_register_activities_with_locks",
+      "breakpoints": true
     }
   ]
 }
