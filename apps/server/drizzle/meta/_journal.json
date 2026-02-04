@@ -183,6 +183,13 @@
       "when": 1770200279475,
       "tag": "0025_register_activities_with_locks",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1770221216411,
+      "tag": "0026_register_activities_with_locks_actually",
+      "breakpoints": true
     }
   ]
 }
