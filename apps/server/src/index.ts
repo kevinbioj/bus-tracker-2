@@ -34,6 +34,7 @@ const redis = createClient({
 await redis.connect();
 
 await redis.subscribe("journeys", async (message) => {
+	let didWarn = false;
 	let vehicleJourneys: VehicleJourney[];
 
 	try {
@@ -42,7 +43,11 @@ await redis.subscribe("journeys", async (message) => {
 		vehicleJourneys = payload.flatMap((entry) => {
 			const parsed = vehicleJourneySchema.safeParse(entry);
 			if (!parsed.success) {
-				console.error(parsed.error);
+				if (!didWarn) {
+					console.warn(`Rejected object(s) from journeys channel, sample:`, entry);
+					console.error(parsed.error);
+					didWarn = true;
+				}
 				return [];
 			}
 			return parsed.data;
