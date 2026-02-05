@@ -34,6 +34,14 @@ const sources = [
 		getDestination: (journey) => journey?.calls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
+	{
+		id: "sud-lib",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/sudlib.zip",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/sud_lib/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "SUD-LIB",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
