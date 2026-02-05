@@ -183,6 +183,16 @@ const sources = [
 		getDestination: (journey) => journey?.trip?.headsign?.replace(`LIGNE ${journey?.trip?.route.name} - `, ""),
 	},
 	{
+		id: "st-die-des-vosges",
+		staticResourceHref: "https://pysae.com/api/v2/groups/saint-die-des-vosges/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/saint-die-des-vosges/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "ST-DIE-DES-VOSGES",
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
+	},
+	{
 		id: "st-etienne",
 		staticResourceHref: "https://api.stas3.cityway.fr/dataflow/offre-tc/download?provider=STAS&dataFormat=GTFS",
 		realtimeResourceHrefs: [
