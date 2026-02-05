@@ -4,7 +4,9 @@ export async function getStaleness(href: string) {
 	const response = await fetch(href, {
 		headers: { "User-Agent": USER_AGENT },
 		method: "HEAD",
+		signal: AbortSignal.timeout(30_000),
 	});
+
 	if (!response.ok) {
 		throw new Error(`Unable to get response from '${href}' (status ${response.status}).`);
 	}
