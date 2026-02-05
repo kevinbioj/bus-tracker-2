@@ -99,6 +99,16 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1),
 	},
 	{
+		id: "na-19-transdevlr19",
+		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-lignes-regulieres-correze/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-lignes-regulieres-correze/gtfs-rt"],
+		gtfsOptions: { shapesStrategy: "IGNORE" },
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "NA-19",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "na-79",
 		staticResourceHref: "https://pysae.com/api/v2/groups/deux-sevres/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/deux-sevres/gtfs-rt"],
