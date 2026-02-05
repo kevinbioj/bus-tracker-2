@@ -26,6 +26,7 @@ export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
 	queryOptions({
 		enabled: typeof lineId !== "undefined",
 		staleTime: 15_000,
+		refetchInterval: 5_000,
 		queryKey: ["lines", lineId, "online"],
 		queryFn: () => client.get(`lines/${lineId}/online-vehicles`).then((response) => response.json<Vehicle[]>()),
 	});
