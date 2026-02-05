@@ -159,6 +159,15 @@ const sources = [
 		getOperatorRef: () => "KSOE",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
+	{
+		id: "transdev-vallee-sud",
+		staticResourceHref: "https://pysae.com/api/v2/groups/Transdev-Cr92/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/Transdev-Cr92/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "VALLEE-SUD-BUS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
