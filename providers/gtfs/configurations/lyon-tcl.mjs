@@ -7,6 +7,15 @@ const sources = [
 		excludeScheduled: (trip) => !["SUBWAY", "FUNICULAR", "FERRY"].includes(trip.route.type),
 		mode: "NO-TU",
 		getNetworkRef: () => "TCL",
+		getOperatorRef: (_, vehicle) => {
+			if (vehicle?.id) {
+				const [operatorRef] = vehicle.id.split(":");
+				if (operatorRef) {
+					return operatorRef;
+				}
+			}
+		},
+		getVehicleRef: (vehicle) => vehicle?.id.split(":")[1],
 	},
 	{
 		id: "transports-faure-28bi",
