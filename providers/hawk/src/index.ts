@@ -14,9 +14,10 @@ dayjs.extend(customParseFormatPlugin);
 dayjs.extend(timezonePlugin);
 dayjs.extend(utcPlugin);
 
-if (process.argv.length < 3) {
-	console.error("Usage: hawk <network ref> <hawk id> <info token>");
-	process.exit(1);
+const { NETWORK_REF, HAWK_ID, INFO_TOKEN, OPERATOR_REF } = process.env;
+
+if (NETWORK_REF === undefined || HAWK_ID === undefined || INFO_TOKEN === undefined) {
+	throw new Error("NETWORK_REF, HAWK_ID and INFO_TOKEN environment variables must be defined");
 }
 
 const lineRegex = /(?:{Route}:|Ligne:)(?:\s*<\/?[^>]+>)*\s*(?:<[^>]+>)?([\w\d-]+)(?:<\/[^>]+>)?/i;
@@ -36,12 +37,10 @@ await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
 
-const [, , networkRef, hawkId, info] = process.argv;
-
 while (true) {
 	const updateLog = console.draft("%s ► Fetching vehicles from Hawk <%s>...", Temporal.Now.instant());
 	const response = await fetch(
-		`https://hawk.hanoverdisplays.com/${hawkId}/api/vehicles/poi?info=${info}&isSAEIVMode=true&culture=fr-FR&hasOperator=false&hasTransporter=false&isUsingMetricSystem=true&hasCapacity=false&userId=1&driverInfo=1&ShowAssignedOnly=false&assignment_state_exists=false&vehicle_phone_number_exists=true`,
+		`https://hawk.hanoverdisplays.com/${HAWK_ID}/api/vehicles/poi?info=${INFO_TOKEN}&isSAEIVMode=true&culture=fr-FR&hasOperator=false&hasTransporter=false&isUsingMetricSystem=true&hasCapacity=false&userId=1&driverInfo=1&ShowAssignedOnly=false&assignment_state_exists=false&vehicle_phone_number_exists=true`,
 	);
 	if (!response.ok) {
 		updateLog("%s ► Failed to fetch data from Hawk (status %d).", Temporal.Now.instant(), response.status);
@@ -79,9 +78,9 @@ while (true) {
 		if (Date.now() - lastPositionAtDate.getTime() > 10 * 60_000) return [];
 
 		return {
-			id: `${networkRef}::VehicleTracking:${vehicle.ParcNumber}`,
+			id: `${NETWORK_REF}:${OPERATOR_REF ?? ""}:VehicleTracking:${vehicle.ParcNumber}`,
 			line: {
-				ref: `${networkRef}:Line:${line ?? "?"}`,
+				ref: `${NETWORK_REF}:Line:${line ?? "?"}`,
 				number: line ?? "?",
 				type: "BUS",
 				color: "FFFFFF",
@@ -97,8 +96,9 @@ while (true) {
 					.toZonedDateTimeISO("Europe/Paris")
 					.toString({ timeZoneName: "never" }),
 			},
-			networkRef: networkRef!,
-			vehicleRef: `${networkRef}::Vehicle:${vehicle.ParcNumber}`,
+			networkRef: NETWORK_REF,
+			operatorRef: OPERATOR_REF,
+			vehicleRef: `${NETWORK_REF}:${OPERATOR_REF ?? ""}:Vehicle:${vehicle.ParcNumber}`,
 			updatedAt: now.toString(),
 		} satisfies VehicleJourney;
 	});
@@ -108,4 +108,3 @@ while (true) {
 	console.log();
 	await setTimeout(30_000);
 }
-//https://hawk.hanoverdisplays.com/tisseo_alcis/api/vehicles/poi?info=ofopTYNaU2czDbUZzC8DpUeO%2B9jV0YyuIAjPkKukXmfSkPy5hgzhOWtz9xoa9wB%2Ftec8UQEhMaBiPT7VHSHokoPnmm8x5zFZ18DBfhhD5sEbd2%2BR2fmHh765QSYrZ3FH9%2FthLmH7Eco7PP5sVUTPCVtmBtYoMl1xGQAoDhurXEvkd6Cpw%2BxCiFDG29sDK8ZxM7Ncr6h%2BlBorDqkaNr52LA%3D%3D&isSAEIVMode=true&culture=fr-FR&hasOperator=false&hasTransporter=false&isUsingMetricSystem=true&hasCapacity=false&userId=1
