@@ -25,7 +25,7 @@ const sources = [
 		mode: "NO-TU",
 		mapLineRef: (lineRef) => `FAURE-28BI ${lineRef}`,
 		getNetworkRef: () => "TCL",
-		getOperatorRef: () => "FAURE-28BI",
+		getOperatorRef: () => "CARS_FAURE",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
 	{
@@ -36,7 +36,7 @@ const sources = [
 		mode: "NO-TU",
 		mapLineRef: (lineRef) => `FAURE-TCL ${lineRef}`,
 		getNetworkRef: () => "TCL",
-		getOperatorRef: () => "FAURE-TCL",
+		getOperatorRef: () => "CARS_FAURE",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
 ];
