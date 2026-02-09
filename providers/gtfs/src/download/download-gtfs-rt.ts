@@ -18,7 +18,7 @@ export async function downloadGtfsRt(
 		realtimeFeedHrefs.map(async (realtimeFeedHref) => {
 			const response = await fetch(realtimeFeedHref, {
 				headers: { "User-Agent": USER_AGENT },
-				signal: AbortSignal.timeout(5_000),
+				signal: AbortSignal.timeout(15_000),
 			});
 
 			if (!response.ok)
