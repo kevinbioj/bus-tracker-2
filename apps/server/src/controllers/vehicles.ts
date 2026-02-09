@@ -96,7 +96,7 @@ hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
 		.select()
 		.from(vehiclesTable)
 		.where(vehiclesListWhereClause)
-		.orderBy(sortOrder === "asc" ? asc(vehiclesTable[sortBy]) : desc(vehiclesTable[sortBy]))
+		.orderBy(sortOrder === "asc" ? asc(vehiclesTable[sortBy]) : desc(vehiclesTable[sortBy]), vehiclesTable.operatorId)
 		.offset(page * limit)
 		.limit(limit);
 
