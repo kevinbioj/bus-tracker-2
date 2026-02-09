@@ -25,6 +25,12 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "citalis",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/citalis.zip",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "CITALIS",
+	},
+	{
 		id: "karouest",
 		staticResourceHref: "https://pysae.com/api/v2/groups/semto-2/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/semto-2/gtfs-rt"],
