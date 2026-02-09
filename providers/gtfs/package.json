@@ -13,7 +13,7 @@
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@types/decompress": "^4.2.7",
-		"@types/node": "^25.2.0",
+		"@types/node": "^25.2.2",
 		"@types/papaparse": "^5.5.2",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
@@ -22,7 +22,7 @@
 	"dependencies": {
 		"croner": "^10.0.1",
 		"decompress": "^4.2.1",
-		"dotenv": "^17.2.3",
+		"dotenv": "^17.2.4",
 		"draftlog": "^1.0.13",
 		"gtfs-realtime-bindings": "^1.1.1",
 		"p-limit": "^7.3.0",

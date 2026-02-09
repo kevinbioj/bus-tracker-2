@@ -12,8 +12,8 @@
 		"migrations:push": "drizzle-kit push"
 	},
 	"devDependencies": {
-		"@types/node": "^25.2.0",
-		"drizzle-kit": "^0.31.8",
+		"@types/node": "^25.2.2",
+		"drizzle-kit": "^0.31.9",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},
@@ -21,9 +21,9 @@
 		"@bus-tracker/contracts": "workspace:*",
 		"@hono/node-server": "^1.19.9",
 		"@hono/oauth-providers": "^0.8.5",
-		"dotenv": "^17.2.3",
+		"dotenv": "^17.2.4",
 		"drizzle-orm": "^0.45.1",
-		"hono": "^4.11.7",
+		"hono": "^4.11.9",
 		"hono-sessions": "^0.8.0",
 		"postgres": "^3.4.8",
 		"redis": "^5.10.0",
