@@ -122,6 +122,18 @@ const sources = [
 		getNetworkRef: () => "ARVI",
 	},
 	{
+		id: "evian",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/429c8587-676a-4ed3-8279-e67403bc36f4",
+		realtimeResourceHrefs: [
+			"https://evad.nuamouv.com/tempsreel/api/gtfs-rt/trip_update",
+			"https://evad.nuamouv.com/tempsreel/api/gtfs-rt/vehicle_position",
+		],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "EVIAN",
+		mapLineRef: (lineRef) => lineRef.split("-")[0],
+	},
+	{
 		id: "grenoble",
 		staticResourceHref: "https://data.mobilites-m.fr/api/gtfs/SEM",
 		realtimeResourceHrefs: [],
