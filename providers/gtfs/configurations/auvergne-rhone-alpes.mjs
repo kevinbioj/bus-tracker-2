@@ -108,8 +108,7 @@ const sources = [
 	},
 	{
 		id: "clermont-f",
-		staticResourceHref:
-			"https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/clermont-ferrand.zip",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/t2c-clermont-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
