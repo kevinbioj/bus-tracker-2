@@ -3,7 +3,6 @@ version: '3.9'
 services:
   database:
     image: postgres:18.1-alpine
-    command: -c 'max_connections=200' -c 'shared_buffers=1024MB' -c 'work_mem=128MB' -c 'maintenance_work_mem=256MB'
     environment:
       - POSTGRES_USER=bustracker
       - POSTGRES_PASSWORD_FILE=/run/secrets/database_password
@@ -15,7 +14,7 @@ services:
       - database_data:/var/lib/postgresql
 
   redis:
-    image: redis:8.4.0-alpine
+    image: redis:8.6.0-alpine
     ports:
       - 6379:6379
     volumes:

@@ -2,9 +2,9 @@
 # STAGE 1 - Build project artifacts      #
 ##########################################
 
-FROM node:24.13.0 AS builder
+FROM node:25.6.0 AS builder
 WORKDIR /bus-tracker
-RUN npm install -g corepack@latest
+RUN npm install -g --force corepack@latest
 RUN corepack enable
 
 # Fetch dependencies
@@ -31,7 +31,7 @@ RUN pnpm -r build
 # STAGE 2 - Run distribution app         #
 ##########################################
 
-FROM nginx:1.29.1-alpine AS web
+FROM nginx:1.29.5-alpine AS web
 WORKDIR /usr/share/nginx/html
 
 # Copy nginx configuration

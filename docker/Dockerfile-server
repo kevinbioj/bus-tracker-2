@@ -1,4 +1,4 @@
-FROM node:24.13.0-alpine AS base
+FROM node:25.6.0-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /bus-tracker
@@ -8,7 +8,7 @@ WORKDIR /bus-tracker
 ##########################################
 
 FROM base AS builder
-RUN npm install -g corepack@latest
+RUN npm install -g --force corepack@latest
 RUN corepack enable
 
 # Fetch dependencies
@@ -40,4 +40,4 @@ COPY --from=builder /bus-tracker/server-deployment/drizzle ./server/drizzle/
 COPY --from=builder /bus-tracker/server-deployment/dist ./server/
 COPY --from=builder /bus-tracker/server-deployment/.env ./server/.env
 
-CMD ["node", "--env-file", "/bus-tracker/server/.env", "--enable-source-maps", "/bus-tracker/server/index.js"]
+CMD ["node", "--env-file", "/bus-tracker/server/.env", "/bus-tracker/server/index.js"]
