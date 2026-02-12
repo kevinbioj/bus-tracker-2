@@ -113,6 +113,17 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/t2c-clermont-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
 		getNetworkRef: () => "T2C",
+		mapTripUpdate: (tripUpdate) => {
+			if (tripUpdate.vehicle === undefined) {
+				return;
+			}
+
+			tripUpdate.vehicle.id = tripUpdate.vehicle.label;
+			return tripUpdate;
+		},
+		isValidJourney: (journey) => {
+			return journey.vehicleRef !== undefined || journey.calls.every((call) => call.callStatus === "SCHEDULED");
+		},
 	},
 	{
 		id: "cluses",
