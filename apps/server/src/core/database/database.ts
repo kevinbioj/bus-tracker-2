@@ -20,7 +20,8 @@ if (connectionUrl.includes("{PASSWORD_FILE}")) {
 }
 
 const connection = postgres(connectionUrl, {
-	max: 50,
+	max: 75,
+	idle_timeout: 120_000,
 });
 
 export const database = drizzle(connection, {
