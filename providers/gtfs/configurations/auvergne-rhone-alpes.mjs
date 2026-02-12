@@ -90,6 +90,18 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.split("-")[0],
 	},
 	{
+		id: "bourg-en-bresse",
+		staticResourceHref: "https://transport.data.gouv.fr/resources/83841/download",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/rubis-bourg-en-bresse-gtfs-rt-vehicle-position",
+			"https://proxy.transport.data.gouv.fr/resource/rubis-bourg-en-bresse-gtfs-rt-trip-update",
+		],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "BOURG-EN-BRESSE",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "chambery",
 		staticResourceHref:
 			"https://mwe.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
@@ -192,6 +204,16 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "MORZINE-AVORIAZ",
 		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "moulins",
+		staticResourceHref: "https://api.pysae.com/api/v4/groups/moulins/gtfs/pub",
+		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/moulins/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "MOULINS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 	{
 		id: "porte-isere",
