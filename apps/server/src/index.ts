@@ -14,6 +14,7 @@ import "./controllers/announcements.js";
 import "./controllers/editors.js";
 import "./controllers/lines.js";
 import "./controllers/networks.js";
+import "./controllers/ping.js";
 import "./controllers/regions.js";
 import "./controllers/vehicle-journeys.js";
 import "./controllers/vehicles.js";
