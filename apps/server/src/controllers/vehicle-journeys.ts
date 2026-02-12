@@ -1,15 +1,14 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
 import { createParamValidator, createQueryValidator } from "../api/validator-helpers.js";
-import { fetchLines } from "../core/cache/line-cache.js";
 import { database } from "../core/database/database.js";
-import { vehiclesTable } from "../core/database/schema.js";
-import { journeyStore } from "../core/store/journey-store.js";
+import { linesTable, vehiclesTable } from "../core/database/schema.js";
 import { findGirouette } from "../core/services/girouette-service.js";
-
+import { journeyStore } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
+import { keyBy } from "../utils/key-by.js";
 
 const getVehicleJourneyMarkersQuery = z.object({
 	swLat: z.coerce.number().min(-90).max(90),
@@ -31,6 +30,7 @@ const getVehicleJourneyMarkersQuery = z.object({
 hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
 	const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled, lineId, networkId } = c.req.valid("query");
 
+	const boundedLineIds = new Set<number>();
 	const boundedJourneys = journeyStore
 		.values()
 		.filter((journey) => {
@@ -51,7 +51,16 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 			}
 
 			const { latitude, longitude } = journey.position;
-			return swLat <= latitude && latitude <= neLat && swLon <= longitude && longitude <= neLon;
+			const isWithin = swLat <= latitude && latitude <= neLat && swLon <= longitude && longitude <= neLon;
+
+			if (!isWithin) {
+				return false;
+			}
+
+			if (journey.lineId !== undefined) {
+				boundedLineIds.add(journey.lineId);
+			}
+			return true;
 		})
 		.toArray();
 
@@ -62,8 +71,13 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 		}
 	}
 
-	const lineIds = boundedJourneys.flatMap(({ lineId }) => lineId ?? []);
-	const lines = await fetchLines(Array.from(new Set(lineIds)));
+	const lines = keyBy(
+		await database
+			.select()
+			.from(linesTable)
+			.where(inArray(linesTable.id, Array.from(boundedLineIds))),
+		(line) => line.id,
+	);
 
 	const items = boundedJourneys.map(({ id, lineId, position, vehicle }) => {
 		const { latitude, longitude, bearing, type } = position;
