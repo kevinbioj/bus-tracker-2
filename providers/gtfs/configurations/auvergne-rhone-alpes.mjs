@@ -30,6 +30,46 @@ const montelimarRouteIdConverter = new Map([
 	["D34", "CAMA_LD34"],
 ]);
 
+const clermontInterurbainLines = [
+	"36", // E5
+	"27", // E6
+	"38", // P30
+	"42", // P31
+	"26", // P32
+	"31", // P33
+	"7", // P34
+	"34", // P35
+	"40", // P36
+	"28", // P37
+	"37", // P38
+	"41", // P39
+	"N-P", // P40
+	"L31", // P41
+	"L28", // P81
+	"L29", // P82
+	"L30", // P83
+	"L32", // P84
+	"L33", // P75
+	"L34", // BeN
+	"L36", // 110
+	"L37", // 120
+	"L38", // 130
+	"L39", // 140
+	"L40", // 150
+	"L41", // 160
+	"L42", // 170
+	"L43", // 180
+	"L44", // 190
+	"L45", // 200
+	"L46", // 210
+	"L47", // 220
+	"L48", // 230
+	"L49", // 310
+	"L50", // 410
+	"L51", // 420
+	"L52", // 430
+];
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -124,18 +164,24 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/t2c-clermont-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
+		gtfsOptions: { filterTrips: (trip) => !clermontInterurbainLines.includes(trip.route.id) },
 		getNetworkRef: () => "T2C",
 		mapTripUpdate: (tripUpdate) => {
-			if (tripUpdate.vehicle === undefined) {
+			if (tripUpdate.vehicle === undefined || clermontInterurbainLines.includes(tripUpdate.trip.routeId)) {
 				return;
 			}
 
 			tripUpdate.vehicle.id = tripUpdate.vehicle.label;
 			return tripUpdate;
 		},
-		isValidJourney: (journey) => {
-			return journey.vehicleRef !== undefined || journey.calls.every((call) => call.callStatus === "SCHEDULED");
-		},
+	},
+	{
+		id: "clermont-f-int",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/clermont-ferrand.zip",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/t2c/realtime"],
+		gtfsOptions: { filterTrips: (trip) => clermontInterurbainLines.includes(trip.route.id) },
+		mode: "NO-TU",
+		getNetworkRef: () => "T2C",
 	},
 	{
 		id: "cluses",
