@@ -9,6 +9,7 @@ import type { Source } from "../model/source.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
+import { createPlainDate, createPlainTime, createZonedDateTime } from "../cache/temporal-cache.js";
 
 const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journey: Journey) => number) => {
 	const aheadTime = getAheadTime?.(journey) ?? 0;
@@ -71,7 +72,7 @@ const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): Journey
 	});
 };
 
-const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor) => {
+const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allowTripGuessing?: boolean) => {
 	const trip = gtfs.trips.get(tripDescriptor.tripId);
 	if (typeof trip !== "undefined") {
 		if (typeof tripDescriptor.routeId !== "undefined" && trip.route.id !== tripDescriptor.routeId) return;
@@ -79,25 +80,39 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor) => {
 		return trip;
 	}
 
-	// if (
-	// 	typeof tripDescriptor.routeId !== "undefined" &&
-	// 	typeof tripDescriptor.startDate !== "undefined" &&
-	// 	typeof tripDescriptor.startTime !== "undefined"
-	// ) {
-	// 	const matchingTrip = gtfs.trips.values().find((trip) => {
-	// 		if (trip.route.id !== tripDescriptor.routeId) return false;
-	// 		if (trip.direction !== (tripDescriptor.directionId ?? 0)) return false;
-	// 		if (!trip.service.runsOn(Temporal.PlainDate.from(tripDescriptor.startDate!))) return false;
+	if (
+		allowTripGuessing &&
+		typeof tripDescriptor.routeId !== "undefined" &&
+		typeof tripDescriptor.startDate !== "undefined" &&
+		typeof tripDescriptor.startTime !== "undefined" &&
+		gtfs.routes.has(tripDescriptor.routeId)
+	) {
+		const startDate = createPlainDate(tripDescriptor.startDate);
+		const startTime = createPlainTime(tripDescriptor.startTime);
+		const startsAt = createZonedDateTime(
+			startDate,
+			startTime,
+			gtfs.routes.get(tripDescriptor.routeId)!.agency.timeZone,
+		);
 
-	// 		const firstStop = trip.stopTimes.at(0);
-	// 		if (typeof firstStop === "undefined") return false;
+		if (startsAt.toInstant().since(Temporal.Now.instant()).total("minutes") >= 30) {
+			return;
+		}
 
-	// 		const startTime = `${(firstStop.arrivalTime.hour + 24 * firstStop.arrivalModulus).toString().padStart(2, "0")}:${firstStop.arrivalTime.minute.toString().padStart(2, "0")}:${firstStop.arrivalTime.second.toString().padStart(2, "0")}`;
-	// 		return startTime === tripDescriptor.startTime;
-	// 	});
+		const matchingTrip = gtfs.trips.values().find((trip) => {
+			if (trip.route.id !== tripDescriptor.routeId) return false;
+			if (trip.direction !== (tripDescriptor.directionId ?? 0)) return false;
+			if (!trip.service.runsOn(startDate)) return false;
 
-	// 	return matchingTrip;
-	// }
+			const firstStop = trip.stopTimes.at(0);
+			if (typeof firstStop === "undefined") return false;
+
+			const startTime = `${(firstStop.arrivalTime.hour + 24 * firstStop.arrivalModulus).toString().padStart(2, "0")}:${firstStop.arrivalTime.minute.toString().padStart(2, "0")}:${firstStop.arrivalTime.second.toString().padStart(2, "0")}`;
+			return startTime === tripDescriptor.startTime;
+		});
+
+		return matchingTrip;
+	}
 
 	return trip;
 };
@@ -132,6 +147,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 		const activeJourneys = new Map<string, VehicleJourney>();
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
+		const detectedToOriginalTripIds = new Map<string, string>();
 
 		if (tripUpdates.length > 0) {
 			for (const tripUpdate of tripUpdates) {
@@ -139,10 +155,14 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
 
-				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip);
+				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
 				if (typeof trip === "undefined") continue;
-				const firstStopTime = trip.stopTimes.at(0)!;
 
+				if (source.options.allowTripGuessing) {
+					detectedToOriginalTripIds.set(trip.id, tripUpdate.trip.tripId);
+				}
+
+				const firstStopTime = trip.stopTimes.at(0)!;
 				const startDate =
 					typeof tripUpdate.trip.startDate !== "undefined"
 						? Temporal.PlainDate.from(tripUpdate.trip.startDate)
@@ -192,7 +212,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			const updatedAt = Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000);
 
 			if (typeof vehiclePosition.trip !== "undefined") {
-				const trip = getTripFromDescriptor(source.gtfs, vehiclePosition.trip);
+				const trip = getTripFromDescriptor(source.gtfs, vehiclePosition.trip, source.options.allowTripGuessing);
 				if (typeof trip !== "undefined") {
 					const firstStopTime = trip.stopTimes.at(0)!;
 
@@ -333,7 +353,10 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				if (handledJourneyIds.has(journey.id)) continue;
 				if (typeof journey.trip.block !== "undefined" && handledBlockIds.has(journey.trip.block)) continue;
 
-				const vehicleDescriptor = tripUpdates.find((tu) => matchJourneyToTripDescriptor(journey, tu.trip))?.vehicle;
+				const originalTripId = detectedToOriginalTripIds.get(journey.trip.id);
+				const vehicleDescriptor = tripUpdates.find((tu) =>
+					originalTripId ? tu.trip.tripId === originalTripId : matchJourneyToTripDescriptor(journey, tu.trip),
+				)?.vehicle;
 
 				const networkRef = source.options.getNetworkRef(journey);
 				const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);

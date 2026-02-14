@@ -19,6 +19,7 @@ export type SourceOptions = {
 	realtimeResourceHrefs?: string[];
 	gtfsOptions?: ImportGtfsOptions;
 	appendTripUpdateInformation?: boolean;
+	allowTripGuessing?: boolean;
 	// --- Additional data acquirance
 	mode?: "ALL" | "VP-ONLY" | "VP+TU" | "NO-TU";
 	excludeScheduled?: ((trip: Trip) => boolean) | boolean;
