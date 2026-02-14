@@ -23,6 +23,16 @@ const sources = [
 		getNetworkRef: () => "BOURGES",
 	},
 	{
+		id: "chartres",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/8d4c3e5c-1702-4649-b47a-b16c6016dcc6",
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/chartres/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/chartres/vehicle-positions",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "CHARTRES",
+	},
+	{
 		id: "chateauroux",
 		staticResourceHref:
 			"https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20260105_zip",
