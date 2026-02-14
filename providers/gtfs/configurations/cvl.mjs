@@ -31,6 +31,11 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "CHARTRES",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		getDestination: (journey, vehicle) =>
+			vehicle?.label ??
+			journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name ??
+			journey?.trip.headsign,
 	},
 	{
 		id: "chateauroux",
