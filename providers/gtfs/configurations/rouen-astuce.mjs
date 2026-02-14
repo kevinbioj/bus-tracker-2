@@ -68,6 +68,18 @@ const sources = [
 				}
 			}
 
+			// Les premiers shifts métro sont graphiqués à tort sur le jour N-1
+			if (vehicleJourney.line?.ref === "ASTUCE:Line:90") {
+				const aimedTime = vehicleJourney.calls?.[0]?.aimedTime
+					? Temporal.Instant.from(vehicleJourney.calls[0].aimedTime).toZonedDateTimeISO("Europe/Paris")
+					: undefined;
+
+				// courses >= 00:00 + < 04:00 non affectées
+				if (aimedTime !== undefined && aimedTime.hour >= 4) {
+					vehicleJourney.serviceDate = aimedTime.toPlainDate();
+				}
+			}
+
 			return true;
 		},
 		mapLineRef: (lineRef) => lineRef.replace("TCAR:", ""),
