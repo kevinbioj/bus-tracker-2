@@ -6,6 +6,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/tcl/"],
 		excludeScheduled: (trip) => !["SUBWAY", "FUNICULAR", "FERRY"].includes(trip.route.type),
 		mode: "NO-TU",
+		appendTripUpdateInformation: true,
 		getNetworkRef: () => "TCL",
 		getOperatorRef: (_, vehicle) => {
 			if (vehicle?.id) {
