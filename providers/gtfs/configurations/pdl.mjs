@@ -236,6 +236,16 @@ const sources = [
 		getNetworkRef: () => "CHOLETBUS",
 	},
 	{
+		id: "guerande",
+		staticResourceHref:
+			"https://transport.data.gouv.fr/resources/83762/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/lila-presquile-cap-atlantique-gtfs-rt?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "GUERANDE-ATLANTIQUE",
+	},
+	{
 		id: "laval",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rd-laval/exports/pan.zip",
