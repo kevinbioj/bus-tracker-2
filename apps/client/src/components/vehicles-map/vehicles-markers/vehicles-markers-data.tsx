@@ -5,7 +5,7 @@ import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
-import { GetVehicleJourneyMarkersQuery, type VehicleJourneyMarker } from "~/api/vehicle-journeys";
+import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { VehiclesMarkersStatusControl } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-status-control";
 
 const noise = ([lon, lat]: [number, number]): [number, number] => [
@@ -27,7 +27,7 @@ export function VehiclesMarkersData({ networkId, source }: VehiclesMarkersDataPr
 	// biome-ignore lint/correctness/useExhaustiveDependencies: need to refetch on bounds change
 	useEffect(() => void refetch(), [bounds, refetch]);
 
-	const features = useMemo<CircleMarkerFeature<VehicleJourneyMarker>[]>(
+	const features = useMemo<CircleMarkerFeature[]>(
 		() =>
 			(data?.items ?? []).map((item) => {
 				const coordinates: [number, number] = [item.position.longitude, item.position.latitude];

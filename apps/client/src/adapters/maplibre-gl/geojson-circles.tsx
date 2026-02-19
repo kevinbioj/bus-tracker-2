@@ -6,12 +6,12 @@ export type CircleMarkerSource = {
 	data: CircleMarkerFeatureCollection;
 };
 
-export type CircleMarkerFeatureCollection<T = { id: string; bearing?: number }> = {
+export type CircleMarkerFeatureCollection<T = { id: string; bearing: number | null }> = {
 	type: "FeatureCollection";
 	features: CircleMarkerFeature<T>[];
 };
 
-export type CircleMarkerFeature<T = { id: string; bearing?: number }> = {
+export type CircleMarkerFeature<T = { id: string; bearing: number | null }> = {
 	type: "Feature";
 	geometry: {
 		type: "Point";
@@ -20,12 +20,12 @@ export type CircleMarkerFeature<T = { id: string; bearing?: number }> = {
 	properties: T;
 };
 
-type MapCircleMarkersProps<T extends { id: string; bearing?: number }> = {
+type MapCircleMarkersProps<T extends { id: string; bearing: number | null }> = {
 	features: CircleMarkerFeature<T>[];
 	source: maplibregl.GeoJSONSource;
 };
 
-export function GeojsonCircles<T extends { id: string; bearing?: number }>({
+export function GeojsonCircles<T extends { id: string; bearing: number | null }>({
 	features,
 	source,
 }: MapCircleMarkersProps<T>) {
@@ -46,7 +46,7 @@ export function GeojsonCircles<T extends { id: string; bearing?: number }>({
 						position: feature.geometry.coordinates,
 						bearing: feature.properties.bearing,
 					}),
-				new Map<string, { position: GeoJSON.Position; bearing?: number }>(),
+				new Map<string, { position: GeoJSON.Position; bearing: number | null }>(),
 			);
 
 			const nextFeatures = features.reduce(
@@ -61,8 +61,11 @@ export function GeojsonCircles<T extends { id: string; bearing?: number }>({
 				const feature = temporaryCollection.features[i];
 				const nextFeature = nextFeatures.get(feature.properties.id);
 				if (typeof nextFeature !== "undefined") {
-					const { bearing, ...properties } = nextFeature.properties;
-					feature.properties = { bearing, ...feature.properties, ...properties };
+					if (feature.properties.bearing === null) {
+						feature.properties.bearing = nextFeature.properties.bearing;
+					} else if (nextFeature.properties.bearing === null) {
+						feature.properties.bearing = null;
+					}
 					continue;
 				}
 
