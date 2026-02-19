@@ -124,7 +124,7 @@ const sources = [
 	},
 	{
 		id: "lens-bethune",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/7b4bf9e6-50c5-47d1-855d-7da6c149a16e",
+		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/opendata/gtfs.zip",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "TADAO",
 	},
