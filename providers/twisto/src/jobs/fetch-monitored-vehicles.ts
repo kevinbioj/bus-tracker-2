@@ -115,17 +115,23 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 							stopName: unescapeString(vehicle.MonitoredVehicleJourney.OriginName),
 							stopOrder: 1,
 							callStatus: "SCHEDULED" as const,
-						},
+							flags: ["NO_DROP_OFF"],
+						} satisfies VehicleJourneyCall,
 					]
 				: []),
-			...calls.map((call) => ({
-				aimedTime: call.AimedDepartureTime ?? call.AimedArrivalTime,
-				expectedTime: call.ExpectedDepartureTime ?? call.ExpectedArrivalTime,
-				stopRef: call.StopPointRef.split(":")[3]!,
-				stopName: unescapeString(call.StopPointName),
-				stopOrder: call.Order,
-				callStatus: call.ArrivalStatus === "cancelled" ? ("SKIPPED" as const) : ("SCHEDULED" as const),
-			})),
+			...calls.map(
+				(call, index, calls) =>
+					({
+						aimedTime: call.AimedDepartureTime ?? call.AimedArrivalTime,
+						expectedTime: call.ExpectedDepartureTime ?? call.ExpectedArrivalTime,
+						stopRef: call.StopPointRef.split(":")[3]!,
+						stopName: unescapeString(call.StopPointName),
+						stopOrder: call.Order,
+						callStatus: call.ArrivalStatus === "cancelled" ? ("SKIPPED" as const) : ("SCHEDULED" as const),
+						flags:
+							calls.findLastIndex((call) => call.ArrivalStatus !== "cancelled") === index ? ["NO_PICKUP"] : undefined,
+					}) satisfies VehicleJourneyCall,
+			),
 		];
 
 		vehicleJourneys.push({
