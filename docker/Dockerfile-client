@@ -2,7 +2,7 @@
 # STAGE 1 - Build project artifacts      #
 ##########################################
 
-FROM node:25.6.0 AS builder
+FROM node:25.6.1 AS builder
 WORKDIR /bus-tracker
 RUN npm install -g --force corepack@latest
 RUN corepack enable

@@ -12,16 +12,16 @@
 	},
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@types/node": "^25.2.3",
+		"@types/node": "^25.3.0",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
 		"croner": "^10.0.1",
 		"draftlog": "^1.0.13",
-		"fast-xml-parser": "^5.3.5",
+		"fast-xml-parser": "^5.3.7",
 		"ky": "^1.14.3",
-		"redis": "^5.10.0",
+		"redis": "^5.11.0",
 		"temporal-polyfill": "^0.3.0"
 	}
 }
