@@ -151,9 +151,11 @@ const sources = [
 	},
 	{
 		id: "solea",
-		staticResourceHref:
-			"https://www.datagrandest.fr/metadata/fluo-grand-est/FR-200052264-T0014-0000/fluo-grand-est-sitram-gtfs.zip",
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/fluo-solea-mulhouse-gtfs-rt-service-alert"],
+		staticResourceHref: "https://gtfs.bus-tracker.fr/mulhouse.zip",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/solea-mulhouse-gtfs-rt?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		excludeScheduled: (journey) => journey.route.id === "93",
 		getNetworkRef: () => "SOLEA",
 	},
 	{

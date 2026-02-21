@@ -124,7 +124,7 @@ const sources = [
 	},
 	{
 		id: "dunkerque",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/f51fabfb-9d7a-44b7-bd03-d1032337fb80",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/dunkerque.zip",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/dunkerque/"],
 		excludeScheduled: true,
 		mode: "NO-TU",
