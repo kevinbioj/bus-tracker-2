@@ -23,10 +23,6 @@ const sources = [
 		},
 		getAheadTime: (journey) => (journey?.trip.route.id === "TCAR:99" ? 5 * 60 : undefined),
 		excludeScheduled: (trip) => {
-			if (trip.route.id === "TCAR:43") {
-				return !["Place Colbert MONT-SAINT-AIGNAN", "Place du Vivier HOUPPEVILLE"].includes(trip.headsign);
-			}
-
 			if (/^TCAR:2\d\d$/.test(trip.route.id)) return false;
 			return !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id);
 		},
@@ -109,16 +105,6 @@ const sources = [
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TAE",
 	},
-	// {
-	// 	id: "tgr",
-	// 	staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tgr.zip",
-	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tcar/gtfs-rt"],
-	// 	mode: "NO-TU",
-	// 	excludeScheduled: (trip) => trip.route.name === "06",
-	// 	getNetworkRef: () => "ASTUCE",
-	// 	getOperatorRef: () => "TNI",
-	// 	getVehicleRef: (descriptor) => descriptor?.label ?? undefined,
-	// },
 	{
 		id: "tni",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tni.zip",
@@ -127,10 +113,10 @@ const sources = [
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
 		mode: "NO-TU",
-		getNetworkRef: (journey) => {
+		getNetworkRef: (journey, vehicle) => {
 			if (
-				typeof journey !== "undefined" &&
-				journey.trip.route.name === "530" &&
+				vehicle === undefined &&
+				journey?.trip.route.name === "530" &&
 				[journey.calls.at(0), journey.calls.at(-1)].some((call) => call.stop.name === "Caudebec - Quai")
 			) {
 				return "NOMAD-CAR";
@@ -140,14 +126,6 @@ const sources = [
 		getDestination: (journey) => `${journey.calls.at(0)?.stop.name} > ${journey.calls.at(-1)?.stop.name}`,
 		getOperatorRef: () => "TNI",
 	},
-	// {
-	// 	id: "hanga",
-	// 	staticResourceHref: "https://exs.tcar.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=ASTUCE&companyCode=ASTUCE:004",
-	// 	realtimeResourceHrefs: [],
-	// 	getNetworkRef: () => "ASTUCE",
-	// 	getOperatorRef: (journey) => (["204", "214"].includes(journey?.trip.route.id) ? "TNI" : "HANGA"),
-	// 	getDestination: (journey) => journey?.trip.stopTimes.at(-1).stop.name,
-	// },
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
