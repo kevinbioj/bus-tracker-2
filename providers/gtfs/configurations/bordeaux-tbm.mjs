@@ -17,8 +17,8 @@ const sources = [
 			return !Number.isNaN(+vehicle?.label) ? vehicle?.label : undefined;
 		},
 		getDestination: (journey) => {
-			const lastCall = journey.calls.at(-1);
-			if (typeof lastCall === "undefined" || lastCall.status === "SCHEDULED") return journey.trip.headsign;
+			const lastCall = journey?.calls.at(-1);
+			if (typeof lastCall === "undefined" || lastCall.status === "SCHEDULED") return journey?.trip.headsign;
 			return journey.calls.findLast((call) => call.status === "SCHEDULED")?.stop.name ?? "HAUT  LE  PIED";
 		},
 	},
