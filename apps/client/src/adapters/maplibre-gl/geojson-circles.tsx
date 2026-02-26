@@ -56,11 +56,15 @@ export function GeojsonCircles<T extends { id: string; bearing: number | null }>
 
 			const temporaryCollection = structuredClone(previousCollection);
 
-			// 1. We remove features that no longer exist
+			// 1. We remove features that no longer exist, and update properties for those that do
 			for (let i = 0; i < temporaryCollection.features.length; i += 1) {
 				const feature = temporaryCollection.features[i];
 				const nextFeature = nextFeatures.get(feature.properties.id);
 				if (typeof nextFeature !== "undefined") {
+					// We update the properties of the feature
+					const bearing = feature.properties.bearing;
+					feature.properties = { ...nextFeature.properties, bearing };
+
 					if (feature.properties.bearing === null) {
 						feature.properties.bearing = nextFeature.properties.bearing;
 					} else if (nextFeature.properties.bearing === null) {
@@ -88,7 +92,7 @@ export function GeojsonCircles<T extends { id: string; bearing: number | null }>
 			function moveFeatures(now = start) {
 				if (abort || source === null || now > end) return;
 
-				const percentage = Math.min(100, (now - start) / (end - start));
+				const percentage = Math.min(1, (now - start) / (end - start));
 
 				for (const feature of temporaryCollection.features) {
 					const nextFeature = nextFeatures.get(feature.properties.id);
