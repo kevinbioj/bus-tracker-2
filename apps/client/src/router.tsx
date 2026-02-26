@@ -1,13 +1,16 @@
 import type { QueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { Suspense } from "react";
 import { createBrowserRouter, Outlet } from "react-router-dom";
 
+import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery, GetNetworksQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
 import { LoadingIndicator } from "~/components/loading-indicator";
 import { WelcomeBack } from "~/components/welcome-back";
 import { NavigationBar } from "~/layout/navigation-bar";
 import EmbeddableMapPage from "~/pages/embeddable-map";
+import { LineVehicleAssignments } from "~/pages/line-vehicle-assignments";
 import MapPage from "~/pages/map";
 import { NetworkDetails } from "~/pages/network-details";
 import { NetworkList } from "~/pages/network-list";
@@ -56,6 +59,18 @@ export const router = (queryClient: QueryClient) =>
 					loader: async ({ params }) => {
 						const { networkId } = params;
 						await queryClient.ensureQueryData(GetNetworkQuery(+networkId!, true));
+					},
+				},
+				{
+					path: "/data/lines/:lineId/vehicle-assignments",
+					element: <LineVehicleAssignments />,
+					loader: async ({ params, request }) => {
+						const { lineId } = params;
+						const url = new URL(request.url);
+						const date = url.searchParams.get("date") ?? dayjs().format("YYYY-MM-DD");
+
+						await queryClient.ensureQueryData(GetLineQuery(+lineId!));
+						await queryClient.ensureQueryData(GetLineVehicleAssignmentsQuery(+lineId!, date));
 					},
 				},
 				{

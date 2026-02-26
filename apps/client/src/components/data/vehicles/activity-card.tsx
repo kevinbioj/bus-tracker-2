@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { Link } from "react-router-dom";
 
 import { GetLineQuery } from "~/api/lines";
 import type { VehicleTimelineDayActivity } from "~/api/vehicles";
@@ -10,24 +11,19 @@ export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
 	const { data: line } = useQuery(GetLineQuery(activity.lineId));
 
 	const ongoing = dayjs().diff(activity.updatedAt, "minutes") < 10;
+	const date = dayjs(activity.startedAt).format("YYYY-MM-DD");
 
-	return (
-		<article
-			className="border border-border flex h-14 px-2 py-1 rounded-md"
-			style={{
-				backgroundColor: line?.color ? `#${line.color}` : undefined,
-				color: line?.textColor ? `#${line.textColor}` : undefined,
-			}}
-		>
+	const cardContent = (
+		<>
 			{line?.cartridgeHref ? (
 				<div className="h-full max-w-16">
 					<img className="h-full" alt={line.number} src={line.cartridgeHref} />
 				</div>
 			) : (
-				<p className="font-bold min-w-12 my-auto pt-[1px] text-2xl text-center">{line?.number}</p>
+				<p className="font-bold min-w-12 my-auto pt-px text-2xl text-center">{line?.number}</p>
 			)}
 			<div
-				className="border-l-[1px] mx-2"
+				className="border-l mx-2"
 				style={{
 					borderColor: line?.textColor ? `#${line.textColor}` : undefined,
 				}}
@@ -44,6 +40,29 @@ export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
 					</>
 				)}
 			</p>
+		</>
+	);
+
+	const style = {
+		backgroundColor: line?.color ? `#${line.color}` : undefined,
+		color: line?.textColor ? `#${line.textColor}` : undefined,
+	};
+
+	if (line) {
+		return (
+			<Link
+				className="border border-border flex h-14 px-2 py-1 rounded-md hover:brightness-90 transition-all"
+				style={style}
+				to={`/data/lines/${line.id}/vehicle-assignments?date=${date}`}
+			>
+				{cardContent}
+			</Link>
+		);
+	}
+
+	return (
+		<article className="border border-border flex h-14 px-2 py-1 rounded-md" style={style}>
+			{cardContent}
 		</article>
 	);
 }

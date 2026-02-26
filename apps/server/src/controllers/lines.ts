@@ -108,20 +108,42 @@ hono.get(
 
 		const lineActivitiesByVehicleId = Map.groupBy(lineActivities, (lineActivity) => lineActivity.vehicleId);
 
-		const vehicles = await database
-			.select({ id: vehiclesTable.id, number: vehiclesTable.number, designation: vehiclesTable.designation })
-			.from(vehiclesTable)
-			.where(inArray(vehiclesTable.id, Array.from(lineActivitiesByVehicleId.keys())));
+		let vehicles: { id: number; number: string; designation: string | null; activities: any[] }[] = [];
 
-		const response = vehicles.map((vehicle) => ({
-			...vehicle,
-			activities: (lineActivitiesByVehicleId.get(vehicle.id) ?? []).map((lineActivity) => ({
-				startedAt: lineActivity.startedAt,
-				endedAt:
-					Temporal.Now.instant().since(lineActivity.endedAt).total("minutes") >= 10 ? lineActivity.endedAt : null,
-			})),
-		}));
+		if (lineActivitiesByVehicleId.size > 0) {
+			const vehicleData = await database
+				.select({ id: vehiclesTable.id, number: vehiclesTable.number, designation: vehiclesTable.designation })
+				.from(vehiclesTable)
+				.where(inArray(vehiclesTable.id, Array.from(lineActivitiesByVehicleId.keys())));
 
-		return c.json(response, 200);
+			vehicles = vehicleData.map((vehicle) => ({
+				...vehicle,
+				activities: (lineActivitiesByVehicleId.get(vehicle.id) ?? []).map((lineActivity) => ({
+					startedAt: lineActivity.startedAt,
+					endedAt:
+						Temporal.Now.instant().since(lineActivity.endedAt).total("minutes") >= 10 ? lineActivity.endedAt : null,
+				})),
+			}));
+		}
+
+		const activeDays = await database
+			.select({ serviceDate: lineActivitiesTable.serviceDate })
+			.from(lineActivitiesTable)
+			.where(
+				and(
+					eq(lineActivitiesTable.lineId, id),
+					sql`EXTRACT(MONTH FROM service_date) = ${date.month}`,
+					sql`EXTRACT(YEAR FROM service_date) = ${date.year}`,
+				),
+			)
+			.groupBy(lineActivitiesTable.serviceDate);
+
+		return c.json(
+			{
+				activeDays: activeDays.map((d) => d.serviceDate),
+				vehicles,
+			},
+			200,
+		);
 	},
 );

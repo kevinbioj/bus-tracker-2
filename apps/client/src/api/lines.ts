@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import { client } from "./client";
 import type { Vehicle } from "./vehicles";
@@ -12,6 +12,19 @@ export type Line = {
 	color: string;
 	textColor: string;
 	archivedAt: string;
+	activeMonths: string[];
+};
+
+export type LineVehicleAssignment = {
+	id: number;
+	number: string;
+	designation: string;
+	activities: { startedAt: string; endedAt: string }[];
+};
+
+export type LineVehicleAssignmentsResponse = {
+	activeDays: string[];
+	vehicles: LineVehicleAssignment[];
 };
 
 export const GetLineQuery = (lineId?: number) =>
@@ -29,4 +42,16 @@ export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
 		refetchInterval: 5_000,
 		queryKey: ["lines", lineId, "online"],
 		queryFn: () => client.get(`lines/${lineId}/online-vehicles`).then((response) => response.json<Vehicle[]>()),
+	});
+
+export const GetLineVehicleAssignmentsQuery = (lineId: number, date: string) =>
+	queryOptions({
+		placeholderData: keepPreviousData,
+		staleTime: 10_000,
+		refetchInterval: 10_000,
+		queryKey: ["lines", lineId, "vehicle-assignments", date],
+		queryFn: () =>
+			client
+				.get(`lines/${lineId}/vehicle-assignments?date=${date}`)
+				.then((response) => response.json<LineVehicleAssignmentsResponse>()),
 	});
