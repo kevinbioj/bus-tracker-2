@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
@@ -24,7 +24,15 @@ hono.get("/lines/:id", createParamValidator(getLineByIdParamSchema), async (c) =
 	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
 	if (typeof line === "undefined") return c.json({ error: `No line found with id '${id}'.` }, 404);
 
-	return c.json(line);
+	const activeMonths = await database
+		.select({ month: sql<string>`DISTINCT TO_CHAR(started_at, 'YYYY-MM')` })
+		.from(lineActivitiesTable)
+		.where(eq(lineActivitiesTable.lineId, line.id));
+
+	return c.json({
+		...line,
+		activeMonths: activeMonths.map(({ month }) => month).toSorted((a, b) => a.localeCompare(b)),
+	});
 });
 
 hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSchema), async (c) => {
