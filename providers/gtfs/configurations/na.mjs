@@ -71,6 +71,17 @@ const sources = [
 		getVehicleRef: () => undefined,
 	},
 	{
+		id: "angouleme",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/angouleme.zip",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/mobius-angouleme?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		excludeScheduled: true,
+		getNetworkRef: () => "ANGOULEME",
+		getVehicleRef: (vehicle) => vehicle?.label,
+		isValidJourney: (journey) => journey.vehicleRef !== undefined,
+	},
+	{
 		id: "basque-adour",
 		staticResourceHref:
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/txiktxak?apiKey=0f64273f070b7d4621002040646e180d374e5373",
