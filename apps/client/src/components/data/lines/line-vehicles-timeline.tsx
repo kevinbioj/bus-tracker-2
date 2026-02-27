@@ -106,10 +106,10 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			.reduce(
 				([min, max], activity) => {
 					const startedAt = dayjs(activity.startedAt);
-					const endedAt = activity.endedAt ? dayjs(activity.endedAt) : null;
+					const endedAt = activity.endedAt ? dayjs(activity.endedAt) : dayjs();
 					return [startedAt.isBefore(min) ? startedAt : min, endedAt?.isAfter(max) ? endedAt : max];
 				},
-				[currentDate.endOf("day"), currentDate.startOf("day")],
+				[dayjs("2099-31-12"), dayjs("2000-01-01")],
 			);
 
 		timelineRef.current.setGroups(groups);

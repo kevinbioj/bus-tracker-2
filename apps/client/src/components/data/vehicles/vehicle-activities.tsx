@@ -84,6 +84,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 								{activities.map((activity) => (
 									<ActivityCard
 										activity={activity}
+										day={date}
 										key={`${activity.lineId}_${activity.startedAt}_${activity.updatedAt}`}
 									/>
 								))}

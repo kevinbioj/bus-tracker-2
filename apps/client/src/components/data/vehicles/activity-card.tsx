@@ -5,13 +5,12 @@ import { Link } from "react-router-dom";
 import { GetLineQuery } from "~/api/lines";
 import type { VehicleTimelineDayActivity } from "~/api/vehicles";
 
-type ActivityCardProps = { activity: VehicleTimelineDayActivity };
+type ActivityCardProps = { activity: VehicleTimelineDayActivity; day: string };
 
-export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
+export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 	const { data: line } = useQuery(GetLineQuery(activity.lineId));
 
 	const ongoing = dayjs().diff(activity.updatedAt, "minutes") < 10;
-	const date = dayjs(activity.startedAt).format("YYYY-MM-DD");
 
 	const cardContent = (
 		<>
@@ -53,7 +52,7 @@ export function ActivityCard({ activity }: Readonly<ActivityCardProps>) {
 			<Link
 				className="border border-border flex h-14 px-2 py-1 rounded-md hover:brightness-90 transition-all"
 				style={style}
-				to={`/data/lines/${line.id}/vehicle-assignments?date=${date}`}
+				to={`/data/lines/${line.id}/vehicle-assignments?date=${day}`}
 			>
 				{cardContent}
 			</Link>

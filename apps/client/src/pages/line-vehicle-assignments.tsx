@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
@@ -44,6 +44,8 @@ export function LineVehicleAssignments() {
 		GetLineVehicleAssignmentsQuery(line.id, currentDate.format("YYYY-MM-DD")),
 	);
 
+	const currentDateRef = useRef<HTMLButtonElement>(null);
+
 	const daysInMonth = useMemo(() => {
 		const startOfMonth = dayjs(month).startOf("month");
 		const days = [];
@@ -52,6 +54,15 @@ export function LineVehicleAssignments() {
 		}
 		return days;
 	}, [month]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: should react on month change
+	useEffect(() => {
+		currentDateRef.current?.scrollIntoView({
+			behavior: "auto",
+			inline: "center",
+			block: "nearest",
+		});
+	}, [currentDate.format("YYYY-MM")]);
 
 	return (
 		<>
@@ -138,6 +149,7 @@ export function LineVehicleAssignments() {
 								asChild
 								variant={isSelected ? "branding-default" : "secondary"}
 								size="sm"
+								ref={isSelected ? currentDateRef : undefined}
 								className={cn(
 									"flex flex-col gap-0 items-center justify-center h-full min-w-12 py-1",
 									(isFuture || !hasData) && "opacity-50 pointer-events-none hover:cursor-not-allowed",
