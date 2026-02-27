@@ -50,7 +50,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			locale: "fr",
 			orientation: "top",
 			align: "center",
-			maxHeight: "calc(100dvh - 330px)",
+			maxHeight: "calc(100dvh - 310px)",
 			zoomKey: "altKey",
 			verticalScroll: true,
 			horizontalScroll: true,

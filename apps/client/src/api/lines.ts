@@ -13,6 +13,7 @@ export type Line = {
 	textColor: string;
 	archivedAt: string;
 	activeMonths: string[];
+	latestServiceDate: string | null;
 };
 
 export type LineVehicleAssignment = {

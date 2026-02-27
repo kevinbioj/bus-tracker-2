@@ -2,10 +2,10 @@ import dayjs from "dayjs";
 import { ArchiveIcon } from "lucide-react";
 import { useMemo } from "react";
 import {
+	TbArrowRight as ArrowRightIcon,
 	TbCash as CashIcon,
 	TbEngine as EngineIcon,
 	TbFireExtinguisher as FireExtinguisherIcon,
-	TbArrowRight as ArrowRightIcon,
 	TbSkull as SkullIcon,
 } from "react-icons/tb";
 import { Link } from "react-router-dom";
@@ -62,7 +62,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 						<BusIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
 					))}
 				<div
-					className="border-l-[1px] border-black dark:border-white mx-2 my-1"
+					className="border-l border-black dark:border-white mx-2 my-1"
 					style={{ borderColor: line?.textColor ?? undefined }}
 				/>
 				<h2 className="flex font-bold gap-1.5 justify-center ml-1 tabular-nums text-2xl sm:my-auto sm:text-4xl sm:min-w-32">
@@ -70,7 +70,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 				</h2>
 			</div>
 			<div
-				className="border-t-[1px] sm:border-l-[1px] border-black dark:border-white mx-2"
+				className="border-t sm:border-l border-black dark:border-white mx-2"
 				style={{ borderColor: line?.textColor ?? undefined }}
 			/>
 			<div className="flex gap-2 flex-1 mt-2 mx-2 sm:mt-0 sm:mx-0">

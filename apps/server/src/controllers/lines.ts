@@ -29,9 +29,17 @@ hono.get("/lines/:id", createParamValidator(getLineByIdParamSchema), async (c) =
 		.from(lineActivitiesTable)
 		.where(eq(lineActivitiesTable.lineId, line.id));
 
+	const [latestActivity] = await database
+		.select({ serviceDate: lineActivitiesTable.serviceDate })
+		.from(lineActivitiesTable)
+		.where(eq(lineActivitiesTable.lineId, line.id))
+		.orderBy(desc(lineActivitiesTable.serviceDate))
+		.limit(1);
+
 	return c.json({
 		...line,
 		activeMonths: activeMonths.map(({ month }) => month).toSorted((a, b) => a.localeCompare(b)),
+		latestServiceDate: latestActivity?.serviceDate ?? null,
 	});
 });
 

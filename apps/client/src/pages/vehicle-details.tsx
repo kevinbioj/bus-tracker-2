@@ -40,7 +40,7 @@ export function VehicleDetails() {
 			<title>{`${vehicleDesignation} n°${vehicle.number} – ${network.name} – Données – Bus Tracker`}</title>
 			<main className="max-w-(--breakpoint-xl) p-3 w-full mx-auto">
 				<NetworkHeader network={network} />
-				<Breadcrumb className="mt-3">
+				<Breadcrumb>
 					<BreadcrumbList>
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
@@ -50,7 +50,18 @@ export function VehicleDetails() {
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link to={`/data/networks/${network.id}`}>{network.name}</Link>
+								<Link to={`/data/networks/${network.id}`}>
+									{network.logoHref ? (
+										<picture className="min-w-12 w-fit">
+											{network.darkModeLogoHref !== null ? (
+												<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+											) : null}
+											<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
+										</picture>
+									) : (
+										network.name
+									)}
+								</Link>
 							</BreadcrumbLink>
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />

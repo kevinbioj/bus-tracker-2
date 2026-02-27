@@ -31,6 +31,7 @@ export type Line = {
 	cartridgeHref: string | null;
 	color: string | null;
 	textColor: string | null;
+	sortOrder: number | null;
 	archivedAt: string | null;
 	onlineVehicleCount?: number;
 };

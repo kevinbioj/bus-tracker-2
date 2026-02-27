@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SnackbarProvider } from "notistack";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v6";
 import { useState } from "react";
 import { RouterProvider } from "react-router-dom";
 
@@ -14,7 +15,9 @@ export default function App() {
 		<SnackbarProvider anchorOrigin={{ horizontal: "right", vertical: "top" }} autoHideDuration={2500}>
 			<QueryClientProvider client={queryClient}>
 				<TooltipProvider>
-					<RouterProvider router={router(queryClient)} />
+					<NuqsAdapter>
+						<RouterProvider router={router(queryClient)} />
+					</NuqsAdapter>
 				</TooltipProvider>
 			</QueryClientProvider>
 		</SnackbarProvider>

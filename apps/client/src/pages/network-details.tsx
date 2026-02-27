@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { NetworkHeader } from "~/components/data/network-header";
-import { NetworkVehicles } from "~/components/data/networks/network-vehicles";
+import { NetworkPage } from "~/components/data/networks/network-page";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -36,13 +36,24 @@ export function NetworkDetails() {
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
-							<BreadcrumbPage>{network.name}</BreadcrumbPage>
+							<BreadcrumbPage>
+								{network.logoHref ? (
+									<picture className="min-w-12 w-fit">
+										{network.darkModeLogoHref !== null ? (
+											<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+										) : null}
+										<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
+									</picture>
+								) : (
+									network.name
+								)}
+							</BreadcrumbPage>
 						</BreadcrumbItem>
 					</BreadcrumbList>
 				</Breadcrumb>
 				<Separator className="my-1" />
 				{/* <NetworkStatistics networkId={network.id} /> */}
-				<NetworkVehicles networkId={network.id} />
+				<NetworkPage networkId={network.id} />
 			</main>
 		</>
 	);

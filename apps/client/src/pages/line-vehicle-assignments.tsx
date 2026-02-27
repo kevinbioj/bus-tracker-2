@@ -36,7 +36,9 @@ export function LineVehicleAssignments() {
 	const { data: line } = useSuspenseQuery(GetLineQuery(+lineId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
 
-	const currentDate = searchParams.has("date") ? dayjs(searchParams.get("date")) : dayjs();
+	const currentDate = searchParams.has("date")
+		? dayjs(searchParams.get("date"))
+		: dayjs(line.latestServiceDate ?? undefined);
 	const month = parseMonth(currentDate, line.activeMonths);
 	const currentMonthIndex = line.activeMonths.indexOf(month);
 
@@ -69,7 +71,7 @@ export function LineVehicleAssignments() {
 			<title>{`${line.number} – ${network.name} – Données – Bus Tracker`}</title>
 			<main className="max-w-(--breakpoint-xl) p-3 w-full mx-auto">
 				<NetworkHeader network={network} />
-				<Breadcrumb className="mt-3">
+				<Breadcrumb>
 					<BreadcrumbList>
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
@@ -79,12 +81,29 @@ export function LineVehicleAssignments() {
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link to={`/data/networks/${network.id}`}>{network.name}</Link>
+								<Link to={`/data/networks/${network.id}`}>
+									{network.logoHref ? (
+										<picture className="min-w-12 w-fit">
+											{network.darkModeLogoHref !== null ? (
+												<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+											) : null}
+											<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
+										</picture>
+									) : (
+										network.name
+									)}
+								</Link>
 							</BreadcrumbLink>
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
-							<BreadcrumbPage>{line.number}</BreadcrumbPage>
+							<BreadcrumbPage>
+								{line.cartridgeHref ? (
+									<img className="h-5 object-contain rounded-sm" src={line.cartridgeHref} alt={line.number} />
+								) : (
+									line.number
+								)}
+							</BreadcrumbPage>
 						</BreadcrumbItem>
 					</BreadcrumbList>
 				</Breadcrumb>

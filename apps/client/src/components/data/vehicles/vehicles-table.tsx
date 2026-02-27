@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useMediaQuery } from "usehooks-ts";
 
 import type { Vehicle } from "~/api/vehicles";
-import { VehicleCard } from "~/components/data/networks/vehicle-card";
+import { VehicleCard } from "~/components/data/vehicles/vehicle-card";
 
 type VehiclesTableProps = {
 	data: Vehicle[];
@@ -37,7 +37,7 @@ export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProp
 	}, [searchParams]);
 
 	return (
-		<div className="h-[calc(100dvh-255px)] sm:h-[calc(100dvh-270px)] overflow-auto pb-1" ref={parentRef}>
+		<div className="h-[calc(100dvh-230px)] sm:h-[calc(100dvh-315px)] overflow-auto pb-1" ref={parentRef}>
 			<div className="w-full relative" style={{ height: `${virtualizer.getTotalSize()}px` }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
 					const vehicle = data[virtualItem.index];

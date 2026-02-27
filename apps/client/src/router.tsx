@@ -67,9 +67,10 @@ export const router = (queryClient: QueryClient) =>
 					loader: async ({ params, request }) => {
 						const { lineId } = params;
 						const url = new URL(request.url);
-						const date = url.searchParams.get("date") ?? dayjs().format("YYYY-MM-DD");
 
-						await queryClient.ensureQueryData(GetLineQuery(+lineId!));
+						const line = await queryClient.ensureQueryData(GetLineQuery(+lineId!));
+						const date = url.searchParams.get("date") ?? line.latestServiceDate ?? dayjs().format("YYYY-MM-DD");
+
 						await queryClient.ensureQueryData(GetLineVehicleAssignmentsQuery(+lineId!, date));
 					},
 				},
