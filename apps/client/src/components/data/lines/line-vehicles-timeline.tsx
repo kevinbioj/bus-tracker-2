@@ -118,7 +118,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			min: minStartedAt.subtract(1, "hour").toDate(),
 			max: maxUpdatedAt.add(1, "hour").toDate(),
 		});
-	}, [assignments, currentDate]);
+	}, [assignments]);
 
 	return assignments.vehicles.length > 0 ? (
 		<div className="border rounded-lg bg-white dark:bg-neutral-900 vis-timeline-custom min-h-32">
@@ -131,7 +131,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 					.vis-timeline-custom .vis-item {
 						background-color: #${line.color};
-						border-color: #${line.color};
+						border-color: #${line.textColor};
 						color: #${line.textColor};
 					}
 
