@@ -26,6 +26,7 @@ const sources = [
 		],
 		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
+		mode: "NO-TU",
 		getNetworkRef: () => "PALMBUS",
 	},
 	{
