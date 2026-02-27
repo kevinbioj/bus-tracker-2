@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Timeline, type TimelineOptions } from "vis-timeline/standalone";
 
@@ -32,7 +32,7 @@ const numberSort = (aNumber: string, bNumber: string) => {
 
 export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTimelineProps>) {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const timelineRef = useRef<Timeline | null>(null);
+	const [timeline, setTimeline] = useState<Timeline | null>(null);
 	const navigate = useNavigate();
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(lineId));
@@ -44,8 +44,6 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 		if (containerRef.current === null) return;
 
 		const options = {
-			start: currentDate.startOf("day").add(4, "hours").toDate(),
-			end: currentDate.endOf("day").add(2, "hours").toDate(),
 			showCurrentTime: true,
 			locale: "fr",
 			orientation: "top",
@@ -57,23 +55,28 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			xss: { disabled: false, filterOptions: { whiteList: { div: ["class"], span: ["class"] } } },
 		} satisfies TimelineOptions;
 
-		timelineRef.current = new Timeline(containerRef.current, [], [], options);
-		timelineRef.current.on("click", (props) => {
+		const currentTimeline = new Timeline(containerRef.current, [], [], options);
+		currentTimeline.on("click", (props) => {
 			if (props.what === "group-label" && props.group) {
 				navigate(`/data/vehicles/${props.group}`);
 			}
 		});
 
+		setTimeline(currentTimeline);
 		return () => {
-			if (timelineRef.current === null) return;
-			timelineRef.current.destroy();
-			timelineRef.current = null;
+			setTimeline(null);
+			currentTimeline.destroy();
 		};
-	}, [currentDate, navigate]);
+	}, [navigate]);
+
+	const updateTimelineStartEnd = useEffectEvent(() => {
+		timeline?.setOptions({
+			start: currentDate.startOf("day").add(4, "hours").toDate(),
+			end: currentDate.endOf("day").add(2, "hours").toDate(),
+		});
+	});
 
 	useEffect(() => {
-		if (timelineRef.current === null) return;
-
 		const groups = assignments.vehicles
 			.toSorted((a, b) => numberSort(a.number, b.number))
 			.map((a) => ({
@@ -112,13 +115,15 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 				[dayjs("2099-31-12"), dayjs("2000-01-01")],
 			);
 
-		timelineRef.current.setGroups(groups);
-		timelineRef.current.setItems(items);
-		timelineRef.current.setOptions({
+		timeline?.setGroups(groups);
+		timeline?.setItems(items);
+		timeline?.setOptions({
 			min: minStartedAt.subtract(1, "hour").toDate(),
 			max: maxUpdatedAt.add(1, "hour").toDate(),
 		});
-	}, [assignments]);
+
+		updateTimelineStartEnd();
+	}, [assignments, timeline]);
 
 	return assignments.vehicles.length > 0 ? (
 		<div className="border rounded-lg bg-white dark:bg-neutral-900 vis-timeline-custom min-h-32">
