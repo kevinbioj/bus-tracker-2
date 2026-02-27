@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { Activity, useEffect, useEffectEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Timeline, type TimelineOptions } from "vis-timeline/standalone";
 
@@ -125,8 +125,8 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 		updateTimelineStartEnd();
 	}, [assignments, timeline]);
 
-	return assignments.vehicles.length > 0 ? (
-		<div className="border rounded-lg bg-white dark:bg-neutral-900 vis-timeline-custom min-h-32">
+	return (
+		<>
 			<style>
 				{`
 					.vis-timeline-custom .vis-timeline {
@@ -175,11 +175,14 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 					}
 				`}
 			</style>
-			<div ref={containerRef} />
-		</div>
-	) : (
-		<p className="mt-4 text-center text-muted-foreground">
-			Aucun véhicule n'a été observé sur cette ligne à cette date.
-		</p>
+			<Activity mode={assignments.vehicles.length > 0 ? "visible" : "hidden"}>
+				<div className="border rounded-lg bg-white dark:bg-neutral-900 vis-timeline-custom" ref={containerRef} />
+			</Activity>
+			{assignments.vehicles.length === 0 ? (
+				<p className="mt-4 text-center text-muted-foreground">
+					Aucun véhicule n'a été observé sur cette ligne à cette date.
+				</p>
+			) : null}
+		</>
 	);
 }
