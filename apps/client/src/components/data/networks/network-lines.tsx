@@ -24,7 +24,7 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 	);
 
 	return (
-		<div className="max-h-[calc(100dvh-141px)] sm:max-h-[calc(100dvh-225px)] overflow-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mt-2 pb-2">
+		<div className="max-h-[calc(100dvh-150px)] sm:max-h-[calc(100dvh-225px)] overflow-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mt-2 pb-2">
 			{sortedLines.map((line) => (
 				<Link
 					key={line.id}
