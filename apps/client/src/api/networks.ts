@@ -13,6 +13,7 @@ export type Network = {
 	textColor: string | null;
 	hasVehiclesFeature: boolean;
 	regionId: number;
+	timezone: string;
 	embedMapCenter: [number, number, number];
 };
 

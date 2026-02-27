@@ -214,16 +214,18 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			if (typeof vehiclePosition.trip !== "undefined") {
 				const trip = getTripFromDescriptor(source.gtfs, vehiclePosition.trip, source.options.allowTripGuessing);
 				if (typeof trip !== "undefined") {
-					const firstStopTime = trip.stopTimes.at(0)!;
+					const firstStopTime = trip.stopTimes.at(0);
 
 					const startDate =
 						typeof vehiclePosition.trip.startDate !== "undefined"
 							? Temporal.PlainDate.from(vehiclePosition.trip.startDate)
-							: guessStartDate(
-									firstStopTime.arrivalTime,
-									firstStopTime.arrivalModulus,
-									updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
-								);
+							: firstStopTime
+								? guessStartDate(
+										firstStopTime.arrivalTime,
+										firstStopTime.arrivalModulus,
+										updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
+									)
+								: Temporal.Now.plainDateISO();
 
 					journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);
 					if (typeof journey === "undefined") {

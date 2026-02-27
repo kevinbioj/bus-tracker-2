@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { Activity, useEffect, useEffectEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Timeline, type TimelineOptions } from "vis-timeline/standalone";
@@ -7,6 +7,7 @@ import { Timeline, type TimelineOptions } from "vis-timeline/standalone";
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 
 import "vis-timeline/styles/vis-timeline-graph2d.min.css";
+import { GetNetworkQuery } from "~/api/networks";
 
 type LineVehiclesTimelineProps = {
 	lineId: number;
@@ -30,15 +31,20 @@ const numberSort = (aNumber: string, bNumber: string) => {
 	return numberifiedA - numberifiedB;
 };
 
+const toTimelineDate = (value: Dayjs, timezone: string) => {
+	return new Date(dayjs(value).tz(timezone).format("YYYY-MM-DDTHH:mm:ss.SSS"));
+};
+
 export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTimelineProps>) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [timeline, setTimeline] = useState<Timeline | null>(null);
 	const navigate = useNavigate();
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(lineId));
+	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
 	const { data: assignments } = useSuspenseQuery(GetLineVehicleAssignmentsQuery(lineId, date));
 
-	const currentDate = dayjs(date);
+	const currentDate = dayjs.tz(date, network.timezone);
 
 	useEffect(() => {
 		if (containerRef.current === null) return;
@@ -69,10 +75,23 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 		};
 	}, [navigate]);
 
+	useEffect(() => {
+		if (!timeline) return;
+
+		const update = () => {
+			timeline.setCurrentTime(toTimelineDate(dayjs(), network.timezone));
+		};
+
+		update();
+		const interval = setInterval(update, 10_000);
+
+		return () => clearInterval(interval);
+	}, [timeline, network.timezone]);
+
 	const updateTimelineStartEnd = useEffectEvent(() => {
 		timeline?.setOptions({
-			start: currentDate.startOf("day").add(4, "hours").toDate(),
-			end: currentDate.endOf("day").add(2, "hours").toDate(),
+			start: toTimelineDate(currentDate.startOf("day").add(4, "hours"), network.timezone),
+			end: toTimelineDate(currentDate.endOf("day").add(2, "hours"), network.timezone),
 		});
 	});
 
@@ -86,8 +105,8 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 		const items = assignments.vehicles.flatMap((a) =>
 			a.activities.map((act, index) => {
-				const start = dayjs(act.startedAt);
-				const end = act.endedAt ? dayjs(act.endedAt) : undefined;
+				const start = dayjs(act.startedAt).tz(network.timezone);
+				const end = act.endedAt ? dayjs(act.endedAt).tz(network.timezone) : undefined;
 				const timeRange = end
 					? `<span class="font-bold">${start.format("HH:mm")}</span> - <span class="font-bold">${end.format("HH:mm")}</span>`
 					: `depuis <span class="font-bold">${start.format("HH:mm")}</span>`;
@@ -95,8 +114,8 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 				return {
 					id: `${a.id}-${index}-${act.startedAt}`,
 					group: a.id,
-					start: start.toDate(),
-					end: (end ?? dayjs()).toDate(),
+					start: toTimelineDate(start, network.timezone),
+					end: toTimelineDate(end ?? dayjs(), network.timezone),
 					type: "range",
 					content: `<div class="leading-none overflow-hidden whitespace-nowrap">${timeRange}</div>`,
 					title: `<div>${timeRange}</div>`,
@@ -108,22 +127,24 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			.flatMap((vehicle) => vehicle.activities)
 			.reduce(
 				([min, max], activity) => {
-					const startedAt = dayjs(activity.startedAt);
-					const endedAt = activity.endedAt ? dayjs(activity.endedAt) : dayjs();
+					const startedAt = dayjs(activity.startedAt).tz(network.timezone);
+					const endedAt = activity.endedAt
+						? dayjs(activity.endedAt).tz(network.timezone)
+						: dayjs().tz(network.timezone);
 					return [startedAt.isBefore(min) ? startedAt : min, endedAt?.isAfter(max) ? endedAt : max];
 				},
-				[dayjs("2099-31-12"), dayjs("2000-01-01")],
+				[dayjs.tz("2099-12-31", network.timezone), dayjs.tz("2000-01-01", network.timezone)],
 			);
 
 		timeline?.setGroups(groups);
 		timeline?.setItems(items);
 		timeline?.setOptions({
-			min: minStartedAt.subtract(1, "hour").toDate(),
-			max: maxUpdatedAt.add(1, "hour").toDate(),
+			min: toTimelineDate(minStartedAt.subtract(1, "hour"), network.timezone),
+			max: toTimelineDate(maxUpdatedAt.add(1, "hour"), network.timezone),
 		});
 
 		updateTimelineStartEnd();
-	}, [assignments, timeline]);
+	}, [assignments, timeline, network.timezone]);
 
 	return (
 		<>

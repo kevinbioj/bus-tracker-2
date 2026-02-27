@@ -3,12 +3,14 @@ import dayjs from "dayjs";
 import { Link } from "react-router-dom";
 
 import { GetLineQuery } from "~/api/lines";
+import { GetNetworkQuery } from "~/api/networks";
 import type { VehicleTimelineDayActivity } from "~/api/vehicles";
 
 type ActivityCardProps = { activity: VehicleTimelineDayActivity; day: string };
 
 export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 	const { data: line } = useQuery(GetLineQuery(activity.lineId));
+	const { data: network } = useQuery(GetNetworkQuery(line?.networkId, true));
 
 	const ongoing = dayjs().diff(activity.updatedAt, "minutes") < 10;
 
@@ -30,12 +32,20 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 			<p className="flex-1 my-auto text-2xl">
 				{ongoing ? (
 					<>
-						depuis <span className="font-bold tabular-nums">{dayjs(activity.startedAt).format("HH:mm")}</span>
+						depuis{" "}
+						<span className="font-bold tabular-nums">
+							{dayjs(activity.startedAt).tz(network?.timezone).format("HH:mm")}
+						</span>
 					</>
 				) : (
 					<>
-						<span className="font-bold tabular-nums">{dayjs(activity.startedAt).format("HH:mm")}</span> à{" "}
-						<span className="font-bold tabular-nums">{dayjs(activity.updatedAt).format("HH:mm")}</span>
+						<span className="font-bold tabular-nums">
+							{dayjs(activity.startedAt).tz(network?.timezone).format("HH:mm")}
+						</span>{" "}
+						à{" "}
+						<span className="font-bold tabular-nums">
+							{dayjs(activity.updatedAt).tz(network?.timezone).format("HH:mm")}
+						</span>
 					</>
 				)}
 			</p>
