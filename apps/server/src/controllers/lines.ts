@@ -116,7 +116,12 @@ hono.get(
 
 		const lineActivitiesByVehicleId = Map.groupBy(lineActivities, (lineActivity) => lineActivity.vehicleId);
 
-		let vehicles: { id: number; number: string; designation: string | null; activities: any[] }[] = [];
+		let vehicles: {
+			id: number;
+			number: string;
+			designation: string | null;
+			activities: { startedAt: Temporal.Instant; endedAt: Temporal.Instant | null }[];
+		}[] = [];
 
 		if (lineActivitiesByVehicleId.size > 0) {
 			const vehicleData = await database
