@@ -51,6 +51,7 @@ export const GetLineVehicleAssignmentsQuery = (lineId: number, date: string) =>
 		staleTime: 10_000,
 		refetchInterval: 10_000,
 		queryKey: ["lines", lineId, "vehicle-assignments", date],
+		structuralSharing: false,
 		queryFn: () =>
 			client
 				.get(`lines/${lineId}/vehicle-assignments?date=${date}`)
