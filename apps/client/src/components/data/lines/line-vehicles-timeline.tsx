@@ -37,6 +37,7 @@ const toTimelineDate = (value: Dayjs, timezone: string) => {
 
 export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTimelineProps>) {
 	const containerRef = useRef<HTMLDivElement>(null);
+	const previousDateRef = useRef<string>(null);
 	const [timeline, setTimeline] = useState<Timeline | null>(null);
 	const navigate = useNavigate();
 
@@ -89,6 +90,12 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 	}, [timeline, network.timezone]);
 
 	const updateTimelineStartEnd = useEffectEvent(() => {
+		const formattedCurrentDate = currentDate.format("YYYY-MM-DD");
+		if (timeline === null || formattedCurrentDate === previousDateRef.current) {
+			return;
+		}
+
+		previousDateRef.current = formattedCurrentDate;
 		timeline?.setOptions({
 			start: toTimelineDate(currentDate.startOf("day").add(4, "hours"), network.timezone),
 			end: toTimelineDate(currentDate.endOf("day").add(2, "hours"), network.timezone),
