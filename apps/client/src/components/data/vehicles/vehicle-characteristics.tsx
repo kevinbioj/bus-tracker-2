@@ -13,7 +13,7 @@ import { match } from "ts-pattern";
 import type { Vehicle } from "~/api/vehicles";
 import { VehicleCharacteristicsActions } from "~/components/data/vehicles/actions/vehicle-characteristics-action-menu";
 import { Button } from "~/components/ui/button";
-import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import tcInfosIcon from "~/icons/tc-infos.png";
 
 const getTcInfosLink = (tcId: number) => `https://tc-infos.com/vehicule/${tcId}`;
@@ -25,6 +25,8 @@ type VehicleCharacteristicsProps = {
 export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacteristicsProps>) {
 	const vehicleIcon = match(vehicle.type)
 		.with("SUBWAY", "TRAMWAY", "RAIL", () => <TramwayIcon className="align-baseline inline size-4" />)
+		.with("TROLLEY", () => <TrolleybusIcon className="align-baseline inline size-4" />)
+		.with("COACH", () => <CoachIcon className="align-baseline inline size-4" />)
 		.with("FERRY", () => <ShipIcon className="align-baseline inline size-4" />)
 		.otherwise(() => <BusIcon className="align-baseline inline size-4" />);
 

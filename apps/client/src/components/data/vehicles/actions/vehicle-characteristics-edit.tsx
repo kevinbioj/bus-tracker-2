@@ -37,8 +37,8 @@ type UpdateVehicleFormData = z.infer<typeof updateVehicleFormSchema>;
 
 const lineTypeLabels: Record<VehicleJourneyLineType, string> = {
 	BUS: "Bus",
-	TROLLEY: "Trolley",
-	COACH: "Coach",
+	TROLLEY: "Trolleybus",
+	COACH: "Car",
 	FERRY: "Ferry",
 	RAIL: "Train",
 	SUBWAY: "Métro",
@@ -190,7 +190,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 												<SelectValue />
 											</SelectTrigger>
 										</FormControl>
-										<SelectContent className="z-[9999]">
+										<SelectContent className="z-9999">
 											{vehicleJourneyLineTypes.map((type) => (
 												<SelectItem key={type} value={type}>
 													{lineTypeLabels[type]}

@@ -15,7 +15,7 @@ import { GetNetworkQuery } from "~/api/networks";
 
 import type { Vehicle } from "~/api/vehicles";
 import { useLine } from "~/hooks/use-line";
-import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import { Zzz } from "~/icons/zzz";
 
 export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
@@ -60,6 +60,12 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 					))
 					.with("FERRY", () => (
 						<ShipIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+					))
+					.with("TROLLEY", () => (
+						<TrolleybusIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+					))
+					.with("COACH", () => (
+						<CoachIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
 					))
 					.otherwise(() => (
 						<BusIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />

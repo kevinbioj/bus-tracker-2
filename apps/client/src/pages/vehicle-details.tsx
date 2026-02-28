@@ -17,7 +17,7 @@ import {
 	BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
 import { Separator } from "~/components/ui/separator";
-import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 
 export function VehicleDetails() {
 	const { vehicleId } = useParams();
@@ -30,6 +30,8 @@ export function VehicleDetails() {
 
 	const vehicleIcon = match(vehicle.type)
 		.with("SUBWAY", "TRAMWAY", "RAIL", () => <TramwayIcon className="align-top inline size-4" />)
+		.with("TROLLEY", () => <TrolleybusIcon className="align-top inline size-4" />)
+		.with("COACH", () => <CoachIcon className="align-top inline size-4" />)
 		.with("FERRY", () => <ShipIcon className="align-top inline size-4" />)
 		.otherwise(() => <BusIcon className="align-top inline size-4" />);
 

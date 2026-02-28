@@ -12,15 +12,46 @@ import { VehiclesTable } from "~/components/data/vehicles/vehicles-table";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import { cn } from "~/utils/utils";
 
-const filterableVehicleTypes = {
-	ALL: <span className="text-muted-foreground">Type</span>,
-	TRAMWAY: <TramwayIcon className="size-5" />,
-	BUS: <BusIcon className="size-5" />,
-	FERRY: <ShipIcon className="size-5" />,
-} as const;
+const vehicleTypeOptions = {
+	ALL: {
+		label: <span className="text-muted-foreground">Type</span>,
+		icon: null,
+	},
+	TRAMWAY: {
+		label: "Tramway",
+		icon: <TramwayIcon className="size-5" />,
+	},
+	TROLLEY: {
+		label: "Trolleybus",
+		icon: <TrolleybusIcon className="size-5" />,
+	},
+	BUS: {
+		label: "Bus",
+		icon: <BusIcon className="size-5" />,
+	},
+	COACH: {
+		label: "Car",
+		icon: <CoachIcon className="size-5" />,
+	},
+	FERRY: {
+		label: "Ferry",
+		icon: <ShipIcon className="size-5" />,
+	},
+};
+
+const sortingOptions = {
+	number: {
+		label: "Numéro",
+		icon: <BinaryIcon className="size-5" />,
+	},
+	activity: {
+		label: "Activité",
+		icon: <ClockIcon className="size-5" />,
+	},
+};
 
 const numberSort = (a: Vehicle, b: Vehicle) => {
 	const numberifiedA = parseInt(a.number, 10);
@@ -55,7 +86,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		const networkVehicleTypes = new Set(vehicles.map(({ type }) => type));
 		return [
 			"ALL",
-			...Object.keys(filterableVehicleTypes).filter((type) => networkVehicleTypes.has(type as Vehicle["type"])),
+			...Object.keys(vehicleTypeOptions).filter((type) => networkVehicleTypes.has(type as Vehicle["type"])),
 		];
 	}, [vehicles]);
 
@@ -138,14 +169,22 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 						{availableNetworkTypeFilters.length > 2 && (
 							<Select value={type} onValueChange={(newType) => updateSearchParam("type", newType)}>
 								<SelectTrigger aria-label="Type" className="h-10 w-18">
-									<SelectValue />
+									<SelectValue>
+										{vehicleTypeOptions[type as keyof typeof vehicleTypeOptions].icon ?? vehicleTypeOptions.ALL.label}
+									</SelectValue>
 								</SelectTrigger>
 								<SelectContent>
-									{availableNetworkTypeFilters.map((type) => (
-										<SelectItem key={type} value={type}>
-											{filterableVehicleTypes[type as keyof typeof filterableVehicleTypes]}
-										</SelectItem>
-									))}
+									{availableNetworkTypeFilters.map((type) => {
+										const item = vehicleTypeOptions[type as keyof typeof vehicleTypeOptions];
+										return (
+											<SelectItem key={type} value={type}>
+												<div className="flex items-center gap-2">
+													{item.icon}
+													<span>{item.label}</span>
+												</div>
+											</SelectItem>
+										);
+									})}
 								</SelectContent>
 							</Select>
 						)}
@@ -188,15 +227,17 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					</Label>
 					<Select value={sort} onValueChange={(newSort) => updateSearchParam("sort", newSort)}>
 						<SelectTrigger aria-label="Trier" className="h-10">
-							<SelectValue />
+							<SelectValue>{sortingOptions[sort as keyof typeof sortingOptions].icon}</SelectValue>
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="number">
-								<BinaryIcon />
-							</SelectItem>
-							<SelectItem value="activity">
-								<ClockIcon />
-							</SelectItem>
+							{Object.entries(sortingOptions).map(([key, item]) => (
+								<SelectItem key={key} value={key}>
+									<div className="flex items-center gap-2">
+										{item.icon}
+										<span>{item.label}</span>
+									</div>
+								</SelectItem>
+							))}
 						</SelectContent>
 					</Select>
 				</div>

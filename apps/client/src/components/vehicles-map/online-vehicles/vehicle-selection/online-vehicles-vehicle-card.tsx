@@ -10,7 +10,7 @@ import type { Vehicle } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { useLine } from "~/hooks/use-line";
-import { BusIcon, ShipIcon, TramwayIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 
 type OnlineVehiclesVehicleCard = {
 	embedMode?: boolean;
@@ -57,10 +57,10 @@ export function OnlineVehiclesVehicleCard({
 				<div className="flex justify-center">
 					{match(vehicle.type)
 						.with(P.union("SUBWAY", "TRAMWAY"), () => <TramwayIcon className="my-auto size-6" />)
+						.with("TROLLEY", () => <TrolleybusIcon className="my-auto size-6" />)
+						.with("COACH", () => <CoachIcon className="my-auto size-6" />)
 						.with("FERRY", () => <ShipIcon className="my-auto size-6" />)
-						.otherwise(() => (
-							<BusIcon className="my-auto size-6" />
-						))}
+						.otherwise(() => <BusIcon className="my-auto size-6" />)}
 					<div
 						className="border-l border-black dark:border-white mx-2 my-1"
 						style={{ borderColor: line?.textColor ?? undefined }}
