@@ -2,7 +2,13 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
 import { Activity, useEffect, useEffectEvent, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Timeline, type TimelineOptions } from "vis-timeline/standalone";
+import { DataSet } from "vis-data";
+import {
+	type DataGroupCollectionType,
+	type DataItemCollectionType,
+	Timeline,
+	type TimelineOptions,
+} from "vis-timeline/standalone";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 
@@ -37,8 +43,10 @@ const toTimelineDate = (value: Dayjs, timezone: string) => {
 
 export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTimelineProps>) {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const previousDateRef = useRef<string>(null);
+	const lastConfiguredRef = useRef<{ timeline: Timeline; date: string } | null>(null);
 	const [timeline, setTimeline] = useState<Timeline | null>(null);
+	const [groups] = useState(() => new DataSet());
+	const [items] = useState(() => new DataSet());
 	const navigate = useNavigate();
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(lineId));
@@ -62,7 +70,12 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			xss: { disabled: false, filterOptions: { whiteList: { div: ["class"], span: ["class"] } } },
 		} satisfies TimelineOptions;
 
-		const currentTimeline = new Timeline(containerRef.current, [], [], options);
+		const currentTimeline = new Timeline(
+			containerRef.current,
+			items as unknown as DataItemCollectionType,
+			groups as unknown as DataGroupCollectionType,
+			options,
+		);
 		currentTimeline.on("click", (props) => {
 			if (props.what === "group-label" && props.group) {
 				navigate(`/data/vehicles/${props.group}`);
@@ -74,7 +87,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			setTimeline(null);
 			currentTimeline.destroy();
 		};
-	}, [navigate]);
+	}, [navigate, items, groups]);
 
 	useEffect(() => {
 		if (!timeline) return;
@@ -90,27 +103,33 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 	}, [timeline, network.timezone]);
 
 	const updateTimelineStartEnd = useEffectEvent(() => {
+		if (!timeline) return;
+
 		const formattedCurrentDate = currentDate.format("YYYY-MM-DD");
-		if (timeline === null || formattedCurrentDate === previousDateRef.current) {
+		if (lastConfiguredRef.current?.timeline === timeline && lastConfiguredRef.current?.date === formattedCurrentDate) {
 			return;
 		}
 
-		previousDateRef.current = formattedCurrentDate;
-		timeline?.setOptions({
+		lastConfiguredRef.current = { timeline, date: formattedCurrentDate };
+		timeline.setOptions({
 			start: toTimelineDate(currentDate.startOf("day").add(4, "hours"), network.timezone),
 			end: toTimelineDate(currentDate.endOf("day").add(2, "hours"), network.timezone),
 		});
 	});
 
 	useEffect(() => {
-		const groups = assignments.vehicles
+		if (timeline === null) {
+			return;
+		}
+
+		const newGroups = assignments.vehicles
 			.toSorted((a, b) => numberSort(a.number, b.number))
 			.map((a) => ({
 				id: a.id,
 				content: `<div class="flex items-center gap-1">n°${a.number}${a.designation ? ` <span class="hidden text-muted-foreground text-sm lg:block">${a.designation}</span>` : ""}</div>`,
 			}));
 
-		const items = assignments.vehicles.flatMap((a) =>
+		const newItems = assignments.vehicles.flatMap((a) =>
 			a.activities.map((act, index) => {
 				const start = dayjs(act.startedAt).tz(network.timezone);
 				const end = act.endedAt ? dayjs(act.endedAt).tz(network.timezone) : undefined;
@@ -143,15 +162,24 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 				[dayjs.tz("2099-12-31", network.timezone), dayjs.tz("2000-01-01", network.timezone)],
 			);
 
-		timeline?.setGroups(groups);
-		timeline?.setItems(items);
-		timeline?.setOptions({
+		groups.update(newGroups);
+		items.update(newItems);
+
+		const currentGroupIds = new Set(newGroups.map((g) => g.id));
+		const groupsToRemove = groups.getIds().filter((id) => !currentGroupIds.has(id as number));
+		if (groupsToRemove.length > 0) groups.remove(groupsToRemove);
+
+		const currentItemIds = new Set(newItems.map((i) => i.id));
+		const itemsToRemove = items.getIds().filter((id) => !currentItemIds.has(id as string));
+		if (itemsToRemove.length > 0) items.remove(itemsToRemove);
+
+		timeline.setOptions({
 			min: toTimelineDate(minStartedAt.subtract(1, "hour"), network.timezone),
 			max: toTimelineDate(maxUpdatedAt.add(1, "hour"), network.timezone),
 		});
 
 		updateTimelineStartEnd();
-	}, [assignments, timeline, network.timezone]);
+	}, [assignments, timeline, network.timezone, groups, items]);
 
 	return (
 		<>
