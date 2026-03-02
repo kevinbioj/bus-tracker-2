@@ -32,6 +32,7 @@ RUN pnpm -r build
 ##########################################
 
 FROM nginx:1.29.5-alpine AS web
+RUN apk add --no-cache curl
 WORKDIR /usr/share/nginx/html
 
 # Copy nginx configuration
