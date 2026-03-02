@@ -28,13 +28,16 @@ services:
       - REDIS_URL=redis://redis:6379
     secrets:
       - database_password
+    stop_grace_period: 10s
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         parallelism: 1
         order: start-first
         failure_action: rollback
-        delay: 10s
+        monitor: 15s
+        max_failure_ratio: 0.1
+        delay: 5s
       rollback_config:
         parallelism: 1
         order: stop-first
@@ -46,18 +49,24 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
-  
+
   client:
     image: ghcr.io/kevinbioj/bus-tracker-2/client:sha-${GITHUB_SHA}
     ports:
-      - 3000:3000
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: ingress
+    stop_grace_period: 10s
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         parallelism: 1
         order: start-first
         failure_action: rollback
-        delay: 10s
+        monitor: 15s
+        max_failure_ratio: 0.1
+        delay: 5s
       rollback_config:
         parallelism: 1
         order: stop-first
