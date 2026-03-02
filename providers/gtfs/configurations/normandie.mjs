@@ -319,7 +319,7 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) => {
-			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
+			if (/(?:DM|MISC|\d{6})-.+/.test(vehicle.trip?.routeId)) {
 				vehicle.trip = undefined;
 			}
 
