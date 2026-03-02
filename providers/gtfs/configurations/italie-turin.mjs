@@ -11,7 +11,6 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "TURIN",
-		getVehicleRef: () => undefined,
 	},
 ];
 
