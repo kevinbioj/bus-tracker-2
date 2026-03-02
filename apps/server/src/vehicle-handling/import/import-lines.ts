@@ -1,9 +1,10 @@
 import type { VehicleJourneyLine } from "@bus-tracker/contracts";
-import { getTableColumns, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import type { Temporal } from "temporal-polyfill";
 
 import { database } from "../../core/database/database.js";
-import { type LineEntity, linesTable, type NetworkEntity } from "../../core/database/schema.js";
+import { linesTable, type NetworkEntity } from "../../core/database/schema.js";
+import { mapRowsToEntity } from "../../core/database/utils.js";
 
 export async function importLines(
 	network: NetworkEntity,
@@ -12,7 +13,6 @@ export async function importLines(
 ) {
 	if (linesData.length === 0) return [];
 
-	const columns = getTableColumns(linesTable);
 	const rows = await database.execute(
 		sql`SELECT * FROM public.import_lines(
 			${network.id}, 
@@ -21,13 +21,5 @@ export async function importLines(
 		)`,
 	);
 
-	return rows.map((row) => {
-		const mapped: Record<string, unknown> = {};
-
-		for (const [key, col] of Object.entries(columns)) {
-			mapped[key] = col.mapFromDriverValue(row[col.name]);
-		}
-
-		return mapped;
-	}) as LineEntity[];
+	return mapRowsToEntity(linesTable, rows);
 }
