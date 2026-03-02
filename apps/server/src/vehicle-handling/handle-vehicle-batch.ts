@@ -8,7 +8,7 @@ import { nthIndexOf } from "../utils/nth-index-of.js";
 
 import { importLines } from "./import/import-lines.js";
 import { importNetwork } from "./import/import-network.js";
-import { importVehicles } from "./import/import-vehicle.js";
+import { importVehicles } from "./import/import-vehicles.js";
 import { registerActivities } from "./register-activities.js";
 
 export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {

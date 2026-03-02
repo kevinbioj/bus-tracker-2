@@ -18,8 +18,8 @@ import {
 import { Temporal } from "temporal-polyfill";
 
 export const timestamp = customType<{
-	data: Temporal.Instant;
-	driverData: string;
+	data: Temporal.Instant | null;
+	driverData: string | null;
 	config: { precision?: number };
 }>({
 	dataType(config) {
@@ -27,9 +27,14 @@ export const timestamp = customType<{
 		return `timestamp${precision}`;
 	},
 	fromDriver(value) {
+		if (value === null) return null;
 		return Temporal.Instant.from(`${value.replace(" ", "T")}Z`);
 	},
 	toDriver(value) {
+		if (value === null) {
+			return "NULL";
+		}
+
 		return value.toString();
 	},
 });

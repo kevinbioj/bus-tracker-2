@@ -1,9 +1,9 @@
 import type { VehicleJourneyLine } from "@bus-tracker/contracts";
-import { and, arrayOverlaps, eq, gte, isNull, or } from "drizzle-orm";
+import { getTableColumns, sql } from "drizzle-orm";
 import type { Temporal } from "temporal-polyfill";
 
 import { database } from "../../core/database/database.js";
-import { type NetworkEntity, linesTable } from "../../core/database/schema.js";
+import { type LineEntity, linesTable, type NetworkEntity } from "../../core/database/schema.js";
 
 export async function importLines(
 	network: NetworkEntity,
@@ -12,39 +12,22 @@ export async function importLines(
 ) {
 	if (linesData.length === 0) return [];
 
-	const existingLines = await database
-		.select()
-		.from(linesTable)
-		.where(
-			and(
-				eq(linesTable.networkId, network.id),
-				arrayOverlaps(
-					linesTable.references,
-					linesData.map(({ ref }) => ref),
-				),
-				or(isNull(linesTable.archivedAt), gte(linesTable.archivedAt, recordedAt)),
-			),
-		);
-
-	const missingLines = linesData.filter(
-		({ ref }) => !existingLines.some(({ references }) => references?.includes(ref)),
+	const columns = getTableColumns(linesTable);
+	const rows = await database.execute(
+		sql`SELECT * FROM public.import_lines(
+			${network.id}, 
+			${JSON.stringify(linesData)}::jsonb, 
+			${recordedAt.toString()}::timestamp
+		)`,
 	);
 
-	if (missingLines.length > 0) {
-		const addedLines = await database
-			.insert(linesTable)
-			.values(
-				missingLines.map((line) => ({
-					networkId: network.id,
-					references: [line.ref],
-					number: line.number,
-					color: line.color?.length === 6 ? line.color : undefined,
-					textColor: line.textColor?.length === 6 ? line.textColor : undefined,
-				})),
-			)
-			.returning();
-		existingLines.push(...addedLines);
-	}
+	return rows.map((row) => {
+		const mapped: Record<string, unknown> = {};
 
-	return existingLines;
+		for (const [key, col] of Object.entries(columns)) {
+			mapped[key] = col.mapFromDriverValue(row[col.name]);
+		}
+
+		return mapped;
+	}) as LineEntity[];
 }

@@ -60,7 +60,9 @@ export function OnlineVehiclesVehicleCard({
 						.with("TROLLEY", () => <TrolleybusIcon className="my-auto size-6" />)
 						.with("COACH", () => <CoachIcon className="my-auto size-6" />)
 						.with("FERRY", () => <ShipIcon className="my-auto size-6" />)
-						.otherwise(() => <BusIcon className="my-auto size-6" />)}
+						.otherwise(() => (
+							<BusIcon className="my-auto size-6" />
+						))}
 					<div
 						className="border-l border-black dark:border-white mx-2 my-1"
 						style={{ borderColor: line?.textColor ?? undefined }}
