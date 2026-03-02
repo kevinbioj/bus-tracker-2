@@ -32,7 +32,7 @@ RUN pnpm -r build
 ##########################################
 
 FROM nginx:1.29.5-alpine AS web
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl tini
 WORKDIR /usr/share/nginx/html
 
 # Copy nginx configuration
@@ -40,3 +40,6 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy build artifacts
 COPY --from=builder /bus-tracker/apps/client/dist/ ./
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["nginx", "-g", "daemon off;"]
