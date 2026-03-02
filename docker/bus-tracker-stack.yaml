@@ -1,13 +1,35 @@
 version: '3.9'
 
 services:
+  traefik:
+    image: traefik:v3.6.9
+    command:
+      - "--providers.swarm=true"
+      - "--providers.swarm.exposedByDefault=false"
+      - "--entrypoints.web.address=:3000"
+      - "--accesslog=true"
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
   database:
     image: postgres:18.2-alpine
     environment:
       - POSTGRES_USER=bustracker
       - POSTGRES_PASSWORD_FILE=/run/secrets/database_password
     ports:
-      - 5432:5432
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: host
     secrets:
       - database_password
     volumes:
@@ -16,7 +38,10 @@ services:
   redis:
     image: redis:8.6.0-alpine
     ports:
-      - 6379:6379
+      - target: 6379
+        published: 6379
+        protocol: tcp
+        mode: host
     volumes:
       - redis_data:/data
 
@@ -28,7 +53,7 @@ services:
       - REDIS_URL=redis://redis:6379
     secrets:
       - database_password
-    stop_grace_period: 10s
+    stop_grace_period: 25s
     deploy:
       replicas: 1
       update_config:
@@ -41,8 +66,13 @@ services:
       rollback_config:
         parallelism: 1
         order: stop-first
-      restart_policy:
-        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.server.rule=PathPrefix(`/api/`)"
+        - "traefik.http.routers.server.entrypoints=web"
+        - "traefik.http.routers.server.middlewares=api-strip"
+        - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api/"
+        - "traefik.http.services.server.loadbalancer.server.port=8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
       interval: 10s
@@ -52,11 +82,6 @@ services:
 
   client:
     image: ghcr.io/kevinbioj/bus-tracker-2/client:sha-${GITHUB_SHA}
-    ports:
-      - target: 3000
-        published: 3000
-        protocol: tcp
-        mode: ingress
     stop_grace_period: 10s
     deploy:
       replicas: 1
@@ -70,10 +95,13 @@ services:
       rollback_config:
         parallelism: 1
         order: stop-first
-      restart_policy:
-        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.client.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.client.entrypoints=web"
+        - "traefik.http.services.client.loadbalancer.server.port=3000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/ping"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 10s
       timeout: 5s
       retries: 3
