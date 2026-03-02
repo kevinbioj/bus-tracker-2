@@ -35,7 +35,9 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 		);
 
 		const lines = keyBy(await importLines(network, Array.from(lineDatas.values()), now), (line) => line.references!);
-		const vehicles = keyBy(await importVehicles(network, vehicleRefs), (vehicle) => vehicle.ref);
+		const vehicles = network.hasVehiclesFeature
+			? keyBy(await importVehicles(network, vehicleRefs), (vehicle) => vehicle.ref)
+			: undefined;
 
 		const registerableActivities = [];
 
@@ -63,7 +65,7 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 			journeyStore.set(disposeableJourney.id, disposeableJourney);
 
 			if (typeof vehicleJourney.vehicleRef !== "undefined") {
-				const vehicle = vehicles.get(vehicleJourney.vehicleRef);
+				const vehicle = vehicles?.get(vehicleJourney.vehicleRef);
 				if (typeof vehicle !== "undefined") {
 					disposeableJourney.vehicle = {
 						id: vehicle.id,
@@ -71,7 +73,7 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 					};
 
 					registerableActivities.push(disposeableJourney);
-				} else if (networkRef === "SNCF") {
+				} else {
 					disposeableJourney.vehicle = {
 						number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
 					};
@@ -79,6 +81,8 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 			}
 		}
 
-		registerActivities(registerableActivities);
+		if (network.hasVehiclesFeature) {
+			registerActivities(registerableActivities);
+		}
 	}
 }
