@@ -53,19 +53,7 @@ services:
       - REDIS_URL=redis://redis:6379
     secrets:
       - database_password
-    stop_grace_period: 25s
     deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        order: start-first
-        failure_action: rollback
-        monitor: 15s
-        max_failure_ratio: 0.1
-        delay: 5s
-      rollback_config:
-        parallelism: 1
-        order: stop-first
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.server.rule=PathPrefix(`/api/`)"
@@ -73,39 +61,41 @@ services:
         - "traefik.http.routers.server.middlewares=api-strip"
         - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api/"
         - "traefik.http.services.server.loadbalancer.server.port=8080"
+      replicas: 1
+      update_config:
+        order: start-first
+        failure_action: rollback
+        monitor: 5s
+      rollback_config:
+        order: start-first
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 3
-      start_period: 5s
+      retries: 10
+      start_period: 3s
 
   client:
     image: ghcr.io/kevinbioj/bus-tracker-2/client:sha-${GITHUB_SHA}
-    stop_grace_period: 10s
     deploy:
-      replicas: 1
-      update_config:
-        parallelism: 1
-        order: start-first
-        failure_action: rollback
-        monitor: 15s
-        max_failure_ratio: 0.1
-        delay: 5s
-      rollback_config:
-        parallelism: 1
-        order: stop-first
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.client.rule=PathPrefix(`/`)"
         - "traefik.http.routers.client.entrypoints=web"
         - "traefik.http.services.client.loadbalancer.server.port=3000"
+      replicas: 1
+      update_config:
+        order: start-first
+        failure_action: rollback
+        monitor: 5s
+      rollback_config:
+        order: start-first
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 3
-      start_period: 5s
+      retries: 10
+      start_period: 1s
 
 secrets:
   database_password:
