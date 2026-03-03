@@ -81,7 +81,7 @@ export function LineVehicleAssignments() {
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link to={`/data/networks/${network.id}`}>
+								<Link to={`/data/networks/${network.id}?tab=lines`}>
 									{network.logoHref ? (
 										<picture className="min-w-12 w-fit">
 											{network.darkModeLogoHref !== null ? (
