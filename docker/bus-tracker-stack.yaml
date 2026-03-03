@@ -21,7 +21,7 @@ services:
           - node.role == manager
 
   database:
-    image: postgres:18.2-alpine
+    image: postgres:18.3-alpine
     environment:
       - POSTGRES_USER=bustracker
       - POSTGRES_PASSWORD_FILE=/run/secrets/database_password
@@ -36,7 +36,7 @@ services:
       - database_data:/var/lib/postgresql
 
   redis:
-    image: redis:8.6.0-alpine
+    image: redis:8.6.1-alpine
     ports:
       - target: 6379
         published: 6379
