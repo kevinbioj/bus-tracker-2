@@ -56,6 +56,7 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
+        - "traefik.docker.lbswarm=true"
         - "traefik.http.routers.server.rule=PathPrefix(`/api/`)"
         - "traefik.http.routers.server.entrypoints=web"
         - "traefik.http.routers.server.middlewares=api-strip"
@@ -65,12 +66,14 @@ services:
       update_config:
         order: start-first
         failure_action: rollback
-        monitor: 5s
+        monitor: 10s
+        delay: 5s
       rollback_config:
         order: start-first
+    stop_grace_period: 10s
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
-      interval: 5s
+      interval: 1s
       timeout: 5s
       retries: 10
       start_period: 3s
@@ -80,6 +83,7 @@ services:
     deploy:
       labels:
         - "traefik.enable=true"
+        - "traefik.docker.lbswarm=true"
         - "traefik.http.routers.client.rule=PathPrefix(`/`)"
         - "traefik.http.routers.client.entrypoints=web"
         - "traefik.http.services.client.loadbalancer.server.port=3000"
@@ -87,12 +91,14 @@ services:
       update_config:
         order: start-first
         failure_action: rollback
-        monitor: 5s
+        monitor: 10s
+        delay: 5s
       rollback_config:
         order: start-first
+    stop_grace_period: 2s
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 5s
+      interval: 1s
       timeout: 5s
       retries: 10
       start_period: 1s
