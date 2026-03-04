@@ -16,7 +16,7 @@ import { Button } from "~/components/ui/button";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import tcInfosIcon from "~/icons/tc-infos.png";
 
-const getTcInfosLink = (tcId: number) => `https://tc-infos.com/vehicule/${tcId}`;
+const getTcInfosLink = (tcId: number) => `https://tc-infos.fr/vehicule/${tcId}`;
 
 type VehicleCharacteristicsProps = {
 	vehicle: Vehicle;
