@@ -34,7 +34,6 @@ const vehicleEntityToVehicleDto = (
 	ref: vehicle.ref,
 	number: vehicle.number,
 	designation: vehicle.designation,
-	// 2026-02-25: temporary edit
 	links: { tcInfos: vehicle.tcId ? `https://tc-infos.fr/vehicule/${vehicle.tcId}` : null },
 	network: networkEntityToNetworkDto(network),
 	operator: operator !== null ? { id: operator.id, name: operator.name } : null,

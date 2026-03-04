@@ -13,6 +13,7 @@ import {
 	serial,
 	smallint,
 	text,
+	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
 import { Temporal } from "temporal-polyfill";
@@ -88,7 +89,10 @@ export const linesTable = pgTable(
 		sortOrder: integer("sort_order"),
 		archivedAt: timestamp("archived_at"),
 	},
-	(table) => [index("network_idx").on(table.networkId)],
+	(table) => [
+		index("network_idx").on(table.networkId),
+		index("line_ref_gin_idx").using("gin", table.references),
+	],
 );
 
 export type LineEntity = InferSelectModel<typeof linesTable>;
@@ -131,7 +135,7 @@ export const vehiclesTable = pgTable(
 	},
 	(table) => [
 		index("vehicle_network_index").on(table.networkId),
-		index("vehicle_network_ref_index").on(table.networkId, table.ref),
+		uniqueIndex("vehicle_network_ref_unique_index").on(table.networkId, table.ref),
 	],
 );
 
