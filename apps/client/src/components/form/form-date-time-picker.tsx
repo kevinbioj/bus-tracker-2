@@ -1,14 +1,14 @@
-import type { ComponentProps } from "react";
-import type { ControllerProps, FieldValues } from "react-hook-form";
 import dayjs from "dayjs";
 import { CalendarIcon } from "lucide-react";
+import { type ComponentProps, useEffect, useState } from "react";
+import type { ControllerProps, FieldValues } from "react-hook-form";
 
-import { cn } from "~/utils/utils";
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import { Input } from "~/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { cn } from "~/utils/utils";
 
 export type FormDateTimePickerProps<T extends FieldValues> = Omit<ControllerProps<T>, "render"> & {
 	label: string;
@@ -32,7 +32,13 @@ export function FormDateTimePicker<T extends FieldValues = FieldValues>({
 			render={({ field }) => {
 				const value = field.value ? dayjs(field.value) : null;
 				const dateValue = value?.toDate();
-				const timeValue = value?.format("HH:mm") ?? "";
+				const initialTimeValue = value?.format("HH:mm") ?? "";
+
+				const [timeValue, setTimeValue] = useState(initialTimeValue);
+
+				useEffect(() => {
+					setTimeValue(initialTimeValue);
+				}, [initialTimeValue]);
 
 				return (
 					<FormItem {...itemProps}>
@@ -69,15 +75,24 @@ export function FormDateTimePicker<T extends FieldValues = FieldValues>({
 								<Input
 									type="time"
 									className="w-auto appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-									step="1"
 									value={timeValue}
 									onChange={(e) => {
-										const timeStr = e.target.value;
-										if (!timeStr) return;
-										const [hours, minutes] = timeStr.split(":").map(Number);
-										const current = field.value ? dayjs(field.value) : dayjs();
-										const updated = current.hour(hours).minute(minutes).second(0).millisecond(0);
-										field.onChange(updated.toISOString());
+										const newTime = e.target.value;
+										setTimeValue(newTime);
+
+										if (!newTime) return;
+
+										const [hoursStr, minutesStr] = newTime.split(":");
+										if (hoursStr && minutesStr) {
+											const hours = Number.parseInt(hoursStr, 10);
+											const minutes = Number.parseInt(minutesStr, 10);
+
+											if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+												const current = field.value ? dayjs(field.value) : dayjs();
+												const updated = current.hour(hours).minute(minutes).second(0).millisecond(0);
+												field.onChange(updated.toISOString());
+											}
+										}
 									}}
 								/>
 							</FormControl>
