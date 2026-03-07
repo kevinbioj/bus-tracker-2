@@ -71,6 +71,7 @@ const updateVehicleBodySchema = z.object({
 	designation: z.string().nullable(),
 	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier.").nullable(),
 	type: vehicleJourneyLineTypeEnum,
+	operatorId: z.number().nullable(),
 });
 
 const archiveVehicleBodySchema = z.object({
@@ -299,6 +300,10 @@ hono.put(
 
 		if (vehicle.type !== data.type) {
 			updatedFields.push({ field: "type", oldValue: vehicle.type, newValue: data.type });
+		}
+
+		if (vehicle.operatorId !== data.operatorId) {
+			updatedFields.push({ field: "operatorId", oldValue: vehicle.operatorId, newValue: data.operatorId });
 		}
 
 		await database.update(vehiclesTable).set(data).where(eq(vehiclesTable.id, vehicle.id));

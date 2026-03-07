@@ -4,12 +4,14 @@ import {
 	vehicleJourneyLineTypes,
 } from "@bus-tracker/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangleIcon } from "lucide-react";
 import { useSnackbar } from "notistack";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { GetNetworkQuery } from "~/api/networks";
 import { UpdateVehicleMutation, type Vehicle } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
 import {
@@ -31,6 +33,7 @@ const updateVehicleFormSchema = z.object({
 	designation: z.string().nullable(),
 	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier.").nullable(),
 	type: vehicleJourneyLineTypeEnum,
+	operatorId: z.number().nullable(),
 });
 
 type UpdateVehicleFormData = z.infer<typeof updateVehicleFormSchema>;
@@ -61,12 +64,20 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 	const queryClient = useQueryClient();
 	const { isPending: updatingVehicle, mutateAsync: updateVehicle } = useMutation(UpdateVehicleMutation(vehicle.id));
 
+	const { data: network } = useQuery(GetNetworkQuery(vehicle.networkId, true));
+
+	const operators = useMemo(
+		() => network?.operators.slice().sort((a, b) => a.sortOrder - b.sortOrder) ?? [],
+		[network],
+	);
+
 	const form = useForm<UpdateVehicleFormData>({
 		defaultValues: {
 			designation: vehicle.designation,
 			number: vehicle.number,
 			tcId: vehicle.tcId,
 			type: vehicle.type,
+			operatorId: vehicle.operatorId,
 		},
 		resolver: zodResolver(updateVehicleFormSchema),
 	});
@@ -202,6 +213,38 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 								</FormItem>
 							)}
 						/>
+						{operators.length > 0 ? (
+							<FormField
+								control={form.control}
+								name="operatorId"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Opérateur</FormLabel>
+										<Select
+											onValueChange={(value) => field.onChange(value === "none" ? null : +value)}
+											value={field.value?.toString() ?? "none"}
+										>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder="Non renseigné" />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent className="z-9999">
+												<SelectItem value="none">
+													<span className="text-muted-foreground">Non renseigné</span>
+												</SelectItem>
+												{operators.map((operator) => (
+													<SelectItem key={operator.id} value={operator.id.toString()}>
+														{operator.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						) : null}
 						<DialogFooter className="gap-2">
 							<DialogClose asChild>
 								<Button disabled={updatingVehicle} type="button">

@@ -27,6 +27,7 @@ export type UpdateVehicleData = {
 	designation: string | null;
 	tcId: number | null;
 	type: VehicleJourneyLineType;
+	operatorId: number | null;
 };
 
 export type ArchiveVehicleData = {
