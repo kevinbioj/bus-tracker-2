@@ -366,3 +366,52 @@ hono.post(
 		return c.body(null, 204);
 	},
 );
+
+hono.post(
+	"/vehicles/:id/unarchive",
+	editorMiddleware({ required: true }),
+	createParamValidator(getVehicleByIdParamSchema),
+	async (c) => {
+		const { id } = c.req.valid("param");
+
+		const [vehicle] = await database
+			.select()
+			.from(vehiclesTable)
+			.where(and(eq(vehiclesTable.id, id)));
+		if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+
+		const editor = c.get("editor");
+
+		if (!Array.isArray(editor.manageableNetworks) || !editor.manageableNetworks.includes(vehicle.networkId)) {
+			return c.json({ error: "Your privileges do not allow you to edit this vehicle" }, 403);
+		}
+
+		if (vehicle.archivedAt === null) {
+			return c.json({ error: "This vehicle is not archived" }, 400);
+		}
+
+		if (vehicle.ref.endsWith(":ARCHIVED")) {
+			return c.json({ error: "Cannot unarchive a vehicle whose reference ends with :ARCHIVED" }, 400);
+		}
+
+		await database
+			.update(vehiclesTable)
+			.set({
+				archivedAt: null,
+				archivedFor: null,
+			})
+			.where(eq(vehiclesTable.id, vehicle.id));
+
+		await database.insert(editionLogsTable).values({
+			editorId: editor.id,
+			networkId: vehicle.networkId,
+			vehicleId: vehicle.id,
+			updatedFields: [
+				{ type: "archivedAt", oldValue: vehicle.archivedAt, newValue: null },
+				{ type: "archivedFor", oldValue: vehicle.archivedFor, newValue: null },
+			],
+		});
+
+		return c.body(null, 204);
+	},
+);

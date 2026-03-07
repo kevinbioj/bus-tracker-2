@@ -117,3 +117,12 @@ export const ArchiveVehicleMutation = (vehicleId: number) =>
 			});
 		},
 	});
+
+export const UnarchiveVehicleMutation = (vehicleId: number) =>
+	mutationOptions({
+		mutationFn: async ({ token }: { token: string }) => {
+			await client.post(`vehicles/${vehicleId}/unarchive`, {
+				headers: { "X-Editor-Token": token },
+			});
+		},
+	});
