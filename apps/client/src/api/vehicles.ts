@@ -32,6 +32,7 @@ export type UpdateVehicleData = {
 export type ArchiveVehicleData = {
 	reason: VehicleArchiveReason | null;
 	wipeReference: boolean;
+	archivedAt?: string | null;
 };
 
 export type VehicleWithActiveMonths = Vehicle & {

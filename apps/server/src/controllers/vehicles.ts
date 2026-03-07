@@ -76,6 +76,11 @@ const updateVehicleBodySchema = z.object({
 const archiveVehicleBodySchema = z.object({
 	reason: z.enum(vehicleArchiveReasons),
 	wipeReference: z.boolean(),
+	archivedAt: z
+		.string()
+		.datetime({ offset: true })
+		.optional()
+		.transform((value) => (value ? Temporal.Instant.from(value) : Temporal.Now.instant())),
 });
 
 hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
@@ -316,7 +321,7 @@ hono.post(
 	createJsonValidator(archiveVehicleBodySchema),
 	async (c) => {
 		const { id } = c.req.valid("param");
-		const { reason, wipeReference } = c.req.valid("json");
+		const { reason, wipeReference, archivedAt } = c.req.valid("json");
 
 		const [vehicle] = await database
 			.select()
@@ -335,7 +340,7 @@ hono.post(
 		}
 
 		const fields = {
-			archivedAt: Temporal.Now.instant(),
+			archivedAt,
 			archivedFor: reason,
 			ref: wipeReference ? `${vehicle.ref}:ARCHIVED` : vehicle.ref,
 		};

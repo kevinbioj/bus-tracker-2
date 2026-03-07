@@ -3,10 +3,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSnackbar } from "notistack";
 import { useForm } from "react-hook-form";
 import z from "zod";
+import dayjs from "dayjs";
 
 import { ArchiveVehicleMutation, type VehicleArchiveReason, type Vehicle, vehicleArchiveReasons } from "~/api/vehicles";
 import { FormCheckbox } from "~/components/form/form-checkbox";
 import { FormSelect } from "~/components/form/form-select";
+import { FormDateTimePicker } from "~/components/form/form-date-time-picker";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 import { Form } from "~/components/ui/form";
@@ -15,6 +17,7 @@ import { useEditor } from "~/hooks/use-editor";
 const schema = z.object({
 	reason: z.enum(vehicleArchiveReasons),
 	wipeReference: z.boolean(),
+	archivedAt: z.string().nullish(),
 });
 
 const vehicleArchiveReasonLabels: Record<VehicleArchiveReason, string> = {
@@ -38,7 +41,7 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 	const { editorToken } = useEditor();
 
 	const form = useForm({
-		defaultValues: { reason: "OTHER" as const, wipeReference: false },
+		defaultValues: { reason: "OTHER" as const, wipeReference: false, archivedAt: dayjs().toISOString() },
 		resolver: zodResolver(schema),
 	});
 
@@ -77,8 +80,8 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 						<li>il ne correspond pas à un réel véhicule du réseau.</li>
 					</ul>
 					<br />
-					Cocher la case ci-dessous <span className="font-bold">uniquement</span> en cas de réforme définitive du
-					véhicule.
+					Cocher la case ci-dessous <span className="font-bold">si et seulement si</span> le numéro du véhicule est
+					susceptible d'être réutilisé à court terme sur le réseau.
 				</div>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
@@ -94,6 +97,12 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 							inputProps={{
 								className: "data-[state=checked]:bg-destructive data-[state=checked]:text-destructive-foreground",
 							}}
+						/>
+						<FormDateTimePicker
+							control={form.control}
+							name="archivedAt"
+							label="Date d'archivage"
+							itemProps={{ className: "mb-5" }}
 						/>
 						<FormSelect
 							control={form.control}
