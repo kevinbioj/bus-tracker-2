@@ -159,7 +159,7 @@ const sources = [
 			).replace(/[- ]/g, "");
 			if (
 				typeof normalizedLicensePlate !== "undefined" &&
-				["DJ328QV", "DJ359QV", "DJ384QV", "DJ394QV"].includes(normalizedLicensePlate)
+				["DJ328QV", "DJ359QV", "DJ384QV", "DJ394QV", "EF694KE"].includes(normalizedLicensePlate)
 			) {
 				return normalizedLicensePlate;
 			}
