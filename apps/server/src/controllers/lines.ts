@@ -25,7 +25,7 @@ hono.get("/lines/:id", createParamValidator(getLineByIdParamSchema), async (c) =
 	if (typeof line === "undefined") return c.json({ error: `No line found with id '${id}'.` }, 404);
 
 	const activeMonths = await database
-		.select({ month: sql<string>`DISTINCT TO_CHAR(started_at, 'YYYY-MM')` })
+		.select({ month: sql<string>`DISTINCT TO_CHAR(service_date, 'YYYY-MM')` })
 		.from(lineActivitiesTable)
 		.where(eq(lineActivitiesTable.lineId, line.id));
 

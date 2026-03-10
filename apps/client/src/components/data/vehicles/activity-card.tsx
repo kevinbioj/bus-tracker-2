@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { GetLineQuery } from "~/api/lines";
@@ -8,11 +9,23 @@ import type { VehicleTimelineDayActivity } from "~/api/vehicles";
 
 type ActivityCardProps = { activity: VehicleTimelineDayActivity; day: string };
 
+const TimeDisplay = ({ at, showDate }: { at: dayjs.Dayjs; showDate: boolean }) => (
+	<div className="flex flex-col gap-0.5">
+		{showDate && <span className="leading-none text-xs">{at.format("DD/MM")}</span>}
+		<span className="font-bold leading-none tabular-nums">{at.format("HH:mm")}</span>
+	</div>
+);
+
 export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 	const { data: line } = useQuery(GetLineQuery(activity.lineId));
 	const { data: network } = useQuery(GetNetworkQuery(line?.networkId, true));
 
-	const ongoing = dayjs().diff(activity.updatedAt, "minutes") < 10;
+	const startedAt = dayjs(activity.startedAt).tz(network?.timezone);
+	const updatedAt = dayjs(activity.updatedAt).tz(network?.timezone);
+	const ongoing = dayjs().diff(updatedAt, "minutes") < 10;
+
+	const didStartOnServiceDate = startedAt.isSame(day, "day");
+	const didEndOnStartDate = updatedAt.isSame(startedAt, "day");
 
 	const cardContent = (
 		<>
@@ -29,23 +42,16 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 					borderColor: line?.textColor ? `#${line.textColor}` : undefined,
 				}}
 			/>
-			<p className="flex-1 my-auto text-2xl">
+			<p className="flex-1 flex items-center gap-1 my-auto text-2xl">
 				{ongoing ? (
 					<>
-						depuis{" "}
-						<span className="font-bold tabular-nums">
-							{dayjs(activity.startedAt).tz(network?.timezone).format("HH:mm")}
-						</span>
+						depuis <TimeDisplay at={startedAt} showDate={!didStartOnServiceDate} />
 					</>
 				) : (
 					<>
-						<span className="font-bold tabular-nums">
-							{dayjs(activity.startedAt).tz(network?.timezone).format("HH:mm")}
-						</span>{" "}
-						à{" "}
-						<span className="font-bold tabular-nums">
-							{dayjs(activity.updatedAt).tz(network?.timezone).format("HH:mm")}
-						</span>
+						<TimeDisplay at={startedAt} showDate={!didStartOnServiceDate} />
+						<ArrowRight className="inline" />
+						<TimeDisplay at={updatedAt} showDate={!didStartOnServiceDate || !didEndOnStartDate} />
 					</>
 				)}
 			</p>
@@ -70,8 +76,8 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 	}
 
 	return (
-		<article className="border border-border flex h-14 px-2 py-1 rounded-md" style={style}>
+		<div className="border border-border flex h-14 px-2 py-1 rounded-md" style={style}>
 			{cardContent}
-		</article>
+		</div>
 	);
 }

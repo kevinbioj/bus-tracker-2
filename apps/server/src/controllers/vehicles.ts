@@ -177,7 +177,7 @@ hono.get("/vehicles/:id", createParamValidator(getVehicleByIdParamSchema), async
 	).at(0);
 
 	const activeMonths = await database
-		.select({ month: sql<string>`DISTINCT TO_CHAR(started_at, 'YYYY-MM')` })
+		.select({ month: sql<string>`DISTINCT TO_CHAR(service_date, 'YYYY-MM')` })
 		.from(lineActivitiesTable)
 		.where(eq(lineActivitiesTable.vehicleId, vehicle.id));
 
