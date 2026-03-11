@@ -215,13 +215,15 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
+		gtfsOptions: {
+			filterTrips: (trip) => !trip.route.id.startsWith("E"),
+		},
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "MONTELIMAR",
 		mapTripUpdate: (tripUpdate) => {
-			tripUpdate.trip.tripId = tripUpdate.trip.tripId.split("--")[0];
-			if (tripUpdate.trip.routeId && montelimarRouteIdConverter.has(tripUpdate.trip.routeId)) {
-				tripUpdate.trip.routeId = montelimarRouteIdConverter.get(tripUpdate.trip.routeId);
+			if (tripUpdate.trip.routeId?.startsWith("E")) {
+				return;
 			}
 
 			return tripUpdate;
@@ -233,14 +235,6 @@ const sources = [
 
 			delete vehicle.position.bearing;
 			vehicle.vehicle.id = vehicle.vehicle.label;
-
-			if (vehicle.trip) {
-				vehicle.trip.tripId = vehicle.trip.tripId.split("--")[0];
-				if (vehicle.trip.routeId && montelimarRouteIdConverter.has(vehicle.trip.routeId)) {
-					vehicle.trip.routeId = montelimarRouteIdConverter.get(vehicle.trip.routeId);
-				}
-			}
-
 			return vehicle;
 		},
 	},
