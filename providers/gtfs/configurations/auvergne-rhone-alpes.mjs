@@ -336,6 +336,14 @@ const sources = [
 		getNetworkRef: () => "VIENNE",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
+	{
+		id: "voiron",
+		staticResourceHref: "https://data.mobilites-m.fr/api/gtfs/TPV",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/voiron/realtime"],
+		mode: "NO-TU",
+		getNetworkRef: () => "TAG",
+		getOperatorRef: () => "VOIRON",
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
