@@ -14,15 +14,23 @@ export function NetworkList() {
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
 	const [favoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
+	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
 	const [expandedRegionAccordions, setExpandedRegionAccordions] = useLocalStorage<string[]>(
 		"expanded-region-accordions",
 		regions.map(({ id }) => id.toString()),
 	);
 
-	const favoriteNetworks = networks.filter(({ id }) => favoriteNetworkIds.includes(id));
+	const favoriteNetworks = networks.filter(({ id }) => {
+		if (!favoriteNetworkIds.includes(id)) return false;
+		if (onlyNetworksWithHistory) {
+			const network = networks.find((n) => n.id === id);
+			return network?.hasVehiclesFeature;
+		}
+		return true;
+	});
 
 	const relevantNetworksByRegion = Map.groupBy(
-		networks.filter(({ hasVehiclesFeature }) => hasVehiclesFeature),
+		networks.filter(({ hasVehiclesFeature }) => !onlyNetworksWithHistory || hasVehiclesFeature),
 		(network) => regions.find(({ id }) => id === network.regionId) ?? null,
 	);
 
@@ -32,7 +40,9 @@ export function NetworkList() {
 			<main className="p-3 max-w-(--breakpoint-xl) w-full mx-auto">
 				<h2 className="font-bold text-2xl">Données des véhicules</h2>
 				<p className="text-muted-foreground">
-					Seuls les réseaux pour lesquels le suivi des véhicules est disponible sont affichés.
+					{onlyNetworksWithHistory && (
+						<>Seuls les réseaux pour lesquels le suivi des véhicules est disponible sont affichés.</>
+					)}
 				</p>
 				<Separator />
 				<Accordion

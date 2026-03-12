@@ -1,10 +1,14 @@
+import { useQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
+import { parseAsInteger, useQueryState } from "nuqs";
 import { type ComponentPropsWithoutRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
+import { GetLineQuery } from "~/api/lines";
+import { GetNetworkQuery } from "~/api/networks";
 import { OnlineControl } from "~/components/vehicles-map/online-vehicles/online-control";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
@@ -13,6 +17,12 @@ type VehiclesMapProps = ComponentPropsWithoutRef<"div">;
 
 export function VehiclesMap(props: VehiclesMapProps) {
 	const location = useLocation();
+
+	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
+
+	const { data: line } = useQuery(GetLineQuery(lineId ?? undefined));
+	const { data: filteredNetwork } = useQuery(GetNetworkQuery(line?.networkId, true));
+	const filteredLine = filteredNetwork?.lines.find((line) => line.id === lineId);
 
 	const [initialLocation] = useState(() => {
 		// location in url has priority over local storage location
@@ -59,8 +69,12 @@ export function VehiclesMap(props: VehiclesMapProps) {
 			ref={onMap}
 		>
 			<PositionSave />
-			<VehiclesMarkers />
-			<OnlineControl />
+			<VehiclesMarkers lineId={filteredLine?.id} />
+			<OnlineControl
+				filteredLine={filteredLine}
+				filteredNetwork={filteredNetwork}
+				onFilterChange={(line) => setLineId(line?.id ?? null)}
+			/>
 		</MapComponent>
 	);
 }

@@ -8,11 +8,17 @@ import { OnlineVehiclesVehicleSelection } from "~/components/vehicles-map/online
 
 type OnlineVehiclesSheetManagement = {
 	fixedNetworkId?: number;
+	onFilterChange: (line?: Line) => void;
 	open: boolean;
 	setOpen: (open: boolean) => void;
 };
 
-export function OnlineVehiclesSheetManagement({ fixedNetworkId, open, setOpen }: OnlineVehiclesSheetManagement) {
+export function OnlineVehiclesSheetManagement({
+	fixedNetworkId,
+	onFilterChange,
+	open,
+	setOpen,
+}: OnlineVehiclesSheetManagement) {
 	const { data: fixedNetwork } = useQuery(GetNetworkQuery(fixedNetworkId));
 
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>();
@@ -33,10 +39,10 @@ export function OnlineVehiclesSheetManagement({ fixedNetworkId, open, setOpen }:
 	}
 
 	const vehicleSelectionContainer = useRef<HTMLDivElement>(null);
-	if (networkSelectionContainer.current === null) {
-		networkSelectionContainer.current = document.createElement("div");
-		networkSelectionContainer.current.id = "network-selection-sheet";
-		document.body.append(networkSelectionContainer.current);
+	if (vehicleSelectionContainer.current === null) {
+		vehicleSelectionContainer.current = document.createElement("div");
+		vehicleSelectionContainer.current.id = "vehicle-selection-sheet";
+		document.body.append(vehicleSelectionContainer.current);
 	}
 
 	const handleClose = () => {
@@ -68,6 +74,10 @@ export function OnlineVehiclesSheetManagement({ fixedNetworkId, open, setOpen }:
 				network={open ? (fixedNetwork ?? selectedNetwork) : undefined}
 				line={open ? selectedLine : undefined}
 				onClose={handleClose}
+				onFilterSelect={(line) => {
+					onFilterChange(line);
+					setOpen(false);
+				}}
 				onVehicleSelect={() => {
 					setOpen(false);
 				}}

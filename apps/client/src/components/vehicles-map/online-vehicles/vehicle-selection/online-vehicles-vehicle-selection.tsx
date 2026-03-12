@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, FilterIcon } from "lucide-react";
 
 import { GetLineOnlineVehiclesQuery } from "~/api/lines";
 import type { Line, Network } from "~/api/networks";
@@ -7,6 +7,7 @@ import { OnlineVehiclesVehicleCard } from "~/components/vehicles-map/online-vehi
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Skeleton } from "~/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 
 type OnlineVehiclesVehicleSelection = {
 	container: HTMLDivElement | null;
@@ -14,6 +15,7 @@ type OnlineVehiclesVehicleSelection = {
 	network?: Network;
 	line?: Line;
 	onClose: () => void;
+	onFilterSelect: (line: Line) => void;
 	onVehicleSelect: () => void;
 };
 
@@ -23,6 +25,7 @@ export function OnlineVehiclesVehicleSelection({
 	network,
 	line,
 	onClose,
+	onFilterSelect,
 	onVehicleSelect,
 }: OnlineVehiclesVehicleSelection) {
 	const { data: vehicles } = useQuery(GetLineOnlineVehiclesQuery(line?.id));
@@ -39,19 +42,37 @@ export function OnlineVehiclesVehicleSelection({
 				withCloseButton={false}
 			>
 				<SheetHeader className="mb-1.5">
-					<div className="flex items-center gap-2">
-						<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
-							<ArrowLeft className="size-full" />
-						</Button>
-						<SheetTitle className="text-start">
-							<span className="align-middle max-w-36 inline-block text-ellipsis overflow-x-hidden text-nowrap">
-								{network?.name}
-							</span>{" "}
-							<ChevronRight className="align-text-bottom inline size-5" />{" "}
-							<span className="align-middle max-w-24 inline-block text-ellipsis overflow-x-hidden text-nowrap">
-								{line?.number}
-							</span>
-						</SheetTitle>
+					<div className="flex items-center justify-between gap-2">
+						<div className="flex items-center gap-2 overflow-hidden">
+							<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
+								<ArrowLeft className="size-full" />
+							</Button>
+							<SheetTitle className="text-start truncate">
+								<span className="align-middle max-w-36 inline-block text-ellipsis overflow-x-hidden text-nowrap">
+									{network?.name}
+								</span>{" "}
+								<ChevronRight className="align-text-bottom inline size-5" />{" "}
+								<span className="align-middle max-w-24 inline-block text-ellipsis overflow-x-hidden text-nowrap">
+									{line?.number}
+								</span>
+							</SheetTitle>
+						</div>
+						{line ? (
+							<Tooltip>
+								<TooltipContent side="left">Filtrer sur la carte</TooltipContent>
+								<TooltipTrigger asChild>
+									<Button
+										className="size-8"
+										onClick={() => onFilterSelect(line)}
+										size="icon"
+										title="Filtrer sur la carte"
+										variant="outline"
+									>
+										<FilterIcon className="size-4" />
+									</Button>
+								</TooltipTrigger>
+							</Tooltip>
+						) : null}
 					</div>
 				</SheetHeader>
 				<div className="flex flex-col gap-1 max-h-[96%] overflow-y-auto py-1.5">
@@ -72,7 +93,7 @@ export function OnlineVehiclesVehicleSelection({
 						)
 					) : (
 						// biome-ignore lint/suspicious/noArrayIndexKey: this is safe here
-						Array.from({ length: 10 }).map((_, index) => <Skeleton className="h-[101px] w-full" key={index} />)
+						Array.from({ length: 10 }).map((_, index) => <Skeleton className="h-25.25 w-full" key={index} />)
 					)}
 				</div>
 			</SheetContent>

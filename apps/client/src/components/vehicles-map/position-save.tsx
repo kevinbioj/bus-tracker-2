@@ -29,7 +29,10 @@ export function PositionSave() {
 				clearTimeout(timeoutId);
 			}
 
-			timeoutId = setTimeout(() => window.history.replaceState(null, "", `#${lng},${lat},${zoom}`), 500);
+			timeoutId = setTimeout(() => {
+				const search = window.location.search;
+				window.history.replaceState(null, "", `${search}#${lng},${lat},${zoom}`);
+			}, 500);
 		};
 
 		map.on("moveend", onMoveEnd);

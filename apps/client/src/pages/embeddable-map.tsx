@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
+import { parseAsInteger, useQueryState } from "nuqs";
 import { useParams } from "react-router-dom";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
@@ -11,7 +12,10 @@ import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehi
 export default function EmbeddableMapPage() {
 	const { networkId } = useParams();
 
-	const { data } = useSuspenseQuery(GetNetworkQuery(+networkId!));
+	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
+
+	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId!, true));
+	const filteredLine = network.lines.find((line) => line.id === lineId);
 
 	const onMap = (map: maplibregl.Map) => {
 		const searchParams = new URLSearchParams(location.search);
@@ -34,19 +38,24 @@ export default function EmbeddableMapPage() {
 
 	return (
 		<>
-			<title>{`Carte du réseau ${data.name}`}</title>
+			<title>{`Carte du réseau ${network.name}`}</title>
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			<MapComponent
 				containerProps={{ className: "h-dvh relative" }}
 				mapOptions={{
-					center: data.embedMapCenter ? [data.embedMapCenter[0], data.embedMapCenter[1]] : undefined,
+					center: network.embedMapCenter ? [network.embedMapCenter[0], network.embedMapCenter[1]] : undefined,
 					style: "https://tiles.openfreemap.org/styles/liberty",
-					zoom: data.embedMapCenter ? data.embedMapCenter[2] : undefined,
+					zoom: network.embedMapCenter ? network.embedMapCenter[2] : undefined,
 				}}
 				ref={onMap}
 			>
-				<OnlineControl fixedNetworkId={+networkId!} />
-				<VehiclesMarkers embeddedNetworkId={+networkId!} />
+				<OnlineControl
+					filteredLine={filteredLine}
+					filteredNetwork={network}
+					fixedNetworkId={+networkId!}
+					onFilterChange={(line) => setLineId(line?.id ?? null)}
+				/>
+				<VehiclesMarkers embeddedNetworkId={+networkId!} lineId={filteredLine?.id} />
 				<Signature />
 			</MapComponent>
 		</>

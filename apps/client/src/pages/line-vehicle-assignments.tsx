@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapIcon } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 
@@ -97,12 +97,24 @@ export function LineVehicleAssignments() {
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
-							<BreadcrumbPage>
+							<BreadcrumbPage className="flex items-center gap-1">
 								{line.cartridgeHref ? (
 									<img className="h-5 object-contain rounded-sm" src={line.cartridgeHref} alt={line.number} />
 								) : (
 									line.number
 								)}
+								<Button
+									asChild
+									size="sm"
+									variant="outline"
+									className="border-[0.5px] h-5 ml-2 my-0 py-0 px-2"
+									title="Voir sur la carte"
+								>
+									<Link to={`/?line-id=${line.id}`}>
+										<MapIcon className="size-3.5" />
+										Voir sur la carte
+									</Link>
+								</Button>
 							</BreadcrumbPage>
 						</BreadcrumbItem>
 					</BreadcrumbList>

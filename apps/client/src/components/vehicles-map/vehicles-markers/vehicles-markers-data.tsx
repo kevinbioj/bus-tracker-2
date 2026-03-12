@@ -14,15 +14,16 @@ const noise = ([lon, lat]: [number, number]): [number, number] => [
 ];
 
 type VehiclesMarkersDataProps = {
+	lineId?: number;
 	networkId?: number;
 	source: maplibregl.GeoJSONSource;
 };
 
-export function VehiclesMarkersData({ networkId, source }: VehiclesMarkersDataProps) {
+export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarkersDataProps) {
 	const [previewVehicleNumber] = useLocalStorage("preview-vehicle-number", false);
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
 
-	const { data, isFetching, refetch } = useQuery(GetVehicleJourneyMarkersQuery(bounds, networkId));
+	const { data, isFetching, refetch } = useQuery(GetVehicleJourneyMarkersQuery(bounds, networkId, lineId));
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: need to refetch on bounds change
 	useEffect(() => void refetch(), [bounds, refetch]);

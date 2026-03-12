@@ -28,6 +28,7 @@ export function OnlineVehiclesNetworkSelection({
 	const networksByRegion = useMemo(() => Map.groupBy(networks ?? [], (network) => network.regionId), [networks]);
 
 	const [favoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
+	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
 	const [expandedRegionAccordions, setExpandedRegionAccordions] = useLocalStorage<string[]>(
 		"expanded-region-accordions",
 		() => regions?.map(({ id }) => id.toString()) ?? [],
@@ -59,6 +60,7 @@ export function OnlineVehiclesNetworkSelection({
 							{favoriteNetworkIds.map((networkId) => {
 								const network = networks?.find(({ id }) => id === networkId);
 								if (typeof network === "undefined") return null;
+								if (onlyNetworksWithHistory && !network.hasVehiclesFeature) return null;
 								return (
 									<OnlineVehiclesNetworkCard
 										key={networkId}
@@ -71,7 +73,9 @@ export function OnlineVehiclesNetworkSelection({
 					) : null}
 					<Accordion type="multiple" value={expandedRegionAccordions} onValueChange={setExpandedRegionAccordions}>
 						{regions?.map((region) => {
-							const relevantNetworks = networksByRegion.get(region.id)?.filter((network) => network.hasVehiclesFeature);
+							const relevantNetworks = networksByRegion
+								.get(region.id)
+								?.filter((network) => !onlyNetworksWithHistory || network.hasVehiclesFeature);
 							if (typeof relevantNetworks === "undefined" || relevantNetworks.length === 0) return null;
 
 							return (

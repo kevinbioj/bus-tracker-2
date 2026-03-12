@@ -3,6 +3,7 @@ import { LucideSettings } from "lucide-react";
 import { DisplayNextCallsSetting } from "~/components/settings/display-next-calls";
 import { EditorTokenInput } from "~/components/settings/editor-token-input";
 import { HideScheduledTripsSetting } from "~/components/settings/hide-scheduled-trips";
+import { OnlyNetworksWithHistorySetting } from "~/components/settings/only-networks-with-history";
 import { PreviewVehicleNumberSetting } from "~/components/settings/preview-vehicle-number";
 import { ShowDebugInfoSetting } from "~/components/settings/show-debug-info";
 import { DisplayAbsoluteTimeSetting } from "~/components/settings/use-absolute-time";
@@ -26,6 +27,7 @@ export function Settings() {
 					<DisplayNextCallsSetting />
 					<PreviewVehicleNumberSetting />
 					<HideScheduledTripsSetting />
+					<OnlyNetworksWithHistorySetting />
 					<DisplayAbsoluteTimeSetting />
 					{/* <BypassMinZoomSetting /> */}
 					<ShowDebugInfoSetting />

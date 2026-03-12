@@ -44,12 +44,12 @@ export type DisposeableVehicleJourney = {
 	updatedAt: string;
 };
 
-export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetworkId?: number) =>
+export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetworkId?: number, lineId?: number) =>
 	queryOptions({
 		placeholderData: keepPreviousData,
 		refetchInterval: 10_000,
 		staleTime: 20_000,
-		queryKey: ["vehicle-journeys", embeddedNetworkId],
+		queryKey: ["vehicle-journeys", embeddedNetworkId, lineId],
 		queryFn: () => {
 			const activeMarkerId = localStorage.getItem("active-feature");
 			const hideScheduledTrips = embeddedNetworkId ? false : localStorage.getItem("hide-scheduled-trips") === "true";
@@ -60,6 +60,7 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 			params.append("neLat", Math.min(bounds.getNorthEast().lat, 90).toString());
 			params.append("neLon", Math.min(bounds.getNorthEast().lng, 180).toString());
 			if (embeddedNetworkId) params.append("networkId", String(embeddedNetworkId));
+			if (lineId) params.append("lineId", String(lineId));
 			if (hideScheduledTrips) params.append("excludeScheduled", "true");
 			if (activeMarkerId !== null) params.append("includeMarker", activeMarkerId);
 			return client
