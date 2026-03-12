@@ -89,10 +89,7 @@ export const linesTable = pgTable(
 		sortOrder: integer("sort_order"),
 		archivedAt: timestamp("archived_at"),
 	},
-	(table) => [
-		index("network_idx").on(table.networkId),
-		index("line_ref_gin_idx").using("gin", table.references),
-	],
+	(table) => [index("network_idx").on(table.networkId), index("line_ref_gin_idx").using("gin", table.references)],
 );
 
 export type LineEntity = InferSelectModel<typeof linesTable>;
