@@ -23,44 +23,45 @@ type VehiclesMarkersDataProps = {
 export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarkersDataProps) {
 	const map = useMap();
 	const [previewVehicleNumber] = useLocalStorage("preview-vehicle-number", false);
+	const [hideScheduledTrips] = useLocalStorage("hide-scheduled-trips", false);
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
 
-	const { data, isFetching, refetch, isPlaceholderData } = useQuery(
-		GetVehicleJourneyMarkersQuery(bounds, networkId, lineId),
-	);
+	const { data, isFetching, refetch } = useQuery(GetVehicleJourneyMarkersQuery(bounds, networkId, lineId));
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: need to refetch on bounds change
-	useEffect(() => void refetch(), [bounds, refetch]);
-
-	const [lastRefocusedLineId, setLastRefocusedLineId] = useState<number | undefined>();
+	// biome-ignore lint/correctness/useExhaustiveDependencies: keep data fresh on any change
 	useEffect(() => {
-		if (lineId === undefined) {
-			setLastRefocusedLineId(undefined);
-			return;
-		}
+		void refetch();
+	}, [bounds, networkId, lineId, hideScheduledTrips, refetch]);
 
-		if (lineId === lastRefocusedLineId) return;
-		if (isPlaceholderData || data === undefined || data.items.length === 0) return;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only refocus when filters change
+	useEffect(() => {
+		const refocus = async () => {
+			if (lineId === undefined) return;
 
-		const validPositions = data.items.flatMap((item) => {
-			if (item.position.latitude === 0 || item.position.longitude === 0) {
-				return [];
+			const { data: freshData } = await refetch();
+			if (!freshData || freshData.items.length === 0) return;
+
+			const validPositions = freshData.items.flatMap((item) => {
+				if (item.position.latitude === 0 || item.position.longitude === 0) {
+					return [];
+				}
+
+				return [[item.position.longitude, item.position.latitude] as [number, number]];
+			});
+
+			if (validPositions.length === 0) return;
+
+			const boundsObj = new maplibregl.LngLatBounds(validPositions[0], validPositions[0]);
+			for (const pos of validPositions) {
+				boundsObj.extend(pos);
 			}
 
-			return [[item.position.longitude, item.position.latitude] as [number, number]];
-		});
+			map.fitBounds(boundsObj, { padding: 40, maxZoom: 15 });
+		};
 
-		if (validPositions.length === 0) return;
+		refocus();
+	}, [networkId, lineId, hideScheduledTrips, map, refetch]);
 
-		const bounds = new maplibregl.LngLatBounds(validPositions[0], validPositions[0]);
-		for (const pos of validPositions) {
-			bounds.extend(pos);
-		}
-
-		map.fitBounds(bounds, { padding: 40, maxZoom: 15 });
-
-		setLastRefocusedLineId(lineId);
-	}, [lineId, data, isPlaceholderData, map, lastRefocusedLineId]);
 
 	const features = useMemo<CircleMarkerFeature[]>(
 		() =>

@@ -49,7 +49,7 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 		placeholderData: keepPreviousData,
 		refetchInterval: 10_000,
 		staleTime: 20_000,
-		queryKey: ["vehicle-journeys", embeddedNetworkId, lineId],
+		queryKey: ["vehicle-journeys"],
 		queryFn: () => {
 			const activeMarkerId = localStorage.getItem("active-feature");
 			const hideScheduledTrips = embeddedNetworkId ? false : localStorage.getItem("hide-scheduled-trips") === "true";

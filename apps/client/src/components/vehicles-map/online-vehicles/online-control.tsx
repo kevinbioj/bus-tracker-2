@@ -1,9 +1,13 @@
+import { useQuery } from "@tanstack/react-query";
 import type maplibregl from "maplibre-gl";
-import { ChevronRight, FilterXIcon } from "lucide-react";
+import { ChevronRight, CircleIcon, FilterXIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useDebounceValue } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
+import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import type { Line, Network } from "~/api/networks";
+import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { OnlineVehiclesSheetManagement } from "~/components/vehicles-map/online-vehicles/online-vehicles-sheet-management";
 import { BusIcon } from "~/icons/means-of-transport";
 
@@ -18,6 +22,12 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 	const map = useMap();
 	const activatorRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
+
+	const [bounds] = useDebounceValue(useMapBounds(), 250);
+	const { data, refetch } = useQuery(GetVehicleJourneyMarkersQuery(bounds, fixedNetworkId, filteredLine?.id));
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: need to refetch on bounds or filters change
+	useEffect(() => void refetch(), [bounds, fixedNetworkId, filteredLine?.id, refetch]);
 
 	useEffect(() => {
 		if (activatorRef.current === null) return;
@@ -63,10 +73,10 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 							) : (
 								<span className="mr-1 text-base">{filteredLine.number}</span>
 							)}
-							{/* <span className="text-muted-foreground">
-								{onlineVehicles?.length ?? 0}
+							<span className="text-muted-foreground">
+								{data?.items.length ?? 0}
 								<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
-							</span> */}
+							</span>
 						</div>
 					</div>
 				) : (
