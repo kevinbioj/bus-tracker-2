@@ -33,18 +33,10 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 
 	return (
 		<>
-			<div className="maplibregl-ctrl maplibregl-ctrl-group" ref={activatorRef}>
+			<div className="maplibregl-ctrl maplibregl-ctrl-group text-black" ref={activatorRef}>
 				{filteredLine ? (
 					<div className="font-sans flex items-center gap-1.5 mr-1">
-						<button
-							className="text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-							onClick={() => {
-								onFilterChange(undefined);
-								setOpen(true);
-							}}
-							title="Désactiver le filtre"
-							type="button"
-						>
+						<button onClick={() => onFilterChange(undefined)} title="Désactiver le filtre" type="button">
 							<FilterXIcon className="m-auto size-5" />
 						</button>
 
@@ -52,9 +44,6 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 							<div className="flex items-center gap-1.5">
 								{filteredNetwork.logoHref !== null ? (
 									<picture className="h-5">
-										{filteredNetwork.darkModeLogoHref !== null ? (
-											<source srcSet={filteredNetwork.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-										) : null}
 										<img className="h-full object-contain" src={filteredNetwork.logoHref} alt={filteredNetwork.name} />
 									</picture>
 								) : (
@@ -81,7 +70,7 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 						</div>
 					</div>
 				) : (
-					<button className="text-black dark:text-white" onClick={() => setOpen(true)} type="button">
+					<button onClick={() => setOpen(true)} title="Véhicules en ligne" type="button">
 						<BusIcon className="m-auto p-1" />
 					</button>
 				)}

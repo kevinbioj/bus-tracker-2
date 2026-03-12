@@ -42,12 +42,22 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 				return false;
 			}
 
-			if (Array.isArray(networkId) && (journey.networkId === undefined || !networkId.includes(journey.networkId))) {
-				return false;
+			if (Array.isArray(lineId)) {
+				if (journey.lineId === undefined || !lineId.includes(journey.lineId)) {
+					return false;
+				}
+
+				boundedLineIds.add(journey.lineId);
+				return true;
 			}
 
-			if (Array.isArray(lineId) && (journey.lineId === undefined || !lineId.includes(journey.lineId))) {
-				return false;
+			if (Array.isArray(networkId)) {
+				if (journey.networkId === undefined || !networkId.includes(journey.networkId)) {
+					return false;
+				}
+
+				boundedLineIds.add(journey.networkId);
+				return true;
 			}
 
 			const { latitude, longitude } = journey.position;
@@ -60,6 +70,7 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 			if (journey.lineId !== undefined) {
 				boundedLineIds.add(journey.lineId);
 			}
+
 			return true;
 		})
 		.toArray();
