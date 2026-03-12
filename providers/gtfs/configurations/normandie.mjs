@@ -345,6 +345,37 @@ const sources = [
 				},
 			]
 		: []),
+	//- Bagnoles de l'Orne
+	...(process.env.BOUBET_API_KEY
+		? [
+				{
+					id: "bagnoles",
+					staticResourceHref: `https://www.maxtrip.fr/api/v1/Export/Gtfs/boubet?apiKey=${process.env.BOUBET_API_KEY}`,
+					realtimeResourceHrefs: [
+						`https://www.maxtrip.fr/api/v1/Export/GtfsRealtime/boubet?apiKey=${process.env.BOUBET_API_KEY}`,
+					],
+					gtfsOptions: {
+						filterTrips: (trip) => ["3659", "7755"].includes(trip.route.id),
+					},
+					mode: "NO-TU",
+					getNetworkRef: () => "BAGNOLES",
+					mapTripUpdate: (tripUpdate) => {
+						if (!["3659", "7755"].includes(tripUpdate.trip?.routeId)) {
+							return;
+						}
+
+						return tripUpdate;
+					},
+					mapVehiclePosition: (vehiclePosition) => {
+						if (!["3659", "7755"].includes(vehiclePosition.trip?.routeId)) {
+							return;
+						}
+
+						return vehiclePosition;
+					},
+				},
+			]
+		: []),
 	//- Argentan Bus
 	{
 		id: "argentan-bus",

@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
-import { GeojsonCircles, type CircleMarkerFeature } from "~/adapters/maplibre-gl/geojson-circles";
+import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
@@ -61,7 +61,6 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 
 		refocus();
 	}, [networkId, lineId, hideScheduledTrips, map, refetch]);
-
 
 	const features = useMemo<CircleMarkerFeature[]>(
 		() =>
