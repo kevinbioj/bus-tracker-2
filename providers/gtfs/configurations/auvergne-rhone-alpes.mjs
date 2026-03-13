@@ -311,6 +311,13 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "TAG",
 		getOperatorRef: () => "VOIRON",
+		getVehicleRef: (vehicle) => {
+			if (vehicle?.id.startsWith("u_")) {
+				return;
+			}
+
+			return vehicle?.label;
+		},
 	},
 ];
 
