@@ -81,6 +81,7 @@ export type GirouetteData = {
 
 type GirouetteProps = ComponentPropsWithoutRef<"div"> &
 	GirouetteData & {
+		onRouteNumberClick?: () => void;
 		width: number;
 	};
 
@@ -88,6 +89,7 @@ export function Girouette({
 	className,
 	dimensions = defaultDimensions,
 	ledColor = "WHITE",
+	onRouteNumberClick,
 	pages = [],
 	routeNumber = { text: "" },
 	width,
@@ -103,7 +105,13 @@ export function Girouette({
 			}}
 			{...props}
 		>
-			<RouteNumber dimensions={dimensions} ledColor={ledColor} routeNumber={routeNumber} width={width} />
+			<RouteNumber
+				dimensions={dimensions}
+				ledColor={ledColor}
+				onClick={onRouteNumberClick}
+				routeNumber={routeNumber}
+				width={width}
+			/>
 			<Pages dimensions={dimensions} ledColor={ledColor} pages={pages} width={width} />
 		</div>
 	);
@@ -114,11 +122,12 @@ export function Girouette({
 type RouteNumberProps = {
 	dimensions: GirouetteDimensions;
 	ledColor: LedColor;
+	onClick?: () => void;
 	routeNumber: RouteNumberData;
 	width: number;
 };
 
-function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<RouteNumberProps>) {
+function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Readonly<RouteNumberProps>) {
 	const [halfPattern, setHalfPattern] = useState<RouteNumberData["halfPattern"]>();
 
 	useEffect(() => {
@@ -145,10 +154,13 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<Rout
 		onePixel * (fontProperties[fontFamily].extraSpacing && routeNumber.outlineColor ? 2 : 0);
 	const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 	return (
-		<div
+		<button
 			className={clsx("flex items-center justify-center overflow-hidden whitespace-nowrap")}
+			onClick={onClick}
+			type="button"
 			style={{
 				width: `${onePixel * dimensions.rnWidth}px`,
+				cursor: onClick ? "pointer" : "default",
 				//- Font, placement & spacing
 				fontFamily: `"${fontFamily}"`,
 				fontSize: `${virtualHeight}px`,
@@ -186,7 +198,7 @@ function RouteNumber({ dimensions, ledColor, routeNumber, width }: Readonly<Rout
 					__html: routeNumber.text.trimEnd().replaceAll(" ", "&nbsp;"),
 				}}
 			/>
-		</div>
+		</button>
 	);
 }
 

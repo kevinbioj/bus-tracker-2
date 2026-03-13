@@ -1,3 +1,4 @@
+import { parseAsInteger, useQueryState } from "nuqs";
 import { match, P } from "ts-pattern";
 
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
@@ -19,19 +20,23 @@ type VehicleGirouetteProps = {
 
 export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouetteProps>) {
 	const girouette = journey.girouette;
+	const [, setLineId] = useQueryState("line-id", parseAsInteger);
 
 	const line = useLine(girouette ? undefined : journey.networkId, journey.lineId);
 	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName ?? "Destination inconnue";
 
 	const defaultRouteNumber = line?.girouetteNumber ?? line?.number ?? "";
 
+	const onRouteNumberClick = () => setLineId(journey.lineId ?? null);
+
 	return (
 		<div className="border-b-[1px] border-black">
 			{girouette ? (
-				<Girouette ledColor="WHITE" width={width} {...girouette} />
+				<Girouette ledColor="WHITE" onRouteNumberClick={onRouteNumberClick} width={width} {...girouette} />
 			) : (
 				<Girouette
 					ledColor="WHITE"
+					onRouteNumberClick={onRouteNumberClick}
 					routeNumber={
 						typeof line !== "undefined"
 							? {

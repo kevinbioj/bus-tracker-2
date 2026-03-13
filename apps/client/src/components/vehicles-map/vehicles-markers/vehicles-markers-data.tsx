@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
-import { useEffect, useMemo } from "react";
-import { useDebounceValue, useLocalStorage } from "usehooks-ts";
+import { useEffect, useMemo, useRef } from "react";
+import { useDebounceValue, useLocalStorage, useWindowSize } from "usehooks-ts";
 
 import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
@@ -22,28 +22,35 @@ type VehiclesMarkersDataProps = {
 
 export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarkersDataProps) {
 	const map = useMap();
+	const { width: windowWidth } = useWindowSize();
 	const [previewVehicleNumber] = useLocalStorage("preview-vehicle-number", false);
 	const [hideScheduledTrips] = useLocalStorage("hide-scheduled-trips", false);
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
 
-	const { data, isFetching, refetch } = useQuery(GetVehicleJourneyMarkersQuery(bounds, networkId, lineId));
+	const { data, isFetching, isPlaceholderData, refetch } = useQuery(
+		GetVehicleJourneyMarkersQuery(bounds, networkId, lineId),
+	);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: keep data fresh on any change
+	const lastRefocusedLineId = useRef<number | undefined>(undefined);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to refetch if that setting changes
 	useEffect(() => {
-		void refetch();
-	}, [bounds, networkId, lineId, hideScheduledTrips, refetch]);
+		refetch();
+	}, [bounds, hideScheduledTrips, lineId, networkId]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: only refocus when filters change
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only refocus when data is fresh and lineId changed
 	useEffect(() => {
-		let abort = false;
+		if (lineId === undefined) {
+			lastRefocusedLineId.current = undefined;
+			return;
+		}
 
-		const refocus = async () => {
-			if (abort || lineId === undefined) return;
+		if (isPlaceholderData || isFetching || data === undefined || lastRefocusedLineId.current === lineId) {
+			return;
+		}
 
-			const { data: freshData } = await refetch();
-			if (!freshData || freshData.items.length === 0) return;
-
-			const validPositions = freshData.items.flatMap((item) => {
+		const refocus = () => {
+			const validPositions = data.items.flatMap((item) => {
 				if (item.position.latitude === 0 || item.position.longitude === 0) {
 					return [];
 				}
@@ -58,15 +65,13 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 				boundsObj.extend(pos);
 			}
 
-			map.fitBounds(boundsObj, { padding: 40, maxZoom: 15 });
-			console.log(Date.now());
+			const padding = windowWidth < 640 ? 40 : windowWidth < 1024 ? 100 : 200;
+			map.fitBounds(boundsObj, { padding, maxZoom: 15 });
+			lastRefocusedLineId.current = lineId;
 		};
 
 		refocus();
-		return () => {
-			abort = true;
-		};
-	}, [networkId, lineId, hideScheduledTrips, map, refetch]);
+	}, [lineId, data, isPlaceholderData, isFetching, map]);
 
 	const features = useMemo<CircleMarkerFeature[]>(
 		() =>

@@ -55,16 +55,18 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	);
 
 	const onMap = useCallback((map: maplibregl.Map) => {
-		const navigationControl = new maplibregl.NavigationControl();
-		map.addControl(navigationControl, "top-left");
+		setTimeout(() => {
+			const navigationControl = new maplibregl.NavigationControl();
+			map.addControl(navigationControl, "top-left");
 
-		const fullscreenControl = new maplibregl.FullscreenControl();
-		map.addControl(fullscreenControl, "top-right");
+			const fullscreenControl = new maplibregl.FullscreenControl();
+			map.addControl(fullscreenControl, "top-right");
 
-		const geolocateControl = new maplibregl.GeolocateControl({
-			trackUserLocation: true,
+			const geolocateControl = new maplibregl.GeolocateControl({
+				trackUserLocation: true,
+			});
+			map.addControl(geolocateControl, "top-right");
 		});
-		map.addControl(geolocateControl, "top-right");
 	}, []);
 
 	const onFilterChange = useCallback((line?: { id: number }) => setLineId(line?.id ?? null), [setLineId]);

@@ -24,7 +24,7 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 	const [open, setOpen] = useState(false);
 
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
-	const { data } = useQuery(GetVehicleJourneyMarkersQuery(bounds, fixedNetworkId, filteredLine?.id));
+	const { data, isPlaceholderData } = useQuery(GetVehicleJourneyMarkersQuery(bounds, fixedNetworkId, filteredLine?.id));
 
 	useEffect(() => {
 		if (activatorRef.current === null) return;
@@ -70,10 +70,12 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 							) : (
 								<span className="mr-1 text-base">{filteredLine.number}</span>
 							)}
-							<span className="text-muted-foreground">
-								{data?.items.length ?? 0}
-								<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
-							</span>
+							{!isPlaceholderData && (
+								<span className="text-muted-foreground tabular-nums">
+									{data?.items.length ?? 0}
+									<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
+								</span>
+							)}
 						</div>
 					</div>
 				) : (
