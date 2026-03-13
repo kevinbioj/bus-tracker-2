@@ -35,8 +35,10 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: only refocus when filters change
 	useEffect(() => {
+		let abort = false;
+
 		const refocus = async () => {
-			if (lineId === undefined) return;
+			if (abort || lineId === undefined) return;
 
 			const { data: freshData } = await refetch();
 			if (!freshData || freshData.items.length === 0) return;
@@ -57,9 +59,13 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 			}
 
 			map.fitBounds(boundsObj, { padding: 40, maxZoom: 15 });
+			console.log(Date.now());
 		};
 
 		refocus();
+		return () => {
+			abort = true;
+		};
 	}, [networkId, lineId, hideScheduledTrips, map, refetch]);
 
 	const features = useMemo<CircleMarkerFeature[]>(

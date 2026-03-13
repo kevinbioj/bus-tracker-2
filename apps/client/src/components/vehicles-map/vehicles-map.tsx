@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { type ComponentPropsWithoutRef, useState } from "react";
+import { type ComponentPropsWithoutRef, useCallback, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -44,7 +44,17 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		}
 	});
 
-	const onMap = (map: maplibregl.Map) => {
+	const mapOptions = useMemo(
+		() => ({
+			center: initialLocation.position,
+			// style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+			style: "/map-styles/liberty-fr.json",
+			zoom: initialLocation.zoom,
+		}),
+		[initialLocation],
+	);
+
+	const onMap = useCallback((map: maplibregl.Map) => {
 		const navigationControl = new maplibregl.NavigationControl();
 		map.addControl(navigationControl, "top-left");
 
@@ -55,26 +65,15 @@ export function VehiclesMap(props: VehiclesMapProps) {
 			trackUserLocation: true,
 		});
 		map.addControl(geolocateControl, "top-right");
-	};
+	}, []);
+
+	const onFilterChange = useCallback((line?: { id: number }) => setLineId(line?.id ?? null), [setLineId]);
 
 	return (
-		<MapComponent
-			containerProps={props}
-			mapOptions={{
-				center: initialLocation.position,
-				// style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-				style: "/map-styles/liberty-fr.json",
-				zoom: initialLocation.zoom,
-			}}
-			ref={onMap}
-		>
+		<MapComponent containerProps={props} mapOptions={mapOptions} ref={onMap}>
 			<PositionSave />
 			<VehiclesMarkers lineId={filteredLine?.id} />
-			<OnlineControl
-				filteredLine={filteredLine}
-				filteredNetwork={filteredNetwork}
-				onFilterChange={(line) => setLineId(line?.id ?? null)}
-			/>
+			<OnlineControl filteredLine={filteredLine} filteredNetwork={filteredNetwork} onFilterChange={onFilterChange} />
 		</MapComponent>
 	);
 }

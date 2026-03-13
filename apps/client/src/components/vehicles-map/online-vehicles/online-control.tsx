@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import type maplibregl from "maplibre-gl";
 import { ChevronRight, CircleIcon, FilterXIcon } from "lucide-react";
+import type maplibregl from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -24,10 +24,7 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 	const [open, setOpen] = useState(false);
 
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
-	const { data, refetch } = useQuery(GetVehicleJourneyMarkersQuery(bounds, fixedNetworkId, filteredLine?.id));
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: need to refetch on bounds or filters change
-	useEffect(() => void refetch(), [bounds, fixedNetworkId, filteredLine?.id, refetch]);
+	const { data } = useQuery(GetVehicleJourneyMarkersQuery(bounds, fixedNetworkId, filteredLine?.id));
 
 	useEffect(() => {
 		if (activatorRef.current === null) return;
