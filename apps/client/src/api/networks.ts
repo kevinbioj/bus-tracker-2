@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import { client } from "~/api/client";
 
@@ -65,6 +65,7 @@ export const GetNetworksQuery = queryOptions({
 export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetails?: T, continuousRefetch?: boolean) =>
 	queryOptions({
 		enabled: typeof networkId !== "undefined",
+		placeholderData: keepPreviousData,
 		queryKey: ["networks", networkId, withDetails ?? false],
 		queryFn: () =>
 			client
