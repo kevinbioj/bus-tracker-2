@@ -4,7 +4,6 @@ import { LucideInfo } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import { Link } from "~/components/ui/link";
-import { Separator } from "~/components/ui/separator";
 
 const buildHash = import.meta.env.VITE_BUILD_HASH ?? "dev";
 
@@ -31,25 +30,31 @@ export function About() {
 						Envoyez-moi un e-mail à <Link to="mailto:contact@bus-tracker.fr">contact@bus-tracker.fr</Link> 😉
 					</p>
 
-					<Separator />
+					<div className="space-y-2">
+						<p className="text-center">
+							<DialogClose asChild>
+								<Link to="/help">Aide & FAQ</Link>
+							</DialogClose>{" "}
+							•{" "}
+							<DialogClose asChild>
+								<Link to="/legal">Mentions légales</Link>
+							</DialogClose>
+						</p>
 
-					<p className="text-center">
-						<DialogClose asChild>
-							<Link to="/legal">Mentions légales</Link>
-						</DialogClose>{" "}
-						•{" "}
-						<Link to="https://kevinbioj.fr" target="_blank">
-							kevinbioj.fr
-						</Link>{" "}
-						•{" "}
-						<Link to="https://github.com/kevinbioj/bus-tracker-2" target="_blank">
-							GitHub
-						</Link>{" "}
-						•{" "}
-						<Link to="https://discord.gg/DpwtEU4qBg" target="_blank">
-							Discord
-						</Link>
-					</p>
+						<p className="text-center">
+							<Link to="https://kevinbioj.fr" target="_blank">
+								kevinbioj.fr
+							</Link>{" "}
+							•{" "}
+							<Link to="https://github.com/kevinbioj/bus-tracker-2" target="_blank">
+								GitHub
+							</Link>{" "}
+							•{" "}
+							<Link to="https://discord.gg/DpwtEU4qBg" target="_blank">
+								Discord
+							</Link>
+						</p>
+					</div>
 				</div>
 			</DialogContent>
 		</Dialog>

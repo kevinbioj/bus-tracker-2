@@ -55,7 +55,7 @@ export function PurpleScreenOfDeath() {
 					</div>
 					<div className="flex flex-col items-start gap-2 mt-8">
 						<p>
-							Enfin, vous pouvez nous contacter à l'adresse{" "}
+							Enfin, un contact est possible à l'adresse{" "}
 							<Link
 								className="text-branding-foreground/70 hover:text-branding-foreground/50"
 								to="mailto:contact@bus-tracker.fr"
