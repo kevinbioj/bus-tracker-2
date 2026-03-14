@@ -16,9 +16,16 @@ export function HideScheduledTripsSetting() {
 	};
 
 	return (
-		<div className="flex items-center space-x-2">
+		<div className="flex items-center justify-between gap-4">
+			<div className="grid gap-0.5">
+				<Label htmlFor={id} className="text-base cursor-pointer">
+					Masquer les courses théoriques
+				</Label>
+				<p className="text-sm text-muted-foreground">
+					Masquer les courses pour lesquelles aucun temps réel n'est disponible.
+				</p>
+			</div>
 			<Switch id={id} checked={hideScheduledTrips} onCheckedChange={onChange} />
-			<Label htmlFor={id}>Masquer les courses théoriques</Label>
 		</div>
 	);
 }

@@ -1,17 +1,23 @@
-import { useId } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
-import { Switch } from "~/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 export function DisplayAbsoluteTimeSetting() {
-	const id = useId();
 	const [displayAbsoluteTime, setDisplayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
 
 	return (
-		<div className="flex items-center space-x-2">
-			<Switch id={id} checked={displayAbsoluteTime} onCheckedChange={setDisplayAbsoluteTime} />
-			<Label htmlFor={id}>Afficher l'heure absolue à la place de l'heure relative</Label>
+		<div>
+			<Label className="block mb-1 text-base">Affichage de l'heure</Label>
+			<Tabs
+				value={displayAbsoluteTime ? "absolute" : "relative"}
+				onValueChange={(v) => setDisplayAbsoluteTime(v === "absolute")}
+			>
+				<TabsList className="grid grid-cols-2">
+					<TabsTrigger value="relative">Heure relative</TabsTrigger>
+					<TabsTrigger value="absolute">Heure absolue</TabsTrigger>
+				</TabsList>
+			</Tabs>
 		</div>
 	);
 }

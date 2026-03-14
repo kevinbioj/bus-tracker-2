@@ -9,9 +9,14 @@ export function GeolocateOnStartSetting() {
 	const [geolocateOnStart, setGeolocateOnStart] = useLocalStorage("geolocate-on-start", false);
 
 	return (
-		<div className="flex items-center space-x-2">
+		<div className="flex items-center justify-between gap-4">
+			<div className="grid gap-0.5">
+				<Label htmlFor={id} className="text-base cursor-pointer">
+					Géolocalisation automatique
+				</Label>
+				<p className="text-sm text-muted-foreground">Me localiser à l'ouverture de l'application.</p>
+			</div>
 			<Switch id={id} checked={geolocateOnStart} onCheckedChange={setGeolocateOnStart} />
-			<Label htmlFor={id}>Me géolocaliser à l'ouverture</Label>
 		</div>
 	);
 }

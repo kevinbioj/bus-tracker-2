@@ -10,14 +10,16 @@ export function BypassMinZoomSetting() {
 	const [bypassMinZoom, setBypassMinZoom] = useLocalStorage("bypass-min-zoom", false);
 
 	return (
-		<div className="flex items-center space-x-2">
+		<div className="flex items-center justify-between gap-4">
+			<div className="grid gap-0.5">
+				<Label htmlFor={id} className="text-base cursor-pointer">
+					Dézoom intégral
+				</Label>
+				<p className="text-sm text-muted-foreground">
+					<AlertTriangleIcon className="inline size-4 text-amber-500" /> Option énergivore.
+				</p>
+			</div>
 			<Switch id={id} checked={bypassMinZoom} onCheckedChange={setBypassMinZoom} />
-			<Label htmlFor={id}>
-				Autoriser le dézoom intégral{" "}
-				<span className="text-xs">
-					– <AlertTriangleIcon className="inline" height={16} width={16} /> option énergivore
-				</span>
-			</Label>
 		</div>
 	);
 }
