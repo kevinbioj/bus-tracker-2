@@ -13,6 +13,7 @@ import EmbeddableMapPage from "~/pages/embeddable-map";
 import { LineVehicleAssignments } from "~/pages/line-vehicle-assignments";
 import MapPage from "~/pages/map";
 import { NetworkDetails } from "~/pages/network-details";
+import { LegalPage } from "~/pages/legal";
 import { NetworkList } from "~/pages/network-list";
 import { VehicleDetails } from "~/pages/vehicle-details";
 import { PurpleScreenOfDeath } from "~/psod";
@@ -45,6 +46,10 @@ export const router = (queryClient: QueryClient) =>
 				{
 					path: "/",
 					element: <MapPage />,
+				},
+				{
+					path: "/legal",
+					element: <LegalPage />,
 				},
 				{
 					path: "/data",
