@@ -131,17 +131,38 @@ export function LegalPage() {
 									<li>Erreurs levées dans le cadre de l'exécution de l'application</li>
 								</ul>
 								<p className="text-sm italic text-muted-foreground pt-2">
-									Vos droits (accès, suppression) peuvent être exercés par e-mail à{" "}
+									Vos droits (accès, suppression) peuvent être exercés par mail à{" "}
 									<Link to="mailto:contact@bus-tracker.fr" className="font-medium underline decoration-primary/50">
 										contact@bus-tracker.fr
 									</Link>
 									.
 								</p>
-							</div>
-						</section>
-					</div>
-				</div>
-			</main>
-		</>
-	);
-}
+								</div>
+								</section>
+
+								{/* Section 5: Responsabilité */}
+								<section className="space-y-3">
+								<h3 className="font-bold text-xl flex items-center gap-2">
+								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
+									5
+								</span>
+								Responsabilité & Fiabilité
+								</h3>
+								<div className="space-y-3">
+								<p className="leading-relaxed">
+									Bien que les données soient considérées comme fiables pour la majorité des réseaux, elles sont
+									fournies <strong>à titre indicatif uniquement</strong>.
+								</p>
+								<p className="leading-relaxed">
+									Bus Tracker ne peut en aucun cas servir de preuve "légale" ou officielle (notamment devant un
+									employeur ou toute autre autorité). L'exactitude des positions et des horaires n'est pas garantie et
+									dépend des flux de données fournis par les opérateurs.
+								</p>
+								</div>
+								</section>
+								</div>
+								</div>
+								</main>
+								</>
+								);
+								}
