@@ -47,21 +47,25 @@ export function Announcements() {
 				<DialogHeader>
 					<DialogTitle>Actualités</DialogTitle>
 				</DialogHeader>
-				<Accordion onValueChange={trackAnnouncementRead} type="single" collapsible>
-					{announcements.map((announcement) => (
-						<AccordionItem key={announcement.id} value={announcement.id.toString()}>
-							<AccordionTrigger className="relative">
-								<AnnouncementTitle announcement={announcement} />
-								{!announcementsRead.includes(announcement.id) && (
-									<LucideCircle className="absolute top-2 -left-3 size-2 fill-green-600 stroke-green-600 animate-pulse" />
-								)}
-							</AccordionTrigger>
-							<AccordionContent className="text-black dark:text-white">
-								<AnnouncementContent announcement={announcement} />
-							</AccordionContent>
-						</AccordionItem>
-					))}
-				</Accordion>
+				{announcements.length === 0 ? (
+					<p className="text-muted-foreground text-center py-8">Aucune actualité pour le moment.</p>
+				) : (
+					<Accordion onValueChange={trackAnnouncementRead} type="single" collapsible>
+						{announcements.map((announcement) => (
+							<AccordionItem key={announcement.id} value={announcement.id.toString()}>
+								<AccordionTrigger className="relative">
+									<AnnouncementTitle announcement={announcement} />
+									{!announcementsRead.includes(announcement.id) && (
+										<LucideCircle className="absolute top-2 -left-3 size-2 fill-green-600 stroke-green-600 animate-pulse" />
+									)}
+								</AccordionTrigger>
+								<AccordionContent className="text-black dark:text-white">
+									<AnnouncementContent announcement={announcement} />
+								</AccordionContent>
+							</AccordionItem>
+						))}
+					</Accordion>
+				)}
 			</DialogContent>
 		</Dialog>
 	);

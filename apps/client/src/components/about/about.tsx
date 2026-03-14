@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import { LucideInfo } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import { Link } from "~/components/ui/link";
 import { Separator } from "~/components/ui/separator";
 
@@ -34,9 +34,9 @@ export function About() {
 					<Separator />
 
 					<p className="text-center">
-						<Link to="/legal" target="_blank">
-							Mentions légales
-						</Link>{" "}
+						<DialogClose asChild>
+							<Link to="/legal">Mentions légales</Link>
+						</DialogClose>{" "}
 						•{" "}
 						<Link to="https://kevinbioj.fr" target="_blank">
 							kevinbioj.fr
