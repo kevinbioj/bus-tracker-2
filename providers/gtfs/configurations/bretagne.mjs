@@ -1,3 +1,5 @@
+const bibusLastRecordedPositions = new Map();
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -55,7 +57,26 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "BIBUS",
 		// "anonymised" vehicle reference 😅🤣
-		getVehicleRef: (vehicle) => (vehicle ? +vehicle.id - 2 ** 28 : undefined),
+		mapVehiclePosition: (vehicle) => {
+			const vehicleNumber = +vehicle.vehicle.id - 2 ** 28;
+			vehicle.vehicle.id = vehicleNumber;
+
+			const recordedPosition = bibusLastRecordedPositions.get(vehicleNumber);
+			if (
+				recordedPosition !== undefined &&
+				vehicle.position.latitude === recordedPosition.latitude &&
+				vehicle.position.longitude === recordedPosition.longitude
+			) {
+				return;
+			}
+
+			bibusLastRecordedPositions.set(vehicleNumber, {
+				latitude: vehicle.position.latitude,
+				longitude: vehicle.position.longitude,
+			});
+
+			return vehicle;
+		},
 	},
 	{
 		id: "fougeres",
