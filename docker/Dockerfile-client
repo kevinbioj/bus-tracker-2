@@ -31,14 +31,17 @@ RUN pnpm -r build
 # STAGE 2 - Run distribution app         #
 ##########################################
 
-FROM nginx:1.29.5-alpine AS web
+FROM nginxinc/nginx-unprivileged:1.29.5-alpine AS web
+
+USER root
 RUN apk add --no-cache curl tini
-WORKDIR /usr/share/nginx/html
+USER 101
 
 # Copy nginx configuration
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy build artifacts
+WORKDIR /usr/share/nginx/html
 COPY --from=builder /bus-tracker/apps/client/dist/ ./
 
 ENTRYPOINT ["/sbin/tini", "--"]

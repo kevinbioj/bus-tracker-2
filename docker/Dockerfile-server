@@ -42,4 +42,5 @@ COPY --from=builder /bus-tracker/server-deployment/drizzle ./server/drizzle/
 COPY --from=builder /bus-tracker/server-deployment/dist ./server/
 COPY --from=builder /bus-tracker/server-deployment/.env ./server/.env
 
+USER node
 CMD ["/sbin/tini", "--", "node", "--env-file", "/bus-tracker/server/.env", "/bus-tracker/server/index.js"]
