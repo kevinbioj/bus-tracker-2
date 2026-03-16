@@ -52,12 +52,12 @@ type VehiclePathProps = {
 export function VehiclePath({ journeyId }: VehiclePathProps) {
 	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", false);
 
-	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId));
+	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId, true, showVehiclePaths));
 	const { data: line } = useQuery(GetLineQuery(journey?.lineId));
-
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
-		if (journey?.path === undefined || line === undefined || !showVehiclePaths)
+		if (journey?.path === undefined || line === undefined || !showVehiclePaths) {
 			return { type: "FeatureCollection", features: [] };
+		}
 
 		const points = journey.path.p;
 		const currentDistanceTraveled = journey.position.distanceTraveled ?? 0;

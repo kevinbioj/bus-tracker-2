@@ -76,13 +76,16 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 		},
 	});
 
-export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
+export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean, includePath?: boolean) =>
 	queryOptions({
 		enabled: id !== null,
 		placeholderData: keepPreviousData,
 		retry: false,
 		refetchInterval: refetch ? 5_000 : undefined,
 		staleTime: 10_000,
-		queryKey: ["vehicle-journeys", id],
-		queryFn: () => client.get(`vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),
+		queryKey: ["vehicle-journeys", id, includePath],
+		queryFn: () =>
+			client
+				.get(`vehicle-journeys/${id}${includePath ? "?includePath=true" : ""}`)
+				.then((response) => response.json<DisposeableVehicleJourney>()),
 	});

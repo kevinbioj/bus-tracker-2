@@ -117,35 +117,45 @@ const getVehicleJourneyParams = z.object({
 	id: z.string(),
 });
 
-hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams), async (c) => {
-	const { id } = c.req.valid("param");
-
-	const journey = journeyStore.get(id);
-	if (journey === undefined) {
-		c.status(404);
-		return c.json({ error: `No journey was found with id "${id}".` });
-	}
-
-	const vehicle = journey.vehicle?.id
-		? (
-				await database
-					.select({ designation: vehiclesTable.designation })
-					.from(vehiclesTable)
-					.where(eq(vehiclesTable.id, journey.vehicle.id))
-			).at(0)
-		: undefined;
-
-	const girouette = await findGirouette({
-		networkId: journey.networkId,
-		lineId: journey.lineId,
-		directionId: journey.direction === "OUTBOUND" ? 0 : 1,
-		destination: journey.destination ?? journey.calls?.findLast((call) => call.callStatus !== "SKIPPED")?.stopName,
-	});
-
-	return c.json({
-		...journey,
-		path: journey.pathRef ? pathStore.get(journey.pathRef) : undefined,
-		vehicle: journey.vehicle ? { ...journey.vehicle, designation: vehicle?.designation ?? undefined } : undefined,
-		girouette: girouette?.data,
-	});
+const getVehicleJourneyQuery = z.object({
+	includePath: z.coerce.boolean().optional(),
 });
+
+hono.get(
+	"/vehicle-journeys/:id",
+	createParamValidator(getVehicleJourneyParams),
+	createQueryValidator(getVehicleJourneyQuery),
+	async (c) => {
+		const { id } = c.req.valid("param");
+		const { includePath } = c.req.valid("query");
+
+		const journey = journeyStore.get(id);
+		if (journey === undefined) {
+			c.status(404);
+			return c.json({ error: `No journey was found with id "${id}".` });
+		}
+
+		const vehicle = journey.vehicle?.id
+			? (
+					await database
+						.select({ designation: vehiclesTable.designation })
+						.from(vehiclesTable)
+						.where(eq(vehiclesTable.id, journey.vehicle.id))
+				).at(0)
+			: undefined;
+
+		const girouette = await findGirouette({
+			networkId: journey.networkId,
+			lineId: journey.lineId,
+			directionId: journey.direction === "OUTBOUND" ? 0 : 1,
+			destination: journey.destination ?? journey.calls?.findLast((call) => call.callStatus !== "SKIPPED")?.stopName,
+		});
+
+		return c.json({
+			...journey,
+			path: includePath && journey.pathRef ? pathStore.get(journey.pathRef) : undefined,
+			vehicle: journey.vehicle ? { ...journey.vehicle, designation: vehicle?.designation ?? undefined } : undefined,
+			girouette: girouette?.data,
+		});
+	},
+);
