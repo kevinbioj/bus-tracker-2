@@ -279,7 +279,7 @@ export async function computeVehicleJourneys(source: Source) {
 
 			const pathRef =
 				journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined;
-			if (pathRef !== undefined && !paths.has(pathRef)) {
+			if (!source.options.disableRoutePaths && pathRef !== undefined && !paths.has(pathRef)) {
 				paths.set(pathRef, {
 					points: journey!.trip.shape!.points.map((point) => ({
 						latitude: point.latitude,
@@ -407,7 +407,7 @@ export async function computeVehicleJourneys(source: Source) {
 
 				const pathRef =
 					journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined;
-				if (pathRef !== undefined && !paths.has(pathRef)) {
+				if (!source.options.disableRoutePaths && pathRef !== undefined && !paths.has(pathRef)) {
 					paths.set(pathRef, {
 						points: journey!.trip.shape!.points.map((point) => ({
 							latitude: point.latitude,

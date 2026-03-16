@@ -20,6 +20,7 @@ export type SourceOptions = {
 	gtfsOptions?: ImportGtfsOptions;
 	appendTripUpdateInformation?: boolean;
 	allowTripGuessing?: boolean;
+	disableRoutePaths?: boolean;
 	// --- Additional data acquirance
 	mode?: "ALL" | "VP-ONLY" | "VP+TU" | "NO-TU";
 	excludeScheduled?: ((trip: Trip) => boolean) | boolean;
