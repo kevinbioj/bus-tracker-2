@@ -56,7 +56,10 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 					return false;
 				}
 
-				boundedLineIds.add(journey.networkId);
+				if (journey.lineId !== undefined) {
+					boundedLineIds.add(journey.lineId);
+				}
+
 				return true;
 			}
 
