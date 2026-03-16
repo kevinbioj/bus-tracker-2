@@ -8,6 +8,22 @@ import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { GetLineQuery } from "~/api/lines";
 import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 
+const pastPathStrokeLayer: maplibregl.AddLayerObject = {
+	id: "vehicle-path-past-stroke",
+	source: "vehicle-path",
+	type: "line",
+	layout: {
+		"line-cap": "round",
+		"line-join": "round",
+	},
+	paint: {
+		"line-color": ["get", "strokeColor"],
+		"line-width": 6,
+		"line-opacity": 0.3,
+	},
+	filter: ["==", ["get", "type"], "past"],
+};
+
 const pastPathLayer: maplibregl.AddLayerObject = {
 	id: "vehicle-path-past",
 	source: "vehicle-path",
@@ -22,6 +38,22 @@ const pastPathLayer: maplibregl.AddLayerObject = {
 		"line-opacity": 0.3,
 	},
 	filter: ["==", ["get", "type"], "past"],
+};
+
+const futurePathStrokeLayer: maplibregl.AddLayerObject = {
+	id: "vehicle-path-future-stroke",
+	source: "vehicle-path",
+	type: "line",
+	layout: {
+		"line-cap": "round",
+		"line-join": "round",
+	},
+	paint: {
+		"line-color": ["get", "strokeColor"],
+		"line-width": 6,
+		"line-opacity": 1,
+	},
+	filter: ["==", ["get", "type"], "future"],
 };
 
 const futurePathLayer: maplibregl.AddLayerObject = {
@@ -96,6 +128,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 		}
 
 		const pathColor = line.color ? `#${line.color}` : "#000000";
+		const pathStrokeColor = line.textColor ? `#${line.textColor}` : "#FFFFFF";
 
 		const features: GeoJSON.Feature[] = [];
 
@@ -103,7 +136,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 			features.push({
 				type: "Feature",
 				geometry: { type: "LineString", coordinates: pastPoints },
-				properties: { type: "past", color: pathColor },
+				properties: { type: "past", color: pathColor, strokeColor: pathStrokeColor },
 			});
 		}
 
@@ -111,7 +144,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 			features.push({
 				type: "Feature",
 				geometry: { type: "LineString", coordinates: futurePoints },
-				properties: { type: "future", color: pathColor },
+				properties: { type: "future", color: pathColor, strokeColor: pathStrokeColor },
 			});
 		}
 
@@ -119,7 +152,9 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 	}, [journey, line, showVehiclePaths]);
 
 	const source = useMapSource<maplibregl.GeoJSONSource>("vehicle-path", initialSource);
+	useMapLayer(pastPathStrokeLayer, "vehicles");
 	useMapLayer(pastPathLayer, "vehicles");
+	useMapLayer(futurePathStrokeLayer, "vehicles");
 	useMapLayer(futurePathLayer, "vehicles");
 
 	useEffect(() => {
