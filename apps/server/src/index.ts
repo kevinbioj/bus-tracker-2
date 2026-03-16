@@ -1,10 +1,11 @@
 import "dotenv/config.js";
 
-import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
+import { type VehicleJourney, type VehicleJourneyPath, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { serve } from "@hono/node-server";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
+import { pathStore } from "./core/store/path-store.js";
 import { handleVehicleBatch } from "./vehicle-handling/handle-vehicle-batch.js";
 
 import { port } from "./options.js";
@@ -34,6 +35,19 @@ const redis = createClient({
 });
 await redis.connect();
 
+await redis.subscribe("paths", (message) => {
+	try {
+		const paths = JSON.parse(message) as Record<string, VehicleJourneyPath>;
+		for (const [ref, path] of Object.entries(paths)) {
+			if (!pathStore.has(ref)) {
+				pathStore.set(ref, path);
+			}
+		}
+	} catch (error) {
+		console.error("Failed to parse paths:", error);
+	}
+});
+
 await redis.subscribe("journeys", async (message) => {
 	let didWarn = false;
 	let vehicleJourneys: VehicleJourney[];
@@ -50,6 +64,9 @@ await redis.subscribe("journeys", async (message) => {
 					didWarn = true;
 				}
 				return [];
+			}
+			if (parsed.data.path !== undefined) {
+				console.log("► Received journey with path:", parsed.data.id);
 			}
 			return parsed.data;
 		});

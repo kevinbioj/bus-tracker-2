@@ -8,15 +8,18 @@ export function useMapSource<T extends maplibregl.Source>(id: string, specificat
 	const [source, setSource] = useState<T | null>(null);
 
 	const removeSource = useCallback(() => {
-		if (!Array.isArray(map.style?._layers)) return;
+		const style = map.getStyle();
+		if (style === undefined || style.layers === undefined) return;
 
-		for (const layerId in map.style._layers) {
-			const layer = map.style._layers[layerId];
-			if (layer.source !== id) continue;
-			map.removeLayer(layerId);
+		for (const layer of style.layers) {
+			if ("source" in layer && layer.source === id) {
+				map.removeLayer(layer.id);
+			}
 		}
 
-		map.removeSource(id);
+		if (map.getSource(id) !== undefined) {
+			map.removeSource(id);
+		}
 	}, [id, map]);
 
 	useEffect(() => {

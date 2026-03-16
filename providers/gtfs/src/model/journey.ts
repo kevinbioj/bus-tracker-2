@@ -105,6 +105,7 @@ export class Journey {
 			bearing: this.bearing,
 			atStop: false,
 			type: "COMPUTED",
+			distanceTraveled,
 			recordedAt: at.toZonedDateTimeISO(this.trip.route.agency.timeZone).toString({ timeZoneName: "never" }),
 		};
 	}
@@ -202,6 +203,7 @@ export class Journey {
 			bearing: this.bearing,
 			atStop: true,
 			type: "COMPUTED",
+			distanceTraveled: call.distanceTraveled,
 			recordedAt: (call.expectedArrivalTime ?? call.aimedArrivalTime).toString({
 				timeZoneName: "never",
 			}),

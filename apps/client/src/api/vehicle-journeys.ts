@@ -26,6 +26,7 @@ export type DisposeableVehicleJourney = {
 		stopName: string;
 		stopOrder: number;
 		platformName?: string;
+		distanceTraveled?: number;
 		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 	}>;
 	position: {
@@ -33,11 +34,21 @@ export type DisposeableVehicleJourney = {
 		longitude: number;
 		atStop: boolean;
 		type: "GPS" | "COMPUTED";
+		distanceTraveled?: number;
 		recordedAt: string;
 	};
 	occupancy?: "LOW" | "MEDIUM" | "HIGH" | "NO_PASSENGERS";
+	path?: {
+		points: Array<{
+			latitude: number;
+			longitude: number;
+			distanceTraveled?: number;
+		}>;
+	};
+	pathRef?: string;
 	networkId: number;
 	operator?: number;
+	line?: { number: string; color?: string; textColor?: string };
 	vehicle?: { id?: number; number: string; designation?: string };
 	serviceDate?: string;
 	girouette?: GirouetteData;

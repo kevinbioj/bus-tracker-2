@@ -92,7 +92,13 @@ async function computeCurrentJourneys() {
 			configuration.sources.map((source) =>
 				computeLimitFn(async () => {
 					if (source.gtfs === undefined) return 0;
-					const journeys = await computeVehicleJourneys(source);
+					const { journeys, paths } = await computeVehicleJourneys(source);
+
+					// Publish paths first
+					if (Object.keys(paths).length > 0) {
+						await redis.publish("paths", JSON.stringify(paths));
+					}
+
 					for (let i = 0; i < journeys.length; i += 500) {
 						const chunk = journeys.slice(i, Math.min(i + 500, journeys.length));
 						await redis.publish(channel, JSON.stringify(chunk));

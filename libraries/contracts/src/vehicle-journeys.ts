@@ -42,6 +42,7 @@ export const vehicleJourneyCallSchema = z.object({
 	stopName: z.string(),
 	stopOrder: z.number().min(0),
 	platformName: z.string().optional(),
+	distanceTraveled: z.number().optional(),
 	callStatus: vehicleJourneyCallStatusEnum,
 	flags: z.array(vehicleJourneyCallFlagsEnum).optional(),
 });
@@ -54,6 +55,7 @@ export const vehicleJourneyPositionSchema = z.object({
 	bearing: z.number().optional(),
 	atStop: z.boolean(),
 	type: z.enum(["GPS", "COMPUTED"]),
+	distanceTraveled: z.number().optional(),
 	recordedAt: z.string().datetime({ offset: true }),
 });
 
@@ -63,6 +65,18 @@ export const vehicleJourneyOccupancy = ["LOW", "MEDIUM", "HIGH", "NO_PASSENGERS"
 
 export const vehicleJourneyOccupancyEnum = z.enum(vehicleJourneyOccupancy);
 
+export const vehicleJourneyPathSchema = z.object({
+	points: z.array(
+		z.object({
+			latitude: z.number(),
+			longitude: z.number(),
+			distanceTraveled: z.number().optional(),
+		}),
+	),
+});
+
+export type VehicleJourneyPath = z.infer<typeof vehicleJourneyPathSchema>;
+
 export const vehicleJourneySchema = z.object({
 	id: z.string(),
 	line: vehicleJourneyLineSchema.optional(),
@@ -71,6 +85,8 @@ export const vehicleJourneySchema = z.object({
 	calls: z.array(vehicleJourneyCallSchema).optional(),
 	position: vehicleJourneyPositionSchema,
 	occupancy: vehicleJourneyOccupancyEnum.optional(),
+	path: vehicleJourneyPathSchema.optional(),
+	pathRef: z.string().optional(),
 	networkRef: z.string(),
 	journeyRef: z.string().optional(),
 	operatorRef: z.string().optional(),

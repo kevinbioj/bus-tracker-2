@@ -35,9 +35,7 @@ export function EditorTokenInput() {
 
 	return (
 		<div>
-			<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-				Espace contribution
-			</h3>
+			<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Espace contribution</h3>
 			{editor ? (
 				<div className="flex justify-between">
 					<p>

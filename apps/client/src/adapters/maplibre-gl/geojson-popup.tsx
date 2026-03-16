@@ -9,6 +9,7 @@ import { cn } from "~/utils/utils";
 type ActiveFeature = {
 	id: string;
 	type: "hover" | "selected";
+	properties: CircleMarkerFeature["properties"];
 };
 
 type MapCircleMarkersPopup = {
@@ -146,7 +147,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			}
 
 			if (activeFeature === null || feature.properties.id !== activeFeature.id) {
-				setActiveFeature({ id: feature.properties.id, type: "hover" });
+				setActiveFeature({ id: feature.properties.id, type: "hover", properties: feature.properties });
 				openPopup(feature);
 			}
 		};
@@ -164,7 +165,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 				return;
 			}
 
-			setActiveFeature({ id: feature.properties.id, type: "selected" });
+			setActiveFeature({ id: feature.properties.id, type: "selected", properties: feature.properties });
 			openPopup(feature);
 			adjustPan();
 		};
@@ -183,6 +184,11 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 			popup.setLngLat(feature.geometry.coordinates);
 			if (activeFeature?.type === "selected") adjustPan();
+
+			// Properties update (if they changed)
+			if (activeFeature !== null && feature.properties !== activeFeature.properties) {
+				setActiveFeature((prev) => (prev ? { ...prev, properties: feature.properties } : null));
+			}
 		};
 
 		map.on("mousemove", onMouseMove);
@@ -199,7 +205,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 		children({
 			activeFeature,
 			openPopup: (feature, type) => {
-				setActiveFeature({ id: feature.properties.id, type });
+				setActiveFeature({ id: feature.properties.id, type, properties: feature.properties });
 				openPopup(feature);
 			},
 		}),

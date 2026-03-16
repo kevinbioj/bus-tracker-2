@@ -1,4 +1,4 @@
-import type { VehicleJourney } from "@bus-tracker/contracts";
+import type { VehicleJourney, VehicleJourneyPath } from "@bus-tracker/contracts";
 import { match, P } from "ts-pattern";
 
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
@@ -125,8 +125,8 @@ const matchJourneyToTripDescriptor = (journey: Journey, tripDescriptor: TripDesc
 	return true;
 };
 
-export async function computeVehicleJourneys(source: Source): Promise<VehicleJourney[]> {
-	if (source.gtfs === undefined) return [];
+export async function computeVehicleJourneys(source: Source) {
+	if (source.gtfs === undefined) return { journeys: [], paths: [] };
 
 	const now = Temporal.Now.instant();
 	const watch = createStopWatch();
@@ -144,6 +144,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 		updateLog("%s 2/2 ► Computing active journeys.", sourceId);
 		const activeJourneys = new Map<string, VehicleJourney>();
+		const paths = new Map<string, VehicleJourneyPath>();
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
 		const detectedToOriginalTripIds = new Map<string, string>();
@@ -276,6 +277,18 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 
+			const pathRef =
+				journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined;
+			if (pathRef !== undefined && !paths.has(pathRef)) {
+				paths.set(pathRef, {
+					points: journey!.trip.shape!.points.map((point) => ({
+						latitude: point.latitude,
+						longitude: point.longitude,
+						distanceTraveled: point.distanceTraveled,
+					})),
+				});
+			}
+
 			const vehicleJourney: VehicleJourney = {
 				id: key,
 				line:
@@ -329,6 +342,8 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						.toZonedDateTimeISO(journey?.trip.route.agency.timeZone ?? "Europe/Paris")
 						.toString({ timeZoneName: "never" }),
 				},
+				path: undefined,
+				pathRef: journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined,
 				occupancy: match(vehiclePosition.occupancyStatus)
 					.with(P.union("EMPTY", "MANY_SEATS_AVAILABLE"), () => "LOW" as const)
 					.with(P.union("FEW_SEATS_AVAILABLE", "STANDING_ROOM_ONLY"), () => "MEDIUM" as const)
@@ -370,7 +385,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					if (source.options.mode === "NO-TU") continue;
 				} else {
 					if (source.options.excludeScheduled === true) continue;
-					if (source.options.excludeScheduled === "function" && source.options.excludeScheduled?.(journey.trip))
+					if (typeof source.options.excludeScheduled === "function" && source.options.excludeScheduled?.(journey.trip))
 						continue;
 				}
 
@@ -388,6 +403,18 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 				if (journey.trip.block !== undefined) {
 					handledBlockIds.add(journey.trip.block);
+				}
+
+				const pathRef =
+					journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined;
+				if (pathRef !== undefined && !paths.has(pathRef)) {
+					paths.set(pathRef, {
+						points: journey!.trip.shape!.points.map((point) => ({
+							latitude: point.latitude,
+							longitude: point.longitude,
+							distanceTraveled: point.distanceTraveled,
+						})),
+					});
 				}
 
 				const vehicleJourney: VehicleJourney = {
@@ -417,6 +444,8 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						};
 					}),
 					position: journey.guessPosition(now),
+					path: undefined,
+					pathRef: journey.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined,
 					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
 					networkRef,
 					operatorRef,
@@ -433,14 +462,19 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 		const computeTime = watch.step();
 		updateLog(
-			"%s     ✓ Computed %d journeys in %dms (%dms download - %dms compute).",
+			"%s     ✓ Computed %d journeys and %d paths in %dms (%dms download - %dms compute).",
 			sourceId,
 			activeJourneys.size,
+			paths.size,
 			watch.total(),
 			downloadTime,
 			computeTime,
 		);
-		return Array.from(activeJourneys.values());
+
+		return {
+			journeys: Array.from(activeJourneys.values()),
+			paths: Object.fromEntries(paths),
+		};
 	} catch (cause) {
 		updateLog("%s     ✘ Something wrong occurred during computation.", sourceId);
 		throw new Error(`Failed to compute vehicle journeys for '${source.id}'.`, {

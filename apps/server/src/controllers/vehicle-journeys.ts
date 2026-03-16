@@ -7,6 +7,7 @@ import { database } from "../core/database/database.js";
 import { linesTable, vehiclesTable } from "../core/database/schema.js";
 import { findGirouette } from "../core/services/girouette-service.js";
 import { journeyStore } from "../core/store/journey-store.js";
+import { pathStore } from "../core/store/path-store.js";
 import { hono } from "../server.js";
 import { keyBy } from "../utils/key-by.js";
 
@@ -143,6 +144,7 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 
 	return c.json({
 		...journey,
+		path: journey.pathRef ? pathStore.get(journey.pathRef) : undefined,
 		vehicle: journey.vehicle ? { ...journey.vehicle, designation: vehicle?.designation ?? undefined } : undefined,
 		girouette: girouette?.data,
 	});
