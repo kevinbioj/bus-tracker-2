@@ -1,3 +1,4 @@
+import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 import { eq, inArray } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
@@ -7,7 +8,7 @@ import { database } from "../core/database/database.js";
 import { linesTable, vehiclesTable } from "../core/database/schema.js";
 import { findGirouette } from "../core/services/girouette-service.js";
 import { journeyStore } from "../core/store/journey-store.js";
-import { pathStore } from "../core/store/path-store.js";
+import { redis } from "../index.js";
 import { hono } from "../server.js";
 import { keyBy } from "../utils/key-by.js";
 
@@ -151,9 +152,17 @@ hono.get(
 			destination: journey.destination ?? journey.calls?.findLast((call) => call.callStatus !== "SKIPPED")?.stopName,
 		});
 
+		let path: VehicleJourneyPath | undefined;
+		if (includePath && journey.pathRef) {
+			const rawPath = await redis.get(journey.pathRef);
+			if (rawPath) {
+				path = JSON.parse(rawPath);
+			}
+		}
+
 		return c.json({
 			...journey,
-			path: includePath && journey.pathRef ? pathStore.get(journey.pathRef) : undefined,
+			path,
 			vehicle: journey.vehicle ? { ...journey.vehicle, designation: vehicle?.designation ?? undefined } : undefined,
 			girouette: girouette?.data,
 		});

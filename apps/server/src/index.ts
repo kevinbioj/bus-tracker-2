@@ -5,7 +5,6 @@ import { serve } from "@hono/node-server";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
-import { pathStore } from "./core/store/path-store.js";
 import { handleVehicleBatch } from "./vehicle-handling/handle-vehicle-batch.js";
 
 import { port } from "./options.js";
@@ -30,25 +29,14 @@ console.log("► Running database migrations.");
 await migrateDatabase();
 
 console.log("► Connecting to Redis.");
-const redis = createClient({
+export const redis = createClient({
 	url: process.env.REDIS_URL ?? "redis://localhost:6379",
 });
-await redis.connect();
+export const redisSubscriber = redis.duplicate();
 
-await redis.subscribe("paths", (message) => {
-	try {
-		const paths = JSON.parse(message) as Record<string, VehicleJourneyPath>;
-		for (const [ref, path] of Object.entries(paths)) {
-			if (!pathStore.has(ref)) {
-				pathStore.set(ref, path);
-			}
-		}
-	} catch (error) {
-		console.error("Failed to parse paths:", error);
-	}
-});
+await Promise.all([redis.connect(), redisSubscriber.connect()]);
 
-await redis.subscribe("journeys", async (message) => {
+await redisSubscriber.subscribe("journeys", async (message) => {
 	let didWarn = false;
 	let vehicleJourneys: VehicleJourney[];
 
