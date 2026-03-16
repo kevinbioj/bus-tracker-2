@@ -13,7 +13,7 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 	await readCsv<StopRecord>(join(gtfsDirectory, "stops.txt"), (stopRecord) => {
 		if (
 			!importAllStops &&
-			typeof stopRecord.location_type !== "undefined" &&
+			stopRecord.location_type !== undefined &&
 			stopRecord.location_type !== "" &&
 			stopRecord.location_type !== "0"
 		) {

@@ -109,7 +109,7 @@ networksApp.get(
 
 			const lineIds = new Set(lines.map(({ id }) => id));
 			for (const vehicle of journeyStore.values()) {
-				if (typeof vehicle.lineId === "undefined" || !lineIds.has(vehicle.lineId)) continue;
+				if (vehicle.lineId === undefined || !lineIds.has(vehicle.lineId)) continue;
 				onlineVehicleCountMap.set(vehicle.lineId, (onlineVehicleCountMap.get(vehicle.lineId) ?? 0) + 1);
 			}
 		}

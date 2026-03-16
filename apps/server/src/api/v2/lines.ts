@@ -53,9 +53,7 @@ linesApp.get("/:id/online-vehicles", async (c) => {
 
 	const onlineVehicleIds = journeyStore
 		.values()
-		.flatMap((journey) =>
-			journey.lineId === line.id && typeof journey.vehicle?.id !== "undefined" ? [journey.vehicle.id] : [],
-		)
+		.flatMap((journey) => (journey.lineId === line.id && journey.vehicle?.id !== undefined ? [journey.vehicle.id] : []))
 		.toArray();
 
 	const vehicleList = await database.select().from(vehiclesTable).where(inArray(vehiclesTable.id, onlineVehicleIds));

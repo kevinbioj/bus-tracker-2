@@ -189,9 +189,9 @@ const sources = [
 		getNetworkRef: () => "KICEO",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 		isValidJourney: (journey) =>
-			(typeof journey.line !== "undefined" &&
+			(journey.line !== undefined &&
 				["CREACEO", "MATINEO", "MOBICEO"].some((ref) => journey.line?.ref.endsWith(ref))) ||
-			typeof journey.destination !== "undefined" ||
+			journey.destination !== undefined ||
 			journey.calls?.some((call) => call.callStatus === "UNSCHEDULED"),
 	},
 	{

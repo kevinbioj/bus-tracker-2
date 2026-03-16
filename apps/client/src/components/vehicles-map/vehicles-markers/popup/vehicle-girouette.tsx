@@ -38,7 +38,7 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 					ledColor="WHITE"
 					onRouteNumberClick={onRouteNumberClick}
 					routeNumber={
-						typeof line !== "undefined"
+						line !== undefined
 							? {
 									backgroundColor: line.color ?? undefined,
 									textColor: line.textColor ?? undefined,

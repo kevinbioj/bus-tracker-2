@@ -1,4 +1,4 @@
-if (typeof Map.groupBy === "undefined") {
+if (Map.groupBy === undefined) {
 	Map.groupBy = function groupBy<K, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) {
 		const map = new Map<K, T[]>();
 		let i = 0;
@@ -18,7 +18,7 @@ if (typeof Map.groupBy === "undefined") {
 	};
 }
 
-if (typeof Array.prototype.toSorted === "undefined") {
+if (Array.prototype.toSorted === undefined) {
 	Array.prototype.toSorted = function toSorted(compareFn) {
 		const shallow = this.slice();
 		return shallow.sort(compareFn);

@@ -24,7 +24,7 @@ export const timestamp = customType<{
 	config: { precision?: number };
 }>({
 	dataType(config) {
-		const precision = typeof config?.precision !== "undefined" ? ` (${config.precision})` : "";
+		const precision = config?.precision === undefined ? "" : ` (${config.precision})`;
 		return `timestamp${precision}`;
 	},
 	fromDriver(value) {

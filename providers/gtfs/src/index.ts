@@ -91,7 +91,7 @@ async function computeCurrentJourneys() {
 		const computationResults = await Promise.allSettled(
 			configuration.sources.map((source) =>
 				computeLimitFn(async () => {
-					if (typeof source.gtfs === "undefined") return 0;
+					if (source.gtfs === undefined) return 0;
 					const journeys = await computeVehicleJourneys(source);
 					for (let i = 0; i < journeys.length; i += 500) {
 						const chunk = journeys.slice(i, Math.min(i + 500, journeys.length));

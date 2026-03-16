@@ -23,7 +23,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 						.otherwise(() => null);
 
 					const tooltipProps =
-						typeof call.expectedTime !== "undefined" || call.callStatus === "SKIPPED"
+						call.expectedTime !== undefined || call.callStatus === "SKIPPED"
 							? match([call.callStatus, dayjs(call.expectedTime ?? call.aimedTime).diff(call.aimedTime, "minutes")])
 									.with(
 										["SKIPPED", P.any],
@@ -66,12 +66,11 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 									)
 							: null;
 
-					const hasExtra =
-						(typeof call.flags !== "undefined" && call.flags.length > 0) || typeof call.platformName !== "undefined";
+					const hasExtra = (call.flags !== undefined && call.flags.length > 0) || call.platformName !== undefined;
 
 					const children = (
 						<div className={clsx("flex font-bold", accentColor)}>
-							{typeof call.expectedTime !== "undefined" || call.callStatus === "SKIPPED" ? (
+							{call.expectedTime !== undefined || call.callStatus === "SKIPPED" ? (
 								<Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} />
 							) : null}
 							<span
@@ -92,12 +91,12 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 							</div>
 							{hasExtra && (
 								<div className="flex-1">
-									{typeof call.platformName !== "undefined" && (
-										<span className="border-[0.5px] border-foreground leading-none px-0.5 pt-[1px] text-[9px] text-nowrap uppercase">
+									{call.platformName !== undefined && (
+										<span className="border-[0.5px] border-foreground leading-none px-0.5 pt-px text-[9px] text-nowrap uppercase">
 											{call.platformName}
 										</span>
 									)}
-									{typeof call.flags !== "undefined" && call.flags.length > 0 && (
+									{call.flags !== undefined && call.flags.length > 0 && (
 										<span>
 											{match(call.flags)
 												.with(["NO_DROP_OFF"], () => (

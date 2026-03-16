@@ -15,7 +15,7 @@ export async function importShapes(gtfsDirectory: string, options: ImportGtfsOpt
 	const shapesFile = join(gtfsDirectory, "shapes.txt");
 	if (await fileExists(shapesFile)) {
 		await readCsv<ShapeRecord>(shapesFile, (shapeRecord) => {
-			if (typeof shapeRecord.shape_dist_traveled === "undefined") {
+			if (shapeRecord.shape_dist_traveled === undefined) {
 				return;
 			}
 

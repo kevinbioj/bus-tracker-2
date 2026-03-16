@@ -77,7 +77,7 @@ export function OnlineVehiclesLineSelection({
 	);
 
 	return (
-		<Sheet open={typeof network !== "undefined"} onOpenChange={(open) => !open && onClose()}>
+		<Sheet open={network !== undefined} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent
 				aria-describedby={undefined}
 				className="max-w-[90vw] w-full p-3"

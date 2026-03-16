@@ -64,7 +64,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 		siriResponse?.Envelope?.Body?.GetVehicleMonitoringResponse?.Answer?.VehicleMonitoringDelivery;
 
 	const vehicles = (
-		typeof vehiclesDelivery?.VehicleActivity === "undefined"
+		vehiclesDelivery?.VehicleActivity === undefined
 			? []
 			: Array.isArray(vehiclesDelivery.VehicleActivity)
 				? vehiclesDelivery.VehicleActivity
@@ -80,7 +80,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 		)
 		.filter(
 			(vehicle, index, vehicleList) =>
-				typeof vehicle.MonitoredVehicleJourney.VehicleLocation !== "undefined" &&
+				vehicle.MonitoredVehicleJourney.VehicleLocation !== undefined &&
 				vehicleList.findIndex((v) => v.VehicleMonitoringRef === vehicle.VehicleMonitoringRef) === index,
 		);
 
@@ -94,7 +94,7 @@ export async function fetchMonitoredVehicles(lineRefs: string[]) {
 			vehicle.MonitoredVehicleJourney.MonitoredCall,
 			...(Array.isArray(vehicle.MonitoredVehicleJourney.OnwardCalls.OnwardCall)
 				? vehicle.MonitoredVehicleJourney.OnwardCalls.OnwardCall
-				: typeof vehicle.MonitoredVehicleJourney.OnwardCalls.OnwardCall !== "undefined"
+				: vehicle.MonitoredVehicleJourney.OnwardCalls.OnwardCall !== undefined
 					? [vehicle.MonitoredVehicleJourney.OnwardCalls.OnwardCall]
 					: []),
 		].sort((a, b) => a.Order - b.Order);

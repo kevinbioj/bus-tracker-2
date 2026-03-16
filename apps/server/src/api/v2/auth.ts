@@ -22,7 +22,7 @@ authApp.use(
 	async (c) => {
 		const user = c.get("user-discord");
 
-		if (typeof user?.id === "undefined") {
+		if (user?.id === undefined) {
 			return c.json(
 				{
 					status: 500,

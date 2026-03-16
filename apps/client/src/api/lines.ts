@@ -30,7 +30,7 @@ export type LineVehicleAssignmentsResponse = {
 
 export const GetLineQuery = (lineId?: number) =>
 	queryOptions({
-		enabled: typeof lineId !== "undefined",
+		enabled: lineId !== undefined,
 		staleTime: 15_000,
 		queryKey: ["lines", lineId],
 		queryFn: () => client.get(`lines/${lineId}`).then((response) => response.json<Line>()),
@@ -38,7 +38,7 @@ export const GetLineQuery = (lineId?: number) =>
 
 export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
 	queryOptions({
-		enabled: typeof lineId !== "undefined",
+		enabled: lineId !== undefined,
 		staleTime: 15_000,
 		refetchInterval: 5_000,
 		queryKey: ["lines", lineId, "online"],

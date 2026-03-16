@@ -21,11 +21,11 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 
 		const [lineDatas, vehicleRefs] = vehicleJourneys.reduce(
 			([lineDataAcc, vehicleRefAcc], vehicleJourney) => {
-				if (typeof vehicleJourney.line !== "undefined") {
+				if (vehicleJourney.line !== undefined) {
 					lineDataAcc.set(vehicleJourney.line.ref, vehicleJourney.line);
 				}
 
-				if (networkRef !== "SNCF" && typeof vehicleJourney.vehicleRef !== "undefined") {
+				if (networkRef !== "SNCF" && vehicleJourney.vehicleRef !== undefined) {
 					vehicleRefAcc.add(vehicleJourney.vehicleRef);
 				}
 
@@ -64,9 +64,9 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 
 			journeyStore.set(disposeableJourney.id, disposeableJourney);
 
-			if (typeof vehicleJourney.vehicleRef !== "undefined") {
+			if (vehicleJourney.vehicleRef !== undefined) {
 				const vehicle = vehicles?.get(vehicleJourney.vehicleRef);
-				if (typeof vehicle !== "undefined") {
+				if (vehicle !== undefined) {
 					disposeableJourney.vehicle = {
 						id: vehicle.id,
 						number: vehicle.number,

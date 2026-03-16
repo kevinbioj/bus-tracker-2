@@ -114,13 +114,13 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 
 	const positionInformation = useMemo(() => {
 		if (journey.position.type === "GPS") return positionIconDetails.GPS;
-		return journey.calls?.some((call) => typeof call.expectedTime !== "undefined")
+		return journey.calls?.some((call) => call.expectedTime !== undefined)
 			? positionIconDetails.ESTIMATED
 			: positionIconDetails.SCHEDULED;
 	}, [journey]);
 
 	const occupancyInformation = useMemo(() => {
-		if (typeof journey.occupancy === "undefined") return;
+		if (journey.occupancy === undefined) return;
 		return occupancyIconDetails[journey.occupancy];
 	}, [journey]);
 
@@ -152,7 +152,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				{recordedAt}
 			</span>
 			<div className="flex items-center justify-end gap-2">
-				{typeof occupancyInformation !== "undefined" && (
+				{occupancyInformation !== undefined && (
 					<CustomTooltip
 						className={clsx("font-bold", occupancyInformation.tooltipClasses)}
 						content={occupancyInformation.tooltipText}

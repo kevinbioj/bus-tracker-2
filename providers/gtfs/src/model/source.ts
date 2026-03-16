@@ -119,7 +119,7 @@ export class Source {
 		const sourceId = padSourceId(this.id);
 		const updateLog = console.draft("%s ► Checking GTFS resource staleness.", sourceId);
 
-		if (typeof this.gtfs === "undefined") {
+		if (this.gtfs === undefined) {
 			updateLog("%s ℹ Resource has not loaded yet (error?), performing a load attempt.", sourceId);
 			return this.importGtfs();
 		}
@@ -160,7 +160,7 @@ export class Source {
 
 	computeNextJourneys() {
 		const sourceId = padSourceId(this.id);
-		if (typeof this.gtfs === "undefined") {
+		if (this.gtfs === undefined) {
 			console.warn("%s ⚠ Source has no loaded GTFS data, ignoring.", sourceId);
 			return;
 		}
@@ -192,7 +192,7 @@ export class Source {
 	}
 
 	sweepJourneys() {
-		if (typeof this.gtfs === "undefined") return;
+		if (this.gtfs === undefined) return;
 
 		const now = Temporal.Now.instant().epochMilliseconds;
 		const oldJourneyCount = this.gtfs.journeys.size;

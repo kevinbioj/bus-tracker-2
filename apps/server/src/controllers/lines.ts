@@ -50,7 +50,7 @@ hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSche
 	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
 	const onlineJourneys = keyBy(
-		journeyStore.values().filter((journey) => journey.lineId === line.id && typeof journey.vehicle?.id !== "undefined"),
+		journeyStore.values().filter((journey) => journey.lineId === line.id && journey.vehicle?.id !== undefined),
 		(journey) => journey.vehicle?.id ?? -1,
 	);
 

@@ -46,8 +46,8 @@ export function OnlineVehiclesSheetManagement({
 	}
 
 	const handleClose = () => {
-		if (typeof selectedLine !== "undefined") return setSelectedLine(undefined);
-		if (typeof selectedNetwork !== "undefined") return setSelectedNetwork(undefined);
+		if (selectedLine !== undefined) return setSelectedLine(undefined);
+		if (selectedNetwork !== undefined) return setSelectedNetwork(undefined);
 		setOpen(false);
 	};
 

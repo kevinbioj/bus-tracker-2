@@ -18,11 +18,11 @@ export async function findGirouette({ networkId, lineId, directionId, destinatio
 			and(
 				eq(girouettesTable.enabled, true),
 				eq(girouettesTable.networkId, networkId),
-				typeof lineId !== "undefined" ? eq(girouettesTable.lineId, lineId) : isNull(girouettesTable.lineId),
-				typeof directionId !== "undefined"
+				lineId !== undefined ? eq(girouettesTable.lineId, lineId) : isNull(girouettesTable.lineId),
+				directionId !== undefined
 					? or(eq(girouettesTable.directionId, directionId), isNull(girouettesTable.directionId))
 					: isNull(girouettesTable.directionId),
-				typeof destination !== "undefined"
+				destination !== undefined
 					? or(
 							arrayContains(girouettesTable.destinations, [destination]),
 							eq(sql`cardinality(${girouettesTable.destinations})`, 0),

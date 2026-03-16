@@ -48,13 +48,11 @@ export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDet
 						Cette entrée n'est plus d'actualité, elle devrait disparaitre au prochain rafraichissement de la carte.
 					</span>
 				</p>
-			) : typeof journey !== "undefined" ? (
+			) : journey !== undefined ? (
 				<>
 					<VehicleGirouette journey={journey} width={popupWidth} />
 					<VehicleInformation disableLinks={embedMode} journey={journey} />
-					{typeof journey.calls !== "undefined" ? (
-						<VehicleNextStops calls={journey.calls} tooltipId={journey.id} />
-					) : null}
+					{journey.calls !== undefined && <VehicleNextStops calls={journey.calls} tooltipId={journey.id} />}
 					{showDebugInfos && (
 						<>
 							<Separator />

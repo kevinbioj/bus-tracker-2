@@ -69,7 +69,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 		(feature: CircleMarkerFeature) => {
 			activeFeatureRef.current = feature;
 			popup.setLngLat(feature.geometry.coordinates);
-			if (typeof popup._map === "undefined") {
+			if (popup._map === undefined) {
 				popup.setDOMContent(containerRef.current).addTo(map);
 				setTimeout(() => {
 					popup.getElement()?.setAttribute("data-open", "true");

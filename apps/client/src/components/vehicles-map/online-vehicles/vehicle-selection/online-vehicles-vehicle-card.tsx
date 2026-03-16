@@ -27,7 +27,7 @@ export function OnlineVehiclesVehicleCard({
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 
 	const flyTo = () => {
-		if (typeof vehicle.activity.markerId === "undefined") return;
+		if (vehicle.activity.markerId === undefined) return;
 
 		onVehicleSelect();
 		queryClient.prefetchQuery(GetVehicleJourneyQuery(vehicle.activity.markerId));

@@ -29,13 +29,13 @@ const sources = [
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (
-				typeof journey !== "undefined" &&
+				journey !== undefined &&
 				tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(journey.trip.route.id)
 			) {
 				return "TNI";
 			}
 
-			if (typeof vehicle !== "undefined" && isTniVehicle(+vehicle.id)) {
+			if (vehicle !== undefined && isTniVehicle(+vehicle.id)) {
 				return "TNI";
 			}
 

@@ -20,7 +20,7 @@ export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProp
 		getScrollElement: () => parentRef.current,
 		estimateSize: useCallback(() => (isDesktop ? 64 : 105), [isDesktop]),
 		measureElement:
-			typeof window !== "undefined" && navigator.userAgent.indexOf("Firefox") === -1
+			window !== undefined && navigator.userAgent.indexOf("Firefox") === -1
 				? (element) => element?.getBoundingClientRect().height
 				: undefined,
 		overscan: 5,

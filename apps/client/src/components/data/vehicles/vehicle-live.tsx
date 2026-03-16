@@ -23,7 +23,7 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 
 	useEffect(() => {
 		const map = mapRef.current;
-		if (map === null || typeof vehicle.activity.position === "undefined") return;
+		if (map === null || vehicle.activity.position === undefined) return;
 
 		const { position } = vehicle.activity;
 		map.flyTo({ lat: position.latitude, lng: position.longitude });
@@ -39,7 +39,7 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 		});
 	}, [line]);
 
-	if (typeof vehicle.activity.position === "undefined") return null;
+	if (vehicle.activity.position === undefined) return null;
 
 	const { position } = vehicle.activity;
 

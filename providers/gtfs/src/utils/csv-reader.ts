@@ -27,7 +27,7 @@ export async function readCsv<T extends CsvRecord<string>>(
 	{ delimiter = ",", encoding = "utf-8" }: ReadCsvOptions = {},
 ) {
 	const firstBytes = await readFirstBytes(path, 3);
-	const hasBom = firstBytes.toString().charCodeAt(0) === 0xfeff;
+	const hasBom = firstBytes.toString().codePointAt(0) === 0xfeff;
 	const readStream = createReadStream(path, {
 		encoding,
 		start: hasBom ? 3 : 0,

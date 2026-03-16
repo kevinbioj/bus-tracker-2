@@ -60,7 +60,7 @@ export function GeojsonCircles<T extends { id: string; bearing: number | null }>
 			for (let i = 0; i < temporaryCollection.features.length; i += 1) {
 				const feature = temporaryCollection.features[i];
 				const nextFeature = nextFeatures.get(feature.properties.id);
-				if (typeof nextFeature !== "undefined") {
+				if (nextFeature !== undefined) {
 					// We update the properties of the feature
 					const bearing = feature.properties.bearing;
 					feature.properties = { ...nextFeature.properties, bearing };

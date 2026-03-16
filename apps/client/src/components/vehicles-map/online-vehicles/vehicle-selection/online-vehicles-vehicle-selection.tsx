@@ -33,7 +33,7 @@ export function OnlineVehiclesVehicleSelection({
 	const lineVehicles = vehicles?.filter((vehicle) => vehicle.activity.lineId === line?.id);
 
 	return (
-		<Sheet open={typeof line !== "undefined"} onOpenChange={(open) => !open && onClose()}>
+		<Sheet open={line !== undefined} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent
 				aria-describedby={undefined}
 				className="max-w-[90vw] p-3 w-full"

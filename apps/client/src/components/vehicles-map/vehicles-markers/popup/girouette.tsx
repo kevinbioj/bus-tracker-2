@@ -131,7 +131,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 	const [halfPattern, setHalfPattern] = useState<RouteNumberData["halfPattern"]>();
 
 	useEffect(() => {
-		if (typeof routeNumber.halfPattern === "undefined") return;
+		if (routeNumber.halfPattern === undefined) return;
 
 		let showingHalfPattern = false;
 
@@ -146,7 +146,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 	if (routeNumber === undefined) return null;
 
 	const fontFamily =
-		typeof routeNumber.font !== "undefined" && routeNumber.font in fontProperties ? routeNumber.font : "1513B3E1";
+		routeNumber.font !== undefined && routeNumber.font in fontProperties ? routeNumber.font : "1513B3E1";
 	const height = (dimensions.height * width) / (dimensions.rnWidth + dimensions.destinationWidth);
 	const onePixel = width / (dimensions.rnWidth + dimensions.destinationWidth);
 	const spacing =
@@ -242,11 +242,7 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 		>
 			{lines.filter(Boolean).map((line) => {
 				const fontFamily =
-					typeof line.font !== "undefined" && line.font in fontProperties
-						? line.font
-						: oneLine
-							? "1513B3E1"
-							: "0808B2E1";
+					line.font !== undefined && line.font in fontProperties ? line.font : oneLine ? "1513B3E1" : "0808B2E1";
 				const spacing = onePixel * (line.spacing ?? fontProperties[fontFamily].spacing);
 				const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 				const processedText = line.text.trimEnd().replaceAll(" ", "&nbsp;");

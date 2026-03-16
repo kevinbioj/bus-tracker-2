@@ -21,8 +21,8 @@ type LineVehiclesTimelineProps = {
 };
 
 const numberSort = (aNumber: string, bNumber: string) => {
-	const numberifiedA = parseInt(aNumber, 10);
-	const numberifiedB = parseInt(bNumber, 10);
+	const numberifiedA = Number.parseInt(aNumber, 10);
+	const numberifiedB = Number.parseInt(bNumber, 10);
 
 	if (Number.isNaN(numberifiedA)) {
 		if (Number.isNaN(numberifiedB)) {

@@ -54,8 +54,8 @@ const sortingOptions = {
 };
 
 const numberSort = (a: Vehicle, b: Vehicle) => {
-	const numberifiedA = parseInt(a.number, 10);
-	const numberifiedB = parseInt(b.number, 10);
+	const numberifiedA = Number.parseInt(a.number, 10);
+	const numberifiedB = Number.parseInt(b.number, 10);
 
 	if (Number.isNaN(numberifiedA)) {
 		if (Number.isNaN(numberifiedB)) {
@@ -128,8 +128,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 			})
 			.sort((a, b) => {
 				if (sort === "activity") {
-					if (typeof a.activity.lineId !== "undefined" && typeof b.activity.lineId !== "undefined")
-						return numberSort(a, b);
+					if (a.activity.lineId !== undefined && b.activity.lineId !== undefined) return numberSort(a, b);
 					if (typeof a.activity.lineId === "number") return -1;
 					if (typeof b.activity.lineId === "number") return 1;
 					if (a.activity.since === null) return 1;
@@ -142,7 +141,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	}, [debouncedFilter, operatorId, showArchived, searchParams, type, vehicles]);
 
 	const onlineVehicles = useMemo(
-		() => filteredAndSortedVehicles.filter(({ activity }) => typeof activity.lineId !== "undefined"),
+		() => filteredAndSortedVehicles.filter(({ activity }) => activity.lineId !== undefined),
 		[filteredAndSortedVehicles],
 	);
 

@@ -68,9 +68,9 @@ export class Journey {
 		// Autrement - on est en voyage
 		const nextCall = calls.at(calls.indexOf(monitoredCall) + 1);
 		if (
-			typeof this.trip.shape === "undefined" ||
-			typeof monitoredCall.distanceTraveled === "undefined" ||
-			typeof nextCall?.distanceTraveled === "undefined"
+			this.trip.shape === undefined ||
+			monitoredCall.distanceTraveled === undefined ||
+			nextCall?.distanceTraveled === undefined
 		) {
 			return this.getJourneyPositionAt(monitoredCall);
 		}
@@ -111,7 +111,7 @@ export class Journey {
 
 	hasRealtime() {
 		return this.calls.some(
-			(call) => typeof call.expectedArrivalTime !== "undefined" || typeof call.expectedDepartureTime !== "undefined",
+			(call) => call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined,
 		);
 	}
 
@@ -148,13 +148,13 @@ export class Journey {
 			}
 
 			if (timeUpdate?.scheduleRelationship === "SKIPPED") {
-				if (typeof arrivalDelay !== "undefined") {
+				if (arrivalDelay !== undefined) {
 					call.expectedArrivalTime = call.aimedArrivalTime.add({
 						seconds: arrivalDelay,
 					});
 				}
 
-				if (typeof departureDelay !== "undefined") {
+				if (departureDelay !== undefined) {
 					call.expectedDepartureTime = call.aimedArrivalTime.add({
 						seconds: departureDelay,
 					});
@@ -181,13 +181,13 @@ export class Journey {
 				departureDelay = departureEvent.delay;
 			}
 
-			if (typeof arrivalDelay !== "undefined") {
+			if (arrivalDelay !== undefined) {
 				call.expectedArrivalTime = call.aimedArrivalTime.add({
 					seconds: arrivalDelay,
 				});
 			}
 
-			if (typeof departureDelay !== "undefined") {
+			if (departureDelay !== undefined) {
 				call.expectedDepartureTime = call.aimedDepartureTime.add({
 					seconds: departureDelay,
 				});

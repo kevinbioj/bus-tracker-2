@@ -20,7 +20,7 @@ export function LegalPage() {
 							<h3 className="font-bold text-xl flex items-center gap-2">
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									1
-								</span>
+								</span>{" "}
 								Édition du site
 							</h3>
 							<div className="space-y-3">
@@ -49,7 +49,7 @@ export function LegalPage() {
 							<h3 className="font-bold text-xl flex items-center gap-2">
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									2
-								</span>
+								</span>{" "}
 								Hébergement
 							</h3>
 							<Card>
@@ -81,7 +81,7 @@ export function LegalPage() {
 							<h3 className="font-bold text-xl flex items-center gap-2">
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									3
-								</span>
+								</span>{" "}
 								Propriété Intellectuelle
 							</h3>
 							<div className="space-y-4">
@@ -116,7 +116,7 @@ export function LegalPage() {
 							<h3 className="font-bold text-xl flex items-center gap-2">
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									4
-								</span>
+								</span>{" "}
 								Confidentialité (RGPD)
 							</h3>
 							<div className="space-y-3">
@@ -137,18 +137,18 @@ export function LegalPage() {
 									</Link>
 									.
 								</p>
-								</div>
-								</section>
+							</div>
+						</section>
 
-								{/* Section 5: Responsabilité */}
-								<section className="space-y-3">
-								<h3 className="font-bold text-xl flex items-center gap-2">
+						{/* Section 5: Responsabilité */}
+						<section className="space-y-3">
+							<h3 className="font-bold text-xl flex items-center gap-2">
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									5
-								</span>
+								</span>{" "}
 								Responsabilité & Fiabilité
-								</h3>
-								<div className="space-y-3">
+							</h3>
+							<div className="space-y-3">
 								<p className="leading-relaxed">
 									Bien que les données soient considérées comme fiables pour la majorité des réseaux, elles sont
 									fournies <strong>à titre indicatif uniquement</strong>.
@@ -158,11 +158,11 @@ export function LegalPage() {
 									employeur ou toute autre autorité). L'exactitude des positions et des horaires n'est pas garantie et
 									dépend des flux de données fournis par les opérateurs.
 								</p>
-								</div>
-								</section>
-								</div>
-								</div>
-								</main>
-								</>
-								);
-								}
+							</div>
+						</section>
+					</div>
+				</div>
+			</main>
+		</>
+	);
+}

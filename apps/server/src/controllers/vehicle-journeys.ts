@@ -37,7 +37,7 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 			if (
 				excludeScheduled &&
 				journey.position.type === "COMPUTED" &&
-				journey.calls?.every((call) => typeof call.expectedTime === "undefined")
+				journey.calls?.every((call) => call.expectedTime === undefined)
 			) {
 				return false;
 			}
@@ -75,9 +75,9 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 		})
 		.toArray();
 
-	if (typeof includeMarker !== "undefined" && !boundedJourneys.some((journey) => journey.id === includeMarker)) {
+	if (includeMarker !== undefined && !boundedJourneys.some((journey) => journey.id === includeMarker)) {
 		const additionalJourney = journeyStore.get(includeMarker);
-		if (typeof additionalJourney !== "undefined") {
+		if (additionalJourney !== undefined) {
 			boundedJourneys.push(additionalJourney);
 		}
 	}

@@ -39,7 +39,7 @@ while (true) {
 	const now = Temporal.Now.zonedDateTimeISO();
 
 	const vehicles =
-		typeof payload.liste?.vehicule !== "undefined"
+		payload.liste?.vehicule !== undefined
 			? Array.isArray(payload.liste.vehicule)
 				? payload.liste.vehicule
 				: [payload.liste.vehicule]
@@ -48,7 +48,7 @@ while (true) {
 	updateLog("%s ► 2/3 – Processing %d vehicles from provider...", Temporal.Now.instant(), vehicles.length);
 
 	const vehicleJourneys = vehicles.flatMap((vehicle) => {
-		if (typeof vehicle.jour === "undefined") return [];
+		if (vehicle.jour === undefined) return [];
 		if (vehicle.ligne === 0 || vehicle.course === 0 || vehicle.destination === "DEPOT AUTOBUS") return [];
 
 		const [date, time] = vehicle.jour.split(" ");
@@ -57,12 +57,12 @@ while (true) {
 		if (now.since(recordedAt).total("minutes") > 10) return [];
 
 		let journeyData = siriData.get(vehicle.course);
-		if (typeof journeyData !== "undefined" && now.toInstant().since(journeyData.recordedAt).total("minutes") > 5) {
+		if (journeyData !== undefined && now.toInstant().since(journeyData.recordedAt).total("minutes") > 5) {
 			journeyData = undefined;
 		}
 
 		const calls =
-			typeof journeyData !== "undefined"
+			journeyData !== undefined
 				? Array.isArray(journeyData.journey.EstimatedCalls.EstimatedCall)
 					? journeyData.journey.EstimatedCalls.EstimatedCall
 					: [journeyData.journey.EstimatedCalls.EstimatedCall]

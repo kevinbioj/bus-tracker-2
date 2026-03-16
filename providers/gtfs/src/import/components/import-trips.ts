@@ -54,10 +54,10 @@ export async function importTrips(
 			[],
 			+(tripRecord.direction_id ?? 0) as 0 | 1,
 			tripRecord.trip_headsign || undefined,
-			typeof tripRecord.block_id !== "undefined" && tripRecord.block_id.length > 0 && !ignoreBlocks
+			tripRecord.block_id !== undefined && tripRecord.block_id.length > 0 && !ignoreBlocks
 				? tripRecord.block_id
 				: undefined,
-			typeof tripRecord.shape_id !== "undefined" ? shapes.get(tripRecord.shape_id) : undefined,
+			tripRecord.shape_id !== undefined ? shapes.get(tripRecord.shape_id) : undefined,
 		);
 
 		if (filterTrips === undefined || filterTrips(trip)) {
@@ -119,7 +119,7 @@ export async function importTrips(
 					)
 				: undefined,
 			mismatchingTimes ? Math.floor(+departureHours / 24) : undefined,
-			typeof stopTimeRecord.shape_dist_traveled !== "undefined" ? +stopTimeRecord.shape_dist_traveled : undefined,
+			stopTimeRecord.shape_dist_traveled !== undefined ? +stopTimeRecord.shape_dist_traveled : undefined,
 		);
 
 		trip.stopTimes.push(stopTime);

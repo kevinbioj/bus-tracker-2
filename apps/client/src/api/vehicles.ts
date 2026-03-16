@@ -66,7 +66,7 @@ export type VehicleTimelineDayActivity = {
 
 export const GetVehiclesQuery = (networkId?: number) =>
 	queryOptions({
-		enabled: typeof networkId !== "undefined",
+		enabled: networkId !== undefined,
 		queryKey: ["network-vehicles", networkId],
 		queryFn: () => {
 			const params = new URLSearchParams();

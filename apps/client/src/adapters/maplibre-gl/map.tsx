@@ -33,7 +33,7 @@ export function MapComponent({ children, containerProps, mapOptions, ref }: MapC
 
 			if (typeof ref === "function") {
 				ref(instance);
-			} else if (typeof ref !== "undefined" && ref !== null) {
+			} else if (ref !== undefined && ref !== null) {
 				ref.current = instance;
 			}
 

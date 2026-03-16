@@ -39,7 +39,7 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 };
 
 const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): JourneyCall[] | undefined => {
-	if (typeof tripUpdate?.stopTimeUpdate === "undefined") return;
+	if (tripUpdate?.stopTimeUpdate === undefined) return;
 	if (tripUpdate.stopTimeUpdate.some(({ stopId }) => !gtfs.stops.has(stopId))) return;
 
 	const timeZone =
@@ -74,17 +74,17 @@ const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): Journey
 
 const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allowTripGuessing?: boolean) => {
 	const trip = gtfs.trips.get(tripDescriptor.tripId);
-	if (typeof trip !== "undefined") {
-		if (typeof tripDescriptor.routeId !== "undefined" && trip.route.id !== tripDescriptor.routeId) return;
-		if (typeof tripDescriptor.directionId !== "undefined" && trip.direction !== tripDescriptor.directionId) return;
+	if (trip !== undefined) {
+		if (tripDescriptor.routeId !== undefined && trip.route.id !== tripDescriptor.routeId) return;
+		if (tripDescriptor.directionId !== undefined && trip.direction !== tripDescriptor.directionId) return;
 		return trip;
 	}
 
 	if (
 		allowTripGuessing &&
-		typeof tripDescriptor.routeId !== "undefined" &&
-		typeof tripDescriptor.startDate !== "undefined" &&
-		typeof tripDescriptor.startTime !== "undefined" &&
+		tripDescriptor.routeId !== undefined &&
+		tripDescriptor.startDate !== undefined &&
+		tripDescriptor.startTime !== undefined &&
 		gtfs.routes.has(tripDescriptor.routeId)
 	) {
 		const startDate = createPlainDate(tripDescriptor.startDate);
@@ -119,15 +119,14 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allow
 
 const matchJourneyToTripDescriptor = (journey: Journey, tripDescriptor: TripDescriptor) => {
 	if (journey.trip.id !== tripDescriptor.tripId) return false;
-	if (typeof tripDescriptor.routeId !== "undefined" && journey.trip.route.id !== tripDescriptor.routeId) return false;
-	if (typeof tripDescriptor.directionId !== "undefined" && journey.trip.direction !== tripDescriptor.directionId)
-		return false;
-	if (typeof tripDescriptor.startDate !== "undefined" && !journey.date.equals(tripDescriptor.startDate)) return false;
+	if (tripDescriptor.routeId !== undefined && journey.trip.route.id !== tripDescriptor.routeId) return false;
+	if (tripDescriptor.directionId !== undefined && journey.trip.direction !== tripDescriptor.directionId) return false;
+	if (tripDescriptor.startDate !== undefined && !journey.date.equals(tripDescriptor.startDate)) return false;
 	return true;
 };
 
 export async function computeVehicleJourneys(source: Source): Promise<VehicleJourney[]> {
-	if (typeof source.gtfs === "undefined") return [];
+	if (source.gtfs === undefined) return [];
 
 	const now = Temporal.Now.instant();
 	const watch = createStopWatch();
@@ -164,7 +163,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 				const firstStopTime = trip.stopTimes.at(0)!;
 				const startDate =
-					typeof tripUpdate.trip.startDate !== "undefined"
+					tripUpdate.trip.startDate !== undefined
 						? Temporal.PlainDate.from(tripUpdate.trip.startDate)
 						: guessStartDate(
 								firstStopTime.arrivalTime,
@@ -189,17 +188,17 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 		for (const vehiclePosition of vehiclePositions) {
 			// 👏 https://transport.data.gouv.fr/resources/81925
-			if (typeof vehiclePosition.position === "undefined") continue;
+			if (vehiclePosition.position === undefined) continue;
 
 			// nomad-car-geo3d patch
 			if (source.id === "nomad-car-geo3d") {
 				const tripUpdate = tripUpdates.find((tripUpdate) => tripUpdate.trip.tripId === vehiclePosition.trip?.tripId);
-				if (typeof tripUpdate !== "undefined") {
+				if (tripUpdate !== undefined) {
 					const nextStop = tripUpdate.stopTimeUpdate?.find(
 						(stopTimeUpdate) =>
-							stopTimeUpdate.scheduleRelationship === "SCHEDULED" && typeof stopTimeUpdate.departure === "undefined",
+							stopTimeUpdate.scheduleRelationship === "SCHEDULED" && stopTimeUpdate.departure === undefined,
 					);
-					if (typeof nextStop !== "undefined") {
+					if (nextStop !== undefined) {
 						vehiclePosition.currentStatus = "IN_TRANSIT_TO";
 						vehiclePosition.currentStopSequence = nextStop.stopSequence;
 						vehiclePosition.stopId = nextStop.stopId;
@@ -211,13 +210,13 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 
 			const updatedAt = Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000);
 
-			if (typeof vehiclePosition.trip !== "undefined") {
+			if (vehiclePosition.trip !== undefined) {
 				const trip = getTripFromDescriptor(source.gtfs, vehiclePosition.trip, source.options.allowTripGuessing);
-				if (typeof trip !== "undefined") {
+				if (trip !== undefined) {
 					const firstStopTime = trip.stopTimes.at(0);
 
 					const startDate =
-						typeof vehiclePosition.trip.startDate !== "undefined"
+						vehiclePosition.trip.startDate !== undefined
 							? Temporal.PlainDate.from(vehiclePosition.trip.startDate)
 							: firstStopTime
 								? guessStartDate(
@@ -244,7 +243,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 						}
 					}
 					handledJourneyIds.add(journey.id);
-					if (typeof journey.trip.block !== "undefined") {
+					if (journey.trip.block !== undefined) {
 						handledBlockIds.add(journey.trip.block);
 					}
 				}
@@ -255,18 +254,18 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
 			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);
 			const vehicleRef =
-				typeof source.options.getVehicleRef !== "undefined"
+				source.options.getVehicleRef !== undefined
 					? source.options.getVehicleRef?.(vehiclePosition.vehicle, journey)
 					: (vehiclePosition.vehicle.label ?? vehiclePosition.vehicle.id);
 
 			const tripRef =
-				typeof journey !== "undefined" ? (source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id) : undefined;
+				journey !== undefined ? (source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id) : undefined;
 
 			const calls =
-				typeof journey !== "undefined"
-					? typeof vehiclePosition.currentStopSequence !== "undefined"
+				journey !== undefined
+					? vehiclePosition.currentStopSequence !== undefined
 						? journey.calls.filter((call) => call.sequence >= vehiclePosition.currentStopSequence!)
-						: typeof vehiclePosition.stopId !== "undefined" &&
+						: vehiclePosition.stopId !== undefined &&
 								journey.calls.some(({ stop }) => stop.id === vehiclePosition.stopId)
 							? journey.calls.slice(journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId))
 							: getCalls(journey, now, () => Number.POSITIVE_INFINITY)
@@ -280,7 +279,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 			const vehicleJourney: VehicleJourney = {
 				id: key,
 				line:
-					typeof journey !== "undefined"
+					journey !== undefined
 						? {
 								ref: `${networkRef}:Line:${
 									source.options.mapLineRef?.(journey.trip.route.id) ?? journey.trip.route.id
@@ -290,7 +289,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 								color: journey.trip.route.color,
 								textColor: journey.trip.route.textColor,
 							}
-						: typeof vehiclePosition.trip?.routeId !== "undefined"
+						: vehiclePosition.trip?.routeId !== undefined
 							? {
 									ref: `${networkRef}:Line:${
 										source.options.mapLineRef?.(vehiclePosition.trip.routeId) ?? vehiclePosition.trip.routeId
@@ -301,7 +300,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 							: undefined,
 				direction: (journey?.trip.direction ?? vehiclePosition.trip?.directionId) === 0 ? "OUTBOUND" : "INBOUND",
 				calls:
-					typeof journey !== "undefined" || typeof calls !== "undefined"
+					journey !== undefined || calls !== undefined
 						? (calls?.map((call, index) => {
 								const isLast = index === calls.length - 1;
 								return {
@@ -336,16 +335,15 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					.with(P.union("CRUSHED_STANDING_ROOM_ONLY", "FULL"), () => "HIGH" as const)
 					.with(P.union("NOT_ACCEPTING_PASSENGERS", "NOT_BOARDABLE" as const), () => "NO_PASSENGERS" as const)
 					.otherwise(() => undefined),
-				journeyRef: typeof journey !== "undefined" ? `${networkRef}:ServiceJourney:${tripRef}` : undefined,
+				journeyRef: journey !== undefined ? `${networkRef}:ServiceJourney:${tripRef}` : undefined,
 				networkRef,
 				operatorRef,
-				vehicleRef:
-					typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
+				vehicleRef: vehicleRef !== undefined ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
 				serviceDate: journey?.date.toString(),
 				updatedAt: Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000).toString(),
 			};
 
-			if (typeof source.options.isValidJourney === "undefined" || source.options.isValidJourney(vehicleJourney)) {
+			if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
 				activeJourneys.set(key, vehicleJourney);
 			}
 		}
@@ -353,7 +351,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 		if (source.options.mode !== "VP-ONLY") {
 			for (const journey of source.gtfs.journeys.values()) {
 				if (handledJourneyIds.has(journey.id)) continue;
-				if (typeof journey.trip.block !== "undefined" && handledBlockIds.has(journey.trip.block)) continue;
+				if (journey.trip.block !== undefined && handledBlockIds.has(journey.trip.block)) continue;
 
 				const originalTripId = detectedToOriginalTripIds.get(journey.trip.id);
 				const vehicleDescriptor = tripUpdates.find((tu) =>
@@ -363,7 +361,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				const networkRef = source.options.getNetworkRef(journey);
 				const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);
 				const vehicleRef =
-					typeof source.options.getVehicleRef !== "undefined"
+					source.options.getVehicleRef !== undefined
 						? source.options.getVehicleRef(vehicleDescriptor, journey)
 						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
 				const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
@@ -372,14 +370,14 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					if (source.options.mode === "NO-TU") continue;
 				} else {
 					if (source.options.excludeScheduled === true) continue;
-					if (typeof source.options.excludeScheduled === "function" && source.options.excludeScheduled?.(journey.trip))
+					if (source.options.excludeScheduled === "function" && source.options.excludeScheduled?.(journey.trip))
 						continue;
 				}
 
 				const key =
-					typeof vehicleDescriptor !== "undefined"
+					vehicleDescriptor !== undefined
 						? `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehicleDescriptor.id}`
-						: typeof journey.trip.block !== "undefined"
+						: journey.trip.block !== undefined
 							? `${networkRef}:${operatorRef ?? ""}:ServiceBlock:${journey.trip.block}:${journey.date}`
 							: `${networkRef}:${operatorRef ?? ""}:ServiceJourney:${tripRef}:${journey.date}`;
 
@@ -388,7 +386,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				const calls = getCalls(journey, now, source.options.getAheadTime);
 				if (calls === undefined || calls.length === 0) continue;
 
-				if (typeof journey.trip.block !== "undefined") {
+				if (journey.trip.block !== undefined) {
 					handledBlockIds.add(journey.trip.block);
 				}
 
@@ -422,13 +420,12 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
 					networkRef,
 					operatorRef,
-					vehicleRef:
-						typeof vehicleRef !== "undefined" ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
+					vehicleRef: vehicleRef !== undefined ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
 					serviceDate: journey.date.toString(),
 					updatedAt: now.toString(),
 				};
 
-				if (typeof source.options.isValidJourney === "undefined" || source.options.isValidJourney(vehicleJourney)) {
+				if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
 					activeJourneys.set(key, vehicleJourney);
 				}
 			}
