@@ -27,7 +27,7 @@ export function OnlineVehiclesVehicleSelection({
 	onClose,
 	onFilterSelect,
 	onVehicleSelect,
-}: OnlineVehiclesVehicleSelection) {
+}: Readonly<OnlineVehiclesVehicleSelection>) {
 	const { data: vehicles } = useQuery(GetLineOnlineVehiclesQuery(line?.id));
 
 	const lineVehicles = vehicles?.filter((vehicle) => vehicle.activity.lineId === line?.id);

@@ -56,7 +56,7 @@ while (true) {
 					if (stopIndex === -1) return [];
 
 					const time = call.DepartureTime || call.ArrivalTime;
-					if (typeof time === "undefined") return [];
+					if (time === undefined) return [];
 
 					const expectedTime = Temporal.PlainDateTime.from(time).toZonedDateTime("Europe/Paris");
 

@@ -96,10 +96,10 @@ export function GeojsonCircles<T extends { id: string; bearing: number | null }>
 
 				for (const feature of temporaryCollection.features) {
 					const nextFeature = nextFeatures.get(feature.properties.id);
-					if (typeof nextFeature === "undefined") continue;
+					if (nextFeature === undefined) continue;
 
 					const previousLocation = previousLocations.get(feature.properties.id);
-					if (typeof previousLocation === "undefined") continue;
+					if (previousLocation === undefined) continue;
 
 					const nextPosition = nextFeature.geometry.coordinates;
 					const nextBearing = nextFeature.properties.bearing;

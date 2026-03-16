@@ -34,7 +34,7 @@ linesApp.get("/:id", byIdParamValidator, async (c) => {
 		.innerJoin(networksTable, eq(networksTable.id, linesTable.networkId))
 		.where(eq(linesTable.id, +id));
 
-	if (typeof item === "undefined") {
+	if (item === undefined) {
 		return c.json({ status: 404, code: "LINE_NOT_FOUND", message: `No line found with id '${id}'.` }, 404);
 	}
 
@@ -47,7 +47,7 @@ linesApp.get("/:id/online-vehicles", async (c) => {
 
 	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, +id));
 
-	if (typeof line === "undefined") {
+	if (line === undefined) {
 		return c.json({ status: 404, code: "LINE_NOT_FOUND", message: `No line found with id '${id}'.` }, 404);
 	}
 

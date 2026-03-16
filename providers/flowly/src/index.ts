@@ -59,11 +59,11 @@ while (true) {
 
 	const vehicleJourneys = vehiclePopups.flatMap((vehicleInstruction) => {
 		const vehicleId = /\( (\w\d+) \)/.exec(vehicleInstruction)?.at(1);
-		if (typeof vehicleId === "undefined") return [];
+		if (vehicleId === undefined) return [];
 
 		const positionLine = vehicleMarkers.find((marker) => marker.startsWith(`vehicles.set('${vehicleId}',`));
 		const position = extractPosition(positionLine ?? "");
-		if (typeof position === "undefined") return [];
+		if (position === undefined) return [];
 
 		const lineName = /title="Ligne (\w+)"/.exec(vehicleInstruction)?.at(1);
 		const lineColors = /style="background-color:#(\w{6});color:#(\w{6})"/.exec(vehicleInstruction)?.slice(1) ?? [];

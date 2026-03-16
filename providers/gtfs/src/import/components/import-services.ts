@@ -49,7 +49,7 @@ export async function importServices(gtfsDirectory: string) {
 	if (await fileExists(calendarDatesFile)) {
 		await readCsv<ExceptionRecord>(calendarDatesFile, (exceptionRecord) => {
 			let service = services.get(exceptionRecord.service_id);
-			if (typeof service === "undefined") {
+			if (service === undefined) {
 				service = new Service(exceptionRecord.service_id);
 				services.set(service.id, service);
 			}

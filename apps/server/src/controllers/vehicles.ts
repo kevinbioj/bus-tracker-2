@@ -154,7 +154,7 @@ hono.get("/vehicles/:id", createParamValidator(getVehicleByIdParamSchema), async
 		.innerJoin(networksTable, eq(networksTable.id, vehiclesTable.networkId))
 		.leftJoin(operatorsTable, eq(operatorsTable.id, vehiclesTable.operatorId))
 		.where(eq(vehiclesTable.id, id));
-	if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+	if (data === undefined) return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
 	const { vehicle, network, operator } = data;
 
@@ -216,7 +216,7 @@ hono.get(
 			.from(vehiclesTable)
 			.innerJoin(networksTable, eq(networksTable.id, vehiclesTable.networkId))
 			.where(eq(vehiclesTable.id, id));
-		if (typeof data === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+		if (data === undefined) return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
 		const { vehicle, network } = data;
 
@@ -275,7 +275,7 @@ hono.put(
 			.select()
 			.from(vehiclesTable)
 			.where(and(eq(vehiclesTable.id, id)));
-		if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+		if (vehicle === undefined) return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
 		const editor = c.get("editor");
 
@@ -332,7 +332,7 @@ hono.post(
 			.select()
 			.from(vehiclesTable)
 			.where(and(eq(vehiclesTable.id, id)));
-		if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+		if (vehicle === undefined) return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
 		const editor = c.get("editor");
 
@@ -378,7 +378,7 @@ hono.post(
 			.select()
 			.from(vehiclesTable)
 			.where(and(eq(vehiclesTable.id, id)));
-		if (typeof vehicle === "undefined") return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+		if (vehicle === undefined) return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
 
 		const editor = c.get("editor");
 

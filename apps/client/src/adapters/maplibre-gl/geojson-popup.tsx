@@ -92,7 +92,9 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 		};
 
 		popup.on("open", onOpen);
-		return () => void popup.off("open", onOpen);
+		return () => {
+			popup.off("open", onOpen);
+		};
 	}, [activeFeature, adjustPan, popup]);
 
 	useEffect(() => {
@@ -136,7 +138,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			});
 
 			const feature = features[0] as unknown as CircleMarkerFeature;
-			if (typeof feature === "undefined") {
+			if (feature === undefined) {
 				if (activeFeature?.type === "hover") {
 					closePopup();
 				}
@@ -155,7 +157,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			});
 
 			const feature = features[0] as unknown as CircleMarkerFeature;
-			if (typeof feature === "undefined") {
+			if (feature === undefined) {
 				if (activeFeature !== null) {
 					closePopup();
 				}
@@ -172,7 +174,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 			const source = e.source;
 			const feature = source.data?.features?.find((feature) => feature.properties.id === activeFeature?.id);
-			if (typeof feature === "undefined") {
+			if (feature === undefined) {
 				if (activeFeature !== null) {
 					closePopup();
 				}

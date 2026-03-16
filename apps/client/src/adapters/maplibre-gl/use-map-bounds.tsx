@@ -10,7 +10,9 @@ export function useMapBounds() {
 	useEffect(() => {
 		const onMoveEnd = () => setBounds(map.getBounds());
 		map.on("moveend", onMoveEnd);
-		return () => void map.off("moveend", onMoveEnd);
+		return () => {
+			map.off("moveend", onMoveEnd);
+		};
 	}, [map]);
 
 	return bounds;

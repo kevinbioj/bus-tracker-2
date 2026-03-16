@@ -22,7 +22,7 @@ hono.get("/lines/:id", createParamValidator(getLineByIdParamSchema), async (c) =
 	const { id } = c.req.valid("param");
 
 	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
-	if (typeof line === "undefined") return c.json({ error: `No line found with id '${id}'.` }, 404);
+	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
 	const activeMonths = await database
 		.select({ month: sql<string>`DISTINCT TO_CHAR(service_date, 'YYYY-MM')` })
@@ -47,7 +47,7 @@ hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSche
 	const { id } = c.req.valid("param");
 
 	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
-	if (typeof line === "undefined") return c.json({ error: `No line found with id '${id}'.` }, 404);
+	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
 	const onlineJourneys = keyBy(
 		journeyStore.values().filter((journey) => journey.lineId === line.id && typeof journey.vehicle?.id !== "undefined"),
@@ -100,7 +100,7 @@ hono.get(
 		const { id } = c.req.valid("param");
 
 		const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
-		if (typeof line === "undefined") return c.json({ error: `No line found with id '${id}'.` }, 404);
+		if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
 		const { date } = c.req.valid("query");
 

@@ -9,9 +9,9 @@ export function NetworkHeader({ network }: Readonly<NetworkHeaderProps>) {
 		<div className="hidden sm:flex sm:items-center sm:gap-6 sm:mb-3">
 			{network.logoHref ? (
 				<picture>
-					{network.darkModeLogoHref !== null ? (
+					{network.darkModeLogoHref !== null && (
 						<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-					) : null}
+					)}
 					<img className="max-h-16 w-full" src={network.logoHref} alt="" />
 				</picture>
 			) : null}

@@ -21,7 +21,7 @@ export function OnlineVehiclesNetworkSelection({
 	open,
 	onOpenChange,
 	onNetworkSelect,
-}: OnlineVehiclesNetworkSelection) {
+}: Readonly<OnlineVehiclesNetworkSelection>) {
 	const { data: networks } = useQuery(GetNetworksQuery);
 	const { data: regions } = useQuery(GetRegionsQuery);
 
@@ -59,7 +59,7 @@ export function OnlineVehiclesNetworkSelection({
 						<div className="space-y-2">
 							{favoriteNetworkIds.map((networkId) => {
 								const network = networks?.find(({ id }) => id === networkId);
-								if (typeof network === "undefined") return null;
+								if (network === undefined) return null;
 								if (onlyNetworksWithHistory && !network.hasVehiclesFeature) return null;
 								return (
 									<OnlineVehiclesNetworkCard
@@ -76,7 +76,7 @@ export function OnlineVehiclesNetworkSelection({
 							const relevantNetworks = networksByRegion
 								.get(region.id)
 								?.filter((network) => !onlyNetworksWithHistory || network.hasVehiclesFeature);
-							if (typeof relevantNetworks === "undefined" || relevantNetworks.length === 0) return null;
+							if (relevantNetworks === undefined || relevantNetworks.length === 0) return null;
 
 							return (
 								<AccordionItem key={region.id} value={region.id.toString()}>

@@ -10,7 +10,7 @@ type OnlineVehiclesNetworkCard = {
 	onClick: () => void;
 };
 
-export function OnlineVehiclesNetworkCard({ network, onClick }: OnlineVehiclesNetworkCard) {
+export function OnlineVehiclesNetworkCard({ network, onClick }: Readonly<OnlineVehiclesNetworkCard>) {
 	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
 
 	const toggleFavoriteNetwork = () => {

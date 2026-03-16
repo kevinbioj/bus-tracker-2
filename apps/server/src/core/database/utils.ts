@@ -13,7 +13,7 @@ export function mapRowsToEntity<T extends TableConfig>(
 
 		for (const [key, col] of Object.entries(columns)) {
 			const rawValue = row[col.name];
-			mapped[key] = rawValue !== null ? col.mapFromDriverValue(rawValue) : null;
+			mapped[key] = rawValue === null ? null : col.mapFromDriverValue(rawValue);
 		}
 
 		return mapped as InferSelectModel<typeof table>;

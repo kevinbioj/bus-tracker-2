@@ -21,7 +21,7 @@ export async function importRoutes(
 	await readCsv<RouteRecord>(join(gtfsDirectory, "routes.txt"), (routeRecord) => {
 		const agency =
 			routeRecord.agency_id?.trim().length > 0 ? agencies.get(routeRecord.agency_id) : agencies.values().next().value;
-		if (typeof agency === "undefined") {
+		if (agency === undefined) {
 			throw new Error(`Unknown agency with id '${routeRecord.agency_id}' for route '${routeRecord.route_id}'.`);
 		}
 

@@ -37,7 +37,7 @@ export function JumpTo({ openPopup }: JumpToProps) {
 				const onSourceData = (e: { source: CircleMarkerSource; sourceDataType: "content" | string }) => {
 					const source = e.source;
 					const feature = source.data?.features?.find((feature) => feature.properties.id === journey.id);
-					if (typeof feature === "undefined") return;
+					if (feature === undefined) return;
 
 					openPopup(feature, "selected");
 					map.off("sourcedata", onSourceData);

@@ -25,7 +25,7 @@ export function OnlineVehiclesLineSelection({
 	onClose,
 	onLineChange,
 	withBackdrop = false,
-}: OnlineVehiclesLineSelection) {
+}: Readonly<OnlineVehiclesLineSelection>) {
 	const { data: networkWithLines, isLoading } = useQuery(GetNetworkQuery(network?.id, true, true));
 
 	const [linesWithVehicles, linesWithoutVehicles] = useMemo(
@@ -60,10 +60,10 @@ export function OnlineVehiclesLineSelection({
 			}}
 		>
 			<div className="flex items-center h-full gap-2">
-				{line.cartridgeHref !== null ? (
-					<img className="h-full max-w-24" src={line.cartridgeHref} alt={line.number} />
-				) : (
+				{line.cartridgeHref === null ? (
 					<p className="align-middle font-bold min-w-12 text-xl">{line.number}</p>
+				) : (
+					<img className="h-full max-w-24" src={line.cartridgeHref} alt={line.number} />
 				)}
 				{typeof line.onlineVehicleCount === "number" && line.onlineVehicleCount > 0 ? (
 					<p className="align-middle text-base text-wrap">

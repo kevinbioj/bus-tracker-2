@@ -33,7 +33,7 @@ hono.get(
 		const { withDetails } = c.req.valid("query");
 
 		const [network] = await database.select().from(networksTable).where(eq(networksTable.id, id));
-		if (typeof network === "undefined") return c.json({ error: `No network found with id '${id}'.` }, 404);
+		if (network === undefined) return c.json({ error: `No network found with id '${id}'.` }, 404);
 
 		if (withDetails) {
 			const onlineNetworkVehicles = journeyStore

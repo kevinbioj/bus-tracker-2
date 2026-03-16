@@ -38,7 +38,7 @@ authApp.use(
 			.from(editorsTable)
 			.where(and(eq(editorsTable.discordId, user.id), eq(editorsTable.enabled, true)));
 
-		if (typeof editor === "undefined") {
+		if (editor === undefined) {
 			return c.json(
 				{
 					status: 401,
@@ -67,7 +67,7 @@ authApp.post(
 			.from(editorsTable)
 			.where(and(eq(editorsTable.token, token), eq(editorsTable.enabled, true)));
 
-		if (typeof editor === "undefined") {
+		if (editor === undefined) {
 			return c.json(
 				{
 					status: 401,

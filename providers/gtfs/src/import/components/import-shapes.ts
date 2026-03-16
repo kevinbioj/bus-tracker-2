@@ -20,7 +20,7 @@ export async function importShapes(gtfsDirectory: string, options: ImportGtfsOpt
 			}
 
 			let shape = shapes.get(shapeRecord.shape_id);
-			if (typeof shape === "undefined") {
+			if (shape === undefined) {
 				shape = new Shape(shapeRecord.shape_id, []);
 				shapes.set(shapeRecord.shape_id, shape);
 			}

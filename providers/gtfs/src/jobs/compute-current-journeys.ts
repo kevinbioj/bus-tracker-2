@@ -16,7 +16,7 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 
 	const firstCall = journey.calls.at(0);
 	if (
-		typeof firstCall === "undefined" ||
+		firstCall === undefined ||
 		at.epochMilliseconds + aheadTime * 1000 <
 			(firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime).epochMilliseconds
 	)
@@ -24,7 +24,7 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 
 	const lastCall = journey.calls.at(-1);
 	if (
-		typeof lastCall === "undefined" ||
+		lastCall === undefined ||
 		at.epochMilliseconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochMilliseconds
 	)
 		return;
@@ -105,7 +105,7 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allow
 			if (!trip.service.runsOn(startDate)) return false;
 
 			const firstStop = trip.stopTimes.at(0);
-			if (typeof firstStop === "undefined") return false;
+			if (firstStop === undefined) return false;
 
 			const startTime = `${(firstStop.arrivalTime.hour + 24 * firstStop.arrivalModulus).toString().padStart(2, "0")}:${firstStop.arrivalTime.minute.toString().padStart(2, "0")}:${firstStop.arrivalTime.second.toString().padStart(2, "0")}`;
 			return startTime === tripDescriptor.startTime;
@@ -156,7 +156,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
-				if (typeof trip === "undefined") continue;
+				if (trip === undefined) continue;
 
 				if (source.options.allowTripGuessing) {
 					detectedToOriginalTripIds.set(trip.id, tripUpdate.trip.tripId);
@@ -173,7 +173,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 							);
 
 				let journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);
-				if (typeof journey === "undefined") {
+				if (journey === undefined) {
 					journey = trip.getScheduledJourney(startDate, true);
 					source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
 				}
@@ -228,7 +228,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 								: Temporal.Now.plainDateISO();
 
 					journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);
-					if (typeof journey === "undefined") {
+					if (journey === undefined) {
 						journey = trip.getScheduledJourney(startDate, true);
 						source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
 					}
@@ -250,7 +250,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				}
 			}
 
-			if (typeof journey === "undefined" && now.since(updatedAt).total("minutes") >= 5) continue;
+			if (journey === undefined && now.since(updatedAt).total("minutes") >= 5) continue;
 
 			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
 			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);
@@ -386,7 +386,7 @@ export async function computeVehicleJourneys(source: Source): Promise<VehicleJou
 				if (activeJourneys.has(key)) continue;
 
 				const calls = getCalls(journey, now, source.options.getAheadTime);
-				if (typeof calls === "undefined" || calls.length === 0) continue;
+				if (calls === undefined || calls.length === 0) continue;
 
 				if (typeof journey.trip.block !== "undefined") {
 					handledBlockIds.add(journey.trip.block);

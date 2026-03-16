@@ -36,7 +36,7 @@ const vehicleEntityToVehicleDto = (
 	designation: vehicle.designation,
 	links: { tcInfos: vehicle.tcId ? `https://tc-infos.fr/vehicule/${vehicle.tcId}` : null },
 	network: networkEntityToNetworkDto(network),
-	operator: operator !== null ? { id: operator.id, name: operator.name } : null,
+	operator: operator === null ? null : { id: operator.id, name: operator.name },
 	activity,
 	archivedAt: vehicle.archivedAt,
 	archivedFor: vehicle.archivedAt ? vehicle.archivedFor : null,
@@ -52,7 +52,7 @@ vehiclesApp.get("/:id", byIdParamValidator, async (c) => {
 		.leftJoin(operatorsTable, eq(operatorsTable.id, vehiclesTable.operatorId))
 		.where(eq(vehiclesTable.id, id));
 
-	if (typeof result === "undefined") {
+	if (result === undefined) {
 		return c.json({ status: 404, code: "VEHICLE_NOT_FOUND", message: `No vehicle found with id '${id}'.` }, 404);
 	}
 
@@ -86,7 +86,7 @@ vehiclesApp.put(
 
 		const [vehicle] = await database.select().from(vehiclesTable).where(eq(vehiclesTable.id, id));
 
-		if (typeof vehicle === "undefined") {
+		if (vehicle === undefined) {
 			return c.json({ status: 404, code: "VEHICLE_NOT_FOUND", message: `No vehicle found with id '${id}'.` }, 404);
 		}
 
@@ -100,7 +100,7 @@ vehiclesApp.put(
 				.from(operatorsTable)
 				.where(and(eq(operatorsTable.networkId, vehicle.networkId), eq(operatorsTable.id, fields.operatorId)));
 
-			if (typeof operator === "undefined") {
+			if (operator === undefined) {
 				return c.json({
 					status: 400,
 					code: "UNKNOWN_OPERATOR",
@@ -147,7 +147,7 @@ vehiclesApp.post(
 
 		const [vehicle] = await database.select().from(vehiclesTable).where(eq(vehiclesTable.id, id));
 
-		if (typeof vehicle === "undefined") {
+		if (vehicle === undefined) {
 			return c.json({ status: 404, code: "VEHICLE_NOT_FOUND", message: `No vehicle found with id '${id}'.` }, 404);
 		}
 

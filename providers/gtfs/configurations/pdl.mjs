@@ -142,7 +142,7 @@ const sources = [
 			const label = descriptor?.label;
 
 			// We filter out shitness
-			if (typeof label === "undefined") return;
+			if (label === undefined) return;
 			if (label.includes("→") || label.includes(">")) return;
 			if (/\d/.exec(label) === null) return;
 

@@ -87,7 +87,7 @@ networksApp.get(
 			.leftJoin(regionsTable, eq(regionsTable.id, networksTable.regionId))
 			.where(eq(networksTable.id, id));
 
-		if (typeof item === "undefined") {
+		if (item === undefined) {
 			return c.json({ status: 404, code: "NETWORK_NOT_FOUND", message: `No network found with id '${id}'.` }, 404);
 		}
 
@@ -132,7 +132,7 @@ networksApp.get("/:id/contributors", byIdParamValidator, async (c) => {
 
 	const [network] = await database.select().from(networksTable).where(eq(networksTable.id, id));
 
-	if (typeof network === "undefined") {
+	if (network === undefined) {
 		return c.json({ status: 404, code: "NETWORK_NOT_FOUND", message: `No network found with id '${id}'.` }, 404);
 	}
 
@@ -162,7 +162,7 @@ networksApp.get("/:id/vehicles", byIdParamValidator, async (c) => {
 		.from(networksTable)
 		.where(eq(networksTable.id, +id));
 
-	if (typeof network === "undefined") {
+	if (network === undefined) {
 		return c.json({ status: 404, code: "NETWORK_NOT_FOUND", message: `No network found with id '${id}'.` }, 404);
 	}
 
@@ -208,7 +208,7 @@ networksApp.put(
 				.from(regionsTable)
 				.where(eq(regionsTable.id, fields.regionId));
 
-			if (typeof region === "undefined") {
+			if (region === undefined) {
 				return c.json(
 					{ status: 400, code: "UNKNOWN_REGION_ID", message: `No region found with id '${fields.regionId}'.` },
 					400,
@@ -229,7 +229,7 @@ networksApp.put(
 			.where(eq(networksTable.id, id))
 			.returning();
 
-		if (typeof item === "undefined") {
+		if (item === undefined) {
 			return c.json({ status: 404, code: "NETWORK_NOT_FOUND", message: `No network found with id '${id}'.` }, 404);
 		}
 

@@ -89,9 +89,9 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 		<Tooltip>
 			<TooltipTrigger asChild>
 				<picture className="min-w-12 w-fit">
-					{network.darkModeLogoHref !== null ? (
+					{network.darkModeLogoHref !== null && (
 						<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-					) : null}
+					)}
 					<img className="h-5 object-contain m-auto" src={network.logoHref} alt="" />
 				</picture>
 			</TooltipTrigger>

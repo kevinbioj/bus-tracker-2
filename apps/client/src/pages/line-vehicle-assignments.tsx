@@ -29,7 +29,7 @@ export function LineVehicleAssignments() {
 	const { lineId } = useParams();
 	const [searchParams] = useSearchParams();
 
-	if (typeof lineId === "undefined") {
+	if (lineId === undefined) {
 		throw new Error("Expected lineId to be provided!");
 	}
 
@@ -84,9 +84,9 @@ export function LineVehicleAssignments() {
 								<Link to={`/data/networks/${network.id}?tab=lines`}>
 									{network.logoHref ? (
 										<picture className="min-w-12 w-fit">
-											{network.darkModeLogoHref !== null ? (
+											{network.darkModeLogoHref !== null && (
 												<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-											) : null}
+											)}
 											<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
 										</picture>
 									) : (

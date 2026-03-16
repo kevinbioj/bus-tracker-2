@@ -5,13 +5,13 @@ import postgres from "postgres";
 import * as schema from "./schema.js";
 
 let connectionUrl = process.env.DATABASE_URL;
-if (typeof connectionUrl === "undefined") {
+if (connectionUrl === undefined) {
 	throw new Error('Expected "DATABASE_URL" environment to be defined!');
 }
 
 if (connectionUrl.includes("{PASSWORD_FILE}")) {
 	const passwordFile = process.env.DATABASE_PASSWORD_FILE;
-	if (typeof passwordFile === "undefined") {
+	if (passwordFile === undefined) {
 		throw new Error('Connection URL refers to password file but no "DATABASE_PASSWORD_FILE" environment was defined!');
 	}
 

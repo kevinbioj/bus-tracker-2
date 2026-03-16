@@ -33,7 +33,7 @@ export const authMiddleware = ({ role = "EDITOR" }: AuthenticatedMiddlewareProps
 			.from(editorsTable)
 			.where(and(eq(editorsTable.id, editorId), eq(editorsTable.enabled, true)));
 
-		if (typeof editor === "undefined") {
+		if (editor === undefined) {
 			return c.json({ status: 500, code: "INTERNAL_ERROR", message: "An internal error occurred." }, 500);
 		}
 

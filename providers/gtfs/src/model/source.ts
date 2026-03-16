@@ -81,7 +81,7 @@ export class Source {
 
 					const journeys = dates.map((date) => trip.getScheduledJourney(date));
 					for (const journey of journeys) {
-						if (typeof journey === "undefined") continue;
+						if (journey === undefined) continue;
 						if (now.epochMilliseconds > journey.calls.at(-1)!.aimedDepartureTime.epochMilliseconds) continue;
 						gtfs.journeys.set(`${journey.date.toString()}-${journey.trip.id}`, journey);
 					}
@@ -177,7 +177,7 @@ export class Source {
 				if (this.options.excludeScheduled?.(trip)) continue;
 
 				const journey = trip.getScheduledJourney(date);
-				if (typeof journey === "undefined") continue;
+				if (journey === undefined) continue;
 
 				this.gtfs.journeys.set(`${date.toString()}-${trip.id}`, journey);
 				computedJourneys += 1;

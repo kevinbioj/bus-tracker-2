@@ -20,7 +20,7 @@ let monitoredLines: string[] = [];
 let lastMonitoredLinesUpdate: number | undefined;
 
 while (true) {
-	if (typeof lastMonitoredLinesUpdate === "undefined" || Date.now() - lastMonitoredLinesUpdate > 7200_000) {
+	if (lastMonitoredLinesUpdate === undefined || Date.now() - lastMonitoredLinesUpdate > 7200_000) {
 		console.log("%s ► Fetching monitored lines.", Temporal.Now.instant());
 		try {
 			monitoredLines = await fetchMonitoredLines();
@@ -32,7 +32,7 @@ while (true) {
 		await setTimeout(60_000);
 
 		// Initial lines fetch did not work
-		if (typeof lastMonitoredLinesUpdate === "undefined") {
+		if (lastMonitoredLinesUpdate === undefined) {
 			continue;
 		}
 	}

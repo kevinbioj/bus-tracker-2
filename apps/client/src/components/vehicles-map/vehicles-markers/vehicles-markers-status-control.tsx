@@ -29,7 +29,9 @@ export function VehiclesMarkersStatusControl({ loading, onClick }: VehiclesMarke
 		};
 
 		map.addControl(control, "top-right");
-		return () => void map.removeControl(control);
+		return () => {
+			map.removeControl(control);
+		};
 	}, [controlRef, map]);
 
 	return (
@@ -37,7 +39,7 @@ export function VehiclesMarkersStatusControl({ loading, onClick }: VehiclesMarke
 		createPortal(
 			<button
 				className="text-black"
-				disabled={typeof onClick === "undefined"}
+				disabled={onClick === undefined}
 				onClick={onClick}
 				title={loading ? "Rafraichissement en cours..." : "Rafraichir les données"}
 				type="button"

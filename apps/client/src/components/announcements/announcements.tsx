@@ -16,7 +16,7 @@ export function Announcements() {
 	const posthog = usePostHog();
 
 	// If we have no announcement, we don't even display the icon.
-	if (typeof announcements === "undefined") return null;
+	if (announcements === undefined) return null;
 
 	const unreadAnnouncementsCount = announcements.reduce(
 		(count, { id }) => count + (announcementsRead.includes(id) ? 0 : 1),

@@ -11,7 +11,7 @@ export async function importOperator(networkRef: string, ref: string) {
 		.select()
 		.from(operatorsTable)
 		.where(and(eq(operatorsTable.networkId, network.id), eq(operatorsTable.ref, ref)));
-	if (typeof operator === "undefined") {
+	if (operator === undefined) {
 		operator = (
 			await database
 				.insert(operatorsTable)

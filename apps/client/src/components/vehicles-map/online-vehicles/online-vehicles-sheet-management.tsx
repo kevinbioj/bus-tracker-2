@@ -18,7 +18,7 @@ export function OnlineVehiclesSheetManagement({
 	onFilterChange,
 	open,
 	setOpen,
-}: OnlineVehiclesSheetManagement) {
+}: Readonly<OnlineVehiclesSheetManagement>) {
 	const { data: fixedNetwork } = useQuery(GetNetworkQuery(fixedNetworkId));
 
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>();

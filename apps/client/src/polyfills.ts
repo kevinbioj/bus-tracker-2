@@ -6,7 +6,7 @@ if (typeof Map.groupBy === "undefined") {
 			const key = keySelector(item, i);
 
 			let list = map.get(key);
-			if (typeof list === "undefined") {
+			if (list === undefined) {
 				list = [];
 				map.set(key, list);
 			}

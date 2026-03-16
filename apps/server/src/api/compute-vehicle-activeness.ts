@@ -24,7 +24,7 @@ export async function computeVehicleActiveness(vehicle: VehicleEntity): Promise<
 		journeyStore.get(vehicle.ref.replace("Vehicle", "VehicleTracking")) ??
 		journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
 
-	if (typeof journey === "undefined") return { mode: "INACTIVE", since: vehicle.lastSeenAt };
+	if (journey === undefined) return { mode: "INACTIVE", since: vehicle.lastSeenAt };
 	if (typeof journey.lineId === "undefined") return { mode: "NON_COMMERCIAL" };
 
 	const [latestActivity] = await database
@@ -34,7 +34,7 @@ export async function computeVehicleActiveness(vehicle: VehicleEntity): Promise<
 		.orderBy(desc(lineActivitiesTable.startedAt))
 		.limit(1);
 
-	if (typeof latestActivity === "undefined") return { mode: "NON_COMMERCIAL" };
+	if (latestActivity === undefined) return { mode: "NON_COMMERCIAL" };
 
 	return {
 		mode: "ACTIVE",

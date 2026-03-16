@@ -23,7 +23,7 @@
 		"@hono/oauth-providers": "^0.8.5",
 		"dotenv": "^17.3.1",
 		"drizzle-orm": "^0.45.1",
-		"hono": "^4.12.7",
+		"hono": "^4.12.8",
 		"hono-sessions": "^0.8.1",
 		"postgres": "^3.4.8",
 		"redis": "^5.11.0",

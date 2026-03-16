@@ -12,7 +12,7 @@ export async function fetchMonitoredLines() {
 		| AnnotatedLine
 		| undefined;
 
-	if (typeof annotatedLines === "undefined") return [];
+	if (annotatedLines === undefined) return [];
 
 	return (Array.isArray(annotatedLines) ? annotatedLines : [annotatedLines])
 		.filter(({ Monitored }) => Monitored)

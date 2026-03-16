@@ -21,7 +21,7 @@ import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/ico
 
 export function VehicleDetails() {
 	const { vehicleId } = useParams();
-	if (typeof vehicleId === "undefined") {
+	if (vehicleId === undefined) {
 		throw new Error("Expected vehicleId to be provided!");
 	}
 
@@ -55,9 +55,9 @@ export function VehicleDetails() {
 								<Link to={`/data/networks/${network.id}`}>
 									{network.logoHref ? (
 										<picture className="min-w-12 w-fit">
-											{network.darkModeLogoHref !== null ? (
+											{network.darkModeLogoHref !== null && (
 												<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-											) : null}
+											)}
 											<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
 										</picture>
 									) : (

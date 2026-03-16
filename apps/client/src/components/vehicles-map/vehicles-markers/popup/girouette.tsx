@@ -143,7 +143,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 		return () => clearInterval(interval);
 	}, [routeNumber.halfPattern]);
 
-	if (typeof routeNumber === "undefined") return null;
+	if (routeNumber === undefined) return null;
 
 	const fontFamily =
 		typeof routeNumber.font !== "undefined" && routeNumber.font in fontProperties ? routeNumber.font : "1513B3E1";
@@ -222,7 +222,7 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 	}, [pages]);
 
 	const activePage = pages[currentPageIndex];
-	if (typeof activePage === "undefined") return null;
+	if (activePage === undefined) return null;
 
 	const lines = Array.isArray(activePage) ? activePage : [activePage];
 	const oneLine = lines.length === 1;

@@ -37,7 +37,7 @@ export function PositionSave() {
 
 		map.on("moveend", onMoveEnd);
 		return () => {
-			void map.off("moveend", onMoveEnd);
+			map.off("moveend", onMoveEnd);
 			clearTimeout(timeoutId);
 		};
 	}, [map]);

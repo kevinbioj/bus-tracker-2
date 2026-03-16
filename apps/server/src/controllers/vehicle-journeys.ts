@@ -117,7 +117,7 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 	const { id } = c.req.valid("param");
 
 	const journey = journeyStore.get(id);
-	if (typeof journey === "undefined") {
+	if (journey === undefined) {
 		c.status(404);
 		return c.json({ error: `No journey was found with id "${id}".` });
 	}

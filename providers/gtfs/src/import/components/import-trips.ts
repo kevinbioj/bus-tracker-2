@@ -37,12 +37,12 @@ export async function importTrips(
 		const routeId = mapRouteId?.(tripRecord.route_id) ?? tripRecord.route_id;
 
 		const route = routes.get(routeId);
-		if (typeof route === "undefined") {
+		if (route === undefined) {
 			throw new Error(`Unknown route with id '${routeId}' for trip '${tripId}'.`);
 		}
 
 		let service = services.get(tripRecord.service_id);
-		if (typeof service === "undefined") {
+		if (service === undefined) {
 			service = new Service(tripRecord.service_id);
 			services.set(service.id, service);
 		}
@@ -60,7 +60,7 @@ export async function importTrips(
 			typeof tripRecord.shape_id !== "undefined" ? shapes.get(tripRecord.shape_id) : undefined,
 		);
 
-		if (typeof filterTrips === "undefined" || filterTrips(trip)) {
+		if (filterTrips === undefined || filterTrips(trip)) {
 			trips.set(trip.id, trip);
 		} else {
 			excludedTripIds.add(trip.id);
@@ -72,7 +72,7 @@ export async function importTrips(
 		const stopId = mapStopId?.(stopTimeRecord.stop_id) ?? stopTimeRecord.stop_id;
 
 		const trip = trips.get(tripId);
-		if (typeof trip === "undefined") {
+		if (trip === undefined) {
 			if (excludedTripIds.has(tripId)) return;
 
 			throw new Error(
@@ -81,7 +81,7 @@ export async function importTrips(
 		}
 
 		const stop = stops.get(stopId);
-		if (typeof stop === "undefined") {
+		if (stop === undefined) {
 			throw new Error(
 				`Unknown stop with id '${stopId}' for {${stopTimeRecord.stop_sequence}/${stopId}/${stopTimeRecord.arrival_time}/${stopTimeRecord.departure_time}}.`,
 			);

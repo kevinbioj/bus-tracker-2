@@ -16,7 +16,7 @@ import { Separator } from "~/components/ui/separator";
 
 export function NetworkDetails() {
 	const { networkId } = useParams();
-	if (typeof networkId === "undefined") {
+	if (networkId === undefined) {
 		throw new Error("Expected networkId to be provided!");
 	}
 
@@ -39,9 +39,9 @@ export function NetworkDetails() {
 							<BreadcrumbPage>
 								{network.logoHref ? (
 									<picture className="min-w-12 w-fit">
-										{network.darkModeLogoHref !== null ? (
+										{network.darkModeLogoHref !== null && (
 											<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-										) : null}
+										)}
 										<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
 									</picture>
 								) : (

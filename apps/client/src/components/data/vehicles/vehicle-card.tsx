@@ -33,7 +33,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 				.otherwise(() => <ArchiveIcon className="size-full" />);
 		}
 
-		if (typeof line === "undefined") return <Zzz className="h-full mx-auto" />;
+		if (line === undefined) return <Zzz className="h-full mx-auto" />;
 
 		return line.cartridgeHref ? (
 			<img className="h-full mx-auto object-contain" src={line.cartridgeHref} alt={line.number} />

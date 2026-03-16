@@ -18,7 +18,12 @@ type OnlineControlProps = {
 	onFilterChange: (line?: Line) => void;
 };
 
-export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, onFilterChange }: OnlineControlProps) {
+export function OnlineControl({
+	filteredLine,
+	filteredNetwork,
+	fixedNetworkId,
+	onFilterChange,
+}: Readonly<OnlineControlProps>) {
 	const map = useMap();
 	const activatorRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
@@ -35,7 +40,9 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 		};
 
 		map.addControl(control, "top-left");
-		return () => void map.removeControl(control);
+		return () => {
+			map.removeControl(control);
+		};
 	}, [map]);
 
 	return (
@@ -49,12 +56,12 @@ export function OnlineControl({ filteredLine, filteredNetwork, fixedNetworkId, o
 
 						{filteredNetwork ? (
 							<div className="flex items-center gap-1.5">
-								{filteredNetwork.logoHref !== null ? (
+								{filteredNetwork.logoHref === null ? (
+									<span className="text-base">{filteredNetwork.name}</span>
+								) : (
 									<picture className="h-5">
 										<img className="h-full object-contain" src={filteredNetwork.logoHref} alt={filteredNetwork.name} />
 									</picture>
-								) : (
-									<span className="text-base">{filteredNetwork.name}</span>
 								)}
 								<ChevronRight className="size-3 text-muted-foreground" />
 							</div>
