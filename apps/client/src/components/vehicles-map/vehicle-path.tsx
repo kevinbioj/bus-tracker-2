@@ -59,16 +59,16 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 		if (journey?.path === undefined || line === undefined || !showVehiclePaths)
 			return { type: "FeatureCollection", features: [] };
 
-		const points = journey.path.points;
-		const distanceTraveled = journey.position.distanceTraveled ?? 0;
+		const points = journey.path.p;
+		const currentDistanceTraveled = journey.position.distanceTraveled ?? 0;
 
 		const pastPoints: number[][] = [];
 		const futurePoints: number[][] = [];
 
-		for (const point of points) {
-			const coords = [point.longitude, point.latitude];
-			if (point.distanceTraveled !== undefined) {
-				if (point.distanceTraveled <= distanceTraveled) {
+		for (const [latitude, longitude, distanceTraveled] of points) {
+			const coords = [longitude, latitude];
+			if (distanceTraveled !== undefined) {
+				if (distanceTraveled <= currentDistanceTraveled) {
 					pastPoints.push(coords);
 				} else {
 					if (pastPoints.length > 0 && futurePoints.length === 0) {
@@ -90,8 +90,8 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 
 		// If no distanceTraveled was provided, we just show everything as future
 		if (futurePoints.length === 0 && pastPoints.length === 0 && points.length > 0) {
-			for (const point of points) {
-				futurePoints.push([point.longitude, point.latitude]);
+			for (const [latitude, longitude] of points) {
+				futurePoints.push([longitude, latitude]);
 			}
 		}
 

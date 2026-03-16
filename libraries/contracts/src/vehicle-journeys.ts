@@ -66,13 +66,7 @@ export const vehicleJourneyOccupancy = ["LOW", "MEDIUM", "HIGH", "NO_PASSENGERS"
 export const vehicleJourneyOccupancyEnum = z.enum(vehicleJourneyOccupancy);
 
 export const vehicleJourneyPathSchema = z.object({
-	points: z.array(
-		z.object({
-			latitude: z.number(),
-			longitude: z.number(),
-			distanceTraveled: z.number().optional(),
-		}),
-	),
+	p: z.array(z.tuple([z.number(), z.number(), z.number().optional()])),
 });
 
 export type VehicleJourneyPath = z.infer<typeof vehicleJourneyPathSchema>;

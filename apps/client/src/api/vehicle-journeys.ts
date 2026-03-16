@@ -39,11 +39,7 @@ export type DisposeableVehicleJourney = {
 	};
 	occupancy?: "LOW" | "MEDIUM" | "HIGH" | "NO_PASSENGERS";
 	path?: {
-		points: Array<{
-			latitude: number;
-			longitude: number;
-			distanceTraveled?: number;
-		}>;
+		p: Array<[number, number, number | undefined]>;
 	};
 	pathRef?: string;
 	networkId: number;

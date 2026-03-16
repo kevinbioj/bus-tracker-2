@@ -281,11 +281,17 @@ export async function computeVehicleJourneys(source: Source) {
 				journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined;
 			if (!source.options.disableRoutePaths && pathRef !== undefined && !paths.has(pathRef)) {
 				paths.set(pathRef, {
-					points: journey!.trip.shape!.points.map((point) => ({
-						latitude: point.latitude,
-						longitude: point.longitude,
-						distanceTraveled: point.distanceTraveled,
-					})),
+					p: journey!.trip.shape!.points.map((point) => {
+						const longitude = Math.round(point.longitude * 1000000) / 1000000;
+						const latitude = Math.round(point.latitude * 1000000) / 1000000;
+						const distanceTraveled =
+							typeof point.distanceTraveled === "number" ? Math.round(point.distanceTraveled * 10) / 10 : null;
+						if (distanceTraveled === null) {
+							return [latitude, longitude] as const;
+						}
+
+						return [latitude, longitude, distanceTraveled] as const;
+					}),
 				});
 			}
 
@@ -409,11 +415,17 @@ export async function computeVehicleJourneys(source: Source) {
 					journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined;
 				if (!source.options.disableRoutePaths && pathRef !== undefined && !paths.has(pathRef)) {
 					paths.set(pathRef, {
-						points: journey!.trip.shape!.points.map((point) => ({
-							latitude: point.latitude,
-							longitude: point.longitude,
-							distanceTraveled: point.distanceTraveled,
-						})),
+						p: journey!.trip.shape!.points.map((point) => {
+							const longitude = Math.round(point.longitude * 1000000) / 1000000;
+							const latitude = Math.round(point.latitude * 1000000) / 1000000;
+							const distanceTraveled =
+								typeof point.distanceTraveled === "number" ? Math.round(point.distanceTraveled * 10) / 10 : null;
+							if (distanceTraveled === null) {
+								return [latitude, longitude] as const;
+							}
+
+							return [latitude, longitude, distanceTraveled] as const;
+						}),
 					});
 				}
 
