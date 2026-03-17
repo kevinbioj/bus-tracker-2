@@ -77,7 +77,6 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
 	queryOptions({
 		enabled: id !== null,
-		placeholderData: keepPreviousData,
 		retry: false,
 		refetchInterval: refetch ? 5_000 : undefined,
 		staleTime: 10_000,
@@ -88,7 +87,6 @@ export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
 export const GetPathQuery = (ref?: string) =>
 	queryOptions({
 		enabled: ref !== undefined,
-		placeholderData: keepPreviousData,
 		staleTime: 120_000,
 		queryKey: ["paths", ref],
 		queryFn: () => client.get(`paths/${ref}`).then((response) => response.json<VehicleJourneyPath>()),

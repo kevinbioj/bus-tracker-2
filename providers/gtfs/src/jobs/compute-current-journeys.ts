@@ -278,8 +278,11 @@ export async function computeVehicleJourneys(source: Source) {
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 
 			const pathRef =
-				journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined;
-			if (!source.options.disableRoutePaths && pathRef !== undefined && !paths.has(pathRef)) {
+				!source.options.disableRoutePaths && journey?.trip.shape !== undefined
+					? `${networkRef}:RoutePath:${source.id}:${journey.trip.shape.id}`
+					: undefined;
+
+			if (pathRef !== undefined && !paths.has(pathRef)) {
 				paths.set(pathRef, {
 					p: journey!.trip.shape!.points.map((point) => {
 						const longitude = Math.round(point.longitude * 1000000) / 1000000;
@@ -348,8 +351,7 @@ export async function computeVehicleJourneys(source: Source) {
 						.toZonedDateTimeISO(journey?.trip.route.agency.timeZone ?? "Europe/Paris")
 						.toString({ timeZoneName: "never" }),
 				},
-				path: undefined,
-				pathRef: journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined,
+				pathRef,
 				occupancy: match(vehiclePosition.occupancyStatus)
 					.with(P.union("EMPTY", "MANY_SEATS_AVAILABLE"), () => "LOW" as const)
 					.with(P.union("FEW_SEATS_AVAILABLE", "STANDING_ROOM_ONLY"), () => "MEDIUM" as const)
@@ -412,8 +414,11 @@ export async function computeVehicleJourneys(source: Source) {
 				}
 
 				const pathRef =
-					journey?.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined;
-				if (!source.options.disableRoutePaths && pathRef !== undefined && !paths.has(pathRef)) {
+					!source.options.disableRoutePaths && journey?.trip.shape !== undefined
+						? `${networkRef}:RoutePath:${source.id}:${journey.trip.shape.id}`
+						: undefined;
+
+				if (pathRef !== undefined && !paths.has(pathRef)) {
 					paths.set(pathRef, {
 						p: journey!.trip.shape!.points.map((point) => {
 							const longitude = Math.round(point.longitude * 1000000) / 1000000;
@@ -456,8 +461,7 @@ export async function computeVehicleJourneys(source: Source) {
 						};
 					}),
 					position: journey.guessPosition(now),
-					path: undefined,
-					pathRef: journey.trip.shape !== undefined ? `${networkRef}:RoutePath:${journey.trip.shape.id}` : undefined,
+					pathRef,
 					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
 					networkRef,
 					operatorRef,

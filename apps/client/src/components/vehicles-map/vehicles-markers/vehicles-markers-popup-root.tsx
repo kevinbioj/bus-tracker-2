@@ -30,11 +30,9 @@ export function VehiclesMarkersPopupRoot({ embedMode, layer }: VehiclesMarkersPo
 				return (
 					<>
 						{activeFeature !== null && (
-							<>
-								<VehicleMarkerPopup embedMode={embedMode} key={activeFeature.id} journeyId={activeFeature.id} />
-								{activeFeature.type === "selected" && <VehiclePath journeyId={activeFeature.id} />}
-							</>
+							<VehicleMarkerPopup embedMode={embedMode} key={activeFeature.id} journeyId={activeFeature.id} />
 						)}
+						<VehiclePath journeyId={activeFeature?.id} />
 						<JumpTo openPopup={openPopup} />
 					</>
 				);

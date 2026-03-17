@@ -78,17 +78,18 @@ const initialSource: maplibregl.SourceSpecification = {
 };
 
 type VehiclePathProps = {
-	journeyId: string;
+	journeyId?: string;
 };
 
 export function VehiclePath({ journeyId }: VehiclePathProps) {
 	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", false);
 
-	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId, true));
+	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId ?? null, true));
 	const { data: path } = useQuery(GetPathQuery(showVehiclePaths ? journey?.pathRef : undefined));
 	const { data: line } = useQuery(GetLineQuery(journey?.lineId));
+
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
-		if (path === undefined || line === undefined || !showVehiclePaths) {
+		if (journey?.id !== journeyId || path === undefined || line === undefined || !showVehiclePaths) {
 			return { type: "FeatureCollection", features: [] };
 		}
 
@@ -150,7 +151,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 		}
 
 		return { type: "FeatureCollection", features };
-	}, [journey, path, line, showVehiclePaths]);
+	}, [journey, journeyId, path, line, showVehiclePaths]);
 
 	const source = useMapSource<maplibregl.GeoJSONSource>("vehicle-path", initialSource);
 	useMapLayer(pastPathStrokeLayer, "vehicles");
