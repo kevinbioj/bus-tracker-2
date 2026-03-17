@@ -1,3 +1,4 @@
+import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
@@ -38,9 +39,6 @@ export type DisposeableVehicleJourney = {
 		recordedAt: string;
 	};
 	occupancy?: "LOW" | "MEDIUM" | "HIGH" | "NO_PASSENGERS";
-	path?: {
-		p: Array<[number, number, number | undefined]>;
-	};
 	pathRef?: string;
 	networkId: number;
 	operator?: number;
@@ -76,16 +74,22 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 		},
 	});
 
-export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean, includePath?: boolean) =>
+export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
 	queryOptions({
 		enabled: id !== null,
 		placeholderData: keepPreviousData,
 		retry: false,
 		refetchInterval: refetch ? 5_000 : undefined,
 		staleTime: 10_000,
-		queryKey: ["vehicle-journeys", id, includePath],
-		queryFn: () =>
-			client
-				.get(`vehicle-journeys/${id}${includePath ? "?includePath=true" : ""}`)
-				.then((response) => response.json<DisposeableVehicleJourney>()),
+		queryKey: ["vehicle-journeys", id],
+		queryFn: () => client.get(`vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),
+	});
+
+export const GetPathQuery = (ref?: string) =>
+	queryOptions({
+		enabled: ref !== undefined,
+		placeholderData: keepPreviousData,
+		staleTime: 120_000,
+		queryKey: ["paths", ref],
+		queryFn: () => client.get(`paths/${ref}`).then((response) => response.json<VehicleJourneyPath>()),
 	});

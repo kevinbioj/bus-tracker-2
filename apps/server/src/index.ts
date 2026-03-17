@@ -1,6 +1,6 @@
 import "dotenv/config.js";
 
-import { type VehicleJourney, type VehicleJourneyPath, vehicleJourneySchema } from "@bus-tracker/contracts";
+import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { serve } from "@hono/node-server";
 import { createClient } from "redis";
 

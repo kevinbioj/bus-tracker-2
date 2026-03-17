@@ -6,7 +6,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { GetLineQuery } from "~/api/lines";
-import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import { GetPathQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 
 const pastPathStrokeLayer: maplibregl.AddLayerObject = {
 	id: "vehicle-path-past-stroke",
@@ -84,15 +84,16 @@ type VehiclePathProps = {
 export function VehiclePath({ journeyId }: VehiclePathProps) {
 	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", false);
 
-	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId, true, showVehiclePaths));
+	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId, true));
+	const { data: path } = useQuery(GetPathQuery(showVehiclePaths ? journey?.pathRef : undefined));
 	const { data: line } = useQuery(GetLineQuery(journey?.lineId));
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
-		if (journey?.path === undefined || line === undefined || !showVehiclePaths) {
+		if (path === undefined || line === undefined || !showVehiclePaths) {
 			return { type: "FeatureCollection", features: [] };
 		}
 
-		const points = journey.path.p;
-		const currentDistanceTraveled = journey.position.distanceTraveled ?? 0;
+		const points = path.p;
+		const currentDistanceTraveled = journey?.position.distanceTraveled ?? 0;
 
 		const pastPoints: number[][] = [];
 		const futurePoints: number[][] = [];
@@ -149,7 +150,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 		}
 
 		return { type: "FeatureCollection", features };
-	}, [journey, line, showVehiclePaths]);
+	}, [journey, path, line, showVehiclePaths]);
 
 	const source = useMapSource<maplibregl.GeoJSONSource>("vehicle-path", initialSource);
 	useMapLayer(pastPathStrokeLayer, "vehicles");

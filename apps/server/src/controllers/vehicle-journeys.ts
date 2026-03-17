@@ -1,4 +1,3 @@
-import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 import { eq, inArray } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
@@ -118,53 +117,50 @@ const getVehicleJourneyParams = z.object({
 	id: z.string(),
 });
 
-const getVehicleJourneyQuery = z.object({
-	includePath: z.coerce.boolean().optional(),
+hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams), async (c) => {
+	const { id } = c.req.valid("param");
+
+	const journey = journeyStore.get(id);
+	if (journey === undefined) {
+		c.status(404);
+		return c.json({ error: `No journey was found with id "${id}".` });
+	}
+
+	const vehicle = journey.vehicle?.id
+		? (
+				await database
+					.select({ designation: vehiclesTable.designation })
+					.from(vehiclesTable)
+					.where(eq(vehiclesTable.id, journey.vehicle.id))
+			).at(0)
+		: undefined;
+
+	const girouette = await findGirouette({
+		networkId: journey.networkId,
+		lineId: journey.lineId,
+		directionId: journey.direction === "OUTBOUND" ? 0 : 1,
+		destination: journey.destination ?? journey.calls?.findLast((call) => call.callStatus !== "SKIPPED")?.stopName,
+	});
+
+	return c.json({
+		...journey,
+		vehicle: journey.vehicle ? { ...journey.vehicle, designation: vehicle?.designation ?? undefined } : undefined,
+		girouette: girouette?.data,
+	});
 });
 
-hono.get(
-	"/vehicle-journeys/:id",
-	createParamValidator(getVehicleJourneyParams),
-	createQueryValidator(getVehicleJourneyQuery),
-	async (c) => {
-		const { id } = c.req.valid("param");
-		const { includePath } = c.req.valid("query");
+const getPathParams = z.object({
+	ref: z.string(),
+});
 
-		const journey = journeyStore.get(id);
-		if (journey === undefined) {
-			c.status(404);
-			return c.json({ error: `No journey was found with id "${id}".` });
-		}
+hono.get("/paths/:ref", createParamValidator(getPathParams), async (c) => {
+	const { ref } = c.req.valid("param");
 
-		const vehicle = journey.vehicle?.id
-			? (
-					await database
-						.select({ designation: vehiclesTable.designation })
-						.from(vehiclesTable)
-						.where(eq(vehiclesTable.id, journey.vehicle.id))
-				).at(0)
-			: undefined;
+	const rawPath = await redis.get(ref);
+	if (rawPath === null) {
+		c.status(404);
+		return c.json({ error: `No path was found with ref "${ref}".` });
+	}
 
-		const girouette = await findGirouette({
-			networkId: journey.networkId,
-			lineId: journey.lineId,
-			directionId: journey.direction === "OUTBOUND" ? 0 : 1,
-			destination: journey.destination ?? journey.calls?.findLast((call) => call.callStatus !== "SKIPPED")?.stopName,
-		});
-
-		let path: VehicleJourneyPath | undefined;
-		if (includePath && journey.pathRef) {
-			const rawPath = await redis.get(journey.pathRef);
-			if (rawPath) {
-				path = JSON.parse(rawPath);
-			}
-		}
-
-		return c.json({
-			...journey,
-			path,
-			vehicle: journey.vehicle ? { ...journey.vehicle, designation: vehicle?.designation ?? undefined } : undefined,
-			girouette: girouette?.data,
-		});
-	},
-);
+	return c.json(JSON.parse(rawPath));
+});
