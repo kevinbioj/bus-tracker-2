@@ -1,5 +1,3 @@
-import "dotenv/config.js";
-
 import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { createClient } from "redis";
 

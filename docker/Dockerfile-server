@@ -35,15 +35,15 @@ ENV NODE_ENV=production
 
 RUN apk add --no-cache tini curl
 
-WORKDIR /bus-tracker
+WORKDIR /bus-tracker/server
 
 # Copy project artifacts
-COPY --from=builder /bus-tracker/server-deployment/node_modules ./server/node_modules/
-COPY --from=builder /bus-tracker/server-deployment/drizzle ./server/drizzle/
-COPY --from=builder /bus-tracker/server-deployment/dist ./server/
-COPY --from=builder /bus-tracker/server-deployment/src ./server/src/
-COPY --from=builder /bus-tracker/server-deployment/.env ./server/.env
+COPY --from=builder /bus-tracker/server-deployment/node_modules ./node_modules/
+COPY --from=builder /bus-tracker/server-deployment/drizzle ./drizzle/
+COPY --from=builder /bus-tracker/server-deployment/dist ./
+COPY --from=builder /bus-tracker/server-deployment/src ./src/
+COPY --from=builder /bus-tracker/server-deployment/.env ./.env
 
 USER bun
-ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["bun", "run", "/bus-tracker/server/src/index.ts"]
+CMD ["/sbin/tini", "--", "bun", "run", "--env-file", ".env", "src/index.ts"]
+
