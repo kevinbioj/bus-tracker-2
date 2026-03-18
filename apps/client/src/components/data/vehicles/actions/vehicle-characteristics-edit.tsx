@@ -1,7 +1,7 @@
 import {
 	type VehicleJourneyLineType,
-	vehicleJourneyLineTypeEnum,
 	vehicleJourneyLineTypes,
+	vehicleJourneyLineTypeZodEnum,
 } from "@bus-tracker/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -32,7 +32,7 @@ const updateVehicleFormSchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
 	designation: z.string().nullable(),
 	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier.").nullable(),
-	type: vehicleJourneyLineTypeEnum,
+	type: vehicleJourneyLineTypeZodEnum,
 	operatorId: z.number().nullable(),
 });
 

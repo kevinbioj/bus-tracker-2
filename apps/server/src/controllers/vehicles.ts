@@ -1,8 +1,8 @@
-import { vehicleJourneyLineTypeEnum } from "@bus-tracker/contracts";
+import { vehicleJourneyLineTypeZodEnum } from "@bus-tracker/contracts";
 import { and, asc, between, desc, eq, ilike, isNotNull, isNull, gt, sql, inArray } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 import { match } from "ts-pattern";
-import * as z from "zod";
+import { z } from "zod";
 
 import { createJsonValidator, createParamValidator, createQueryValidator } from "../api/validator-helpers.js";
 import { database } from "../core/database/database.js";
@@ -70,7 +70,7 @@ const updateVehicleBodySchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
 	designation: z.string().nullable(),
 	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier.").nullable(),
-	type: vehicleJourneyLineTypeEnum,
+	type: vehicleJourneyLineTypeZodEnum,
 	operatorId: z.number().nullable(),
 });
 

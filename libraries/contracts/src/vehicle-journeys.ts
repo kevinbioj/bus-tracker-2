@@ -1,4 +1,5 @@
-import * as z from "zod";
+import { type } from "arktype";
+import { z } from "zod";
 
 export const vehicleJourneyLineTypes = [
 	"TRAMWAY",
@@ -12,81 +13,81 @@ export const vehicleJourneyLineTypes = [
 	"UNKNOWN",
 ] as const;
 
-export const vehicleJourneyLineTypeEnum = z.enum(vehicleJourneyLineTypes);
+export const vehicleJourneyLineTypeZodEnum = z.enum(vehicleJourneyLineTypes);
 
-export type VehicleJourneyLineType = z.infer<typeof vehicleJourneyLineTypeEnum>;
+export const vehicleJourneyLineTypeEnum = type(
+	"'TRAMWAY'|'SUBWAY'|'RAIL'|'TROLLEY'|'FUNICULAR'|'BUS'|'FERRY'|'COACH'|'UNKNOWN'",
+);
 
-export const vehicleJourneyLineSchema = z.object({
-	ref: z.string(),
-	number: z.string(),
+export type VehicleJourneyLineType = typeof vehicleJourneyLineTypeEnum.infer;
+
+export const vehicleJourneyLineSchema = type({
+	ref: "string",
+	number: "string",
 	type: vehicleJourneyLineTypeEnum,
-	color: z
-		.string() /*.length(6)*/
-		.optional(),
-	textColor: z
-		.string() /*.length(6)*/
-		.optional(),
+	"color?": "string",
+	"textColor?": "string",
 });
-export type VehicleJourneyLine = z.infer<typeof vehicleJourneyLineSchema>;
+export type VehicleJourneyLine = typeof vehicleJourneyLineSchema.infer;
 
-export const vehicleJourneyCallStatusEnum = z.enum(["SCHEDULED", "UNSCHEDULED", "SKIPPED"]);
-export type VehicleJourneyCallStatus = z.infer<typeof vehicleJourneyCallStatusEnum>;
+export const vehicleJourneyCallStatusEnum = type("'SCHEDULED'|'UNSCHEDULED'|'SKIPPED'");
+export type VehicleJourneyCallStatus = typeof vehicleJourneyCallStatusEnum.infer;
 
-export const vehicleJourneyCallFlagsEnum = z.enum(["NO_PICKUP", "NO_DROP_OFF"]);
-export type VehicleJourneyCallFlags = z.infer<typeof vehicleJourneyCallFlagsEnum>;
+export const vehicleJourneyCallFlagsEnum = type("'NO_PICKUP'|'NO_DROP_OFF'");
+export type VehicleJourneyCallFlags = typeof vehicleJourneyCallFlagsEnum.infer;
 
-export const vehicleJourneyCallSchema = z.object({
-	aimedTime: z.string().datetime({ offset: true }),
-	expectedTime: z.string().datetime({ offset: true }).optional(),
-	stopRef: z.string(),
-	stopName: z.string(),
-	stopOrder: z.number().min(0),
-	platformName: z.string().optional(),
-	distanceTraveled: z.number().optional(),
+export const vehicleJourneyCallSchema = type({
+	aimedTime: "string.date.iso",
+	"expectedTime?": "string.date.iso",
+	stopRef: "string",
+	stopName: "string",
+	stopOrder: "number>=0",
+	"platformName?": "string",
+	"distanceTraveled?": "number",
 	callStatus: vehicleJourneyCallStatusEnum,
-	flags: z.array(vehicleJourneyCallFlagsEnum).optional(),
+	"flags?": vehicleJourneyCallFlagsEnum.array(),
 });
 
-export type VehicleJourneyCall = z.infer<typeof vehicleJourneyCallSchema>;
+export type VehicleJourneyCall = typeof vehicleJourneyCallSchema.infer;
 
-export const vehicleJourneyPositionSchema = z.object({
-	latitude: z.number(),
-	longitude: z.number(),
-	bearing: z.number().optional(),
-	atStop: z.boolean(),
-	type: z.enum(["GPS", "COMPUTED"]),
-	distanceTraveled: z.number().optional(),
-	recordedAt: z.string().datetime({ offset: true }),
+export const vehicleJourneyPositionSchema = type({
+	latitude: "number",
+	longitude: "number",
+	"bearing?": "number",
+	atStop: "boolean",
+	type: "'GPS'|'COMPUTED'",
+	"distanceTraveled?": "number",
+	recordedAt: "string.date.iso",
 });
 
-export type VehicleJourneyPosition = z.infer<typeof vehicleJourneyPositionSchema>;
+export type VehicleJourneyPosition = typeof vehicleJourneyPositionSchema.infer;
 
 export const vehicleJourneyOccupancy = ["LOW", "MEDIUM", "HIGH", "NO_PASSENGERS"] as const;
 
-export const vehicleJourneyOccupancyEnum = z.enum(vehicleJourneyOccupancy);
+export const vehicleJourneyOccupancyEnum = type("'LOW'|'MEDIUM'|'HIGH'|'NO_PASSENGERS'");
 
-export const vehicleJourneyPathSchema = z.object({
-	p: z.array(z.tuple([z.number(), z.number(), z.number().optional()])),
+export const vehicleJourneyPathSchema = type({
+	p: type(["number", "number", "number?"]).array(),
 });
 
-export type VehicleJourneyPath = z.infer<typeof vehicleJourneyPathSchema>;
+export type VehicleJourneyPath = typeof vehicleJourneyPathSchema.infer;
 
-export const vehicleJourneySchema = z.object({
-	id: z.string(),
-	line: vehicleJourneyLineSchema.optional(),
-	direction: z.enum(["OUTBOUND", "INBOUND"]).optional(),
-	destination: z.string().optional(),
-	calls: z.array(vehicleJourneyCallSchema).optional(),
+export const vehicleJourneySchema = type({
+	id: "string",
+	"line?": vehicleJourneyLineSchema,
+	"direction?": "'OUTBOUND'|'INBOUND'",
+	"destination?": "string",
+	"calls?": vehicleJourneyCallSchema.array(),
 	position: vehicleJourneyPositionSchema,
-	occupancy: vehicleJourneyOccupancyEnum.optional(),
-	path: vehicleJourneyPathSchema.optional(),
-	pathRef: z.string().optional(),
-	networkRef: z.string(),
-	journeyRef: z.string().optional(),
-	operatorRef: z.string().optional(),
-	vehicleRef: z.string().optional(),
-	serviceDate: z.string().date().optional(),
-	updatedAt: z.string().datetime(),
+	"occupancy?": vehicleJourneyOccupancyEnum,
+	"path?": vehicleJourneyPathSchema,
+	"pathRef?": "string",
+	networkRef: "string",
+	"journeyRef?": "string",
+	"operatorRef?": "string",
+	"vehicleRef?": "string",
+	"serviceDate?": "string.date",
+	updatedAt: "string.date.iso",
 });
 
-export type VehicleJourney = z.infer<typeof vehicleJourneySchema>;
+export type VehicleJourney = typeof vehicleJourneySchema.infer;

@@ -1,4 +1,5 @@
 import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
+import { ArkErrors } from "arktype";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
@@ -41,19 +42,20 @@ await redisSubscriber.subscribe("journeys", async (message) => {
 		const payload = JSON.parse(message);
 		if (!Array.isArray(payload)) throw new Error("Payload is not an array");
 		vehicleJourneys = payload.flatMap((entry) => {
-			const parsed = vehicleJourneySchema.safeParse(entry);
-			if (!parsed.success) {
+			const result = vehicleJourneySchema(entry);
+			if (result instanceof ArkErrors) {
 				if (!didWarn) {
 					console.warn(`Rejected object(s) from journeys channel, sample:`, entry);
-					console.error(parsed.error);
+					console.error(result.toString());
 					didWarn = true;
 				}
 				return [];
 			}
-			if (parsed.data.path !== undefined) {
-				console.log("► Received journey with path:", parsed.data.id);
+			const journey = result as VehicleJourney;
+			if (journey.path !== undefined) {
+				console.log("► Received journey with path:", journey.id);
 			}
-			return parsed.data;
+			return journey;
 		});
 	} catch (error) {
 		console.error(error);
