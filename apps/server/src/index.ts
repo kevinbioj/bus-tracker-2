@@ -1,7 +1,6 @@
 import "dotenv/config.js";
 
 import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
-import { serve } from "@hono/node-server";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
@@ -67,4 +66,8 @@ await redisSubscriber.subscribe("journeys", async (message) => {
 });
 
 console.log("► Listening on port %d.\n", port);
-serve({ fetch: hono.fetch, port });
+
+export default {
+	fetch: hono.fetch,
+	port,
+};
