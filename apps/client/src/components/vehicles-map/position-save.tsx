@@ -14,7 +14,7 @@ export function PositionSave() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: setCurrentLocation is a state setter
 	useEffect(() => {
-		let timeoutId: number | undefined;
+		let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
 		const onMoveEnd = () => {
 			const { lng, lat } = map.getCenter();

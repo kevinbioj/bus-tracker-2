@@ -6,8 +6,6 @@
 	"scripts": {
 		"dev:client": "pnpm -C apps/client dev",
 		"dev:server": "pnpm -C apps/server dev",
-		"dev:dkbus": "pnpm -C providers/dkbus dev",
-		"dev:flowly": "pnpm -C providers/flowly dev",
 		"dev:idelis": "pnpm -C providers/idelis dev",
 		"dev:gtfs": "pnpm -C providers/gtfs dev",
 		"dev:hawk": "pnpm -C providers/hawk dev",
@@ -19,6 +17,6 @@
 	},
 	"packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
 	"devDependencies": {
-		"@biomejs/biome": "2.4.7"
+		"@biomejs/biome": "2.4.8"
 	}
 }
