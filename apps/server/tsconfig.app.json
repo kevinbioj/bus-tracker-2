@@ -13,7 +13,7 @@
 		"noImplicitOverride": true,
 		"module": "NodeNext",
 		"outDir": "dist",
-		"lib": ["ESNext"]
+		"lib": ["ESNext", "DOM"]
 	},
 	"include": ["src/**/*.ts"],
 	"exclude": ["node_modules"]

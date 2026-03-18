@@ -1,9 +1,8 @@
-import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
-import { ArkErrors } from "arktype";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
-import { handleVehicleBatch } from "./vehicle-handling/handle-vehicle-batch.js";
+import { journeyStore } from "./core/store/journey-store.js";
+import type { DisposeableVehicleJourney } from "./types/disposeable-vehicle-journey.js";
 
 import { port } from "./options.js";
 import { hono } from "./server.js";
@@ -32,37 +31,20 @@ export const redis = createClient({
 });
 export const redisSubscriber = redis.duplicate();
 
+const vehicleWorker = new Worker(new URL("./vehicle-handling/vehicle-worker.ts", import.meta.url).href, {
+	type: "module",
+});
+
+vehicleWorker.onmessage = (event: MessageEvent<DisposeableVehicleJourney[]>) => {
+	for (const journey of event.data) {
+		journeyStore.set(journey.id, journey);
+	}
+};
+
 await Promise.all([redis.connect(), redisSubscriber.connect()]);
 
 await redisSubscriber.subscribe("journeys", async (message) => {
-	let didWarn = false;
-	let vehicleJourneys: VehicleJourney[];
-
-	try {
-		const payload = JSON.parse(message);
-		if (!Array.isArray(payload)) throw new Error("Payload is not an array");
-		vehicleJourneys = payload.flatMap((entry) => {
-			const result = vehicleJourneySchema(entry);
-			if (result instanceof ArkErrors) {
-				if (!didWarn) {
-					console.warn(`Rejected object(s) from journeys channel, sample:`, entry);
-					console.error(result.toString());
-					didWarn = true;
-				}
-				return [];
-			}
-			const journey = result as VehicleJourney;
-			if (journey.path !== undefined) {
-				console.log("► Received journey with path:", journey.id);
-			}
-			return journey;
-		});
-	} catch (error) {
-		console.error(error);
-		return;
-	}
-
-	await handleVehicleBatch(vehicleJourneys);
+	vehicleWorker.postMessage(message);
 });
 
 console.log("► Listening on port %d.\n", port);

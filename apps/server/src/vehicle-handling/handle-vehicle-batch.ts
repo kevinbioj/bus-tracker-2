@@ -1,7 +1,6 @@
 import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts";
 import { Temporal } from "temporal-polyfill";
 
-import { journeyStore } from "../core/store/journey-store.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { keyBy } from "../utils/key-by.js";
 import { nthIndexOf } from "../utils/nth-index-of.js";
@@ -15,6 +14,8 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
 
 	const vehicleJourneysByNetwork = Map.groupBy(vehicleJourneys, (vehicleJourney) => vehicleJourney.networkRef);
+
+	const allProcessedJourneys: DisposeableVehicleJourney[] = [];
 
 	for (const [networkRef, vehicleJourneys] of vehicleJourneysByNetwork) {
 		const network = await importNetwork(networkRef);
@@ -63,7 +64,7 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 				updatedAt: vehicleJourney.updatedAt,
 			};
 
-			journeyStore.set(disposeableJourney.id, disposeableJourney);
+			allProcessedJourneys.push(disposeableJourney);
 
 			if (vehicleJourney.vehicleRef !== undefined) {
 				const vehicle = vehicles?.get(vehicleJourney.vehicleRef);
@@ -86,4 +87,6 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 			registerActivities(registerableActivities);
 		}
 	}
+
+	return allProcessedJourneys;
 }
