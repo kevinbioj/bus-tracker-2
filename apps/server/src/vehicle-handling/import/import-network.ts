@@ -1,26 +1,26 @@
 import { sql } from "drizzle-orm";
+import { Temporal } from "temporal-polyfill";
 
 import { database } from "../../core/database/database.js";
 import { type NetworkEntity, networksTable } from "../../core/database/schema.js";
 import { mapRowsToEntity } from "../../core/database/utils.js";
+import { useCache } from "../../utils/use-cache.js";
 
-import { redis } from "../vehicle-worker.js";
-
-const CACHE_TTL = 300;
+const cache = useCache<NetworkEntity>(Temporal.Duration.from({ minutes: 60 }).total("milliseconds"));
 
 export async function importNetwork(ref: string) {
-	const cached = await redis.get(ref);
+	const cached = cache.get(ref);
 
 	if (cached) {
-		return JSON.parse(cached) as NetworkEntity;
+		return cached;
 	}
 
-	const rows = await database.execute(sql`SELECT * FROM public.import_network(${ref})`);
+	const rows = await database.execute(sql`SELECT * FROM public.import_network(ROW(${ref}, ${ref})::network_input)`);
 
 	const [network] = mapRowsToEntity(networksTable, rows);
 
 	if (network) {
-		await redis.set(ref, JSON.stringify(network), { EX: CACHE_TTL });
+		cache.set(ref, network);
 	}
 
 	return network!;

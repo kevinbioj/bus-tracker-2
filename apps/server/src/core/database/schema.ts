@@ -20,7 +20,7 @@ import { Temporal } from "temporal-polyfill";
 
 export const timestamp = customType<{
 	data: Temporal.Instant;
-	driverData: string;
+	driverData: Date;
 	config: { precision?: number };
 }>({
 	dataType(config) {
@@ -28,10 +28,10 @@ export const timestamp = customType<{
 		return `timestamp${precision}`;
 	},
 	fromDriver(value) {
-		return Temporal.Instant.from(`${value.replace(" ", "T")}Z`);
+		return Temporal.Instant.fromEpochMilliseconds(value.getDate());
 	},
 	toDriver(value) {
-		return value.toString();
+		return new Date(value.epochMilliseconds);
 	},
 });
 

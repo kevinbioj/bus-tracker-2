@@ -1,5 +1,5 @@
-import { DrizzleQueryError, type SQL, sql } from "drizzle-orm";
-import pg from "postgres";
+import { SQL } from "bun";
+import { DrizzleQueryError, type SQL as DrizzleSQL, sql } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 
 import { database } from "../core/database/database.js";
@@ -14,7 +14,7 @@ type RegisterActivityInput = {
 	recordedAt: Temporal.Instant;
 };
 
-const performRegistration = async (sqlRows: SQL<unknown>, retryCount = 3) => {
+const performRegistration = async (sqlRows: DrizzleSQL<unknown>, retryCount = 3) => {
 	try {
 		await database.execute(sql`
 			SELECT register_activities(
@@ -23,7 +23,11 @@ const performRegistration = async (sqlRows: SQL<unknown>, retryCount = 3) => {
 			)
 		`);
 	} catch (error) {
-		if (error instanceof DrizzleQueryError && error.cause instanceof pg.PostgresError && error.cause.code === "40P01") {
+		if (
+			error instanceof DrizzleQueryError &&
+			error.cause instanceof SQL.PostgresError &&
+			error.cause?.code === "40P01"
+		) {
 			if (retryCount === 0) {
 				return;
 			}

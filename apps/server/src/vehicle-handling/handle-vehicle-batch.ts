@@ -43,10 +43,7 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 		const registerableActivities = [];
 
 		for (const vehicleJourney of vehicleJourneys) {
-			const timeSince = Temporal.Now.instant().since(vehicleJourney.updatedAt);
-			if (timeSince.total("minutes") >= 10) continue;
-
-			const line = vehicleJourney.line ? lines.get(vehicleJourney.line!.ref) : undefined;
+			const line = vehicleJourney.line ? lines.get(vehicleJourney.line.ref) : undefined;
 
 			const disposeableJourney: DisposeableVehicleJourney = {
 				id: vehicleJourney.id.replaceAll("/", "_"),

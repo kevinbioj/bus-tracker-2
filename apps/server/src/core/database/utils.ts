@@ -1,10 +1,9 @@
 import { getTableColumns, type InferSelectModel } from "drizzle-orm";
 import type { PgTableWithColumns, TableConfig } from "drizzle-orm/pg-core";
-import type { RowList } from "postgres";
 
 export function mapRowsToEntity<T extends TableConfig>(
 	table: PgTableWithColumns<T>,
-	rows: RowList<Record<string, unknown>[]>,
+	rows: Record<string, unknown>[],
 ) {
 	const columns = getTableColumns(table);
 
