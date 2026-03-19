@@ -1,37 +1,56 @@
 import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { ArkErrors } from "arktype";
+import { createClient } from "redis";
 
 import { handleVehicleBatch } from "./handle-vehicle-batch.js";
 
 declare var self: Worker;
 
-self.onmessage = async (event: MessageEvent<string>) => {
-	const message = event.data;
-	let didWarn = false;
-	let vehicleJourneys: VehicleJourney[];
+const redis = createClient({
+	url: process.env.REDIS_URL ?? "redis://localhost:6379",
+});
 
-	try {
-		const payload = JSON.parse(message);
-		if (!Array.isArray(payload)) throw new Error("Payload is not an array");
-		vehicleJourneys = payload.flatMap((entry) => {
-			const result = vehicleJourneySchema(entry);
+async function start() {
+	console.log("► [Worker] Connecting to Redis.");
+	await redis.connect();
 
-			if (result instanceof ArkErrors) {
-				if (!didWarn) {
-					console.warn(`Rejected object(s) from journeys channel, sample:`, entry);
-					console.error(result.toString());
-					didWarn = true;
-				}
-				return [];
+	console.log("► [Worker] Subscribing to journeys channel.");
+	await redis.subscribe("journeys", async (message) => {
+		try {
+			let didWarn = false;
+			let vehicleJourneys: VehicleJourney[];
+
+			try {
+				const payload = JSON.parse(message);
+				if (!Array.isArray(payload)) throw new Error("Payload is not an array");
+				vehicleJourneys = payload.flatMap((entry) => {
+					const result = vehicleJourneySchema(entry);
+
+					if (result instanceof ArkErrors) {
+						if (!didWarn) {
+							console.warn(`⚠ [Worker] Rejected object(s) from journeys channel, sample:`, entry);
+							console.error(result.toString());
+							didWarn = true;
+						}
+						return [];
+					}
+
+					return result;
+				});
+			} catch (error) {
+				console.error("✘ [Worker] An error occurred while processing batch:", error);
+				return;
 			}
 
-			return result;
-		});
-	} catch (error) {
-		console.error(error);
-		return;
-	}
+			const processedJourneys = await handleVehicleBatch(vehicleJourneys);
+			self.postMessage(processedJourneys);
+		} catch (error) {
+			console.error("✘ [Worker] A worker-related error occurred while processing batch:", error);
+		}
+	});
+}
 
-	const processedJourneys = await handleVehicleBatch(vehicleJourneys);
-	self.postMessage(processedJourneys);
-};
+start().catch((error) => {
+	console.error("✘ An error occurred while starting thread:", error);
+	throw error;
+});

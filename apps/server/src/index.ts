@@ -25,30 +25,41 @@ console.log(`,-----.                  ,--------.                   ,--.         
 console.log("► Running database migrations.");
 await migrateDatabase();
 
+let worker: Worker;
+
+function startVehicleWorker() {
+	console.log("► Starting vehicle worker.");
+	worker = new Worker(new URL("./vehicle-handling/vehicle-worker.ts", import.meta.url).href, {
+		type: "module",
+	});
+
+	worker.onmessage = (event: MessageEvent<DisposeableVehicleJourney[]>) => {
+		for (const journey of event.data) {
+			journeyStore.set(journey.id, journey);
+		}
+	};
+
+	worker.onerror = (event) => {
+		console.error("✘ Worker has encountered an error:", event.message);
+		console.warn("⚠ Worker crashed! Restarting in 5 seconds.");
+		setTimeout(() => {
+			worker.terminate();
+			worker = startVehicleWorker();
+		}, 5000);
+	};
+
+	return worker;
+}
+
+startVehicleWorker();
+
 console.log("► Connecting to Redis.");
 export const redis = createClient({
 	url: process.env.REDIS_URL ?? "redis://localhost:6379",
 });
-export const redisSubscriber = redis.duplicate();
-
-const vehicleWorker = new Worker(new URL("./vehicle-handling/vehicle-worker.ts", import.meta.url).href, {
-	type: "module",
-});
-
-vehicleWorker.onmessage = (event: MessageEvent<DisposeableVehicleJourney[]>) => {
-	for (const journey of event.data) {
-		journeyStore.set(journey.id, journey);
-	}
-};
-
-await Promise.all([redis.connect(), redisSubscriber.connect()]);
-
-await redisSubscriber.subscribe("journeys", async (message) => {
-	vehicleWorker.postMessage(message);
-});
+await redis.connect();
 
 console.log("► Listening on port %d.\n", port);
-
 export default {
 	fetch: hono.fetch,
 	port,
