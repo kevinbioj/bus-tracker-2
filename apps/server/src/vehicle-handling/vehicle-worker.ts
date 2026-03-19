@@ -6,16 +6,19 @@ import { handleVehicleBatch } from "./handle-vehicle-batch.js";
 
 declare var self: Worker;
 
-const redis = createClient({
+export const redis = createClient({
 	url: process.env.REDIS_URL ?? "redis://localhost:6379",
 });
+
+const redisSubscriber = redis.duplicate();
 
 async function start() {
 	console.log("► [Worker] Connecting to Redis.");
 	await redis.connect();
+	await redisSubscriber.connect();
 
 	console.log("► [Worker] Subscribing to journeys channel.");
-	await redis.subscribe("journeys", async (message) => {
+	await redisSubscriber.subscribe("journeys", async (message) => {
 		try {
 			let didWarn = false;
 			let vehicleJourneys: VehicleJourney[];
