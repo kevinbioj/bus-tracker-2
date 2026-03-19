@@ -28,7 +28,7 @@ export const timestamp = customType<{
 		return `timestamp${precision}`;
 	},
 	fromDriver(value) {
-		return Temporal.Instant.fromEpochMilliseconds(value.getDate());
+		return Temporal.Instant.fromEpochMilliseconds(value.getTime());
 	},
 	toDriver(value) {
 		return new Date(value.epochMilliseconds);

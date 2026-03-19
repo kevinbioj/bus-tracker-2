@@ -20,7 +20,7 @@ if (connectionUrl.includes("{PASSWORD_FILE}")) {
 }
 
 const connection = new SQL(connectionUrl, {
-	max: 75,
+	max: 25,
 	idleTimeout: 120,
 });
 
