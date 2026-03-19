@@ -3,7 +3,7 @@ import { createMiddleware } from "hono/factory";
 import { Temporal } from "temporal-polyfill";
 
 import { database } from "../../core/database/database.js";
-import { editorsTable, type EditorEntity } from "../../core/database/schema.js";
+import { type EditorEntity, editorsTable } from "../../core/database/schema.js";
 
 type EditorMiddlewareProps<Required extends boolean> = {
 	required?: Required;

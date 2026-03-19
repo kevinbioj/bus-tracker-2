@@ -1,10 +1,7 @@
 import { getTableColumns, type InferSelectModel } from "drizzle-orm";
 import type { PgTableWithColumns, TableConfig } from "drizzle-orm/pg-core";
 
-export function mapRowsToEntity<T extends TableConfig>(
-	table: PgTableWithColumns<T>,
-	rows: Record<string, unknown>[],
-) {
+export function mapRowsToEntity<T extends TableConfig>(table: PgTableWithColumns<T>, rows: Record<string, unknown>[]) {
 	const columns = getTableColumns(table);
 
 	return rows.map((row) => {

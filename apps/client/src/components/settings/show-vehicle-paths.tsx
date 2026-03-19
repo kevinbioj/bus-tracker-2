@@ -15,7 +15,8 @@ export function ShowVehiclePathsSetting() {
 					Tracés des courses
 				</Label>
 				<p className="text-sm text-muted-foreground">
-					Afficher le tracé théorique de la course lors de la sélection d'un véhicule (indisponible sur certains réseaux).
+					Afficher le tracé théorique de la course lors de la sélection d'un véhicule (indisponible sur certains
+					réseaux).
 				</p>
 			</div>
 			<Switch id={id} checked={showVehiclePaths} onCheckedChange={setShowVehiclePaths} />

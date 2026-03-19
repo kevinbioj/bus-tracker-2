@@ -2,7 +2,7 @@ import { asc } from "drizzle-orm";
 import { Hono } from "hono";
 
 import { database } from "../../core/database/database.js";
-import { regionsTable, type RegionEntity } from "../../core/database/schema.js";
+import { type RegionEntity, regionsTable } from "../../core/database/schema.js";
 
 const regionsApp = new Hono();
 

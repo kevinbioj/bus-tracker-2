@@ -2,7 +2,7 @@ import type { VehicleJourney } from "@bus-tracker/contracts";
 import DraftLog from "draftlog";
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
-import { P, match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import { getLines, getVehicles } from "./data.js";
 

@@ -1,6 +1,6 @@
 import type { VehicleJourney, VehicleJourneyPath } from "@bus-tracker/contracts";
 import { match, P } from "ts-pattern";
-
+import { createPlainDate, createPlainTime, createZonedDateTime } from "../cache/temporal-cache.js";
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
 import type { Gtfs } from "../model/gtfs.js";
 import type { TripDescriptor, TripUpdate } from "../model/gtfs-rt.js";
@@ -9,7 +9,6 @@ import type { Source } from "../model/source.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
-import { createPlainDate, createPlainTime, createZonedDateTime } from "../cache/temporal-cache.js";
 
 const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journey: Journey) => number) => {
 	const aheadTime = getAheadTime?.(journey) ?? 0;

@@ -1,26 +1,23 @@
 import { vehicleJourneyLineTypes } from "@bus-tracker/contracts";
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { Temporal } from "temporal-polyfill";
 import { z } from "zod";
-
 import { database } from "../../core/database/database.js";
 import {
+	type NetworkEntity,
 	networksTable,
+	type OperatorEntity,
 	operatorsTable,
+	type VehicleEntity,
 	vehicleArchiveReasons,
 	vehiclesTable,
-	type NetworkEntity,
-	type OperatorEntity,
-	type VehicleEntity,
 } from "../../core/database/schema.js";
-
 import { authMiddleware } from "../auth-middleware.js";
 import { byIdParamValidator } from "../common-validators.js";
 import { computeVehicleActiveness, type VehicleActiveness } from "../compute-vehicle-activeness.js";
 import { createJsonValidator } from "../validator-helpers.js";
-
 import { networkEntityToNetworkDto } from "./networks.js";
-import { Temporal } from "temporal-polyfill";
 
 const vehiclesApp = new Hono();
 

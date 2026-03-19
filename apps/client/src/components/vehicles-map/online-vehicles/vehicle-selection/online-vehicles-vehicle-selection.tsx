@@ -3,11 +3,11 @@ import { ArrowLeft, ChevronRight, FilterIcon } from "lucide-react";
 
 import { GetLineOnlineVehiclesQuery } from "~/api/lines";
 import type { Line, Network } from "~/api/networks";
-import { OnlineVehiclesVehicleCard } from "~/components/vehicles-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-card";
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Skeleton } from "~/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
+import { OnlineVehiclesVehicleCard } from "~/components/vehicles-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-card";
 
 type OnlineVehiclesVehicleSelection = {
 	container: HTMLDivElement | null;

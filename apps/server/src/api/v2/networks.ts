@@ -6,22 +6,22 @@ import { z } from "zod";
 import { database } from "../../core/database/database.js";
 import {
 	editorsTable,
+	type LineEntity,
 	linesTable,
+	type NetworkEntity,
 	networksTable,
+	type OperatorEntity,
 	operatorsTable,
+	type RegionEntity,
 	regionsTable,
 	vehiclesTable,
-	type LineEntity,
-	type NetworkEntity,
-	type OperatorEntity,
-	type RegionEntity,
 } from "../../core/database/schema.js";
 import { journeyStore } from "../../core/store/journey-store.js";
 
 import { authMiddleware } from "../auth-middleware.js";
 import { byIdParamValidator } from "../common-validators.js";
-import { createJsonValidator, createQueryValidator } from "../validator-helpers.js";
 import { computeVehicleActiveness } from "../compute-vehicle-activeness.js";
+import { createJsonValidator, createQueryValidator } from "../validator-helpers.js";
 
 const networksApp = new Hono();
 

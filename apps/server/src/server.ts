@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { CookieStore, sessionMiddleware, type Session } from "hono-sessions";
+import { CookieStore, type Session, sessionMiddleware } from "hono-sessions";
 import { Temporal } from "temporal-polyfill";
 
 import v2app from "./api/v2/index.js";

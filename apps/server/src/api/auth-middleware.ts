@@ -1,9 +1,9 @@
-import { createMiddleware } from "hono/factory";
 import { and, eq } from "drizzle-orm";
+import { createMiddleware } from "hono/factory";
 import { Temporal } from "temporal-polyfill";
 
 import { database } from "../core/database/database.js";
-import { editorsTable, type EditorRole } from "../core/database/schema.js";
+import { type EditorRole, editorsTable } from "../core/database/schema.js";
 import type { HonoWithSession } from "../server.js";
 
 const hasSufficientRole = (currentRole: EditorRole, targetRole: EditorRole) => {

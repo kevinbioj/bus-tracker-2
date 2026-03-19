@@ -1,4 +1,4 @@
-import { type EventedProps, createLayerComponent } from "@react-leaflet/core";
+import { createLayerComponent, type EventedProps } from "@react-leaflet/core";
 import { CircleMarker, type CircleMarkerOptions, type LatLngExpression, Util } from "leaflet";
 import type { ReactNode } from "react";
 

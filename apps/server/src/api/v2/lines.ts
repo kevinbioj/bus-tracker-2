@@ -3,11 +3,11 @@ import { Hono } from "hono";
 
 import { database } from "../../core/database/database.js";
 import {
+	type LineEntity,
 	lineActivitiesTable,
 	linesTable,
 	networksTable,
 	vehiclesTable,
-	type LineEntity,
 } from "../../core/database/schema.js";
 import { journeyStore } from "../../core/store/journey-store.js";
 

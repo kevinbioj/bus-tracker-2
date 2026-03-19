@@ -4,8 +4,8 @@ import { Journey } from "./journey.js";
 import type { Route } from "./route.js";
 import type { Service } from "./service.js";
 import type { Shape } from "./shape.js";
-import type { StopTime } from "./stop-time.js";
 import type { Stop } from "./stop.js";
+import type { StopTime } from "./stop-time.js";
 
 export type StopTimeCall = {
 	aimedArrivalTime: Temporal.ZonedDateTime;

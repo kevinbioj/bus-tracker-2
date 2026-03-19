@@ -1,5 +1,5 @@
 import { validator } from "hono/validator";
-import type { ZodObject, core } from "zod";
+import type { core, ZodObject } from "zod";
 
 export const createJsonValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(
 	schema: ZodObject<Shape, Config>,

@@ -4,7 +4,7 @@ import { Temporal } from "temporal-polyfill";
 import { z } from "zod";
 
 import { database } from "../../core/database/database.js";
-import { announcementsTable, announcementType, type AnnouncementEntity } from "../../core/database/schema.js";
+import { type AnnouncementEntity, announcementsTable, announcementType } from "../../core/database/schema.js";
 
 import { authMiddleware } from "../auth-middleware.js";
 import { byIdParamValidator } from "../common-validators.js";

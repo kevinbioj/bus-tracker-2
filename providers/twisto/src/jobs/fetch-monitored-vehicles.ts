@@ -1,6 +1,5 @@
-import { Temporal } from "temporal-polyfill";
-
 import type { VehicleJourney, VehicleJourneyCall } from "@bus-tracker/contracts";
+import { Temporal } from "temporal-polyfill";
 
 import { siriEndpoint } from "../config.js";
 import { GET_VEHICLE_MONITORING } from "../payloads/get-vehicle-monitoring.js";

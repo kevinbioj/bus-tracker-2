@@ -2,10 +2,9 @@ import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
 import { journeyStore } from "./core/store/journey-store.js";
-import type { DisposeableVehicleJourney } from "./types/disposeable-vehicle-journey.js";
-
 import { port } from "./options.js";
 import { hono } from "./server.js";
+import type { DisposeableVehicleJourney } from "./types/disposeable-vehicle-journey.js";
 
 import "./controllers/announcements.js";
 import "./controllers/editors.js";

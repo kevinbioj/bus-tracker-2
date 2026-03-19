@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { LocateFixedIcon, LocateIcon } from "lucide-react";
 import type { PropsWithChildren } from "react";
 import { Link } from "react-router-dom";
-import { P, match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import type { Vehicle } from "~/api/vehicles";
