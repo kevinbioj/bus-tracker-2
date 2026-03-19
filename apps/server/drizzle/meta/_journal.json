@@ -239,6 +239,13 @@
       "when": 1773948740674,
       "tag": "0033_empty_hardball",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1773950538659,
+      "tag": "0034_glamorous_scarlet_spider",
+      "breakpoints": true
     }
   ]
 }
