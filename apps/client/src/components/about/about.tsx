@@ -17,7 +17,7 @@ export function About() {
 					<LucideInfo aria-label="À propos" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent aria-describedby={undefined} className="max-h-dvh overflow-y-auto">
+			<DialogContent aria-describedby={undefined} className="max-h-[95dvh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>À propos de Bus Tracker</DialogTitle>
 				</DialogHeader>

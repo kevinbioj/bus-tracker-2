@@ -22,7 +22,7 @@ export function Settings() {
 			</DialogTrigger>
 			<DialogContent
 				aria-describedby={undefined}
-				className="max-w-xl max-h-[95vh] flex flex-col gap-0 p-0 overflow-hidden"
+				className="max-w-xl max-h-[95dvh] flex flex-col gap-0 p-0 overflow-hidden"
 			>
 				<DialogHeader className="p-6 pb-4">
 					<DialogTitle>Paramètres de l'application</DialogTitle>
