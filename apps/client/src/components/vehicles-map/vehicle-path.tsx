@@ -99,13 +99,24 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 		const pastPoints: number[][] = [];
 		const futurePoints: number[][] = [];
 
-		for (const [latitude, longitude, distanceTraveled] of points) {
+		let lastPoint: (typeof points)[number] | undefined;
+		for (const point of points) {
+			const [latitude, longitude, distanceTraveled] = point;
 			const coords = [longitude, latitude];
+
 			if (distanceTraveled !== undefined) {
 				if (distanceTraveled <= currentDistanceTraveled) {
 					pastPoints.push(coords);
 				} else {
-					if (pastPoints.length > 0 && futurePoints.length === 0) {
+					if (lastPoint !== undefined && lastPoint[2] !== undefined && lastPoint[2] < currentDistanceTraveled) {
+						const [lastLat, lastLon, lastDist] = lastPoint;
+						const t = (currentDistanceTraveled - lastDist) / (distanceTraveled - lastDist);
+						const interpLat = lastLat + t * (latitude - lastLat);
+						const interpLon = lastLon + t * (longitude - lastLon);
+						const interpCoords = [interpLon, interpLat];
+						pastPoints.push(interpCoords);
+						futurePoints.push(interpCoords);
+					} else if (pastPoints.length > 0 && futurePoints.length === 0) {
 						// Add the last past point to future points to have a continuous line
 						futurePoints.push(pastPoints.at(-1)!);
 					}
@@ -115,6 +126,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 				// Fallback if no distanceTraveled
 				futurePoints.push(coords);
 			}
+			lastPoint = point;
 		}
 
 		// If all points are in futurePoints but we are at the start
