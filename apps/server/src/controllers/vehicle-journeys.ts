@@ -83,6 +83,9 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 		const additionalJourney = journeyStore.get(includeMarker);
 		if (additionalJourney !== undefined) {
 			boundedJourneys.push(additionalJourney);
+			if (additionalJourney.lineId !== undefined) {
+				boundedLineIds.add(additionalJourney.lineId);
+			}
 		}
 	}
 
