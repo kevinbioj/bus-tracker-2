@@ -4,7 +4,7 @@ import type { Source } from "../model/source.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 
 export async function initializeResources(sources: Source[]) {
-	const initLimit = 4;
+	const initLimit = 2;
 	const initLimitFn = pLimit(initLimit);
 	const initWatch = createStopWatch();
 	console.log("%s ► Loading resources (concurrency limit: %d).", Temporal.Now.instant(), initLimit);
@@ -19,4 +19,5 @@ export async function initializeResources(sources: Source[]) {
 
 	console.log("✓ Load complete in %dms.\n", initWatch.total());
 	console.log("► Initialization is complete.\n");
+	global.gc?.();
 }

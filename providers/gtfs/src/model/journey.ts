@@ -82,26 +82,28 @@ export class Journey {
 		const distanceTraveled =
 			monitoredCall.distanceTraveled + (nextCall.distanceTraveled - monitoredCall.distanceTraveled) * percentTraveled;
 
-		const currentShapePoint =
-			this.trip.shape.points.findLast((point) => distanceTraveled >= point.distanceTraveled) ??
-			this.trip.shape.points.at(0)!;
-		const nextShapePoint =
-			this.trip.shape.points.at(this.trip.shape.points.indexOf(currentShapePoint) + 1) ??
-			this.trip.shape.points.at(-1)!;
-		const ratio =
-			(distanceTraveled - currentShapePoint.distanceTraveled) /
-			(nextShapePoint.distanceTraveled - currentShapePoint.distanceTraveled);
+		const currentIndex = this.trip.shape.findPointIndex(distanceTraveled);
+		if (currentIndex === undefined) {
+			return this.getJourneyPositionAt(monitoredCall);
+		}
 
-		this.bearing = getDirection(
-			currentShapePoint.longitude,
-			currentShapePoint.latitude,
-			nextShapePoint.longitude,
-			nextShapePoint.latitude,
-		);
+		const nextIndex = Math.min(currentIndex + 1, this.trip.shape.length - 1);
+
+		const currentLat = this.trip.shape.getPointLatitude(currentIndex);
+		const currentLon = this.trip.shape.getPointLongitude(currentIndex);
+		const currentDist = this.trip.shape.getPointDistanceTraveled(currentIndex)!;
+
+		const nextLat = this.trip.shape.getPointLatitude(nextIndex);
+		const nextLon = this.trip.shape.getPointLongitude(nextIndex);
+		const nextDist = this.trip.shape.getPointDistanceTraveled(nextIndex)!;
+
+		const ratio = nextDist === currentDist ? 0 : (distanceTraveled - currentDist) / (nextDist - currentDist);
+
+		this.bearing = getDirection(currentLon, currentLat, nextLon, nextLat);
 
 		return {
-			latitude: currentShapePoint.latitude + (nextShapePoint.latitude - currentShapePoint.latitude) * ratio,
-			longitude: currentShapePoint.longitude + (nextShapePoint.longitude - currentShapePoint.longitude) * ratio,
+			latitude: currentLat + (nextLat - currentLat) * ratio,
+			longitude: currentLon + (nextLon - currentLon) * ratio,
 			bearing: this.bearing,
 			atStop: false,
 			type: "COMPUTED",

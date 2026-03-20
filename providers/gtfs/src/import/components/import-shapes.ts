@@ -9,7 +9,7 @@ import type { ImportGtfsOptions } from "../import-gtfs.js";
 type ShapeRecord = CsvRecord<"shape_id" | "shape_pt_lat" | "shape_pt_lon" | "shape_pt_sequence", "shape_dist_traveled">;
 
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-	const R = 6371000; // Rayon de la Terre en mètres
+	const R = 6371000;
 	const φ1 = (lat1 * Math.PI) / 180;
 	const φ2 = (lat2 * Math.PI) / 180;
 	const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -21,41 +21,53 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 	return R * c;
 }
 
+// Structure plus compacte pour l'import temporaire
+type RawShapeData = {
+	lats: number[];
+	lons: number[];
+	seqs: number[];
+	dists: (number | undefined)[];
+};
+
 export async function importShapes(gtfsDirectory: string, options: ImportGtfsOptions) {
-	const shapes = new Map<string, Shape>();
-	if (options.shapesStrategy === "IGNORE") return shapes;
+	const rawShapes = new Map<string, RawShapeData>();
+	if (options.shapesStrategy === "IGNORE") return new Map<string, Shape>();
 
 	const shapesFile = join(gtfsDirectory, "shapes.txt");
 	if (await fileExists(shapesFile)) {
 		await readCsv<ShapeRecord>(shapesFile, (shapeRecord) => {
-			let shape = shapes.get(shapeRecord.shape_id);
-			if (shape === undefined) {
-				shape = new Shape(shapeRecord.shape_id, []);
-				shapes.set(shapeRecord.shape_id, shape);
+			let data = rawShapes.get(shapeRecord.shape_id);
+			if (data === undefined) {
+				data = { lats: [], lons: [], seqs: [], dists: [] };
+				rawShapes.set(shapeRecord.shape_id, data);
 			}
 
-			shape.points.push({
-				sequence: +shapeRecord.shape_pt_sequence,
-				latitude: +shapeRecord.shape_pt_lat,
-				longitude: +shapeRecord.shape_pt_lon,
-				distanceTraveled: shapeRecord.shape_dist_traveled !== undefined ? +shapeRecord.shape_dist_traveled : -1,
-			});
+			data.lats.push(+shapeRecord.shape_pt_lat);
+			data.lons.push(+shapeRecord.shape_pt_lon);
+			data.seqs.push(+shapeRecord.shape_pt_sequence);
+			data.dists.push(shapeRecord.shape_dist_traveled !== undefined ? +shapeRecord.shape_dist_traveled : undefined);
 		});
 	}
 
-	for (const shape of shapes.values()) {
-		shape.points.sort((a, b) => a.sequence - b.sequence);
+	const shapes = new Map<string, Shape>();
 
-		if (shape.points.some((point) => point.distanceTraveled === -1)) {
-			let cumulativeDistance = 0;
-			shape.points[0]!.distanceTraveled = 0;
-			for (let i = 1; i < shape.points.length; i++) {
-				const p1 = shape.points[i - 1]!;
-				const p2 = shape.points[i]!;
-				cumulativeDistance += getDistance(p1.latitude, p1.longitude, p2.latitude, p2.longitude);
-				p2.distanceTraveled = cumulativeDistance;
-			}
+	const shapeIds = Array.from(rawShapes.keys());
+	for (const id of shapeIds) {
+		const data = rawShapes.get(id)!;
+		rawShapes.delete(id);
+
+		const indices = Array.from({ length: data.seqs.length }, (_, i) => i);
+		indices.sort((a, b) => data.seqs[a]! - data.seqs[b]!);
+
+		const typedPoints = new Float64Array(indices.length * 3);
+		for (let i = 0; i < indices.length; i++) {
+			const idx = indices[i]!;
+			typedPoints[i * 3] = data.lats[idx]!;
+			typedPoints[i * 3 + 1] = data.lons[idx]!;
+			typedPoints[i * 3 + 2] = data.dists[idx]!;
 		}
+
+		shapes.set(id, new Shape(id, typedPoints));
 	}
 
 	return shapes;
