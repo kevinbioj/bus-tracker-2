@@ -1,4 +1,30 @@
-const plainDateCache = new Map<string, Temporal.PlainDate>();
+class WeakValueMap<K, V extends object> {
+	private map = new Map<K, WeakRef<V>>();
+	private registry = new FinalizationRegistry<K>((key) => {
+		const ref = this.map.get(key);
+		if (ref && !ref.deref()) {
+			this.map.delete(key);
+		}
+	});
+
+	get(key: K): V | undefined {
+		const ref = this.map.get(key);
+		if (!ref) return undefined;
+		const value = ref.deref();
+		if (!value) {
+			this.map.delete(key);
+			return undefined;
+		}
+		return value;
+	}
+
+	set(key: K, value: V) {
+		this.map.set(key, new WeakRef(value));
+		this.registry.register(value, key);
+	}
+}
+
+const plainDateCache = new WeakValueMap<string, Temporal.PlainDate>();
 
 export function createPlainDate(item: string) {
 	let plainDate = plainDateCache.get(item);
@@ -9,7 +35,7 @@ export function createPlainDate(item: string) {
 	return plainDate;
 }
 
-const plainTimeCache = new Map<string, Temporal.PlainTime>();
+const plainTimeCache = new WeakValueMap<string, Temporal.PlainTime>();
 
 export function createPlainTime(item: string) {
 	let plainTime = plainTimeCache.get(item);
@@ -20,7 +46,7 @@ export function createPlainTime(item: string) {
 	return plainTime;
 }
 
-const zonedDateTimeCache = new Map<string, Temporal.ZonedDateTime>();
+const zonedDateTimeCache = new WeakValueMap<string, Temporal.ZonedDateTime>();
 
 export function createZonedDateTime(date: Temporal.PlainDate, time: Temporal.PlainTime, timeZone: string) {
 	const key = `${date}_${time}_${timeZone}`;
