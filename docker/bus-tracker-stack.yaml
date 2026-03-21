@@ -62,6 +62,9 @@ services:
         - "traefik.http.routers.server.middlewares=api-strip"
         - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api/"
         - "traefik.http.services.server.loadbalancer.server.port=8080"
+      resources:
+        limits:
+          memory: '1G'
       replicas: 1
       update_config:
         order: start-first
