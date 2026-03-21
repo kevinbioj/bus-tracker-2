@@ -42,28 +42,8 @@ const sources = [
 			return "TCAR";
 		},
 		getVehicleRef: (vehicle) => vehicle?.id,
-		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.calls.at(-1)?.stop.name ?? "SPECIAL",
+		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 		isValidJourney: (vehicleJourney) => {
-			// Étant donné que les données sont parfois partielles, on prend le premier arrêt avec du temps réel
-			// et on propage son avance-retard à l'envers... étant donné que c'est calculé de façon bête et
-			// méchante ça passe plutôt bien.
-			if (vehicleJourney.calls?.length && !vehicleJourney.calls.at(0).expectedTime) {
-				const firstMonitoredCallIndex = vehicleJourney.calls.findIndex((call) => call.expectedTime);
-				if (firstMonitoredCallIndex >= 0) {
-					const firstMonitoredCall = vehicleJourney.calls.at(firstMonitoredCallIndex);
-					const delay = Temporal.Instant.from(firstMonitoredCall.expectedTime)
-						.since(firstMonitoredCall.aimedTime)
-						.total("seconds");
-					for (let i = firstMonitoredCallIndex - 1; i >= 0; i -= 1) {
-						const call = vehicleJourney.calls.at(i);
-						call.expectedTime = Temporal.Instant.from(call.aimedTime)
-							.add({ seconds: delay })
-							.toZonedDateTimeISO("Europe/Paris")
-							.toString({ timeZoneName: "never" });
-					}
-				}
-			}
-
 			// Les premiers shifts métro sont graphiqués à tort sur le jour N-1
 			if (vehicleJourney.line?.ref === "ASTUCE:Line:90") {
 				const aimedTime = vehicleJourney.calls?.[0]?.aimedTime
@@ -81,7 +61,6 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.replace("TCAR:", ""),
 		mapVehiclePosition: (vehicle) => {
 			vehicle.vehicle.id = vehicle.vehicle.id.replace("TCAR:", "");
-			// vehicle.timestamp += 3600;
 			return vehicle;
 		},
 	},
@@ -104,18 +83,33 @@ const sources = [
 			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
 		mode: "NO-TU",
-		getNetworkRef: (journey, vehicle) => {
-			if (
-				vehicle === undefined &&
-				journey?.trip.route.name === "530" &&
-				[journey.calls.at(0), journey.calls.at(-1)].some((call) => call.stop.name === "Caudebec - Quai")
-			) {
-				return "NOMAD-CAR";
+		mapTripUpdate: (tripUpdate) => {
+			tripUpdate.stopTimeUpdate?.forEach((stopTimeUpdate) => {
+				if (typeof stopTimeUpdate.stopId === "string") {
+					stopTimeUpdate.stopId = `TNI:${stopTimeUpdate.stopId}`;
+				}
+			});
+
+			if (typeof tripUpdate.trip.routeId === "string") {
+				tripUpdate.trip.routeId = `TNI:${tripUpdate.trip.routeId}`;
 			}
-			return "ASTUCE";
+
+			return tripUpdate;
 		},
-		getDestination: (journey) => `${journey.calls.at(0)?.stop.name} > ${journey.calls.at(-1)?.stop.name}`,
+		mapVehiclePosition: (vehicle) => {
+			if (typeof vehicle.stopId === "string") {
+				vehicle.stopId = `TNI:${vehicle.stopId}`;
+			}
+
+			if (typeof vehicle.trip?.routeId === "string") {
+				vehicle.trip.routeId = `TNI:${vehicle.trip.routeId}`;
+			}
+
+			return vehicle;
+		},
+		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
+		mapLineRef: (lineRef) => lineRef.replace("TNI:", ""),
 	},
 ];
 
