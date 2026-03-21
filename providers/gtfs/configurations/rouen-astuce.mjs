@@ -88,22 +88,13 @@ const sources = [
 	{
 		id: "tae",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tae.zip",
-		realtimeResourceHrefs: ["https://gtfs.tae76.fr/gtfs-rt.bin"],
-		mapTripUpdate: (tripUpdate) => {
-			if (!tripUpdate.vehicle?.id) return;
-			if (tripUpdate.stopTimeUpdate?.some(({ arrival }) => arrival?.delay > 5400)) return;
-			return tripUpdate;
-		},
-		getDestination: (journey) =>
-			journey?.trip.stopTimes
-				.at(-1)
-				.stop.name.toUpperCase()
-				.normalize("NFD")
-				.replace(/\p{Diacritic}/gu, ""),
-		getAheadTime: (journey) =>
-			journey?.calls.some((c) => !!(c.expectedArrivalTime ?? c.expectedDepartureTime)) ? 15 * 60 : 0,
+		realtimeResourceHrefs: [
+			"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
+		],
+		getAheadTime: () => 15,
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TAE",
+		mapLineRef: (lineRef) => lineRef.replace("TAE:", ""),
 	},
 	{
 		id: "tni",
