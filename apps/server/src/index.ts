@@ -1,3 +1,5 @@
+import { Worker } from "node:worker_threads";
+import { serve } from "@hono/node-server";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
@@ -28,24 +30,23 @@ let worker: Worker;
 
 function startVehicleWorker() {
 	console.log("► Starting vehicle worker.");
-	worker = new Worker(new URL("./vehicle-handling/vehicle-worker.ts", import.meta.url).href, {
-		type: "module",
-	});
 
-	worker.onmessage = (event: MessageEvent<DisposeableVehicleJourney[]>) => {
-		for (const journey of event.data) {
+	const workerPath = new URL("./vehicle-handling/vehicle-worker.js", import.meta.url);
+	worker = new Worker(workerPath);
+	worker.on("message", (data: DisposeableVehicleJourney[]) => {
+		for (const journey of data) {
 			journeyStore.set(journey.id, journey);
 		}
-	};
+	});
 
-	worker.onerror = (event) => {
-		console.error("✘ Worker has encountered an error:", event.message);
+	worker.on("error", (error) => {
+		console.error("✘ Worker has encountered an error:", error.message ?? error);
 		console.warn("⚠ Worker crashed! Restarting in 5 seconds.");
 		setTimeout(() => {
 			worker.terminate();
 			worker = startVehicleWorker();
 		}, 5000);
-	};
+	});
 
 	return worker;
 }
@@ -59,7 +60,7 @@ export const redis = createClient({
 await redis.connect();
 
 console.log("► Listening on port %d.\n", port);
-export default {
+serve({
 	fetch: hono.fetch,
 	port,
-};
+});

@@ -195,6 +195,9 @@ importers:
       '@bus-tracker/contracts':
         specifier: workspace:*
         version: link:../../libraries/contracts
+      '@hono/node-server':
+        specifier: ^1.19.4
+        version: 1.19.11(hono@4.12.8)
       '@hono/oauth-providers':
         specifier: ^0.8.5
         version: 0.8.5(hono@4.12.8)
@@ -210,6 +213,9 @@ importers:
       hono-sessions:
         specifier: ^0.8.1
         version: 0.8.1(hono@4.12.8)
+      postgres:
+        specifier: ^3.4.8
+        version: 3.4.8
       redis:
         specifier: ^5.11.0
         version: 5.11.0
@@ -223,15 +229,12 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
-      '@types/bun':
-        specifier: ^1.3.11
-        version: 1.3.11
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.19.15
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -1478,6 +1481,12 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
+  '@hono/node-server@1.19.11':
+    resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
+
   '@hono/oauth-providers@0.8.5':
     resolution: {integrity: sha512-hgEDH/gUmB/opman9jvT8dLItZsSC9M9yFiaam0b6InK7WQkdzIcaRAkdda47QpixnK9S1Ah2vjDB2U16LkMnA==}
     engines: {node: '>=18.4.0'}
@@ -2581,9 +2590,6 @@ packages:
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
 
-  '@types/bun@1.3.11':
-    resolution: {integrity: sha512-5vPne5QvtpjGpsGYXiFyycfpDF2ECyPcTSsFBMa0fraoxiQyMJ3SmuQIGhzPg2WJuWxVBoxWJ2kClYTcw/4fAg==}
-
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
@@ -2616,6 +2622,9 @@ packages:
 
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
+
+  '@types/node@22.19.15':
+    resolution: {integrity: sha512-F0R/h2+dsy5wJAUe3tAU6oqa2qbWY5TpNfL/RGmo1y38hiyO1w3x2jPtt76wmuaJI4DQnOBu21cNXQ2STIUUWg==}
 
   '@types/node@25.5.0':
     resolution: {integrity: sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw==}
@@ -4580,6 +4589,9 @@ packages:
   underscore@1.13.8:
     resolution: {integrity: sha512-DXtD3ZtEQzc7M8m4cXotyHR+FAS18C64asBYY5vqZexfYryNNnDc02W4hKg3rdQuqOYas1jkseX0+nZXjTXnvQ==}
 
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
@@ -5867,6 +5879,10 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
+  '@hono/node-server@1.19.11(hono@4.12.8)':
+    dependencies:
+      hono: 4.12.8
+
   '@hono/oauth-providers@0.8.5(hono@4.12.8)':
     dependencies:
       hono: 4.12.8
@@ -6882,10 +6898,6 @@ snapshots:
       '@babel/types': 7.29.0
     optional: true
 
-  '@types/bun@1.3.11':
-    dependencies:
-      bun-types: 1.3.11
-
   '@types/chai@5.2.3':
     dependencies:
       '@types/deep-eql': 4.0.2
@@ -6918,6 +6930,10 @@ snapshots:
 
   '@types/mdurl@2.0.0': {}
 
+  '@types/node@22.19.15':
+    dependencies:
+      undici-types: 6.21.0
+
   '@types/node@25.5.0':
     dependencies:
       undici-types: 7.18.2
@@ -6928,7 +6944,7 @@ snapshots:
 
   '@types/pg@8.15.6':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 22.19.15
       pg-protocol: 1.13.0
       pg-types: 2.2.0
     optional: true
@@ -7161,7 +7177,8 @@ snapshots:
 
   bun-types@1.3.11:
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 22.19.15
+    optional: true
 
   bytewise-core@1.2.3:
     dependencies:
@@ -8303,8 +8320,7 @@ snapshots:
       xtend: 4.0.2
     optional: true
 
-  postgres@3.4.8:
-    optional: true
+  postgres@3.4.8: {}
 
   posthog-js@1.362.0:
     dependencies:
@@ -8984,6 +9000,8 @@ snapshots:
       unconfig-core: 7.5.0
 
   underscore@1.13.8: {}
+
+  undici-types@6.21.0: {}
 
   undici-types@7.18.2: {}
 

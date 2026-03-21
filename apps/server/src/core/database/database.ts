@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
-import { SQL } from "bun";
-import { drizzle } from "drizzle-orm/bun-sql";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 import * as schema from "./schema.js";
 
@@ -19,9 +19,9 @@ if (connectionUrl.includes("{PASSWORD_FILE}")) {
 	connectionUrl = connectionUrl.replace("{PASSWORD_FILE}", password);
 }
 
-const connection = new SQL(connectionUrl, {
+const connection = postgres(connectionUrl, {
 	max: 25,
-	idleTimeout: 120,
+	idle_timeout: 120,
 });
 
 export const database = drizzle(connection, {

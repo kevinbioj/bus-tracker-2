@@ -1,10 +1,9 @@
+import { parentPort } from "node:worker_threads";
 import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { ArkErrors } from "arktype";
 import { createClient } from "redis";
 
 import { handleVehicleBatch } from "./handle-vehicle-batch.js";
-
-declare var self: Worker;
 
 export const redis = createClient({
 	url: process.env.REDIS_URL ?? "redis://localhost:6379",
@@ -46,7 +45,7 @@ async function start() {
 			}
 
 			const processedJourneys = await handleVehicleBatch(vehicleJourneys);
-			self.postMessage(processedJourneys);
+			parentPort?.postMessage(processedJourneys);
 		} catch (error) {
 			console.error("✘ [Worker] A worker-related error occurred while processing batch:", error);
 		}

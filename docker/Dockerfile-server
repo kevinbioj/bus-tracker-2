@@ -30,7 +30,7 @@ RUN pnpm deploy --legacy --filter=@bus-tracker/server --prod server-deployment
 # STAGE 2 - Run distribution app         #
 ##########################################
 
-FROM oven/bun:1.3.11-alpine AS runtime
+FROM base AS runtime
 ENV NODE_ENV=production
 
 RUN apk add --no-cache tini curl
@@ -40,10 +40,10 @@ WORKDIR /bus-tracker/server
 # Copy project artifacts
 COPY --from=builder /bus-tracker/server-deployment/node_modules ./node_modules/
 COPY --from=builder /bus-tracker/server-deployment/drizzle ./drizzle/
-COPY --from=builder /bus-tracker/server-deployment/dist ./
-COPY --from=builder /bus-tracker/server-deployment/src ./src/
+COPY --from=builder /bus-tracker/server-deployment/dist ./dist/
+COPY --from=builder /bus-tracker/server-deployment/package.json ./package.json
 COPY --from=builder /bus-tracker/server-deployment/.env ./.env
 
-USER bun
-CMD ["/sbin/tini", "--", "bun", "run", "--env-file", ".env", "src/index.ts"]
+USER node
+CMD ["/sbin/tini", "--", "node", "--env-file", ".env", "dist/index.js"]
 
