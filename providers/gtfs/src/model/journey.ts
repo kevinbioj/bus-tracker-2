@@ -40,70 +40,80 @@ export class Journey {
 
 	guessPosition(at: Temporal.Instant): VehicleJourneyPosition {
 		const calls = this.calls.filter((call) => call.status !== "SKIPPED");
-		if (calls.length < 2) return this.getJourneyPositionAt(this.calls.at(0)!);
+		if (calls.length === 0) {
+			return this.getJourneyPositionAt(this.calls[0]!);
+		}
 
-		// Cas n°1 - la course n'a pas encore commencé
-		const firstCall = calls.at(0)!;
-		if (at.epochMilliseconds < (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime).epochMilliseconds) {
+		const atMs = at.epochMilliseconds;
+		const firstCall = calls[0]!;
+		const lastCall = calls[calls.length - 1]!;
+
+		// 1. Before the journey starts
+		const firstDepartureMs = (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime).epochMilliseconds;
+		if (atMs <= firstDepartureMs) {
 			return this.getJourneyPositionAt(firstCall);
 		}
 
-		// Cas n°2 - la course est terminée
-		const lastCall = calls.at(-1)!;
-		if (at.epochMilliseconds >= (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime).epochMilliseconds) {
+		// 2. After the journey ends
+		const lastArrivalMs = (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime).epochMilliseconds;
+		if (atMs >= lastArrivalMs) {
 			return this.getJourneyPositionAt(lastCall);
 		}
 
-		// Cas n°3 - on est à l'arrêt
-		const monitoredCall = calls.findLast(
-			(call) => at.epochMilliseconds >= (call.expectedArrivalTime ?? call.aimedArrivalTime).epochMilliseconds,
-		)!;
+		// 3. During the journey
+		const currentCallIndex = calls.findLastIndex((call) => {
+			const arrivalMs = (call.expectedArrivalTime ?? call.aimedArrivalTime).epochMilliseconds;
+			return atMs >= arrivalMs;
+		});
 
-		if (
-			at.epochMilliseconds < (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochMilliseconds
-		) {
-			return this.getJourneyPositionAt(monitoredCall);
+		const currentCall = calls[currentCallIndex]!;
+		const departureMs = (currentCall.expectedDepartureTime ?? currentCall.aimedDepartureTime).epochMilliseconds;
+
+		// At a stop
+		if (atMs <= departureMs) {
+			return this.getJourneyPositionAt(currentCall);
 		}
 
-		// Autrement - on est en voyage
-		const nextCall = calls.at(calls.indexOf(monitoredCall) + 1);
+		// Between stops
+		const nextCall = calls[currentCallIndex + 1];
+
 		if (
 			this.trip.shape === undefined ||
-			monitoredCall.distanceTraveled === undefined ||
+			currentCall.distanceTraveled === undefined ||
 			nextCall?.distanceTraveled === undefined
 		) {
-			return this.getJourneyPositionAt(monitoredCall);
+			return this.getJourneyPositionAt(currentCall);
 		}
 
-		const leftAt = (monitoredCall.expectedDepartureTime ?? monitoredCall.aimedDepartureTime).epochMilliseconds;
-		const arrivesAt = (nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime).epochMilliseconds;
-
-		const percentTraveled = (at.epochMilliseconds - leftAt) / (arrivesAt - leftAt);
+		const arrivalMs = (nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime).epochMilliseconds;
+		const ratio = Math.max(0, Math.min(1, (atMs - departureMs) / (arrivalMs - departureMs)));
 		const distanceTraveled =
-			monitoredCall.distanceTraveled + (nextCall.distanceTraveled - monitoredCall.distanceTraveled) * percentTraveled;
+			currentCall.distanceTraveled + (nextCall.distanceTraveled - currentCall.distanceTraveled) * ratio;
 
-		const currentIndex = this.trip.shape.findPointIndex(distanceTraveled);
-		if (currentIndex === undefined) {
-			return this.getJourneyPositionAt(monitoredCall);
+		const pointIndex = this.trip.shape.findPointIndex(distanceTraveled);
+		if (pointIndex === undefined) {
+			return this.getJourneyPositionAt(currentCall);
 		}
 
-		const nextIndex = Math.min(currentIndex + 1, this.trip.shape.length - 1);
+		const nextPointIndex = Math.min(pointIndex + 1, this.trip.shape.length - 1);
 
-		const currentLat = this.trip.shape.getPointLatitude(currentIndex);
-		const currentLon = this.trip.shape.getPointLongitude(currentIndex);
-		const currentDist = this.trip.shape.getPointDistanceTraveled(currentIndex)!;
+		const currentLat = this.trip.shape.getPointLatitude(pointIndex);
+		const currentLon = this.trip.shape.getPointLongitude(pointIndex);
+		const currentDist = this.trip.shape.getPointDistanceTraveled(pointIndex)!;
 
-		const nextLat = this.trip.shape.getPointLatitude(nextIndex);
-		const nextLon = this.trip.shape.getPointLongitude(nextIndex);
-		const nextDist = this.trip.shape.getPointDistanceTraveled(nextIndex)!;
+		const nextLat = this.trip.shape.getPointLatitude(nextPointIndex);
+		const nextLon = this.trip.shape.getPointLongitude(nextPointIndex);
+		const nextDist = this.trip.shape.getPointDistanceTraveled(nextPointIndex)!;
 
-		const ratio = nextDist === currentDist ? 0 : (distanceTraveled - currentDist) / (nextDist - currentDist);
+		const pointRatio = nextDist === currentDist ? 0 : (distanceTraveled - currentDist) / (nextDist - currentDist);
 
+		const latitude = currentLat + (nextLat - currentLat) * pointRatio;
+		const longitude = currentLon + (nextLon - currentLon) * pointRatio;
 		this.bearing = getDirection(currentLon, currentLat, nextLon, nextLat);
 
 		return {
-			latitude: currentLat + (nextLat - currentLat) * ratio,
-			longitude: currentLon + (nextLon - currentLon) * ratio,
+			latitude,
+			longitude,
 			bearing: this.bearing,
 			atStop: false,
 			type: "COMPUTED",
@@ -199,6 +209,8 @@ export class Journey {
 	}
 
 	private getJourneyPositionAt(call: JourneyCall): VehicleJourneyPosition {
+		const recordedAt = call.expectedArrivalTime ?? call.aimedArrivalTime;
+
 		return {
 			latitude: call.stop.latitude,
 			longitude: call.stop.longitude,
@@ -206,9 +218,7 @@ export class Journey {
 			atStop: true,
 			type: "COMPUTED",
 			distanceTraveled: call.distanceTraveled,
-			recordedAt: (call.expectedArrivalTime ?? call.aimedArrivalTime).toString({
-				timeZoneName: "never",
-			}),
+			recordedAt: recordedAt.toString({ timeZoneName: "never" }),
 		};
 	}
 }
