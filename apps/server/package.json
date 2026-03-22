@@ -12,13 +12,13 @@
 		"migrations:push": "drizzle-kit push"
 	},
 	"devDependencies": {
-		"@types/node": "^22.13.10",
+		"@types/node": "^25.5.0",
 		"drizzle-kit": "^0.31.10",
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@hono/node-server": "^1.19.4",
+		"@hono/node-server": "^1.19.11",
 		"@hono/oauth-providers": "^0.8.5",
 		"arktype": "^2.2.0",
 		"drizzle-orm": "^0.45.1",
