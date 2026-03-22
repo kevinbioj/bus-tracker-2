@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
-import { Activity, useEffect, useEffectEvent, useRef, useState } from "react";
+import { Activity, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DataSet } from "vis-data";
 import {
@@ -55,6 +55,51 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 	const currentDate = dayjs.tz(date, network.timezone);
 
+	const { newGroups, newItems, minStartedAt, maxUpdatedAt } = useMemo(() => {
+		const now = dayjs().tz(network.timezone);
+		const groups = assignments.vehicles
+			.toSorted((a, b) => numberSort(a.number, b.number))
+			.map((a) => ({
+				id: a.id,
+				number: a.number,
+				content: `<div class="flex items-center gap-1">n°${a.number}${a.designation ? ` <span class="hidden text-muted-foreground text-sm lg:block">${a.designation}</span>` : ""}</div>`,
+			}));
+
+		const items = assignments.vehicles.flatMap((a) =>
+			a.activities.map((act, index) => {
+				const start = dayjs(act.startedAt).tz(network.timezone);
+				const end = act.endedAt ? dayjs(act.endedAt).tz(network.timezone) : undefined;
+				const timeRange = end
+					? `<span class="font-bold">${start.format("HH:mm")}</span> - <span class="font-bold">${end.format("HH:mm")}</span>`
+					: `depuis <span class="font-bold">${start.format("HH:mm")}</span>`;
+
+				return {
+					id: `${a.id}-${index}-${act.startedAt}`,
+					group: a.id,
+					start: toTimelineDate(start, network.timezone),
+					end: toTimelineDate(end ?? now, network.timezone),
+					type: "range",
+					content: `<div class="leading-none overflow-hidden whitespace-nowrap">${timeRange}</div>`,
+					title: `<div>${timeRange}</div>`,
+				};
+			}),
+		);
+
+		let min = dayjs.tz("2099-12-31", network.timezone);
+		let max = dayjs.tz("2000-01-01", network.timezone);
+
+		for (const vehicle of assignments.vehicles) {
+			for (const activity of vehicle.activities) {
+				const startedAt = dayjs(activity.startedAt).tz(network.timezone);
+				const endedAt = activity.endedAt ? dayjs(activity.endedAt).tz(network.timezone) : now;
+				if (startedAt.isBefore(min)) min = startedAt;
+				if (endedAt.isAfter(max)) max = endedAt;
+			}
+		}
+
+		return { newGroups: groups, newItems: items, minStartedAt: min, maxUpdatedAt: max };
+	}, [assignments, network.timezone]);
+
 	useEffect(() => {
 		if (containerRef.current === null) return;
 
@@ -68,6 +113,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			verticalScroll: true,
 			horizontalScroll: true,
 			xss: { disabled: false, filterOptions: { whiteList: { div: ["class"], span: ["class"] } } },
+			groupOrder: (a: { number: string }, b: { number: string }) => numberSort(a.number, b.number),
 		} satisfies TimelineOptions;
 
 		const currentTimeline = new Timeline(
@@ -118,49 +164,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 	});
 
 	useEffect(() => {
-		if (timeline === null) {
-			return;
-		}
-
-		const newGroups = assignments.vehicles
-			.toSorted((a, b) => numberSort(a.number, b.number))
-			.map((a) => ({
-				id: a.id,
-				content: `<div class="flex items-center gap-1">n°${a.number}${a.designation ? ` <span class="hidden text-muted-foreground text-sm lg:block">${a.designation}</span>` : ""}</div>`,
-			}));
-
-		const newItems = assignments.vehicles.flatMap((a) =>
-			a.activities.map((act, index) => {
-				const start = dayjs(act.startedAt).tz(network.timezone);
-				const end = act.endedAt ? dayjs(act.endedAt).tz(network.timezone) : undefined;
-				const timeRange = end
-					? `<span class="font-bold">${start.format("HH:mm")}</span> - <span class="font-bold">${end.format("HH:mm")}</span>`
-					: `depuis <span class="font-bold">${start.format("HH:mm")}</span>`;
-
-				return {
-					id: `${a.id}-${index}-${act.startedAt}`,
-					group: a.id,
-					start: toTimelineDate(start, network.timezone),
-					end: toTimelineDate(end ?? dayjs(), network.timezone),
-					type: "range",
-					content: `<div class="leading-none overflow-hidden whitespace-nowrap">${timeRange}</div>`,
-					title: `<div>${timeRange}</div>`,
-				};
-			}),
-		);
-
-		const [minStartedAt, maxUpdatedAt] = assignments.vehicles
-			.flatMap((vehicle) => vehicle.activities)
-			.reduce(
-				([min, max], activity) => {
-					const startedAt = dayjs(activity.startedAt).tz(network.timezone);
-					const endedAt = activity.endedAt
-						? dayjs(activity.endedAt).tz(network.timezone)
-						: dayjs().tz(network.timezone);
-					return [startedAt.isBefore(min) ? startedAt : min, endedAt?.isAfter(max) ? endedAt : max];
-				},
-				[dayjs.tz("2099-12-31", network.timezone), dayjs.tz("2000-01-01", network.timezone)],
-			);
+		if (timeline === null) return;
 
 		groups.update(newGroups);
 		items.update(newItems);
@@ -179,56 +183,56 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 		});
 
 		updateTimelineStartEnd();
-	}, [assignments, timeline, network.timezone, groups, items]);
+	}, [newGroups, newItems, minStartedAt, maxUpdatedAt, timeline, network.timezone, groups, items]);
 
 	return (
 		<>
 			<style>
 				{`
-					.vis-timeline-custom .vis-timeline {
-						border: none;
-						font-family: inherit;
-					}
+			.vis-timeline-custom .vis-timeline {
+				border: none;
+				font-family: inherit;
+			}
 
-					.vis-timeline-custom .vis-item {
-						background-color: #${line.color};
-						border-color: #${line.textColor};
-						color: #${line.textColor};
-					}
+			.vis-timeline-custom .vis-item {
+				background-color: #${line.color};
+				border-color: #${line.textColor};
+				color: #${line.textColor};
+			}
 
-					.vis-timeline-custom .vis-label {
-						color: var(--foreground);
-						cursor: pointer;
-					}
-					
-					.vis-time-axis .vis-grid.vis-minor {
-						border-color: var(--border);
-					}
+			.vis-timeline-custom .vis-label {
+				color: var(--foreground);
+				cursor: pointer;
+			}
+			
+			.vis-time-axis .vis-grid.vis-minor {
+				border-color: var(--border);
+			}
 
-					.vis-timeline-custom .vis-time-axis .vis-text {
-						color: var(--muted-foreground);
-					}
+			.vis-timeline-custom .vis-time-axis .vis-text {
+				color: var(--muted-foreground);
+			}
 
-					.vis-timeline-custom .vis-panel.vis-background.vis-vertical {
-						border-left: 1px solid var(--border);
-					}
+			.vis-timeline-custom .vis-panel.vis-background.vis-vertical {
+				border-left: 1px solid var(--border);
+			}
 
-					.vis-timeline-custom .vis-panel.vis-bottom, 
-					.vis-timeline-custom .vis-panel.vis-center, 
-					.vis-timeline-custom .vis-panel.vis-left, 
-					.vis-timeline-custom .vis-panel.vis-right, 
-					.vis-timeline-custom .vis-panel.vis-top {
-						border-color: var(--border);
-					}
+			.vis-timeline-custom .vis-panel.vis-bottom, 
+			.vis-timeline-custom .vis-panel.vis-center, 
+			.vis-timeline-custom .vis-panel.vis-left, 
+			.vis-timeline-custom .vis-panel.vis-right, 
+			.vis-timeline-custom .vis-panel.vis-top {
+				border-color: var(--border);
+			}
 
-					.vis-item.vis-range {
-						border-radius: var(--radius);
-					}
-					
-					.vis-label.vis-group-level-0 {
-						display: flex;
-						align-items: center;
-					}
+			.vis-item.vis-range {
+				border-radius: var(--radius);
+			}
+			
+			.vis-label.vis-group-level-0 {
+				display: flex;
+				align-items: center;
+			}
 				`}
 			</style>
 			<Activity mode={assignments.vehicles.length > 0 ? "visible" : "hidden"}>
