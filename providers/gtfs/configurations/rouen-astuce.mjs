@@ -94,6 +94,7 @@ const sources = [
 				tripUpdate.trip.routeId = `TNI:${tripUpdate.trip.routeId}`;
 			}
 
+			tripUpdate.trip.tripId = `TNI:${tripUpdate.trip.tripId}`;
 			return tripUpdate;
 		},
 		mapVehiclePosition: (vehicle) => {
@@ -101,8 +102,11 @@ const sources = [
 				vehicle.stopId = `TNI:${vehicle.stopId}`;
 			}
 
-			if (typeof vehicle.trip?.routeId === "string") {
-				vehicle.trip.routeId = `TNI:${vehicle.trip.routeId}`;
+			if (vehicle.trip !== undefined) {
+				vehicle.trip.tripId = `TNI:${vehicle.trip.tripId}`;
+				if (vehicle.trip.routeId !== undefined) {
+					vehicle.trip.routeId = `TNI:${vehicle.trip.routeId}`;
+				}
 			}
 
 			return vehicle;
