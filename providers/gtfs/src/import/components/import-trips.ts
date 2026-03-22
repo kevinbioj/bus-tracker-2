@@ -9,6 +9,7 @@ import type { Stop } from "../../model/stop.js";
 import { StopTime } from "../../model/stop-time.js";
 import { Trip } from "../../model/trip.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
+import { getDistance } from "../../utils/get-distance.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
 
@@ -23,7 +24,7 @@ type StopTimeRecord = CsvRecord<
 
 export async function importTrips(
 	gtfsDirectory: string,
-	{ filterTrips, mapTripId, mapRouteId, mapStopId, ignoreBlocks }: ImportGtfsOptions,
+	{ filterTrips, mapTripId, mapRouteId, mapStopId, ignoreBlocks, computeShapeDistTraveled }: ImportGtfsOptions,
 	routes: Map<string, Route>,
 	services: Map<string, Service>,
 	shapes: Map<string, Shape>,
@@ -127,6 +128,35 @@ export async function importTrips(
 
 	for (const trip of trips.values()) {
 		trip.stopTimes.sort((a, b) => a.sequence - b.sequence);
+
+		if (computeShapeDistTraveled && trip.stopTimes.some((st) => st.distanceTraveled === undefined)) {
+			let currentDist = 0;
+			for (let i = 0; i < trip.stopTimes.length; i++) {
+				const stopTime = trip.stopTimes[i]!;
+
+				if (stopTime.distanceTraveled === undefined) {
+					if (trip.shape !== undefined) {
+						stopTime.distanceTraveled = trip.shape.findClosestPointDistance(
+							stopTime.stop.latitude,
+							stopTime.stop.longitude,
+						);
+					} else {
+						if (i > 0) {
+							const prevStopTime = trip.stopTimes[i - 1]!;
+							currentDist += getDistance(
+								prevStopTime.stop.latitude,
+								prevStopTime.stop.longitude,
+								stopTime.stop.latitude,
+								stopTime.stop.longitude,
+							);
+						}
+						stopTime.distanceTraveled = currentDist;
+					}
+				} else {
+					currentDist = stopTime.distanceTraveled;
+				}
+			}
+		}
 	}
 
 	return trips;

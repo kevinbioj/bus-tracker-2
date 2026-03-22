@@ -7,8 +7,8 @@
 		"build": "tsc",
 		"dev": "tsx watch src/index.ts",
 		"start": "node .",
-		"test": "vitest --run .",
-		"test:watch": "vitest ."
+		"test": "vitest --run --exclude dist",
+		"test:watch": "vitest --exclude dist"
 	},
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",

@@ -16,6 +16,7 @@ export type ImportGtfsOptions = {
 	mapRouteId?: (routeId: string) => string;
 	importAllStops?: boolean;
 	shapesStrategy?: LoadShapesStrategy;
+	computeShapeDistTraveled?: boolean;
 	ignoreBlocks?: boolean;
 	postLoad?: (resource: Awaited<ReturnType<typeof importGtfs>>) => unknown;
 };

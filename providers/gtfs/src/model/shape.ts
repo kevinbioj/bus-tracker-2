@@ -1,5 +1,7 @@
 import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 
+import { getDistance } from "../utils/get-distance.js";
+
 const pathCache = new WeakMap<Shape, VehicleJourneyPath>();
 
 export class Shape {
@@ -22,6 +24,24 @@ export class Shape {
 
 	getPointDistanceTraveled(index: number) {
 		return this.points[index * 3 + 2];
+	}
+
+	findClosestPointDistance(lat: number, lon: number) {
+		let closestDist = Infinity;
+		let closestPointDist = 0;
+
+		for (let i = 0; i < this.length; i++) {
+			const pointLat = this.getPointLatitude(i);
+			const pointLon = this.getPointLongitude(i);
+			const dist = getDistance(lat, lon, pointLat, pointLon);
+
+			if (dist < closestDist) {
+				closestDist = dist;
+				closestPointDist = this.getPointDistanceTraveled(i) || 0;
+			}
+		}
+
+		return closestPointDist;
 	}
 
 	findPointIndex(distanceTraveled: number) {

@@ -120,6 +120,7 @@ const sources = [
 		id: "douai",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/99cf5e2f-87c2-4ff1-bc0d-32f04cc213ab",
 		realtimeResourceHrefs: [],
+		gtfsOptions: { computeShapeDistTraveled: true },
 		getNetworkRef: () => "EVEOLE",
 	},
 	{

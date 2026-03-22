@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { Shape } from "../../model/shape.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 import { fileExists } from "../../utils/file-exists.js";
+import { getDistance } from "../../utils/get-distance.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
 
@@ -46,10 +47,25 @@ export async function importShapes(gtfsDirectory: string, options: ImportGtfsOpt
 		indices.sort((a, b) => data.seqs[a]! - data.seqs[b]!);
 
 		const typedPoints = new Float64Array(indices.length * 3);
+		let currentDist = 0;
+
+		const computeDistances = options.computeShapeDistTraveled && data.dists.some((dist) => dist === undefined);
+
 		for (let i = 0; i < indices.length; i++) {
 			const idx = indices[i]!;
-			typedPoints[i * 3] = data.lats[idx]!;
-			typedPoints[i * 3 + 1] = data.lons[idx]!;
+			const lat = data.lats[idx]!;
+			const lon = data.lons[idx]!;
+
+			if (computeDistances) {
+				if (i > 0) {
+					const prevIdx = indices[i - 1]!;
+					currentDist += getDistance(data.lats[prevIdx]!, data.lons[prevIdx]!, lat, lon);
+				}
+				data.dists[idx] = currentDist;
+			}
+
+			typedPoints[i * 3] = lat;
+			typedPoints[i * 3 + 1] = lon;
 			typedPoints[i * 3 + 2] = data.dists[idx]!;
 		}
 
