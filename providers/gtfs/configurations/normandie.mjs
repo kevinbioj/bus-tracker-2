@@ -243,10 +243,10 @@ const sources = [
 	//- Némus
 	{
 		id: "flers",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/d8b9a49f-db3b-4b53-b0a0-345072ce1249",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/7d399812-e018-4e35-b3ae-a5ba44c8ad91",
 		realtimeResourceHrefs: [
-			"https://proxy.transport.data.gouv.fr/resource/flers-nemus-gtfs-rt-trip-update",
-			"https://proxy.transport.data.gouv.fr/resource/flers-nemus-gtfs-rt-vehicle-position",
+			"https://flers-agglo.plateforme-2cloud.com/api/gtfsrt/2.0/tripupdates/FLERS-5197-3181-6523/bin?network=104",
+			"https://flers-agglo.plateforme-2cloud.com/api/gtfsrt/2.0/vehiclepositions/FLERS-5197-3181-6523/bin?network=104",
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "NEMUS",
