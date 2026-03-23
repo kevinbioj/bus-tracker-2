@@ -134,11 +134,7 @@ export async function computeVehicleJourneys(source: Source) {
 
 	try {
 		updateLog("%s 1/2 ► Downloading real-time data from feeds.", sourceId);
-		const { tripUpdates, vehiclePositions } = await downloadGtfsRt(
-			source.options.realtimeResourceHrefs ?? [],
-			source.options.mapTripUpdate,
-			source.options.mapVehiclePosition,
-		);
+		const { tripUpdates, vehiclePositions } = await downloadGtfsRt(source);
 		const downloadTime = watch.step();
 
 		updateLog("%s 2/2 ► Computing active journeys.", sourceId);

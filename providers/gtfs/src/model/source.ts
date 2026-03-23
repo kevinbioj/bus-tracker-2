@@ -13,10 +13,25 @@ import type { TripUpdate, VehicleDescriptor, VehiclePosition } from "./gtfs-rt.j
 import type { Journey } from "./journey.js";
 import type { Trip } from "./trip.js";
 
+export type SourceAuth =
+	| {
+			type: "basic";
+			username?: string;
+			password?: string;
+	  }
+	| {
+			type: "header";
+			name: string;
+			value: string;
+	  };
+
 export type SourceOptions = {
 	// --- Data provisioning
 	staticResourceHref: string;
 	realtimeResourceHrefs?: string[];
+	auth?: SourceAuth;
+	staticAuth?: SourceAuth;
+	realtimeAuth?: SourceAuth;
 	gtfsOptions?: ImportGtfsOptions;
 	appendTripUpdateInformation?: boolean;
 	allowTripGuessing?: boolean;
@@ -33,8 +48,8 @@ export type SourceOptions = {
 	mapLineRef?: (lineRef: string) => string;
 	mapStopRef?: (stopRef: string) => string;
 	mapTripRef?: (tripRef: string) => string;
-	mapTripUpdate?: (tripUpdate: TripUpdate) => TripUpdate | undefined;
-	mapVehiclePosition?: (vehicle: VehiclePosition) => VehiclePosition | undefined;
+	mapTripUpdate?: (tripUpdate: TripUpdate, gtfs: Gtfs) => TripUpdate | undefined;
+	mapVehiclePosition?: (vehicle: VehiclePosition, gtfs: Gtfs) => VehiclePosition | undefined;
 	isValidJourney?: (vehicleJourney: VehicleJourney) => boolean;
 };
 
@@ -60,16 +75,18 @@ export class Source {
 
 		try {
 			updateLog("%s 1/3 ► Downloading GTFS resource into temporary directory...", sourceId);
-			await downloadGtfs(this.options.staticResourceHref, resourceDirectory);
+			await downloadGtfs(this, resourceDirectory);
 
 			updateLog("%s 2/3 ► Loading GTFS resource contents into memory...", sourceId);
 			const gtfs: Gtfs = {
 				...(await importGtfs(resourceDirectory, this.options.gtfsOptions)),
 				importedAt: Temporal.Now.instant(),
-				...(await getStaleness(this.options.staticResourceHref).catch(() => ({
-					lastModified: null,
-					etag: null,
-				}))),
+				...(await getStaleness(this.options.staticResourceHref, this.options.staticAuth ?? this.options.auth).catch(
+					() => ({
+						lastModified: null,
+						etag: null,
+					}),
+				)),
 			};
 
 			updateLog("%s 3/3 ► Pre-computing scheduled journeys...", sourceId);
@@ -137,7 +154,10 @@ export class Source {
 
 		try {
 			updateLog("%s ► Fetching resource staleness at '%s'.", sourceId, this.options.staticResourceHref);
-			const staleness = await getStaleness(this.options.staticResourceHref);
+			const staleness = await getStaleness(
+				this.options.staticResourceHref,
+				this.options.staticAuth ?? this.options.auth,
+			);
 
 			if (this.gtfs.lastModified !== staleness.lastModified || this.gtfs.etag !== staleness.etag) {
 				updateLog("%s ℹ Fetched staleness is different than current: updating resource.", sourceId);
