@@ -40,7 +40,7 @@ function startVehicleWorker() {
 	});
 
 	worker.on("error", (error) => {
-		console.error("✘ Worker has encountered an error:", error.message ?? error);
+		console.error("✘ Worker has encountered an error:", error instanceof Error ? error.stack : error);
 		console.warn("⚠ Worker crashed! Restarting in 5 seconds.");
 		setTimeout(() => {
 			worker.terminate();
