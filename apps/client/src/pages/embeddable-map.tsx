@@ -20,7 +20,9 @@ export default function EmbeddableMapPage() {
 
 	const mapOptions = useMemo(
 		() => ({
-			center: network.embedMapCenter ? ([network.embedMapCenter[0], network.embedMapCenter[1]] as [number, number]) : undefined,
+			center: network.embedMapCenter
+				? ([network.embedMapCenter[0], network.embedMapCenter[1]] as [number, number])
+				: undefined,
 			style: "https://tiles.openfreemap.org/styles/liberty",
 			zoom: network.embedMapCenter ? network.embedMapCenter[2] : undefined,
 		}),
@@ -30,20 +32,22 @@ export default function EmbeddableMapPage() {
 	const onMap = useCallback((map: maplibregl.Map) => {
 		const searchParams = new URLSearchParams(window.location.search);
 
-		const navigationControl = new maplibregl.NavigationControl();
-		map.addControl(navigationControl, "top-left");
+		setTimeout(() => {
+			const navigationControl = new maplibregl.NavigationControl();
+			map.addControl(navigationControl, "top-left");
 
-		if (searchParams.has("with-fullscreen")) {
-			const fullscreenControl = new maplibregl.FullscreenControl();
-			map.addControl(fullscreenControl, "top-right");
-		}
+			if (searchParams.has("with-fullscreen")) {
+				const fullscreenControl = new maplibregl.FullscreenControl();
+				map.addControl(fullscreenControl, "top-right");
+			}
 
-		if (searchParams.has("with-geolocate")) {
-			const geolocateControl = new maplibregl.GeolocateControl({
-				trackUserLocation: true,
-			});
-			map.addControl(geolocateControl, "top-right");
-		}
+			if (searchParams.has("with-geolocate")) {
+				const geolocateControl = new maplibregl.GeolocateControl({
+					trackUserLocation: true,
+				});
+				map.addControl(geolocateControl, "top-right");
+			}
+		}, 1);
 	}, []);
 
 	return (

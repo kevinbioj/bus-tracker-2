@@ -66,7 +66,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 				trackUserLocation: true,
 			});
 			map.addControl(geolocateControl, "top-right");
-		});
+		}, 1);
 	}, []);
 
 	const onFilterChange = useCallback((line?: { id: number }) => setLineId(line?.id ?? null), [setLineId]);
