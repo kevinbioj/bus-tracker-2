@@ -8,7 +8,7 @@ if (process.argv.length < 3) {
 	process.exit(1);
 }
 
-console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
+console.log("► Connecting to Redis.");
 const redis = createClient({
 	url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
 	username: process.env.REDIS_USERNAME,
@@ -16,13 +16,13 @@ const redis = createClient({
 });
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
-console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
+console.log(`► Connected! Journeys will be published into '${channel}'.`);
 console.log();
 
 const [, , flowlyId, networkRef] = process.argv;
 
 while (true) {
-	console.log("► Fetching vehicles from Flowly...", Temporal.Now.instant());
+	console.log("► Fetching vehicles from Flowly...");
 
 	const response = await fetch(`https://${flowlyId}.flowly.re/Portal/MapDevices.aspx`);
 	if (!response.ok) {
@@ -94,7 +94,7 @@ while (true) {
 		} satisfies VehicleJourney;
 	});
 
-	await redis.publish("journeys", JSON.stringify(vehicleJourneys));
-	console.log(`► Published ${vehicleJourneys.length} vehicle journeys`, Temporal.Now.instant());
+	await redis.publish(channel, JSON.stringify(vehicleJourneys));
+	console.log(`✓ Published ${vehicleJourneys.length} vehicle journeys`);
 	await setTimeout(30_000);
 }
