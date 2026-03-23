@@ -349,24 +349,26 @@ const sources = [
 		? [
 				{
 					id: "bagnoles",
-					staticResourceHref: `https://www.maxtrip.fr/api/v1/Export/Gtfs/boubet?apiKey=${process.env.BOUBET_API_KEY}`,
+					staticResourceHref: "https://gtfs.bus-tracker.fr/private/bagnoles.zip",
+					staticAuth: {
+						type: "basic",
+						username: process.env.GTFS_PRIVATE_AUTH_USERNAME,
+						password: process.env.GTFS_PRIVATE_AUTH_PASSWORD,
+					},
 					realtimeResourceHrefs: [
 						`https://www.maxtrip.fr/api/v1/Export/GtfsRealtime/boubet?apiKey=${process.env.BOUBET_API_KEY}`,
 					],
-					gtfsOptions: {
-						filterTrips: (trip) => ["3659", "7755"].includes(trip.route.id),
-					},
 					mode: "NO-TU",
 					getNetworkRef: () => "BAGNOLES",
-					mapTripUpdate: (tripUpdate) => {
-						if (!["3659", "7755"].includes(tripUpdate.trip?.routeId)) {
+					mapTripUpdate: (tripUpdate, gtfs) => {
+						if (!gtfs.routes.has(tripUpdate.trip.routeId)) {
 							return;
 						}
 
 						return tripUpdate;
 					},
-					mapVehiclePosition: (vehiclePosition) => {
-						if (!["3659", "7755"].includes(vehiclePosition.trip?.routeId)) {
+					mapVehiclePosition: (vehiclePosition, gtfs) => {
+						if (!gtfs.routes.has(vehiclePosition.trip?.routeId)) {
 							return;
 						}
 
