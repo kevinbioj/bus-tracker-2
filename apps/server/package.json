@@ -14,16 +14,14 @@
 	"devDependencies": {
 		"@types/node": "^25.5.0",
 		"drizzle-kit": "^0.31.10",
-		"typescript": "^5.9.3"
+		"typescript": "^6.0.2"
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@hono/node-server": "^1.19.11",
-		"@hono/oauth-providers": "^0.8.5",
 		"arktype": "^2.2.0",
 		"drizzle-orm": "^0.45.1",
-		"hono": "^4.12.8",
-		"hono-sessions": "^0.8.1",
+		"hono": "^4.12.9",
 		"postgres": "^3.4.8",
 		"redis": "^5.11.0",
 		"temporal-polyfill": "^0.3.2",

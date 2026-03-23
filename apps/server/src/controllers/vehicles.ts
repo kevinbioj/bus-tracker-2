@@ -4,7 +4,7 @@ import { Temporal } from "temporal-polyfill";
 import { match } from "ts-pattern";
 import { z } from "zod";
 
-import { createJsonValidator, createParamValidator, createQueryValidator } from "../api/validator-helpers.js";
+import { createJsonValidator, createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
 import { database } from "../core/database/database.js";
 import {
 	editionLogsTable,

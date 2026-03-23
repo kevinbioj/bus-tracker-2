@@ -1,7 +1,7 @@
 import { and, desc, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 
-import { createQueryValidator } from "../api/validator-helpers.js";
+import { createQueryValidator } from "../utils/validator-helpers.js";
 import { database } from "../core/database/database.js";
 import { announcementsTable } from "../core/database/schema.js";
 

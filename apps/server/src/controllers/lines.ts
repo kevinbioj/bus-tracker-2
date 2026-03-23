@@ -2,7 +2,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { Temporal } from "temporal-polyfill";
 import * as z from "zod";
 
-import { createParamValidator, createQueryValidator } from "../api/validator-helpers.js";
+import { createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
 import { database } from "../core/database/database.js";
 import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
 import { journeyStore } from "../core/store/journey-store.js";

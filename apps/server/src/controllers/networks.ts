@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import * as z from "zod";
 
-import { createParamValidator, createQueryValidator } from "../api/validator-helpers.js";
+import { createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
 import { database } from "../core/database/database.js";
 import { linesTable, networksTable, operatorsTable } from "../core/database/schema.js";
 import { journeyStore } from "../core/store/journey-store.js";
