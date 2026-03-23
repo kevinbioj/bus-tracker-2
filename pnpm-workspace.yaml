@@ -3,6 +3,7 @@ packages:
   - apps/server
   - libraries/contracts
   - providers/idelis
+  - providers/flowly
   - providers/gtfs
   - providers/hawk
   - providers/twisto
