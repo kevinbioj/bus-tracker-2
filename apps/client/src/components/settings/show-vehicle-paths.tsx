@@ -6,7 +6,7 @@ import { Switch } from "~/components/ui/switch";
 
 export function ShowVehiclePathsSetting() {
 	const id = useId();
-	const [showVehiclePaths, setShowVehiclePaths] = useLocalStorage("show-vehicle-paths", false);
+	const [showVehiclePaths, setShowVehiclePaths] = useLocalStorage("show-vehicle-paths", true);
 
 	return (
 		<div className="flex items-center justify-between gap-4">

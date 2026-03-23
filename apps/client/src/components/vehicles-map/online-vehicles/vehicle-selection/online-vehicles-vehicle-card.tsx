@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { LocateFixedIcon, LocateIcon } from "lucide-react";
+import { useQueryState } from "nuqs";
 import type { PropsWithChildren } from "react";
 import { Link } from "react-router-dom";
 import { match, P } from "ts-pattern";
@@ -24,6 +25,7 @@ export function OnlineVehiclesVehicleCard({
 	onVehicleSelect,
 }: Readonly<OnlineVehiclesVehicleCard>) {
 	const queryClient = useQueryClient();
+	const [, setMarkerId] = useQueryState("marker-id");
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 
 	const flyTo = () => {
@@ -31,6 +33,7 @@ export function OnlineVehiclesVehicleCard({
 
 		onVehicleSelect();
 		queryClient.prefetchQuery(GetVehicleJourneyQuery(vehicle.activity.markerId));
+		setMarkerId(vehicle.activity.markerId);
 	};
 
 	const LinkWrapper = ({ children }: PropsWithChildren) =>
@@ -88,16 +91,13 @@ export function OnlineVehiclesVehicleCard({
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Button
-								asChild
 								className="absolute bottom-0 right-0 rounded-md group"
 								onClick={flyTo}
 								variant="inherit"
 								size="icon"
 							>
-								<Link to={{ search: `marker-id=${vehicle.activity.markerId}` }}>
-									<LocateFixedIcon className="absolute opacity-0 group-hover:opacity-100 transition-opacity z-10" />
-									<LocateIcon className="absolute opacity-100 group-hover:opacity-0 transition-opacity" />
-								</Link>
+								<LocateFixedIcon className="absolute opacity-0 group-hover:opacity-100 transition-opacity z-10" />
+								<LocateIcon className="absolute opacity-100 group-hover:opacity-0 transition-opacity" />
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent side="left">

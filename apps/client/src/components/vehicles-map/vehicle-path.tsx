@@ -82,7 +82,7 @@ type VehiclePathProps = {
 };
 
 export function VehiclePath({ journeyId }: VehiclePathProps) {
-	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", false);
+	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", true);
 
 	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId ?? null, true));
 	const { data: path } = useQuery(GetPathQuery(showVehiclePaths ? journey?.pathRef : undefined));

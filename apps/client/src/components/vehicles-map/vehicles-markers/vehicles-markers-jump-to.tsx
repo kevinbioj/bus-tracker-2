@@ -1,5 +1,5 @@
+import { useQueryState } from "nuqs";
 import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 
 import type { CircleMarkerFeature, CircleMarkerSource } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
@@ -12,9 +12,7 @@ type JumpToProps = {
 
 export function JumpTo({ openPopup }: JumpToProps) {
 	const map = useMap();
-	const [searchParams, setSearchParams] = useSearchParams();
-
-	const markerId = searchParams.get("marker-id");
+	const [markerId, setMarkerId] = useQueryState("marker-id");
 
 	useEffect(() => {
 		if (markerId === null) return;
@@ -41,10 +39,7 @@ export function JumpTo({ openPopup }: JumpToProps) {
 
 					openPopup(feature, "selected");
 					map.off("sourcedata", onSourceData);
-					setSearchParams((searchParams) => {
-						searchParams.delete("marker-id");
-						return searchParams;
-					});
+					setMarkerId(null);
 					done = true;
 				};
 
@@ -52,10 +47,7 @@ export function JumpTo({ openPopup }: JumpToProps) {
 				setTimeout(() => {
 					if (done) return;
 					map.off("sourcedata", onSourceData);
-					setSearchParams((searchParams) => {
-						searchParams.delete("marker-id");
-						return searchParams;
-					});
+					setMarkerId(null);
 				}, 5000);
 			} catch (e) {
 				console.error(e);
@@ -68,7 +60,7 @@ export function JumpTo({ openPopup }: JumpToProps) {
 		return () => {
 			abort = true;
 		};
-	}, [map, markerId, openPopup, setSearchParams]);
+	}, [map, markerId, openPopup, setMarkerId]);
 
 	return null;
 }

@@ -4,8 +4,9 @@ import {
 	createContext,
 	type PropsWithChildren,
 	type Ref,
-	useCallback,
 	useContext,
+	useEffect,
+	useRef,
 	useState,
 } from "react";
 
@@ -19,31 +20,30 @@ const MapContext = createContext<maplibregl.Map | null>(null);
 
 export function MapComponent({ children, containerProps, mapOptions, ref }: MapComponentProps) {
 	const [map, setMap] = useState<maplibregl.Map | null>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
 
-	const containerRef = useCallback(
-		(container: HTMLDivElement | null) => {
-			if (container === null) return;
+	useEffect(() => {
+		const container = containerRef.current;
+		if (container === null) return;
 
-			const instance = new maplibregl.Map({
-				...mapOptions,
-				container,
-			});
+		const instance = new maplibregl.Map({
+			...mapOptions,
+			container,
+		});
 
-			setMap(instance);
+		setMap(instance);
 
-			if (typeof ref === "function") {
-				ref(instance);
-			} else if (ref !== undefined && ref !== null) {
-				ref.current = instance;
-			}
+		if (typeof ref === "function") {
+			ref(instance);
+		} else if (ref !== undefined && ref !== null) {
+			ref.current = instance;
+		}
 
-			return () => {
-				instance.remove();
-				setMap(null);
-			};
-		},
-		[mapOptions, ref],
-	);
+		return () => {
+			instance.remove();
+			setMap(null);
+		};
+	}, [mapOptions, ref]);
 
 	return (
 		<div ref={containerRef} {...containerProps}>
