@@ -44,6 +44,8 @@ export const vehicleJourneyCallSchema = type({
 	stopOrder: "number>=0",
 	"platformName?": "string",
 	"distanceTraveled?": "number",
+	"latitude?": "number",
+	"longitude?": "number",
 	callStatus: vehicleJourneyCallStatusEnum,
 	"flags?": vehicleJourneyCallFlagsEnum.array(),
 });

@@ -26,6 +26,8 @@ export type DisposeableVehicleJourney = {
 		stopRef: string;
 		stopName: string;
 		stopOrder: number;
+		latitude?: number;
+		longitude?: number;
 		platformName?: string;
 		distanceTraveled?: number;
 		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";

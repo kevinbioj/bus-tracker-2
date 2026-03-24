@@ -72,6 +72,40 @@ const futurePathLayer: maplibregl.AddLayerObject = {
 	filter: ["==", ["get", "type"], "future"],
 };
 
+const stopsLayer: maplibregl.AddLayerObject = {
+	id: "vehicle-path-stops",
+	source: "vehicle-path",
+	type: "circle",
+	paint: {
+		"circle-color": ["get", "strokeColor"],
+		"circle-radius": 3,
+		"circle-stroke-width": 1,
+		"circle-stroke-color": ["get", "color"],
+	},
+	filter: ["==", ["get", "type"], "stop"],
+};
+
+const stopsLabelLayer: maplibregl.AddLayerObject = {
+	id: "vehicle-path-stops-label",
+	source: "vehicle-path",
+	type: "symbol",
+	layout: {
+		"text-field": ["get", "name"],
+		"text-font": ["Achemine Bold"],
+		"text-size": 12,
+		"text-offset": [0.8, 0],
+		"text-anchor": "left",
+		"text-allow-overlap": false,
+		"text-ignore-placement": false,
+	},
+	paint: {
+		"text-color": ["get", "strokeColor"],
+		"text-halo-color": ["get", "color"],
+		"text-halo-width": 1,
+	},
+	filter: ["==", ["get", "type"], "stop"],
+};
+
 const initialSource: maplibregl.SourceSpecification = {
 	type: "geojson",
 	data: { type: "FeatureCollection", features: [] },
@@ -162,6 +196,55 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 			});
 		}
 
+		if (journey?.calls !== undefined) {
+			for (const call of journey.calls) {
+				// Find coordinates for this distance
+				let stopCoords: number[] | undefined;
+
+				if (call.distanceTraveled !== undefined) {
+					for (let i = 0; i < points.length - 1; i++) {
+						const [lat1, lon1, dist1] = points[i];
+						const [lat2, lon2, dist2] = points[i + 1];
+
+						if (
+							dist1 !== undefined &&
+							dist2 !== undefined &&
+							call.distanceTraveled >= dist1 &&
+							call.distanceTraveled <= dist2
+						) {
+							if (dist1 === dist2) {
+								stopCoords = [lon1, lat1];
+							} else {
+								const t = (call.distanceTraveled - dist1) / (dist2 - dist1);
+								const interpLat = lat1 + t * (lat2 - lat1);
+								const interpLon = lon1 + t * (lon2 - lon1);
+								stopCoords = [interpLon, interpLat];
+							}
+							break;
+						}
+					}
+				}
+
+				// Fallback to direct coordinates if interpolation failed or distanceTraveled is missing
+				if (stopCoords === undefined && call.longitude !== undefined && call.latitude !== undefined) {
+					stopCoords = [call.longitude, call.latitude];
+				}
+
+				if (stopCoords !== undefined) {
+					features.push({
+						type: "Feature",
+						geometry: { type: "Point", coordinates: stopCoords },
+						properties: {
+							type: "stop",
+							name: call.stopName,
+							color: pathColor,
+							strokeColor: pathStrokeColor,
+						},
+					});
+				}
+			}
+		}
+
 		return { type: "FeatureCollection", features };
 	}, [journey, journeyId, path, line, showVehiclePaths]);
 
@@ -170,6 +253,8 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 	useMapLayer(pastPathLayer, "vehicles-arrows");
 	useMapLayer(futurePathStrokeLayer, "vehicles-arrows");
 	useMapLayer(futurePathLayer, "vehicles-arrows");
+	useMapLayer(stopsLayer, "vehicles-arrows");
+	useMapLayer(stopsLabelLayer, "vehicles-arrows");
 
 	useEffect(() => {
 		if (source) {
