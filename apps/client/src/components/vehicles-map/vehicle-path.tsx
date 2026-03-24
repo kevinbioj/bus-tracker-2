@@ -123,77 +123,82 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 	const { data: line } = useQuery(GetLineQuery(journey?.lineId));
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
-		if (journey?.id !== journeyId || path === undefined || line === undefined || !showVehiclePaths) {
+		if (journey?.id !== journeyId || !showVehiclePaths) {
 			return { type: "FeatureCollection", features: [] };
 		}
 
-		const points = path.p;
-		const currentDistanceTraveled = journey?.position.distanceTraveled ?? 0;
+		const color = line?.color ?? journey?.line?.color ?? "000000";
+		const textColor = line?.textColor ?? journey?.line?.textColor ?? "FFFFFF";
 
-		const pastPoints: number[][] = [];
-		const futurePoints: number[][] = [];
-
-		let lastPoint: (typeof points)[number] | undefined;
-		for (const point of points) {
-			const [latitude, longitude, distanceTraveled] = point;
-			const coords = [longitude, latitude];
-
-			if (distanceTraveled !== undefined) {
-				if (distanceTraveled <= currentDistanceTraveled) {
-					pastPoints.push(coords);
-				} else {
-					if (lastPoint !== undefined && lastPoint[2] !== undefined && lastPoint[2] < currentDistanceTraveled) {
-						const [lastLat, lastLon, lastDist] = lastPoint;
-						const t = (currentDistanceTraveled - lastDist) / (distanceTraveled - lastDist);
-						const interpLat = lastLat + t * (latitude - lastLat);
-						const interpLon = lastLon + t * (longitude - lastLon);
-						const interpCoords = [interpLon, interpLat];
-						pastPoints.push(interpCoords);
-						futurePoints.push(interpCoords);
-					} else if (pastPoints.length > 0 && futurePoints.length === 0) {
-						// Add the last past point to future points to have a continuous line
-						futurePoints.push(pastPoints.at(-1)!);
-					}
-					futurePoints.push(coords);
-				}
-			} else {
-				// Fallback if no distanceTraveled
-				futurePoints.push(coords);
-			}
-			lastPoint = point;
-		}
-
-		// If all points are in futurePoints but we are at the start
-		if (futurePoints.length === 0 && pastPoints.length > 0) {
-			// All points are in the past
-		}
-
-		// If no distanceTraveled was provided, we just show everything as future
-		if (futurePoints.length === 0 && pastPoints.length === 0 && points.length > 0) {
-			for (const [latitude, longitude] of points) {
-				futurePoints.push([longitude, latitude]);
-			}
-		}
-
-		const pathColor = line.color ? `#${line.color}` : "#000000";
-		const pathStrokeColor = line.textColor ? `#${line.textColor}` : "#FFFFFF";
+		const pathColor = color.startsWith("#") ? color : `#${color}`;
+		const pathStrokeColor = textColor.startsWith("#") ? textColor : `#${textColor}`;
 
 		const features: GeoJSON.Feature[] = [];
 
-		if (pastPoints.length > 1) {
-			features.push({
-				type: "Feature",
-				geometry: { type: "LineString", coordinates: pastPoints },
-				properties: { type: "past", color: pathColor, strokeColor: pathStrokeColor },
-			});
-		}
+		if (path !== undefined) {
+			const points = path.p;
+			const currentDistanceTraveled = journey?.position.distanceTraveled ?? 0;
 
-		if (futurePoints.length > 1) {
-			features.push({
-				type: "Feature",
-				geometry: { type: "LineString", coordinates: futurePoints },
-				properties: { type: "future", color: pathColor, strokeColor: pathStrokeColor },
-			});
+			const pastPoints: number[][] = [];
+			const futurePoints: number[][] = [];
+
+			let lastPoint: (typeof points)[number] | undefined;
+			for (const point of points) {
+				const [latitude, longitude, distanceTraveled] = point;
+				const coords = [longitude, latitude];
+
+				if (distanceTraveled !== undefined) {
+					if (distanceTraveled <= currentDistanceTraveled) {
+						pastPoints.push(coords);
+					} else {
+						if (lastPoint !== undefined && lastPoint[2] !== undefined && lastPoint[2] < currentDistanceTraveled) {
+							const [lastLat, lastLon, lastDist] = lastPoint;
+							const t = (currentDistanceTraveled - lastDist) / (distanceTraveled - lastDist);
+							const interpLat = lastLat + t * (latitude - lastLat);
+							const interpLon = lastLon + t * (longitude - lastLon);
+							const interpCoords = [interpLon, interpLat];
+							pastPoints.push(interpCoords);
+							futurePoints.push(interpCoords);
+						} else if (pastPoints.length > 0 && futurePoints.length === 0) {
+							// Add the last past point to future points to have a continuous line
+							futurePoints.push(pastPoints.at(-1)!);
+						}
+						futurePoints.push(coords);
+					}
+				} else {
+					// Fallback if no distanceTraveled
+					futurePoints.push(coords);
+				}
+				lastPoint = point;
+			}
+
+			// If all points are in futurePoints but we are at the start
+			if (futurePoints.length === 0 && pastPoints.length > 0) {
+				// All points are in the past
+			}
+
+			// If no distanceTraveled was provided, we just show everything as future
+			if (futurePoints.length === 0 && pastPoints.length === 0 && points.length > 0) {
+				for (const [latitude, longitude] of points) {
+					futurePoints.push([longitude, latitude]);
+				}
+			}
+
+			if (pastPoints.length > 1) {
+				features.push({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: pastPoints },
+					properties: { type: "past", color: pathColor, strokeColor: pathStrokeColor },
+				});
+			}
+
+			if (futurePoints.length > 1) {
+				features.push({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates: futurePoints },
+					properties: { type: "future", color: pathColor, strokeColor: pathStrokeColor },
+				});
+			}
 		}
 
 		if (journey?.calls !== undefined) {
