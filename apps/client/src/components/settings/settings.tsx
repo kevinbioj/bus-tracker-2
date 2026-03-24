@@ -7,6 +7,7 @@ import { OnlyNetworksWithHistorySetting } from "~/components/settings/only-netwo
 import { PreviewVehicleNumberSetting } from "~/components/settings/preview-vehicle-number";
 import { ShowDebugInfoSetting } from "~/components/settings/show-debug-info";
 import { ShowVehiclePathsSetting } from "~/components/settings/show-vehicle-paths";
+import { StopLabelsStyleSetting } from "~/components/settings/stop-labels-style";
 import { DisplayAbsoluteTimeSetting } from "~/components/settings/use-absolute-time";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
@@ -37,6 +38,7 @@ export function Settings() {
 							<DisplayNextCallsSetting />
 							<PreviewVehicleNumberSetting />
 							<ShowVehiclePathsSetting />
+							<StopLabelsStyleSetting />
 						</section>
 
 						<Separator />

@@ -7,6 +7,7 @@ import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { GetLineQuery } from "~/api/lines";
 import { GetPathQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import type { StopLabelsStyle } from "~/components/settings/stop-labels-style";
 
 const pastPathStrokeLayer: maplibregl.AddLayerObject = {
 	id: "vehicle-path-past-stroke",
@@ -72,40 +73,6 @@ const futurePathLayer: maplibregl.AddLayerObject = {
 	filter: ["==", ["get", "type"], "future"],
 };
 
-const stopsLayer: maplibregl.AddLayerObject = {
-	id: "vehicle-path-stops",
-	source: "vehicle-path",
-	type: "circle",
-	paint: {
-		"circle-color": ["get", "strokeColor"],
-		"circle-radius": 3,
-		"circle-stroke-width": 1,
-		"circle-stroke-color": ["get", "color"],
-	},
-	filter: ["==", ["get", "type"], "stop"],
-};
-
-const stopsLabelLayer: maplibregl.AddLayerObject = {
-	id: "vehicle-path-stops-label",
-	source: "vehicle-path",
-	type: "symbol",
-	layout: {
-		"text-field": ["get", "name"],
-		"text-font": ["Achemine Bold"],
-		"text-size": 12,
-		"text-offset": [0.8, 0],
-		"text-anchor": "left",
-		"text-allow-overlap": false,
-		"text-ignore-placement": false,
-	},
-	paint: {
-		"text-color": ["get", "strokeColor"],
-		"text-halo-color": ["get", "color"],
-		"text-halo-width": 1,
-	},
-	filter: ["==", ["get", "type"], "stop"],
-};
-
 const initialSource: maplibregl.SourceSpecification = {
 	type: "geojson",
 	data: { type: "FeatureCollection", features: [] },
@@ -117,10 +84,68 @@ type VehiclePathProps = {
 
 export function VehiclePath({ journeyId }: VehiclePathProps) {
 	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", true);
+	const [stopLabelsStyle] = useLocalStorage<StopLabelsStyle>("stop-labels-style", "without-background");
 
 	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId ?? null, true));
 	const { data: path } = useQuery(GetPathQuery(showVehiclePaths ? journey?.pathRef : undefined));
 	const { data: line } = useQuery(GetLineQuery(journey?.lineId));
+
+	const stopsLabelLayer = useMemo<maplibregl.AddLayerObject>(
+		() => ({
+			id: "vehicle-path-stops-label",
+			source: "vehicle-path",
+			type: "symbol",
+			layout: {
+				"text-field": ["get", "name"],
+				"text-font": ["Achemine Bold"],
+				"text-size": 12,
+				"text-offset": [0.8, 0],
+				"text-anchor": "left",
+				"text-allow-overlap": false,
+				"text-ignore-placement": false,
+				...(stopLabelsStyle === "with-background"
+					? {
+							"icon-image": "square-icon",
+							"icon-text-fit": "both",
+							"icon-text-fit-padding": [1, 3, 1, 3],
+						}
+					: {}),
+				visibility: stopLabelsStyle === "disabled" ? "none" : "visible",
+			},
+			paint: {
+				...(stopLabelsStyle === "with-background"
+					? {
+							"icon-color": ["get", "color"],
+							"icon-opacity": 0.7,
+						}
+					: {}),
+				"text-color": ["get", "strokeColor"],
+				"text-halo-color": ["get", "color"],
+				"text-halo-width": 1,
+			},
+			filter: ["==", ["get", "type"], "stop"],
+		}),
+		[stopLabelsStyle],
+	);
+
+	const stopsLayer = useMemo<maplibregl.AddLayerObject>(
+		() => ({
+			id: "vehicle-path-stops",
+			source: "vehicle-path",
+			type: "circle",
+			layout: {
+				visibility: stopLabelsStyle === "disabled" ? "none" : "visible",
+			},
+			paint: {
+				"circle-color": ["get", "strokeColor"],
+				"circle-radius": 3,
+				"circle-stroke-width": 1,
+				"circle-stroke-color": ["get", "color"],
+			},
+			filter: ["==", ["get", "type"], "stop"],
+		}),
+		[stopLabelsStyle],
+	);
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
 		if (journey?.id !== journeyId || !showVehiclePaths) {

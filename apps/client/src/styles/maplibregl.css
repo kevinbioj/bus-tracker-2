@@ -4,6 +4,7 @@
 
 .maplibregl-zooming-map .maplibregl-popup,
 .maplibregl-zooming-map .maplibregl-popup-content {
+	/* biome-ignore lint/complexity/noImportantStyles: need to */
 	pointer-events: none !important;
 }
 
@@ -12,6 +13,7 @@
 	border-top-color: #444444 !important;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: works like that */
 .maplibregl-popup-content {
 	border: 1px solid #444444;
 	border-top-left-radius: 0px;
