@@ -183,7 +183,6 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			}
 
 			popup.setLngLat(feature.geometry.coordinates);
-			if (activeFeature?.type === "selected") adjustPan();
 
 			// Properties update (if they changed)
 			if (activeFeature !== null && feature.properties !== activeFeature.properties) {
