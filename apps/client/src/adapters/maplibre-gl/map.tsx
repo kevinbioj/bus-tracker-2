@@ -45,6 +45,37 @@ export function MapComponent({ children, containerProps, mapOptions, ref }: MapC
 		};
 	}, [mapOptions, ref]);
 
+	useEffect(() => {
+		const container = containerRef.current;
+		if (container === null) return;
+
+		let timeout: number | null = null;
+
+		const handleWheel = (e: WheelEvent) => {
+			if (timeout !== null) {
+				clearTimeout(timeout);
+			} else {
+				const path = e.composedPath();
+				const isInsidePopup = path.some((el) => el instanceof HTMLElement && el.classList.contains("maplibregl-popup"));
+
+				if (!isInsidePopup) {
+					container.classList.add("maplibregl-zooming-map");
+				}
+			}
+
+			timeout = window.setTimeout(() => {
+				container.classList.remove("maplibregl-zooming-map");
+				timeout = null;
+			}, 300);
+		};
+
+		container.addEventListener("wheel", handleWheel, { capture: true, passive: true });
+		return () => {
+			container.removeEventListener("wheel", handleWheel, { capture: true });
+			if (timeout !== null) clearTimeout(timeout);
+		};
+	}, []);
+
 	return (
 		<div ref={containerRef} {...containerProps}>
 			<MapContext.Provider value={map}>{map !== null && <>{children}</>}</MapContext.Provider>

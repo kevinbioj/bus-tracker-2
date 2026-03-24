@@ -2,6 +2,11 @@
 	z-index: 999;
 }
 
+.maplibregl-zooming-map .maplibregl-popup,
+.maplibregl-zooming-map .maplibregl-popup-content {
+	pointer-events: none !important;
+}
+
 .maplibregl-popup-tip {
 	/* biome-ignore lint/complexity/noImportantStyles: required to override it */
 	border-top-color: #444444 !important;
