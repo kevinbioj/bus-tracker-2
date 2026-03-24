@@ -198,42 +198,10 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 
 		if (journey?.calls !== undefined) {
 			for (const call of journey.calls) {
-				// Find coordinates for this distance
-				let stopCoords: number[] | undefined;
-
-				if (call.distanceTraveled !== undefined) {
-					for (let i = 0; i < points.length - 1; i++) {
-						const [lat1, lon1, dist1] = points[i];
-						const [lat2, lon2, dist2] = points[i + 1];
-
-						if (
-							dist1 !== undefined &&
-							dist2 !== undefined &&
-							call.distanceTraveled >= dist1 &&
-							call.distanceTraveled <= dist2
-						) {
-							if (dist1 === dist2) {
-								stopCoords = [lon1, lat1];
-							} else {
-								const t = (call.distanceTraveled - dist1) / (dist2 - dist1);
-								const interpLat = lat1 + t * (lat2 - lat1);
-								const interpLon = lon1 + t * (lon2 - lon1);
-								stopCoords = [interpLon, interpLat];
-							}
-							break;
-						}
-					}
-				}
-
-				// Fallback to direct coordinates if interpolation failed or distanceTraveled is missing
-				if (stopCoords === undefined && call.longitude !== undefined && call.latitude !== undefined) {
-					stopCoords = [call.longitude, call.latitude];
-				}
-
-				if (stopCoords !== undefined) {
+				if (call.latitude !== undefined && call.longitude !== undefined) {
 					features.push({
 						type: "Feature",
-						geometry: { type: "Point", coordinates: stopCoords },
+						geometry: { type: "Point", coordinates: [call.longitude, call.latitude] },
 						properties: {
 							type: "stop",
 							name: call.stopName,
