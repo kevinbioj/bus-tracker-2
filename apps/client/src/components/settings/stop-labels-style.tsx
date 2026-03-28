@@ -9,7 +9,7 @@ export function StopLabelsStyleSetting() {
 	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", true);
 	const [stopLabelsStyle, setStopLabelsStyle] = useLocalStorage<StopLabelsStyle>(
 		"stop-labels-style",
-		"without-background",
+		"with-background",
 	);
 
 	if (!showVehiclePaths) {

@@ -84,7 +84,7 @@ type VehiclePathProps = {
 
 export function VehiclePath({ journeyId }: VehiclePathProps) {
 	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", true);
-	const [stopLabelsStyle] = useLocalStorage<StopLabelsStyle>("stop-labels-style", "without-background");
+	const [stopLabelsStyle] = useLocalStorage<StopLabelsStyle>("stop-labels-style", "with-background");
 
 	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId ?? null, true));
 	const { data: path } = useQuery(GetPathQuery(showVehiclePaths ? journey?.pathRef : undefined));
