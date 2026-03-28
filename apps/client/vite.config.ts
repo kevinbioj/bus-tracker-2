@@ -33,9 +33,39 @@ export default defineConfig({
 				],
 			},
 			registerType: "autoUpdate",
+			includeAssets: ["logo.svg", "favicon.svg", "favicon.ico", "apple-touch-icon.png", "map-styles/*.json"],
 			workbox: {
-				maximumFileSizeToCacheInBytes: 4_194_304,
+				globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2,woff}"],
+				cleanupOutdatedCaches: true,
+				maximumFileSizeToCacheInBytes: 5_000_000,
 				navigateFallbackDenylist: [/^\/api/],
+				runtimeCaching: [
+					{
+						urlPattern: /^https:\/\/tiles\.openfreemap\.org\/.*/i,
+						handler: "CacheFirst",
+						options: {
+							cacheName: "map-tiles-cache",
+							expiration: {
+								maxEntries: 500,
+								maxAgeSeconds: 60 * 60 * 24 * 30,
+							},
+							cacheableResponse: {
+								statuses: [0, 200],
+							},
+						},
+					},
+					{
+						urlPattern: /^https:\/\/.*\.posthog\.com\/.*/i,
+						handler: "NetworkFirst",
+						options: {
+							cacheName: "posthog-cache",
+							expiration: {
+								maxEntries: 10,
+								maxAgeSeconds: 60 * 60 * 24,
+							},
+						},
+					},
+				],
 			},
 		}),
 	],
