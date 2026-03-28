@@ -8,4 +8,5 @@ export async function computeNextJourneys(sources: Source[]) {
 	}
 
 	console.log();
+	global.gc?.();
 }
