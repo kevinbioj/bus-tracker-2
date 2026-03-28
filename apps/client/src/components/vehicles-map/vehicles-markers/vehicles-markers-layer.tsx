@@ -57,6 +57,7 @@ const arrowsLayerObject: maplibregl.AddLayerObject = {
 	id: "vehicles-arrows",
 	source: "vehicles",
 	type: "symbol",
+	minzoom: 10,
 	layout: {
 		"icon-image": "arrow-icon",
 		"icon-size": 0.5,
@@ -77,6 +78,7 @@ const textLayerObject: maplibregl.AddLayerObject = {
 	id: "vehicles-text",
 	type: "symbol",
 	source: "vehicles",
+	minzoom: 14,
 	filter: ["!=", ["get", "previewText"], null],
 	layout: {
 		"text-field": ["get", "previewText"],
