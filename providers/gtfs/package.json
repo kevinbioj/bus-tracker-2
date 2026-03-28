@@ -17,7 +17,7 @@
 		"@types/papaparse": "^5.5.2",
 		"tsx": "^4.21.0",
 		"typescript": "^6.0.2",
-		"vitest": "^4.1.1"
+		"vitest": "^4.1.2"
 	},
 	"dependencies": {
 		"croner": "^10.0.1",

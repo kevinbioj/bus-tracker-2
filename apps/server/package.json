@@ -20,11 +20,12 @@
 		"@bus-tracker/contracts": "workspace:*",
 		"@hono/node-server": "^1.19.11",
 		"arktype": "^2.2.0",
-		"drizzle-orm": "^0.45.1",
+		"drizzle-orm": "^0.45.2",
 		"hono": "^4.12.9",
 		"postgres": "^3.4.8",
 		"redis": "^5.11.0",
 		"temporal-polyfill": "^0.3.2",
+		"temporal-polyfill-lite": "^0.3.3",
 		"ts-pattern": "^5.9.0",
 		"zod": "^4.3.6"
 	}
