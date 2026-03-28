@@ -8,10 +8,10 @@ import type { Stop } from "./stop.js";
 import type { Trip } from "./trip.js";
 
 export type JourneyCall = {
-	aimedArrivalTime: Temporal.ZonedDateTime;
-	expectedArrivalTime?: Temporal.ZonedDateTime;
-	aimedDepartureTime: Temporal.ZonedDateTime;
-	expectedDepartureTime?: Temporal.ZonedDateTime;
+	aimedArrivalTime: number;
+	expectedArrivalTime?: number;
+	aimedDepartureTime: number;
+	expectedDepartureTime?: number;
 	stop: Stop;
 	sequence: number;
 	platform?: string;
@@ -49,25 +49,25 @@ export class Journey {
 		const lastCall = calls[calls.length - 1]!;
 
 		// 1. Before the journey starts
-		const firstDepartureMs = (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime).epochMilliseconds;
+		const firstDepartureMs = firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime;
 		if (atMs <= firstDepartureMs) {
 			return this.getJourneyPositionAt(firstCall);
 		}
 
 		// 2. After the journey ends
-		const lastArrivalMs = (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime).epochMilliseconds;
+		const lastArrivalMs = lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime;
 		if (atMs >= lastArrivalMs) {
 			return this.getJourneyPositionAt(lastCall);
 		}
 
 		// 3. During the journey
 		const currentCallIndex = calls.findLastIndex((call) => {
-			const arrivalMs = (call.expectedArrivalTime ?? call.aimedArrivalTime).epochMilliseconds;
+			const arrivalMs = call.expectedArrivalTime ?? call.aimedArrivalTime;
 			return atMs >= arrivalMs;
 		});
 
 		const currentCall = calls[currentCallIndex]!;
-		const departureMs = (currentCall.expectedDepartureTime ?? currentCall.aimedDepartureTime).epochMilliseconds;
+		const departureMs = currentCall.expectedDepartureTime ?? currentCall.aimedDepartureTime;
 
 		// At a stop
 		if (atMs <= departureMs) {
@@ -85,7 +85,7 @@ export class Journey {
 			return this.getJourneyPositionAt(currentCall);
 		}
 
-		const arrivalMs = (nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime).epochMilliseconds;
+		const arrivalMs = nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime;
 		const ratio = Math.max(0, Math.min(1, (atMs - departureMs) / (arrivalMs - departureMs)));
 		const distanceTraveled =
 			currentCall.distanceTraveled + (nextCall.distanceTraveled - currentCall.distanceTraveled) * ratio;
@@ -162,15 +162,11 @@ export class Journey {
 
 			if (timeUpdate?.scheduleRelationship === "SKIPPED") {
 				if (arrivalDelay !== undefined) {
-					call.expectedArrivalTime = call.aimedArrivalTime.add({
-						seconds: arrivalDelay,
-					});
+					call.expectedArrivalTime = call.aimedArrivalTime + arrivalDelay * 1000;
 				}
 
 				if (departureDelay !== undefined) {
-					call.expectedDepartureTime = call.aimedArrivalTime.add({
-						seconds: departureDelay,
-					});
+					call.expectedDepartureTime = call.aimedDepartureTime + departureDelay * 1000;
 				}
 
 				call.status = "SKIPPED";
@@ -183,33 +179,29 @@ export class Journey {
 			const departureEvent = timeUpdate?.departure ?? timeUpdate?.arrival;
 
 			if (typeof arrivalEvent?.time === "number") {
-				arrivalDelay = arrivalEvent.time - Math.floor(call.aimedArrivalTime.epochMilliseconds / 1000);
+				arrivalDelay = arrivalEvent.time - Math.floor(call.aimedArrivalTime / 1000);
 			} else if (typeof arrivalEvent?.delay === "number") {
 				arrivalDelay = arrivalEvent.delay;
 			}
 
 			if (typeof departureEvent?.time === "number") {
-				departureDelay = departureEvent.time - Math.floor(call.aimedDepartureTime.epochMilliseconds / 1000);
+				departureDelay = departureEvent.time - Math.floor(call.aimedDepartureTime / 1000);
 			} else if (typeof departureEvent?.delay === "number") {
 				departureDelay = departureEvent.delay;
 			}
 
 			if (arrivalDelay !== undefined) {
-				call.expectedArrivalTime = call.aimedArrivalTime.add({
-					seconds: arrivalDelay,
-				});
+				call.expectedArrivalTime = call.aimedArrivalTime + arrivalDelay * 1000;
 			}
 
 			if (departureDelay !== undefined) {
-				call.expectedDepartureTime = call.aimedDepartureTime.add({
-					seconds: departureDelay,
-				});
+				call.expectedDepartureTime = call.aimedDepartureTime + departureDelay * 1000;
 			}
 		}
 	}
 
 	private getJourneyPositionAt(call: JourneyCall): VehicleJourneyPosition {
-		const recordedAt = call.expectedArrivalTime ?? call.aimedArrivalTime;
+		const recordedAtMs = call.expectedArrivalTime ?? call.aimedArrivalTime;
 
 		return {
 			latitude: call.stop.latitude,
@@ -218,7 +210,9 @@ export class Journey {
 			atStop: true,
 			type: "COMPUTED",
 			distanceTraveled: call.distanceTraveled,
-			recordedAt: recordedAt.toString({ timeZoneName: "never" }),
+			recordedAt: Temporal.Instant.fromEpochMilliseconds(recordedAtMs)
+				.toZonedDateTimeISO(this.trip.route.agency.timeZone)
+				.toString({ timeZoneName: "never" }),
 		};
 	}
 }

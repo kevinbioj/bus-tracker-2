@@ -10,28 +10,82 @@ import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 
+/**
+ * A faster version of Temporal.ZonedDateTime.toString({ timeZoneName: "never" })
+ * using native Date and manual offset calculation.
+ * To be removed whenever Temporal gets fast enough.
+ */
+function fastFormatISO(epochMs: number, offsetMs: number): string {
+	const date = new Date(epochMs + offsetMs);
+	const y = date.getUTCFullYear();
+	const m = date.getUTCMonth() + 1;
+	const d = date.getUTCDate();
+	const hh = date.getUTCHours();
+	const mm = date.getUTCMinutes();
+	const ss = date.getUTCSeconds();
+
+	const absOffset = Math.abs(offsetMs);
+	const oH = Math.floor(absOffset / 3600000);
+	const oM = Math.floor((absOffset % 3600000) / 60000);
+	const sign = offsetMs >= 0 ? "+" : "-";
+
+	return (
+		y +
+		"-" +
+		(m < 10 ? `0${m}` : m) +
+		"-" +
+		(d < 10 ? `0${d}` : d) +
+		"T" +
+		(hh < 10 ? `0${hh}` : hh) +
+		":" +
+		(mm < 10 ? `0${mm}` : mm) +
+		":" +
+		(ss < 10 ? `0${ss}` : ss) +
+		sign +
+		(oH < 10 ? `0${oH}` : oH) +
+		":" +
+		(oM < 10 ? `0${oM}` : oM)
+	);
+}
+
+/**
+ * Get the timezone offset in milliseconds for a given timezone at a specific epoch.
+ * We cache this per journey to avoid repeated calculations.
+ */
+const offsetCache = new Map<string, number>();
+function getTimeZoneOffsetMs(timeZone: string, epochMs: number): number {
+	const cacheKey = `${timeZone}_${Math.floor(epochMs / 3600000)}`; // Cache hourly to handle DST transitions
+	let offset = offsetCache.get(cacheKey);
+	if (offset === undefined) {
+		const dt = new Date(epochMs);
+		const utcDate = new Date(dt.toLocaleString("en-US", { timeZone: "UTC" }));
+		const tzDate = new Date(dt.toLocaleString("en-US", { timeZone }));
+		offset = tzDate.getTime() - utcDate.getTime();
+		offsetCache.set(cacheKey, offset);
+
+		if (offsetCache.size > 1000) offsetCache.clear();
+	}
+	return offset;
+}
+
 const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journey: Journey) => number) => {
 	const aheadTime = getAheadTime?.(journey) ?? 0;
 
 	const firstCall = journey.calls.at(0);
 	if (
 		firstCall === undefined ||
-		at.epochMilliseconds + aheadTime * 1000 <
-			(firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime).epochMilliseconds
+		at.epochMilliseconds + aheadTime * 1000 < (firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime)
 	)
 		return;
 
 	const lastCall = journey.calls.at(-1);
-	if (
-		lastCall === undefined ||
-		at.epochMilliseconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochMilliseconds
-	)
+	if (lastCall === undefined || at.epochMilliseconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime))
 		return;
 
 	const ongoingCalls = journey.calls.filter((call, index) => {
 		return index === journey.calls.length - 1
-			? at.epochMilliseconds < (call.expectedArrivalTime ?? call.aimedArrivalTime).epochMilliseconds
-			: at.epochMilliseconds < (call.expectedDepartureTime ?? call.aimedDepartureTime).epochMilliseconds;
+			? at.epochMilliseconds < (call.expectedArrivalTime ?? call.aimedArrivalTime)
+			: at.epochMilliseconds < (call.expectedDepartureTime ?? call.aimedDepartureTime);
 	});
 	if (ongoingCalls.length === 0) return;
 	return ongoingCalls;
@@ -41,27 +95,20 @@ const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): Journey
 	if (tripUpdate?.stopTimeUpdate === undefined) return;
 	if (tripUpdate.stopTimeUpdate.some(({ stopId }) => !gtfs.stops.has(stopId))) return;
 
-	const timeZone =
-		gtfs.trips.values().next().value?.route.agency.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-
 	return tripUpdate.stopTimeUpdate.flatMap((stopTimeUpdate, index) => {
 		if (typeof stopTimeUpdate.arrival?.time !== "number" && typeof stopTimeUpdate.departure?.time !== "number")
 			return [];
 
 		const stop = gtfs.stops.get(stopTimeUpdate.stopId)!;
 
-		const arrivalTime = Temporal.Instant.fromEpochMilliseconds(
-			(stopTimeUpdate?.arrival?.time ?? stopTimeUpdate.departure?.time)! * 1000,
-		).toZonedDateTimeISO(timeZone);
-		const departureTime = Temporal.Instant.fromEpochMilliseconds(
-			(stopTimeUpdate?.departure?.time ?? stopTimeUpdate.arrival?.time)! * 1000,
-		).toZonedDateTimeISO(timeZone);
+		const arrivalTimeMs = (stopTimeUpdate?.arrival?.time ?? stopTimeUpdate.departure?.time)! * 1000;
+		const departureTimeMs = (stopTimeUpdate?.departure?.time ?? stopTimeUpdate.arrival?.time)! * 1000;
 
 		return {
-			aimedArrivalTime: arrivalTime,
-			expectedArrivalTime: arrivalTime,
-			aimedDepartureTime: departureTime,
-			expectedDepartureTime: departureTime,
+			aimedArrivalTime: arrivalTimeMs,
+			expectedArrivalTime: arrivalTimeMs,
+			aimedDepartureTime: departureTimeMs,
+			expectedDepartureTime: departureTimeMs,
 			sequence: stopTimeUpdate.stopSequence ?? index,
 			stop,
 			platform: stopTimeUpdate.stopTimeProperties?.assignedStopId,
@@ -178,7 +225,7 @@ export async function computeVehicleJourneys(source: Source) {
 			// source.gtfs.journeys.sort((a, b) => {
 			// 	const aStart = a.calls.at(0)!.expectedArrivalTime ?? a.calls.at(0)!.aimedArrivalTime;
 			// 	const bStart = b.calls.at(0)!.expectedArrivalTime ?? b.calls.at(0)!.aimedArrivalTime;
-			// 	return aStart.epochMilliseconds - bStart.epochMilliseconds;
+			// 	return aStart - bStart;
 			// });
 		}
 
@@ -232,9 +279,7 @@ export async function computeVehicleJourneys(source: Source) {
 						now.since(Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000)).total("minutes") >= 10
 					) {
 						const lastCall = journey.calls.at(-1)!;
-						if (
-							Temporal.Instant.compare(now, (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).toInstant())
-						) {
+						if (now.epochMilliseconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime)) {
 							continue;
 						}
 					}
@@ -268,7 +313,7 @@ export async function computeVehicleJourneys(source: Source) {
 					: createCallsFromTripUpdate(
 							source.gtfs,
 							tripUpdates.find((tripUpdate) => tripUpdate.trip.tripId === vehiclePosition.trip?.tripId),
-						)?.filter(({ aimedDepartureTime }) => Temporal.Instant.compare(now, aimedDepartureTime.toInstant()) < 0);
+						)?.filter(({ aimedDepartureTime }) => now.epochMilliseconds < aimedDepartureTime);
 
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 
@@ -280,6 +325,9 @@ export async function computeVehicleJourneys(source: Source) {
 			if (pathRef !== undefined && !paths.has(pathRef)) {
 				paths.set(pathRef, journey!.trip.shape!.asPath());
 			}
+
+			const timeZone = journey?.trip.route.agency.timeZone ?? "Europe/Paris";
+			const offsetMs = getTimeZoneOffsetMs(timeZone, now.epochMilliseconds);
 
 			const vehicleJourney: VehicleJourney = {
 				id: key,
@@ -308,13 +356,12 @@ export async function computeVehicleJourneys(source: Source) {
 					journey !== undefined || calls !== undefined
 						? (calls?.map((call, index) => {
 								const isLast = index === calls.length - 1;
+								const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
+								const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
+
 								return {
-									aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({
-										timeZoneName: "never",
-									}),
-									expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
-										timeZoneName: "never",
-									}),
+									aimedTime: fastFormatISO(aimedTimeMs, offsetMs),
+									expectedTime: expectedTimeMs ? fastFormatISO(expectedTimeMs, offsetMs) : undefined,
 									stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 									stopName: call.stop.name,
 									stopOrder: call.sequence,
@@ -333,9 +380,7 @@ export async function computeVehicleJourneys(source: Source) {
 					bearing: vehiclePosition.position.bearing,
 					atStop: vehiclePosition.currentStatus === "STOPPED_AT",
 					type: "GPS",
-					recordedAt: Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000)
-						.toZonedDateTimeISO(journey?.trip.route.agency.timeZone ?? "Europe/Paris")
-						.toString({ timeZoneName: "never" }),
+					recordedAt: fastFormatISO(vehiclePosition.timestamp * 1000, offsetMs),
 				},
 				pathRef,
 				occupancy: match(vehiclePosition.occupancyStatus)
@@ -408,6 +453,9 @@ export async function computeVehicleJourneys(source: Source) {
 					paths.set(pathRef, journey!.trip.shape!.asPath());
 				}
 
+				const timeZone = journey.trip.route.agency.timeZone;
+				const offsetMs = getTimeZoneOffsetMs(timeZone, now.epochMilliseconds);
+
 				const vehicleJourney: VehicleJourney = {
 					id: key,
 					line: {
@@ -421,11 +469,12 @@ export async function computeVehicleJourneys(source: Source) {
 					destination: source.options.getDestination?.(journey, vehicleDescriptor) ?? journey.trip.headsign,
 					calls: calls.map((call, index) => {
 						const isLast = index === calls.length - 1;
+						const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
+						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
+
 						return {
-							aimedTime: (isLast ? call.aimedArrivalTime : call.aimedDepartureTime).toString({ timeZoneName: "never" }),
-							expectedTime: (isLast ? call.expectedArrivalTime : call.expectedDepartureTime)?.toString({
-								timeZoneName: "never",
-							}),
+							aimedTime: fastFormatISO(aimedTimeMs, offsetMs),
+							expectedTime: expectedTimeMs ? fastFormatISO(expectedTimeMs, offsetMs) : undefined,
 							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 							stopName: call.stop.name,
 							stopOrder: call.sequence,

@@ -100,7 +100,7 @@ export class Source {
 					const journeys = dates.map((date) => trip.getScheduledJourney(date));
 					for (const journey of journeys) {
 						if (journey === undefined) continue;
-						if (now.epochMilliseconds > journey.calls.at(-1)!.aimedDepartureTime.epochMilliseconds) continue;
+						if (now.epochMilliseconds > journey.calls.at(-1)!.aimedDepartureTime) continue;
 						gtfs.journeys.set(`${journey.date.toString()}-${journey.trip.id}`, journey);
 					}
 				}
@@ -220,7 +220,7 @@ export class Source {
 
 		for (const [id, journey] of this.gtfs.journeys) {
 			const lastCall = journey.calls.at(-1)!;
-			if (now > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime).epochMilliseconds) {
+			if (now > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime)) {
 				this.gtfs.journeys.delete(id);
 			}
 		}

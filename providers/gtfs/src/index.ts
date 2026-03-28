@@ -15,7 +15,7 @@ import { updateResources } from "./jobs/update-resources.js";
 import { configurationPath } from "./options.js";
 import { createStopWatch } from "./utils/stop-watch.js";
 
-DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
+DraftLog(console, true)?.addLineListener(process.stdin);
 
 console.log(` ,----.,--------.,------.,---.   ,------.                                                         
 '  .-./'--.  .--'|  .---'   .-'  |  .--. ',--.--. ,---.  ,---. ,---.  ,---.  ,---.  ,---. ,--.--. 

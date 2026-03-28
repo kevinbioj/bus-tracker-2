@@ -8,10 +8,10 @@ import type { Stop } from "./stop.js";
 import type { StopTime } from "./stop-time.js";
 
 export type StopTimeCall = {
-	aimedArrivalTime: Temporal.ZonedDateTime;
-	aimedDepartureTime: Temporal.ZonedDateTime;
-	expectedArrivalTime?: Temporal.ZonedDateTime;
-	expectedDepartureTime?: Temporal.ZonedDateTime;
+	aimedArrivalTime: number;
+	aimedDepartureTime: number;
+	expectedArrivalTime?: number;
+	expectedDepartureTime?: number;
 	stop: Stop;
 	sequence: number;
 	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
@@ -44,16 +44,18 @@ export class Trip {
 					stopTime.arrivalTime,
 					this.route.agency.timeZone,
 				);
+				const aimedArrivalTimeMs = aimedArrivalTime.epochMilliseconds;
+
 				return {
-					aimedArrivalTime,
+					aimedArrivalTime: aimedArrivalTimeMs,
 					expectedArrivalTime: undefined,
 					aimedDepartureTime: stopTime.departureTime
 						? createZonedDateTime(
 								date.add({ days: stopTime.departureModulus }),
 								stopTime.departureTime,
 								this.route.agency.timeZone,
-							)
-						: aimedArrivalTime,
+							).epochMilliseconds
+						: aimedArrivalTimeMs,
 					expectedDepartureTime: undefined,
 					stop: stopTime.stop,
 					sequence: stopTime.sequence,
