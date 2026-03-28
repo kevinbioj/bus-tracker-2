@@ -1,6 +1,5 @@
 import { DrizzleQueryError, type SQL as DrizzleSQL, sql } from "drizzle-orm";
 import postgres from "postgres";
-import { Temporal } from "temporal-polyfill";
 
 import { database } from "../core/database/database.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";

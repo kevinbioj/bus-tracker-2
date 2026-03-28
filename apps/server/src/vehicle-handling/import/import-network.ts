@@ -1,5 +1,4 @@
 import { sql } from "drizzle-orm";
-import { Temporal } from "temporal-polyfill";
 
 import { database } from "../../core/database/database.js";
 import { type NetworkEntity, networksTable } from "../../core/database/schema.js";

@@ -7,7 +7,7 @@
 		"build": "tsc -b",
 		"dev": "pnpm build && pnpm start",
 		"package": "pkg",
-		"start": "node --env-file .env dist/index.js",
+		"start": "deno run --allow-env --allow-read --allow-net --env-file=.env dist/index.js",
 		"migrations:generate": "drizzle-kit generate",
 		"migrations:push": "drizzle-kit push"
 	},
@@ -24,8 +24,6 @@
 		"hono": "^4.12.9",
 		"postgres": "^3.4.8",
 		"redis": "^5.11.0",
-		"temporal-polyfill": "^0.3.2",
-		"temporal-polyfill-lite": "^0.3.3",
 		"ts-pattern": "^5.9.0",
 		"zod": "^4.3.6"
 	}

@@ -1,13 +1,12 @@
-FROM node:25.8.2-alpine AS base
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-WORKDIR /bus-tracker
-
 ##########################################
 # STAGE 1 - Build project artifacts      #
 ##########################################
 
-FROM base AS builder
+FROM node:25.8.2-alpine AS builder
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+WORKDIR /bus-tracker
+
 RUN npm install -g --force corepack@latest
 RUN corepack enable
 
@@ -30,7 +29,7 @@ RUN pnpm deploy --legacy --filter=@bus-tracker/server --prod server-deployment
 # STAGE 2 - Run distribution app         #
 ##########################################
 
-FROM base AS runtime
+FROM denoland/deno:alpine-2.7.9
 ENV NODE_ENV=production
 
 RUN apk add --no-cache tini curl
@@ -44,6 +43,7 @@ COPY --from=builder /bus-tracker/server-deployment/dist ./dist/
 COPY --from=builder /bus-tracker/server-deployment/package.json ./package.json
 COPY --from=builder /bus-tracker/server-deployment/.env ./.env
 
-USER node
-CMD ["/sbin/tini", "--", "node", "--env-file", ".env", "dist/index.js"]
+USER deno
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["deno", "run", "--allow-env", "--allow-read", "--allow-net", "--env-file=.env", "dist/index.js"]
 

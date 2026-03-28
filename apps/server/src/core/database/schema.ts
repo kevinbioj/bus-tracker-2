@@ -16,7 +16,6 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
-import { Temporal } from "temporal-polyfill";
 
 export const timestamp = customType<{
 	data: Temporal.Instant;

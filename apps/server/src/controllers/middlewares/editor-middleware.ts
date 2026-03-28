@@ -1,6 +1,5 @@
 import { and, eq } from "drizzle-orm";
 import { createMiddleware } from "hono/factory";
-import { Temporal } from "temporal-polyfill";
 
 import { database } from "../../core/database/database.js";
 import { type EditorEntity, editorsTable } from "../../core/database/schema.js";

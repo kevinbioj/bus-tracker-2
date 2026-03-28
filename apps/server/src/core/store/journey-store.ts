@@ -1,5 +1,3 @@
-import { Temporal } from "temporal-polyfill";
-
 import type { DisposeableVehicleJourney } from "../../types/disposeable-vehicle-journey.js";
 
 export const journeyStore = new Map<string, DisposeableVehicleJourney>();

@@ -1,5 +1,4 @@
 import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts";
-import { Temporal } from "temporal-polyfill";
 
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { keyBy } from "../utils/key-by.js";

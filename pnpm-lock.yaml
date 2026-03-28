@@ -11,6 +11,9 @@ importers:
       '@biomejs/biome':
         specifier: 2.4.9
         version: 2.4.9
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.2
 
   apps/client:
     dependencies:
@@ -213,12 +216,6 @@ importers:
       redis:
         specifier: ^5.11.0
         version: 5.11.0
-      temporal-polyfill:
-        specifier: ^0.3.2
-        version: 0.3.2
-      temporal-polyfill-lite:
-        specifier: ^0.3.3
-        version: 0.3.3
       ts-pattern:
         specifier: ^5.9.0
         version: 5.9.0
@@ -297,9 +294,9 @@ importers:
       redis:
         specifier: ^5.11.0
         version: 5.11.0
-      temporal-polyfill:
-        specifier: ^0.3.2
-        version: 0.3.2
+      temporal-polyfill-lite:
+        specifier: ^0.3.3
+        version: 0.3.3
       ts-pattern:
         specifier: ^5.9.0
         version: 5.9.0

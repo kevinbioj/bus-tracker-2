@@ -1,5 +1,3 @@
-import { Temporal } from "temporal-polyfill";
-
 function nthIndexOf(input, pattern, n) {
 	const length = input.length;
 	let i = -1;

@@ -1,6 +1,5 @@
 import type { VehicleJourneyLine } from "@bus-tracker/contracts";
 import { sql } from "drizzle-orm";
-import type { Temporal } from "temporal-polyfill";
 
 import { database } from "../../core/database/database.js";
 import { linesTable, type NetworkEntity } from "../../core/database/schema.js";

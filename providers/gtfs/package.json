@@ -5,8 +5,8 @@
 	"private": true,
 	"scripts": {
 		"build": "tsc",
-		"dev": "tsx watch src/index.ts",
-		"start": "node .",
+		"dev": "pnpm build && pnpm start",
+		"start": "deno run --allow-env --allow-read --allow-write --allow-net --allow-sys --env-file=.env dist/index.js",
 		"test": "vitest --run --exclude dist",
 		"test:watch": "vitest --exclude dist"
 	},
@@ -28,7 +28,7 @@
 		"p-limit": "^7.3.0",
 		"papaparse": "^5.5.3",
 		"redis": "^5.11.0",
-		"temporal-polyfill": "^0.3.2",
+		"temporal-polyfill-lite": "^0.3.3",
 		"ts-pattern": "^5.9.0"
 	}
 }
