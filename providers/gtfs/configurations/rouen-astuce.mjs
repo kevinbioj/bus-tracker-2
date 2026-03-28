@@ -42,7 +42,8 @@ const sources = [
 			return "TCAR";
 		},
 		getVehicleRef: (vehicle) => vehicle?.id,
-		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
+		getDestination: (journey, vehicle) =>
+			vehicle?.label ?? journey?.calls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		isValidJourney: (vehicleJourney) => {
 			// Les premiers shifts métro sont graphiqués à tort sur le jour N-1
 			if (vehicleJourney.line?.ref === "ASTUCE:Line:90") {
