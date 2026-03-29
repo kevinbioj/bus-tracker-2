@@ -23,7 +23,8 @@ export default function EmbeddableMapPage() {
 			center: network.embedMapCenter
 				? ([network.embedMapCenter[0], network.embedMapCenter[1]] as [number, number])
 				: undefined,
-			style: "https://tiles.openfreemap.org/styles/liberty",
+			// style: "https://tiles.openfreemap.org/styles/liberty",
+			style: "/map-styles/liberty-fr.json",
 			zoom: network.embedMapCenter ? network.embedMapCenter[2] : undefined,
 		}),
 		[network.embedMapCenter],

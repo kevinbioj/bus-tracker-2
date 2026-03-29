@@ -15,7 +15,7 @@
 		}
 	},
 	"sprite": "https://tiles.openfreemap.org/sprites/ofm_f384/ofm",
-	"glyphs": "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",
+	"glyphs": "https://tiles.bus-tracker.fr/fonts/{fontstack}/{range}.pbf",
 	"layers": [
 		{
 			"id": "background",

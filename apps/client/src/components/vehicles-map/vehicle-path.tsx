@@ -98,7 +98,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 			layout: {
 				"text-field": ["get", "name"],
 				"text-font": ["Achemine Bold"],
-				"text-size": 12,
+				"text-size": 13,
 				"text-offset": [0.8, 0],
 				"text-anchor": "left",
 				"text-allow-overlap": false,

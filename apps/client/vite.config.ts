@@ -41,7 +41,7 @@ export default defineConfig({
 				navigateFallbackDenylist: [/^\/api/],
 				runtimeCaching: [
 					{
-						urlPattern: /^https:\/\/tiles\.openfreemap\.org\/.*/i,
+						urlPattern: /^https:\/\/(?:tiles\.openfreemap\.org|tiles\.bus-tracker\.fr)\/.*/i,
 						handler: "CacheFirst",
 						options: {
 							cacheName: "map-tiles-cache",
