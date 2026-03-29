@@ -97,7 +97,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 			type: "symbol",
 			layout: {
 				"text-field": ["get", "name"],
-				"text-font": ["Achemine Bold"],
+				"text-font": ["Parisine Bold"],
 				"text-size": 13,
 				"text-offset": [0.8, 0],
 				"text-anchor": "left",
