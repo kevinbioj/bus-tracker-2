@@ -24,9 +24,9 @@ const lineRegex = /(?:{Route}:|Ligne:)(?:\s*<\/?[^>]+>)*\s*(?:<[^>]+>)?([\w\d-]+
 const destinationRegex = /(?:{RunDestination}:|Destination:)\s*([^<\n]+)/i;
 const lastLocRegex = /(?:{LastLoc}:|Dernière position:)\s*([\d]{2}\/[\d]{2}\/[\d]{4} [\d]{2}:[\d]{2}:[\d]{2})/i;
 
-DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
+DraftLog(console, true)?.addLineListener(process.stdin);
 
-console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
+console.log("► Connecting to Redis.");
 const redis = createClient({
 	socket: process.env.REDIS_SOCK
 		? {
@@ -38,16 +38,16 @@ const redis = createClient({
 });
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
-console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
+console.log("► Connected! Journeys will be published into '%s'.", channel);
 console.log();
 
 while (true) {
-	const updateLog = console.draft("%s ► Fetching vehicles from Hawk <%s>...", Temporal.Now.instant());
+	const updateLog = console.draft("► Fetching vehicles from Hawk <%s>...", HAWK_ID);
 	const response = await fetch(
 		`https://hawk.hanoverdisplays.com/${HAWK_ID}/api/vehicles/poi?info=${INFO_TOKEN}&isSAEIVMode=true&culture=fr-FR&hasOperator=false&hasTransporter=false&isUsingMetricSystem=true&hasCapacity=false&userId=1&driverInfo=1&ShowAssignedOnly=false&assignment_state_exists=false&vehicle_phone_number_exists=true`,
 	);
 	if (!response.ok) {
-		updateLog("%s ► Failed to fetch data from Hawk (status %d).", Temporal.Now.instant(), response.status);
+		updateLog("✘ Failed to fetch data from Hawk (status %d).", response.status);
 		await setTimeout(5000);
 		continue;
 	}
@@ -58,7 +58,7 @@ while (true) {
 
 	const vehicleJourneys = vehicles.flatMap((vehicle) => {
 		if (vehicle.PopUpText.includes("Eteint") || vehicle.PopUpText.includes("SwitchedOff")) {
-			console.log(`		${vehicle.ParcNumber} > OFF`);
+			console.log(`\t⛛ ${vehicle.ParcNumber} > OFF`);
 			return [];
 		}
 
@@ -66,16 +66,14 @@ while (true) {
 		const destinationResult = destinationRegex.exec(vehicle.PopUpText);
 		const lastLocResult = lastLocRegex.exec(vehicle.PopUpText);
 		if (lineResult === null || destinationResult === null || lastLocResult === null) {
-			console.log(`		${vehicle.ParcNumber} > Failed to extract info ("${vehicle.PopUpText}")`);
+			console.log(`\t✘ ${vehicle.ParcNumber} > Failed to extract info ("${vehicle.PopUpText}")`);
 			return [];
 		}
 
 		const [, line] = lineResult;
 		const [, destination] = destinationResult;
 		const [, lastPositionAt] = lastLocResult;
-		console.log(`		${vehicle.ParcNumber} OK (LIGNE:${line} / DEST:${destination} / LAST POS.:${lastPositionAt})`);
-
-		console.log(lastPositionAt);
+		console.log(`\t⛛ ${vehicle.ParcNumber} OK (LIGNE:${line} / DEST:${destination} / LAST POS.:${lastPositionAt})`);
 
 		const lastPositionAtDate = dayjs.tz(lastPositionAt, "DD/MM/YYYY HH:mm:ss", "Europe/Paris").toDate();
 
@@ -108,7 +106,7 @@ while (true) {
 	});
 
 	await redis.publish("journeys", JSON.stringify(vehicleJourneys));
-	updateLog(`%s ► Published ${vehicleJourneys.length} vehicle journeys`, Temporal.Now.instant());
+	updateLog(`✓ Published ${vehicleJourneys.length} vehicle journeys`);
 	console.log();
 	await setTimeout(30_000);
 }
