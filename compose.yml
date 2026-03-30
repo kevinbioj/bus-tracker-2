@@ -10,7 +10,7 @@ services:
       - database_data:/var/lib/postgresql
 
   redis:
-    image: redis:8.6.1-alpine
+    image: redis:8.6.2-alpine
     ports:
       - 6379:6379
     volumes:
