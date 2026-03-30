@@ -23,8 +23,9 @@ services:
   database:
     image: postgres:18.3-alpine
     environment:
-      - POSTGRES_USER=bustracker
-      - POSTGRES_PASSWORD_FILE=/run/secrets/database_password
+      - "PGHOST=/var/run/bus-tracker/postgresql"
+      - "POSTGRES_USER=bustracker"
+      - "POSTGRES_PASSWORD_FILE=/run/secrets/database_password"
     ports:
       - target: 5432
         published: 5432
@@ -34,13 +35,13 @@ services:
       - database_password
     volumes:
       - database_data:/var/lib/postgresql
-      - sockets:/var/run/postgresql
+      - sockets:/var/run/bus-tracker
 
   redis:
     image: redis:8.6.2-alpine
     command: >
       redis-server
-        --unixsocket /var/run/redis/redis.sock
+        --unixsocket /var/run/bus-tracker/redis.sock
         --unixsocketperm 777
     ports:
       - target: 6379
@@ -49,7 +50,7 @@ services:
         mode: host
     volumes:
       - redis_data:/data
-      - sockets:/var/run/redis
+      - sockets:/var/run/bus-tracker
 
   server:
     image: ghcr.io/kevinbioj/bus-tracker-2/server:sha-${GITHUB_SHA}
