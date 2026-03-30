@@ -45,5 +45,5 @@ COPY --from=builder /bus-tracker/server-deployment/.env ./.env
 
 USER deno
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["deno", "run", "--allow-env", "--allow-read", "--allow-net", "--env-file=.env", "dist/index.js"]
+CMD ["deno", "run", "--allow-env", "--allow-read", "--allow-write", "--allow-net", "--env-file=.env", "dist/index.js"]
 

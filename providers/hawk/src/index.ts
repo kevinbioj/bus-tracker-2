@@ -28,9 +28,13 @@ DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
 const redis = createClient({
-	url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
-	username: process.env.REDIS_USERNAME,
-	password: process.env.REDIS_PASSWORD,
+	socket: process.env.REDIS_SOCK
+		? {
+				path: process.env.REDIS_SOCK,
+				tls: process.env.REDIS_TLS === "true",
+			}
+		: undefined,
+	url: process.env.REDIS_SOCK ? undefined : (process.env.REDIS_URL ?? "redis://127.0.0.1:6379"),
 });
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();

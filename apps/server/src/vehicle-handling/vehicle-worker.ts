@@ -6,7 +6,13 @@ import { createClient } from "redis";
 import { handleVehicleBatch } from "./handle-vehicle-batch.js";
 
 export const redis = createClient({
-	url: process.env.REDIS_URL ?? "redis://localhost:6379",
+	socket: process.env.REDIS_SOCK
+		? {
+				path: process.env.REDIS_SOCK,
+				tls: process.env.REDIS_TLS === "true",
+			}
+		: undefined,
+	url: process.env.REDIS_SOCK ? undefined : process.env.REDIS_URL,
 });
 
 const redisSubscriber = redis.duplicate();

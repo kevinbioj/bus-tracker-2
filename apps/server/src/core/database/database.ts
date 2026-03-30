@@ -4,22 +4,19 @@ import postgres from "postgres";
 
 import * as schema from "./schema.js";
 
-let connectionUrl = process.env.DATABASE_URL;
-if (connectionUrl === undefined) {
-	throw new Error('Expected "DATABASE_URL" environment to be defined!');
+let PG_PASSWORD = process.env.PG_PASSWORD;
+
+const PG_PASSWORD_FILE = process.env.PG_PASSWORD_FILE;
+if (PG_PASSWORD_FILE !== undefined) {
+	PG_PASSWORD = (await readFile(PG_PASSWORD_FILE)).toString();
 }
 
-if (connectionUrl.includes("{PASSWORD_FILE}")) {
-	const passwordFile = process.env.DATABASE_PASSWORD_FILE;
-	if (passwordFile === undefined) {
-		throw new Error('Connection URL refers to password file but no "DATABASE_PASSWORD_FILE" environment was defined!');
-	}
-
-	const password = (await readFile(passwordFile)).toString();
-	connectionUrl = connectionUrl.replace("{PASSWORD_FILE}", password);
-}
-
-const connection = postgres(connectionUrl, {
+const connection = postgres({
+	host: process.env.PG_HOST,
+	user: process.env.PG_USER,
+	password: PG_PASSWORD,
+	database: process.env.PG_DATABASE,
+	path: process.env.PG_PATH,
 	max: 25,
 	idle_timeout: 120,
 });
