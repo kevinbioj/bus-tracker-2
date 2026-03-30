@@ -414,6 +414,18 @@ const sources = [
 		},
 	},
 	{
+		id: "lunel",
+		staticResourceHref:
+			"https://transport.data.gouv.fr/resources/83852/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		realtimeResourceHrefs: [
+			"https://ole.plateforme-2cloud.com/api/gtfsrt/2.0/vehiclepositions/OLE-2187-9024-3517/bin",
+			"https://ole.plateforme-2cloud.com/api/gtfsrt/2.0/tripupdates/OLE-2187-9024-3517/bin",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "LUNEL",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "montpellier",
 		staticResourceHref: "https://data.montpellier3m.fr/GTFS/Urbain/GTFS.zip",
 		realtimeResourceHrefs: [
