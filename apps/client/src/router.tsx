@@ -31,7 +31,6 @@ export const router = (queryClient: QueryClient) =>
 			),
 		},
 		{
-			hydrateFallbackElement: null,
 			element: (
 				<>
 					<NavigationBar />
