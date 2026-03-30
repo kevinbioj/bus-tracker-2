@@ -22,6 +22,8 @@ services:
 
   database:
     image: postgres:18.3-alpine
+    command: >
+      postgres -c unix_socket_directories='/var/run/bus-tracker/postgresql'
     environment:
       - "PGHOST=/var/run/bus-tracker/postgresql"
       - "POSTGRES_USER=bustracker"
@@ -55,7 +57,7 @@ services:
   server:
     image: ghcr.io/kevinbioj/bus-tracker-2/server:sha-${GITHUB_SHA}
     environment:
-      - PG_HOST=/var/run/bus-tracker
+      - PG_HOST=/var/run/bus-tracker/postgresql
       - PG_PORT=5432
       - PG_USER=bustracker
       - PG_DATABASE=bustracker
