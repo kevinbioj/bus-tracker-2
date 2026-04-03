@@ -36,6 +36,10 @@ export function VehiclesTable({ data, searchParams }: Readonly<VehiclesTableProp
 		virtualizer.scrollToIndex(0, { behavior: "smooth" });
 	}, [searchParams]);
 
+	if (data.length === 0) {
+		return null;
+	}
+
 	return (
 		<div className="h-[calc(100dvh-245px)] sm:h-[calc(100dvh-325px)] overflow-auto pb-1" ref={parentRef}>
 			<div className="w-full relative" style={{ height: `${virtualizer.getTotalSize()}px` }}>
