@@ -11,13 +11,13 @@ const sources = [
 	},
 	{
 		id: "breizhgo-29",
-		staticResourceHref: "https://www.korrigo.bzh/ftp/OPENDATA/29.gtfs.zip",
+		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-29/gtfs",
 		realtimeResourceHrefs: [
 			"https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
 			"https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
-		getNetworkRef: () => "BREIZHGO",
+		mode: "NO-TU",
+		getNetworkRef: () => "BZH29",
 	},
 	{
 		id: "breizhgo-35",
