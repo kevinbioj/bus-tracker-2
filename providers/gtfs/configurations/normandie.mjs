@@ -204,11 +204,10 @@ const sources = [
 		id: "rezobus",
 		staticResourceHref: "https://pysae.com/api/v2/groups/caux-seine-agglo/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/caux-seine-agglo/gtfs-rt"],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
+		gtfsOptions: { computeShapeDistTraveled: true },
 		mode: "NO-TU",
-		excludeScheduled: (trip) => ["14", "30"].includes(trip.route.id),
 		getNetworkRef: () => "REZOBUS",
-		getVehicleRef: () => undefined,
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	//- Neva
 	{
