@@ -8,7 +8,6 @@ const sources = [
 			"https://bdx.mecatran.com/utw/ws/gtfsfeed/vehicles/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt",
 			"https://bdx.mecatran.com/utw/ws/gtfsfeed/realtime/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt",
 		],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "TBM",
