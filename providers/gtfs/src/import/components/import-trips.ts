@@ -129,12 +129,17 @@ export async function importTrips(
 	for (const trip of trips.values()) {
 		trip.stopTimes.sort((a, b) => a.sequence - b.sequence);
 
-		if (computeShapeDistTraveled && trip.stopTimes.some((st) => st.distanceTraveled === undefined)) {
+		const shapeRecalculated = !!trip.shape?.recalculatedDistances;
+
+		if (
+			computeShapeDistTraveled &&
+			(shapeRecalculated || trip.stopTimes.some((st) => st.distanceTraveled === undefined))
+		) {
 			let currentDist = 0;
 			for (let i = 0; i < trip.stopTimes.length; i++) {
 				const stopTime = trip.stopTimes[i]!;
 
-				if (stopTime.distanceTraveled === undefined) {
+				if (shapeRecalculated || stopTime.distanceTraveled === undefined) {
 					if (trip.shape !== undefined) {
 						stopTime.distanceTraveled = trip.shape.findClosestPointDistance(
 							stopTime.stop.latitude,

@@ -69,7 +69,7 @@ export async function importShapes(gtfsDirectory: string, options: ImportGtfsOpt
 			typedPoints[i * 3 + 2] = data.dists[idx]!;
 		}
 
-		shapes.set(id, new Shape(id, typedPoints));
+		shapes.set(id, new Shape(id, typedPoints, computeDistances));
 	}
 
 	return shapes;

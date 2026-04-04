@@ -8,6 +8,7 @@ export class Shape {
 	constructor(
 		readonly id: string,
 		private readonly points: Float64Array,
+		readonly recalculatedDistances = false,
 	) {}
 
 	get length() {
