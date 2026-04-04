@@ -193,6 +193,18 @@ const sources = [
 		getOperatorRef: () => "RIO4",
 		getVehicleRef: (vehicle) => vehicle?.id.slice(3),
 	},
+	{
+		id: "saint-omer",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/584491f9-0ace-4ee2-a49e-23caedb6f3f1",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/mouveo-saint-omer-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			"https://proxy.transport.data.gouv.fr/resource/mouveo-saint-omer-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "SAINT-OMER",
+		getVehicleRef: (vehicle) => vehicle?.id,
+		mapLineRef: (lineRef) => (lineRef.includes("geo") ? lineRef.split("_")[0] : lineRef),
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
