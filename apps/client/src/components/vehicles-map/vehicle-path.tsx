@@ -116,12 +116,13 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 				...(stopLabelsStyle === "with-background"
 					? {
 							"icon-color": ["get", "color"],
-							"icon-opacity": 0.7,
+							"icon-opacity": ["case", ["get", "skipped"], 0.35, 0.7],
 						}
 					: {}),
 				"text-color": ["get", "strokeColor"],
 				"text-halo-color": ["get", "color"],
 				"text-halo-width": 1,
+				"text-opacity": ["case", ["get", "skipped"], 0.5, 1],
 			},
 			filter: ["==", ["get", "type"], "stop"],
 		}),
@@ -138,11 +139,35 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 			},
 			paint: {
 				"circle-color": ["get", "strokeColor"],
-				"circle-radius": 3,
-				"circle-stroke-width": 1,
+				"circle-radius": ["case", ["get", "skipped"], 0, 4],
+				"circle-stroke-width": ["case", ["get", "skipped"], 0, 1],
 				"circle-stroke-color": ["get", "color"],
 			},
 			filter: ["==", ["get", "type"], "stop"],
+		}),
+		[stopLabelsStyle],
+	);
+
+	const skippedStopMarkerLayer = useMemo<maplibregl.AddLayerObject>(
+		() => ({
+			id: "vehicle-path-stops-skipped",
+			source: "vehicle-path",
+			type: "symbol",
+			layout: {
+				"text-field": "✕",
+				"text-font": ["Parisine Bold", "Arial Unicode MS Regular"],
+				"text-size": 13,
+				"text-anchor": "center",
+				"text-allow-overlap": true,
+				"text-ignore-placement": true,
+				visibility: stopLabelsStyle === "disabled" ? "none" : "visible",
+			},
+			paint: {
+				"text-color": "#EF4444",
+				"text-halo-color": "#FFFFFF",
+				"text-halo-width": 1.5,
+			},
+			filter: ["all", ["==", ["get", "type"], "stop"], ["==", ["get", "skipped"], true]],
 		}),
 		[stopLabelsStyle],
 	);
@@ -229,6 +254,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 		if (journey?.calls !== undefined) {
 			for (const call of journey.calls) {
 				if (call.latitude !== undefined && call.longitude !== undefined) {
+					const skipped = call.callStatus === "SKIPPED";
 					features.push({
 						type: "Feature",
 						geometry: { type: "Point", coordinates: [call.longitude, call.latitude] },
@@ -237,6 +263,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 							name: call.stopName,
 							color: pathColor,
 							strokeColor: pathStrokeColor,
+							skipped,
 						},
 					});
 				}
@@ -252,6 +279,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 	useMapLayer(futurePathStrokeLayer, "vehicles-arrows");
 	useMapLayer(futurePathLayer, "vehicles-arrows");
 	useMapLayer(stopsLayer, "vehicles-arrows");
+	useMapLayer(skippedStopMarkerLayer, "vehicles-arrows");
 	useMapLayer(stopsLabelLayer, "vehicles-arrows");
 
 	useEffect(() => {
