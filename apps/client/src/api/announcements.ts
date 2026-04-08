@@ -16,10 +16,12 @@ export const GetAnnouncementsQuery = queryOptions({
 	refetchInterval: 120_000,
 	queryKey: ["announcements"],
 	queryFn: () => {
-		const params = new URLSearchParams();
+		const searchParams = new URLSearchParams();
+
 		if (import.meta.env.DEV) {
-			params.append("includeUnpublished", "true");
+			searchParams.append("includeUnpublished", "true");
 		}
-		return client.get(`announcements?${params}`).then((response) => response.json<Announcement[]>());
+
+		return client.get(`/announcements`, { searchParams }).then((response) => response.json<Announcement[]>());
 	},
 });

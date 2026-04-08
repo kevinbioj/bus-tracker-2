@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   traefik:
-    image: traefik:v3.6.12
+    image: traefik:v3.6.13
     command:
       - "--providers.swarm=true"
       - "--providers.swarm.exposedByDefault=false"

@@ -16,8 +16,9 @@ export const GetEditorSelf = (token: string | null) =>
 		queryKey: ["editor", token],
 		queryFn: () => {
 			if (token === null) return null;
+
 			return client
-				.get("editors/@me", { headers: { [EDITOR_TOKEN_HEADER]: token } })
+				.get("/editors/@me", { headers: { [EDITOR_TOKEN_HEADER]: token } })
 				.then((response) => response.json<Editor>());
 		},
 		retry: false,

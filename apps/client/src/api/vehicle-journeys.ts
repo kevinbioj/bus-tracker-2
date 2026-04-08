@@ -61,17 +61,18 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 			const activeMarkerId = localStorage.getItem("active-feature");
 			const hideScheduledTrips = embeddedNetworkId ? false : localStorage.getItem("hide-scheduled-trips") === "true";
 
-			const params = new URLSearchParams();
-			params.append("swLat", Math.max(bounds.getSouthWest().lat, -90).toString());
-			params.append("swLon", Math.max(bounds.getSouthWest().lng, -180).toString());
-			params.append("neLat", Math.min(bounds.getNorthEast().lat, 90).toString());
-			params.append("neLon", Math.min(bounds.getNorthEast().lng, 180).toString());
-			if (embeddedNetworkId) params.append("networkId", String(embeddedNetworkId));
-			if (lineId) params.append("lineId", String(lineId));
-			if (hideScheduledTrips) params.append("excludeScheduled", "true");
-			if (activeMarkerId !== null) params.append("includeMarker", activeMarkerId);
+			const searchParams = new URLSearchParams();
+			searchParams.append("swLat", Math.max(bounds.getSouthWest().lat, -90).toString());
+			searchParams.append("swLon", Math.max(bounds.getSouthWest().lng, -180).toString());
+			searchParams.append("neLat", Math.min(bounds.getNorthEast().lat, 90).toString());
+			searchParams.append("neLon", Math.min(bounds.getNorthEast().lng, 180).toString());
+			if (embeddedNetworkId) searchParams.append("networkId", String(embeddedNetworkId));
+			if (lineId) searchParams.append("lineId", String(lineId));
+			if (hideScheduledTrips) searchParams.append("excludeScheduled", "true");
+			if (activeMarkerId !== null) searchParams.append("includeMarker", activeMarkerId);
+
 			return client
-				.get(`vehicle-journeys/markers?${params}`)
+				.get("/vehicle-journeys/markers", { searchParams })
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
 		},
 	});
@@ -83,7 +84,7 @@ export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
 		refetchInterval: refetch ? 5_000 : undefined,
 		staleTime: 10_000,
 		queryKey: ["vehicle-journeys", id],
-		queryFn: () => client.get(`vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),
+		queryFn: () => client.get(`/vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),
 	});
 
 export const GetPathQuery = (ref?: string) =>
@@ -91,5 +92,5 @@ export const GetPathQuery = (ref?: string) =>
 		enabled: ref !== undefined,
 		staleTime: 120_000,
 		queryKey: ["paths", ref],
-		queryFn: () => client.get(`paths/${ref}`).then((response) => response.json<VehicleJourneyPath>()),
+		queryFn: () => client.get(`/paths/${ref}`).then((response) => response.json<VehicleJourneyPath>()),
 	});

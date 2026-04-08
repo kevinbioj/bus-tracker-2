@@ -33,7 +33,7 @@ export const GetLineQuery = (lineId?: number) =>
 		enabled: lineId !== undefined,
 		staleTime: 15_000,
 		queryKey: ["lines", lineId],
-		queryFn: () => client.get(`lines/${lineId}`).then((response) => response.json<Line>()),
+		queryFn: () => client.get(`/lines/${lineId}`).then((response) => response.json<Line>()),
 	});
 
 export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
@@ -42,7 +42,7 @@ export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
 		staleTime: 15_000,
 		refetchInterval: 5_000,
 		queryKey: ["lines", lineId, "online"],
-		queryFn: () => client.get(`lines/${lineId}/online-vehicles`).then((response) => response.json<Vehicle[]>()),
+		queryFn: () => client.get(`/lines/${lineId}/online-vehicles`).then((response) => response.json<Vehicle[]>()),
 	});
 
 export const GetLineVehicleAssignmentsQuery = (lineId: number, date: string) =>
@@ -52,8 +52,12 @@ export const GetLineVehicleAssignmentsQuery = (lineId: number, date: string) =>
 		refetchInterval: 10_000,
 		queryKey: ["lines", lineId, "vehicle-assignments", date],
 		structuralSharing: false,
-		queryFn: () =>
-			client
-				.get(`lines/${lineId}/vehicle-assignments?date=${date}`)
-				.then((response) => response.json<LineVehicleAssignmentsResponse>()),
+		queryFn: () => {
+			const searchParams = new URLSearchParams();
+			searchParams.append("date", date);
+
+			return client
+				.get(`/lines/${lineId}/vehicle-assignments`, { searchParams })
+				.then((response) => response.json<LineVehicleAssignmentsResponse>());
+		},
 	});

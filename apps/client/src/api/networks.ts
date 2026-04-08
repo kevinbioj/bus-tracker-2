@@ -51,7 +51,7 @@ export type NetworkStats = {
 
 export const GetNetworksQuery = queryOptions({
 	queryKey: ["networks"],
-	queryFn: () => client.get("networks").then((response) => response.json<Network[]>()),
+	queryFn: () => client.get("/networks").then((response) => response.json<Network[]>()),
 	select: (networks) =>
 		networks
 			.map((network) => ({
@@ -67,10 +67,14 @@ export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetai
 		enabled: networkId !== undefined,
 		placeholderData: keepPreviousData,
 		queryKey: ["networks", networkId, withDetails ?? false],
-		queryFn: () =>
-			client
-				.get(`networks/${networkId}?withDetails=${withDetails ?? false}`)
-				.then((response) => response.json<T extends true ? NetworkWithDetails : Network>()),
+		queryFn: () => {
+			const searchParams = new URLSearchParams();
+			searchParams.append("withDetails", String(withDetails ?? false));
+
+			return client
+				.get(`/networks/${networkId}`, { searchParams })
+				.then((response) => response.json<T extends true ? NetworkWithDetails : Network>());
+		},
 		staleTime: 300_000,
 		refetchInterval: continuousRefetch ? 10_000 : undefined,
 		select: (network) => ({

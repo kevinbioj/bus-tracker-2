@@ -69,11 +69,13 @@ export const GetVehiclesQuery = (networkId?: number) =>
 		enabled: networkId !== undefined,
 		queryKey: ["network-vehicles", networkId],
 		queryFn: () => {
-			const params = new URLSearchParams();
-			if (typeof networkId === "number") {
-				params.append("networkId", networkId.toString());
+			const searchParams = new URLSearchParams();
+
+			if (networkId !== undefined) {
+				searchParams.append("networkId", String(networkId));
 			}
-			return client.get(`vehicles?${params}`).then((response) => response.json<Vehicle[]>());
+
+			return client.get("/vehicles", { searchParams }).then((response) => response.json<Vehicle[]>());
 		},
 		select: (data) => data.sort((a, b) => +a.number - +b.number),
 		refetchInterval: 20_000,
@@ -83,7 +85,7 @@ export const GetVehicleQuery = (vehicleId: number) =>
 	queryOptions({
 		refetchInterval: 20_000,
 		queryKey: ["vehicles", vehicleId],
-		queryFn: () => client.get(`vehicles/${vehicleId}`).then((response) => response.json<VehicleWithActiveMonths>()),
+		queryFn: () => client.get(`/vehicles/${vehicleId}`).then((response) => response.json<VehicleWithActiveMonths>()),
 	});
 
 export const GetVehicleActivitiesQuery = (vehicleId: number, month?: string) =>
@@ -92,8 +94,9 @@ export const GetVehicleActivitiesQuery = (vehicleId: number, month?: string) =>
 		queryFn: () => {
 			const params = new URLSearchParams();
 			if (month) params.append("month", month);
+
 			return client
-				.get(`vehicles/${vehicleId}/activities?${params.toString()}`)
+				.get(`/vehicles/${vehicleId}/activities?${params.toString()}`)
 				.then((response) => response.json<VehicleTimeline>());
 		},
 	});
@@ -101,7 +104,7 @@ export const GetVehicleActivitiesQuery = (vehicleId: number, month?: string) =>
 export const UpdateVehicleMutation = (vehicleId: number) =>
 	mutationOptions({
 		mutationFn: async ({ token, json }: { token: string; json: UpdateVehicleData }) => {
-			await client.put(`vehicles/${vehicleId}`, {
+			await client.put(`/vehicles/${vehicleId}`, {
 				headers: { "X-Editor-Token": token },
 				json,
 			});
@@ -111,7 +114,7 @@ export const UpdateVehicleMutation = (vehicleId: number) =>
 export const ArchiveVehicleMutation = (vehicleId: number) =>
 	mutationOptions({
 		mutationFn: async ({ token, json }: { token: string; json: ArchiveVehicleData }) => {
-			await client.post(`vehicles/${vehicleId}/archive`, {
+			await client.post(`/vehicles/${vehicleId}/archive`, {
 				headers: { "X-Editor-Token": token },
 				json,
 			});
@@ -121,7 +124,7 @@ export const ArchiveVehicleMutation = (vehicleId: number) =>
 export const UnarchiveVehicleMutation = (vehicleId: number) =>
 	mutationOptions({
 		mutationFn: async ({ token }: { token: string }) => {
-			await client.post(`vehicles/${vehicleId}/unarchive`, {
+			await client.post(`/vehicles/${vehicleId}/unarchive`, {
 				headers: { "X-Editor-Token": token },
 			});
 		},
