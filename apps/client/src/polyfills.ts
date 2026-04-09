@@ -1,26 +1,3 @@
-if (Map.groupBy === undefined) {
-	Map.groupBy = function groupBy<K, T>(items: Iterable<T>, keySelector: (item: T, index: number) => K) {
-		const map = new Map<K, T[]>();
-		let i = 0;
-		for (const item of items) {
-			const key = keySelector(item, i);
-
-			let list = map.get(key);
-			if (list === undefined) {
-				list = [];
-				map.set(key, list);
-			}
-
-			list.push(item);
-			i += 1;
-		}
-		return map;
-	};
-}
-
-if (Array.prototype.toSorted === undefined) {
-	Array.prototype.toSorted = function toSorted(compareFn) {
-		const shallow = this.slice();
-		return shallow.sort(compareFn);
-	};
-}
+import "core-js/actual/array/to-sorted";
+import "core-js/actual/map/group-by";
+import "core-js/actual/object/has-own";

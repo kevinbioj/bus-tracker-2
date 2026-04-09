@@ -37,7 +37,7 @@ export default defineConfig({
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2,woff}"],
 				cleanupOutdatedCaches: true,
-				maximumFileSizeToCacheInBytes: 5_000_000,
+				maximumFileSizeToCacheInBytes: 16_777_216,
 				navigateFallbackDenylist: [/^\/api/],
 				runtimeCaching: [
 					{
