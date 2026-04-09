@@ -189,8 +189,6 @@ export async function computeVehicleJourneys(source: Source) {
 		const paths = new Map<string, VehicleJourneyPath>();
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
-		const detectedToOriginalTripIds = new Map<string, string>();
-
 		if (tripUpdates.length > 0) {
 			for (const tripUpdate of tripUpdates) {
 				if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
@@ -199,10 +197,6 @@ export async function computeVehicleJourneys(source: Source) {
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
 				if (trip === undefined) continue;
-
-				if (source.options.allowTripGuessing) {
-					detectedToOriginalTripIds.set(trip.id, tripUpdate.trip.tripId);
-				}
 
 				const firstStopTime = trip.stopTimes.at(0)!;
 				const startDate =
@@ -220,6 +214,7 @@ export async function computeVehicleJourneys(source: Source) {
 					source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
 				}
 				journey.updateJourney(tripUpdate.stopTimeUpdate ?? [], source.options.appendTripUpdateInformation);
+				journey.setVehicleDescriptor(tripUpdate.vehicle, tripUpdate.timestamp * 1000);
 			}
 
 			// source.gtfs.journeys.sort((a, b) => {
@@ -407,10 +402,7 @@ export async function computeVehicleJourneys(source: Source) {
 				if (handledJourneyIds.has(journey.id)) continue;
 				if (journey.trip.block !== undefined && handledBlockIds.has(journey.trip.block)) continue;
 
-				const originalTripId = detectedToOriginalTripIds.get(journey.trip.id);
-				const vehicleDescriptor = tripUpdates.find((tu) =>
-					originalTripId ? tu.trip.tripId === originalTripId : matchJourneyToTripDescriptor(journey, tu.trip),
-				)?.vehicle;
+				const vehicleDescriptor = journey.vehicleDescriptor;
 
 				const networkRef = source.options.getNetworkRef(journey);
 				const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);

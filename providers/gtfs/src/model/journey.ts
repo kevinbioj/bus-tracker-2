@@ -3,7 +3,7 @@ import type { VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-track
 import { getDirection } from "../utils/get-direction.js";
 import { groupBy } from "../utils/group-by.js";
 
-import type { StopTimeUpdate } from "./gtfs-rt.js";
+import type { StopTimeUpdate, VehicleDescriptor } from "./gtfs-rt.js";
 import type { Stop } from "./stop.js";
 import type { Trip } from "./trip.js";
 
@@ -28,8 +28,12 @@ export type JourneyPosition = {
 	recordedAt: Temporal.Instant;
 };
 
+const VEHICLE_DESCRIPTOR_TTL_MS = 5 * 60 * 1000;
+
 export class Journey {
 	private bearing: number | undefined;
+	private _vehicleDescriptor: VehicleDescriptor | undefined;
+	private _vehicleDescriptorUpdatedAt: number | undefined;
 
 	constructor(
 		readonly id: string,
@@ -37,6 +41,17 @@ export class Journey {
 		readonly date: Temporal.PlainDate,
 		readonly calls: JourneyCall[],
 	) {}
+
+	get vehicleDescriptor(): VehicleDescriptor | undefined {
+		if (this._vehicleDescriptorUpdatedAt === undefined) return undefined;
+		if (Date.now() - this._vehicleDescriptorUpdatedAt > VEHICLE_DESCRIPTOR_TTL_MS) return undefined;
+		return this._vehicleDescriptor;
+	}
+
+	setVehicleDescriptor(descriptor: VehicleDescriptor | undefined, updatedAt: number) {
+		this._vehicleDescriptor = descriptor;
+		this._vehicleDescriptorUpdatedAt = updatedAt;
+	}
 
 	guessPosition(at: Temporal.Instant): VehicleJourneyPosition {
 		const calls = this.calls.filter((call) => call.status !== "SKIPPED");
