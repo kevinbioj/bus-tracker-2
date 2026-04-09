@@ -67,14 +67,10 @@ export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetai
 		enabled: networkId !== undefined,
 		placeholderData: keepPreviousData,
 		queryKey: ["networks", networkId, withDetails ?? false],
-		queryFn: () => {
-			const searchParams = new URLSearchParams();
-			searchParams.append("withDetails", String(withDetails ?? false));
-
-			return client
-				.get(`/networks/${networkId}`, { searchParams })
-				.then((response) => response.json<T extends true ? NetworkWithDetails : Network>());
-		},
+		queryFn: () =>
+			client
+				.get(`/networks/${networkId}`, { searchParams: { withDetails: String(withDetails ?? false) } })
+				.then((response) => response.json<T extends true ? NetworkWithDetails : Network>()),
 		staleTime: 300_000,
 		refetchInterval: continuousRefetch ? 10_000 : undefined,
 		select: (network) => ({

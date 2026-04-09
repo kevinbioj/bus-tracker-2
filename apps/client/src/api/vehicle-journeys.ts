@@ -61,18 +61,19 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 			const activeMarkerId = localStorage.getItem("active-feature");
 			const hideScheduledTrips = embeddedNetworkId ? false : localStorage.getItem("hide-scheduled-trips") === "true";
 
-			const searchParams = new URLSearchParams();
-			searchParams.append("swLat", Math.max(bounds.getSouthWest().lat, -90).toString());
-			searchParams.append("swLon", Math.max(bounds.getSouthWest().lng, -180).toString());
-			searchParams.append("neLat", Math.min(bounds.getNorthEast().lat, 90).toString());
-			searchParams.append("neLon", Math.min(bounds.getNorthEast().lng, 180).toString());
-			if (embeddedNetworkId) searchParams.append("networkId", String(embeddedNetworkId));
-			if (lineId) searchParams.append("lineId", String(lineId));
-			if (hideScheduledTrips) searchParams.append("excludeScheduled", "true");
-			if (activeMarkerId !== null) searchParams.append("includeMarker", activeMarkerId);
-
 			return client
-				.get("/vehicle-journeys/markers", { searchParams })
+				.get("/vehicle-journeys/markers", {
+					searchParams: {
+						swLat: String(Math.max(bounds.getSouthWest().lat, -90)),
+						swLon: String(Math.max(bounds.getSouthWest().lng, -180)),
+						neLat: String(Math.min(bounds.getNorthEast().lat, 90)),
+						neLon: String(Math.min(bounds.getNorthEast().lng, 180)),
+						networkId: embeddedNetworkId ? String(embeddedNetworkId) : undefined,
+						lineId: lineId ? String(lineId) : undefined,
+						excludeScheduled: hideScheduledTrips ? "true" : undefined,
+						includeMarker: activeMarkerId ?? undefined,
+					},
+				})
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
 		},
 	});

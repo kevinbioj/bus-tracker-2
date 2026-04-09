@@ -15,13 +15,8 @@ export type Announcement = {
 export const GetAnnouncementsQuery = queryOptions({
 	refetchInterval: 120_000,
 	queryKey: ["announcements"],
-	queryFn: () => {
-		const searchParams = new URLSearchParams();
-
-		if (import.meta.env.DEV) {
-			searchParams.append("includeUnpublished", "true");
-		}
-
-		return client.get(`/announcements`, { searchParams }).then((response) => response.json<Announcement[]>());
-	},
+	queryFn: () =>
+		client
+			.get(`/announcements`, { searchParams: { includeUnpublished: import.meta.env.DEV ? "true" : undefined } })
+			.then((response) => response.json<Announcement[]>()),
 });

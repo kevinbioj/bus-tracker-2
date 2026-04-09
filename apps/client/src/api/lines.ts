@@ -52,12 +52,8 @@ export const GetLineVehicleAssignmentsQuery = (lineId: number, date: string) =>
 		refetchInterval: 10_000,
 		queryKey: ["lines", lineId, "vehicle-assignments", date],
 		structuralSharing: false,
-		queryFn: () => {
-			const searchParams = new URLSearchParams();
-			searchParams.append("date", date);
-
-			return client
-				.get(`/lines/${lineId}/vehicle-assignments`, { searchParams })
-				.then((response) => response.json<LineVehicleAssignmentsResponse>());
-		},
+		queryFn: () =>
+			client
+				.get(`/lines/${lineId}/vehicle-assignments`, { searchParams: { date } })
+				.then((response) => response.json<LineVehicleAssignmentsResponse>()),
 	});

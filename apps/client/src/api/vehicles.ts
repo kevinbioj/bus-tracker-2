@@ -68,15 +68,10 @@ export const GetVehiclesQuery = (networkId?: number) =>
 	queryOptions({
 		enabled: networkId !== undefined,
 		queryKey: ["network-vehicles", networkId],
-		queryFn: () => {
-			const searchParams = new URLSearchParams();
-
-			if (networkId !== undefined) {
-				searchParams.append("networkId", String(networkId));
-			}
-
-			return client.get("/vehicles", { searchParams }).then((response) => response.json<Vehicle[]>());
-		},
+		queryFn: () =>
+			client
+				.get("/vehicles", { searchParams: { networkId: networkId ? String(networkId) : undefined } })
+				.then((response) => response.json<Vehicle[]>()),
 		select: (data) => data.sort((a, b) => +a.number - +b.number),
 		refetchInterval: 20_000,
 	});
@@ -91,14 +86,10 @@ export const GetVehicleQuery = (vehicleId: number) =>
 export const GetVehicleActivitiesQuery = (vehicleId: number, month?: string) =>
 	queryOptions({
 		queryKey: ["vehicles", vehicleId, "activities", month],
-		queryFn: () => {
-			const params = new URLSearchParams();
-			if (month) params.append("month", month);
-
-			return client
-				.get(`/vehicles/${vehicleId}/activities?${params.toString()}`)
-				.then((response) => response.json<VehicleTimeline>());
-		},
+		queryFn: () =>
+			client
+				.get(`/vehicles/${vehicleId}/activities`, { searchParams: { month } })
+				.then((response) => response.json<VehicleTimeline>()),
 	});
 
 export const UpdateVehicleMutation = (vehicleId: number) =>
