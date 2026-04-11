@@ -43,8 +43,8 @@ export class Journey {
 		readonly date: Temporal.PlainDate,
 		/** Heure d'arrivée visée au premier arrêt (epoch ms). Précalculé pour éviter de matérialiser calls[]. */
 		readonly firstCallArrivalMs: number,
-		/** Heure de départ visée au dernier arrêt (epoch ms). Précalculé pour éviter de matérialiser calls[]. */
-		readonly lastCallDepartureMs: number,
+		/** Heure de départ au dernier arrêt (epoch ms). Initialisé sur l'heure théorique, mis à jour par updateJourney avec l'heure temps réel. */
+		public lastCallDepartureMs: number,
 	) {}
 
 	/**
@@ -256,6 +256,13 @@ export class Journey {
 		this._hasRealtime = this._calls!.some(
 			(call) => call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined,
 		);
+
+		// Mettre à jour lastCallDepartureMs avec l'heure temps réel du dernier arrêt.
+		// Utilisé par le sweep et le fast-rejection de getCalls.
+		const lastCall = this._calls![this._calls!.length - 1];
+		if (lastCall !== undefined) {
+			this.lastCallDepartureMs = lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime;
+		}
 	}
 
 	private getJourneyPositionAt(call: JourneyCall): VehicleJourneyPosition {

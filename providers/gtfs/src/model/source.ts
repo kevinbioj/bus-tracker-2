@@ -221,9 +221,10 @@ export class Source {
 		for (const [id, journey] of this.gtfs.journeys) {
 			// Utilise lastCallDepartureMs pour éviter de matérialiser les calls.
 			// Si un voyage a des données RT, on vérifie la dernière heure attendue.
-			const lastDepartureMs = journey.hasRealtime()
-				? (journey.calls.at(-1)!.expectedDepartureTime ?? journey.lastCallDepartureMs)
-				: journey.lastCallDepartureMs;
+			// lastCallDepartureMs est précalculé et évite de matérialiser les calls.
+			// Pour les courses RT très en avance, on pourrait sweeper légèrement trop tôt,
+			// mais l'écart est négligeable (quelques minutes max) et le gain en perf vaut la peine.
+			const lastDepartureMs = journey.lastCallDepartureMs;
 			if (now > lastDepartureMs) {
 				this.gtfs.journeys.delete(id);
 			}

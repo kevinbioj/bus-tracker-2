@@ -54,7 +54,7 @@ while (true) {
 		lastUpdateAt = Date.now();
 	}
 
-	if (Date.now() - lastSweepAt > 3600_000) {
+	if (Date.now() - lastSweepAt > 300_000) {
 		sweepJourneys(configuration.sources);
 		lastSweepAt = Date.now();
 	}
