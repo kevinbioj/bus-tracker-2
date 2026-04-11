@@ -25,43 +25,12 @@ const saclayZenbusIdToVehicleLabel = new Map();
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
-	// {
-	// 	id: "idfm",
-	// 	staticResourceHref: "https://clarifygdps.com/bridge/gtfs/fr-idf.zip",
-	// 	realtimeResourceHrefs: [
-	// 		"http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm",
-	// 		"https://gtfs.bus-tracker.fr/gtfs-rt/idfm/trip-updates",
-	// 	],
-	// 	gtfsOptions: {
-	// 		filterTrips: (trip) => trip.route.name !== "TER",
-	// 	},
-	// 	excludeScheduled: true,
-	// 	mapTripUpdate: (tripUpdate) => {
-	// 		if (typeof tripUpdate.vehicle?.id === "string") {
-	// 			delete tripUpdate.vehicle.id;
-	// 		}
-	// 		return tripUpdate;
-	// 	},
-	// 	isValidJourney: (journey) => {
-	// 		const firstCall = journey.calls[0];
-	// 		if (firstCall === undefined || typeof firstCall.expectedTime === undefined) return true;
-	// 		return Temporal.Instant.from(firstCall.expectedTime).since(firstCall.aimedTime).total("minutes") < 1380;
-	// 	},
-	// 	getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
-	// 	getNetworkRef: () => "IDFM",
-	// 	getVehicleRef: () => undefined,
-	// },
 	{
 		id: "idfm",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
-		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/idfm/trip-updates"],
+		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
 		gtfsOptions: {
-			filterTrips: (trip) => trip.route.name !== "TER" && ["RAIL"].includes(trip.route.type),
-		},
-		isValidJourney: (journey) => {
-			const firstCall = journey.calls[0];
-			if (firstCall === undefined || firstCall.expectedTime === undefined) return true;
-			return Temporal.Instant.from(firstCall.expectedTime).since(firstCall.aimedTime).total("minutes") < 1380;
+			filterTrips: (trip) => trip.route.name !== "TER",
 		},
 		getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
 		getNetworkRef: () => "IDFM",
@@ -119,24 +88,15 @@ const sources = [
 		getOperatorRef: () => "KEOLIS-PH48",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
-	{
-		id: "thiais",
-		staticResourceHref: "https://pysae.com/api/v2/groups/navette-thiais-587/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/navette-thiais-587/gtfs-rt"],
-		mode: "NO-TU",
-		excludeScheduled: true,
-		getNetworkRef: () => "THIAIS",
-		getVehicleRef: (vehicle) => vehicle?.label,
-	},
-	{
-		id: "vallee-sud-bus",
-		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-cr92/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-cr92/gtfs-rt"],
-		mode: "NO-TU",
-		excludeScheduled: true,
-		getNetworkRef: () => "VALLEE-SUD-BUS",
-		getVehicleRef: (vehicle) => vehicle?.label,
-	},
+	// {
+	// 	id: "thiais",
+	// 	staticResourceHref: "https://pysae.com/api/v2/groups/navette-thiais-587/gtfs/pub",
+	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/navette-thiais-587/gtfs-rt"],
+	// 	mode: "NO-TU",
+	// 	excludeScheduled: true,
+	// 	getNetworkRef: () => "THIAIS",
+	// 	getVehicleRef: (vehicle) => vehicle?.label,
+	// },
 	{
 		id: "traverse-brancion-commerce",
 		staticResourceHref: "https://pysae.com/api/v2/groups/traverse-brancion-commerce/gtfs/pub",
