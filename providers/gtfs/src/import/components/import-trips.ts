@@ -1,5 +1,4 @@
 import { join } from "node:path";
-import type { VehicleJourneyCallFlags } from "@bus-tracker/contracts";
 
 import { createPlainTime } from "../../cache/temporal-cache.js";
 import type { Route } from "../../model/route.js";
@@ -88,9 +87,8 @@ export async function importTrips(
 			);
 		}
 
-		const flags: VehicleJourneyCallFlags[] = [];
-		if (stopTimeRecord.pickup_type === "1") flags.push("NO_PICKUP");
-		if (stopTimeRecord.drop_off_type === "1") flags.push("NO_DROP_OFF");
+		const flagsBitmask =
+			(stopTimeRecord.pickup_type === "1" ? 1 : 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
 
 		const [arrivalHours, arrivalMinutes, arrivalSeconds] = stopTimeRecord.arrival_time.split(":") as [
 			string,
@@ -109,7 +107,7 @@ export async function importTrips(
 		const stopTime = new StopTime(
 			+stopTimeRecord.stop_sequence,
 			stop,
-			flags,
+			flagsBitmask,
 			createPlainTime(
 				`${(+arrivalHours % 24).toString().padStart(2, "0")}:${arrivalMinutes.padStart(2, "0")}:${arrivalSeconds.padStart(2, "0")}`,
 			),

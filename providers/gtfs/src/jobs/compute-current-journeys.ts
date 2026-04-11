@@ -70,22 +70,27 @@ function getTimeZoneOffsetMs(timeZone: string, epochMs: number): number {
 
 const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journey: Journey) => number) => {
 	const aheadTime = getAheadTime?.(journey) ?? 0;
+	const atMs = at.epochMilliseconds;
 
+	// Rejet rapide via les bornes précalculées, sans matérialiser le tableau calls.
+	if (atMs + aheadTime * 1000 < journey.firstCallArrivalMs) return;
+	if (atMs > journey.lastCallDepartureMs) return;
+
+	// Le voyage est dans la fenêtre : on accède aux calls (matérialisation si nécessaire).
 	const firstCall = journey.calls.at(0);
 	if (
 		firstCall === undefined ||
-		at.epochMilliseconds + aheadTime * 1000 < (firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime)
+		atMs + aheadTime * 1000 < (firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime)
 	)
 		return;
 
 	const lastCall = journey.calls.at(-1);
-	if (lastCall === undefined || at.epochMilliseconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime))
-		return;
+	if (lastCall === undefined || atMs > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime)) return;
 
 	const monitoredCallIndex = journey.calls.findIndex((call, index) =>
 		index === journey.calls.length - 1
-			? at.epochMilliseconds < (call.expectedArrivalTime ?? call.aimedArrivalTime)
-			: at.epochMilliseconds < (call.expectedDepartureTime ?? call.aimedDepartureTime),
+			? atMs < (call.expectedArrivalTime ?? call.aimedArrivalTime)
+			: atMs < (call.expectedDepartureTime ?? call.aimedDepartureTime),
 	);
 
 	if (monitoredCallIndex === -1) return;
@@ -493,6 +498,11 @@ export async function computeVehicleJourneys(source: Source) {
 					activeJourneys.set(key, vehicleJourney);
 				}
 			}
+		}
+
+		// Libère les calls non-RT pour éviter l'accumulation mémoire des voyages inactifs.
+		for (const journey of source.gtfs!.journeys.values()) {
+			journey.releaseUnmodifiedCalls();
 		}
 
 		const computeTime = watch.step();

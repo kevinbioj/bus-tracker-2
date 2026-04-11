@@ -1,3 +1,5 @@
+import type { VehicleJourneyCallFlags } from "@bus-tracker/contracts";
+
 import { createZonedDateTime } from "../cache/temporal-cache.js";
 
 import { Journey } from "./journey.js";
@@ -6,6 +8,17 @@ import type { Service } from "./service.js";
 import type { Shape } from "./shape.js";
 import type { Stop } from "./stop.js";
 import type { StopTime } from "./stop-time.js";
+
+/** Tableau vide partagé pour les arrêts sans flags (évite les allocations répétées). */
+const EMPTY_FLAGS: VehicleJourneyCallFlags[] = [];
+
+function bitmaskToFlags(bitmask: number): VehicleJourneyCallFlags[] {
+	if (bitmask === 0) return EMPTY_FLAGS;
+	const result: VehicleJourneyCallFlags[] = [];
+	if (bitmask & 1) result.push("NO_PICKUP");
+	if (bitmask & 2) result.push("NO_DROP_OFF");
+	return result;
+}
 
 export type StopTimeCall = {
 	aimedArrivalTime: number;
@@ -29,41 +42,55 @@ export class Trip {
 		readonly shape?: Shape,
 	) {}
 
+	computeCallsForDate(date: Temporal.PlainDate) {
+		return this.stopTimes.map((stopTime) => {
+			const aimedArrivalTime = createZonedDateTime(
+				date.add({ days: stopTime.arrivalModulus }),
+				stopTime.arrivalTime,
+				this.route.agency.timeZone,
+			);
+			const aimedArrivalTimeMs = aimedArrivalTime.epochMilliseconds;
+
+			return {
+				aimedArrivalTime: aimedArrivalTimeMs,
+				expectedArrivalTime: undefined as number | undefined,
+				aimedDepartureTime: stopTime.departureTime
+					? createZonedDateTime(
+							date.add({ days: stopTime.departureModulus }),
+							stopTime.departureTime,
+							this.route.agency.timeZone,
+						).epochMilliseconds
+					: aimedArrivalTimeMs,
+				expectedDepartureTime: undefined as number | undefined,
+				stop: stopTime.stop,
+				sequence: stopTime.sequence,
+				distanceTraveled: stopTime.distanceTraveled,
+				status: "SCHEDULED" as const,
+				flags: bitmaskToFlags(stopTime.flagsBitmask),
+			};
+		});
+	}
+
 	getScheduledJourney(date: Temporal.PlainDate, force: true): Journey;
 	getScheduledJourney(date: Temporal.PlainDate, force?: false): Journey | undefined;
 	getScheduledJourney(date: Temporal.PlainDate, force = false) {
 		if (!force && !this.service.runsOn(date)) return;
 
-		return new Journey(
-			`${this.id}:${date}`,
-			this,
-			date,
-			this.stopTimes.map((stopTime) => {
-				const aimedArrivalTime = createZonedDateTime(
-					date.add({ days: stopTime.arrivalModulus }),
-					stopTime.arrivalTime,
-					this.route.agency.timeZone,
-				);
-				const aimedArrivalTimeMs = aimedArrivalTime.epochMilliseconds;
+		const firstStopTime = this.stopTimes[0]!;
+		const lastStopTime = this.stopTimes.at(-1)!;
 
-				return {
-					aimedArrivalTime: aimedArrivalTimeMs,
-					expectedArrivalTime: undefined,
-					aimedDepartureTime: stopTime.departureTime
-						? createZonedDateTime(
-								date.add({ days: stopTime.departureModulus }),
-								stopTime.departureTime,
-								this.route.agency.timeZone,
-							).epochMilliseconds
-						: aimedArrivalTimeMs,
-					expectedDepartureTime: undefined,
-					stop: stopTime.stop,
-					sequence: stopTime.sequence,
-					distanceTraveled: stopTime.distanceTraveled,
-					status: "SCHEDULED",
-					flags: stopTime.flags,
-				};
-			}),
-		);
+		const firstCallArrivalMs = createZonedDateTime(
+			date.add({ days: firstStopTime.arrivalModulus }),
+			firstStopTime.arrivalTime,
+			this.route.agency.timeZone,
+		).epochMilliseconds;
+
+		const lastCallDepartureMs = createZonedDateTime(
+			date.add({ days: lastStopTime.departureModulus ?? lastStopTime.arrivalModulus }),
+			lastStopTime.departureTime ?? lastStopTime.arrivalTime,
+			this.route.agency.timeZone,
+		).epochMilliseconds;
+
+		return new Journey(`${this.id}:${date}`, this, date, firstCallArrivalMs, lastCallDepartureMs);
 	}
 }

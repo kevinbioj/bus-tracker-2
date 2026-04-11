@@ -34,13 +34,39 @@ export class Journey {
 	private bearing: number | undefined;
 	private _vehicleDescriptor: VehicleDescriptor | undefined;
 	private _vehicleDescriptorUpdatedAt: number | undefined;
+	private _calls: JourneyCall[] | null = null;
+	private _hasRealtime = false;
 
 	constructor(
 		readonly id: string,
 		readonly trip: Trip,
 		readonly date: Temporal.PlainDate,
-		readonly calls: JourneyCall[],
+		/** Heure d'arrivée visée au premier arrêt (epoch ms). Précalculé pour éviter de matérialiser calls[]. */
+		readonly firstCallArrivalMs: number,
+		/** Heure de départ visée au dernier arrêt (epoch ms). Précalculé pour éviter de matérialiser calls[]. */
+		readonly lastCallDepartureMs: number,
 	) {}
+
+	/**
+	 * Tableau des appels de la journée. Calculé à la demande (lazy) et mis en cache.
+	 * Utilisé uniquement quand le voyage est dans la fenêtre active ou a des données temps réel.
+	 */
+	get calls(): JourneyCall[] {
+		if (this._calls === null) {
+			this._calls = this.trip.computeCallsForDate(this.date);
+		}
+		return this._calls;
+	}
+
+	/**
+	 * Libère le cache des calls si aucune donnée temps réel n'est présente.
+	 * À appeler après chaque cycle de calcul pour libérer la mémoire des voyages passés/futurs.
+	 */
+	releaseUnmodifiedCalls() {
+		if (!this._hasRealtime) {
+			this._calls = null;
+		}
+	}
 
 	get vehicleDescriptor(): VehicleDescriptor | undefined {
 		if (this._vehicleDescriptorUpdatedAt === undefined) return undefined;
@@ -138,9 +164,13 @@ export class Journey {
 	}
 
 	hasRealtime() {
-		return this.calls.some(
-			(call) => call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined,
-		);
+		// Si les calls sont en mémoire, vérification précise. Sinon, on utilise le flag.
+		if (this._calls !== null) {
+			return this._calls.some(
+				(call) => call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined,
+			);
+		}
+		return this._hasRealtime;
 	}
 
 	updateJourney(stopTimeUpdates: StopTimeUpdate[], appendTripUpdateInformation?: boolean) {
@@ -213,6 +243,11 @@ export class Journey {
 				call.expectedDepartureTime = call.aimedDepartureTime + departureDelay * 1000;
 			}
 		}
+
+		// Mise à jour du flag RT basée sur l'état réel des calls.
+		this._hasRealtime = this._calls!.some(
+			(call) => call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined,
+		);
 	}
 
 	private getJourneyPositionAt(call: JourneyCall): VehicleJourneyPosition {

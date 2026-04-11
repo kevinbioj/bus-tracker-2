@@ -100,7 +100,7 @@ export class Source {
 					const journeys = dates.map((date) => trip.getScheduledJourney(date));
 					for (const journey of journeys) {
 						if (journey === undefined) continue;
-						if (now.epochMilliseconds > journey.calls.at(-1)!.aimedDepartureTime) continue;
+						if (now.epochMilliseconds > journey.lastCallDepartureMs) continue;
 						gtfs.journeys.set(`${journey.date.toString()}-${journey.trip.id}`, journey);
 					}
 				}
@@ -219,8 +219,12 @@ export class Source {
 		const oldJourneyCount = this.gtfs.journeys.size;
 
 		for (const [id, journey] of this.gtfs.journeys) {
-			const lastCall = journey.calls.at(-1)!;
-			if (now > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime)) {
+			// Utilise lastCallDepartureMs pour éviter de matérialiser les calls.
+			// Si un voyage a des données RT, on vérifie la dernière heure attendue.
+			const lastDepartureMs = journey.hasRealtime()
+				? (journey.calls.at(-1)!.expectedDepartureTime ?? journey.lastCallDepartureMs)
+				: journey.lastCallDepartureMs;
+			if (now > lastDepartureMs) {
 				this.gtfs.journeys.delete(id);
 			}
 		}
