@@ -82,13 +82,14 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 	if (lastCall === undefined || at.epochMilliseconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime))
 		return;
 
-	const ongoingCalls = journey.calls.filter((call, index) => {
-		return index === journey.calls.length - 1
+	const monitoredCallIndex = journey.calls.findIndex((call, index) =>
+		index === journey.calls.length - 1
 			? at.epochMilliseconds < (call.expectedArrivalTime ?? call.aimedArrivalTime)
-			: at.epochMilliseconds < (call.expectedDepartureTime ?? call.aimedDepartureTime);
-	});
-	if (ongoingCalls.length === 0) return;
-	return ongoingCalls;
+			: at.epochMilliseconds < (call.expectedDepartureTime ?? call.aimedDepartureTime),
+	);
+
+	if (monitoredCallIndex === -1) return;
+	return journey.calls.slice(monitoredCallIndex);
 };
 
 const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): JourneyCall[] | undefined => {
