@@ -68,6 +68,7 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tae.zip",
 		realtimeResourceHrefs: [
 			"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
+			"https://api.mrn.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
 		],
 		getAheadTime: () => 15,
 		getNetworkRef: () => "ASTUCE",
