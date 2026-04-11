@@ -33,7 +33,7 @@ const sources = [
 			filterTrips: (trip) => trip.route.name !== "TER",
 		},
 		getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
-		getNetworkRef: () => "IDFM",
+		getNetworkRef: (journey) => journey?.trip.route.agency.id,
 		getVehicleRef: () => undefined,
 	},
 	{
