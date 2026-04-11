@@ -87,13 +87,33 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 	const lastCall = journey.calls.at(-1);
 	if (lastCall === undefined || atMs > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime)) return;
 
-	const monitoredCallIndex = journey.calls.findIndex((call, index) =>
+	const getCallTime = (call: JourneyCall, index: number) =>
 		index === journey.calls.length - 1
-			? atMs < (call.expectedArrivalTime ?? call.aimedArrivalTime)
-			: atMs < (call.expectedDepartureTime ?? call.aimedDepartureTime),
-	);
+			? (call.expectedArrivalTime ?? call.aimedArrivalTime)
+			: (call.expectedDepartureTime ?? call.aimedDepartureTime);
 
-	if (monitoredCallIndex === -1) return;
+	// Chercher le dernier arrêt déjà desservi (heure <= maintenant).
+	// Un arrêt ultérieur desservi en temps réel implique que tous les arrêts précédents l'ont été aussi,
+	// même si leur heure théorique est encore dans le futur.
+	const lastPassedIndex = journey.calls.findLastIndex((call, index) => atMs >= getCallTime(call, index));
+
+	const firstCandidateIndex = lastPassedIndex + 1;
+	if (firstCandidateIndex >= journey.calls.length) return;
+
+	// Parmi les arrêts restants, le monitoredCall est celui dont l'heure est la plus petite.
+	// Cela gère le cas d'une course en avance où un arrêt tardif (temps réel) a une heure
+	// antérieure à l'heure théorique d'un arrêt précédent : afficher l'arrêt 2 à 13:12 puis
+	// l'arrêt 3 à 13:11 serait incohérent, donc on commence directement à l'arrêt 3.
+	let monitoredCallIndex = firstCandidateIndex;
+	let minCallTime = getCallTime(journey.calls[firstCandidateIndex]!, firstCandidateIndex);
+	for (let i = firstCandidateIndex + 1; i < journey.calls.length; i++) {
+		const t = getCallTime(journey.calls[i]!, i);
+		if (t < minCallTime) {
+			minCallTime = t;
+			monitoredCallIndex = i;
+		}
+	}
+
 	return journey.calls.slice(monitoredCallIndex);
 };
 
@@ -169,13 +189,13 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allow
 	return trip;
 };
 
-const matchJourneyToTripDescriptor = (journey: Journey, tripDescriptor: TripDescriptor) => {
-	if (journey.trip.id !== tripDescriptor.tripId) return false;
-	if (tripDescriptor.routeId !== undefined && journey.trip.route.id !== tripDescriptor.routeId) return false;
-	if (tripDescriptor.directionId !== undefined && journey.trip.direction !== tripDescriptor.directionId) return false;
-	if (tripDescriptor.startDate !== undefined && !journey.date.equals(tripDescriptor.startDate)) return false;
-	return true;
-};
+// const matchJourneyToTripDescriptor = (journey: Journey, tripDescriptor: TripDescriptor) => {
+// 	if (journey.trip.id !== tripDescriptor.tripId) return false;
+// 	if (tripDescriptor.routeId !== undefined && journey.trip.route.id !== tripDescriptor.routeId) return false;
+// 	if (tripDescriptor.directionId !== undefined && journey.trip.direction !== tripDescriptor.directionId) return false;
+// 	if (tripDescriptor.startDate !== undefined && !journey.date.equals(tripDescriptor.startDate)) return false;
+// 	return true;
+// };
 
 export async function computeVehicleJourneys(source: Source) {
 	if (source.gtfs === undefined) return { journeys: [], paths: [] };

@@ -127,7 +127,14 @@ export class Journey {
 			return this.getJourneyPositionAt(currentCall);
 		}
 
-		const arrivalMs = nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime;
+		// Borner l'heure d'arrivée à nextCall par la plus petite heure connue parmi les arrêts suivants.
+		// Si un arrêt ultérieur a un temps réel antérieur à l'heure théorique de nextCall,
+		// le bus y sera forcément avant ce temps — sans cette borne, le ratio serait sous-estimé.
+		let arrivalMs = nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime;
+		for (let i = currentCallIndex + 2; i < calls.length; i++) {
+			const t = calls[i]!.expectedArrivalTime ?? calls[i]!.aimedArrivalTime;
+			if (t < arrivalMs) arrivalMs = t;
+		}
 		const ratio = Math.max(0, Math.min(1, (atMs - departureMs) / (arrivalMs - departureMs)));
 		const distanceTraveled =
 			currentCall.distanceTraveled + (nextCall.distanceTraveled - currentCall.distanceTraveled) * ratio;
