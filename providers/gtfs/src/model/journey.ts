@@ -59,11 +59,12 @@ export class Journey {
 	}
 
 	/**
-	 * Libère le cache des calls si aucune donnée temps réel n'est présente.
-	 * À appeler après chaque cycle de calcul pour libérer la mémoire des voyages passés/futurs.
+	 * Libère le cache des calls si le voyage est terminé et n'a pas de données temps réel.
+	 * À appeler après chaque cycle de calcul. Les voyages encore actifs ou futurs conservent
+	 * leur cache pour éviter de re-calculer computeCallsForDate() à chaque cycle.
 	 */
-	releaseUnmodifiedCalls() {
-		if (!this._hasRealtime) {
+	releaseUnmodifiedCalls(nowMs: number) {
+		if (!this._hasRealtime && nowMs > this.lastCallDepartureMs) {
 			this._calls = null;
 		}
 	}

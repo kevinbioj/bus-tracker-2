@@ -500,9 +500,11 @@ export async function computeVehicleJourneys(source: Source) {
 			}
 		}
 
-		// Libère les calls non-RT pour éviter l'accumulation mémoire des voyages inactifs.
+		// Libère les calls des voyages terminés sans RT. Les voyages actifs/futurs conservent
+		// leur cache pour éviter de re-calculer computeCallsForDate() à chaque cycle.
+		const nowMs = now.epochMilliseconds;
 		for (const journey of source.gtfs!.journeys.values()) {
-			journey.releaseUnmodifiedCalls();
+			journey.releaseUnmodifiedCalls(nowMs);
 		}
 
 		const computeTime = watch.step();
