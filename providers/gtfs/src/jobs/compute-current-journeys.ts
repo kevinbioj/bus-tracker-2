@@ -15,6 +15,7 @@ import { createStopWatch } from "../utils/stop-watch.js";
  * using native Date and manual offset calculation.
  * To be removed whenever Temporal gets fast enough.
  */
+const offsetStringCache = new Map<number, string>();
 function fastFormatISO(epochMs: number, offsetMs: number): string {
 	const date = new Date(epochMs + offsetMs);
 	const y = date.getUTCFullYear();
@@ -24,10 +25,15 @@ function fastFormatISO(epochMs: number, offsetMs: number): string {
 	const mm = date.getUTCMinutes();
 	const ss = date.getUTCSeconds();
 
-	const absOffset = Math.abs(offsetMs);
-	const oH = Math.floor(absOffset / 3600000);
-	const oM = Math.floor((absOffset % 3600000) / 60000);
-	const sign = offsetMs >= 0 ? "+" : "-";
+	let offsetStr = offsetStringCache.get(offsetMs);
+	if (offsetStr === undefined) {
+		const absOffset = Math.abs(offsetMs);
+		const oH = Math.floor(absOffset / 3600000);
+		const oM = Math.floor((absOffset % 3600000) / 60000);
+		const sign = offsetMs >= 0 ? "+" : "-";
+		offsetStr = sign + (oH < 10 ? `0${oH}` : oH) + ":" + (oM < 10 ? `0${oM}` : oM);
+		offsetStringCache.set(offsetMs, offsetStr);
+	}
 
 	return (
 		y +
@@ -41,10 +47,7 @@ function fastFormatISO(epochMs: number, offsetMs: number): string {
 		(mm < 10 ? `0${mm}` : mm) +
 		":" +
 		(ss < 10 ? `0${ss}` : ss) +
-		sign +
-		(oH < 10 ? `0${oH}` : oH) +
-		":" +
-		(oM < 10 ? `0${oM}` : oM)
+		offsetStr
 	);
 }
 
@@ -77,14 +80,14 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 	if (atMs > journey.lastCallDepartureMs) return;
 
 	// Le voyage est dans la fenêtre : on accède aux calls (matérialisation si nécessaire).
-	const firstCall = journey.calls.at(0);
+	const firstCall = journey.calls[0];
 	if (
 		firstCall === undefined ||
 		atMs + aheadTime * 1000 < (firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime)
 	)
 		return;
 
-	const lastCall = journey.calls.at(-1);
+	const lastCall = journey.calls[journey.calls.length - 1];
 	if (lastCall === undefined || atMs > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime)) return;
 
 	const getCallTime = (call: JourneyCall, index: number) =>
@@ -215,6 +218,7 @@ export async function computeVehicleJourneys(source: Source) {
 		const paths = new Map<string, VehicleJourneyPath>();
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
+
 		if (tripUpdates.length > 0) {
 			for (const tripUpdate of tripUpdates) {
 				if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
@@ -296,10 +300,9 @@ export async function computeVehicleJourneys(source: Source) {
 						source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
 					}
 
-					if (
-						now.since(Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000)).total("minutes") >= 10
-					) {
-						const lastCall = journey.calls.at(-1)!;
+					const minutesSinceUpdate = (now.epochMilliseconds - updatedAt.epochMilliseconds) / 60000;
+					if (minutesSinceUpdate >= 10) {
+						const lastCall = journey.calls[journey.calls.length - 1]!;
 						if (now.epochMilliseconds > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime)) {
 							continue;
 						}
@@ -311,7 +314,7 @@ export async function computeVehicleJourneys(source: Source) {
 				}
 			}
 
-			if (journey === undefined && now.since(updatedAt).total("minutes") >= 5) continue;
+			if (journey === undefined && (now.epochMilliseconds - updatedAt.epochMilliseconds) / 60000 >= 5) continue;
 
 			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
 			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);
@@ -326,10 +329,14 @@ export async function computeVehicleJourneys(source: Source) {
 			const calls =
 				journey !== undefined
 					? vehiclePosition.currentStopSequence !== undefined
-						? journey.calls.filter((call) => call.sequence >= vehiclePosition.currentStopSequence!)
-						: vehiclePosition.stopId !== undefined &&
-								journey.calls.some(({ stop }) => stop.id === vehiclePosition.stopId)
-							? journey.calls.slice(journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId))
+						? journey.calls.slice(
+								journey.calls.findIndex((call) => call.sequence >= vehiclePosition.currentStopSequence!),
+							)
+						: vehiclePosition.stopId !== undefined
+							? (() => {
+									const idx = journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId);
+									return idx !== -1 ? journey.calls.slice(idx) : getCalls(journey, now, () => Number.POSITIVE_INFINITY);
+								})()
 							: getCalls(journey, now, () => Number.POSITIVE_INFINITY)
 					: createCallsFromTripUpdate(
 							source.gtfs,
@@ -415,7 +422,7 @@ export async function computeVehicleJourneys(source: Source) {
 				operatorRef,
 				vehicleRef: vehicleRef !== undefined ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
 				serviceDate: journey?.date.toString(),
-				updatedAt: Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000).toString(),
+				updatedAt: updatedAt.toString(),
 			};
 
 			if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
@@ -424,6 +431,7 @@ export async function computeVehicleJourneys(source: Source) {
 		}
 
 		if (source.options.mode !== "VP-ONLY") {
+			const nowStr = now.toString();
 			for (const journey of source.gtfs.journeys.values()) {
 				if (handledJourneyIds.has(journey.id)) continue;
 				if (journey.trip.block !== undefined && handledBlockIds.has(journey.trip.block)) continue;
@@ -432,10 +440,6 @@ export async function computeVehicleJourneys(source: Source) {
 
 				const networkRef = source.options.getNetworkRef(journey);
 				const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);
-				const vehicleRef =
-					source.options.getVehicleRef !== undefined
-						? source.options.getVehicleRef(vehicleDescriptor, journey)
-						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
 				const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
 
 				if (journey.hasRealtime()) {
@@ -457,6 +461,11 @@ export async function computeVehicleJourneys(source: Source) {
 
 				const calls = getCalls(journey, now, source.options.getAheadTime);
 				if (calls === undefined || calls.length === 0) continue;
+
+				const vehicleRef =
+					source.options.getVehicleRef !== undefined
+						? source.options.getVehicleRef(vehicleDescriptor, journey)
+						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
 
 				if (journey.trip.block !== undefined) {
 					handledBlockIds.add(journey.trip.block);
@@ -511,7 +520,7 @@ export async function computeVehicleJourneys(source: Source) {
 					operatorRef,
 					vehicleRef: vehicleRef !== undefined ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
 					serviceDate: journey.date.toString(),
-					updatedAt: now.toString(),
+					updatedAt: nowStr,
 				};
 
 				if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
