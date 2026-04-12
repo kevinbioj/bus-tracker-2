@@ -22,10 +22,7 @@ services:
 
   database:
     image: postgres:18.3-alpine
-    command: >
-      postgres -c unix_socket_directories='/var/run/bus-tracker/postgresql'
     environment:
-      - "PGHOST=/var/run/bus-tracker/postgresql"
       - "POSTGRES_USER=bustracker"
       - "POSTGRES_PASSWORD_FILE=/run/secrets/database_password"
     ports:
@@ -37,7 +34,11 @@ services:
       - database_password
     volumes:
       - database_data:/var/lib/postgresql
-      - sockets:/var/run/bus-tracker
+      - type: volume
+        source: sockets
+        target: /var/run/postgresql/
+        volume:
+          subpath: postgresql/
 
   redis:
     image: redis:8.6.2-alpine
