@@ -54,19 +54,19 @@ export function LegalPage() {
 							</h3>
 							<Card>
 								<CardHeader className="p-4 pb-2">
-									<CardTitle className="text-lg font-bold uppercase">Dyjix SAS</CardTitle>
+									<CardTitle className="text-lg font-bold uppercase">YorkHost SAS</CardTitle>
 								</CardHeader>
 								<CardContent className="p-4 pt-0 space-y-1 text-sm">
-									<p>149 avenue du Maine</p>
-									<p>75014 Paris, France</p>
+									<p>20 rue Jacques Louis Duvivier</p>
+									<p>78520 Limay, France</p>
 									<div className="pt-2 flex flex-col gap-1">
 										<p>
-											<span className="font-medium text-muted-foreground">E-mail :</span> contact[at]dyjix.eu
+											<span className="font-medium text-muted-foreground">E-mail :</span> contact[at]yorkhost.fr
 										</p>
 										<p>
 											<span className="font-medium text-muted-foreground">Site :</span>{" "}
-											<Link to="https://www.dyjix.eu" target="_blank" className="underline">
-												www.dyjix.eu
+											<Link to="https://www.yorkhost.fr" target="_blank" className="underline">
+												www.yorkhost.fr
 											</Link>
 										</p>
 									</div>
