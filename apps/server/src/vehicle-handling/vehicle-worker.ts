@@ -17,6 +17,14 @@ export const redis = createClient({
 
 const redisSubscriber = redis.duplicate();
 
+redis.on("error", (error) => {
+	console.error("✘ [Worker] An error occurred with Redis-client:", error);
+});
+
+redisSubscriber.on("error", (error) => {
+	console.error("✘ [Worker] An error occurred with Redis-subscriber:", error);
+});
+
 async function start() {
 	console.log("► [Worker] Connecting to Redis.");
 	await redis.connect();
@@ -46,7 +54,7 @@ async function start() {
 					return result;
 				});
 			} catch (error) {
-				console.error("✘ [Worker] An error occurred while processing batch:", error);
+				console.error("✘ [Worker] An error occurred while parsing batch:", error);
 				return;
 			}
 

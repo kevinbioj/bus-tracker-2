@@ -65,6 +65,10 @@ export const redis = createClient({
 });
 await redis.connect();
 
+redis.on("error", (error) => {
+	console.error("✘ An error occurred with Redis:", error);
+});
+
 console.log("► Listening on port %d.\n", port);
 serve({
 	fetch: hono.fetch,
