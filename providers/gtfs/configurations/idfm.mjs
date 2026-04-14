@@ -30,7 +30,44 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
 		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
 		gtfsOptions: {
-			filterTrips: (trip) => trip.route.name !== "TER",
+			filterTrips: (trip) => {
+				if (trip.route.name === "TER") return false;
+
+				if (trip.route.agency.id === "IDFM:885") {
+					// Paris-Saclay Mobilités
+					return false;
+				}
+
+				if (trip.route.agency.id === "IDFM:1088") {
+					// Grand Paris Seine Ouest
+					return false;
+				}
+
+				if (trip.route.agency.id === "IDFM:Operator_334") {
+					// Autocars Dominique pour la Traverse
+					return false;
+				}
+
+				if (trip.route.agency.id === "IDFM:1064") {
+					// Vallée Sud Grand Paris
+					return false;
+				}
+
+				if (
+					trip.route.agency.id === "IDFM:1051" &&
+					["IDFM:C00275" /* 6570 */, "IDFM:C02805" /* 6582 */].includes(trip.route.id)
+				) {
+					// Poissy – Les Mureaux (lignes 6570 et 6582 uniquement)
+					return false;
+				}
+
+				if (trip.route.agency.id === "IDFM:1054" && ["IDFM:C02629" /* N */].includes(trip.route.id)) {
+					// Argenteuil – Boucles de Seine (ligne N uniquement)
+					return false;
+				}
+
+				return true;
+			},
 		},
 		getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
 		getNetworkRef: (journey) => journey?.trip.route.agency.id,
@@ -42,7 +79,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=gpso-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => "GPSO",
+		getNetworkRef: () => "IDFM:1088",
 		getVehicleRef: (vehicle) =>
 			vehicle
 				? gpsoZenbusIdToVehicleLabel.get(
@@ -58,7 +95,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=caee"],
 		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => "SACLAY",
+		getNetworkRef: () => "IDFM:885",
 		getVehicleRef: (vehicle) =>
 			vehicle
 				? saclayZenbusIdToVehicleLabel.get(
@@ -84,19 +121,10 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		mapLineRef: (lineRef) => `KEOLIS-PH48_${lineRef}`,
-		getNetworkRef: () => "IDFM-ARGENTEUIL-BOUCLES-SEINE",
+		getNetworkRef: () => "IDFM:1054",
 		getOperatorRef: () => "KEOLIS-PH48",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
-	// {
-	// 	id: "thiais",
-	// 	staticResourceHref: "https://pysae.com/api/v2/groups/navette-thiais-587/gtfs/pub",
-	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/navette-thiais-587/gtfs-rt"],
-	// 	mode: "NO-TU",
-	// 	excludeScheduled: true,
-	// 	getNetworkRef: () => "THIAIS",
-	// 	getVehicleRef: (vehicle) => vehicle?.label,
-	// },
 	{
 		id: "traverse-brancion-commerce",
 		staticResourceHref: "https://pysae.com/api/v2/groups/traverse-brancion-commerce/gtfs/pub",
@@ -113,7 +141,7 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		mapLineRef: (lineRef) => `KSOE_${lineRef}`,
-		getNetworkRef: () => "IDFM-POISSY-LES-MUREAUX",
+		getNetworkRef: () => "IDFM:1051",
 		getOperatorRef: () => "KSOE",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
@@ -123,7 +151,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/Transdev-Cr92/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
-		getNetworkRef: () => "VALLEE-SUD-BUS",
+		getNetworkRef: () => "IDFM:1064",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 ];
