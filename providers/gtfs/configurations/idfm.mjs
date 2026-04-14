@@ -31,6 +31,18 @@ const sources = [
 		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
 		gtfsOptions: {
 			filterTrips: (trip) => {
+				if (trip.route.agency.id === "IDFM:Operator_1041") {
+					trip.route.agency.id = "IDFM:1086";
+				}
+
+				if (trip.route.agency.id === "IDFM:Operator_1004") {
+					trip.route.agency.id = "IDFM:1047";
+				}
+
+				if (trip.route.agency.id === "IDFM:Operator_1032") {
+					trip.route.agency.id = "IDFM:1065";
+				}
+
 				if (trip.route.name === "TER") return false;
 
 				if (trip.route.agency.id === "IDFM:885") {
@@ -41,6 +53,10 @@ const sources = [
 				if (trip.route.agency.id === "IDFM:1088") {
 					// Grand Paris Seine Ouest
 					return false;
+				}
+
+				if (trip.route.agency.id === "IDFM:Operator_1044") {
+					trip.route.agency.id = "IDFM:1088";
 				}
 
 				if (trip.route.agency.id === "IDFM:Operator_334") {
