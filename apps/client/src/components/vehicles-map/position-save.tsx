@@ -17,8 +17,10 @@ export function PositionSave() {
 		let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
 		const onMoveEnd = () => {
-			const { lng, lat } = map.getCenter();
-			const zoom = +map.getZoom().toFixed(0);
+			const center = map.getCenter();
+			const lng = +center.lng.toFixed(3);
+			const lat = +center.lat.toFixed(3);
+			const zoom = +map.getZoom().toFixed(2);
 
 			setCurrentLocation({
 				position: { lng, lat },
