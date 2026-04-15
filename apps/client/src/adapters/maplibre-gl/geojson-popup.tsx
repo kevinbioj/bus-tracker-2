@@ -134,6 +134,8 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 	useEffect(() => {
 		const onMouseMove = (e: maplibregl.MapMouseEvent) => {
+			if (activeFeature?.type === "selected") return;
+
 			const features = map.queryRenderedFeatures(e.point, {
 				layers: [layer.id],
 			});
