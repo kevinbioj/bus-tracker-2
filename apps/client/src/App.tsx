@@ -9,14 +9,17 @@ import { TooltipProvider } from "~/components/ui/tooltip.js";
 import { router } from "./router.jsx";
 
 export default function App() {
-	const [queryClient] = useState(() => new QueryClient());
+	const [{ queryClient, routerInstance }] = useState(() => {
+		const qc = new QueryClient();
+		return { queryClient: qc, routerInstance: router(qc) };
+	});
 
 	return (
 		<SnackbarProvider anchorOrigin={{ horizontal: "right", vertical: "top" }} autoHideDuration={2500}>
 			<QueryClientProvider client={queryClient}>
 				<TooltipProvider>
 					<NuqsAdapter>
-						<RouterProvider router={router(queryClient)} />
+						<RouterProvider router={routerInstance} />
 					</NuqsAdapter>
 				</TooltipProvider>
 			</QueryClientProvider>

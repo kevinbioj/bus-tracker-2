@@ -5,6 +5,7 @@ import { createBrowserRouter, Outlet } from "react-router-dom";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery, GetNetworksQuery } from "~/api/networks";
+import { GetRegionsQuery } from "~/api/regions";
 import { GetVehicleQuery } from "~/api/vehicles";
 import { LoadingIndicator } from "~/components/loading-indicator";
 import { WelcomeBack } from "~/components/welcome-back";
@@ -59,7 +60,10 @@ export const router = (queryClient: QueryClient) =>
 					path: "/data",
 					element: <NetworkList />,
 					loader: async () => {
-						await queryClient.ensureQueryData(GetNetworksQuery);
+						await Promise.all([
+							queryClient.ensureQueryData(GetRegionsQuery),
+							queryClient.ensureQueryData(GetNetworksQuery),
+						]);
 					},
 				},
 				{
