@@ -179,7 +179,10 @@ const sources = [
 	},
 	{
 		id: "vesoul",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/0d6e6c56-8926-49b3-87e2-13c6f57c136b",
+		// 2026-04-16 : use n-1 resource as n is broken
+		staticResourceHref:
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/81222/81222.20250901.213612.326884.zip",
+		// staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/0d6e6c56-8926-49b3-87e2-13c6f57c136b",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/moova-vesoul-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/moova-vesoul-gtfs-rt-vehicle-position",
