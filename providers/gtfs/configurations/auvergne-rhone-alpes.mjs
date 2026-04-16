@@ -95,7 +95,9 @@ const sources = [
 	{
 		id: "aura-38",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/aura-38.zip",
-		realtimeResourceHrefs: ["https://www.itinisere.fr/ftp/GtfsRT/GtfsRT.CG38.pb"],
+		realtimeResourceHrefs: [
+			"https://api.oura3.cityway.fr/dataflow/horaire-tr/download?provider=ISERE&dataFormat=GTFS-RT&dataProfil=OPENDATA",
+		],
 		getNetworkRef: () => "AURA-38",
 		getAheadTime: () => 5 * 60,
 		mapLineRef: (lineRef) => lineRef.split("-")[0],
