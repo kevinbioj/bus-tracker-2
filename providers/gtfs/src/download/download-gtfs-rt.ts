@@ -1,5 +1,6 @@
 import { Buffer } from "node:buffer";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
+import { captureException } from "@bus-tracker/monitoring";
 
 import { USER_AGENT } from "../constants.js";
 import type { GtfsRt, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
@@ -16,46 +17,53 @@ export async function downloadGtfsRt(source: Source) {
 
 	await Promise.allSettled(
 		realtimeFeedHrefs.map(async (realtimeFeedHref) => {
-			const response = await fetch(realtimeFeedHref, {
-				headers: {
-					"User-Agent": USER_AGENT,
-					...getAuthHeaders(source.options.realtimeAuth ?? source.options.auth),
-				},
-				signal: AbortSignal.timeout(15_000),
-			});
+			try {
+				const response = await fetch(realtimeFeedHref, {
+					headers: {
+						"User-Agent": USER_AGENT,
+						...getAuthHeaders(source.options.realtimeAuth ?? source.options.auth),
+					},
+					signal: AbortSignal.timeout(15_000),
+				});
 
-			if (!response.ok)
-				throw new Error(`Failed to download feed at '${realtimeFeedHref}' (status ${response.status}).`);
+				if (!response.ok)
+					throw new Error(`Failed to download feed at '${realtimeFeedHref}' (status ${response.status}).`);
 
-			if (response.status === 204) return;
+				if (response.status === 204) return;
 
-			const buffer = Buffer.from(await response.arrayBuffer());
-			const gtfsRt = feedMessage.toObject(feedMessage.decode(buffer), {
-				enums: String,
-				longs: Number,
-			}) as GtfsRt;
-			const entities = gtfsRt.entity ?? [];
+				const buffer = Buffer.from(await response.arrayBuffer());
+				const gtfsRt = feedMessage.toObject(feedMessage.decode(buffer), {
+					enums: String,
+					longs: Number,
+				}) as GtfsRt;
+				const entities = gtfsRt.entity ?? [];
 
-			for (const entity of entities) {
-				if (entity.tripUpdate) {
-					const tripUpdate =
-						typeof source.options.mapTripUpdate === "function"
-							? source.options.mapTripUpdate(entity.tripUpdate, source.gtfs!)
-							: entity.tripUpdate;
-					if (tripUpdate === undefined) continue;
-					tripUpdate.timestamp ||= gtfsRt.header.timestamp;
-					tripUpdates.push(tripUpdate);
+				for (const entity of entities) {
+					if (entity.tripUpdate) {
+						const tripUpdate =
+							typeof source.options.mapTripUpdate === "function"
+								? source.options.mapTripUpdate(entity.tripUpdate, source.gtfs!)
+								: entity.tripUpdate;
+						if (tripUpdate === undefined) continue;
+						tripUpdate.timestamp ||= gtfsRt.header.timestamp;
+						tripUpdates.push(tripUpdate);
+					}
+
+					if (entity.vehicle) {
+						const vehiclePosition =
+							typeof source.options.mapVehiclePosition === "function"
+								? source.options.mapVehiclePosition(entity.vehicle, source.gtfs!)
+								: entity.vehicle;
+						if (vehiclePosition === undefined) continue;
+						vehiclePosition.timestamp ||= gtfsRt.header.timestamp;
+						vehiclePositions.push(vehiclePosition);
+					}
 				}
-
-				if (entity.vehicle) {
-					const vehiclePosition =
-						typeof source.options.mapVehiclePosition === "function"
-							? source.options.mapVehiclePosition(entity.vehicle, source.gtfs!)
-							: entity.vehicle;
-					if (vehiclePosition === undefined) continue;
-					vehiclePosition.timestamp ||= gtfsRt.header.timestamp;
-					vehiclePositions.push(vehiclePosition);
-				}
+			} catch (error) {
+				captureException(error, {
+					sourceId: source.id,
+					realtimeFeedHref,
+				});
 			}
 		}),
 	);
