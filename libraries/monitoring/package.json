@@ -1,0 +1,25 @@
+{
+	"name": "@bus-tracker/monitoring",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/src/index.d.ts",
+			"default": "./dist/src/index.js"
+		}
+	},
+	"private": true,
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch"
+	},
+	"devDependencies": {
+		"@types/node": "^25.5.2",
+		"typescript": "^6.0.2"
+	},
+	"peerDependencies": {
+		"@types/node": "*"
+	},
+	"dependencies": {
+		"posthog-node": "^4.0.0"
+	}
+}

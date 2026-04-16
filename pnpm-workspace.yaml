@@ -2,6 +2,7 @@ packages:
   - apps/client
   - apps/server
   - libraries/contracts
+  - libraries/monitoring
   - providers/idelis
   - providers/flowly
   - providers/gtfs

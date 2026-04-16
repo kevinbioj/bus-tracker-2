@@ -1,5 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
+import { initMonitoring } from "@bus-tracker/monitoring";
 import dayjs from "dayjs";
 import customParseFormatPlugin from "dayjs/plugin/customParseFormat.js";
 import timezonePlugin from "dayjs/plugin/timezone.js";
@@ -25,6 +26,7 @@ const destinationRegex = /(?:{RunDestination}:|Destination:)\s*([^<\n]+)/i;
 const lastLocRegex = /(?:{LastLoc}:|Dernière position:)\s*([\d]{2}\/[\d]{2}\/[\d]{4} [\d]{2}:[\d]{2}:[\d]{2})/i;
 
 DraftLog(console, true)?.addLineListener(process.stdin);
+initMonitoring("processor-hawk");
 
 console.log("► Connecting to Redis.");
 const redis = createClient({

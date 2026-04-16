@@ -1,9 +1,12 @@
 import { setTimeout } from "node:timers/promises";
+import { captureException, initMonitoring } from "@bus-tracker/monitoring";
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
 
 import { fetchMonitoredLines } from "./jobs/fetch-monitored-lines.js";
 import { fetchMonitoredVehicles } from "./jobs/fetch-monitored-vehicles.js";
+
+initMonitoring("processor-twisto");
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
 const redis = createClient({
@@ -32,6 +35,7 @@ while (true) {
 			console.log("%s ✓ %d have been registered", Temporal.Now.instant(), monitoredLines.length);
 		} catch (cause) {
 			console.error("%s ✘ Failed to update monitored lines", Temporal.Now.instant(), cause);
+			captureException(cause);
 		}
 		await setTimeout(60_000);
 

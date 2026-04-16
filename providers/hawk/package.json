@@ -17,6 +17,7 @@
 		"typescript": "^6.0.2"
 	},
 	"dependencies": {
+		"@bus-tracker/monitoring": "workspace:*",
 		"dayjs": "^1.11.20",
 		"draftlog": "^1.0.13",
 		"redis": "^5.11.0",

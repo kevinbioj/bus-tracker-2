@@ -1,6 +1,7 @@
 import "dotenv";
 
 import { setTimeout } from "node:timers/promises";
+import { captureException, initMonitoring, shutdownMonitoring } from "@bus-tracker/monitoring";
 import { Cron } from "croner";
 import DraftLog from "draftlog";
 import pLimit from "p-limit";
@@ -22,6 +23,8 @@ console.log(` ,----.,--------.,------.,---.   ,------.
 |  | .---.|  |   |  \`--,\`.  \`-.  |  '--' ||  .--'| .-. || .--'| .-. :(  .-' (  .-' | .-. ||  .--' 
 '  '--'  ||  |   |  |\`  .-'    | |  | --' |  |   ' '-' '  \`--.    --..-'  \`).-'  \`)' '-' '|  |    
  \`------' \`--'   \`--'   \`-----'  \`--'     \`--'    \`---'  \`---' \`----'\`----' \`----'  \`---' \`--'    \n\n`);
+
+initMonitoring("processor-gtfs");
 
 const configuration = await loadConfiguration(configurationPath);
 
@@ -73,10 +76,13 @@ while (true) {
 
 		if (timedOut) {
 			console.error("Time out when computing journeys, restarting processor.");
+			captureException(new Error("Timeout computing journeys"));
+			await shutdownMonitoring();
 			process.exit(1);
 		}
 	} catch (e) {
 		console.error("Failed to compute current journeys", e);
+		captureException(e);
 	}
 	const computeDuration = Date.now() - startedAt;
 
@@ -120,6 +126,7 @@ async function computeCurrentJourneys() {
 		for (const computationResult of computationResults) {
 			if (computationResult.status === "rejected") {
 				console.error(computationResult.reason);
+				captureException(computationResult.reason);
 				continue;
 			}
 			computedJourneyCount += computationResult.value;
@@ -134,6 +141,7 @@ async function computeCurrentJourneys() {
 	} catch (e) {
 		updateLog("%s ✘ Something wrong occurred while publishing vehicle journeys.", Temporal.Now.instant());
 		console.error(e);
+		captureException(e);
 	}
 
 	console.log();

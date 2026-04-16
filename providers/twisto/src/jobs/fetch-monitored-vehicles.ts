@@ -1,4 +1,5 @@
 import type { VehicleJourney, VehicleJourneyCall } from "@bus-tracker/contracts";
+import { captureException } from "@bus-tracker/monitoring";
 import { Temporal } from "temporal-polyfill";
 
 import { siriEndpoint } from "../config.js";
@@ -53,7 +54,10 @@ export type SiriStopCall = {
 };
 
 export async function fetchMonitoredVehicles(lineRefs: string[]) {
-	const siriResponse = await siriRequest(siriEndpoint, GET_VEHICLE_MONITORING(lineRefs)).catch((e) => console.error(e));
+	const siriResponse = await siriRequest(siriEndpoint, GET_VEHICLE_MONITORING(lineRefs)).catch((e) => {
+		console.error(e);
+		captureException(e);
+	});
 
 	if (siriResponse === undefined) {
 		return [];

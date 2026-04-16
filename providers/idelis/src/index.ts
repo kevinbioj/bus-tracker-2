@@ -1,6 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
 import DraftLog from "draftlog";
+import { initMonitoring } from "@bus-tracker/monitoring";
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
 
@@ -8,6 +9,7 @@ import { fetchVehicles } from "./fetch-vehicles.js";
 import { lines } from "./lines.js";
 
 DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
+initMonitoring("processor-idelis");
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
 const redis = createClient({

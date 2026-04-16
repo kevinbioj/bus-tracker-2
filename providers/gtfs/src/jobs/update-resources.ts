@@ -1,3 +1,5 @@
+import { captureException } from "@bus-tracker/monitoring";
+
 import type { Source } from "../model/source.js";
 
 export async function updateResources(sources: Source[]) {
@@ -8,6 +10,7 @@ export async function updateResources(sources: Source[]) {
 		} catch (e) {
 			console.log();
 			console.error(e);
+			captureException(e);
 			console.log();
 		}
 	}

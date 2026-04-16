@@ -1,3 +1,4 @@
+import { captureException } from "@bus-tracker/monitoring";
 import pLimit from "p-limit";
 
 import type { Source } from "../model/source.js";
@@ -14,6 +15,7 @@ export async function initializeResources(sources: Source[]) {
 		if (result.status !== "rejected") continue;
 		console.log();
 		console.error(result.reason);
+		captureException(result.reason);
 		console.log();
 	}
 

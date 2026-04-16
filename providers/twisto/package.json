@@ -17,6 +17,7 @@
 		"typescript": "^6.0.2"
 	},
 	"dependencies": {
+		"@bus-tracker/monitoring": "workspace:*",
 		"croner": "^10.0.1",
 		"draftlog": "^1.0.13",
 		"fast-xml-parser": "^5.5.11",
