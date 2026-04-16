@@ -63,7 +63,10 @@ const sources = [
 	},
 	{
 		id: "aura-e18",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e",
+		// 2026-04-16 : use n-1 resource as n is broken
+		staticResourceHref:
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/82545/82545.20260326.141119.892603.zip",
+		// staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
@@ -178,7 +181,10 @@ const sources = [
 	},
 	{
 		id: "montelimar",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e",
+		// 2026-04-16 : use n-1 resource as n is broken
+		staticResourceHref:
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/82545/82545.20260326.141119.892603.zip",
+		// staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 			"https://proxy.transport.data.gouv.fr/resource/montelibus-montelimar-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
