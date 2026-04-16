@@ -13,8 +13,8 @@ const sources = [
 		id: "breizhgo-29",
 		staticResourceHref: "https://www.transdev-bretagne.com/bzh/open-data/breizhgo-29/gtfs",
 		realtimeResourceHrefs: [
-			"https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
-			"https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
+			// "https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
+			// "https://cat29.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "BZH29",
