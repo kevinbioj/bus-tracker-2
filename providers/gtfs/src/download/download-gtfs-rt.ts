@@ -63,6 +63,7 @@ export async function downloadGtfsRt(source: Source) {
 				captureException(error, {
 					sourceId: source.id,
 					realtimeFeedHref,
+					$exception_fingerprint: [`gtfs-rt-error`, source.id, realtimeFeedHref],
 				});
 			}
 		}),
