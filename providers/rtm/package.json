@@ -12,14 +12,14 @@
 	},
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@types/node": "^25.5.2",
+		"@types/node": "^25.6.0",
 		"tsx": "^4.21.0",
 		"typescript": "^6.0.2"
 	},
 	"dependencies": {
 		"@bus-tracker/monitoring": "workspace:*",
 		"draftlog": "^1.0.13",
-		"redis": "^5.11.0",
+		"redis": "^5.12.1",
 		"temporal-polyfill": "^0.3.2",
 		"ts-pattern": "^5.9.0"
 	}
