@@ -232,7 +232,7 @@ export async function computeVehicleJourneys(source: Source) {
 				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
-				if (trip === undefined) continue;
+				if (trip === undefined || trip.stopTimes.length < 2) continue;
 
 				const firstStopTime = trip.stopTimes.at(0)!;
 				const startDate =
