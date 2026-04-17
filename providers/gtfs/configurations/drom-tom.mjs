@@ -52,6 +52,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
+	id: "drom-tom",
 	computeDelayMs: 30_000,
 	sources,
 };

@@ -24,9 +24,9 @@ console.log(` ,----.,--------.,------.,---.   ,------.
 '  '--'  ||  |   |  |\`  .-'    | |  | --' |  |   ' '-' '  \`--.    --..-'  \`).-'  \`)' '-' '|  |    
  \`------' \`--'   \`--'   \`-----'  \`--'     \`--'    \`---'  \`---' \`----'\`----' \`----'  \`---' \`--'    \n\n`);
 
-initMonitoring("processor-gtfs");
-
 const configuration = await loadConfiguration(configurationPath);
+
+initMonitoring(`processor-gtfs:${configuration.id}`);
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
 const redis = createClient({

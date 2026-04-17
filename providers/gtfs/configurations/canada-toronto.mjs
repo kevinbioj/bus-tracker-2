@@ -17,6 +17,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
+	id: "canada-toronto",
 	computeDelayMs: 30_000,
 	sources,
 };

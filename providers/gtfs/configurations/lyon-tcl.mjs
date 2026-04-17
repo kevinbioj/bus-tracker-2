@@ -44,6 +44,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
+	id: "lyon-tcl",
 	computeDelayMs: 10_000,
 	sources,
 };

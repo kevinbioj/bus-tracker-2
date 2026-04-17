@@ -16,6 +16,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
+	id: "lemans-setram",
 	computeDelayMs: 30_000,
 	sources,
 };
