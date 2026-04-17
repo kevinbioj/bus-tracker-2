@@ -9,8 +9,6 @@ if (process.argv.length < 3) {
 	process.exit(1);
 }
 
-initMonitoring("processor-flowly");
-
 console.log("► Connecting to Redis.");
 const redis = createClient({
 	url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
@@ -23,6 +21,8 @@ console.log(`► Connected! Journeys will be published into '${channel}'.`);
 console.log();
 
 const [, , flowlyId, networkRef] = process.argv;
+
+initMonitoring(`processor-flowly:${flowlyId}`);
 
 while (true) {
 	console.log("► Fetching vehicles from Flowly...");
