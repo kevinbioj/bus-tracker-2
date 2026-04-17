@@ -163,9 +163,15 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allow
 		gtfs.routes.has(tripDescriptor.routeId)
 	) {
 		const startDate = createPlainDate(tripDescriptor.startDate);
-		const startTime = createPlainTime(tripDescriptor.startTime);
+
+		const [hours, minutes, seconds] = tripDescriptor.startTime.split(":").map(Number);
+		const startTimeModulus = Math.floor((hours ?? 0) / 24);
+		const startTime = createPlainTime(
+			`${String((hours ?? 0) % 24).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
+		);
+
 		const startsAt = createZonedDateTime(
-			startDate,
+			startDate.add({ days: startTimeModulus }),
 			startTime,
 			gtfs.routes.get(tripDescriptor.routeId)!.agency.timeZone,
 		);
