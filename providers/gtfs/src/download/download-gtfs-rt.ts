@@ -26,10 +26,10 @@ export async function downloadGtfsRt(source: Source) {
 					signal: AbortSignal.timeout(15_000),
 				});
 
+				if ([204, 429].includes(response.status)) return;
+
 				if (!response.ok)
 					throw new Error(`Failed to download feed at '${realtimeFeedHref}' (status ${response.status}).`);
-
-				if (response.status === 204) return;
 
 				const buffer = Buffer.from(await response.arrayBuffer());
 				const gtfsRt = feedMessage.toObject(feedMessage.decode(buffer), {
