@@ -161,5 +161,9 @@ export async function importTrips(
 		}
 	}
 
+	for (const [id, trip] of trips) {
+		if (trip.stopTimes.length < 2) trips.delete(id);
+	}
+
 	return trips;
 }
