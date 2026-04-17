@@ -87,8 +87,7 @@ export async function importTrips(
 			);
 		}
 
-		const flagsBitmask =
-			(stopTimeRecord.pickup_type === "1" ? 1 : 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
+		const flagsBitmask = (stopTimeRecord.pickup_type === "1" ? 1 : 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
 
 		const [arrivalHours, arrivalMinutes, arrivalSeconds] = stopTimeRecord.arrival_time.split(":") as [
 			string,

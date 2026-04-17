@@ -15,12 +15,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": [
-			"**",
-			"!**/dist",
-			"!**/node_modules",
-			"!**/.git"
-		]
+		"includes": ["**", "!**/dist", "!**/node_modules", "!**/.git"]
 	},
 	"formatter": {
 		"enabled": true,
