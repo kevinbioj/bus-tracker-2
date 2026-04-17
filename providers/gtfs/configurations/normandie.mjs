@@ -183,8 +183,9 @@ const sources = [
 		staticResourceHref: "https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs-rt"],
 		excludeScheduled: true,
+		mode: "NO-TU",
 		getNetworkRef: () => "SNGO",
-		getVehicleRef: (vehicle) => vehicle.label ?? undefined,
+		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
 	//- Astrobus
 	{
