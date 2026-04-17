@@ -26,7 +26,7 @@ const destinationRegex = /(?:{RunDestination}:|Destination:)\s*([^<\n]+)/i;
 const lastLocRegex = /(?:{LastLoc}:|Dernière position:)\s*([\d]{2}\/[\d]{2}\/[\d]{4} [\d]{2}:[\d]{2}:[\d]{2})/i;
 
 DraftLog(console, true)?.addLineListener(process.stdin);
-initMonitoring("processor-hawk");
+initMonitoring(`processor-hawk:${HAWK_ID}`);
 
 console.log("► Connecting to Redis.");
 const redis = createClient({
