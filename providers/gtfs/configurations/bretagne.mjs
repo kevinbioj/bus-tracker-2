@@ -57,6 +57,14 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "BIBUS",
 		// "anonymised" vehicle reference 😅🤣
+		mapTripUpdate: (tripUpdate) => {
+			if (typeof tripUpdate.vehicle?.id === "string") {
+				const vehicleNumber = +tripUpdate.vehicle.id - 2 ** 28;
+				tripUpdate.vehicle.id = vehicleNumber;
+			}
+
+			return tripUpdate;
+		},
 		mapVehiclePosition: (vehicle) => {
 			const vehicleNumber = +vehicle.vehicle.id - 2 ** 28;
 			vehicle.vehicle.id = vehicleNumber;
