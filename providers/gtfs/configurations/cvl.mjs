@@ -45,7 +45,6 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/chateauroux/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/chateauroux/vehicle-positions",
 		],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "CHATEAUROUX",
