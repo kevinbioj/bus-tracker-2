@@ -578,7 +578,7 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 		getNetworkRef: () => "TISSEO",
 		isValidJourney: (journey) =>
-			["A", "B", "TELEO"].includes(journey.line?.number) || journey.id.includes("VehicleTracking"),
+			journey.id.includes("VehicleTracking") || journey.calls?.every((call) => call.expectedTime === undefined),
 	},
 ];
 
