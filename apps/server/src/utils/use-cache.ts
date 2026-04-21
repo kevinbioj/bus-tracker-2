@@ -1,19 +1,16 @@
 export function useCache<T>(ttl: number) {
 	const cache = new Map<string, { data: T; recordedAt: number }>();
 
-	setInterval(() => {
-		const now = Date.now();
-
-		for (const [id, { recordedAt }] of cache) {
-			const age = now - recordedAt;
-			if (age >= ttl) {
-				cache.delete(id);
-			}
-		}
-	}, ttl);
-
 	return {
-		get: (key: string) => cache.get(key)?.data,
+		get: (key: string) => {
+			const entry = cache.get(key);
+			if (!entry) return undefined;
+			if (Date.now() - entry.recordedAt >= ttl) {
+				cache.delete(key);
+				return undefined;
+			}
+			return entry.data;
+		},
 		set: (key: string, value: T) =>
 			cache.set(key, {
 				data: value,

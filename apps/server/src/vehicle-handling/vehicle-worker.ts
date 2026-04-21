@@ -31,38 +31,46 @@ async function start() {
 	await redisSubscriber.connect();
 
 	console.log("► [Worker] Subscribing to journeys channel.");
-	await redisSubscriber.subscribe("journeys", async (message) => {
-		try {
-			let didWarn = false;
-			let vehicleJourneys: VehicleJourney[];
+	let processingPromise: Promise<void> | null = null;
 
+	await redisSubscriber.subscribe("journeys", (message) => {
+		if (processingPromise !== null) return;
+
+		processingPromise = (async () => {
 			try {
-				const payload = JSON.parse(message);
-				if (!Array.isArray(payload)) throw new Error("Payload is not an array");
-				vehicleJourneys = payload.flatMap((entry) => {
-					const result = vehicleJourneySchema(entry);
+				let didWarn = false;
+				let vehicleJourneys: VehicleJourney[];
 
-					if (result instanceof ArkErrors) {
-						if (!didWarn) {
-							console.warn(`⚠ [Worker] Rejected object(s) from journeys channel, sample:`, entry);
-							console.error(result.toString());
-							didWarn = true;
+				try {
+					const payload = JSON.parse(message);
+					if (!Array.isArray(payload)) throw new Error("Payload is not an array");
+					vehicleJourneys = payload.flatMap((entry) => {
+						const result = vehicleJourneySchema(entry);
+
+						if (result instanceof ArkErrors) {
+							if (!didWarn) {
+								console.warn(`⚠ [Worker] Rejected object(s) from journeys channel, sample:`, entry);
+								console.error(result.toString());
+								didWarn = true;
+							}
+							return [];
 						}
-						return [];
-					}
 
-					return result;
-				});
+						return result;
+					});
+				} catch (error) {
+					console.error("✘ [Worker] An error occurred while parsing batch:", error);
+					return;
+				}
+
+				const processedJourneys = await handleVehicleBatch(vehicleJourneys);
+				parentPort?.postMessage(processedJourneys);
 			} catch (error) {
-				console.error("✘ [Worker] An error occurred while parsing batch:", error);
-				return;
+				console.error("✘ [Worker] A worker-related error occurred while processing batch:", error);
 			}
-
-			const processedJourneys = await handleVehicleBatch(vehicleJourneys);
-			parentPort?.postMessage(processedJourneys);
-		} catch (error) {
-			console.error("✘ [Worker] A worker-related error occurred while processing batch:", error);
-		}
+		})().finally(() => {
+			processingPromise = null;
+		});
 	});
 }
 
