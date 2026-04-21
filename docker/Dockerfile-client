@@ -38,7 +38,7 @@ RUN apk add --no-cache curl tini
 USER 101
 
 # Copy nginx configuration
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx.conf /etc/nginx/nginx.conf
 
 # Copy build artifacts
 WORKDIR /usr/share/nginx/html
