@@ -32,20 +32,9 @@ services:
         mode: host
     secrets:
       - database_password
-    volumes:
-      - database_data:/var/lib/postgresql
-      - type: volume
-        source: sockets
-        target: /var/run/postgresql/
-        volume:
-          subpath: postgresql/
 
   redis:
     image: redis:8.6.2-alpine
-    command: >
-      redis-server
-        --unixsocket /var/run/bus-tracker/redis.sock
-        --unixsocketperm 777
     ports:
       - target: 6379
         published: 6379
@@ -53,21 +42,17 @@ services:
         mode: host
     volumes:
       - redis_data:/data
-      - sockets:/var/run/bus-tracker
 
   server:
     image: ghcr.io/kevinbioj/bus-tracker-2/server:sha-${GITHUB_SHA}
     environment:
-      - PG_HOST=/var/run/bus-tracker/postgresql
+      - PG_HOST=database
       - PG_PORT=5432
       - PG_USER=bustracker
       - PG_DATABASE=bustracker
       - PG_PASSWORD_FILE=/run/secrets/database_password
-      - REDIS_SOCK=/var/run/bus-tracker/redis.sock
     secrets:
       - database_password
-    volumes:
-      - sockets:/var/run/bus-tracker
     deploy:
       labels:
         - "traefik.enable=true"
@@ -133,8 +118,4 @@ volumes:
 
   redis_data:
     name: bus-tracker_redis-data
-    external: true
-  
-  sockets:
-    name: bus-tracker_sockets
     external: true
