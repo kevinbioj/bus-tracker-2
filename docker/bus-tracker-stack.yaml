@@ -25,6 +25,7 @@ services:
     environment:
       - "POSTGRES_USER=bustracker"
       - "POSTGRES_PASSWORD_FILE=/run/secrets/database_password"
+      - "POSTGRES_DB=bustracker"
     ports:
       - target: 5432
         published: 5432
@@ -32,6 +33,8 @@ services:
         mode: host
     secrets:
       - database_password
+    volumes:
+      - database_data:/var/lib/postgresql
 
   redis:
     image: redis:8.6.2-alpine
@@ -51,6 +54,7 @@ services:
       - PG_USER=bustracker
       - PG_DATABASE=bustracker
       - PG_PASSWORD_FILE=/run/secrets/database_password
+      - REDIS_URL=redis://redis:6379
     secrets:
       - database_password
     deploy:
