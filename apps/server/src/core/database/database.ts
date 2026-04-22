@@ -8,7 +8,7 @@ let PG_PASSWORD = process.env.PG_PASSWORD;
 
 const PG_PASSWORD_FILE = process.env.PG_PASSWORD_FILE;
 if (PG_PASSWORD_FILE !== undefined) {
-	PG_PASSWORD = (await readFile(PG_PASSWORD_FILE)).toString();
+	PG_PASSWORD = (await readFile(PG_PASSWORD_FILE, "utf-8")).trim();
 }
 
 const connection = postgres({
