@@ -14,11 +14,11 @@
 	"devDependencies": {
 		"@types/node": "^25.6.0",
 		"drizzle-kit": "^0.31.10",
-		"typescript": "^6.0.2"
+		"typescript": "^6.0.3"
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@hono/node-server": "^1.19.14",
+		"@hono/node-server": "^2.0.0",
 		"arktype": "^2.2.0",
 		"drizzle-orm": "^0.45.2",
 		"hono": "^4.12.14",

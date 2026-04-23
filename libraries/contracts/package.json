@@ -16,7 +16,7 @@
 		"dev": "tsc --watch"
 	},
 	"devDependencies": {
-		"typescript": "^6.0.2"
+		"typescript": "^6.0.3"
 	},
 	"dependencies": {
 		"arktype": "^2.2.0",

@@ -31,7 +31,7 @@ RUN pnpm -r build
 # STAGE 2 - Run distribution app         #
 ##########################################
 
-FROM nginxinc/nginx-unprivileged:1.29.5-alpine AS web
+FROM nginxinc/nginx-unprivileged:1.29.8-alpine AS web
 
 USER root
 RUN apk add --no-cache curl tini

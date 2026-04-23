@@ -14,14 +14,14 @@
 		"@bus-tracker/contracts": "workspace:*",
 		"@types/node": "^25.6.0",
 		"tsx": "^4.21.0",
-		"typescript": "^6.0.2"
+		"typescript": "^6.0.3"
 	},
 	"dependencies": {
 		"@bus-tracker/monitoring": "workspace:*",
 		"croner": "^10.0.1",
 		"draftlog": "^1.0.13",
-		"fast-xml-parser": "^5.6.0",
-		"ky": "^2.0.1",
+		"fast-xml-parser": "^5.7.1",
+		"ky": "^2.0.2",
 		"redis": "^5.12.1",
 		"temporal-polyfill": "^0.3.2"
 	}
