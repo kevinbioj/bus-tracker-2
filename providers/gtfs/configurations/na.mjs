@@ -109,6 +109,17 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1),
 	},
 	{
+		id: "limoges",
+		staticResourceHref:
+			"https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/ca_limoges_metropole-aggregated-gtfs.zip",
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/limoges/trip-updates"],
+		gtfsOptions: { computeShapeDistTraveled: true },
+		getNetworkRef: () => "LIMOGES",
+		mapLineRef: (lineRef) => lineRef.split(":")[2],
+		mapStopRef: (stopRef) => stopRef.split(":")[2],
+		mapTripRef: (tripRef) => tripRef.split(":")[2],
+	},
+	{
 		id: "na-19-transdevlr19",
 		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-lignes-regulieres-correze/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-lignes-regulieres-correze/gtfs-rt"],
