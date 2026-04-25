@@ -1,7 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
-import DraftLog from "draftlog";
 import { initMonitoring } from "@bus-tracker/monitoring";
+import DraftLog from "draftlog";
 import { createClient } from "redis";
 import { Temporal } from "temporal-polyfill";
 

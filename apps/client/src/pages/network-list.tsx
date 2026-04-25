@@ -1,5 +1,5 @@
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowRight, SearchIcon, StarIcon } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -12,10 +12,7 @@ import { Separator } from "~/components/ui/separator";
 import { cn } from "~/utils/utils";
 
 function normalizeStr(str: string) {
-	return str
-		.toLowerCase()
-		.normalize("NFD")
-		.replace(/[̀-ͯ]/g, "");
+	return str.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 type PageItem =
@@ -169,9 +166,7 @@ export function NetworkList() {
 								>
 									{item.type === "header" ? (
 										<div className={cn("flex items-center gap-3", item.first ? "pb-3" : "pt-6 pb-3")}>
-											<h3 className="font-semibold text-lg whitespace-nowrap text-muted-foreground">
-												{item.title}
-											</h3>
+											<h3 className="font-semibold text-lg whitespace-nowrap text-muted-foreground">{item.title}</h3>
 											<Separator className="flex-1" />
 										</div>
 									) : (

@@ -240,10 +240,7 @@ export async function computeVehicleJourneys(source: Source) {
 				const startDate =
 					tripUpdate.trip.startDate !== undefined
 						? Temporal.PlainDate.from(tripUpdate.trip.startDate)
-						: guessStartDate(
-								trip.firstArrivalSecs,
-								updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
-							);
+						: guessStartDate(trip.firstArrivalSecs, updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone));
 
 				let journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);
 				if (journey === undefined) {
@@ -292,10 +289,7 @@ export async function computeVehicleJourneys(source: Source) {
 						vehiclePosition.trip.startDate !== undefined
 							? Temporal.PlainDate.from(vehiclePosition.trip.startDate)
 							: trip.stopTimeCount > 0
-								? guessStartDate(
-										trip.firstArrivalSecs,
-										updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
-									)
+								? guessStartDate(trip.firstArrivalSecs, updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone))
 								: Temporal.Now.plainDateISO();
 
 					journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);

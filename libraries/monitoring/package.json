@@ -20,6 +20,6 @@
 		"@types/node": "*"
 	},
 	"dependencies": {
-		"posthog-node": "^5.29.6"
+		"posthog-node": "^5.30.4"
 	}
 }

@@ -172,8 +172,7 @@ export async function importTrips(
 
 		stopRefs[idx] = stop;
 		sequence[idx] = +stopTimeRecord.stop_sequence;
-		flagsBitmask[idx] =
-			(stopTimeRecord.pickup_type === "1" ? 1 : 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
+		flagsBitmask[idx] = (stopTimeRecord.pickup_type === "1" ? 1 : 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
 		arrivalSecs[idx] = aSecs;
 		departureSecs[idx] = dSecs;
 		distanceTraveled[idx] =

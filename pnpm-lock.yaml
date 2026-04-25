@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@biomejs/biome':
-        specifier: 2.4.12
-        version: 2.4.12
+        specifier: 2.4.13
+        version: 2.4.13
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -60,8 +60,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0(leaflet@1.9.4)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@tanstack/react-query':
-        specifier: ^5.99.2
-        version: 5.99.2(react@19.2.5)
+        specifier: ^5.100.4
+        version: 5.100.4(react@19.2.5)
       '@tanstack/react-virtual':
         specifier: ^3.13.24
         version: 3.13.24(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -87,8 +87,8 @@ importers:
         specifier: ^1.9.4
         version: 1.9.4
       lucide-react:
-        specifier: ^1.8.0
-        version: 1.8.0(react@19.2.5)
+        specifier: ^1.11.0
+        version: 1.11.0(react@19.2.5)
       maplibre-gl:
         specifier: ^5.24.0
         version: 5.24.0
@@ -99,8 +99,8 @@ importers:
         specifier: ^2.8.9
         version: 2.8.9(react-router-dom@7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-router@7.14.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)
       posthog-js:
-        specifier: ^1.371.1
-        version: 1.371.1
+        specifier: ^1.372.1
+        version: 1.372.1
       react:
         specifier: ^19.2.5
         version: 19.2.5
@@ -203,7 +203,7 @@ importers:
         version: link:../../libraries/contracts
       '@hono/node-server':
         specifier: ^2.0.0
-        version: 2.0.0(hono@4.12.14)
+        version: 2.0.0(hono@4.12.15)
       arktype:
         specifier: ^2.2.0
         version: 2.2.0
@@ -211,8 +211,8 @@ importers:
         specifier: ^0.45.2
         version: 0.45.2(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(bun-types@1.3.11)(postgres@3.4.9)
       hono:
-        specifier: ^4.12.14
-        version: 4.12.14
+        specifier: ^4.12.15
+        version: 4.12.15
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
@@ -252,8 +252,8 @@ importers:
   libraries/monitoring:
     dependencies:
       posthog-node:
-        specifier: ^5.29.6
-        version: 5.29.6
+        specifier: ^5.30.4
+        version: 5.30.4
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -447,8 +447,8 @@ importers:
         specifier: ^1.0.13
         version: 1.0.13
       fast-xml-parser:
-        specifier: ^5.7.1
-        version: 5.7.1
+        specifier: ^5.7.2
+        version: 5.7.2
       ky:
         specifier: ^2.0.2
         version: 2.0.2
@@ -985,59 +985,59 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
-  '@biomejs/biome@2.4.12':
-    resolution: {integrity: sha512-Rro7adQl3NLq/zJCIL98eElXKI8eEiBtoeu5TbXF/U3qbjuSc7Jb5rjUbeHHcquDWeSf3HnGP7XI5qGrlRk/pA==}
+  '@biomejs/biome@2.4.13':
+    resolution: {integrity: sha512-gLXOwkOBBg0tr7bDsqlkIh4uFeKuMjxvqsrb1Tukww1iDmHcfr4Uu8MoQxp0Rcte+69+osRNWXwHsu/zxT6XqA==}
     engines: {node: '>=14.21.3'}
     hasBin: true
 
-  '@biomejs/cli-darwin-arm64@2.4.12':
-    resolution: {integrity: sha512-BnMU4Pc3ciEVteVpZ0BK33MLr7X57F5w1dwDLDn+/iy/yTrA4Q/N2yftidFtsA4vrDh0FMXDpacNV/Tl3fbmng==}
+  '@biomejs/cli-darwin-arm64@2.4.13':
+    resolution: {integrity: sha512-2KImO1jhNFBa2oWConyr0x6flxbQpGKv6902uGXpYM62Xyem8U80j441SyUJ8KyngsmKbQjeIv1q2CQfDkNnYg==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [darwin]
 
-  '@biomejs/cli-darwin-x64@2.4.12':
-    resolution: {integrity: sha512-x9uJ0bI1rJsWICp3VH8w/5PnAVD3A7SqzDpbrfoUQX1QyWrK5jSU4fRLo/wSgGeplCivbxBRKmt5Xq4/nWvq8A==}
+  '@biomejs/cli-darwin-x64@2.4.13':
+    resolution: {integrity: sha512-BKrJklbaFN4p1Ts4kPBczo+PkbsHQg57kmJ+vON9u2t6uN5okYHaSr7h/MutPCWQgg2lglaWoSmm+zhYW+oOkg==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [darwin]
 
-  '@biomejs/cli-linux-arm64-musl@2.4.12':
-    resolution: {integrity: sha512-FhfpkAAlKL6kwvcVap0Hgp4AhZmtd3YImg0kK1jd7C/aSoh4SfsB2f++yG1rU0lr8Y5MCFJrcSkmssiL9Xnnig==}
+  '@biomejs/cli-linux-arm64-musl@2.4.13':
+    resolution: {integrity: sha512-U5MsuBQW25dXaYtqWWSPM3P96H6Y+fHuja3TQpMNnylocHW0tEbtFTDlUj6oM+YJLntvEkQy4grBvQNUD4+RCg==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@biomejs/cli-linux-arm64@2.4.12':
-    resolution: {integrity: sha512-tOwuCuZZtKi1jVzbk/5nXmIsziOB6yqN8c9r9QM0EJYPU6DpQWf11uBOSCfFKKM4H3d9ZoarvlgMfbcuD051Pw==}
+  '@biomejs/cli-linux-arm64@2.4.13':
+    resolution: {integrity: sha512-NzkUDSqfvMBrPplKgVr3aXLHZ2NEELvvF4vZxXulEylKWIGqlvNEcwUcj9OLrn75TD3lJ/GIqCVlBwd1MZCuYQ==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@biomejs/cli-linux-x64-musl@2.4.12':
-    resolution: {integrity: sha512-dwTIgZrGutzhkQCuvHynCkyW6hJxUuyZqKKO0YNfaS2GUoRO+tOvxXZqZB6SkWAOdfZTzwaw8IEdUnIkHKHoew==}
+  '@biomejs/cli-linux-x64-musl@2.4.13':
+    resolution: {integrity: sha512-Z601MienRgTBDza/+u2CH3RSrWoXo9rtr8NK6A4KJzqGgfxx+H3VlyLgTJ4sRo40T3pIsqpTmiOQEvYzQvBRvQ==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@biomejs/cli-linux-x64@2.4.12':
-    resolution: {integrity: sha512-8pFeAnLU9QdW9jCIslB/v82bI0lhBmz2ZAKc8pVMFPO0t0wAHsoEkrUQUbMkIorTRIjbqyNZHA3lEXavsPWYSw==}
+  '@biomejs/cli-linux-x64@2.4.13':
+    resolution: {integrity: sha512-Az3ZZedYRBo9EQzNnD9SxFcR1G5QsGo6VEc2hIyVPZ1rdKwee/7E9oeBBZFpE8Z44ekxsDQBqbiWGW5ShOhUSQ==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@biomejs/cli-win32-arm64@2.4.12':
-    resolution: {integrity: sha512-B0DLnx0vA9ya/3v7XyCaP+/lCpnbWbMOfUFFve+xb5OxyYvdHaS55YsSddr228Y+JAFk58agCuZTsqNiw2a6ig==}
+  '@biomejs/cli-win32-arm64@2.4.13':
+    resolution: {integrity: sha512-Px9PS2B5/Q183bUwy/5VHqp3J2lzdOCeVGzMpphYfl8oSa7VDCqenBdqWpy6DCy/en4Rbf/Y1RieZF6dJPcc9A==}
     engines: {node: '>=14.21.3'}
     cpu: [arm64]
     os: [win32]
 
-  '@biomejs/cli-win32-x64@2.4.12':
-    resolution: {integrity: sha512-yMckRzTyZ83hkk8iDFWswqSdU8tvZxspJKnYNh7JZr/zhZNOlzH13k4ecboU6MurKExCe2HUkH75pGI/O2JwGA==}
+  '@biomejs/cli-win32-x64@2.4.13':
+    resolution: {integrity: sha512-tTcMkXyBrmHi9BfrD2VNHs/5rYIUKETqsBlYOvSAABwBkJhSDVb5e7wPukftsQbO3WzQkXe6kaztC6WtUOXSoQ==}
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
@@ -1806,11 +1806,11 @@ packages:
   '@oxc-project/types@0.127.0':
     resolution: {integrity: sha512-aIYXQBo4lCbO4z0R3FHeucQHpF46l2LbMdxRvqvuRuW2OxdnSkcng5B8+K12spgLDj93rtN3+J2Vac/TIO+ciQ==}
 
-  '@posthog/core@1.27.0':
-    resolution: {integrity: sha512-09IQgr7BocTrETbYVNQx5Dq06xsCItXbxYO8dpHIE4rEcDvWiIv3/4zEaVzsKrCI1cSLds3d5sgBGaEfh7RScA==}
+  '@posthog/core@1.27.5':
+    resolution: {integrity: sha512-sYCcUDuYKumYTjwGqGCPT8aUy086v9PKw5wD+UXCRSfCsxWy5R/ic6W13kGTn4O5B2cD1V19wJv19oIH5kHUiQ==}
 
-  '@posthog/types@1.371.1':
-    resolution: {integrity: sha512-JAJMEZ9OzqpVLojIA98s/AFl9t+q0cqoQFWrMDvegm0AhH+wPMI55w74LFNAOaDSGm5/pyPaSul04r6ciTaA6A==}
+  '@posthog/types@1.372.1':
+    resolution: {integrity: sha512-yl2x2HgtdhFk8bvf6HuRSDzXnKmKGrzNxUahKvA/0mcwheweINvmWy5MsN55NevrcCrNXA6m8GPHS9o/y1mn4A==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -2607,11 +2607,11 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
 
-  '@tanstack/query-core@5.99.2':
-    resolution: {integrity: sha512-1HunU0bXVsR1ZJMZbcOPE6VtaBJxsW809RE9xPe4Gz7MlB0GWwQvuTPhMoEmQ/hIzFKJ/DWAuttIe7BOaWx0tA==}
+  '@tanstack/query-core@5.100.4':
+    resolution: {integrity: sha512-LdW/DDImiw9g4ukyndlrifIXPFpoQjNybCAIDBcPvdYu9iUIhAKwhznfAATe2dJBonhm0O3ksoCMmVTUxN89uA==}
 
-  '@tanstack/react-query@5.99.2':
-    resolution: {integrity: sha512-vM91UEe45QUS9ED6OklsVL15i8qKcRqNwpWzPTVWvRPRSEgDudDgHpvyTjcdlwHcrKNa80T+xXYcchT2noPnZA==}
+  '@tanstack/react-query@5.100.4':
+    resolution: {integrity: sha512-L6n5UWBvnMuYaZTu6WgTbl2mJ7fob1NIdL2vIFo05R/mkr9XvP5PmesZOBiicxzhDAuUurYIG+ZFONbvarEFtQ==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -2775,8 +2775,8 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  ajv@8.18.0:
-    resolution: {integrity: sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A==}
+  ajv@8.20.0:
+    resolution: {integrity: sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA==}
 
   ansi-styles@4.3.0:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
@@ -2854,8 +2854,8 @@ packages:
   base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
 
-  baseline-browser-mapping@2.10.21:
-    resolution: {integrity: sha512-Q+rUQ7Uz8AHM7DEaNdwvfFCTq7a43lNTzuS94eiWqwyxfV/wJv+oUivef51T91mmRY4d4A1u9rcSvkeufCVXlA==}
+  baseline-browser-mapping@2.10.22:
+    resolution: {integrity: sha512-6qruVrb5rse6WylFkU0FhBKKGuecWseqdpQfhkawn6ztyk2QlfwSRjsDxMCLJrkfmfN21qvhl9ABgaMeRkuwww==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -3220,8 +3220,8 @@ packages:
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
 
-  enhanced-resolve@5.20.1:
-    resolution: {integrity: sha512-Qohcme7V1inbAfvjItgw0EaxVX5q2rdVEZHRBrEQdRZTssLDGsL8Lwrznl8oQ/6kuTJONLaDcGjkNP247XEhcA==}
+  enhanced-resolve@5.21.0:
+    resolution: {integrity: sha512-otxSQPw4lkOZWkHpB3zaEQs6gWYEsmX4xQF68ElXC/TWvGxGMSGOvoNbaLXm6/cS/fSfHtsEdw90y20PCd+sCA==}
     engines: {node: '>=10.13.0'}
 
   entities@4.5.0:
@@ -3344,8 +3344,8 @@ packages:
   fast-xml-builder@1.1.5:
     resolution: {integrity: sha512-4TJn/8FKLeslLAH3dnohXqE3QSoxkhvaMzepOIZytwJXZO69Bfz0HBdDHzOTOon6G59Zrk6VQ2bEiv1t61rfkA==}
 
-  fast-xml-parser@5.7.1:
-    resolution: {integrity: sha512-8Cc3f8GUGUULg34pBch/KGyPLglS+OFs05deyOlY7fL2MTagYPKrVQNmR1fLF/yJ9PH5ZSTd3YDF6pnmeZU+zA==}
+  fast-xml-parser@5.7.2:
+    resolution: {integrity: sha512-P7oW7tLbYnhOLQk/Gv7cZgzgMPP/XN03K02/Jy6Y/NHzyIAIpxuZIM/YqAkfiXFPxA2CTm7NtCijK9EDu09u2w==}
     hasBin: true
 
   fd-slicer@1.1.0:
@@ -3503,8 +3503,8 @@ packages:
     resolution: {integrity: sha512-ej4AhfhfL2Q2zpMmLo7U1Uv9+PyhIZpgQLGT1F9miIGmiCJIoCgSmczFdrc97mWT4kVY72KA+WnnhJ5pghSvSg==}
     engines: {node: '>= 0.4'}
 
-  hono@4.12.14:
-    resolution: {integrity: sha512-am5zfg3yu6sqn5yjKBNqhnTX7Cv+m00ox+7jbaKkrLMRJ4rAdldd1xPd/JzbBWspqaQv6RSTrgFN95EsfhC+7w==}
+  hono@4.12.15:
+    resolution: {integrity: sha512-qM0jDhFEaCBb4TxoW7f53Qrpv9RBiayUHo0S52JudprkhvpjIrGoU1mnnr29Fvd1U335ZFPZQY1wlkqgfGXyLg==}
     engines: {node: '>=16.9.0'}
 
   ico-endec@0.1.6:
@@ -3824,8 +3824,8 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  lucide-react@1.8.0:
-    resolution: {integrity: sha512-WuvlsjngSk7TnTBJ1hsCy3ql9V9VOdcPkd3PKcSmM34vJD8KG6molxz7m7zbYFgICwsanQWmJ13JlYs4Zp7Arw==}
+  lucide-react@1.11.0:
+    resolution: {integrity: sha512-UOhjdztXCgdBReRcIhsvz2siIBogfv/lhJEIViCpLt924dO+GDms9T7DNoucI23s6kEPpe988m5N0D2ajnzb2g==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -4049,11 +4049,11 @@ packages:
     resolution: {integrity: sha512-GD3qdB0x1z9xgFI6cdRD6xu2Sp2WCOEoe3mtnyB5Ee0XrrL5Pe+e4CCnJrRMnL1zYtRDZmQQVbvOttLnKDLnaw==}
     engines: {node: '>=12'}
 
-  posthog-js@1.371.1:
-    resolution: {integrity: sha512-oShGkEe+E1W5MTQJgl3LtN6UegOApj38SnQWBNS0IgrCusjQ4efnQaC/Vz7SRj42LPAnh+6MKN9msbVpYv31GQ==}
+  posthog-js@1.372.1:
+    resolution: {integrity: sha512-gP316wDc36YbieIEW48wfB6wq2ugBNQc+XwNkewN9QRPzhitX+9dG6lUjqHEhMx3A2Y41HjbZf5Vl0Ll0ju8UA==}
 
-  posthog-node@5.29.6:
-    resolution: {integrity: sha512-x77Ps+vLn2QgJ+i1wfFnAd+VVoMY1ZxpwV8un+jKRJUU/57zX8sInDyCaG8x08dlBd5Bys+xKtIV7uNJsUOFJw==}
+  posthog-node@5.30.4:
+    resolution: {integrity: sha512-NjEgLdQwff9aPssHgmDYYDe5EbMsR33k327g/hC7RM3qbaqWio559TqAaVjP+Ks8c61liP0Vhr90lr4dpO48OQ==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -4925,9 +4925,9 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@apideck/better-ajv-errors@0.3.7(ajv@8.18.0)':
+  '@apideck/better-ajv-errors@0.3.7(ajv@8.20.0)':
     dependencies:
-      ajv: 8.18.0
+      ajv: 8.20.0
       jsonpointer: 5.0.1
       leven: 3.1.0
 
@@ -5591,39 +5591,39 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@biomejs/biome@2.4.12':
+  '@biomejs/biome@2.4.13':
     optionalDependencies:
-      '@biomejs/cli-darwin-arm64': 2.4.12
-      '@biomejs/cli-darwin-x64': 2.4.12
-      '@biomejs/cli-linux-arm64': 2.4.12
-      '@biomejs/cli-linux-arm64-musl': 2.4.12
-      '@biomejs/cli-linux-x64': 2.4.12
-      '@biomejs/cli-linux-x64-musl': 2.4.12
-      '@biomejs/cli-win32-arm64': 2.4.12
-      '@biomejs/cli-win32-x64': 2.4.12
+      '@biomejs/cli-darwin-arm64': 2.4.13
+      '@biomejs/cli-darwin-x64': 2.4.13
+      '@biomejs/cli-linux-arm64': 2.4.13
+      '@biomejs/cli-linux-arm64-musl': 2.4.13
+      '@biomejs/cli-linux-x64': 2.4.13
+      '@biomejs/cli-linux-x64-musl': 2.4.13
+      '@biomejs/cli-win32-arm64': 2.4.13
+      '@biomejs/cli-win32-x64': 2.4.13
 
-  '@biomejs/cli-darwin-arm64@2.4.12':
+  '@biomejs/cli-darwin-arm64@2.4.13':
     optional: true
 
-  '@biomejs/cli-darwin-x64@2.4.12':
+  '@biomejs/cli-darwin-x64@2.4.13':
     optional: true
 
-  '@biomejs/cli-linux-arm64-musl@2.4.12':
+  '@biomejs/cli-linux-arm64-musl@2.4.13':
     optional: true
 
-  '@biomejs/cli-linux-arm64@2.4.12':
+  '@biomejs/cli-linux-arm64@2.4.13':
     optional: true
 
-  '@biomejs/cli-linux-x64-musl@2.4.12':
+  '@biomejs/cli-linux-x64-musl@2.4.13':
     optional: true
 
-  '@biomejs/cli-linux-x64@2.4.12':
+  '@biomejs/cli-linux-x64@2.4.13':
     optional: true
 
-  '@biomejs/cli-win32-arm64@2.4.12':
+  '@biomejs/cli-win32-arm64@2.4.13':
     optional: true
 
-  '@biomejs/cli-win32-x64@2.4.12':
+  '@biomejs/cli-win32-x64@2.4.13':
     optional: true
 
   '@canvas/image-data@1.1.0': {}
@@ -5901,9 +5901,9 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@hono/node-server@2.0.0(hono@4.12.14)':
+  '@hono/node-server@2.0.0(hono@4.12.15)':
     dependencies:
-      hono: 4.12.14
+      hono: 4.12.15
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.73.1(react@19.2.5))':
     dependencies:
@@ -6155,9 +6155,11 @@ snapshots:
 
   '@oxc-project/types@0.127.0': {}
 
-  '@posthog/core@1.27.0': {}
+  '@posthog/core@1.27.5':
+    dependencies:
+      '@posthog/types': 1.372.1
 
-  '@posthog/types@1.371.1': {}
+  '@posthog/types@1.372.1': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -6800,7 +6802,7 @@ snapshots:
   '@tailwindcss/node@4.2.4':
     dependencies:
       '@jridgewell/remapping': 2.3.5
-      enhanced-resolve: 5.20.1
+      enhanced-resolve: 5.21.0
       jiti: 2.6.1
       lightningcss: 1.32.0
       magic-string: 0.30.21
@@ -6873,11 +6875,11 @@ snapshots:
       tailwindcss: 4.2.4
       vite: 8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.2)(tsx@4.21.0)
 
-  '@tanstack/query-core@5.99.2': {}
+  '@tanstack/query-core@5.100.4': {}
 
-  '@tanstack/react-query@5.99.2(react@19.2.5)':
+  '@tanstack/react-query@5.100.4(react@19.2.5)':
     dependencies:
-      '@tanstack/query-core': 5.99.2
+      '@tanstack/query-core': 5.100.4
       react: 19.2.5
 
   '@tanstack/react-virtual@3.13.24(react-dom@19.2.5(react@19.2.5))(react@19.2.5)':
@@ -7057,7 +7059,7 @@ snapshots:
 
   acorn@8.16.0: {}
 
-  ajv@8.18.0:
+  ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
       fast-uri: 3.1.0
@@ -7147,7 +7149,7 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  baseline-browser-mapping@2.10.21: {}
+  baseline-browser-mapping@2.10.22: {}
 
   bl@1.2.3:
     dependencies:
@@ -7167,7 +7169,7 @@ snapshots:
 
   browserslist@4.28.2:
     dependencies:
-      baseline-browser-mapping: 2.10.21
+      baseline-browser-mapping: 2.10.22
       caniuse-lite: 1.0.30001790
       electron-to-chromium: 1.5.344
       node-releases: 2.0.38
@@ -7434,7 +7436,7 @@ snapshots:
     dependencies:
       once: 1.4.0
 
-  enhanced-resolve@5.20.1:
+  enhanced-resolve@5.21.0:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.3.3
@@ -7664,7 +7666,7 @@ snapshots:
     dependencies:
       path-expression-matcher: 1.5.0
 
-  fast-xml-parser@5.7.1:
+  fast-xml-parser@5.7.2:
     dependencies:
       '@nodable/entities': 2.1.0
       fast-xml-builder: 1.1.5
@@ -7824,7 +7826,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  hono@4.12.14: {}
+  hono@4.12.15: {}
 
   ico-endec@0.1.6: {}
 
@@ -8109,7 +8111,7 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  lucide-react@1.8.0(react@19.2.5):
+  lucide-react@1.11.0(react@19.2.5):
     dependencies:
       react: 19.2.5
 
@@ -8317,15 +8319,15 @@ snapshots:
 
   postgres@3.4.9: {}
 
-  posthog-js@1.371.1:
+  posthog-js@1.372.1:
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.208.0
       '@opentelemetry/exporter-logs-otlp-http': 0.208.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resources': 2.7.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-logs': 0.208.0(@opentelemetry/api@1.9.1)
-      '@posthog/core': 1.27.0
-      '@posthog/types': 1.371.1
+      '@posthog/core': 1.27.5
+      '@posthog/types': 1.372.1
       core-js: 3.49.0
       dompurify: 3.4.1
       fflate: 0.4.8
@@ -8333,9 +8335,9 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.2.0
 
-  posthog-node@5.29.6:
+  posthog-node@5.30.4:
     dependencies:
-      '@posthog/core': 1.27.0
+      '@posthog/core': 1.27.5
 
   potpack@2.1.0: {}
 
@@ -9203,7 +9205,7 @@ snapshots:
 
   workbox-build@7.3.0(@types/babel__core@7.20.5):
     dependencies:
-      '@apideck/better-ajv-errors': 0.3.7(ajv@8.18.0)
+      '@apideck/better-ajv-errors': 0.3.7(ajv@8.20.0)
       '@babel/core': 7.29.0
       '@babel/preset-env': 7.29.2(@babel/core@7.29.0)
       '@babel/runtime': 7.29.2
@@ -9212,7 +9214,7 @@ snapshots:
       '@rollup/plugin-replace': 2.4.2(rollup@2.80.0)
       '@rollup/plugin-terser': 0.4.4(rollup@2.80.0)
       '@surma/rollup-plugin-off-main-thread': 2.2.3
-      ajv: 8.18.0
+      ajv: 8.20.0
       common-tags: 1.8.2
       fast-json-stable-stringify: 2.1.0
       fs-extra: 9.1.0

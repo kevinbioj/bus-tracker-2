@@ -1,5 +1,5 @@
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { useQuery } from "@tanstack/react-query";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { BusFrontIcon, SearchIcon, StarIcon } from "lucide-react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
@@ -12,10 +12,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/co
 import { OnlineVehiclesNetworkCard } from "~/components/vehicles-map/online-vehicles/network-selection/online-vehicles-network-card";
 
 function normalizeStr(str: string) {
-	return str
-		.toLowerCase()
-		.normalize("NFD")
-		.replace(/[̀-ͯ]/g, "");
+	return str.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
 type FlatItem =
@@ -190,10 +187,7 @@ function NetworkVirtualList({ onNetworkSelect }: NetworkVirtualListProps) {
 									</div>
 								) : (
 									<div className="pb-2">
-										<OnlineVehiclesNetworkCard
-											network={item.network}
-											onClick={() => onNetworkSelect(item.network)}
-										/>
+										<OnlineVehiclesNetworkCard network={item.network} onClick={() => onNetworkSelect(item.network)} />
 									</div>
 								)}
 							</div>

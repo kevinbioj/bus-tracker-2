@@ -1,6 +1,6 @@
 import { Buffer } from "node:buffer";
-import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 import { captureException } from "@bus-tracker/monitoring";
+import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 
 import { USER_AGENT } from "../constants.js";
 import type { GtfsRt, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
