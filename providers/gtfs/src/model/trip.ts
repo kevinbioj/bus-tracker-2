@@ -30,18 +30,9 @@ export type StopTimeCall = {
 };
 
 export class Trip {
-	/** Index dans le StopTimeStore (assigné après lecture des stop_times). */
-	stopTimeStart = 0;
-	/** Nombre de stop_times pour ce trip. */
-	stopTimeCount = 0;
-	/** Heure d'arrivée au premier arrêt, secondes depuis minuit du jour 0 (modulus inclus). */
-	firstArrivalSecs = 0;
-	/** Heure d'arrivée au dernier arrêt, secondes depuis minuit du jour 0 (modulus inclus). */
-	lastArrivalSecs = 0;
-	/** Heure de départ au dernier arrêt, secondes depuis minuit du jour 0 (modulus inclus). */
-	lastDepartureSecs = 0;
-
 	constructor(
+		/** Index du trip dans les tableaux per-trip du StopTimeStore. */
+		readonly idx: number,
 		readonly id: string,
 		readonly route: Route,
 		readonly service: Service,
@@ -51,6 +42,22 @@ export class Trip {
 		readonly block?: string,
 		readonly shape?: Shape,
 	) {}
+
+	get stopTimeStart() {
+		return this.store.tripStart[this.idx]!;
+	}
+	get stopTimeCount() {
+		return this.store.tripCount[this.idx]!;
+	}
+	get firstArrivalSecs() {
+		return this.store.tripFirstArrivalSecs[this.idx]!;
+	}
+	get lastArrivalSecs() {
+		return this.store.tripLastArrivalSecs[this.idx]!;
+	}
+	get lastDepartureSecs() {
+		return this.store.tripLastDepartureSecs[this.idx]!;
+	}
 
 	computeCallsForDate(date: Temporal.PlainDate) {
 		const start = this.stopTimeStart;

@@ -41,15 +41,19 @@ export async function importTrips(
 	const trips = new Map<string, Trip>();
 	const excludedTripIds = new Set<string>();
 
-	// Store vide partagé : populé en place après les deux passes sur stop_times.txt.
-	// On le construit dès maintenant pour que chaque Trip puisse y détenir une référence.
+	// Store vide partagé : populé en place après les passes sur stop_times.txt.
 	const placeholderStore = new StopTimeStore(
 		[],
-		new Uint32Array(0),
+		new Uint8Array(0),
 		new Uint8Array(0),
 		new Uint32Array(0),
 		new Uint32Array(0),
 		new Float32Array(0),
+		new Uint32Array(0),
+		new Uint32Array(0),
+		new Uint32Array(0),
+		new Uint32Array(0),
+		new Uint32Array(0),
 	);
 
 	const stopTimesFile = join(gtfsDirectory, "stop_times.txt");
@@ -69,7 +73,11 @@ export async function importTrips(
 			services.set(service.id, service);
 		}
 
+		// L'idx prévu correspond au prochain slot accepté ; les trips rejetés
+		// par filterTrips réutilisent le même slot pour le trip suivant accepté.
+		const tripIdx = trips.size;
 		const trip = new Trip(
+			tripIdx,
 			tripId,
 			route,
 			service,
@@ -89,31 +97,45 @@ export async function importTrips(
 		}
 	});
 
-	// Pass 1: compter les stop_times par trip pour dimensionner les tableaux.
+	const totalTrips = trips.size;
+
+	// Allocation des tableaux par-trip — accessibles via les getters de Trip dès maintenant.
+	placeholderStore.tripStart = new Uint32Array(totalTrips);
+	placeholderStore.tripCount = new Uint32Array(totalTrips);
+	placeholderStore.tripFirstArrivalSecs = new Uint32Array(totalTrips);
+	placeholderStore.tripLastArrivalSecs = new Uint32Array(totalTrips);
+	placeholderStore.tripLastDepartureSecs = new Uint32Array(totalTrips);
+
+	const tripCount = placeholderStore.tripCount;
+	const tripStart = placeholderStore.tripStart;
+
+	// Pass 1: compter les stop_times par trip pour dimensionner les tableaux par stop_time.
 	let totalRows = 0;
 	await readCsv<StopTimeRecord>(stopTimesFile, (stopTimeRecord) => {
 		const tripId = mapTripId?.(stopTimeRecord.trip_id) ?? stopTimeRecord.trip_id;
 		const trip = trips.get(tripId);
 		if (trip === undefined) return;
-		trip.stopTimeCount += 1;
+		tripCount[trip.idx]! += 1;
 		totalRows += 1;
 	});
 
-	// Calcul des offsets (prefix sum) et alloc des tableaux finaux.
-	const sequence = new Uint32Array(totalRows);
+	// Calcul des offsets (prefix sum).
+	let cursor = 0;
+	for (const trip of trips.values()) {
+		tripStart[trip.idx] = cursor;
+		cursor += tripCount[trip.idx]!;
+	}
+
+	// Allocation des tableaux par stop_time.
+	const sequence = new Uint8Array(totalRows);
 	const flagsBitmask = new Uint8Array(totalRows);
 	const arrivalSecs = new Uint32Array(totalRows);
 	const departureSecs = new Uint32Array(totalRows);
 	const distanceTraveled = new Float32Array(totalRows);
 	const stopRefs: Stop[] = new Array(totalRows);
 
-	let cursor = 0;
-	const writeCursor = new Map<string, number>();
-	for (const trip of trips.values()) {
-		trip.stopTimeStart = cursor;
-		writeCursor.set(trip.id, cursor);
-		cursor += trip.stopTimeCount;
-	}
+	// Curseur d'écriture par trip (relatif au trip, pas absolu).
+	const writeCursor = new Uint32Array(totalTrips);
 
 	// Pass 2: remplissage.
 	await readCsv<StopTimeRecord>(stopTimesFile, (stopTimeRecord) => {
@@ -134,8 +156,8 @@ export async function importTrips(
 			);
 		}
 
-		const idx = writeCursor.get(tripId)!;
-		writeCursor.set(tripId, idx + 1);
+		const idx = tripStart[trip.idx]! + writeCursor[trip.idx]!;
+		writeCursor[trip.idx]! += 1;
 
 		const aSecs = parseTimeToSecs(stopTimeRecord.arrival_time);
 		const dSecs =
@@ -153,25 +175,25 @@ export async function importTrips(
 			stopTimeRecord.shape_dist_traveled !== undefined ? +stopTimeRecord.shape_dist_traveled : Number.NaN;
 	});
 
-	// Tri par sequence à l'intérieur de chaque slice de trip.
+	// Tri par sequence à l'intérieur de chaque slice de trip (fast-path "déjà trié").
 	let maxCount = 0;
 	for (const trip of trips.values()) {
-		if (trip.stopTimeCount > maxCount) maxCount = trip.stopTimeCount;
+		const c = tripCount[trip.idx]!;
+		if (c > maxCount) maxCount = c;
 	}
 	const idxBuf = new Uint32Array(maxCount);
 	const tmpStops: Stop[] = new Array(maxCount);
-	const tmpSeq = new Uint32Array(maxCount);
+	const tmpSeq = new Uint8Array(maxCount);
 	const tmpFlags = new Uint8Array(maxCount);
 	const tmpArr = new Uint32Array(maxCount);
 	const tmpDep = new Uint32Array(maxCount);
 	const tmpDist = new Float32Array(maxCount);
 
 	for (const trip of trips.values()) {
-		const start = trip.stopTimeStart;
-		const count = trip.stopTimeCount;
+		const start = tripStart[trip.idx]!;
+		const count = tripCount[trip.idx]!;
 		if (count <= 1) continue;
 
-		// Vérifie si déjà trié (cas le plus courant, fast-path).
 		let alreadySorted = true;
 		for (let i = 1; i < count; i++) {
 			if (sequence[start + i]! < sequence[start + i - 1]!) {
@@ -182,8 +204,6 @@ export async function importTrips(
 		if (alreadySorted) continue;
 
 		for (let i = 0; i < count; i++) idxBuf[i] = start + i;
-		// Sort uniquement la portion utile (Uint32Array.sort trie tout le tableau ;
-		// on utilise un subarray pour limiter le tri à `count` éléments).
 		idxBuf.subarray(0, count).sort((a, b) => sequence[a]! - sequence[b]!);
 
 		for (let i = 0; i < count; i++) {
@@ -208,8 +228,8 @@ export async function importTrips(
 	// Calcul des distanceTraveled si demandé.
 	if (computeShapeDistTraveled) {
 		for (const trip of trips.values()) {
-			const start = trip.stopTimeStart;
-			const count = trip.stopTimeCount;
+			const start = tripStart[trip.idx]!;
+			const count = tripCount[trip.idx]!;
 			if (count === 0) continue;
 
 			const shapeRecalculated = !!trip.shape?.recalculatedDistances;
@@ -248,20 +268,23 @@ export async function importTrips(
 	}
 
 	// Pré-calcul des bornes first/last secs et drop des trips < 2 stops.
+	const tripFirstArrivalSecs = placeholderStore.tripFirstArrivalSecs;
+	const tripLastArrivalSecs = placeholderStore.tripLastArrivalSecs;
+	const tripLastDepartureSecs = placeholderStore.tripLastDepartureSecs;
 	for (const [id, trip] of trips) {
-		const count = trip.stopTimeCount;
+		const count = tripCount[trip.idx]!;
 		if (count < 2) {
 			trips.delete(id);
 			continue;
 		}
-		const start = trip.stopTimeStart;
-		trip.firstArrivalSecs = arrivalSecs[start]!;
+		const start = tripStart[trip.idx]!;
+		tripFirstArrivalSecs[trip.idx] = arrivalSecs[start]!;
 		const lastIdx = start + count - 1;
-		trip.lastArrivalSecs = arrivalSecs[lastIdx]!;
-		trip.lastDepartureSecs = departureSecs[lastIdx]!;
+		tripLastArrivalSecs[trip.idx] = arrivalSecs[lastIdx]!;
+		tripLastDepartureSecs[trip.idx] = departureSecs[lastIdx]!;
 	}
 
-	// Finalise le store en mutant les champs (les Trip détiennent déjà la ref).
+	// Finalise les arrays per-stop_time du store.
 	placeholderStore.stops = stopRefs;
 	placeholderStore.sequence = sequence;
 	placeholderStore.flagsBitmask = flagsBitmask;
