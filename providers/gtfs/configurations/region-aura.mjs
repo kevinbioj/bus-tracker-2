@@ -333,7 +333,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	id: "auvergne-rhone-alpes",
+	id: "aura",
 	computeDelayMs: 30_000,
 	sources,
 };

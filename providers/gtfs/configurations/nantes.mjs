@@ -161,7 +161,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	id: "nantes-naolib",
+	id: "nantes",
 	computeDelayMs: 30_000,
 	sources,
 };

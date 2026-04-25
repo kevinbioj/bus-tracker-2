@@ -119,7 +119,7 @@ const sources = [
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
-	id: "rouen-astuce",
+	id: "rouen",
 	computeDelayMs: 10_000,
 	sources,
 };
