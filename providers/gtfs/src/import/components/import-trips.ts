@@ -62,6 +62,11 @@ export async function importTrips(
 		const tripId = mapTripId?.(tripRecord.trip_id) ?? tripRecord.trip_id;
 		const routeId = mapRouteId?.(tripRecord.route_id) ?? tripRecord.route_id;
 
+		// Doublon de trip_id : un Trip écraserait l'autre dans la map mais garderait
+		// un idx > trips.size, corrompant tripStart/tripCount via writes silencieux
+		// sur Uint32Array out-of-bounds. On garde la première occurrence.
+		if (trips.has(tripId) || excludedTripIds.has(tripId)) return;
+
 		const route = routes.get(routeId);
 		if (route === undefined) {
 			throw new Error(`Unknown route with id '${routeId}' for trip '${tripId}'.`);
