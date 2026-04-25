@@ -4,25 +4,11 @@ const sources = [
 		id: "sncf",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-trip-updates"],
-		disableRoutePaths: true,
 		excludeScheduled: true,
-		gtfsOptions: {
-			ignoreBlocks: true,
-		},
+		gtfsOptions: { ignoreBlocks: true },
 		getAheadTime: () => 10 * 60,
 		getNetworkRef: () => "SNCF",
 		getVehicleRef: (_, journey) => journey?.trip.headsign,
-		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
-	},
-	{
-		id: "trenitalia",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/trenitalia-france.zip",
-		realtimeResourceHrefs: [
-			"https://proxy.transport.data.gouv.fr/resource/trenitalia-gtfs-rt?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
-		],
-		disableRoutePaths: true,
-		getNetworkRef: () => "TRENITALIA-FR",
-		getVehicleRef: () => undefined,
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 ];
