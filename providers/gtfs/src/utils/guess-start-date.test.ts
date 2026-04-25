@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { guessStartDate } from "./guess-start-date.js";
 
-describe("guessStartDate(startTime, startModulus, at)", () => {
+function timeToSecs(time: string, modulus: number) {
+	const [h, m, s = "0"] = time.split(":");
+	return modulus * 86400 + +h! * 3600 + +m! * 60 + +s;
+}
+
+describe("guessStartDate(startSecs, at)", () => {
 	const testCases = [
 		{
 			at: "2024-10-19T23:55:00.000[Europe/Paris]",
@@ -40,8 +45,7 @@ describe("guessStartDate(startTime, startModulus, at)", () => {
 		it(`should return '${testCase.expectedDate}' at '${testCase.at}' with time '${testCase.startTime}' % '${testCase.startModulus}'`, () => {
 			expect(
 				guessStartDate(
-					Temporal.PlainTime.from(testCase.startTime),
-					testCase.startModulus,
+					timeToSecs(testCase.startTime, testCase.startModulus),
 					Temporal.ZonedDateTime.from(testCase.at),
 				).toString(),
 			).toEqual(testCase.expectedDate);

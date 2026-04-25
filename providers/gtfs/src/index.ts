@@ -16,6 +16,8 @@ import { updateResources } from "./jobs/update-resources.js";
 import { configurationPath } from "./options.js";
 import { createStopWatch } from "./utils/stop-watch.js";
 
+await setTimeout(10_000);
+
 DraftLog(console, true)?.addLineListener(process.stdin);
 
 console.log(` ,----.,--------.,------.,---.   ,------.                                                         

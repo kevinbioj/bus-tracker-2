@@ -57,3 +57,20 @@ export function createZonedDateTime(date: Temporal.PlainDate, time: Temporal.Pla
 	}
 	return zonedDateTime;
 }
+
+/**
+ * Construit une ZonedDateTime à partir d'une date "jour 0" et d'une heure
+ * exprimée en secondes depuis minuit (modulus inclus, peut dépasser 86400).
+ */
+export function createZonedDateTimeFromSecs(date0: Temporal.PlainDate, secs: number, timeZone: string) {
+	const days = Math.floor(secs / 86400);
+	const dayOfTrip = days === 0 ? date0 : date0.add({ days });
+	const remain = secs - days * 86400;
+	const h = Math.floor(remain / 3600);
+	const m = Math.floor((remain % 3600) / 60);
+	const s = remain % 60;
+	const time = createPlainTime(
+		`${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`,
+	);
+	return createZonedDateTime(dayOfTrip, time, timeZone);
+}

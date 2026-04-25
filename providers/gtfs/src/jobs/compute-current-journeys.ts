@@ -185,10 +185,13 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allow
 			if (trip.direction !== (tripDescriptor.directionId ?? 0)) return false;
 			if (!trip.service.runsOn(startDate)) return false;
 
-			const firstStop = trip.stopTimes.at(0);
-			if (firstStop === undefined) return false;
+			if (trip.stopTimeCount === 0) return false;
 
-			const startTime = `${(firstStop.arrivalTime.hour + 24 * firstStop.arrivalModulus).toString().padStart(2, "0")}:${firstStop.arrivalTime.minute.toString().padStart(2, "0")}:${firstStop.arrivalTime.second.toString().padStart(2, "0")}`;
+			const secs = trip.firstArrivalSecs;
+			const totalH = Math.floor(secs / 3600);
+			const m = Math.floor((secs % 3600) / 60);
+			const s = secs % 60;
+			const startTime = `${totalH.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 			return startTime === tripDescriptor.startTime;
 		});
 
@@ -232,15 +235,13 @@ export async function computeVehicleJourneys(source: Source) {
 				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
-				if (trip === undefined || trip.stopTimes.length < 2) continue;
+				if (trip === undefined || trip.stopTimeCount < 2) continue;
 
-				const firstStopTime = trip.stopTimes.at(0)!;
 				const startDate =
 					tripUpdate.trip.startDate !== undefined
 						? Temporal.PlainDate.from(tripUpdate.trip.startDate)
 						: guessStartDate(
-								firstStopTime.arrivalTime,
-								firstStopTime.arrivalModulus,
+								trip.firstArrivalSecs,
 								updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
 							);
 
@@ -287,15 +288,12 @@ export async function computeVehicleJourneys(source: Source) {
 			if (vehiclePosition.trip !== undefined) {
 				const trip = getTripFromDescriptor(source.gtfs, vehiclePosition.trip, source.options.allowTripGuessing);
 				if (trip !== undefined) {
-					const firstStopTime = trip.stopTimes.at(0);
-
 					const startDate =
 						vehiclePosition.trip.startDate !== undefined
 							? Temporal.PlainDate.from(vehiclePosition.trip.startDate)
-							: firstStopTime
+							: trip.stopTimeCount > 0
 								? guessStartDate(
-										firstStopTime.arrivalTime,
-										firstStopTime.arrivalModulus,
+										trip.firstArrivalSecs,
 										updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone),
 									)
 								: Temporal.Now.plainDateISO();
