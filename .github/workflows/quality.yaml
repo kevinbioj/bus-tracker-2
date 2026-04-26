@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Biome linting
-        run: pnpm lint
+      - name: Biome check
+        run: pnpm check
 
   sonarqube:
     name: SonarQube
