@@ -1,33 +1,31 @@
 import { ArrowRight, StarIcon } from "lucide-react";
-import { useLocalStorage } from "usehooks-ts";
 
 import type { Network } from "~/api/networks";
 import { Button } from "~/components/ui/button";
+import { cn } from "~/utils/utils";
 
 type OnlineVehiclesNetworkCard = {
 	network: Network;
+	isFavorite: boolean;
+	isNew?: boolean;
 	onClick: () => void;
+	onToggleFavorite: () => void;
 };
 
-export function OnlineVehiclesNetworkCard({ network, onClick }: Readonly<OnlineVehiclesNetworkCard>) {
-	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
-
-	const toggleFavoriteNetwork = () => {
-		if (favoriteNetworkIds.includes(network.id)) {
-			setFavoriteNetworkIds(favoriteNetworkIds.filter((id) => id !== network.id));
-		} else {
-			setFavoriteNetworkIds([...favoriteNetworkIds, network.id]);
-		}
-	};
-
+export function OnlineVehiclesNetworkCard({
+	network,
+	isFavorite,
+	isNew = false,
+	onClick,
+	onToggleFavorite,
+}: Readonly<OnlineVehiclesNetworkCard>) {
 	return (
-		<div className="h-16 relative w-full" key={network.id}>
-			<Button className="absolute top-3.5 left-1 z-10" onClick={toggleFavoriteNetwork} size="icon" variant="ghost">
-				{favoriteNetworkIds.includes(network.id) ? (
-					<StarIcon className="fill-yellow-400 stroke-yellow-600" />
-				) : (
-					<StarIcon />
-				)}
+		<div
+			className={cn("h-16 relative w-full", isNew && "animate-in slide-in-from-bottom-6 fade-in duration-300")}
+			key={network.id}
+		>
+			<Button className="absolute top-3.5 left-1 z-10" onClick={onToggleFavorite} size="icon" variant="ghost">
+				{isFavorite ? <StarIcon className="fill-yellow-400 stroke-yellow-600" /> : <StarIcon />}
 			</Button>
 			<Button
 				className="border border-border drop-shadow-mdflex justify-between items-center h-16 pr-4 pl-12 py-2 rounded-lg shadow-md transition-colors w-full relative overflow-hidden bg-primary/25 text-neutral-800 dark:text-neutral-200 hover:text-primary-foreground hover:bg-primary/50"

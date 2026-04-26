@@ -31,7 +31,7 @@ function fastFormatISO(epochMs: number, offsetMs: number): string {
 		const oH = Math.floor(absOffset / 3600000);
 		const oM = Math.floor((absOffset % 3600000) / 60000);
 		const sign = offsetMs >= 0 ? "+" : "-";
-		offsetStr = sign + (oH < 10 ? `0${oH}` : oH) + ":" + (oM < 10 ? `0${oM}` : oM);
+		offsetStr = `${sign + (oH < 10 ? `0${oH}` : oH)}:${oM < 10 ? `0${oM}` : oM}`;
 		offsetStringCache.set(offsetMs, offsetStr);
 	}
 

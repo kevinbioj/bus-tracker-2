@@ -17,6 +17,7 @@
 		"ignoreUnknown": false,
 		"includes": [
 			"**",
+			"!.claude",
 			"!**/dist",
 			"!**/node_modules",
 			"!**/.git",

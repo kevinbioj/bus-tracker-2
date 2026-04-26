@@ -9,7 +9,6 @@ import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import type { Line, Network } from "~/api/networks";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { OnlineVehiclesSheetManagement } from "~/components/vehicles-map/online-vehicles/online-vehicles-sheet-management";
-import { BusIcon } from "~/icons/means-of-transport";
 
 type OnlineControlProps = {
 	filteredLine?: Line;
@@ -82,7 +81,7 @@ export function OnlineControl({
 						</div>
 					</div>
 				) : (
-					<button onClick={() => setOpen(true)} title="Véhicules en ligne" type="button">
+					<button onClick={() => setOpen(true)} title="Filtrer les véhicules" type="button">
 						<FilterIcon className="m-auto p-0.5" />
 					</button>
 				)}

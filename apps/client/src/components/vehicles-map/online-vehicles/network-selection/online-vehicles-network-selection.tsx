@@ -1,200 +1,140 @@
 import { useQuery } from "@tanstack/react-query";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { BusFrontIcon, SearchIcon, StarIcon } from "lucide-react";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useLocalStorage } from "usehooks-ts";
+import { BusFrontIcon, StarIcon } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
-import { Input } from "~/components/ui/input";
-import { Separator } from "~/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
-import { OnlineVehiclesNetworkCard } from "~/components/vehicles-map/online-vehicles/network-selection/online-vehicles-network-card";
+import { NetworksBlock } from "~/components/vehicles-map/online-vehicles/network-selection/networks-block";
+import { NetworkSearchBar } from "~/components/vehicles-map/online-vehicles/network-selection/search-bar";
 
-function normalizeStr(str: string) {
-	return str.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-}
-
-type FlatItem =
-	| { type: "header"; title: string | React.ReactNode; key: string; first: boolean }
-	| { type: "card"; network: Network; key: string };
+const searchifyQuery = (query: string) =>
+	query
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/\p{Diacritic}/gu, "");
 
 type OnlineVehiclesNetworkSelectionProps = {
-	container: HTMLDivElement | null;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onNetworkSelect: (network: Network) => void;
 };
 
 export function OnlineVehiclesNetworkSelection({
-	container,
 	open,
 	onOpenChange,
 	onNetworkSelect,
 }: Readonly<OnlineVehiclesNetworkSelectionProps>) {
-	return (
-		<Sheet open={open} onOpenChange={onOpenChange}>
-			<SheetTrigger asChild>
-				<a
-					aria-label="Filtrer par ligne"
-					className="leaflet-bar-part leaflet-bar-part-single"
-					// biome-ignore lint/a11y/useValidAnchor: required by Leaflet
-					href="#"
-				>
-					<BusFrontIcon className="inline mb-0.5" />
-				</a>
-			</SheetTrigger>
-			<SheetContent
-				aria-describedby={undefined}
-				className="max-w-[90vw] w-full p-3 flex flex-col"
-				container={container}
-			>
-				<SheetHeader className="mb-1 shrink-0">
-					<SheetTitle className="text-start">Liste des réseaux</SheetTitle>
-				</SheetHeader>
-				{open && <NetworkVirtualList onNetworkSelect={onNetworkSelect} />}
-			</SheetContent>
-		</Sheet>
-	);
-}
-
-type NetworkVirtualListProps = {
-	onNetworkSelect: (network: Network) => void;
-};
-
-function NetworkVirtualList({ onNetworkSelect }: NetworkVirtualListProps) {
-	const { data: networks } = useQuery(GetNetworksQuery);
 	const { data: regions } = useQuery(GetRegionsQuery);
+	const { data: networks } = useQuery(GetNetworksQuery);
 
-	const [favoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
-	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
 	const [searchQuery, setSearchQuery] = useState("");
-	const scrollRef = useRef<HTMLDivElement>(null);
+	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 500);
 
-	const normalizedQuery = normalizeStr(searchQuery.trim());
-	const matchesSearch = useCallback(
-		(network: Network) => {
-			if (!normalizedQuery) return true;
-			return (
-				normalizeStr(network.name).includes(normalizedQuery) ||
-				(network.authority !== null && normalizeStr(network.authority).includes(normalizedQuery))
-			);
-		},
-		[normalizedQuery],
-	);
-
-	const favoriteNetworks = useMemo(
-		() =>
-			(networks ?? []).filter(({ id, hasVehiclesFeature }) => {
-				if (!favoriteNetworkIds.includes(id)) return false;
-				return !onlyNetworksWithHistory || hasVehiclesFeature;
-			}),
-		[networks, favoriteNetworkIds, onlyNetworksWithHistory],
-	);
-
-	const relevantNetworksByRegion = useMemo(
-		() =>
-			Map.groupBy(
-				(networks ?? []).filter(({ hasVehiclesFeature }) => !onlyNetworksWithHistory || hasVehiclesFeature),
-				(network) => regions?.find(({ id }) => id === network.regionId) ?? null,
-			),
-		[networks, regions, onlyNetworksWithHistory],
-	);
-
-	const items = useMemo<FlatItem[]>(() => {
-		const result: FlatItem[] = [];
-
-		const filteredFavorites = favoriteNetworks.filter(matchesSearch);
-		if (filteredFavorites.length > 0) {
-			result.push({
-				type: "header",
-				key: "header-favorites",
-				first: true,
-				title: (
-					<span>
-						<StarIcon className="inline align-text-bottom fill-yellow-400 stroke-yellow-600" /> Réseaux favoris
-					</span>
-				),
-			});
-			for (const network of filteredFavorites) {
-				result.push({ type: "card", network, key: `fav-${network.id}` });
-			}
-		}
-
-		let isFirst = result.length === 0;
-		for (const [region, networks] of Array.from(relevantNetworksByRegion.entries()).toSorted(([a], [b]) => {
-			if (a === null) return 1;
-			if (b === null) return -1;
-			return a.sortOrder - b.sortOrder;
-		})) {
-			const filtered = networks.filter(matchesSearch);
-			if (filtered.length === 0) continue;
-			result.push({
-				type: "header",
-				key: `header-${region?.id ?? -1}`,
-				first: isFirst,
-				title: region?.name ?? "Autres réseaux",
-			});
-			isFirst = false;
-			for (const network of filtered) {
-				result.push({ type: "card", network, key: `card-${network.id}` });
-			}
-		}
-
-		return result;
-	}, [favoriteNetworks, relevantNetworksByRegion, matchesSearch]);
-
-	const virtualizer = useVirtualizer({
-		count: items.length,
-		getScrollElement: () => scrollRef.current,
-		estimateSize: useCallback((i: number) => (items[i]?.type === "header" ? 44 : 72), [items]),
-		overscan: 5,
+	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage("favorite-networks", new Set<number>(), {
+		deserializer: (value) => new Set(JSON.parse(value)),
+		serializer: (value) => JSON.stringify(Array.from(value.values())),
 	});
 
-	useLayoutEffect(() => {
-		virtualizer.measure();
-	}, [virtualizer]);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: setters are not dependencies
+	const toggleFavoriteNetworkId = useCallback(
+		(network: Network) => {
+			const updatedSet = new Set(favoriteNetworkIds);
+
+			if (updatedSet.has(network.id)) {
+				updatedSet.delete(network.id);
+			} else {
+				updatedSet.add(network.id);
+			}
+
+			setFavoriteNetworkIds(updatedSet);
+		},
+		[favoriteNetworkIds],
+	);
+
+	const [favoriteNetworks, otherNetworks] = useMemo<[Network[], Network[]]>(() => {
+		if (networks === undefined) {
+			return [[], []];
+		}
+
+		const groups = Map.groupBy(networks, (network) => {
+			if (debouncedSearchifiedSearchQuery.length > 0) {
+				const compareAgainst = [network.name, ...(network.authority ? [network.authority] : [])].map(searchifyQuery);
+				if (compareAgainst.every((value) => !value.includes(debouncedSearchifiedSearchQuery))) {
+					return "search-mismatch";
+				}
+			}
+
+			return favoriteNetworkIds.has(network.id) ? "favorite" : "other";
+		});
+		return [groups.get("favorite") ?? [], groups.get("other") ?? []];
+	}, [debouncedSearchifiedSearchQuery, favoriteNetworkIds, networks]);
+
+	const networksByRegion = useMemo(() => {
+		if (regions === undefined) {
+			return [];
+		}
+
+		const groups = Map.groupBy(otherNetworks, (network) => network.regionId ?? -1);
+		const orphanNetworks = groups.get(-1);
+		return [
+			...regions.flatMap((region) => {
+				const networks = groups.get(region.id);
+				if (networks === undefined) {
+					return [];
+				}
+
+				return {
+					title: region.name,
+					networks,
+				};
+			}),
+			...(orphanNetworks !== undefined ? [{ title: "Autres réseaux", networks: orphanNetworks }] : []),
+		];
+	}, [regions, otherNetworks]);
 
 	return (
-		<>
-			<div className="relative shrink-0">
-				<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-				<Input
-					className="pl-9"
-					placeholder="Rechercher un réseau ou une ville..."
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-				/>
-			</div>
-			<div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
-				<div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
-					{virtualizer.getVirtualItems().map((vItem) => {
-						const item = items[vItem.index];
-						return (
-							<div
-								key={item.key}
-								data-index={vItem.index}
-								ref={virtualizer.measureElement}
-								className="absolute top-0 left-0 w-full"
-								style={{ transform: `translateY(${vItem.start}px)` }}
-							>
-								{item.type === "header" ? (
-									<div className={item.first ? "pb-3" : "pt-6 pb-3"}>
-										<div className="flex items-center gap-3">
-											<h3 className="font-semibold whitespace-nowrap text-muted-foreground">{item.title}</h3>
-											<Separator className="flex-1" />
-										</div>
-									</div>
-								) : (
-									<div className="pb-2">
-										<OnlineVehiclesNetworkCard network={item.network} onClick={() => onNetworkSelect(item.network)} />
-									</div>
-								)}
-							</div>
-						);
-					})}
+		<Sheet open={open} onOpenChange={onOpenChange}>
+			<SheetTrigger
+				render={
+					<button aria-label="Filtrer par ligne" className="leaflet-bar-part leaflet-bar-part-single" type="button">
+						<BusFrontIcon className="inline mb-0.5" />
+					</button>
+				}
+			/>
+			<SheetContent className="z-999 gap-0">
+				<SheetHeader>
+					<SheetTitle>Liste des réseaux</SheetTitle>
+				</SheetHeader>
+				<div className="mx-3 flex flex-col gap-3 overflow-y-auto pb-2">
+					<NetworkSearchBar query={searchQuery} onQueryChange={setSearchQuery} />
+					{/* Favorite networks */}
+					{favoriteNetworks.length > 0 && (
+						<NetworksBlock
+							favoriteBlock
+							title={
+								<>
+									<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Réseaux favoris
+								</>
+							}
+							networks={favoriteNetworks}
+							onSelect={onNetworkSelect}
+							onToggleFavorite={toggleFavoriteNetworkId}
+						/>
+					)}
+					{/* Other networks by region */}
+					{networksByRegion.map((regionNetworks) => (
+						<NetworksBlock
+							key={regionNetworks.title}
+							title={regionNetworks.title}
+							networks={regionNetworks.networks}
+							onSelect={onNetworkSelect}
+							onToggleFavorite={toggleFavoriteNetworkId}
+						/>
+					))}
 				</div>
-			</div>
-		</>
+			</SheetContent>
+		</Sheet>
 	);
 }

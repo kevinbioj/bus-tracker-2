@@ -49,12 +49,15 @@ hono.get(
 						const sortOrderDiff = (a.sortOrder ?? lineList.length) - (b.sortOrder ?? lineList.length);
 						return sortOrderDiff || Number.parseInt(a.number, 10) - Number.parseInt(b.number, 10);
 					})
-					.map(({ networkId, ...line }) => ({
-						...line,
-						onlineVehicleCount: onlineNetworkVehicles.filter(
-							(journey) => journey.lineId === line.id,
-						).length,
-					})),
+					.map(({ networkId, ...line }) => {
+						const onlineMarkers = onlineNetworkVehicles.filter((journey) => journey.lineId === line.id);
+
+						return {
+							...line,
+							onlineMarkerCount: onlineMarkers.length,
+							onlineVehicleCount: onlineMarkers.filter((marker) => marker.vehicle?.id !== undefined).length,
+						};
+					}),
 			});
 		} else {
 			return c.json(network);

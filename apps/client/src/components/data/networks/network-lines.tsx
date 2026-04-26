@@ -45,7 +45,7 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 					<div className="flex-1 min-w-0">
 						<p className="font-bold truncate">{`${line.girouetteNumber ? "" : "Ligne "}${line.number}`}</p>
 						<div className="flex items-center gap-1.5 text-sm">
-							{line.onlineVehicleCount ?? 0} véhicule{(line.onlineVehicleCount ?? 0) > 1 ? "s" : ""} en service
+							{line.onlineVehicleCount ?? 0} véhicule{(line.onlineVehicleCount ?? 0) > 1 ? "s" : ""} en ligne
 						</div>
 					</div>
 				</Link>

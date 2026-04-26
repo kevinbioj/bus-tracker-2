@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { GetNetworkQuery, type Line, type Network } from "~/api/networks";
 import { OnlineVehiclesLineSelection } from "~/components/vehicles-map/online-vehicles/line-selection/online-vehicles-line-selection";
@@ -22,20 +22,6 @@ export function OnlineVehiclesSheetManagement({
 
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>();
 
-	const networkSelectionContainer = useRef<HTMLDivElement>(null);
-	if (networkSelectionContainer.current === null) {
-		networkSelectionContainer.current = document.createElement("div");
-		networkSelectionContainer.current.id = "network-selection-sheet";
-		document.body.append(networkSelectionContainer.current);
-	}
-
-	const lineSelectionContainer = useRef<HTMLDivElement>(null);
-	if (lineSelectionContainer.current === null) {
-		lineSelectionContainer.current = document.createElement("div");
-		lineSelectionContainer.current.id = "line-selection-sheet";
-		document.body.append(lineSelectionContainer.current);
-	}
-
 	const handleClose = () => {
 		if (selectedNetwork !== undefined) return setSelectedNetwork(undefined);
 		setOpen(false);
@@ -45,14 +31,12 @@ export function OnlineVehiclesSheetManagement({
 		<>
 			{fixedNetwork ? null : (
 				<OnlineVehiclesNetworkSelection
-					container={networkSelectionContainer.current}
-					open={open}
+					open={!selectedNetwork && open}
 					onOpenChange={setOpen}
 					onNetworkSelect={setSelectedNetwork}
 				/>
 			)}
 			<OnlineVehiclesLineSelection
-				container={lineSelectionContainer.current}
 				network={open ? (fixedNetwork ?? selectedNetwork) : undefined}
 				onClose={handleClose}
 				onLineChange={(line) => {
@@ -61,7 +45,6 @@ export function OnlineVehiclesSheetManagement({
 						setOpen(false);
 					}
 				}}
-				withBackdrop={Boolean(fixedNetworkId)}
 			/>
 		</>
 	);

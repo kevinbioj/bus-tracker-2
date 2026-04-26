@@ -12,7 +12,7 @@ export type Network = {
 	color: string | null;
 	textColor: string | null;
 	hasVehiclesFeature: boolean;
-	regionId: number;
+	regionId: number | null;
 	timezone: string;
 	embedMapCenter: [number, number, number];
 };
@@ -34,7 +34,8 @@ export type Line = {
 	textColor: string | null;
 	sortOrder: number | null;
 	archivedAt: string | null;
-	onlineVehicleCount?: number;
+	onlineMarkerCount: number;
+	onlineVehicleCount: number;
 };
 
 export type NetworkWithDetails = Network & {
