@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, CircleIcon, FilterXIcon } from "lucide-react";
+import { ChevronRight, CircleIcon, FilterIcon, FilterXIcon } from "lucide-react";
 import type maplibregl from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
@@ -69,11 +69,7 @@ export function OnlineControl({
 
 						<div className="flex items-center gap-1.5">
 							{filteredLine?.cartridgeHref ? (
-								<img
-									className="h-5 object-contain rounded-sm"
-									src={filteredLine.cartridgeHref}
-									alt={filteredLine.number}
-								/>
+								<img className="h-5 object-contain" src={filteredLine.cartridgeHref} alt={filteredLine.number} />
 							) : (
 								<span className="mr-1 text-base">{filteredLine.number}</span>
 							)}
@@ -87,7 +83,7 @@ export function OnlineControl({
 					</div>
 				) : (
 					<button onClick={() => setOpen(true)} title="Véhicules en ligne" type="button">
-						<BusIcon className="m-auto p-1" />
+						<FilterIcon className="m-auto p-0.5" />
 					</button>
 				)}
 			</div>

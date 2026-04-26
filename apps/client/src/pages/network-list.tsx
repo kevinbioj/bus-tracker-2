@@ -146,7 +146,7 @@ export function NetworkList() {
 					<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
 					<Input
 						className="pl-9"
-						placeholder="Rechercher un réseau…"
+						placeholder="Rechercher un réseau ou une ville…"
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 					/>

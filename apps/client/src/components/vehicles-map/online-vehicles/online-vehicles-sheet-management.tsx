@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { GetNetworkQuery, type Line, type Network } from "~/api/networks";
 import { OnlineVehiclesLineSelection } from "~/components/vehicles-map/online-vehicles/line-selection/online-vehicles-line-selection";
 import { OnlineVehiclesNetworkSelection } from "~/components/vehicles-map/online-vehicles/network-selection/online-vehicles-network-selection";
-import { OnlineVehiclesVehicleSelection } from "~/components/vehicles-map/online-vehicles/vehicle-selection/online-vehicles-vehicle-selection";
 
 type OnlineVehiclesSheetManagement = {
 	fixedNetworkId?: number;
@@ -22,7 +21,6 @@ export function OnlineVehiclesSheetManagement({
 	const { data: fixedNetwork } = useQuery(GetNetworkQuery(fixedNetworkId));
 
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>();
-	const [selectedLine, setSelectedLine] = useState<Line>();
 
 	const networkSelectionContainer = useRef<HTMLDivElement>(null);
 	if (networkSelectionContainer.current === null) {
@@ -38,15 +36,7 @@ export function OnlineVehiclesSheetManagement({
 		document.body.append(lineSelectionContainer.current);
 	}
 
-	const vehicleSelectionContainer = useRef<HTMLDivElement>(null);
-	if (vehicleSelectionContainer.current === null) {
-		vehicleSelectionContainer.current = document.createElement("div");
-		vehicleSelectionContainer.current.id = "vehicle-selection-sheet";
-		document.body.append(vehicleSelectionContainer.current);
-	}
-
 	const handleClose = () => {
-		if (selectedLine !== undefined) return setSelectedLine(undefined);
 		if (selectedNetwork !== undefined) return setSelectedNetwork(undefined);
 		setOpen(false);
 	};
@@ -65,22 +55,13 @@ export function OnlineVehiclesSheetManagement({
 				container={lineSelectionContainer.current}
 				network={open ? (fixedNetwork ?? selectedNetwork) : undefined}
 				onClose={handleClose}
-				onLineChange={(line) => setSelectedLine(line)}
+				onLineChange={(line) => {
+					if (line !== undefined) {
+						onFilterChange(line);
+						setOpen(false);
+					}
+				}}
 				withBackdrop={Boolean(fixedNetworkId)}
-			/>
-			<OnlineVehiclesVehicleSelection
-				container={vehicleSelectionContainer.current}
-				embedMode={Boolean(fixedNetworkId)}
-				network={open ? (fixedNetwork ?? selectedNetwork) : undefined}
-				line={open ? selectedLine : undefined}
-				onClose={handleClose}
-				onFilterSelect={(line) => {
-					onFilterChange(line);
-					setOpen(false);
-				}}
-				onVehicleSelect={() => {
-					setOpen(false);
-				}}
 			/>
 		</>
 	);

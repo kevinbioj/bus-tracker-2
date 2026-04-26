@@ -36,7 +36,7 @@ export function OnlineVehiclesNetworkSelection({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetTrigger asChild>
 				<a
-					aria-label="Véhicules en ligne"
+					aria-label="Filtrer par ligne"
 					className="leaflet-bar-part leaflet-bar-part-single"
 					// biome-ignore lint/a11y/useValidAnchor: required by Leaflet
 					href="#"
@@ -50,7 +50,7 @@ export function OnlineVehiclesNetworkSelection({
 				container={container}
 			>
 				<SheetHeader className="mb-1 shrink-0">
-					<SheetTitle className="text-start">Véhicules en ligne</SheetTitle>
+					<SheetTitle className="text-start">Liste des réseaux</SheetTitle>
 				</SheetHeader>
 				{open && <NetworkVirtualList onNetworkSelect={onNetworkSelect} />}
 			</SheetContent>
@@ -161,7 +161,7 @@ function NetworkVirtualList({ onNetworkSelect }: NetworkVirtualListProps) {
 				<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
 				<Input
 					className="pl-9"
-					placeholder="Rechercher un réseau…"
+					placeholder="Rechercher un réseau ou une ville..."
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
 				/>

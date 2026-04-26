@@ -52,7 +52,7 @@ hono.get(
 					.map(({ networkId, ...line }) => ({
 						...line,
 						onlineVehicleCount: onlineNetworkVehicles.filter(
-							(journey) => journey.lineId === line.id && journey.vehicle?.id !== undefined,
+							(journey) => journey.lineId === line.id,
 						).length,
 					})),
 			});
