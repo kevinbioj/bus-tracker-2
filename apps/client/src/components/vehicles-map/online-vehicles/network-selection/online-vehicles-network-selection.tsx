@@ -166,7 +166,7 @@ function NetworkVirtualList({ onNetworkSelect }: NetworkVirtualListProps) {
 					onChange={(e) => setSearchQuery(e.target.value)}
 				/>
 			</div>
-			<div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0 mt-3">
+			<div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
 				<div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
 					{virtualizer.getVirtualItems().map((vItem) => {
 						const item = items[vItem.index];

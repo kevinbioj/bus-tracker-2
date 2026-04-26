@@ -200,28 +200,11 @@ function NetworkCard({ network }: { network: Network }) {
 				color: network.textColor ?? undefined,
 			}}
 		>
-			<div className="flex-1 text-center overflow-auto text-wrap px-2">
+			<div className="flex-1 overflow-auto text-wrap px-2">
 				<h4 className="font-bold text-lg leading-tight">{network.name}</h4>
 				{network.authority !== null && <p className="text-xs">{network.authority}</p>}
 			</div>
 			<ArrowRight />
-			{network.logoHref && (
-				<>
-					<span
-						className={cn(
-							"absolute inset-2 -z-10 bg-center bg-no-repeat bg-contain blur-xs",
-							network.darkModeLogoHref && "dark:hidden",
-						)}
-						style={{ backgroundImage: `url("${network.logoHref}")` }}
-					/>
-					{network.darkModeLogoHref && (
-						<span
-							className="absolute inset-2 -z-10 bg-center bg-no-repeat bg-contain blur-xs dark:block"
-							style={{ backgroundImage: `url("${network.darkModeLogoHref}")` }}
-						/>
-					)}
-				</>
-			)}
 		</Link>
 	);
 }
