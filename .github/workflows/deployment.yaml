@@ -99,6 +99,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           remote_host: ${{ secrets.DEPLOY_SSH_HOST }}
+          remote_port: ${{ secrets.DEPLOY_SSH_PORT }}
           remote_user: ${{ secrets.DEPLOY_SSH_USER }}
           remote_private_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           stack_file: "docker/bus-tracker-stack.yaml"
