@@ -32,45 +32,54 @@ async function start() {
 
 	console.log("► [Worker] Subscribing to journeys channel.");
 	let processingPromise: Promise<void> | null = null;
+	const messageQueue: string[] = [];
 
-	await redisSubscriber.subscribe("journeys", (message) => {
-		if (processingPromise !== null) return;
+	const processQueue = async () => {
+		while (messageQueue.length > 0) {
+			const messages = messageQueue.splice(0);
+			let didWarn = false;
+			const vehicleJourneys: VehicleJourney[] = [];
 
-		processingPromise = (async () => {
-			try {
-				let didWarn = false;
-				let vehicleJourneys: VehicleJourney[];
-
+			for (const message of messages) {
 				try {
 					const payload = JSON.parse(message);
-					if (!Array.isArray(payload)) throw new Error("Payload is not an array");
-					vehicleJourneys = payload.flatMap((entry) => {
+					if (!Array.isArray(payload)) continue;
+					for (const entry of payload) {
 						const result = vehicleJourneySchema(entry);
-
 						if (result instanceof ArkErrors) {
 							if (!didWarn) {
 								console.warn(`⚠ [Worker] Rejected object(s) from journeys channel, sample:`, entry);
 								console.error(result.toString());
 								didWarn = true;
 							}
-							return [];
+							continue;
 						}
-
-						return result;
-					});
+						vehicleJourneys.push(result);
+					}
 				} catch (error) {
 					console.error("✘ [Worker] An error occurred while parsing batch:", error);
-					return;
 				}
+			}
 
+			if (vehicleJourneys.length > 0) {
 				const processedJourneys = await handleVehicleBatch(vehicleJourneys);
 				parentPort?.postMessage(processedJourneys);
-			} catch (error) {
-				console.error("✘ [Worker] A worker-related error occurred while processing batch:", error);
 			}
-		})().finally(() => {
-			processingPromise = null;
-		});
+		}
+	};
+
+	await redisSubscriber.subscribe("journeys", (message) => {
+		messageQueue.push(message);
+
+		if (processingPromise !== null) return;
+
+		processingPromise = processQueue()
+			.catch((error) => {
+				console.error("✘ [Worker] A worker-related error occurred while processing batch:", error);
+			})
+			.finally(() => {
+				processingPromise = null;
+			});
 	});
 }
 

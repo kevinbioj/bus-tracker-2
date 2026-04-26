@@ -41,8 +41,8 @@ export class Journey {
 		readonly id: string,
 		readonly trip: Trip,
 		readonly date: Temporal.PlainDate,
-		/** Heure d'arrivée visée au premier arrêt (epoch ms). Précalculé pour éviter de matérialiser calls[]. */
-		readonly firstCallArrivalMs: number,
+		/** Heure d'arrivée au premier arrêt (epoch ms). Initialisé sur l'heure théorique, mis à jour par updateJourney avec l'heure temps réel. */
+		public firstCallArrivalMs: number,
 		/** Heure de départ au dernier arrêt (epoch ms). Initialisé sur l'heure théorique, mis à jour par updateJourney avec l'heure temps réel. */
 		public lastCallDepartureMs: number,
 	) {}
@@ -257,8 +257,12 @@ export class Journey {
 			(call) => call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined,
 		);
 
-		// Mettre à jour lastCallDepartureMs avec l'heure temps réel du dernier arrêt.
+		// Mettre à jour les bornes avec les heures temps réel.
 		// Utilisé par le sweep et le fast-rejection de getCalls.
+		const firstCall = this._calls![0];
+		if (firstCall !== undefined) {
+			this.firstCallArrivalMs = firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime;
+		}
 		const lastCall = this._calls![this._calls!.length - 1];
 		if (lastCall !== undefined) {
 			this.lastCallDepartureMs = lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime;
