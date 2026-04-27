@@ -18,7 +18,7 @@ type FilterModuleLinesList = {
 };
 
 export function FilterModuleLinesList({ network, onClose, onLineChange }: Readonly<FilterModuleLinesList>) {
-	const { data: networkWithLines, isLoading } = useQuery(GetNetworkQuery(network?.id, true, true));
+	const { data: networkWithLines, isLoading, isPlaceholderData } = useQuery(GetNetworkQuery(network?.id, true, true));
 
 	const currentNetwork = useRef(network);
 
@@ -82,7 +82,7 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 						</SheetTitle>
 					</div>
 				</SheetHeader>
-				{isLoading ? (
+				{isLoading || isPlaceholderData ? (
 					<div className="flex flex-col gap-1">
 						{Array.from({ length: 10 }).map((_, index) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: safe here
