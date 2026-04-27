@@ -1,148 +1,93 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { ArrowRight, SearchIcon, StarIcon } from "lucide-react";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { useLocalStorage, useMediaQuery } from "usehooks-ts";
+import { SearchIcon, StarIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import { Input } from "~/components/ui/input";
-import { Separator } from "~/components/ui/separator";
-import { cn } from "~/utils/utils";
+import { NetworksBlock } from "~/pages/network-list/networks-block";
 
-function normalizeStr(str: string) {
-	return str.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-}
-
-type PageItem =
-	| { type: "header"; title: string | React.ReactNode; key: string; first: boolean }
-	| { type: "row"; networks: Network[]; key: string; cols: number };
-
-const CARD_HEIGHT = 64;
-const ROW_GAP = 12;
-const HEADER_HEIGHT_FIRST = 44;
-const HEADER_HEIGHT_REST = 68;
+const searchifyQuery = (query: string) =>
+	query
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/\p{Diacritic}/gu, "");
 
 export function NetworkList() {
 	const { data: regions } = useSuspenseQuery(GetRegionsQuery);
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
-	const [favoriteNetworkIds] = useLocalStorage<number[]>("favorite-networks", []);
-	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
+	const scrollContainer = useRef<HTMLDivElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
 
-	const listRef = useRef<HTMLDivElement>(null);
-
-	const isSm = useMediaQuery("(min-width: 640px)");
-	const isMd = useMediaQuery("(min-width: 768px)");
-	const isXl = useMediaQuery("(min-width: 1280px)");
-	const colCount = isXl ? 4 : isMd ? 3 : isSm ? 2 : 1;
-
-	const normalizedQuery = normalizeStr(searchQuery.trim());
-	const matchesSearch = useCallback(
-		(network: Network) => {
-			if (!normalizedQuery) return true;
-			return (
-				normalizeStr(network.name).includes(normalizedQuery) ||
-				(network.authority !== null && normalizeStr(network.authority).includes(normalizedQuery))
-			);
-		},
-		[normalizedQuery],
-	);
-
-	const favoriteNetworks = useMemo(
-		() =>
-			networks.filter(({ id, hasVehiclesFeature }) => {
-				if (!favoriteNetworkIds.includes(id)) return false;
-				return !onlyNetworksWithHistory || hasVehiclesFeature;
-			}),
-		[networks, favoriteNetworkIds, onlyNetworksWithHistory],
-	);
-
-	const relevantNetworksByRegion = useMemo(
-		() =>
-			Map.groupBy(
-				networks.filter(({ hasVehiclesFeature }) => !onlyNetworksWithHistory || hasVehiclesFeature),
-				(network) => regions.find(({ id }) => id === network.regionId) ?? null,
-			),
-		[networks, regions, onlyNetworksWithHistory],
-	);
-
-	const items = useMemo<PageItem[]>(() => {
-		const result: PageItem[] = [];
-
-		function pushSection(title: string | React.ReactNode, sectionKey: string, nets: Network[], first: boolean) {
-			result.push({ type: "header", title, key: `header-${sectionKey}`, first });
-			for (let i = 0; i < nets.length; i += colCount) {
-				result.push({
-					type: "row",
-					networks: nets.slice(i, i + colCount),
-					key: `row-${sectionKey}-${i}`,
-					cols: colCount,
-				});
-			}
-		}
-
-		const filteredFavorites = favoriteNetworks.filter(matchesSearch);
-		if (filteredFavorites.length > 0) {
-			pushSection(
-				<span>
-					<StarIcon className="inline align-text-bottom fill-yellow-400 stroke-yellow-600" /> Réseaux favoris
-				</span>,
-				"favorites",
-				filteredFavorites,
-				true,
-			);
-		}
-
-		let isFirst = result.length === 0;
-		for (const [region, nets] of Array.from(relevantNetworksByRegion.entries()).toSorted(([a], [b]) => {
-			if (a === null) return 1;
-			if (b === null) return -1;
-			return a.sortOrder - b.sortOrder;
-		})) {
-			const filtered = nets.filter(matchesSearch);
-			if (filtered.length === 0) continue;
-			pushSection(region?.name ?? "Autres réseaux", String(region?.id ?? -1), filtered, isFirst);
-			isFirst = false;
-		}
-
-		return result;
-	}, [favoriteNetworks, relevantNetworksByRegion, matchesSearch, colCount]);
-
-	const virtualizer = useVirtualizer({
-		count: items.length,
-		getScrollElement: () => listRef.current,
-		estimateSize: useCallback(
-			(i: number) => {
-				const item = items[i];
-				if (item?.type === "header") return item.first ? HEADER_HEIGHT_FIRST : HEADER_HEIGHT_REST;
-				return CARD_HEIGHT + ROW_GAP;
-			},
-			[items],
-		),
-		overscan: 3,
+	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
+	const [favoriteNetworkIds] = useLocalStorage("favorite-networks", new Set<number>(), {
+		deserializer: (value) => new Set(JSON.parse(value)),
+		serializer: (value) => JSON.stringify(Array.from(value.values())),
 	});
 
-	useLayoutEffect(() => {
-		virtualizer.measure();
-	}, [virtualizer]);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
+	useEffect(() => {
+		scrollContainer.current?.scrollTo({ behavior: "smooth", top: 0 });
+	}, [searchQuery]);
+
+	const [favoriteNetworks, otherNetworks] = useMemo<[Network[], Network[]]>(() => {
+		let innerNetworks = networks;
+		if (innerNetworks === undefined) {
+			return [[], []];
+		}
+
+		if (onlyNetworksWithHistory) {
+			innerNetworks = innerNetworks.filter((network) => network.hasVehiclesFeature);
+		}
+
+		const groups = Map.groupBy(innerNetworks, (network) => {
+			if (debouncedSearchifiedSearchQuery.length > 0) {
+				const compareAgainst = [network.name, ...(network.authority ? [network.authority] : [])].map(searchifyQuery);
+				if (compareAgainst.every((value) => !value.includes(debouncedSearchifiedSearchQuery))) {
+					return "search-mismatch";
+				}
+			}
+
+			return favoriteNetworkIds.has(network.id) ? "favorite" : "other";
+		});
+		return [groups.get("favorite") ?? [], groups.get("other") ?? []];
+	}, [debouncedSearchifiedSearchQuery, favoriteNetworkIds, networks, onlyNetworksWithHistory]);
+
+	const networksByRegion = useMemo(() => {
+		if (regions === undefined) {
+			return [];
+		}
+
+		const groups = Map.groupBy(otherNetworks, (network) => network.regionId ?? -1);
+		const orphanNetworks = groups.get(-1);
+		return [
+			...regions.flatMap((region) => {
+				const networks = groups.get(region.id);
+				if (networks === undefined) {
+					return [];
+				}
+
+				return {
+					title: region.name,
+					networks,
+				};
+			}),
+			...(orphanNetworks !== undefined ? [{ title: "Autres réseaux", networks: orphanNetworks }] : []),
+		];
+	}, [regions, otherNetworks]);
 
 	return (
 		<>
 			<title>Données – Bus Tracker</title>
-			<main className="p-3 max-w-(--breakpoint-xl) w-full mx-auto h-[calc(100dvh-60px)] flex flex-col gap-6 overflow-hidden">
-				<div className="shrink-0">
+			<main className="p-3 max-w-(--breakpoint-xl) w-full mx-auto h-[calc(100dvh-60px)] overflow-hidden flex flex-col">
+				<div className="shrink-0 mb-2">
 					<h2 className="font-bold text-2xl">Données des véhicules</h2>
-					{onlyNetworksWithHistory && (
-						<p className="text-muted-foreground">
-							Seuls les réseaux pour lesquels le suivi des véhicules est disponible sont affichés.
-						</p>
-					)}
+					<p className="text-muted-foreground">Sélectionnez un réseau pour consulter ses véhicules et lignes.</p>
 				</div>
-
-				<div className="relative shrink-0">
+				<div className="relative shrink-0 mb-3">
 					<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
 					<Input
 						className="pl-9"
@@ -151,60 +96,24 @@ export function NetworkList() {
 						onChange={(e) => setSearchQuery(e.target.value)}
 					/>
 				</div>
-
-				<div ref={listRef} className="flex-1 min-h-0 overflow-y-auto">
-					<div className="relative w-full" style={{ height: `${virtualizer.getTotalSize()}px` }}>
-						{virtualizer.getVirtualItems().map((vItem) => {
-							const item = items[vItem.index];
-							return (
-								<div
-									key={item.key}
-									data-index={vItem.index}
-									ref={virtualizer.measureElement}
-									className="absolute top-0 left-0 w-full"
-									style={{ transform: `translateY(${vItem.start}px)` }}
-								>
-									{item.type === "header" ? (
-										<div className={cn("flex items-center gap-3", item.first ? "pb-3" : "pt-6 pb-3")}>
-											<h3 className="font-semibold text-lg whitespace-nowrap text-muted-foreground">{item.title}</h3>
-											<Separator className="flex-1" />
-										</div>
-									) : (
-										<div
-											className="grid gap-3 pb-3"
-											style={{ gridTemplateColumns: `repeat(${item.cols}, minmax(0, 1fr))` }}
-										>
-											{item.networks.map((network) => (
-												<NetworkCard key={network.id} network={network} />
-											))}
-										</div>
-									)}
-								</div>
-							);
-						})}
-					</div>
+				<div className="px-3 flex flex-col gap-3 flex-1 overflow-y-auto pb-2" ref={scrollContainer}>
+					{/* Favorite networks */}
+					{favoriteNetworks.length > 0 && (
+						<NetworksBlock
+							title={
+								<>
+									<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Réseaux favoris
+								</>
+							}
+							networks={favoriteNetworks}
+						/>
+					)}
+					{/* Other networks by region */}
+					{networksByRegion.map((regionNetworks) => (
+						<NetworksBlock key={regionNetworks.title} title={regionNetworks.title} networks={regionNetworks.networks} />
+					))}
 				</div>
 			</main>
 		</>
-	);
-}
-
-function NetworkCard({ network }: { network: Network }) {
-	return (
-		<Link
-			className="flex border justify-between items-center h-16 pr-2 py-2 rounded-lg shadow-md transition-colors text-primary-foreground relative bg-primary/25 hover:bg-primary/50"
-			title={network.authority ? `${network.name} – ${network.authority}` : network.name}
-			to={`/data/networks/${network.id}`}
-			style={{
-				backgroundColor: network.color ?? undefined,
-				color: network.textColor ?? undefined,
-			}}
-		>
-			<div className="flex-1 overflow-auto text-wrap px-2">
-				<h4 className="font-bold text-lg leading-tight">{network.name}</h4>
-				{network.authority !== null && <p className="text-xs">{network.authority}</p>}
-			</div>
-			<ArrowRight />
-		</Link>
 	);
 }

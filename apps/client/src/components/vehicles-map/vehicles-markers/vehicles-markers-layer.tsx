@@ -78,7 +78,7 @@ const textLayerObject: maplibregl.AddLayerObject = {
 	id: "vehicles-text",
 	type: "symbol",
 	source: "vehicles",
-	minzoom: 14,
+	minzoom: 13,
 	filter: ["!=", ["get", "previewText"], null],
 	layout: {
 		"text-field": ["get", "previewText"],
@@ -95,9 +95,9 @@ const textLayerObject: maplibregl.AddLayerObject = {
 	},
 	paint: {
 		"icon-color": ["coalesce", ["get", "fillColor"], "#FFFFFF"],
-		"icon-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.1, 0.7],
+		"icon-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 13.1, 0.7],
 		"text-color": ["coalesce", ["get", "color"], "#000000"],
-		"text-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 14.1, 1],
+		"text-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 13.1, 1],
 	},
 };
 
@@ -111,7 +111,20 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 	const vehiclesSource = useMapSource<maplibregl.GeoJSONSource>("vehicles", initialData);
 	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
 	useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
-	useMapLayer(textLayerObject);
+	const textLayer = useMapLayer(textLayerObject);
+
+	useEffect(() => {
+		if (textLayer === null) return;
+		if (lineId !== undefined) {
+			map.setPaintProperty("vehicles-text", "icon-opacity", 0.7);
+			map.setPaintProperty("vehicles-text", "text-opacity", 1);
+			map.setLayerZoomRange("vehicles-text", 0, 24);
+		} else {
+			map.setPaintProperty("vehicles-text", "icon-opacity", ["interpolate", ["linear"], ["zoom"], 13, 0, 13.1, 0.7]);
+			map.setPaintProperty("vehicles-text", "text-opacity", ["interpolate", ["linear"], ["zoom"], 13, 0, 13.1, 1]);
+			map.setLayerZoomRange("vehicles-text", 13, 24);
+		}
+	}, [textLayer, lineId, map]);
 
 	useEffect(() => {
 		let abort = false;

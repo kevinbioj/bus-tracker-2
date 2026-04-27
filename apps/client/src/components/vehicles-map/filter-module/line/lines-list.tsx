@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { ArrowLeft, Info, StarIcon } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import type { Line } from "~/api/networks";
@@ -9,20 +9,22 @@ import { GetNetworkQuery, type Network } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Skeleton } from "~/components/ui/skeleton";
-import { LinesBlock } from "~/components/vehicles-map/online-vehicles/line-selection/lines-block";
+import { LinesBlock } from "~/components/vehicles-map/filter-module/line/lines-block";
 
-type OnlineVehiclesLineSelectionProps = {
+type FilterModuleLinesList = {
 	network?: Network;
 	onClose: () => void;
 	onLineChange: (line?: Line) => void;
 };
 
-export function OnlineVehiclesLineSelection({
-	network,
-	onClose,
-	onLineChange,
-}: Readonly<OnlineVehiclesLineSelectionProps>) {
+export function FilterModuleLinesList({ network, onClose, onLineChange }: Readonly<FilterModuleLinesList>) {
 	const { data: networkWithLines, isLoading } = useQuery(GetNetworkQuery(network?.id, true, true));
+
+	const currentNetwork = useRef(network);
+
+	if (network !== undefined) {
+		currentNetwork.current = network;
+	}
 
 	const [favoriteLineIds, setFavoriteLineIds] = useLocalStorage("favorite-lines", new Set<number>(), {
 		deserializer: (value) => new Set(JSON.parse(value)),
@@ -67,23 +69,28 @@ export function OnlineVehiclesLineSelection({
 	return (
 		<Sheet open={network !== undefined} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent className="z-999 gap-0" showCloseButton={false}>
-				<SheetHeader className="py-3 shrink-0">
-					<div className="flex items-center gap-2">
+				<SheetHeader className="pt-4 pb-1.5 shrink-0">
+					<div className="flex items-start gap-2">
 						<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
 							<ArrowLeft className="size-full" />
 						</Button>
-						<SheetTitle>{network?.name}</SheetTitle>
+						<SheetTitle className="flex flex-col">
+							<span className="font-bold leading-tight text-lg">{currentNetwork.current?.name}</span>
+							{currentNetwork.current?.authority && (
+								<span className="leading-none text-sm uppercase">{currentNetwork.current.authority}</span>
+							)}
+						</SheetTitle>
 					</div>
 				</SheetHeader>
 				{isLoading ? (
-					<div className="mx-3 flex flex-col gap-1">
+					<div className="px-3 flex flex-col gap-1">
 						{Array.from({ length: 10 }).map((_, index) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: safe here
 							<Skeleton className="bg-neutral-200 h-16 w-full shrink-0" key={index} />
 						))}
 					</div>
 				) : (
-					<div className="mx-3 flex flex-col gap-3 overflow-y-auto pb-2">
+					<div className="px-3 flex flex-col gap-3 overflow-y-auto pb-2">
 						{/* Favorite lines */}
 						{favoriteLines.length > 0 && (
 							<LinesBlock

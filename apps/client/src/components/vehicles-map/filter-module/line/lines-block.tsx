@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 
 import type { Line } from "~/api/networks";
 import { TitleSeparator } from "~/components/ui/title-separator";
-import { OnlineVehiclesLineCard } from "~/components/vehicles-map/online-vehicles/line-selection/online-vehicles-line-card";
+import { FilterModuleLineCard } from "~/components/vehicles-map/filter-module/line/line-card";
 
-type LinesBlockProps = {
+type FilterModuleLinesBlock = {
 	title?: ReactNode;
 	lines: Line[];
 	favoriteBlock?: boolean;
@@ -12,14 +12,14 @@ type LinesBlockProps = {
 	onToggleFavorite: (line: Line) => unknown;
 };
 
-export function LinesBlock({ title, lines, favoriteBlock, onSelect, onToggleFavorite }: LinesBlockProps) {
+export function LinesBlock({ title, lines, favoriteBlock, onSelect, onToggleFavorite }: FilterModuleLinesBlock) {
 	return (
 		<div>
 			{title && <TitleSeparator className="flex items-center gap-2">{title}</TitleSeparator>}
 			<ul className="mt-2 flex flex-col gap-1">
 				{lines.map((line) => (
 					<li key={line.id}>
-						<OnlineVehiclesLineCard
+						<FilterModuleLineCard
 							key={line.id}
 							line={line}
 							isFavorite={favoriteBlock ?? false}

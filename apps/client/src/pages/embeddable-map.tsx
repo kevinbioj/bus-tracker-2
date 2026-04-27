@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
-import { OnlineControl } from "~/components/vehicles-map/online-vehicles/online-control";
+import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
 import { Signature } from "~/components/vehicles-map/signature";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
 
@@ -48,7 +48,7 @@ export default function EmbeddableMapPage() {
 				});
 				map.addControl(geolocateControl, "top-right");
 			}
-		}, 1);
+		}, 100);
 	}, []);
 
 	return (
@@ -56,7 +56,7 @@ export default function EmbeddableMapPage() {
 			<title>{`Carte du réseau ${network.name}`}</title>
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			<MapComponent containerProps={{ className: "h-dvh relative" }} mapOptions={mapOptions} ref={onMap}>
-				<OnlineControl
+				<FilterModuleControl
 					filteredLine={filteredLine}
 					filteredNetwork={network}
 					fixedNetworkId={+networkId!}

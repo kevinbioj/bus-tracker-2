@@ -5,23 +5,32 @@ import type { Line } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/utils/utils";
 
-export type OnlineVehiclesLineCard = {
+export type FilterModuleLineCardProps = {
 	line: Line;
 	isFavorite: boolean;
 	onToggleFavorite: (line: Line) => void;
 	onSelect?: (line: Line) => void;
 };
 
-export const OnlineVehiclesLineCard = memo(function OnlineVehiclesLineCard({
+export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 	line,
 	isFavorite,
 	onToggleFavorite,
 	onSelect,
-}: OnlineVehiclesLineCard) {
+}: FilterModuleLineCardProps) {
 	return (
 		<div className="h-16 relative w-full">
+			{line.textColor && (
+				<style>
+					{`@scope {
+						.favorite-line-background:hover {
+							background-color: ${line.textColor}22;
+						}
+					}`}
+				</style>
+			)}
 			<Button
-				className="absolute top-3.5 left-1 z-10 hover:bg-inherit hover:opacity-75"
+				className="absolute top-3.5 left-1.5 z-10 hover:bg-inherit hover:opacity-75 favorite-line-background"
 				onClick={() => onToggleFavorite(line)}
 				size="icon"
 				variant="ghost"
@@ -31,7 +40,7 @@ export const OnlineVehiclesLineCard = memo(function OnlineVehiclesLineCard({
 			</Button>
 			<Button
 				className={cn(
-					"border border-border flex justify-between items-center h-16 min-h-16 p-2 pl-12 rounded-lg transition text-primary-foreground hover:brightness-90 w-full",
+					"border border-border flex justify-between items-center h-16 min-h-16 p-2 pl-12 rounded-lg transition text-primary-foreground w-full",
 					!line.onlineMarkerCount && "brightness-90 cursor-not-allowed",
 				)}
 				onClick={() => onSelect?.(line)}

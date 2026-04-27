@@ -8,21 +8,21 @@ import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import type { Line, Network } from "~/api/networks";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
-import { OnlineVehiclesSheetManagement } from "~/components/vehicles-map/online-vehicles/online-vehicles-sheet-management";
+import { FilterModuleManager } from "~/components/vehicles-map/filter-module/manager";
 
-type OnlineControlProps = {
+type FilterModuleControlProps = {
 	filteredLine?: Line;
 	filteredNetwork?: Network;
 	fixedNetworkId?: number;
 	onFilterChange: (line?: Line) => void;
 };
 
-export function OnlineControl({
+export function FilterModuleControl({
 	filteredLine,
 	filteredNetwork,
 	fixedNetworkId,
 	onFilterChange,
-}: Readonly<OnlineControlProps>) {
+}: Readonly<FilterModuleControlProps>) {
 	const map = useMap();
 	const activatorRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
@@ -86,7 +86,7 @@ export function OnlineControl({
 					</button>
 				)}
 			</div>
-			<OnlineVehiclesSheetManagement
+			<FilterModuleManager
 				fixedNetworkId={fixedNetworkId}
 				open={open}
 				setOpen={setOpen}

@@ -9,7 +9,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
-import { OnlineControl } from "~/components/vehicles-map/online-vehicles/online-control";
+import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
 
@@ -66,7 +66,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 				trackUserLocation: true,
 			});
 			map.addControl(geolocateControl, "top-right");
-		}, 1);
+		}, 100);
 	}, []);
 
 	const onFilterChange = useCallback((line?: { id: number }) => setLineId(line?.id ?? null), [setLineId]);
@@ -75,7 +75,11 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		<MapComponent containerProps={props} mapOptions={mapOptions} ref={onMap}>
 			<PositionSave />
 			<VehiclesMarkers lineId={filteredLine?.id} />
-			<OnlineControl filteredLine={filteredLine} filteredNetwork={filteredNetwork} onFilterChange={onFilterChange} />
+			<FilterModuleControl
+				filteredLine={filteredLine}
+				filteredNetwork={filteredNetwork}
+				onFilterChange={onFilterChange}
+			/>
 		</MapComponent>
 	);
 }

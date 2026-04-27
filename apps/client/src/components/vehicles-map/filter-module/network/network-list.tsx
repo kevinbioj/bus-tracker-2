@@ -1,13 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { BusFrontIcon, StarIcon } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
-import { NetworksBlock } from "~/components/vehicles-map/online-vehicles/network-selection/networks-block";
-import { NetworkSearchBar } from "~/components/vehicles-map/online-vehicles/network-selection/search-bar";
+import { NetworkSearchBar } from "~/components/vehicles-map/filter-module/network/network-search-bar";
+import { FilterModuleNetworksBlock } from "~/components/vehicles-map/filter-module/network/networks-block";
 
 const searchifyQuery = (query: string) =>
 	query
@@ -15,27 +15,33 @@ const searchifyQuery = (query: string) =>
 		.normalize("NFD")
 		.replace(/\p{Diacritic}/gu, "");
 
-type OnlineVehiclesNetworkSelectionProps = {
+type FilterModuleNetworkListProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onNetworkSelect: (network: Network) => void;
 };
 
-export function OnlineVehiclesNetworkSelection({
+export function FilterModuleNetworkList({
 	open,
 	onOpenChange,
 	onNetworkSelect,
-}: Readonly<OnlineVehiclesNetworkSelectionProps>) {
+}: Readonly<FilterModuleNetworkListProps>) {
 	const { data: regions } = useQuery(GetRegionsQuery);
 	const { data: networks } = useQuery(GetNetworksQuery);
 
+	const scrollContainer = useRef<HTMLDivElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 500);
+	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
 
 	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage("favorite-networks", new Set<number>(), {
 		deserializer: (value) => new Set(JSON.parse(value)),
 		serializer: (value) => JSON.stringify(Array.from(value.values())),
 	});
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
+	useEffect(() => {
+		scrollContainer.current?.scrollTo({ behavior: "smooth", top: 0 });
+	}, [searchQuery]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: setters are not dependencies
 	const toggleFavoriteNetworkId = useCallback(
@@ -107,11 +113,13 @@ export function OnlineVehiclesNetworkSelection({
 				<SheetHeader>
 					<SheetTitle>Liste des réseaux</SheetTitle>
 				</SheetHeader>
-				<div className="mx-3 flex flex-col gap-3 overflow-y-auto pb-2">
+				<div className="px-3 mb-3">
 					<NetworkSearchBar query={searchQuery} onQueryChange={setSearchQuery} />
+				</div>
+				<div className="px-3 flex flex-col gap-3 overflow-y-auto pb-2" ref={scrollContainer}>
 					{/* Favorite networks */}
 					{favoriteNetworks.length > 0 && (
-						<NetworksBlock
+						<FilterModuleNetworksBlock
 							favoriteBlock
 							title={
 								<>
@@ -125,7 +133,7 @@ export function OnlineVehiclesNetworkSelection({
 					)}
 					{/* Other networks by region */}
 					{networksByRegion.map((regionNetworks) => (
-						<NetworksBlock
+						<FilterModuleNetworksBlock
 							key={regionNetworks.title}
 							title={regionNetworks.title}
 							networks={regionNetworks.networks}

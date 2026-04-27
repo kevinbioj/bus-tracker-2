@@ -2,22 +2,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { GetNetworkQuery, type Line, type Network } from "~/api/networks";
-import { OnlineVehiclesLineSelection } from "~/components/vehicles-map/online-vehicles/line-selection/online-vehicles-line-selection";
-import { OnlineVehiclesNetworkSelection } from "~/components/vehicles-map/online-vehicles/network-selection/online-vehicles-network-selection";
+import { FilterModuleLinesList } from "~/components/vehicles-map/filter-module/line/lines-list";
+import { FilterModuleNetworkList } from "~/components/vehicles-map/filter-module/network/network-list";
 
-type OnlineVehiclesSheetManagement = {
+type FilterModuleManagerProps = {
 	fixedNetworkId?: number;
 	onFilterChange: (line?: Line) => void;
 	open: boolean;
 	setOpen: (open: boolean) => void;
 };
 
-export function OnlineVehiclesSheetManagement({
+export function FilterModuleManager({
 	fixedNetworkId,
 	onFilterChange,
 	open,
 	setOpen,
-}: Readonly<OnlineVehiclesSheetManagement>) {
+}: Readonly<FilterModuleManagerProps>) {
 	const { data: fixedNetwork } = useQuery(GetNetworkQuery(fixedNetworkId));
 
 	const [selectedNetwork, setSelectedNetwork] = useState<Network>();
@@ -30,13 +30,13 @@ export function OnlineVehiclesSheetManagement({
 	return (
 		<>
 			{fixedNetwork ? null : (
-				<OnlineVehiclesNetworkSelection
+				<FilterModuleNetworkList
 					open={!selectedNetwork && open}
 					onOpenChange={setOpen}
 					onNetworkSelect={setSelectedNetwork}
 				/>
 			)}
-			<OnlineVehiclesLineSelection
+			<FilterModuleLinesList
 				network={open ? (fixedNetwork ?? selectedNetwork) : undefined}
 				onClose={handleClose}
 				onLineChange={(line) => {
