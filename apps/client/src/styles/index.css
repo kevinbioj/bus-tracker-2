@@ -184,8 +184,8 @@
 			in srgb,
 			var(--network-color) 27%,
 			transparent
-		/* biome-ignore lint/complexity/noImportantStyles: intentional */
-		)  !important;
+			/* biome-ignore lint/complexity/noImportantStyles: intentional */
+		) !important;
 	}
 
 	[style*="--line-text-color"] .favorite-line-background:hover {

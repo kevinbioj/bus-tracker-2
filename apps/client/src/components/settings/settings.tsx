@@ -6,6 +6,7 @@ import { HideScheduledTripsSetting } from "~/components/settings/hide-scheduled-
 import { OnlyNetworksWithHistorySetting } from "~/components/settings/only-networks-with-history";
 import { PreviewVehicleNumberSetting } from "~/components/settings/preview-vehicle-number";
 import { ShowDebugInfoSetting } from "~/components/settings/show-debug-info";
+import { ShowIdentifiedVehiclesPanelSetting } from "~/components/settings/show-identified-vehicles-panel";
 import { ShowVehiclePathsSetting } from "~/components/settings/show-vehicle-paths";
 import { StopLabelsStyleSetting } from "~/components/settings/stop-labels-style";
 import { DisplayAbsoluteTimeSetting } from "~/components/settings/use-absolute-time";
@@ -32,12 +33,13 @@ export function Settings() {
 				<div className="flex-1 overflow-y-auto p-6 pt-0">
 					<div className="flex flex-col gap-6">
 						<section className="space-y-4 pt-4">
-							<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Affichage</h3>
-							<DisplayAbsoluteTimeSetting />
-							<OnlyNetworksWithHistorySetting />
-							<DisplayNextCallsSetting />
+							<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Carte</h3>
+							<HideScheduledTripsSetting />
 							<PreviewVehicleNumberSetting />
+							<DisplayNextCallsSetting />
 							<ShowVehiclePathsSetting />
+							<ShowIdentifiedVehiclesPanelSetting />
+							<DisplayAbsoluteTimeSetting />
 							<StopLabelsStyleSetting />
 						</section>
 
@@ -45,7 +47,7 @@ export function Settings() {
 
 						<section className="space-y-4">
 							<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Données</h3>
-							<HideScheduledTripsSetting />
+							<OnlyNetworksWithHistorySetting />
 						</section>
 
 						<Separator />

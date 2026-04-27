@@ -11,7 +11,7 @@ export function OnlyNetworksWithHistorySetting() {
 			<div className="grid gap-0.5 mb-1">
 				<Label className="text-base">Réseaux à afficher</Label>
 				<p className="text-sm text-muted-foreground">
-					Liste des réseaux à afficher dans les Données et les Véhicules en ligne.
+					Liste des réseaux à afficher sur la page de sélection de la page Données.
 				</p>
 			</div>
 			<Tabs

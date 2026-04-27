@@ -3,6 +3,7 @@ import maplibregl from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { type ComponentPropsWithoutRef, useCallback, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useLocalStorage } from "usehooks-ts";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -10,6 +11,7 @@ import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
+import { LineVehiclesPanel } from "~/components/vehicles-map/line-vehicles-panel";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
 
@@ -19,6 +21,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	const location = useLocation();
 
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
+	const [showIdentifiedVehiclesPanel] = useLocalStorage("show-identified-vehicles-panel", false);
 
 	const { data: line } = useQuery(GetLineQuery(lineId ?? undefined));
 	const { data: filteredNetwork } = useQuery(GetNetworkQuery(line?.networkId, true));
@@ -75,6 +78,9 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		<MapComponent containerProps={props} mapOptions={mapOptions} ref={onMap}>
 			<PositionSave />
 			<VehiclesMarkers lineId={filteredLine?.id} />
+			{showIdentifiedVehiclesPanel && filteredLine !== undefined && (
+				<LineVehiclesPanel lineId={filteredLine.id} timezone={filteredNetwork?.timezone} />
+			)}
 			<FilterModuleControl
 				filteredLine={filteredLine}
 				filteredNetwork={filteredNetwork}
