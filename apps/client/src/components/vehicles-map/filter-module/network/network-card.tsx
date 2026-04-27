@@ -17,7 +17,11 @@ export function FilterModuleNetworkCard({
 	onToggleFavorite,
 }: Readonly<FilterModuleNetworkCardProps>) {
 	return (
-		<div className="card-item py-1 px-3 relative w-full">
+		<div
+			className=" py-1 px-3 relative w-full"
+			key={network.id}
+			style={network.color ? ({ "--network-color": network.color } as React.CSSProperties) : undefined}
+		>
 			<Button
 				className="absolute top-4.5 left-4.5 z-10 favorite-network-background"
 				onClick={onToggleFavorite}
@@ -28,6 +32,10 @@ export function FilterModuleNetworkCard({
 			</Button>
 			<Button
 				className="h-16 border drop-shadow-sm flex justify-between items-center pr-4 pl-10 py-2 rounded-lg transition-colors w-full relative overflow-hidden bg-primary/25 text-neutral-800 dark:text-neutral-200 hover:text-primary-foreground card-network-background"
+				style={{
+					backgroundColor: network.color ? `${network.color}33` : undefined,
+					borderColor: network.color ?? undefined,
+				}}
 				onClick={onClick}
 			>
 				<div className="flex-1 overflow-auto text-start text-wrap px-2">

@@ -170,11 +170,6 @@
 }
 
 @layer utilities {
-	.card-item {
-		content-visibility: auto;
-		contain-intrinsic-size: auto 64px;
-	}
-
 	[style*="--network-color"] .favorite-network-background:hover {
 		background-color: color-mix(in srgb, var(--network-color) 20%, transparent);
 	}
