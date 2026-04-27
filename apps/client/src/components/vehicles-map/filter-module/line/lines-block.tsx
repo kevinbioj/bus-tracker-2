@@ -15,8 +15,12 @@ type FilterModuleLinesBlock = {
 export function LinesBlock({ title, lines, favoriteBlock, onSelect, onToggleFavorite }: FilterModuleLinesBlock) {
 	return (
 		<div>
-			{title && <TitleSeparator className="flex items-center gap-2">{title}</TitleSeparator>}
-			<ul className="mt-2 flex flex-col gap-1">
+			{title && (
+				<div className="px-3">
+					<TitleSeparator className="flex items-center gap-2">{title}</TitleSeparator>
+				</div>
+			)}
+			<ul className="mt-2 flex flex-col">
 				{lines.map((line) => (
 					<li key={line.id}>
 						<FilterModuleLineCard

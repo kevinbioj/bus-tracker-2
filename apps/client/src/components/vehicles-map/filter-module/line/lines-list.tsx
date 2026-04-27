@@ -83,14 +83,14 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 					</div>
 				</SheetHeader>
 				{isLoading ? (
-					<div className="px-3 flex flex-col gap-1">
+					<div className="flex flex-col gap-1">
 						{Array.from({ length: 10 }).map((_, index) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: safe here
 							<Skeleton className="bg-neutral-200 h-16 w-full shrink-0" key={index} />
 						))}
 					</div>
 				) : (
-					<div className="px-3 flex flex-col gap-3 overflow-y-auto pb-2">
+					<div className="flex flex-col gap-3 overflow-y-auto pb-2">
 						{/* Favorite lines */}
 						{favoriteLines.length > 0 && (
 							<LinesBlock
@@ -117,7 +117,7 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 						{/* Non-running lines */}
 						{nonRunningLines.length > 0 && (
 							<div>
-								<div className="bg-neutral-200 text-muted-foreground text-xs text-center p-2 rounded-md mb-1">
+								<div className="bg-neutral-200 dark:bg-neutral-700 text-muted-foreground text-xs text-center p-2 rounded-md mb-1 mx-3">
 									<Info className="inline size-4 align-text-bottom mr-1" /> Aucun véhicule ne circule sur{" "}
 									{runningLines.length > 0
 										? "ces lignes"

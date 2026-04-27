@@ -1,4 +1,5 @@
 import { ArrowRight, StarIcon } from "lucide-react";
+import type React from "react";
 import { memo } from "react";
 
 import type { Line } from "~/api/networks";
@@ -19,18 +20,12 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 	onSelect,
 }: FilterModuleLineCardProps) {
 	return (
-		<div className="h-16 relative w-full">
-			{line.textColor && (
-				<style>
-					{`@scope {
-						.favorite-line-background:hover {
-							background-color: ${line.textColor}22;
-						}
-					}`}
-				</style>
-			)}
+		<div
+			className="card-item px-3 py-0.5 relative w-full"
+			style={line.textColor ? ({ "--line-text-color": line.textColor } as React.CSSProperties) : undefined}
+		>
 			<Button
-				className="absolute top-3.5 left-1.5 z-10 hover:bg-inherit hover:opacity-75 favorite-line-background"
+				className="absolute top-4 left-4.5 z-10 hover:bg-inherit hover:opacity-75 favorite-line-background"
 				onClick={() => onToggleFavorite(line)}
 				size="icon"
 				variant="ghost"
@@ -40,7 +35,7 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 			</Button>
 			<Button
 				className={cn(
-					"border border-border flex justify-between items-center h-16 min-h-16 p-2 pl-12 rounded-lg transition text-primary-foreground w-full",
+					"border border-border flex justify-between items-center h-16 min-h-16 p-2 pl-12 rounded-lg transition text-primary-foreground w-full drop-shadow-xs",
 					!line.onlineMarkerCount && "brightness-90 cursor-not-allowed",
 				)}
 				onClick={() => onSelect?.(line)}

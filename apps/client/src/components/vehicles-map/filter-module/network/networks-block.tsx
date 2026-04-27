@@ -21,8 +21,10 @@ export function FilterModuleNetworksBlock({
 }: FilterModuleNetworksBlockProps) {
 	return (
 		<div>
-			<TitleSeparator className="flex items-center gap-2 text-base">{title}</TitleSeparator>
-			<ul className="mt-2 flex flex-col gap-2">
+			<div className="px-3">
+				<TitleSeparator className="flex items-center gap-2 text-base">{title}</TitleSeparator>
+			</div>
+			<ul className="mt-2 flex flex-col">
 				{networks.map((network) => (
 					<li key={network.id}>
 						<FilterModuleNetworkCard

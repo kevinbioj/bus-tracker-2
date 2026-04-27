@@ -169,6 +169,34 @@
 	}
 }
 
+@layer utilities {
+	.card-item {
+		content-visibility: auto;
+		contain-intrinsic-size: auto 64px;
+	}
+
+	[style*="--network-color"] .favorite-network-background:hover {
+		background-color: color-mix(in srgb, var(--network-color) 20%, transparent);
+	}
+
+	[style*="--network-color"] .card-network-background:hover {
+		background-color: color-mix(
+			in srgb,
+			var(--network-color) 27%,
+			transparent
+		/* biome-ignore lint/complexity/noImportantStyles: intentional */
+		)  !important;
+	}
+
+	[style*="--line-text-color"] .favorite-line-background:hover {
+		background-color: color-mix(
+			in srgb,
+			var(--line-text-color) 13%,
+			transparent
+		);
+	}
+}
+
 @font-face {
 	font-family: Achemine;
 	src: url("../fonts/achemine-regular-webfont.woff2");
