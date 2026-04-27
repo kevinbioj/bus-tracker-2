@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { SearchIcon, StarIcon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
@@ -14,11 +15,17 @@ const searchifyQuery = (query: string) =>
 		.normalize("NFD")
 		.replace(/\p{Diacritic}/gu, "");
 
+type VirtualBlock = {
+	key: string;
+	title: ReactNode;
+	networks: Network[];
+};
+
 export function NetworkList() {
 	const { data: regions } = useSuspenseQuery(GetRegionsQuery);
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
-	const scrollContainer = useRef<HTMLElement>(null);
+	const listRef = useRef<HTMLDivElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
 
@@ -31,7 +38,7 @@ export function NetworkList() {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
 	useEffect(() => {
 		window.scrollTo({ behavior: "smooth", top: 0 });
-	}, [searchQuery]);
+	}, [debouncedSearchifiedSearchQuery]);
 
 	const [favoriteNetworks, otherNetworks] = useMemo<[Network[], Network[]]>(() => {
 		let innerNetworks = networks;
@@ -79,10 +86,40 @@ export function NetworkList() {
 		];
 	}, [regions, otherNetworks]);
 
+	const virtualBlocks = useMemo<VirtualBlock[]>(() => {
+		const blocks: VirtualBlock[] = [];
+
+		if (favoriteNetworks.length > 0) {
+			blocks.push({
+				key: "favorites",
+				title: (
+					<>
+						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Réseaux favoris
+					</>
+				),
+				networks: favoriteNetworks,
+			});
+		}
+
+		for (const { title, networks } of networksByRegion) {
+			blocks.push({ key: `region-${title}`, title, networks });
+		}
+
+		return blocks;
+	}, [favoriteNetworks, networksByRegion]);
+
+	const virtualizer = useWindowVirtualizer({
+		count: virtualBlocks.length,
+		estimateSize: () => 200,
+		overscan: 3,
+		scrollMargin: listRef.current?.offsetTop ?? 0,
+		getItemKey: (index) => virtualBlocks[index].key,
+	});
+
 	return (
 		<>
 			<title>Données – Bus Tracker</title>
-			<main className="px-3 pb-3 max-w-(--breakpoint-xl) w-full mx-auto flex flex-col" ref={scrollContainer}>
+			<main className="px-3 pb-3 max-w-(--breakpoint-xl) w-full mx-auto flex flex-col">
 				<div className="bg-background sticky pt-3 top-15 z-10">
 					<div className="shrink-0 mb-2">
 						<h2 className="font-bold text-2xl">Données des véhicules</h2>
@@ -98,22 +135,28 @@ export function NetworkList() {
 						/>
 					</div>
 				</div>
-				<div className="px-3 flex flex-col gap-3 flex-1 pb-2">
-					{/* Favorite networks */}
-					{favoriteNetworks.length > 0 && (
-						<NetworksBlock
-							title={
-								<>
-									<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Réseaux favoris
-								</>
-							}
-							networks={favoriteNetworks}
-						/>
-					)}
-					{/* Other networks by region */}
-					{networksByRegion.map((regionNetworks) => (
-						<NetworksBlock key={regionNetworks.title} title={regionNetworks.title} networks={regionNetworks.networks} />
-					))}
+				<div ref={listRef} className="flex flex-col flex-1 pb-2">
+					<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+						{virtualizer.getVirtualItems().map((virtualItem) => {
+							const block = virtualBlocks[virtualItem.index];
+							return (
+								<div
+									key={virtualItem.key}
+									ref={virtualizer.measureElement}
+									data-index={virtualItem.index}
+									style={{
+										position: "absolute",
+										top: 0,
+										left: 0,
+										width: "100%",
+										transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
+									}}
+								>
+									<NetworksBlock title={block.title} networks={block.networks} />
+								</div>
+							);
+						})}
+					</div>
 				</div>
 			</main>
 		</>

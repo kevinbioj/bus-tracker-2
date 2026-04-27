@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { BusFrontIcon, StarIcon } from "lucide-react";
+import { BusFrontIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
@@ -7,7 +7,7 @@ import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import { NetworkSearchBar } from "~/components/vehicles-map/filter-module/network/network-search-bar";
-import { FilterModuleNetworksBlock } from "~/components/vehicles-map/filter-module/network/networks-block";
+import { NetworkInnerList } from "~/components/vehicles-map/filter-module/network/networks-inner-list";
 
 const searchifyQuery = (query: string) =>
 	query
@@ -29,7 +29,7 @@ export function FilterModuleNetworkList({
 	const { data: regions } = useQuery(GetRegionsQuery);
 	const { data: networks } = useQuery(GetNetworksQuery);
 
-	const scrollContainer = useRef<HTMLDivElement>(null);
+	const scrollRef = useRef<HTMLDivElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
 
@@ -40,7 +40,7 @@ export function FilterModuleNetworkList({
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
 	useEffect(() => {
-		scrollContainer.current?.scrollTo({ behavior: "smooth", top: 0 });
+		scrollRef.current?.scrollTo({ behavior: "smooth", top: 0 });
 	}, [searchQuery]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: setters are not dependencies
@@ -91,10 +91,7 @@ export function FilterModuleNetworkList({
 					return [];
 				}
 
-				return {
-					title: region.name,
-					networks,
-				};
+				return { title: region.name, networks };
 			}),
 			...(orphanNetworks !== undefined ? [{ title: "Autres réseaux", networks: orphanNetworks }] : []),
 		];
@@ -110,38 +107,19 @@ export function FilterModuleNetworkList({
 				}
 			/>
 			<SheetContent className="gap-0 h-dvh z-999">
-				<SheetHeader>
+				<SheetHeader className="shrink-0">
 					<SheetTitle>Liste des réseaux</SheetTitle>
 				</SheetHeader>
-				<div className="mb-3">
+				<div className="shrink-0 mb-3">
 					<NetworkSearchBar query={searchQuery} onQueryChange={setSearchQuery} />
 				</div>
-				<div className="h-[calc(100dvh-6.75rem)] overflow-y-auto" ref={scrollContainer}>
-					{/* Favorite networks */}
-					{favoriteNetworks.length > 0 && (
-						<FilterModuleNetworksBlock
-							favoriteBlock
-							title={
-								<>
-									<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Réseaux favoris
-								</>
-							}
-							networks={favoriteNetworks}
-							onSelect={onNetworkSelect}
-							onToggleFavorite={toggleFavoriteNetworkId}
-						/>
-					)}
-					{/* Other networks by region */}
-					{networksByRegion.map((regionNetworks) => (
-						<FilterModuleNetworksBlock
-							key={regionNetworks.title}
-							title={regionNetworks.title}
-							networks={regionNetworks.networks}
-							onSelect={onNetworkSelect}
-							onToggleFavorite={toggleFavoriteNetworkId}
-						/>
-					))}
-				</div>
+				<NetworkInnerList
+					favoriteNetworks={favoriteNetworks}
+					networksByRegion={networksByRegion}
+					onNetworkSelect={onNetworkSelect}
+					toggleFavoriteNetworkId={toggleFavoriteNetworkId}
+					scrollRef={scrollRef}
+				/>
 			</SheetContent>
 		</Sheet>
 	);

@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { GetNetworkQuery, type Line, type Network } from "~/api/networks";
 import { FilterModuleLinesList } from "~/components/vehicles-map/filter-module/line/lines-list";
-import { FilterModuleNetworkList } from "~/components/vehicles-map/filter-module/network/network-list";
+import { FilterModuleNetworkList } from "~/components/vehicles-map/filter-module/network/networks-list";
 
 type FilterModuleManagerProps = {
 	fixedNetworkId?: number;

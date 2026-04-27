@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { ArrowLeft, Info, StarIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useCallback, useMemo, useRef } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -9,7 +9,7 @@ import { GetNetworkQuery, type Network } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Skeleton } from "~/components/ui/skeleton";
-import { LinesBlock } from "~/components/vehicles-map/filter-module/line/lines-block";
+import { LinesInnerList } from "~/components/vehicles-map/filter-module/line/lines-inner-list";
 
 type FilterModuleLinesList = {
 	network?: Network;
@@ -66,6 +66,8 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 		return [groups.get("favorite") ?? [], groups.get("running") ?? [], groups.get("non-running") ?? []];
 	}, [favoriteLineIds, networkWithLines]);
 
+	const scrollRef = useRef<HTMLDivElement>(null);
+
 	return (
 		<Sheet open={network !== undefined} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent className="z-999 gap-0" showCloseButton={false}>
@@ -90,46 +92,14 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 						))}
 					</div>
 				) : (
-					<div className="flex flex-col gap-3 overflow-y-auto pb-2">
-						{/* Favorite lines */}
-						{favoriteLines.length > 0 && (
-							<LinesBlock
-								favoriteBlock
-								title={
-									<>
-										<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Lignes favorites
-									</>
-								}
-								lines={favoriteLines}
-								onSelect={onLineChange}
-								onToggleFavorite={toggleFavoriteLineId}
-							/>
-						)}
-						{/* Running lines */}
-						{runningLines.length > 0 && (
-							<LinesBlock
-								title={favoriteLines.length > 0 ? "Lignes en service" : undefined}
-								lines={runningLines}
-								onSelect={onLineChange}
-								onToggleFavorite={toggleFavoriteLineId}
-							/>
-						)}
-						{/* Non-running lines */}
-						{nonRunningLines.length > 0 && (
-							<div>
-								<div className="bg-neutral-200 dark:bg-neutral-700 text-muted-foreground text-xs text-center p-2 rounded-md mb-1 mx-3">
-									<Info className="inline size-4 align-text-bottom mr-1" /> Aucun véhicule ne circule sur{" "}
-									{runningLines.length > 0
-										? "ces lignes"
-										: favoriteLines.length > 0
-											? "le reste du réseau"
-											: "ce réseau"}
-									.
-								</div>
-								<LinesBlock lines={nonRunningLines} onToggleFavorite={toggleFavoriteLineId} />
-							</div>
-						)}
-					</div>
+					<LinesInnerList
+						favoriteLines={favoriteLines}
+						runningLines={runningLines}
+						nonRunningLines={nonRunningLines}
+						onLineSelect={onLineChange}
+						toggleFavoriteLineId={toggleFavoriteLineId}
+						scrollRef={scrollRef}
+					/>
 				)}
 			</SheetContent>
 		</Sheet>

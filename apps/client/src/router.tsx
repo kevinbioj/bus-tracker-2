@@ -16,7 +16,7 @@ import { LegalPage } from "~/pages/legal";
 import { LineVehicleAssignments } from "~/pages/line-vehicle-assignments";
 import MapPage from "~/pages/map";
 import { NetworkDetails } from "~/pages/network-details";
-import { NetworkList } from "~/pages/network-list";
+import { NetworkList } from "~/pages/networks-list";
 import { VehicleDetails } from "~/pages/vehicle-details";
 import { PurpleScreenOfDeath } from "~/psod";
 
