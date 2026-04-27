@@ -18,7 +18,7 @@ export function NetworkList() {
 	const { data: regions } = useSuspenseQuery(GetRegionsQuery);
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
-	const scrollContainer = useRef<HTMLDivElement>(null);
+	const scrollContainer = useRef<HTMLElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
 
@@ -30,7 +30,7 @@ export function NetworkList() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
 	useEffect(() => {
-		scrollContainer.current?.scrollTo({ behavior: "smooth", top: 0 });
+		window.scrollTo({ behavior: "smooth", top: 0 });
 	}, [searchQuery]);
 
 	const [favoriteNetworks, otherNetworks] = useMemo<[Network[], Network[]]>(() => {
@@ -82,21 +82,23 @@ export function NetworkList() {
 	return (
 		<>
 			<title>Données – Bus Tracker</title>
-			<main className="p-3 max-w-(--breakpoint-xl) w-full mx-auto h-[calc(100dvh-60px)] overflow-hidden flex flex-col">
-				<div className="shrink-0 mb-2">
-					<h2 className="font-bold text-2xl">Données des véhicules</h2>
-					<p className="text-muted-foreground">Sélectionnez un réseau pour consulter ses véhicules et lignes.</p>
+			<main className="px-3 pb-3 max-w-(--breakpoint-xl) w-full mx-auto flex flex-col" ref={scrollContainer}>
+				<div className="bg-background sticky pt-3 top-15 z-10">
+					<div className="shrink-0 mb-2">
+						<h2 className="font-bold text-2xl">Données des véhicules</h2>
+						<p className="text-muted-foreground">Sélectionnez un réseau pour consulter ses véhicules et lignes.</p>
+					</div>
+					<div className="relative shrink-0 mb-3">
+						<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+						<Input
+							className="pl-9"
+							placeholder="Rechercher un réseau ou une ville…"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+						/>
+					</div>
 				</div>
-				<div className="relative shrink-0 mb-3">
-					<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-					<Input
-						className="pl-9"
-						placeholder="Rechercher un réseau ou une ville…"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
-				</div>
-				<div className="px-3 flex flex-col gap-3 flex-1 overflow-y-auto pb-2" ref={scrollContainer}>
+				<div className="px-3 flex flex-col gap-3 flex-1 pb-2">
 					{/* Favorite networks */}
 					{favoriteNetworks.length > 0 && (
 						<NetworksBlock

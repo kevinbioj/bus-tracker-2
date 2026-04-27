@@ -1,5 +1,4 @@
 import { ArrowRight, StarIcon } from "lucide-react";
-import type React from "react";
 
 import type { Network } from "~/api/networks";
 import { Button } from "~/components/ui/button";
@@ -18,11 +17,7 @@ export function FilterModuleNetworkCard({
 	onToggleFavorite,
 }: Readonly<FilterModuleNetworkCardProps>) {
 	return (
-		<div
-			className="card-item py-1 px-3 relative w-full"
-			key={network.id}
-			style={network.color ? ({ "--network-color": network.color } as React.CSSProperties) : undefined}
-		>
+		<div className="card-item py-1 px-3 relative w-full">
 			<Button
 				className="absolute top-4.5 left-4.5 z-10 favorite-network-background"
 				onClick={onToggleFavorite}
@@ -34,10 +29,6 @@ export function FilterModuleNetworkCard({
 			<Button
 				className="h-16 border drop-shadow-sm flex justify-between items-center pr-4 pl-10 py-2 rounded-lg transition-colors w-full relative overflow-hidden bg-primary/25 text-neutral-800 dark:text-neutral-200 hover:text-primary-foreground card-network-background"
 				onClick={onClick}
-				style={{
-					backgroundColor: network.color ? `${network.color}33` : undefined,
-					borderColor: network.color ?? undefined,
-				}}
 			>
 				<div className="flex-1 overflow-auto text-start text-wrap px-2">
 					<h3 className="font-bold text-lg leading-tight">{network.name}</h3>

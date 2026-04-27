@@ -109,14 +109,14 @@ export function FilterModuleNetworkList({
 					</button>
 				}
 			/>
-			<SheetContent className="z-999 gap-0">
+			<SheetContent className="gap-0 h-dvh z-999">
 				<SheetHeader>
 					<SheetTitle>Liste des réseaux</SheetTitle>
 				</SheetHeader>
 				<div className="mb-3">
 					<NetworkSearchBar query={searchQuery} onQueryChange={setSearchQuery} />
 				</div>
-				<div className="flex flex-col gap-3 overflow-y-auto pb-2" ref={scrollContainer}>
+				<div className="h-[calc(100dvh-6.75rem)] overflow-y-auto" ref={scrollContainer}>
 					{/* Favorite networks */}
 					{favoriteNetworks.length > 0 && (
 						<FilterModuleNetworksBlock

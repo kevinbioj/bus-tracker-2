@@ -11,7 +11,7 @@ type NetworksBlockProps = {
 
 export function NetworksBlock({ title, networks }: NetworksBlockProps) {
 	return (
-		<div>
+		<div className="mb-3">
 			<TitleSeparator className="flex items-center gap-2 text-base">{title}</TitleSeparator>
 			<ul className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 				{networks.map((network) => (

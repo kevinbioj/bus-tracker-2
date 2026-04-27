@@ -20,7 +20,7 @@ export function FilterModuleNetworksBlock({
 	onToggleFavorite,
 }: FilterModuleNetworksBlockProps) {
 	return (
-		<div>
+		<div className="mb-3">
 			<div className="px-3">
 				<TitleSeparator className="flex items-center gap-2 text-base">{title}</TitleSeparator>
 			</div>
