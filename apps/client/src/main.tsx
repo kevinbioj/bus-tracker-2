@@ -6,6 +6,8 @@ import { createRoot } from "react-dom/client";
 import "./polyfills.js";
 import "./setup-dayjs";
 
+history.scrollRestoration = "manual";
+
 import App from "./App.jsx";
 import "./styles/index.css";
 
