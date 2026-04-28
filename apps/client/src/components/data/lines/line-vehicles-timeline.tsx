@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
 import { Activity, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { DataSet } from "vis-data";
 import {
 	type DataGroupCollectionType,

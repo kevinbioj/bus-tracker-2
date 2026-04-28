@@ -1,14 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import type { Map as LeafletMap } from "leaflet";
 import { CircleIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
-
 import { GetLineQuery } from "~/api/lines";
 import type { Vehicle } from "~/api/vehicles";
 import ReactMoveableCircleMarker, { type MoveableCircleMarker } from "~/utils/moveable-circler-marker";
-
-import { Link } from "@tanstack/react-router";
 
 type VehicleLiveProps = {
 	vehicle: Vehicle;

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { ArrowRight } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";

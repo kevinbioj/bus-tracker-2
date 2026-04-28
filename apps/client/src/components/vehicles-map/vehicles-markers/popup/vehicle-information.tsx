@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import { SatelliteDishIcon } from "lucide-react";
 import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
 import { useLocalStorage } from "usehooks-ts";
 
 import { GetNetworkQuery } from "~/api/networks";
@@ -106,7 +106,9 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	const vehicleLink =
 		journey.vehicle?.id && !disableLinks ? (
 			<Button asChild className="gap-0.5 py-0.5" size="xs" variant="ghost">
-				<Link to="/data/vehicles/$vehicleId" params={{ vehicleId: String(journey.vehicle.id) }}>{vehicleNumber}</Link>
+				<Link to="/data/vehicles/$vehicleId" params={{ vehicleId: String(journey.vehicle.id) }}>
+					{vehicleNumber}
+				</Link>
 			</Button>
 		) : (
 			<>{vehicleNumber} </>
@@ -128,7 +130,13 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] px-1.5 py-1">
 			{network?.hasVehiclesFeature ? (
 				<Button asChild className="" size="xs" variant="ghost">
-					{disableLinks ? networkIdentifier : <Link to="/data/networks/$networkId" params={{ networkId: String(network?.id) }}>{networkIdentifier}</Link>}
+					{disableLinks ? (
+						networkIdentifier
+					) : (
+						<Link to="/data/networks/$networkId" params={{ networkId: String(network?.id) }}>
+							{networkIdentifier}
+						</Link>
+					)}
 				</Button>
 			) : (
 				networkIdentifier

@@ -1,11 +1,11 @@
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useSearchParams } from "~/hooks/use-search-params";
 
 import { GetVehicleActivitiesQuery, GetVehicleQuery } from "~/api/vehicles";
 import { ActivityCard } from "~/components/data/vehicles/activity-card";
-import { Link } from "@tanstack/react-router";
+import { useSearchParams } from "~/hooks/use-search-params";
 
 const parseMonth = (input: string | null, validMonths: string[]) => {
 	if (input === null || !validMonths.includes(input)) return validMonths.at(-1) ?? dayjs().format("YYYY-MM");

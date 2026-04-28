@@ -21,7 +21,8 @@
 			"!**/dist",
 			"!**/node_modules",
 			"!**/.git",
-			"!**/paraglide/*"
+			"!**/paraglide/*",
+			"!apps/client/src/routeTree.gen.ts"
 		]
 	},
 	"formatter": {

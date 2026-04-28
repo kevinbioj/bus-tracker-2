@@ -7,9 +7,6 @@ import { NetworkList } from "~/pages/networks-list";
 export const Route = createFileRoute("/_app/data/")({
 	component: NetworkList,
 	loader: async ({ context: { queryClient } }) => {
-		await Promise.all([
-			queryClient.ensureQueryData(GetRegionsQuery),
-			queryClient.ensureQueryData(GetNetworksQuery),
-		]);
+		await Promise.all([queryClient.ensureQueryData(GetRegionsQuery), queryClient.ensureQueryData(GetNetworksQuery)]);
 	},
 });

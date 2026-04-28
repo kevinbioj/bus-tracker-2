@@ -3,15 +3,14 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "~/hooks/use-search-params";
 import { useDebounceValue } from "usehooks-ts";
-
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
 import { VehiclesTable } from "~/components/data/vehicles/vehicles-table";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { useSearchParams } from "~/hooks/use-search-params";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import { cn } from "~/utils/utils";
 
@@ -168,102 +167,102 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	return (
 		<div>
 			<div className="sticky top-[60px] bg-background z-10 pt-2 pb-1">
-			<div
-				className={cn("grid gap-1", hasArchivedVehicles ? "grid-cols-[1fr_4.5rem_2.3rem]" : "grid-cols-[1fr_4.5rem]")}
-			>
-				{/* Filters */}
-				<div className="flex flex-col gap-1">
-					<Label className="inline-flex items-center gap-1" htmlFor="filter">
-						<FilterIcon size={16} /> Filtrer par
-					</Label>
-					<div className="flex gap-1">
-						{availableNetworkTypeFilters.length > 2 && (
-							<Select value={type} onValueChange={(newType) => updateSearchParam("type", newType)}>
-								<SelectTrigger aria-label="Type" className="h-10 w-18">
-									<SelectValue>
-										{vehicleTypeOptions[type as keyof typeof vehicleTypeOptions].icon ?? vehicleTypeOptions.ALL.label}
-									</SelectValue>
-								</SelectTrigger>
-								<SelectContent>
-									{availableNetworkTypeFilters.map((type) => {
-										const item = vehicleTypeOptions[type as keyof typeof vehicleTypeOptions];
-										return (
-											<SelectItem key={type} value={type}>
-												<div className="flex items-center gap-2">
-													{item.icon}
-													<span>{item.label}</span>
-												</div>
-											</SelectItem>
-										);
-									})}
-								</SelectContent>
-							</Select>
-						)}
-						<div className="flex flex-1 gap-1 max-w-96">
-							{network.operators.length > 0 && (
-								<Select
-									value={operatorId}
-									onValueChange={(newOperatorId) => updateSearchParam("operatorId", newOperatorId)}
-								>
-									<SelectTrigger aria-label="Opérateur" className="h-10 w-1/2">
-										<SelectValue />
+				<div
+					className={cn("grid gap-1", hasArchivedVehicles ? "grid-cols-[1fr_4.5rem_2.3rem]" : "grid-cols-[1fr_4.5rem]")}
+				>
+					{/* Filters */}
+					<div className="flex flex-col gap-1">
+						<Label className="inline-flex items-center gap-1" htmlFor="filter">
+							<FilterIcon size={16} /> Filtrer par
+						</Label>
+						<div className="flex gap-1">
+							{availableNetworkTypeFilters.length > 2 && (
+								<Select value={type} onValueChange={(newType) => updateSearchParam("type", newType)}>
+									<SelectTrigger aria-label="Type" className="h-10 w-18">
+										<SelectValue>
+											{vehicleTypeOptions[type as keyof typeof vehicleTypeOptions].icon ?? vehicleTypeOptions.ALL.label}
+										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="ALL">
-											<span className="text-muted-foreground">Opérateur</span>
-										</SelectItem>
-										{network.operators
-											.toSorted((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
-											.map((operator) => (
-												<SelectItem key={operator.id} value={operator.id.toString()}>
-													{operator.name}
+										{availableNetworkTypeFilters.map((type) => {
+											const item = vehicleTypeOptions[type as keyof typeof vehicleTypeOptions];
+											return (
+												<SelectItem key={type} value={type}>
+													<div className="flex items-center gap-2">
+														{item.icon}
+														<span>{item.label}</span>
+													</div>
 												</SelectItem>
-											))}
+											);
+										})}
 									</SelectContent>
 								</Select>
 							)}
-							<Input
-								className="h-10 w-1/2"
-								placeholder="numéro ou désignation"
-								value={searchParams.get("filter") ?? ""}
-								onChange={(e) => updateSearchParam("filter", e.target.value)}
-							/>
+							<div className="flex flex-1 gap-1 max-w-96">
+								{network.operators.length > 0 && (
+									<Select
+										value={operatorId}
+										onValueChange={(newOperatorId) => updateSearchParam("operatorId", newOperatorId)}
+									>
+										<SelectTrigger aria-label="Opérateur" className="h-10 w-1/2">
+											<SelectValue />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="ALL">
+												<span className="text-muted-foreground">Opérateur</span>
+											</SelectItem>
+											{network.operators
+												.toSorted((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+												.map((operator) => (
+													<SelectItem key={operator.id} value={operator.id.toString()}>
+														{operator.name}
+													</SelectItem>
+												))}
+										</SelectContent>
+									</Select>
+								)}
+								<Input
+									className="h-10 w-1/2"
+									placeholder="numéro ou désignation"
+									value={searchParams.get("filter") ?? ""}
+									onChange={(e) => updateSearchParam("filter", e.target.value)}
+								/>
+							</div>
 						</div>
 					</div>
+					{/* Sort */}
+					<div className="flex flex-col gap-1">
+						<Label className="inline-flex items-center gap-1" htmlFor="sort">
+							<SortAscIcon size={16} /> Tri
+						</Label>
+						<Select value={sort} onValueChange={(newSort) => updateSearchParam("sort", newSort)}>
+							<SelectTrigger aria-label="Trier" className="h-10">
+								<SelectValue>{sortingOptions[sort as keyof typeof sortingOptions].icon}</SelectValue>
+							</SelectTrigger>
+							<SelectContent>
+								{Object.entries(sortingOptions).map(([key, item]) => (
+									<SelectItem key={key} value={key}>
+										<div className="flex items-center gap-2">
+											{item.icon}
+											<span>{item.label}</span>
+										</div>
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+					{/* Archive */}
+					{hasArchivedVehicles && (
+						<Button
+							className="mt-auto h-10"
+							onClick={() => setShowArchived(!showArchived)}
+							size="icon"
+							variant={showArchived ? "branding-default" : "secondary"}
+						>
+							<ArchiveIcon />
+						</Button>
+					)}
 				</div>
-				{/* Sort */}
-				<div className="flex flex-col gap-1">
-					<Label className="inline-flex items-center gap-1" htmlFor="sort">
-						<SortAscIcon size={16} /> Tri
-					</Label>
-					<Select value={sort} onValueChange={(newSort) => updateSearchParam("sort", newSort)}>
-						<SelectTrigger aria-label="Trier" className="h-10">
-							<SelectValue>{sortingOptions[sort as keyof typeof sortingOptions].icon}</SelectValue>
-						</SelectTrigger>
-						<SelectContent>
-							{Object.entries(sortingOptions).map(([key, item]) => (
-								<SelectItem key={key} value={key}>
-									<div className="flex items-center gap-2">
-										{item.icon}
-										<span>{item.label}</span>
-									</div>
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div>
-				{/* Archive */}
-				{hasArchivedVehicles && (
-					<Button
-						className="mt-auto h-10"
-						onClick={() => setShowArchived(!showArchived)}
-						size="icon"
-						variant={showArchived ? "branding-default" : "secondary"}
-					>
-						<ArchiveIcon />
-					</Button>
-				)}
-			</div>
 				<p
 					className={clsx(
 						"text-muted-foreground text-sm mt-2",

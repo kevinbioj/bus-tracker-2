@@ -1,8 +1,8 @@
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
 import { ChevronLeft, ChevronRight, MapIcon } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
-import { Link, useParams, useSearch } from "@tanstack/react-router";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
@@ -77,7 +77,11 @@ export function LineVehicleAssignments() {
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link to="/data/networks/$networkId" params={{ networkId: String(network.id) }} search={{ tab: "lines" }}>
+								<Link
+									to="/data/networks/$networkId"
+									params={{ networkId: String(network.id) }}
+									search={{ tab: "lines" }}
+								>
 									{network.logoHref ? (
 										<picture className="min-w-12 w-fit">
 											{network.darkModeLogoHref !== null && (
@@ -192,7 +196,11 @@ export function LineVehicleAssignments() {
 									(isFuture || !hasData) && "opacity-50 pointer-events-none hover:cursor-not-allowed",
 								)}
 							>
-								<Link from="/data/lines/$lineId/vehicle-assignments" to="." search={(prev) => ({ ...prev, date: dateStr })}>
+								<Link
+									from="/data/lines/$lineId/vehicle-assignments"
+									to="."
+									search={(prev) => ({ ...prev, date: dateStr })}
+								>
 									<p className="uppercase">{d.format("ddd")}</p>
 									<p className="font-bold text-lg">{d.format("DD")}</p>
 								</Link>

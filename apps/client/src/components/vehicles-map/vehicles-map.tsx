@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "@tanstack/react-router";
 import maplibregl from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { type ComponentPropsWithoutRef, useCallback, useMemo, useState } from "react";
-import { useLocation } from "@tanstack/react-router";
 import { useLocalStorage } from "usehooks-ts";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";

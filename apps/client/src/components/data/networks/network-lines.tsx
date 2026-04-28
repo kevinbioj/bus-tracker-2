@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
 
 import { GetNetworkQuery } from "~/api/networks";
 

@@ -1,8 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
 import maplibregl from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useCallback, useMemo } from "react";
-import { useParams } from "@tanstack/react-router";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";

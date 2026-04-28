@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { HistoryIcon, LocateIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "@tanstack/react-router";
 import { match } from "ts-pattern";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
@@ -83,7 +83,11 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 								<LocateIcon className="size-4 m-auto" />
 							</Button>
 							<Button asChild className="size-7 shrink-0" size="icon" variant="ghost">
-								<Link title="Voir l'historique" to="/data/vehicles/$vehicleId" params={{ vehicleId: String(vehicle.id) }}>
+								<Link
+									title="Voir l'historique"
+									to="/data/vehicles/$vehicleId"
+									params={{ vehicleId: String(vehicle.id) }}
+								>
 									<HistoryIcon className="size-4 m-auto" />
 								</Link>
 							</Button>

@@ -12,6 +12,7 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
 	const pathname = useRouterState({ select: (state) => state.location.pathname });
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to force scroll to top on path change
 	useLayoutEffect(() => {
 		window.scrollTo(0, 0);
 	}, [pathname]);

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { ArchiveIcon } from "lucide-react";
 import { useMemo } from "react";
@@ -9,7 +10,6 @@ import {
 	TbFireExtinguisher as FireExtinguisherIcon,
 	TbSkull as SkullIcon,
 } from "react-icons/tb";
-import { Link } from "@tanstack/react-router";
 import { match, P } from "ts-pattern";
 import { GetNetworkQuery } from "~/api/networks";
 
