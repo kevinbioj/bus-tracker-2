@@ -168,9 +168,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							{availableNetworkTypeFilters.length > 2 && (
 								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
 									<SelectTrigger aria-label="Type" className="h-10 w-18">
-										<SelectValue>
-											{vehicleTypeOptions[type].icon ?? vehicleTypeOptions.ALL.label}
-										</SelectValue>
+										<SelectValue>{vehicleTypeOptions[type].icon ?? vehicleTypeOptions.ALL.label}</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										{availableNetworkTypeFilters.map((typeKey) => {
