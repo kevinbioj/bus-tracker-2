@@ -2,7 +2,8 @@ import { Label } from "@radix-ui/react-label";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
@@ -10,7 +11,6 @@ import { VehiclesTable } from "~/components/data/vehicles/vehicles-table";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { useSearchParams } from "~/hooks/use-search-params";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import { cn } from "~/utils/utils";
 
@@ -41,6 +41,8 @@ const vehicleTypeOptions = {
 	},
 };
 
+const vehicleTypeKeys = Object.keys(vehicleTypeOptions) as (keyof typeof vehicleTypeOptions)[];
+
 const sortingOptions = {
 	number: {
 		label: "Numéro",
@@ -51,6 +53,8 @@ const sortingOptions = {
 		icon: <ClockIcon className="size-5" />,
 	},
 };
+
+const sortingKeys = Object.keys(sortingOptions) as (keyof typeof sortingOptions)[];
 
 const numberSort = (a: Vehicle, b: Vehicle) => {
 	const numberifiedA = Number.parseInt(a.number, 10);
@@ -74,40 +78,25 @@ type NetworkVehiclesProps = {
 };
 
 export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
-	const [showArchived, setShowArchived] = useState(false);
-
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(networkId, true, true));
 	const { data: vehicles } = useSuspenseQuery(GetVehiclesQuery(networkId));
+
+	const [type, setType] = useQueryState("type", parseAsStringEnum(vehicleTypeKeys).withDefault("ALL"));
+	const [operatorId, setOperatorId] = useQueryState("operatorId", parseAsString.withDefault("ALL"));
+	const [filter, setFilter] = useQueryState("filter", parseAsString.withDefault(""));
+	const [sort, setSort] = useQueryState("sort", parseAsStringEnum(sortingKeys).withDefault("number"));
+	const [showArchived, setShowArchived] = useQueryState("archived", parseAsBoolean.withDefault(false));
+
+	const [debouncedFilter] = useDebounceValue(filter, 100);
 
 	const hasArchivedVehicles = useMemo(() => vehicles.some((vehicle) => vehicle.archivedAt !== null), [vehicles]);
 
 	const availableNetworkTypeFilters = useMemo(() => {
 		const networkVehicleTypes = new Set(vehicles.map(({ type }) => type));
-		return [
-			"ALL",
-			...Object.keys(vehicleTypeOptions).filter((type) => networkVehicleTypes.has(type as Vehicle["type"])),
-		];
+		return ["ALL", ...vehicleTypeKeys.filter((t) => t !== "ALL" && networkVehicleTypes.has(t as Vehicle["type"]))];
 	}, [vehicles]);
 
-	const [searchParams, setSearchParams] = useSearchParams();
-
-	const updateSearchParam = (key: string, value: string) => {
-		setSearchParams((searchParams) => {
-			const newSearchParams = new URLSearchParams(searchParams);
-			newSearchParams.set(key, value);
-			return newSearchParams;
-		});
-	};
-
-	const type = searchParams.get("type") ?? "ALL";
-	const operatorId = searchParams.get("operatorId") ?? "ALL";
-	const filter = searchParams.get("filter") ?? "";
-	const sort = searchParams.get("sort") ?? "number";
-
-	const [debouncedFilter] = useDebounceValue(() => filter, 100);
-
 	const filteredAndSortedVehicles = useMemo(() => {
-		const sort = searchParams.get("sort");
 		let pattern: RegExp | string = debouncedFilter;
 
 		try {
@@ -118,8 +107,8 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 			.filter((v) => {
 				if (showArchived && v.archivedAt === null) return false;
 				if (!showArchived && v.archivedAt !== null) return false;
-				if (type?.trim().length && type !== "ALL" && v.type !== type) return false;
-				if (operatorId !== "" && operatorId !== "ALL" && +operatorId !== v.operatorId) return false;
+				if (type !== "ALL" && v.type !== type) return false;
+				if (operatorId !== "ALL" && +operatorId !== v.operatorId) return false;
 				if (debouncedFilter === "") return true;
 				return pattern instanceof RegExp
 					? pattern.test(v.number.toString()) || pattern.test(v.designation ?? "")
@@ -137,7 +126,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 				return numberSort(a, b);
 			});
-	}, [debouncedFilter, operatorId, showArchived, searchParams, type, vehicles]);
+	}, [debouncedFilter, operatorId, showArchived, sort, type, vehicles]);
 
 	const onlineVehicles = useMemo(
 		() => filteredAndSortedVehicles.filter(({ activity }) => activity.lineId !== undefined),
@@ -177,17 +166,17 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 						</Label>
 						<div className="flex gap-1">
 							{availableNetworkTypeFilters.length > 2 && (
-								<Select value={type} onValueChange={(newType) => updateSearchParam("type", newType)}>
+								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
 									<SelectTrigger aria-label="Type" className="h-10 w-18">
 										<SelectValue>
-											{vehicleTypeOptions[type as keyof typeof vehicleTypeOptions].icon ?? vehicleTypeOptions.ALL.label}
+											{vehicleTypeOptions[type].icon ?? vehicleTypeOptions.ALL.label}
 										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
-										{availableNetworkTypeFilters.map((type) => {
-											const item = vehicleTypeOptions[type as keyof typeof vehicleTypeOptions];
+										{availableNetworkTypeFilters.map((typeKey) => {
+											const item = vehicleTypeOptions[typeKey as keyof typeof vehicleTypeOptions];
 											return (
-												<SelectItem key={type} value={type}>
+												<SelectItem key={typeKey} value={typeKey}>
 													<div className="flex items-center gap-2">
 														{item.icon}
 														<span>{item.label}</span>
@@ -200,10 +189,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							)}
 							<div className="flex flex-1 gap-1 max-w-96">
 								{network.operators.length > 0 && (
-									<Select
-										value={operatorId}
-										onValueChange={(newOperatorId) => updateSearchParam("operatorId", newOperatorId)}
-									>
+									<Select value={operatorId} onValueChange={setOperatorId}>
 										<SelectTrigger aria-label="Opérateur" className="h-10 w-1/2">
 											<SelectValue />
 										</SelectTrigger>
@@ -224,8 +210,8 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 								<Input
 									className="h-10 w-1/2"
 									placeholder="numéro ou désignation"
-									value={searchParams.get("filter") ?? ""}
-									onChange={(e) => updateSearchParam("filter", e.target.value)}
+									value={filter}
+									onChange={(e) => setFilter(e.target.value || null)}
 								/>
 							</div>
 						</div>
@@ -235,9 +221,9 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 						<Label className="inline-flex items-center gap-1" htmlFor="sort">
 							<SortAscIcon size={16} /> Tri
 						</Label>
-						<Select value={sort} onValueChange={(newSort) => updateSearchParam("sort", newSort)}>
+						<Select value={sort} onValueChange={(newSort) => setSort(newSort as typeof sort)}>
 							<SelectTrigger aria-label="Trier" className="h-10">
-								<SelectValue>{sortingOptions[sort as keyof typeof sortingOptions].icon}</SelectValue>
+								<SelectValue>{sortingOptions[sort].icon}</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
 								{Object.entries(sortingOptions).map(([key, item]) => (
@@ -255,7 +241,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					{hasArchivedVehicles && (
 						<Button
 							className="mt-auto h-10"
-							onClick={() => setShowArchived(!showArchived)}
+							onClick={() => setShowArchived(showArchived ? null : true)}
 							size="icon"
 							variant={showArchived ? "branding-default" : "secondary"}
 						>

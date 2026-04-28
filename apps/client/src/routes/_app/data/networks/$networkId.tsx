@@ -6,11 +6,12 @@ import { GetVehiclesQuery } from "~/api/vehicles";
 import { NetworkDetails } from "~/pages/network-details";
 
 const searchSchema = z.object({
-	tab: z.string().optional(),
-	type: z.string().optional(),
-	operatorId: z.string().optional(),
-	filter: z.string().optional(),
-	sort: z.string().optional(),
+	tab: z.coerce.string().optional(),
+	type: z.coerce.string().optional(),
+	operatorId: z.coerce.string().optional(),
+	filter: z.coerce.string().optional(),
+	sort: z.coerce.string().optional(),
+	archived: z.coerce.boolean().optional(),
 });
 
 export const Route = createFileRoute("/_app/data/networks/$networkId")({

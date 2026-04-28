@@ -1,7 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { SearchIcon, StarIcon } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { parseAsString, useQueryState } from "nuqs";
+import { type ReactNode, useEffect, useMemo, useRef } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
@@ -26,7 +27,7 @@ export function NetworkList() {
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
 	const listRef = useRef<HTMLDivElement>(null);
-	const [searchQuery, setSearchQuery] = useState("");
+	const [searchQuery, setSearchQuery] = useQueryState("q", parseAsString.withDefault(""));
 	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
 
 	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
@@ -132,7 +133,7 @@ export function NetworkList() {
 								className="pl-9"
 								placeholder="Rechercher un réseau ou une ville…"
 								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
+								onChange={(e) => setSearchQuery(e.target.value || null)}
 							/>
 						</div>
 					</div>
