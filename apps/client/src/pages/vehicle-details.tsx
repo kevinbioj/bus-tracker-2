@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "@tanstack/react-router";
 import { match } from "ts-pattern";
 
 import { GetNetworkQuery } from "~/api/networks";
@@ -20,10 +20,7 @@ import { Separator } from "~/components/ui/separator";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 
 export function VehicleDetails() {
-	const { vehicleId } = useParams();
-	if (vehicleId === undefined) {
-		throw new Error("Expected vehicleId to be provided!");
-	}
+	const { vehicleId } = useParams({ from: "/_app/data/vehicles/$vehicleId" });
 
 	const { data: vehicle } = useSuspenseQuery(GetVehicleQuery(+vehicleId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(vehicle.networkId));
@@ -52,7 +49,7 @@ export function VehicleDetails() {
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link to={`/data/networks/${network.id}`}>
+								<Link to="/data/networks/$networkId" params={{ networkId: String(network.id) }}>
 									{network.logoHref ? (
 										<picture className="min-w-12 w-fit">
 											{network.darkModeLogoHref !== null && (

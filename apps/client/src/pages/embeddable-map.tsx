@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { useCallback, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "@tanstack/react-router";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
@@ -11,11 +11,11 @@ import { Signature } from "~/components/vehicles-map/signature";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
 
 export default function EmbeddableMapPage() {
-	const { networkId } = useParams();
+	const { networkId } = useParams({ from: "/embed/$networkId" });
 
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
 
-	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId!, true));
+	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 	const filteredLine = network.lines.find((line) => line.id === lineId);
 
 	const mapOptions = useMemo(
@@ -59,10 +59,10 @@ export default function EmbeddableMapPage() {
 				<FilterModuleControl
 					filteredLine={filteredLine}
 					filteredNetwork={network}
-					fixedNetworkId={+networkId!}
+					fixedNetworkId={+networkId}
 					onFilterChange={(line) => setLineId(line?.id ?? null)}
 				/>
-				<VehiclesMarkers embeddedNetworkId={+networkId!} lineId={filteredLine?.id} />
+				<VehiclesMarkers embeddedNetworkId={+networkId} lineId={filteredLine?.id} />
 				<Signature />
 			</MapComponent>
 		</>

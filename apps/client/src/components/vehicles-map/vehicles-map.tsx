@@ -2,10 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import maplibregl from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { type ComponentPropsWithoutRef, useCallback, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "@tanstack/react-router";
 import { useLocalStorage } from "usehooks-ts";
-
-import "maplibre-gl/dist/maplibre-gl.css";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetLineQuery } from "~/api/lines";
@@ -18,7 +16,7 @@ import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehi
 type VehiclesMapProps = ComponentPropsWithoutRef<"div">;
 
 export function VehiclesMap(props: VehiclesMapProps) {
-	const location = useLocation();
+	const locationHash = useLocation({ select: (state) => state.hash });
 
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
 	const [showIdentifiedVehiclesPanel] = useLocalStorage("show-identified-vehicles-panel", false);
@@ -29,8 +27,8 @@ export function VehiclesMap(props: VehiclesMapProps) {
 
 	const [initialLocation] = useState(() => {
 		// location in url has priority over local storage location
-		if (location.hash) {
-			const [lng, lat, zoom] = location.hash.slice(1).split(",").map(Number);
+		if (locationHash) {
+			const [lng, lat, zoom] = locationHash.split(",").map(Number);
 			if (!Number.isNaN(lng) && !Number.isNaN(lat) && !Number.isNaN(zoom)) {
 				return { position: { lng, lat }, zoom };
 			}

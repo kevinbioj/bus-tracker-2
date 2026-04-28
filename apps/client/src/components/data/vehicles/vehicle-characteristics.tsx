@@ -7,7 +7,6 @@ import {
 	TbFireExtinguisher as FireExtinguisherIcon,
 	TbSkull as SkullIcon,
 } from "react-icons/tb";
-import { Link } from "react-router-dom";
 import { match } from "ts-pattern";
 
 import type { Vehicle } from "~/api/vehicles";
@@ -71,9 +70,9 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 				<div className="flex gap-2">
 					{vehicle.tcId ? (
 						<Button asChild className="" size="icon">
-							<Link target="_blank" to={getTcInfosLink(vehicle.tcId)}>
+							<a target="_blank" rel="noreferrer" href={getTcInfosLink(vehicle.tcId)}>
 								<img className="rounded-sm" src={tcInfosIcon} alt="Voir sur TC-Infos" />
-							</Link>
+							</a>
 						</Button>
 					) : null}
 					<VehicleCharacteristicsActions vehicle={vehicle} />

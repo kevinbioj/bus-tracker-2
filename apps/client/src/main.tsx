@@ -9,6 +9,9 @@ import "./setup-dayjs";
 history.scrollRestoration = "manual";
 
 import App from "./App.jsx";
+import "maplibre-gl/dist/maplibre-gl.css";
+import "leaflet/dist/leaflet.css";
+import "vis-timeline/styles/vis-timeline-graph2d.min.css";
 import "./styles/index.css";
 
 if (import.meta.env.VITE_PUBLIC_POSTHOG_KEY !== undefined) {

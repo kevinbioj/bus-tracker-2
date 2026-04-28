@@ -1,11 +1,11 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "~/hooks/use-search-params";
 
 import { GetVehicleActivitiesQuery, GetVehicleQuery } from "~/api/vehicles";
 import { ActivityCard } from "~/components/data/vehicles/activity-card";
-import { Link } from "~/components/ui/link";
+import { Link } from "@tanstack/react-router";
 
 const parseMonth = (input: string | null, validMonths: string[]) => {
 	if (input === null || !validMonths.includes(input)) return validMonths.at(-1) ?? dayjs().format("YYYY-MM");
@@ -24,7 +24,10 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 	const month = parseMonth(searchParams.get("month"), vehicle.activeMonths);
 	const currentMonthIndex = vehicle.activeMonths.indexOf(month);
 
-	const { data: activities } = useSuspenseQuery(GetVehicleActivitiesQuery(vehicle.id, month));
+	const { data: activities } = useQuery({
+		...GetVehicleActivitiesQuery(vehicle.id, month),
+		placeholderData: keepPreviousData,
+	});
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<div className="flex-1">
 			<h2 className="hidden">Activités du véhicule</h2>
@@ -33,7 +36,9 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					{currentMonthIndex > 0 ? (
 						<Link
 							className="transition-opacity hover:opacity-70"
-							to={`?month=${vehicle.activeMonths.at(currentMonthIndex - 1)}`}
+							from="/data/vehicles/$vehicleId"
+							to="."
+							search={(prev) => ({ ...prev, month: vehicle.activeMonths.at(currentMonthIndex - 1) })}
 						>
 							<ChevronLeft
 								aria-label="Période précédente"
@@ -54,7 +59,9 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					{currentMonthIndex < vehicle.activeMonths.length - 1 ? (
 						<Link
 							className="transition-opacity hover:opacity-70"
-							to={`?month=${vehicle.activeMonths.at(currentMonthIndex + 1)}`}
+							from="/data/vehicles/$vehicleId"
+							to="."
+							search={(prev) => ({ ...prev, month: vehicle.activeMonths.at(currentMonthIndex + 1) })}
 						>
 							<ChevronRight
 								aria-label="Période suivante"

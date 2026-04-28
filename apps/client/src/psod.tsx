@@ -1,17 +1,16 @@
+import { useLocation } from "@tanstack/react-router";
 import { Copy, FrownIcon } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { useEffect } from "react";
-import { useLocation, useRouteError } from "react-router-dom";
 
 import { Button } from "~/components/ui/button";
 import { Link } from "~/components/ui/link";
 
-export function PurpleScreenOfDeath() {
-	const { pathname } = useLocation();
+export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
+	const pathname = useLocation({ select: (state) => state.pathname });
 	const embeddedNetworkId = pathname.startsWith("/embed/") ? pathname.split("/")[2] : undefined;
 
 	const posthog = usePostHog();
-	const error = useRouteError();
 
 	useEffect(() => {
 		if (error) {
@@ -58,7 +57,8 @@ export function PurpleScreenOfDeath() {
 							Enfin, un contact est possible à l'adresse{" "}
 							<Link
 								className="text-branding-foreground/70 hover:text-branding-foreground/50"
-								to="mailto:contact@bus-tracker.fr"
+								external
+								href="mailto:contact@bus-tracker.fr"
 							>
 								contact@bus-tracker.fr
 							</Link>{" "}

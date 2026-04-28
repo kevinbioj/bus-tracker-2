@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 import { GetNetworkQuery } from "~/api/networks";
 
@@ -28,7 +28,8 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 			{sortedLines.map((line) => (
 				<Link
 					key={line.id}
-					to={`/data/lines/${line.id}/vehicle-assignments`}
+					to="/data/lines/$lineId/vehicle-assignments"
+					params={{ lineId: String(line.id) }}
 					className="h-14 border flex items-center gap-1 rounded-lg transition hover:brightness-90"
 					style={{
 						backgroundColor: line.color ?? undefined,

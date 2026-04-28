@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "~/hooks/use-search-params";
 import { useDebounceValue } from "usehooks-ts";
 
 import { GetNetworkQuery } from "~/api/networks";
@@ -90,7 +90,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		];
 	}, [vehicles]);
 
-	const [searchParams, setSearchParams] = useSearchParams("");
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	const updateSearchParam = (key: string, value: string) => {
 		setSearchParams((searchParams) => {

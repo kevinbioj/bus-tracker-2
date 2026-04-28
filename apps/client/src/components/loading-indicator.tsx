@@ -1,21 +1,23 @@
+import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
-import { useNavigation } from "react-router-dom";
 import LoadingBar, { type LoadingBarRef } from "react-top-loading-bar";
 
 export function LoadingIndicator() {
 	const ref = useRef<LoadingBarRef>(null);
-	const { state } = useNavigation();
+	const isPathChangePending = useRouterState({
+		select: (state) => state.isLoading && state.location.pathname !== state.resolvedLocation?.pathname,
+	});
 
 	useEffect(() => {
 		const loadingBar = ref.current;
 		if (loadingBar === null) return;
 
-		if (state === "loading" || state === "submitting") {
+		if (isPathChangePending) {
 			loadingBar.continuousStart();
 		} else {
 			loadingBar.complete();
 		}
-	}, [state]);
+	}, [isPathChangePending]);
 
 	return <LoadingBar className="h-2" color="white" ref={ref} waitingTime={250} />;
 }

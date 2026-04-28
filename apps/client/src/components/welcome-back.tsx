@@ -1,14 +1,18 @@
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 
 export function WelcomeBack() {
-	const [searchParams, setSearchParams] = useSearchParams();
+	const search = useSearch({ strict: false }) as Record<string, unknown>;
+	const navigate = useNavigate();
 
-	const wasRedirected = searchParams.get("from_old") === "true";
+	const wasRedirected = search.from_old === "true" || search.from_old === true;
 
 	return (
-		<Dialog open={wasRedirected} onOpenChange={() => setSearchParams({})}>
+		<Dialog
+			open={wasRedirected}
+			onOpenChange={() => navigate({ to: ".", search: (prev) => ({ ...prev, from_old: undefined }) })}
+		>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Bienvenue sur la nouvelle version</DialogTitle>

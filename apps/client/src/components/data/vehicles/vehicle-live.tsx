@@ -8,8 +8,7 @@ import { GetLineQuery } from "~/api/lines";
 import type { Vehicle } from "~/api/vehicles";
 import ReactMoveableCircleMarker, { type MoveableCircleMarker } from "~/utils/moveable-circler-marker";
 
-import "leaflet/dist/leaflet.css";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 type VehicleLiveProps = {
 	vehicle: Vehicle;
@@ -46,7 +45,8 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 	return (
 		<Link
 			className="block border border-border rounded-md shadow-lg min-w-64 h-32 lg:h-auto lg:aspect-square mt-3"
-			to={{ pathname: "/", search: `marker-id=${vehicle.activity.markerId}` }}
+			to="/"
+			search={{ "marker-id": vehicle.activity.markerId }}
 		>
 			<style>{`
 				.leafletContainer {

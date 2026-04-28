@@ -9,7 +9,7 @@ import {
 	TbFireExtinguisher as FireExtinguisherIcon,
 	TbSkull as SkullIcon,
 } from "react-icons/tb";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 import { match, P } from "ts-pattern";
 import { GetNetworkQuery } from "~/api/networks";
 
@@ -47,7 +47,8 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 			className={`border border-border flex flex-col sm:flex-row py-1 px-2 rounded-md hover:brightness-90 ${
 				!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"
 			}`}
-			to={`/data/vehicles/${vehicle.id}`}
+			to="/data/vehicles/$vehicleId"
+			params={{ vehicleId: String(vehicle.id) }}
 			style={{
 				backgroundColor: line?.color ?? undefined,
 				color: line?.textColor ?? undefined,

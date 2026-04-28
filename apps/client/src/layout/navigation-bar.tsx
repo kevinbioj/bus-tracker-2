@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "@tanstack/react-router";
 
 import { About } from "~/components/about/about";
 import { Announcements } from "~/components/announcements/announcements";
@@ -19,7 +19,7 @@ const links = [
 ] as const;
 
 export function NavigationBar() {
-	const { pathname } = useLocation();
+	const pathname = useLocation({ select: (state) => state.pathname });
 
 	return (
 		<header className="bg-branding text-branding-foreground flex gap-4 h-[60px] p-3 sticky top-0 z-450">

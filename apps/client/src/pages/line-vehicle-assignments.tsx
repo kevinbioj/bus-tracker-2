@@ -1,8 +1,8 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
 import { ChevronLeft, ChevronRight, MapIcon } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
@@ -26,25 +26,21 @@ const parseMonth = (input: Dayjs, validMonths: string[]) => {
 };
 
 export function LineVehicleAssignments() {
-	const { lineId } = useParams();
-	const [searchParams] = useSearchParams();
-
-	if (lineId === undefined) {
-		throw new Error("Expected lineId to be provided!");
-	}
+	const { lineId } = useParams({ from: "/_app/data/lines/$lineId/vehicle-assignments" });
+	const { date } = useSearch({ from: "/_app/data/lines/$lineId/vehicle-assignments" });
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(+lineId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
 
-	const currentDate = searchParams.has("date")
-		? dayjs(searchParams.get("date"))
-		: dayjs(line.latestServiceDate ?? undefined);
+	const currentDate = date ? dayjs(date) : dayjs(line.latestServiceDate ?? undefined);
 	const month = parseMonth(currentDate, line.activeMonths);
 	const currentMonthIndex = line.activeMonths.indexOf(month);
 
-	const { data: assignments } = useSuspenseQuery(
-		GetLineVehicleAssignmentsQuery(line.id, currentDate.format("YYYY-MM-DD")),
-	);
+	const { data: assignments } = useQuery({
+		...GetLineVehicleAssignmentsQuery(line.id, currentDate.format("YYYY-MM-DD")),
+		placeholderData: keepPreviousData,
+	});
+	if (!assignments) throw new Error("Assignments should be preloaded by route loader");
 
 	const currentDateRef = useRef<HTMLButtonElement>(null);
 
@@ -81,7 +77,7 @@ export function LineVehicleAssignments() {
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link to={`/data/networks/${network.id}?tab=lines`}>
+								<Link to="/data/networks/$networkId" params={{ networkId: String(network.id) }} search={{ tab: "lines" }}>
 									{network.logoHref ? (
 										<picture className="min-w-12 w-fit">
 											{network.darkModeLogoHref !== null && (
@@ -110,7 +106,7 @@ export function LineVehicleAssignments() {
 									className="border-[0.5px] h-5 ml-2 my-0 py-0 px-2"
 									title="Voir sur la carte"
 								>
-									<Link to={`/?line-id=${line.id}`}>
+									<Link to="/" search={{ "line-id": line.id }}>
 										<MapIcon className="size-3.5" />
 										Voir sur la carte
 									</Link>
@@ -125,9 +121,14 @@ export function LineVehicleAssignments() {
 						{currentMonthIndex > 0 ? (
 							<Link
 								className="transition-opacity hover:opacity-70"
-								to={`?date=${dayjs(line.activeMonths.at(currentMonthIndex - 1))
-									.endOf("month")
-									.format("YYYY-MM-DD")}`}
+								from="/data/lines/$lineId/vehicle-assignments"
+								to="."
+								search={(prev) => ({
+									...prev,
+									date: dayjs(line.activeMonths.at(currentMonthIndex - 1))
+										.endOf("month")
+										.format("YYYY-MM-DD"),
+								})}
 							>
 								<ChevronLeft
 									aria-label="Période précédente"
@@ -148,9 +149,14 @@ export function LineVehicleAssignments() {
 						{currentMonthIndex < line.activeMonths.length - 1 ? (
 							<Link
 								className="transition-opacity hover:opacity-70"
-								to={`?date=${dayjs(line.activeMonths.at(currentMonthIndex + 1))
-									.startOf("month")
-									.format("YYYY-MM-DD")}`}
+								from="/data/lines/$lineId/vehicle-assignments"
+								to="."
+								search={(prev) => ({
+									...prev,
+									date: dayjs(line.activeMonths.at(currentMonthIndex + 1))
+										.startOf("month")
+										.format("YYYY-MM-DD"),
+								})}
 							>
 								<ChevronRight
 									aria-label="Période suivante"
@@ -186,7 +192,7 @@ export function LineVehicleAssignments() {
 									(isFuture || !hasData) && "opacity-50 pointer-events-none hover:cursor-not-allowed",
 								)}
 							>
-								<Link to={`?date=${dateStr}`}>
+								<Link from="/data/lines/$lineId/vehicle-assignments" to="." search={(prev) => ({ ...prev, date: dateStr })}>
 									<p className="uppercase">{d.format("ddd")}</p>
 									<p className="font-bold text-lg">{d.format("DD")}</p>
 								</Link>

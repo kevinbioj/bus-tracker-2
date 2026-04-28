@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@tanstack/react-router";
 
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
@@ -68,7 +68,9 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 			<Link
 				className="border border-border flex h-14 px-2 py-1 rounded-md hover:brightness-90 transition-all"
 				style={style}
-				to={`/data/lines/${line.id}/vehicle-assignments?date=${day}`}
+				to="/data/lines/$lineId/vehicle-assignments"
+				params={{ lineId: String(line.id) }}
+				search={{ date: day }}
 			>
 				{cardContent}
 			</Link>

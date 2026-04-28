@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "@tanstack/react-router";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { NetworkHeader } from "~/components/data/network-header";
@@ -15,10 +15,7 @@ import {
 import { Separator } from "~/components/ui/separator";
 
 export function NetworkDetails() {
-	const { networkId } = useParams();
-	if (networkId === undefined) {
-		throw new Error("Expected networkId to be provided!");
-	}
+	const { networkId } = useParams({ from: "/_app/data/networks/$networkId" });
 
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 

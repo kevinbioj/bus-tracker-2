@@ -1,7 +1,7 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import dayjs, { type Dayjs } from "dayjs";
 import { Activity, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 import { DataSet } from "vis-data";
 import {
 	type DataGroupCollectionType,
@@ -12,7 +12,6 @@ import {
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 
-import "vis-timeline/styles/vis-timeline-graph2d.min.css";
 import { GetNetworkQuery } from "~/api/networks";
 
 type LineVehiclesTimelineProps = {
@@ -51,7 +50,11 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(lineId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
-	const { data: assignments } = useSuspenseQuery(GetLineVehicleAssignmentsQuery(lineId, date));
+	const { data: assignments } = useQuery({
+		...GetLineVehicleAssignmentsQuery(lineId, date),
+		placeholderData: keepPreviousData,
+	});
+	if (!assignments) throw new Error("Assignments should be preloaded by route loader");
 
 	const currentDate = dayjs.tz(date, network.timezone);
 
@@ -124,7 +127,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 		);
 		currentTimeline.on("click", (props) => {
 			if (props.what === "group-label" && props.group) {
-				navigate(`/data/vehicles/${props.group}`);
+				void navigate({ to: "/data/vehicles/$vehicleId", params: { vehicleId: String(props.group) } });
 			}
 		});
 
