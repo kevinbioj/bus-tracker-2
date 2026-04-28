@@ -37,7 +37,7 @@ export function NetworkList() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
 	useEffect(() => {
-		window.scrollTo({ behavior: "smooth", top: 0 });
+		window.scrollTo({ behavior: "instant", top: 0 });
 	}, [debouncedSearchifiedSearchQuery]);
 
 	const [favoriteNetworks, otherNetworks] = useMemo<[Network[], Network[]]>(() => {
@@ -119,23 +119,25 @@ export function NetworkList() {
 	return (
 		<>
 			<title>Données – Bus Tracker</title>
-			<main className="px-3 pb-3 max-w-(--breakpoint-xl) w-full mx-auto flex flex-col">
+			<main className="pb-3 flex flex-col">
 				<div className="bg-background sticky pt-3 top-15 z-10">
-					<div className="shrink-0 mb-2">
-						<h2 className="font-bold text-2xl">Données des véhicules</h2>
-						<p className="text-muted-foreground">Sélectionnez un réseau pour consulter ses véhicules et lignes.</p>
-					</div>
-					<div className="relative shrink-0 mb-3">
-						<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-						<Input
-							className="pl-9"
-							placeholder="Rechercher un réseau ou une ville…"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-						/>
+					<div className="max-w-(--breakpoint-xl) mx-auto px-3">
+						<div className="shrink-0 mb-2">
+							<h2 className="font-bold text-2xl">Données des véhicules</h2>
+							<p className="text-muted-foreground">Sélectionnez un réseau pour consulter ses véhicules et lignes.</p>
+						</div>
+						<div className="relative shrink-0 mb-3">
+							<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+							<Input
+								className="pl-9"
+								placeholder="Rechercher un réseau ou une ville…"
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+							/>
+						</div>
 					</div>
 				</div>
-				<div ref={listRef} className="flex flex-col flex-1 pb-2">
+				<div ref={listRef} className="flex-1 pb-2 px-3 max-w-(--breakpoint-xl) mx-auto w-full">
 					<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
 						{virtualizer.getVirtualItems().map((virtualItem) => {
 							const block = virtualBlocks[virtualItem.index];
