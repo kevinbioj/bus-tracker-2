@@ -33,6 +33,8 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 		};
 
 		map.addControl(control, "bottom-right");
+		const parent = container.parentElement;
+		if (parent) parent.style.zIndex = "1000";
 		return () => {
 			map.removeControl(control);
 		};
