@@ -70,9 +70,12 @@ const sources = [
 			"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
 			"https://api.mrn.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
 		],
-		getAheadTime: () => 15,
+		mode: "NO-TU",
+		excludeScheduled: (trip) => trip.route.name !== "I",
+		getAheadTime: () => 5,
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TAE",
+		getVehicleRef: (vehicle) => vehicle?.id.replace(/TAE:?/, ""),
 		mapLineRef: (lineRef) => lineRef.replace("TAE:", ""),
 	},
 	{
