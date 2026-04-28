@@ -2,7 +2,7 @@ import { Label } from "@radix-ui/react-label";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -153,8 +153,21 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		return `${onlineVehicles.length}/${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation`;
 	}, [filteredAndSortedVehicles, onlineVehicles, showArchived]);
 
+	useLayoutEffect(() => {
+		window.scrollTo({ top: 0, behavior: "instant" });
+	}, []);
+
+	const filterKey = `${type}|${operatorId}|${debouncedFilter}`;
+	const prevFilterKey = useRef(filterKey);
+	useEffect(() => {
+		if (prevFilterKey.current === filterKey) return;
+		prevFilterKey.current = filterKey;
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	}, [filterKey]);
+
 	return (
 		<div>
+			<div className="sticky top-[60px] bg-background z-10 pt-2 pb-1">
 			<div
 				className={cn("grid gap-1", hasArchivedVehicles ? "grid-cols-[1fr_4.5rem_2.3rem]" : "grid-cols-[1fr_4.5rem]")}
 			>
@@ -251,15 +264,16 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					</Button>
 				)}
 			</div>
-			<p
-				className={clsx(
-					"text-muted-foreground text-sm",
-					filteredAndSortedVehicles.length > 0 ? "mt-2 text-end" : "mt-5 text-center",
-				)}
-			>
-				{activeVehiclesLabel}
-			</p>
-			<VehiclesTable data={filteredAndSortedVehicles} searchParams={searchParams} />
+				<p
+					className={clsx(
+						"text-muted-foreground text-sm mt-2",
+						filteredAndSortedVehicles.length > 0 ? "text-end" : "text-center",
+					)}
+				>
+					{activeVehiclesLabel}
+				</p>
+			</div>
+			<VehiclesTable data={filteredAndSortedVehicles} />
 		</div>
 	);
 }
