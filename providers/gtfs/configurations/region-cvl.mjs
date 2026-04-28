@@ -92,6 +92,11 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.slice("ORLEANS:Line:".length),
 		mapStopRef: (stopRef) => stopRef.slice("ORLEANS:StopArea:".length),
 		mapTripRef: (tripRef) => tripRef.replace(/(ORLEANS|chouette):VehicleJourney:/, ""),
+		mapVehiclePosition: (vehicle) => {
+			vehicle.currentStopSequence = undefined;
+			vehicle.stopId = undefined;
+			return vehicle;
+		},
 	},
 	{
 		id: "remi-28",
