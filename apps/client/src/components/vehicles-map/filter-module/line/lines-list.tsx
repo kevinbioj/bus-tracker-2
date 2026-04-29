@@ -70,8 +70,8 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 
 	return (
 		<Sheet open={network !== undefined} onOpenChange={(open) => !open && onClose()}>
-			<SheetContent className="z-999 gap-0" showCloseButton={false}>
-				<SheetHeader className="pt-4 pb-1.5 shrink-0">
+			<SheetContent ref={scrollRef} className="z-999 gap-0 overflow-y-auto overscroll-none" showCloseButton={false}>
+				<SheetHeader className="pt-4 pb-1.5 shrink-0 sticky top-0 z-9999 bg-background">
 					<div className="flex items-start gap-2">
 						<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
 							<ArrowLeft className="size-full" />

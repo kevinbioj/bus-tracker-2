@@ -106,13 +106,11 @@ export function FilterModuleNetworkList({
 					</button>
 				}
 			/>
-			<SheetContent className="gap-0 h-dvh z-999">
-				<SheetHeader className="shrink-0">
+			<SheetContent ref={scrollRef} className="gap-0 z-999 overflow-y-auto overscroll-none">
+				<SheetHeader className="bg-background shrink-0 sticky top-0 z-9999">
 					<SheetTitle>Liste des réseaux</SheetTitle>
-				</SheetHeader>
-				<div className="shrink-0 mb-3">
 					<NetworkSearchBar query={searchQuery} onQueryChange={setSearchQuery} />
-				</div>
+				</SheetHeader>
 				<NetworkInnerList
 					favoriteNetworks={favoriteNetworks}
 					networksByRegion={networksByRegion}

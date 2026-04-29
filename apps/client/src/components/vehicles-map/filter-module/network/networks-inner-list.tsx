@@ -1,6 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { StarIcon } from "lucide-react";
-import { type ReactNode, type RefObject, useMemo } from "react";
+import { type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { Network } from "~/api/networks";
 import { TitleSeparator } from "~/components/ui/title-separator";
@@ -16,7 +16,7 @@ type NetworkInnerListProps = {
 	networksByRegion: { title: string; networks: Network[] }[];
 	onNetworkSelect: (network: Network) => void;
 	toggleFavoriteNetworkId: (network: Network) => void;
-	scrollRef: RefObject<HTMLDivElement | null>;
+	scrollRef: RefObject<HTMLDivElement | null>; // points to SheetContent (the scroll container)
 };
 
 export function NetworkInnerList({
@@ -26,6 +26,13 @@ export function NetworkInnerList({
 	toggleFavoriteNetworkId,
 	scrollRef,
 }: NetworkInnerListProps) {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [scrollMargin, setScrollMargin] = useState(0);
+
+	useLayoutEffect(() => {
+		setScrollMargin(containerRef.current?.offsetTop ?? 0);
+	}, []);
+
 	const virtualRows = useMemo<VirtualRow[]>(() => {
 		const rows: VirtualRow[] = [];
 		let first = true;
@@ -62,15 +69,15 @@ export function NetworkInnerList({
 		getItemKey: (index) => virtualRows[index].key,
 		estimateSize: (index) => {
 			const row = virtualRows[index];
-			console.log(row);
 			if (row.kind === "separator") return row.first ? 32 : 44;
 			return 72; // py-1 (8px) + h-16 (64px)
 		},
 		overscan: 5,
+		scrollMargin,
 	});
 
 	return (
-		<div className="flex-1 min-h-0 overflow-y-auto pb-1" ref={scrollRef}>
+		<div ref={containerRef} className="pb-1">
 			<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
 					const row = virtualRows[virtualItem.index];
@@ -83,7 +90,7 @@ export function NetworkInnerList({
 								left: 0,
 								width: "100%",
 								height: `${virtualItem.size}px`,
-								transform: `translateY(${virtualItem.start}px)`,
+								transform: `translateY(${virtualItem.start - scrollMargin}px)`,
 							}}
 						>
 							{row.kind === "separator" && (

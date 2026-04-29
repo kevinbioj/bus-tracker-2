@@ -1,6 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { InfoIcon, StarIcon } from "lucide-react";
-import { type ReactNode, type RefObject, useMemo } from "react";
+import { type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { Line } from "~/api/networks";
 import { TitleSeparator } from "~/components/ui/title-separator";
@@ -29,6 +29,13 @@ export function LinesInnerList({
 	toggleFavoriteLineId,
 	scrollRef,
 }: LinesInnerListProps) {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const [scrollMargin, setScrollMargin] = useState(0);
+
+	useLayoutEffect(() => {
+		setScrollMargin(containerRef.current?.offsetTop ?? 0);
+	}, []);
+
 	const virtualRows = useMemo<VirtualRow[]>(() => {
 		const rows: VirtualRow[] = [];
 		let first = true;
@@ -81,10 +88,11 @@ export function LinesInnerList({
 		},
 		overscan: 5,
 		enabled: virtualRows.length > 0,
+		scrollMargin,
 	});
 
 	return (
-		<div ref={scrollRef} className="overflow-y-auto pb-2">
+		<div ref={containerRef} className="pb-2">
 			<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
 					const row = virtualRows[virtualItem.index];
@@ -97,7 +105,7 @@ export function LinesInnerList({
 								left: 0,
 								width: "100%",
 								height: `${virtualItem.size}px`,
-								transform: `translateY(${virtualItem.start}px)`,
+								transform: `translateY(${virtualItem.start - scrollMargin}px)`,
 							}}
 						>
 							{row.kind === "separator" && (
