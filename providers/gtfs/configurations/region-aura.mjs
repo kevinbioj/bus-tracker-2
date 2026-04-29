@@ -178,10 +178,41 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.split("-")[0],
 	},
 	{
-		id: "grenoble",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/grenoble-sem.zip",
+		id: "grenoble-sma",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/grenoble-sma.zip",
 		realtimeResourceHrefs: [],
+		gtfsOptions: { filterTrips: (trip) => trip.route.agency.id !== "TPV" },
 		getNetworkRef: () => "TAG",
+		getOperatorRef: (journey) => journey?.trip.route.agency.id,
+	},
+	{
+		id: "grenoble-tpv",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/grenoble-sma.zip",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/voiron/realtime"],
+		mode: "NO-TU",
+		gtfsOptions: { filterTrips: (trip) => trip.route.agency.id === "TPV" },
+		mapTripUpdate: (tripUpdate) => {
+			if (tripUpdate.trip.routeId) tripUpdate.trip.routeId = `TPV${tripUpdate.trip.routeId}`;
+			tripUpdate.stopTimeUpdate?.forEach((stopTimeUpdate) => {
+				if (stopTimeUpdate.stopId) stopTimeUpdate.stopId = `TPV${stopTimeUpdate.stopId}`;
+			});
+
+			return tripUpdate;
+		},
+		mapVehiclePosition: (vehicle) => {
+			if (vehicle.trip?.tripId) vehicle.trip.tripId = `TPV${vehicle.trip.tripId}`;
+			if (vehicle.trip?.routeId) vehicle.trip.routeId = `TPV${vehicle.trip.routeId}`;
+			return vehicle;
+		},
+		getNetworkRef: () => "TAG",
+		getOperatorRef: () => "TPV",
+		getVehicleRef: (vehicle) => {
+			if (vehicle?.id.startsWith("u_")) {
+				return;
+			}
+
+			return vehicle?.label;
+		},
 	},
 	{
 		id: "montelimar",
@@ -313,21 +344,6 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "VIENNE",
 		getVehicleRef: (vehicle) => vehicle?.label,
-	},
-	{
-		id: "voiron",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/grenoble-tpv.zip",
-		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/voiron/realtime"],
-		mode: "NO-TU",
-		getNetworkRef: () => "TAG",
-		getOperatorRef: () => "VOIRON",
-		getVehicleRef: (vehicle) => {
-			if (vehicle?.id.startsWith("u_")) {
-				return;
-			}
-
-			return vehicle?.label;
-		},
 	},
 ];
 
