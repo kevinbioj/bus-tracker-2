@@ -12,10 +12,10 @@ export function ShowIdentifiedVehiclesPanelSetting() {
 		<div className="flex items-center justify-between gap-4">
 			<div className="grid gap-0.5">
 				<Label className="text-base cursor-pointer" htmlFor={id}>
-					Véhicules géolocalisés
+					Tableau des véhicules identifiés
 				</Label>
 				<p className="text-sm text-muted-foreground">
-					Afficher les véhicules géolocalisés et leurs caractéristiques lors du filtre par ligne sur la carte.
+					Lors du filtre par ligne sur la carte, affiche le tableau des véhicules identifiés circulant sur la ligne.
 				</p>
 			</div>
 			<Switch checked={showPanel} id={id} onCheckedChange={setShowPanel} />
