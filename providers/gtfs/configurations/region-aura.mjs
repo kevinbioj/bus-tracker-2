@@ -192,6 +192,7 @@ const sources = [
 		mode: "NO-TU",
 		gtfsOptions: { filterTrips: (trip) => trip.route.agency.id === "TPV" },
 		mapTripUpdate: (tripUpdate) => {
+			if (tripUpdate.trip.tripId) tripUpdate.trip.tripId = `TPV${tripUpdate.trip.tripId}`;
 			if (tripUpdate.trip.routeId) tripUpdate.trip.routeId = `TPV${tripUpdate.trip.routeId}`;
 			tripUpdate.stopTimeUpdate?.forEach((stopTimeUpdate) => {
 				if (stopTimeUpdate.stopId) stopTimeUpdate.stopId = `TPV${stopTimeUpdate.stopId}`;
@@ -202,6 +203,7 @@ const sources = [
 		mapVehiclePosition: (vehicle) => {
 			if (vehicle.trip?.tripId) vehicle.trip.tripId = `TPV${vehicle.trip.tripId}`;
 			if (vehicle.trip?.routeId) vehicle.trip.routeId = `TPV${vehicle.trip.routeId}`;
+			if (vehicle.stopId) vehicle.stopId = `TPV${vehicle.stopId}`;
 			return vehicle;
 		},
 		getNetworkRef: () => "TAG",
