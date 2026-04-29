@@ -179,7 +179,7 @@ const sources = [
 	},
 	{
 		id: "grenoble",
-		staticResourceHref: "https://data.mobilites-m.fr/api/gtfs/SEM",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/grenoble-sem.zip",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "TAG",
 	},
@@ -316,7 +316,7 @@ const sources = [
 	},
 	{
 		id: "voiron",
-		staticResourceHref: "https://data.mobilites-m.fr/api/gtfs/TPV",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/grenoble-tpv.zip",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/voiron/realtime"],
 		mode: "NO-TU",
 		getNetworkRef: () => "TAG",
