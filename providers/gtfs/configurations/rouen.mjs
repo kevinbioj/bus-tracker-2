@@ -21,7 +21,7 @@ const sources = [
 		},
 		getAheadTime: (journey) => (journey?.trip.route.id === "TCAR:99" ? 5 * 60 : undefined),
 		excludeScheduled: (trip) => {
-			if (/^TCAR:2\d\d$/.test(trip.route.id)) return false;
+			if (/^TCAR:[23]\d\d$/.test(trip.route.id)) return false;
 			return !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id);
 		},
 		getNetworkRef: () => "ASTUCE",
