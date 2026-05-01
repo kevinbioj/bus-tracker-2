@@ -111,7 +111,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			locale: "fr",
 			orientation: "top",
 			align: "center",
-			// maxHeight: `calc(100dvh - ${window.innerWidth >= 640 ? 286 : 230}px)`,
+			maxHeight: `calc(100svh - ${window.innerWidth >= 640 ? 286 : 230}px)`,
 			zoomKey: "altKey",
 			verticalScroll: true,
 			horizontalScroll: true,

@@ -23,11 +23,13 @@ export function NavigationBar() {
 
 	return (
 		<header className="bg-branding text-branding-foreground sticky top-0 z-450">
-			<div className="h-15 p-3 flex gap-4">
-				<img src="/logo.svg" alt="" />
-				<span className="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
-					Bus Tracker
-				</span>
+			<div className="h-14 px-3 py-1 flex gap-3 lg:gap-6 items-center">
+				<div className="h-full flex gap-2 items-center">
+					<img className="h-full" src="/logo.svg" alt="" />
+					<span className="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
+						Bus Tracker
+					</span>
+				</div>
 				<nav className="flex flex-1 gap-1 sm:gap-3">
 					{links.map(({ href, label, isActive }) => (
 						<Button

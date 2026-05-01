@@ -5,7 +5,7 @@ export default function MapPage() {
 		<>
 			<title>Carte – Bus Tracker</title>
 			<style>{` body { background-color: var(--color-branding); } `}</style>
-			<VehiclesMap className="h-[calc(100dvh-60px)]" />
+			<VehiclesMap className="h-[calc(100dvh-56px)]" />
 		</>
 	);
 }

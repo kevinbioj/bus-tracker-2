@@ -6,7 +6,7 @@ export function NetworksListPage() {
 		<>
 			<title>Données des réseaux - Bus-Tracker</title>
 			<main>
-				<NetworksListHeaderBlock className="sticky top-15" />
+				<NetworksListHeaderBlock className="sticky top-14" />
 				<NetworksListVirtualList />
 			</main>
 		</>

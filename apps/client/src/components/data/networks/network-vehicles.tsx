@@ -154,7 +154,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 	return (
 		<div>
-			<div className="sticky top-15 bg-background z-10 py-1">
+			<div className="sticky top-14 bg-background z-10 py-1">
 				<div
 					className={cn("grid gap-1", hasArchivedVehicles ? "grid-cols-[1fr_4.5rem_2.3rem]" : "grid-cols-[1fr_4.5rem]")}
 				>

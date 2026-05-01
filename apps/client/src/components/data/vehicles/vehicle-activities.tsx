@@ -31,7 +31,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<div className="flex-1">
 			<h2 className="hidden">Activités du véhicule</h2>
-			<section className="sticky top-15 z-10 bg-background pt-1 pb-1">
+			<section className="sticky top-14 z-10 bg-background pt-1 pb-1">
 				<div className="bg-branding text-branding-foreground grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md">
 					{currentMonthIndex > 0 ? (
 						<Link
