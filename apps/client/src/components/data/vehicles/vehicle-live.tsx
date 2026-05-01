@@ -54,7 +54,6 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 			`}</style>
 			<MapContainer
 				className="h-full rounded-md w-full"
-				// @ts-expect-error property actually exists
 				center={{ lat: position.latitude, lng: position.longitude }}
 				zoom={11}
 				zoomControl={false}
