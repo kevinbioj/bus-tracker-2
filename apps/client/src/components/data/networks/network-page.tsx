@@ -12,24 +12,22 @@ export function NetworkPage({ networkId }: Readonly<NetworkVehiclesProps>) {
 	const [tab, setTab] = useQueryState("tab", parseAsStringEnum(["lines", "vehicles"]).withDefault("vehicles"));
 
 	return (
-		<section>
-			<Tabs className="w-full" value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
-				<TabsList className="grid w-full grid-cols-2 mb-2">
-					<TabsTrigger value="vehicles" className="flex items-center gap-1.5 font-bold">
-						<BusIcon className="size-4" /> Véhicules
-					</TabsTrigger>
-					<TabsTrigger value="lines" className="flex items-center gap-1.5 font-bold">
-						<RouteIcon className="size-4" /> Lignes
-					</TabsTrigger>
-				</TabsList>
+		<Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
+			<TabsList className="grid grid-cols-2 mt-1">
+				<TabsTrigger value="vehicles" className="flex items-center gap-1.5 font-bold">
+					<BusIcon className="size-4" /> Véhicules
+				</TabsTrigger>
+				<TabsTrigger value="lines" className="flex items-center gap-1.5 font-bold">
+					<RouteIcon className="size-4" /> Lignes
+				</TabsTrigger>
+			</TabsList>
 
-				<TabsContent value="vehicles">
-					<NetworkVehicles networkId={networkId} />
-				</TabsContent>
-				<TabsContent value="lines">
-					<NetworkLines networkId={networkId} />
-				</TabsContent>
-			</Tabs>
-		</section>
+			<TabsContent value="vehicles">
+				<NetworkVehicles networkId={networkId} />
+			</TabsContent>
+			<TabsContent value="lines">
+				<NetworkLines networkId={networkId} />
+			</TabsContent>
+		</Tabs>
 	);
 }

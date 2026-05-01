@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { Button } from "~/components/ui/button";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 type CopyToClipboardProps = React.ComponentProps<typeof Button> & {
 	data: string;

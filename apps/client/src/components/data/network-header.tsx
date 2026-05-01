@@ -6,18 +6,18 @@ type NetworkHeaderProps = {
 
 export function NetworkHeader({ network }: Readonly<NetworkHeaderProps>) {
 	return (
-		<div className="hidden sm:flex sm:items-center sm:gap-6 sm:mb-3">
+		<div className="hidden sm:flex sm:items-center sm:gap-6 sm:mb-2">
 			{network.logoHref ? (
 				<picture>
 					{network.darkModeLogoHref !== null && (
 						<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
 					)}
-					<img className="max-h-16 w-full" src={network.logoHref} alt="" />
+					<img className="max-h-12 w-full" src={network.logoHref} alt="" />
 				</picture>
 			) : null}
 			<div className="grow flex-col my-auto hidden sm:flex">
-				<h1 className="font-bold text-3xl">{network.name}</h1>
-				{network.authority ? <span>{network.authority}</span> : null}
+				<h1 className="font-bold leading-none text-2xl">{network.name}</h1>
+				{network.authority ? <span className="uppercase">{network.authority}</span> : null}
 			</div>
 		</div>
 	);

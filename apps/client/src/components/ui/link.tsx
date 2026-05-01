@@ -1,7 +1,7 @@
 import { Link as RouterLink } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
 
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 type RouterLinkProps = ComponentProps<typeof RouterLink>;
 

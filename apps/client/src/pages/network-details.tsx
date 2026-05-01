@@ -12,7 +12,6 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
-import { Separator } from "~/components/ui/separator";
 
 export function NetworkDetails() {
 	const { networkId } = useParams({ from: "/_app/data/networks/$networkId" });
@@ -48,8 +47,6 @@ export function NetworkDetails() {
 						</BreadcrumbItem>
 					</BreadcrumbList>
 				</Breadcrumb>
-				<Separator className="my-1" />
-				{/* <NetworkStatistics networkId={network.id} /> */}
 				<NetworkPage networkId={network.id} />
 			</main>
 		</>

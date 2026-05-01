@@ -1,5 +1,4 @@
-import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
-import { Suspense, useLayoutEffect } from "react";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { LoadingIndicator } from "~/components/loading-indicator";
 import { WelcomeBack } from "~/components/welcome-back";
@@ -10,20 +9,11 @@ export const Route = createFileRoute("/_app")({
 });
 
 function AppLayout() {
-	const pathname = useRouterState({ select: (state) => state.location.pathname });
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we want to force scroll to top on path change
-	useLayoutEffect(() => {
-		window.scrollTo(0, 0);
-	}, [pathname]);
-
 	return (
 		<>
 			<NavigationBar />
 			<LoadingIndicator />
-			<Suspense>
-				<Outlet />
-			</Suspense>
+			<Outlet />
 			<WelcomeBack />
 		</>
 	);

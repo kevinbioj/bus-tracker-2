@@ -4,11 +4,11 @@ import type { Network } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { Link } from "~/components/ui/link";
 
-type NetworkCardProps = {
+type NetworksListCardProps = {
 	network: Network;
 };
 
-export function NetworkCard({ network }: Readonly<NetworkCardProps>) {
+export function NetworksListCard({ network }: Readonly<NetworksListCardProps>) {
 	return (
 		<div className="h-16 relative w-full" key={network.id}>
 			{network.color && (

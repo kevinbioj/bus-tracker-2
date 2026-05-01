@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
 import { parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
@@ -12,7 +12,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 const vehicleTypeOptions = {
 	ALL: {
@@ -141,21 +141,20 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		return `${onlineVehicles.length}/${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation`;
 	}, [filteredAndSortedVehicles, onlineVehicles, showArchived]);
 
-	useLayoutEffect(() => {
-		window.scrollTo({ top: 0, behavior: "instant" });
-	}, []);
-
 	const filterKey = `${type}|${operatorId}|${debouncedFilter}`;
 	const prevFilterKey = useRef(filterKey);
 	useEffect(() => {
 		if (prevFilterKey.current === filterKey) return;
 		prevFilterKey.current = filterKey;
-		window.scrollTo({ top: 0, behavior: "smooth" });
+		const stickyY = window.innerWidth >= 640 ? 140 : 84;
+		if (window.scrollY > stickyY) {
+			window.scrollTo({ top: stickyY, behavior: "instant" });
+		}
 	}, [filterKey]);
 
 	return (
 		<div>
-			<div className="sticky top-[60px] bg-background z-10 pt-2 pb-1">
+			<div className="sticky top-15 bg-background z-10 py-1">
 				<div
 					className={cn("grid gap-1", hasArchivedVehicles ? "grid-cols-[1fr_4.5rem_2.3rem]" : "grid-cols-[1fr_4.5rem]")}
 				>

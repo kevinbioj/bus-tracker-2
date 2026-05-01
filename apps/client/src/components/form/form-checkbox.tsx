@@ -3,7 +3,7 @@ import type { ControllerProps, FieldValues } from "react-hook-form";
 
 import { Checkbox } from "~/components/ui/checkbox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 export type FormCheckbox<T extends FieldValues> = Omit<ControllerProps<T>, "render"> & {
 	label: ReactNode;

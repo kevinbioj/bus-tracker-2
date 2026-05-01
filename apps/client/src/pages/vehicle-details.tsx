@@ -16,7 +16,6 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
-import { Separator } from "~/components/ui/separator";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 
 export function VehicleDetails() {
@@ -71,9 +70,8 @@ export function VehicleDetails() {
 						</BreadcrumbItem>
 					</BreadcrumbList>
 				</Breadcrumb>
-				<Separator className="my-1" />
-				<div className="flex flex-col lg:flex-row lg:items-start gap-3 w-full">
-					<div>
+				<div className="mt-1 flex flex-col lg:flex-row lg:items-start gap-3 w-full">
+					<div className="lg:sticky lg:top-16">
 						<VehicleCharacteristics vehicle={vehicle} />
 						<VehicleLive vehicle={vehicle} />
 					</div>

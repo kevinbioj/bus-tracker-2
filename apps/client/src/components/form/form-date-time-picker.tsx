@@ -8,7 +8,7 @@ import { Calendar } from "~/components/ui/calendar";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 export type FormDateTimePickerProps<T extends FieldValues> = Omit<ControllerProps<T>, "render"> & {
 	label: string;

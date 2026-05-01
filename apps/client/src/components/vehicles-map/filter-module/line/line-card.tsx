@@ -4,7 +4,7 @@ import { memo } from "react";
 
 import type { Line } from "~/api/networks";
 import { Button } from "~/components/ui/button";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 export type FilterModuleLineCardProps = {
 	line: Line;

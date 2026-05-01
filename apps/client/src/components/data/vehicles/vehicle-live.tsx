@@ -4,6 +4,7 @@ import type { Map as LeafletMap } from "leaflet";
 import { CircleIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
+
 import { GetLineQuery } from "~/api/lines";
 import type { Vehicle } from "~/api/vehicles";
 import ReactMoveableCircleMarker, { type MoveableCircleMarker } from "~/utils/moveable-circler-marker";
@@ -53,6 +54,7 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 			`}</style>
 			<MapContainer
 				className="h-full rounded-md w-full"
+				// @ts-expect-error property actually exists
 				center={{ lat: position.latitude, lng: position.longitude }}
 				zoom={11}
 				zoomControl={false}

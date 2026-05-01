@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 
 import type { CircleMarkerFeature, CircleMarkerSource } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 type ActiveFeature = {
 	id: string;

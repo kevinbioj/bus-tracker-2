@@ -17,8 +17,7 @@ import {
 	BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
 import { Button } from "~/components/ui/button";
-import { Separator } from "~/components/ui/separator";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 const parseMonth = (input: Dayjs, validMonths: string[]) => {
 	if (!validMonths.includes(input.format("YYYY-MM"))) return validMonths.at(-1) ?? dayjs().format("YYYY-MM");
@@ -119,8 +118,7 @@ export function LineVehicleAssignments() {
 						</BreadcrumbItem>
 					</BreadcrumbList>
 				</Breadcrumb>
-				<Separator className="my-1" />
-				<section>
+				<section className="mt-1">
 					<div className="bg-branding text-branding-foreground grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md mb-2">
 						{currentMonthIndex > 0 ? (
 							<Link

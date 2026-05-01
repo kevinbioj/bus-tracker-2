@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 type VehiclesMarkersStatusControlProps = {
 	loading: boolean;

@@ -22,27 +22,29 @@ export function NavigationBar() {
 	const pathname = useLocation({ select: (state) => state.pathname });
 
 	return (
-		<header className="bg-branding text-branding-foreground flex gap-4 h-[60px] p-3 sticky top-0 z-450">
-			<img className="h-full" src="/logo.svg" alt="" />
-			<span className="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
-				Bus Tracker
-			</span>
-			<nav className="flex flex-1 gap-1 sm:gap-3">
-				{links.map(({ href, label, isActive }) => (
-					<Button
-						asChild
-						key={href}
-						variant={isActive(pathname) ? "on-branding-default" : "branding-ghost"}
-						className="px-3"
-					>
-						<Link to={href}>{label}</Link>
-					</Button>
-				))}
-			</nav>
-			<div className="space-x-1 sm:space-x-2">
-				<Announcements />
-				<Settings />
-				<About />
+		<header className="bg-branding text-branding-foreground sticky top-0 z-450">
+			<div className="h-15 p-3 flex gap-4">
+				<img src="/logo.svg" alt="" />
+				<span className="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
+					Bus Tracker
+				</span>
+				<nav className="flex flex-1 gap-1 sm:gap-3">
+					{links.map(({ href, label, isActive }) => (
+						<Button
+							asChild
+							key={href}
+							variant={isActive(pathname) ? "on-branding-default" : "branding-ghost"}
+							className="px-3"
+						>
+							<Link to={href}>{label}</Link>
+						</Button>
+					))}
+				</nav>
+				<div className="space-x-1 sm:space-x-2">
+					<Announcements />
+					<Settings />
+					<About />
+				</div>
 			</div>
 		</header>
 	);

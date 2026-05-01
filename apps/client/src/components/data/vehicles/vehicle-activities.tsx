@@ -31,7 +31,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<div className="flex-1">
 			<h2 className="hidden">Activités du véhicule</h2>
-			<section>
+			<section className="sticky top-15 z-10 bg-background pt-1 pb-1">
 				<div className="bg-branding text-branding-foreground grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md">
 					{currentMonthIndex > 0 ? (
 						<Link
@@ -77,14 +77,14 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					)}
 				</div>
 			</section>
-			<section className="flex flex-col gap-3 mt-2 w-full lg:max-h-[calc(100dvh-15.3rem)] lg:overflow-y-scroll">
+			<section className="flex flex-col gap-3 w-full">
 				{activities?.timeline
 					.sort(
 						({ date: dateA }, { date: dateB }) => dayjs(dateB, "DD/MM/YYYY").unix() - dayjs(dateA, "DD/MM/YYYY").unix(),
 					)
 					.map(({ date, activities }) => (
 						<div className="flex flex-col gap-2 items-center sm:flex-row sm:items-start" key={date}>
-							<h3 className="text-center text-xl sm:text-right sm:w-72">
+							<h3 className="sm:sticky sm:top-29 bg-background py-1 text-center text-xl sm:text-right sm:w-72">
 								{dayjs(date, "DD/MM/YYYY").format("dddd DD MMMM")}
 							</h3>
 							<div className="flex flex-col gap-2 w-full">

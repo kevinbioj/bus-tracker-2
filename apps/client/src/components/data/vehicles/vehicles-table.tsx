@@ -17,6 +17,7 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 	const virtualizer = useWindowVirtualizer({
 		count: data.length,
 		estimateSize: useCallback(() => (isDesktop ? 64 : 105), [isDesktop]),
+		initialOffset: 0,
 		measureElement:
 			window !== undefined && navigator.userAgent.indexOf("Firefox") === -1
 				? (element) => element?.getBoundingClientRect().height

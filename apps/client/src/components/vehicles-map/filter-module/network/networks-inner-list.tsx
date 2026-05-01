@@ -5,7 +5,7 @@ import { type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useSt
 import type { Network } from "~/api/networks";
 import { TitleSeparator } from "~/components/ui/title-separator";
 import { FilterModuleNetworkCard } from "~/components/vehicles-map/filter-module/network/network-card";
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 type VirtualRow =
 	| { kind: "separator"; key: string; title: ReactNode; first: boolean }

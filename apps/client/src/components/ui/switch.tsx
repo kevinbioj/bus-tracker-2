@@ -1,7 +1,7 @@
 import * as SwitchPrimitives from "@radix-ui/react-switch";
 import type * as React from "react";
 
-import { cn } from "~/utils/utils";
+import { cn } from "~/utils/cn";
 
 export function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimitives.Root>) {
 	return (

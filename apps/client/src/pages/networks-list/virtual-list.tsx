@@ -1,14 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { SearchIcon, StarIcon } from "lucide-react";
+import { StarIcon } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { type ReactNode, useEffect, useMemo, useRef } from "react";
+import { match, P } from "ts-pattern";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
-import { Input } from "~/components/ui/input";
-import { NetworksBlock } from "~/pages/network-list/networks-block";
+import { NetworksListBlock } from "~/pages/networks-list/networks-block";
 
 const searchifyQuery = (query: string) =>
 	query
@@ -22,12 +22,12 @@ type VirtualBlock = {
 	networks: Network[];
 };
 
-export function NetworkList() {
+export function NetworksListVirtualList() {
 	const { data: regions } = useSuspenseQuery(GetRegionsQuery);
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
 	const listRef = useRef<HTMLDivElement>(null);
-	const [searchQuery, setSearchQuery] = useQueryState("q", parseAsString.withDefault(""));
+	const [searchQuery] = useQueryState("q", parseAsString.withDefault(""));
 	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
 
 	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
@@ -111,57 +111,41 @@ export function NetworkList() {
 
 	const virtualizer = useWindowVirtualizer({
 		count: virtualBlocks.length,
-		estimateSize: () => 200,
-		overscan: 3,
-		scrollMargin: listRef.current?.offsetTop ?? 0,
+		initialOffset: 0,
+		estimateSize: (index) => {
+			const block = virtualBlocks[index];
+			const gridCols = match(window.innerWidth)
+				.with(P.number.gte(1280), () => 4)
+				.with(P.number.gte(1024), () => 3)
+				.with(P.number.gte(640), () => 2)
+				.otherwise(() => 1);
+
+			const gridLines = Math.ceil(block.networks.length / gridCols);
+			return 48 + gridLines * 64 + (gridLines - 1) * 12;
+		},
 		getItemKey: (index) => virtualBlocks[index].key,
+		overscan: 1,
+		scrollMargin: listRef.current?.offsetTop ?? 0,
 	});
 
 	return (
-		<>
-			<title>Données – Bus Tracker</title>
-			<main className="pb-3 flex flex-col">
-				<div className="bg-background sticky pt-3 top-15 z-10">
-					<div className="max-w-(--breakpoint-xl) mx-auto px-3">
-						<div className="shrink-0 mb-2">
-							<h2 className="font-bold text-2xl">Données des véhicules</h2>
-							<p className="text-muted-foreground">Sélectionnez un réseau pour consulter ses véhicules et lignes.</p>
+		<div ref={listRef} className="max-w-(--breakpoint-xl) mx-auto px-3">
+			<div className="relative" style={{ height: virtualizer.getTotalSize() }}>
+				{virtualizer.getVirtualItems().map((virtualItem) => {
+					const block = virtualBlocks[virtualItem.index];
+					return (
+						<div
+							className="absolute py-2 w-full"
+							data-index={virtualItem.index}
+							key={virtualItem.key}
+							ref={virtualizer.measureElement}
+							style={{ transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)` }}
+						>
+							<NetworksListBlock title={block.title} networks={block.networks} />
 						</div>
-						<div className="relative shrink-0 mb-3">
-							<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-							<Input
-								className="pl-9"
-								placeholder="Rechercher un réseau ou une ville…"
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value || null)}
-							/>
-						</div>
-					</div>
-				</div>
-				<div ref={listRef} className="flex-1 pb-2 px-3 max-w-(--breakpoint-xl) mx-auto w-full">
-					<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
-						{virtualizer.getVirtualItems().map((virtualItem) => {
-							const block = virtualBlocks[virtualItem.index];
-							return (
-								<div
-									key={virtualItem.key}
-									ref={virtualizer.measureElement}
-									data-index={virtualItem.index}
-									style={{
-										position: "absolute",
-										top: 0,
-										left: 0,
-										width: "100%",
-										transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
-									}}
-								>
-									<NetworksBlock title={block.title} networks={block.networks} />
-								</div>
-							);
-						})}
-					</div>
-				</div>
-			</main>
-		</>
+					);
+				})}
+			</div>
+		</div>
 	);
 }
