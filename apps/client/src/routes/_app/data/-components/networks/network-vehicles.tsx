@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
 import { parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
@@ -87,6 +87,8 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	const [filter, setFilter] = useQueryState("filter", parseAsString.withDefault(""));
 	const [sort, setSort] = useQueryState("sort", parseAsStringEnum(sortingKeys).withDefault("number"));
 	const [showArchived, setShowArchived] = useQueryState("archived", parseAsBoolean.withDefault(false));
+	const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+	const mobileFiltersId = useId();
 
 	const [debouncedFilter] = useDebounceValue(filter, 100);
 
@@ -102,6 +104,11 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 				.map((operator) => ({ label: operator.name, value: operator.id })),
 		];
 	}, [network]);
+
+	const selectedOperatorLabel = useMemo(() => {
+		const selectedValue = operatorId === "ALL" ? null : Number(operatorId);
+		return selectableOperators?.find(({ value }) => value === selectedValue)?.label ?? "";
+	}, [operatorId, selectableOperators]);
 
 	const hasArchivedVehicles = useMemo(() => vehicles.some((vehicle) => vehicle.archivedAt !== null), [vehicles]);
 
@@ -177,18 +184,27 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		<div>
 			<div className="sticky top-14 bg-background z-10 pt-2">
 				<div
-					className={cn("grid gap-1", hasArchivedVehicles ? "grid-cols-[1fr_4.5rem_2.3rem]" : "grid-cols-[1fr_4.5rem]")}
+					className={cn(
+						"hidden gap-2 sm:grid sm:gap-1",
+						hasArchivedVehicles ? "sm:grid-cols-[minmax(0,1fr)_4.5rem_2.3rem]" : "sm:grid-cols-[minmax(0,1fr)_4.5rem]",
+					)}
 				>
 					{/* Filters */}
-					<div className="flex flex-col gap-1">
+					<div className="flex min-w-0 flex-col gap-1">
 						<Label className="inline-flex items-center gap-1" htmlFor="filter">
 							<FilterIcon size={16} /> {m.network_vehicle_filter_label()}
 						</Label>
-						<div className="flex gap-1">
+						<div className="flex min-w-0 gap-1">
 							{availableNetworkTypeFilters.length > 2 && (
 								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
-									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="w-18" size="lg">
-										<SelectValue>{vehicleTypeOptions[type].icon ?? vehicleTypeOptions.ALL.label()}</SelectValue>
+									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="w-20 shrink-0" size="lg">
+										<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
+											{vehicleTypeOptions[type].icon ?? (
+												<span className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+													{vehicleTypeOptions.ALL.label()}
+												</span>
+											)}
+										</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										<SelectGroup>
@@ -207,7 +223,12 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 									</SelectContent>
 								</Select>
 							)}
-							<div className="flex flex-1 gap-1 max-w-96">
+							<div
+								className={cn(
+									"grid min-w-0 flex-1 gap-1 sm:max-w-96",
+									selectableOperators !== undefined ? "grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" : "grid-cols-1",
+								)}
+							>
 								{selectableOperators !== undefined && (
 									<Select
 										items={selectableOperators}
@@ -216,10 +237,14 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 									>
 										<SelectTrigger
 											aria-label={m.network_vehicle_operator_filter()}
-											className="overflow-hidden text-ellipsis whitespace-nowrap w-1/2"
+											className="w-full min-w-0 overflow-hidden"
 											size="lg"
 										>
-											<SelectValue />
+											<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
+												<span className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+													{selectedOperatorLabel}
+												</span>
+											</SelectValue>
 										</SelectTrigger>
 										<SelectContent className="w-fit">
 											<SelectGroup>
@@ -233,7 +258,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 									</Select>
 								)}
 								<Input
-									className="h-10 w-1/2"
+									className="h-10 min-w-0"
 									placeholder={m.network_vehicle_filter_placeholder()}
 									value={filter}
 									onChange={(e) => setFilter(e.target.value || null)}
@@ -242,12 +267,12 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 						</div>
 					</div>
 					{/* Sort */}
-					<div className="flex flex-col gap-1">
+					<div className="flex min-w-0 flex-col gap-1">
 						<Label className="inline-flex items-center gap-1" htmlFor="sort">
 							<SortAscIcon size={16} /> {m.network_vehicle_sort_label()}
 						</Label>
 						<Select value={sort} onValueChange={(newSort) => setSort(newSort as typeof sort)}>
-							<SelectTrigger aria-label={m.network_vehicle_sort_aria_label()} size="lg">
+							<SelectTrigger aria-label={m.network_vehicle_sort_aria_label()} className="w-full" size="lg">
 								<SelectValue>{sortingOptions[sort].icon}</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
@@ -274,6 +299,127 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 						>
 							<ArchiveIcon />
 						</Button>
+					)}
+				</div>
+				<div className="sm:hidden">
+					<div className="flex gap-1">
+						<Input
+							className="h-10 min-w-0 flex-1"
+							placeholder={m.network_vehicle_filter_placeholder()}
+							value={filter}
+							onChange={(e) => setFilter(e.target.value || null)}
+						/>
+						<Button
+							aria-controls={mobileFiltersId}
+							aria-expanded={mobileFiltersOpen}
+							aria-label={m.network_vehicle_filter_label()}
+							className="h-10 w-10"
+							onClick={() => setMobileFiltersOpen((open) => !open)}
+							size="icon-lg"
+							type="button"
+							variant={mobileFiltersOpen ? "branding-default" : "secondary"}
+						>
+							<FilterIcon />
+						</Button>
+					</div>
+					{mobileFiltersOpen && (
+						<div
+							id={mobileFiltersId}
+							className={cn(
+								"mt-2 grid gap-1",
+								hasArchivedVehicles ? "grid-cols-[4.5rem_1fr_5.25rem_2.25rem]" : "grid-cols-[4.5rem_1fr_5.25rem]",
+							)}
+						>
+							{availableNetworkTypeFilters.length > 2 && (
+								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
+									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="w-full min-w-0 px-2" size="lg">
+										<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
+											{vehicleTypeOptions[type].icon ?? (
+												<span className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+													{vehicleTypeOptions.ALL.label()}
+												</span>
+											)}
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent>
+										<SelectGroup>
+											{availableNetworkTypeFilters.map((typeKey) => {
+												const item = vehicleTypeOptions[typeKey as keyof typeof vehicleTypeOptions];
+												return (
+													<SelectItem key={typeKey} value={typeKey}>
+														<div className="flex items-center gap-2">
+															{item.icon}
+															<span>{item.label()}</span>
+														</div>
+													</SelectItem>
+												);
+											})}
+										</SelectGroup>
+									</SelectContent>
+								</Select>
+							)}
+							{selectableOperators !== undefined && (
+								<Select
+									items={selectableOperators}
+									value={operatorId === "ALL" ? null : Number(operatorId)}
+									onValueChange={(value) => setOperatorId(value ? String(value) : null)}
+								>
+									<SelectTrigger
+										aria-label={m.network_vehicle_operator_filter()}
+										className="w-full min-w-0 overflow-hidden"
+										size="lg"
+									>
+										<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
+											<span className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+												{selectedOperatorLabel}
+											</span>
+										</SelectValue>
+									</SelectTrigger>
+									<SelectContent className="w-fit">
+										<SelectGroup>
+											{selectableOperators.map(({ label, value }) => (
+												<SelectItem key={value} value={value}>
+													{value ? label : <span className="text-muted-foreground">{label}</span>}
+												</SelectItem>
+											))}
+										</SelectGroup>
+									</SelectContent>
+								</Select>
+							)}
+							<Select value={sort} onValueChange={(newSort) => setSort(newSort as typeof sort)}>
+								<SelectTrigger aria-label={m.network_vehicle_sort_aria_label()} className="w-full min-w-0" size="lg">
+									<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
+										<span className="flex w-full min-w-0 items-center gap-1">
+											<SortAscIcon className="size-4" />
+											{sortingOptions[sort].icon}
+										</span>
+									</SelectValue>
+								</SelectTrigger>
+								<SelectContent>
+									<SelectGroup>
+										{Object.entries(sortingOptions).map(([key, item]) => (
+											<SelectItem key={key} value={key}>
+												<div className="flex items-center gap-2">
+													{item.icon}
+													<span>{item.label()}</span>
+												</div>
+											</SelectItem>
+										))}
+									</SelectGroup>
+								</SelectContent>
+							</Select>
+							{hasArchivedVehicles && (
+								<Button
+									className="mt-0.5 size-9"
+									onClick={() => setShowArchived(showArchived ? null : true)}
+									size="icon-sm"
+									type="button"
+									variant={showArchived ? "branding-default" : "secondary"}
+								>
+									<ArchiveIcon />
+								</Button>
+							)}
+						</div>
 					)}
 				</div>
 				<p
