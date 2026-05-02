@@ -52,6 +52,7 @@
 	"language_english": "Anglais",
 	"language_french": "Français",
 	"language_label": "Langue",
+	"language_system": "Auto / Système",
 	"nav_data": "Données",
 	"nav_map": "Carte",
 	"networks_list_description": "Sélectionnez un réseau pour consulter ses véhicules et lignes.",

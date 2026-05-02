@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import "./polyfills.js";
+import "./setup-paraglide";
 import "./setup-dayjs";
 
 history.scrollRestoration = "manual";
