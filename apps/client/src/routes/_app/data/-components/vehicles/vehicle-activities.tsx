@@ -2,10 +2,11 @@ import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-qu
 import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 
 import { GetVehicleActivitiesQuery, GetVehicleQuery } from "~/api/vehicles";
+import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
 import { ActivityCard } from "~/routes/_app/data/-components/vehicles/activity-card";
-import { useSearchParams } from "~/hooks/use-search-params";
 
 const parseMonth = (input: string | null, validMonths: string[]) => {
 	if (input === null || !validMonths.includes(input)) return validMonths.at(-1) ?? dayjs().format("YYYY-MM");
@@ -17,11 +18,11 @@ type VehicleActivitiesProps = {
 };
 
 export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
-	const [searchParams] = useSearchParams();
+	const [selectedMonth] = useQueryState("month", parseAsString);
 
 	const { data: vehicle } = useSuspenseQuery(GetVehicleQuery(vehicleId));
 
-	const month = parseMonth(searchParams.get("month"), vehicle.activeMonths);
+	const month = parseMonth(selectedMonth, vehicle.activeMonths);
 	const currentMonthIndex = vehicle.activeMonths.indexOf(month);
 
 	const { data: activities } = useQuery({
@@ -31,9 +32,10 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<div className="flex-1">
 			<h2 className="hidden">Activités du véhicule</h2>
-			<section className="sticky top-14 z-10 bg-background pt-1 pb-1">
-				<div className="bg-branding text-branding-foreground grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md">
-					{currentMonthIndex > 0 ? (
+			<PeriodNavigator
+				sticky
+				previous={
+					currentMonthIndex > 0 ? (
 						<Link
 							className="transition-opacity hover:opacity-70"
 							from="/data/vehicles/$vehicleId"
@@ -51,12 +53,10 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 						</Link>
 					) : (
 						<div />
-					)}
-					<p className="font-bold my-auto text-2xl text-center">
-						<span className="hidden lg:inline">activité de </span>
-						{dayjs(month).format("MMMM YYYY")}
-					</p>
-					{currentMonthIndex < vehicle.activeMonths.length - 1 ? (
+					)
+				}
+				next={
+					currentMonthIndex < vehicle.activeMonths.length - 1 ? (
 						<Link
 							className="transition-opacity hover:opacity-70"
 							from="/data/vehicles/$vehicleId"
@@ -74,9 +74,12 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 						</Link>
 					) : (
 						<div />
-					)}
-				</div>
-			</section>
+					)
+				}
+			>
+				<span className="hidden lg:inline">activité de </span>
+				{dayjs(month).format("MMMM YYYY")}
+			</PeriodNavigator>
 			<section className="flex flex-col gap-3 w-full">
 				{activities?.timeline
 					.sort(

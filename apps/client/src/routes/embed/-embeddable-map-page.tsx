@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import maplibregl from "maplibre-gl";
-import { parseAsInteger, useQueryState } from "nuqs";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useCallback, useMemo } from "react";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
@@ -14,6 +14,8 @@ export default function EmbeddableMapPage() {
 	const { networkId } = useParams({ from: "/embed/$networkId" });
 
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
+	const [withFullscreen] = useQueryState("with-fullscreen", parseAsString);
+	const [withGeolocate] = useQueryState("with-geolocate", parseAsString);
 
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 	const filteredLine = network.lines.find((line) => line.id === lineId);
@@ -30,26 +32,27 @@ export default function EmbeddableMapPage() {
 		[network.embedMapCenter],
 	);
 
-	const onMap = useCallback((map: maplibregl.Map) => {
-		const searchParams = new URLSearchParams(window.location.search);
+	const onMap = useCallback(
+		(map: maplibregl.Map) => {
+			setTimeout(() => {
+				const navigationControl = new maplibregl.NavigationControl();
+				map.addControl(navigationControl, "top-left");
 
-		setTimeout(() => {
-			const navigationControl = new maplibregl.NavigationControl();
-			map.addControl(navigationControl, "top-left");
+				if (withFullscreen !== null) {
+					const fullscreenControl = new maplibregl.FullscreenControl();
+					map.addControl(fullscreenControl, "top-right");
+				}
 
-			if (searchParams.has("with-fullscreen")) {
-				const fullscreenControl = new maplibregl.FullscreenControl();
-				map.addControl(fullscreenControl, "top-right");
-			}
-
-			if (searchParams.has("with-geolocate")) {
-				const geolocateControl = new maplibregl.GeolocateControl({
-					trackUserLocation: true,
-				});
-				map.addControl(geolocateControl, "top-right");
-			}
-		}, 100);
-	}, []);
+				if (withGeolocate !== null) {
+					const geolocateControl = new maplibregl.GeolocateControl({
+						trackUserLocation: true,
+					});
+					map.addControl(geolocateControl, "top-right");
+				}
+			}, 100);
+		},
+		[withFullscreen, withGeolocate],
+	);
 
 	return (
 		<>

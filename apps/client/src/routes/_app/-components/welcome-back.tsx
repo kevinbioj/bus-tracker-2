@@ -1,18 +1,12 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { parseAsBoolean, useQueryState } from "nuqs";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 
 export function WelcomeBack() {
-	const search = useSearch({ strict: false }) as Record<string, unknown>;
-	const navigate = useNavigate();
-
-	const wasRedirected = search.from_old === "true" || search.from_old === true;
+	const [wasRedirected, setWasRedirected] = useQueryState("from_old", parseAsBoolean.withDefault(false));
 
 	return (
-		<Dialog
-			open={wasRedirected}
-			onOpenChange={() => navigate({ to: ".", search: (prev) => ({ ...prev, from_old: undefined }) })}
-		>
+		<Dialog open={wasRedirected} onOpenChange={() => setWasRedirected(null)}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Bienvenue sur la nouvelle version</DialogTitle>

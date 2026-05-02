@@ -1,21 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { match } from "ts-pattern";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
-import { NetworkHeader } from "~/routes/_app/data/-components/network-header";
+import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { VehicleActivities } from "~/routes/_app/data/-components/vehicles/vehicle-activities";
 import { VehicleCharacteristics } from "~/routes/_app/data/-components/vehicles/vehicle-characteristics";
 import { VehicleLive } from "~/routes/_app/data/-components/vehicles/vehicle-live";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "~/components/ui/breadcrumb";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 
 export function VehicleDetails() {
@@ -34,50 +26,22 @@ export function VehicleDetails() {
 	const vehicleDesignation = vehicle.designation ?? "Véhicule";
 
 	return (
-		<>
-			<title>{`${vehicleDesignation} n°${vehicle.number} – ${network.name} – Données – Bus Tracker`}</title>
-			<main className="max-w-(--breakpoint-xl) p-3 w-full mx-auto">
-				<NetworkHeader network={network} />
-				<Breadcrumb>
-					<BreadcrumbList>
-						<BreadcrumbItem>
-							<BreadcrumbLink asChild>
-								<Link to="/data">Données</Link>
-							</BreadcrumbLink>
-						</BreadcrumbItem>
-						<BreadcrumbSeparator />
-						<BreadcrumbItem>
-							<BreadcrumbLink asChild>
-								<Link to="/data/networks/$networkId" params={{ networkId: String(network.id) }}>
-									{network.logoHref ? (
-										<picture className="min-w-12 w-fit">
-											{network.darkModeLogoHref !== null && (
-												<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-											)}
-											<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
-										</picture>
-									) : (
-										network.name
-									)}
-								</Link>
-							</BreadcrumbLink>
-						</BreadcrumbItem>
-						<BreadcrumbSeparator />
-						<BreadcrumbItem>
-							<BreadcrumbPage>
-								{vehicleIcon} Véhicule n°{vehicle.number}
-							</BreadcrumbPage>
-						</BreadcrumbItem>
-					</BreadcrumbList>
-				</Breadcrumb>
-				<div className="mt-1 flex flex-col lg:flex-row lg:items-start gap-3 w-full">
-					<div className="lg:sticky lg:top-16">
-						<VehicleCharacteristics vehicle={vehicle} />
-						<VehicleLive vehicle={vehicle} />
-					</div>
-					<VehicleActivities vehicleId={vehicle.id} />
+		<DataPageLayout
+			current={
+				<>
+					{vehicleIcon} Véhicule n°{vehicle.number}
+				</>
+			}
+			network={network}
+			title={`${vehicleDesignation} n°${vehicle.number} – ${network.name} – Données – Bus Tracker`}
+		>
+			<div className="mt-1 flex flex-col lg:flex-row lg:items-start gap-3 w-full">
+				<div className="lg:sticky lg:top-16">
+					<VehicleCharacteristics vehicle={vehicle} />
+					<VehicleLive vehicle={vehicle} />
 				</div>
-			</main>
-		</>
+				<VehicleActivities vehicleId={vehicle.id} />
+			</div>
+		</DataPageLayout>
 	);
 }

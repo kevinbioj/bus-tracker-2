@@ -1,21 +1,15 @@
 import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams, useSearch } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
 import { ChevronLeft, ChevronRight, MapIcon } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
-import { NetworkHeader } from "~/routes/_app/data/-components/network-header";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "~/components/ui/breadcrumb";
+import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/utils/cn";
 
@@ -26,7 +20,7 @@ const parseMonth = (input: Dayjs, validMonths: string[]) => {
 
 export function LineVehicleAssignments() {
 	const { lineId } = useParams({ from: "/_app/data/lines/$lineId/vehicle-assignments" });
-	const { date } = useSearch({ from: "/_app/data/lines/$lineId/vehicle-assignments" });
+	const [date] = useQueryState("date", parseAsString);
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(+lineId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
@@ -62,65 +56,38 @@ export function LineVehicleAssignments() {
 	}, [currentDate.format("YYYY-MM")]);
 
 	return (
-		<>
-			<title>{`${line.number} – ${network.name} – Données – Bus Tracker`}</title>
-			<main className="max-w-(--breakpoint-xl) p-3 w-full mx-auto">
-				<NetworkHeader network={network} />
-				<Breadcrumb>
-					<BreadcrumbList>
-						<BreadcrumbItem>
-							<BreadcrumbLink asChild>
-								<Link to="/data">Données</Link>
-							</BreadcrumbLink>
-						</BreadcrumbItem>
-						<BreadcrumbSeparator />
-						<BreadcrumbItem>
-							<BreadcrumbLink asChild>
-								<Link
-									to="/data/networks/$networkId"
-									params={{ networkId: String(network.id) }}
-									search={{ tab: "lines" }}
-								>
-									{network.logoHref ? (
-										<picture className="min-w-12 w-fit">
-											{network.darkModeLogoHref !== null && (
-												<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-											)}
-											<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
-										</picture>
-									) : (
-										network.name
-									)}
-								</Link>
-							</BreadcrumbLink>
-						</BreadcrumbItem>
-						<BreadcrumbSeparator />
-						<BreadcrumbItem>
-							<BreadcrumbPage className="flex items-center gap-1">
-								{line.cartridgeHref ? (
-									<img className="h-5 object-contain rounded-sm" src={line.cartridgeHref} alt={line.number} />
-								) : (
-									line.number
-								)}
-								<Button
-									asChild
-									size="sm"
-									variant="outline"
-									className="border-[0.5px] h-5 ml-2 my-0 py-0 px-2"
-									title="Voir sur la carte"
-								>
-									<Link to="/" search={{ "line-id": line.id }}>
-										<MapIcon className="size-3.5" />
-										Voir sur la carte
-									</Link>
-								</Button>
-							</BreadcrumbPage>
-						</BreadcrumbItem>
-					</BreadcrumbList>
-				</Breadcrumb>
-				<section className="mt-1">
-					<div className="bg-branding text-branding-foreground grid grid-cols-[3rem_1fr_3rem] px-3 py-2 rounded-md mb-2">
-						{currentMonthIndex > 0 ? (
+		<DataPageLayout
+			current={
+				<>
+					{line.cartridgeHref ? (
+						<img className="h-5 object-contain rounded-sm" src={line.cartridgeHref} alt={line.number} />
+					) : (
+						line.number
+					)}
+					<Button
+						asChild
+						size="sm"
+						variant="outline"
+						className="border-[0.5px] h-5 ml-2 my-0 py-0 px-2"
+						title="Voir sur la carte"
+					>
+						<Link to="/" search={{ "line-id": line.id }}>
+							<MapIcon className="size-3.5" />
+							Voir sur la carte
+						</Link>
+					</Button>
+				</>
+			}
+			currentClassName="flex items-center gap-1"
+			network={network}
+			networkSearch={{ tab: "lines" }}
+			title={`${line.number} – ${network.name} – Données – Bus Tracker`}
+		>
+			<section className="mt-1">
+				<PeriodNavigator
+					className="mb-2"
+					previous={
+						currentMonthIndex > 0 ? (
 							<Link
 								className="transition-opacity hover:opacity-70"
 								from="/data/lines/$lineId/vehicle-assignments"
@@ -143,12 +110,10 @@ export function LineVehicleAssignments() {
 							</Link>
 						) : (
 							<div />
-						)}
-						<p className="font-bold my-auto text-2xl text-center">
-							<span className="hidden lg:inline">activité de </span>
-							{dayjs(month).format("MMMM YYYY")}
-						</p>
-						{currentMonthIndex < line.activeMonths.length - 1 ? (
+						)
+					}
+					next={
+						currentMonthIndex < line.activeMonths.length - 1 ? (
 							<Link
 								className="transition-opacity hover:opacity-70"
 								from="/data/lines/$lineId/vehicle-assignments"
@@ -171,43 +136,46 @@ export function LineVehicleAssignments() {
 							</Link>
 						) : (
 							<div />
-						)}
-					</div>
-				</section>
+						)
+					}
+				>
+					<span className="hidden lg:inline">activité de </span>
+					{dayjs(month).format("MMMM YYYY")}
+				</PeriodNavigator>
+			</section>
 
-				<div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar">
-					{daysInMonth.map((d) => {
-						const dateStr = d.format("YYYY-MM-DD");
-						const isSelected = currentDate.format("YYYY-MM-DD") === dateStr;
-						const isFuture = d.isAfter(dayjs(), "day");
-						const hasData = assignments.activeDays.includes(dateStr);
+			<div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar">
+				{daysInMonth.map((d) => {
+					const dateStr = d.format("YYYY-MM-DD");
+					const isSelected = currentDate.format("YYYY-MM-DD") === dateStr;
+					const isFuture = d.isAfter(dayjs(), "day");
+					const hasData = assignments.activeDays.includes(dateStr);
 
-						return (
-							<Button
-								key={dateStr}
-								asChild
-								variant={isSelected ? "branding-default" : "secondary"}
-								size="sm"
-								ref={isSelected ? currentDateRef : undefined}
-								className={cn(
-									"flex flex-col gap-0 items-center justify-center h-full min-w-12 py-1",
-									(isFuture || !hasData) && "opacity-50 pointer-events-none hover:cursor-not-allowed",
-								)}
+					return (
+						<Button
+							key={dateStr}
+							asChild
+							variant={isSelected ? "branding-default" : "secondary"}
+							size="sm"
+							ref={isSelected ? currentDateRef : undefined}
+							className={cn(
+								"flex flex-col gap-0 items-center justify-center h-full min-w-12 py-1",
+								(isFuture || !hasData) && "opacity-50 pointer-events-none hover:cursor-not-allowed",
+							)}
+						>
+							<Link
+								from="/data/lines/$lineId/vehicle-assignments"
+								to="."
+								search={(prev) => ({ ...prev, date: dateStr })}
 							>
-								<Link
-									from="/data/lines/$lineId/vehicle-assignments"
-									to="."
-									search={(prev) => ({ ...prev, date: dateStr })}
-								>
-									<p className="uppercase">{d.format("ddd")}</p>
-									<p className="font-bold text-lg">{d.format("DD")}</p>
-								</Link>
-							</Button>
-						);
-					})}
-				</div>
-				<LineVehiclesTimeline date={currentDate.format("YYYY-MM-DD")} lineId={line.id} />
-			</main>
-		</>
+								<p className="uppercase">{d.format("ddd")}</p>
+								<p className="font-bold text-lg">{d.format("DD")}</p>
+							</Link>
+						</Button>
+					);
+				})}
+			</div>
+			<LineVehiclesTimeline date={currentDate.format("YYYY-MM-DD")} lineId={line.id} />
+		</DataPageLayout>
 	);
 }
