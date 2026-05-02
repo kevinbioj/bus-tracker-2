@@ -141,16 +141,16 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		return `${onlineVehicles.length}/${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation`;
 	}, [filteredAndSortedVehicles, onlineVehicles, showArchived]);
 
-	const filterKey = `${type}|${operatorId}|${debouncedFilter}`;
-	const prevFilterKey = useRef(filterKey);
+	const filterSortKey = `${type}|${operatorId}|${debouncedFilter}|${sort}|${showArchived}`;
+	const prevFilterSortKey = useRef(filterSortKey);
 	useEffect(() => {
-		if (prevFilterKey.current === filterKey) return;
-		prevFilterKey.current = filterKey;
+		if (prevFilterSortKey.current === filterSortKey) return;
+		prevFilterSortKey.current = filterSortKey;
 		const stickyY = window.innerWidth >= 640 ? 140 : 84;
 		if (window.scrollY > stickyY) {
 			window.scrollTo({ top: stickyY, behavior: "instant" });
 		}
-	}, [filterKey]);
+	}, [filterSortKey]);
 
 	return (
 		<div>
