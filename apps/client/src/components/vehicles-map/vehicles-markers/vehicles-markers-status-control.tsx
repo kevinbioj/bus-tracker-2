@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 type VehiclesMarkersStatusControlProps = {
@@ -41,7 +42,7 @@ export function VehiclesMarkersStatusControl({ loading, onClick }: VehiclesMarke
 				className="text-black"
 				disabled={onClick === undefined}
 				onClick={onClick}
-				title={loading ? "Rafraichissement en cours..." : "Rafraichir les données"}
+				title={loading ? m.map_refresh_loading() : m.map_refresh_data()}
 				type="button"
 			>
 				<RefreshCwIcon className={cn("m-auto p-0.5", loading && "animate-spin")} strokeWidth={3} />

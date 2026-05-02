@@ -12,31 +12,32 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 const vehicleTypeOptions = {
 	ALL: {
-		label: <span className="text-muted-foreground">Type</span>,
+		label: () => <span className="text-muted-foreground">{m.network_vehicle_type_filter()}</span>,
 		icon: null,
 	},
 	TRAMWAY: {
-		label: "Tramway",
+		label: () => "Tramway",
 		icon: <TramwayIcon className="size-5" />,
 	},
 	TROLLEY: {
-		label: "Trolleybus",
+		label: () => "Trolleybus",
 		icon: <TrolleybusIcon className="size-5" />,
 	},
 	BUS: {
-		label: "Bus",
+		label: () => "Bus",
 		icon: <BusIcon className="size-5" />,
 	},
 	COACH: {
-		label: "Car",
+		label: () => "Car",
 		icon: <CoachIcon className="size-5" />,
 	},
 	FERRY: {
-		label: "Ferry",
+		label: () => "Ferry",
 		icon: <ShipIcon className="size-5" />,
 	},
 };
@@ -45,11 +46,11 @@ const vehicleTypeKeys = Object.keys(vehicleTypeOptions) as (keyof typeof vehicle
 
 const sortingOptions = {
 	number: {
-		label: "Numéro",
+		label: () => m.network_vehicle_sort_number(),
 		icon: <BinaryIcon className="size-5" />,
 	},
 	activity: {
-		label: "Activité",
+		label: () => m.network_vehicle_sort_activity(),
 		icon: <ClockIcon className="size-5" />,
 	},
 };
@@ -135,10 +136,17 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 	const activeVehiclesLabel = useMemo(() => {
 		if (showArchived)
-			return `${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} archivé${filteredAndSortedVehicles.length > 1 ? "s" : ""}`;
-		if (filteredAndSortedVehicles.length === 0) return "Aucun véhicule n'existe avec ces critères de recherche";
-		if (onlineVehicles.length === 0) return `Aucun véhicule sur ${filteredAndSortedVehicles.length} en circulation`;
-		return `${onlineVehicles.length}/${filteredAndSortedVehicles.length} véhicule${filteredAndSortedVehicles.length > 1 ? "s" : ""} en circulation`;
+			return m.network_vehicles_archived_count({
+				count: filteredAndSortedVehicles.length,
+				plural: filteredAndSortedVehicles.length > 1 ? "s" : "",
+			});
+		if (filteredAndSortedVehicles.length === 0) return m.network_vehicles_empty();
+		if (onlineVehicles.length === 0) return m.network_vehicles_none_online({ count: filteredAndSortedVehicles.length });
+		return m.network_vehicles_online_count({
+			onlineCount: onlineVehicles.length,
+			totalCount: filteredAndSortedVehicles.length,
+			plural: filteredAndSortedVehicles.length > 1 ? "s" : "",
+		});
 	}, [filteredAndSortedVehicles, onlineVehicles, showArchived]);
 
 	const filterSortKey = `${type}|${operatorId}|${debouncedFilter}|${sort}|${showArchived}`;
@@ -161,13 +169,13 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					{/* Filters */}
 					<div className="flex flex-col gap-1">
 						<Label className="inline-flex items-center gap-1" htmlFor="filter">
-							<FilterIcon size={16} /> Filtrer par
+							<FilterIcon size={16} /> {m.network_vehicle_filter_label()}
 						</Label>
 						<div className="flex gap-1">
 							{availableNetworkTypeFilters.length > 2 && (
 								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
-									<SelectTrigger aria-label="Type" className="h-10 w-18">
-										<SelectValue>{vehicleTypeOptions[type].icon ?? vehicleTypeOptions.ALL.label}</SelectValue>
+									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="h-10 w-18">
+										<SelectValue>{vehicleTypeOptions[type].icon ?? vehicleTypeOptions.ALL.label()}</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										{availableNetworkTypeFilters.map((typeKey) => {
@@ -176,7 +184,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 												<SelectItem key={typeKey} value={typeKey}>
 													<div className="flex items-center gap-2">
 														{item.icon}
-														<span>{item.label}</span>
+														<span>{item.label()}</span>
 													</div>
 												</SelectItem>
 											);
@@ -187,12 +195,12 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							<div className="flex flex-1 gap-1 max-w-96">
 								{network.operators.length > 0 && (
 									<Select value={operatorId} onValueChange={setOperatorId}>
-										<SelectTrigger aria-label="Opérateur" className="h-10 w-1/2">
+										<SelectTrigger aria-label={m.network_vehicle_operator_filter()} className="h-10 w-1/2">
 											<SelectValue />
 										</SelectTrigger>
 										<SelectContent>
 											<SelectItem value="ALL">
-												<span className="text-muted-foreground">Opérateur</span>
+												<span className="text-muted-foreground">{m.network_vehicle_operator_filter()}</span>
 											</SelectItem>
 											{network.operators
 												.toSorted((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
@@ -206,7 +214,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 								)}
 								<Input
 									className="h-10 w-1/2"
-									placeholder="numéro ou désignation"
+									placeholder={m.network_vehicle_filter_placeholder()}
 									value={filter}
 									onChange={(e) => setFilter(e.target.value || null)}
 								/>
@@ -216,10 +224,10 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					{/* Sort */}
 					<div className="flex flex-col gap-1">
 						<Label className="inline-flex items-center gap-1" htmlFor="sort">
-							<SortAscIcon size={16} /> Tri
+							<SortAscIcon size={16} /> {m.network_vehicle_sort_label()}
 						</Label>
 						<Select value={sort} onValueChange={(newSort) => setSort(newSort as typeof sort)}>
-							<SelectTrigger aria-label="Trier" className="h-10">
+							<SelectTrigger aria-label={m.network_vehicle_sort_aria_label()} className="h-10">
 								<SelectValue>{sortingOptions[sort].icon}</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
@@ -227,7 +235,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 									<SelectItem key={key} value={key}>
 										<div className="flex items-center gap-2">
 											{item.icon}
-											<span>{item.label}</span>
+											<span>{item.label()}</span>
 										</div>
 									</SelectItem>
 								))}

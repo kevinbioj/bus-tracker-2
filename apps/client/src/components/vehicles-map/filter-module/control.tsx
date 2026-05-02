@@ -9,6 +9,7 @@ import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import type { Line, Network } from "~/api/networks";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { FilterModuleManager } from "~/components/vehicles-map/filter-module/manager";
+import * as m from "~/paraglide/messages";
 
 type FilterModuleControlProps = {
 	filteredLine?: Line;
@@ -49,7 +50,7 @@ export function FilterModuleControl({
 			<div className="maplibregl-ctrl maplibregl-ctrl-group text-black" ref={activatorRef}>
 				{filteredLine ? (
 					<div className="font-sans flex items-center gap-1.5 mr-1">
-						<button onClick={() => onFilterChange(undefined)} title="Désactiver le filtre" type="button">
+						<button onClick={() => onFilterChange(undefined)} title={m.map_filter_disable()} type="button">
 							<FilterXIcon className="m-auto size-5" />
 						</button>
 
@@ -81,7 +82,7 @@ export function FilterModuleControl({
 						</div>
 					</div>
 				) : (
-					<button onClick={() => setOpen(true)} title="Filtrer les véhicules" type="button">
+					<button onClick={() => setOpen(true)} title={m.map_filter_vehicles()} type="button">
 						<FilterIcon className="m-auto p-0.5" />
 					</button>
 				)}

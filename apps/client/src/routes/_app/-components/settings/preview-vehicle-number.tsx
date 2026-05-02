@@ -3,6 +3,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import * as m from "~/paraglide/messages";
 
 export function PreviewVehicleNumberSetting() {
 	const id = useId();
@@ -12,11 +13,9 @@ export function PreviewVehicleNumberSetting() {
 		<div className="flex items-center justify-between gap-4">
 			<div className="grid gap-0.5">
 				<Label htmlFor={id} className="text-base cursor-pointer">
-					Numéro de véhicule
+					{m.settings_preview_vehicle_number_label()}
 				</Label>
-				<p className="text-sm text-muted-foreground">
-					Prévisualiser le numéro de véhicule lors du zoom sur un point de la carte.
-				</p>
+				<p className="text-sm text-muted-foreground">{m.settings_preview_vehicle_number_description()}</p>
 			</div>
 			<Switch id={id} checked={previewVehicleNumber} onCheckedChange={setPreviewVehicleNumber} />
 		</div>

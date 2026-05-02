@@ -11,6 +11,7 @@ import { useMap } from "~/adapters/maplibre-gl/map";
 import { GetLineOnlineVehiclesQuery } from "~/api/lines";
 import { Button } from "~/components/ui/button";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
+import * as m from "~/paraglide/messages";
 
 type LineVehiclesPanelProps = {
 	lineId: number;
@@ -48,7 +49,7 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 	return createPortal(
 		<div className="bg-background/95 backdrop-blur-sm rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
 			<div className="px-2 py-2 border-b text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-				Véhicules en ligne ({identifiedVehicles.length})
+				{m.map_vehicles_online({ count: identifiedVehicles.length })}
 			</div>
 			<ul className="max-h-52 overflow-y-auto divide-y">
 				{identifiedVehicles.map((vehicle) => {
@@ -68,7 +69,7 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 									</span>
 									{vehicle.activity.since && (
 										<span className="ml-1.5 text-xs text-muted-foreground tabular-nums">
-											depuis {dayjs(vehicle.activity.since).tz(timezone).format("HH:mm")}
+											{m.map_vehicle_since()} {dayjs(vehicle.activity.since).tz(timezone).format("HH:mm")}
 										</span>
 									)}
 								</div>
@@ -77,7 +78,7 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 							<Button
 								className="size-7 shrink-0"
 								size="icon"
-								title="Localiser sur la carte"
+								title={m.map_vehicle_locate()}
 								type="button"
 								variant="ghost"
 								onClick={() => setMarkerId(vehicle.activity.markerId!)}
@@ -86,7 +87,7 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 							</Button>
 							<Button asChild className="size-7 shrink-0" size="icon" variant="ghost">
 								<Link
-									title="Voir l'historique"
+									title={m.map_vehicle_history()}
 									to="/data/vehicles/$vehicleId"
 									params={{ vehicleId: String(vehicle.id) }}
 								>

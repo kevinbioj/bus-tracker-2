@@ -4,6 +4,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import * as m from "~/paraglide/messages";
 
 export function HideScheduledTripsSetting() {
 	const id = useId();
@@ -19,11 +20,9 @@ export function HideScheduledTripsSetting() {
 		<div className="flex items-center justify-between gap-4">
 			<div className="grid gap-0.5">
 				<Label htmlFor={id} className="text-base cursor-pointer">
-					Masquer les courses théoriques
+					{m.settings_hide_scheduled_trips_label()}
 				</Label>
-				<p className="text-sm text-muted-foreground">
-					Masquer les courses pour lesquelles aucun temps réel n'est disponible.
-				</p>
+				<p className="text-sm text-muted-foreground">{m.settings_hide_scheduled_trips_description()}</p>
 			</div>
 			<Switch id={id} checked={hideScheduledTrips} onCheckedChange={onChange} />
 		</div>

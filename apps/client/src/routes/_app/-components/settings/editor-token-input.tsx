@@ -9,6 +9,7 @@ import { GetEditorSelf } from "~/api/editors";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import * as m from "~/paraglide/messages";
 
 export function EditorTokenInput() {
 	const queryClient = useQueryClient();
@@ -29,33 +30,35 @@ export function EditorTokenInput() {
 			await queryClient.fetchQuery(GetEditorSelf(token));
 			setEditorToken(token);
 		} catch {
-			enqueueSnackbar("Aucun contributeur n'existe avec ce jeton.", { variant: "error" });
+			enqueueSnackbar(m.settings_editor_token_invalid(), { variant: "error" });
 		}
 	};
 
 	return (
 		<div>
-			<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Espace contribution</h3>
+			<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+				{m.settings_contribution_section()}
+			</h3>
 			{editor ? (
 				<div className="flex justify-between">
 					<p>
 						<User className="align-text-bottom inline size-5" /> {editor.username}
 						<br />
 						<span className="text-muted-foreground text-sm">
-							Contributeur depuis le {dayjs(editor.createdAt).format("L")}
+							{m.settings_editor_connected_since({ date: dayjs(editor.createdAt).format("L") })}
 						</span>
 					</p>
 					<div className="space-x-2">
 						<Button
 							onClick={() => {
 								navigator.clipboard.writeText(editorToken!);
-								enqueueSnackbar("Jeton d'authentification copié dans le presse-papier !", {
+								enqueueSnackbar(m.settings_editor_token_copied(), {
 									variant: "info",
 								});
 							}}
 							type="button"
 							size="icon"
-							title="Copier mon jeton"
+							title={m.settings_editor_copy_token()}
 						>
 							<Copy />
 						</Button>
@@ -64,7 +67,7 @@ export function EditorTokenInput() {
 							type="button"
 							variant="destructive"
 							size="icon"
-							title="Se déconnecter"
+							title={m.settings_editor_logout()}
 						>
 							<LogOut />
 						</Button>
@@ -73,11 +76,11 @@ export function EditorTokenInput() {
 			) : (
 				<form onSubmit={onSubmit}>
 					<Label htmlFor={id}>
-						<KeySquareIcon className="align-text-bottom inline size-4" /> Jeton d'authentification éditeur
+						<KeySquareIcon className="align-text-bottom inline size-4" /> {m.settings_editor_token_label()}
 					</Label>
 					<div className="flex gap-2">
 						<Input id={id} name="token" defaultValue={editorToken ?? ""} required />
-						<Button disabled={isLoading} type="submit" size="icon" title="Se connecter">
+						<Button disabled={isLoading} type="submit" size="icon" title={m.settings_editor_login()}>
 							<LogIn />
 						</Button>
 					</div>

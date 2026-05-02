@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { GetNetworksQuery } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
+import * as m from "~/paraglide/messages";
 import { NetworksListHeaderBlock } from "./-networks-list/header-block";
 import { NetworksListVirtualList } from "./-networks-list/virtual-list";
 
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/_app/data/")({
 function NetworksListPage() {
 	return (
 		<>
-			<title>Données des réseaux - Bus-Tracker</title>
+			<title>{m.page_title_data()}</title>
 			<main>
 				<NetworksListHeaderBlock className="sticky top-14" />
 				<NetworksListVirtualList />

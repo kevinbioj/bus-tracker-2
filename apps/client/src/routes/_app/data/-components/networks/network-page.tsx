@@ -5,6 +5,7 @@ import { NetworkLines } from "~/routes/_app/data/-components/networks/network-li
 import { NetworkVehicles } from "~/routes/_app/data/-components/networks/network-vehicles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { BusIcon } from "~/icons/means-of-transport";
+import * as m from "~/paraglide/messages";
 
 type NetworkVehiclesProps = { networkId: number };
 
@@ -15,10 +16,10 @@ export function NetworkPage({ networkId }: Readonly<NetworkVehiclesProps>) {
 		<Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
 			<TabsList className="grid grid-cols-2 mt-1">
 				<TabsTrigger value="vehicles" className="flex items-center gap-1.5 font-bold">
-					<BusIcon className="size-4" /> Véhicules
+					<BusIcon className="size-4" /> {m.network_vehicles_tab()}
 				</TabsTrigger>
 				<TabsTrigger value="lines" className="flex items-center gap-1.5 font-bold">
-					<RouteIcon className="size-4" /> Lignes
+					<RouteIcon className="size-4" /> {m.network_lines_tab()}
 				</TabsTrigger>
 			</TabsList>
 

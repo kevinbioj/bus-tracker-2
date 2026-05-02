@@ -8,6 +8,7 @@ import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
+import * as m from "~/paraglide/messages";
 import { NetworksListBlock } from "~/routes/_app/data/-networks-list/networks-block";
 
 const searchifyQuery = (query: string) =>
@@ -83,7 +84,7 @@ export function NetworksListVirtualList() {
 					networks,
 				};
 			}),
-			...(orphanNetworks !== undefined ? [{ title: "Autres réseaux", networks: orphanNetworks }] : []),
+			...(orphanNetworks !== undefined ? [{ title: m.map_network_other(), networks: orphanNetworks }] : []),
 		];
 	}, [regions, otherNetworks]);
 
@@ -95,7 +96,7 @@ export function NetworksListVirtualList() {
 				key: "favorites",
 				title: (
 					<>
-						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Réseaux favoris
+						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> {m.map_network_favorites()}
 					</>
 				),
 				networks: favoriteNetworks,

@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { useMemo } from "react";
 
 import { GetNetworkQuery } from "~/api/networks";
+import * as m from "~/paraglide/messages";
 
 type NetworkLinesProps = {
 	networkId: number;
@@ -44,9 +45,14 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 						)}
 					</div>
 					<div className="flex-1 min-w-0">
-						<p className="font-bold truncate">{`${line.girouetteNumber ? "" : "Ligne "}${line.number}`}</p>
+						<p className="font-bold truncate">
+							{line.girouetteNumber ? line.number : m.network_lines_label({ lineNumber: line.number })}
+						</p>
 						<div className="flex items-center gap-1.5 text-sm">
-							{line.onlineVehicleCount ?? 0} véhicule{(line.onlineVehicleCount ?? 0) > 1 ? "s" : ""} en ligne
+							{m.network_online_vehicle_count({
+								count: line.onlineVehicleCount ?? 0,
+								plural: (line.onlineVehicleCount ?? 0) > 1 ? "s" : "",
+							})}
 						</div>
 					</div>
 				</Link>

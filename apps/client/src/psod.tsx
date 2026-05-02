@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { Button } from "~/components/ui/button";
 import { Link } from "~/components/ui/link";
+import * as m from "~/paraglide/messages";
 
 export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 	const pathname = useLocation({ select: (state) => state.pathname });
@@ -34,41 +35,41 @@ export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 				<div className="max-w-3xl mx-auto">
 					<div className="flex items-center gap-2">
 						<FrownIcon className="size-12" />
-						<h1 className="font-bold text-3xl">Une erreur est survenue</h1>
+						<h1 className="font-bold text-3xl">{m.psod_title()}</h1>
 					</div>
 					<div className="flex flex-col items-start gap-2 mt-3">
 						<p>
-							Les informations relatives à l'erreur ont été remontées pour analyse.
+							{m.psod_intro()}
 							<br />
-							En attendant, vous pouvez essayer de recharger l'application.
+							{m.psod_intro_reload()}
 						</p>
 						<Button asChild className="hover:cursor-default" variant="on-branding-default">
-							<a href={embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/"}>Recharger l'application</a>
+							<a href={embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/"}>{m.psod_reload()}</a>
 						</Button>
 					</div>
 					<div className="flex flex-col items-start gap-2 mt-8">
-						<p>Si le problème persiste, vous pouvez également essayer de réinitialiser les données de l'application.</p>
+						<p>{m.psod_persistent()}</p>
 						<Button onClick={resetApp} variant="on-branding-default">
-							Réinitialiser l'app
+							{m.psod_reset()}
 						</Button>
 					</div>
 					<div className="flex flex-col items-start gap-2 mt-8">
 						<p>
-							Enfin, un contact est possible à l'adresse{" "}
+							{m.psod_contact_before()}
 							<Link
 								className="text-branding-foreground/70 hover:text-branding-foreground/50"
 								external
 								href="mailto:contact@bus-tracker.fr"
 							>
 								contact@bus-tracker.fr
-							</Link>{" "}
-							avec le rapport d'erreur ci-dessous.
+							</Link>
+							{m.psod_contact_after()}
 						</p>
 						<div className="border border-neutral-600 rounded-lg bg-neutral-800 p-3 w-full wrap-break-word">
 							<div className="flex justify-between">
-								<span>Rapport d'erreur</span>
+								<span>{m.psod_error_report()}</span>
 								<Button onClick={() => navigator.clipboard.writeText(String(error))} size="sm" variant="ghost">
-									<Copy className="size-4" /> Copier
+									<Copy className="size-4" /> {m.psod_copy()}
 								</Button>
 							</div>
 							<div className="font-mono text-neutral-300 mt-0.5">{String(error)}</div>

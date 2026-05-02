@@ -27,6 +27,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { useEditor } from "~/hooks/use-editor";
+import * as m from "~/paraglide/messages";
 
 const updateVehicleFormSchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
@@ -38,16 +39,16 @@ const updateVehicleFormSchema = z.object({
 
 type UpdateVehicleFormData = z.infer<typeof updateVehicleFormSchema>;
 
-const lineTypeLabels: Record<VehicleJourneyLineType, string> = {
-	BUS: "Bus",
-	TROLLEY: "Trolleybus",
-	COACH: "Car",
-	FERRY: "Ferry",
-	RAIL: "Train",
-	SUBWAY: "Métro",
-	TRAMWAY: "Tramway",
-	FUNICULAR: "Funiculaire",
-	UNKNOWN: "Autre",
+const lineTypeLabels: Record<VehicleJourneyLineType, () => string> = {
+	BUS: m.vehicle_type_bus,
+	TROLLEY: m.vehicle_type_trolley,
+	COACH: m.vehicle_type_coach,
+	FERRY: m.vehicle_type_ferry,
+	RAIL: m.vehicle_type_rail,
+	SUBWAY: m.vehicle_type_subway,
+	TRAMWAY: m.vehicle_type_tramway,
+	FUNICULAR: m.vehicle_type_funicular,
+	UNKNOWN: m.vehicle_type_other,
 };
 
 type VehicleCharacteristicsEditProps = {
@@ -92,15 +93,15 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 
 		try {
 			await updateVehicle({ token: editorToken, json });
-			snackbar.enqueueSnackbar("Informations du véhicule enregistrées !", {
+			snackbar.enqueueSnackbar(m.vehicle_action_edit_success(), {
 				variant: "success",
 			});
 		} catch {
 			snackbar.enqueueSnackbar(
 				<>
-					Une erreur est survenue lors de l'enregistrement des informations.
+					{m.vehicle_action_edit_error_line_1()}
 					<br />
-					Vérifiez la validité du jeton et vos droits d'édition.
+					{m.vehicle_action_edit_error_line_2()}
 				</>,
 				{
 					variant: "error",
@@ -117,20 +118,19 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent aria-describedby={undefined}>
 				<DialogHeader>
-					<DialogTitle>
-						Édition du véhicule <pre className="inline">{vehicle.ref}</pre>
-					</DialogTitle>
+					<DialogTitle>{m.vehicle_action_edit_title({ vehicleRef: vehicle.ref })}</DialogTitle>
 					<DialogDescription className="text-start text-xs">
-						<AlertTriangleIcon className="align-text-bottom inline size-4" /> Merci de prendre connaissance{" "}
+						<AlertTriangleIcon className="align-text-bottom inline size-4" />{" "}
+						{m.vehicle_action_edit_description_before()}
 						<a
 							className="font-bold hover:underline"
 							href="https://discord.com/channels/1354896116490965316/1407062689531826349/1407068670106009732"
 							target="_blank"
 							rel="noopener"
 						>
-							des règles de contribution
+							{m.vehicle_action_edit_contribution_rules()}
 						</a>{" "}
-						avant toute action.
+						{m.vehicle_action_edit_description_after()}
 					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
@@ -140,7 +140,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 							name="number"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Numéro du véhicule</FormLabel>
+									<FormLabel>{m.vehicle_action_edit_number_label()}</FormLabel>
 									<FormControl>
 										<Input {...field} value={field.value ?? ""} />
 									</FormControl>
@@ -153,7 +153,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 							name="designation"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Dénomination du véhicule</FormLabel>
+									<FormLabel>{m.vehicle_action_edit_designation_label()}</FormLabel>
 									<FormControl>
 										<Input
 											{...field}
@@ -163,7 +163,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 										/>
 									</FormControl>
 									<FormDescription className="text-xs">
-										Merci d'être complet dans la dénomination du véhicule.
+										{m.vehicle_action_edit_designation_description()}
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
@@ -174,7 +174,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 							name="tcId"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Identifiant TC-Infos</FormLabel>
+									<FormLabel>{m.vehicle_action_edit_tc_id_label()}</FormLabel>
 									<FormControl>
 										<Input
 											{...field}
@@ -183,7 +183,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 										/>
 									</FormControl>
 									<FormDescription className="text-xs">
-										Exemple : https://tc-infos.fr/vehicule/<span className="font-bold">7839</span>.
+										{m.vehicle_action_edit_tc_id_description({ tcId: "7839" })}
 									</FormDescription>
 									<FormMessage />
 								</FormItem>
@@ -194,7 +194,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 							name="type"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>Type de véhicule</FormLabel>
+									<FormLabel>{m.vehicle_action_edit_type_label()}</FormLabel>
 									<Select onValueChange={field.onChange} defaultValue={field.value}>
 										<FormControl>
 											<SelectTrigger>
@@ -204,7 +204,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 										<SelectContent className="z-9999">
 											{vehicleJourneyLineTypes.map((type) => (
 												<SelectItem key={type} value={type}>
-													{lineTypeLabels[type]}
+													{lineTypeLabels[type]()}
 												</SelectItem>
 											))}
 										</SelectContent>
@@ -219,19 +219,19 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 								name="operatorId"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Opérateur</FormLabel>
+										<FormLabel>{m.vehicle_action_edit_operator_label()}</FormLabel>
 										<Select
 											onValueChange={(value) => field.onChange(value === "none" ? null : +value)}
 											value={field.value?.toString() ?? "none"}
 										>
 											<FormControl>
 												<SelectTrigger>
-													<SelectValue placeholder="Non renseigné" />
+													<SelectValue placeholder={m.vehicle_action_edit_operator_empty()} />
 												</SelectTrigger>
 											</FormControl>
 											<SelectContent className="z-9999">
 												<SelectItem value="none">
-													<span className="text-muted-foreground">Non renseigné</span>
+													<span className="text-muted-foreground">{m.vehicle_action_edit_operator_empty()}</span>
 												</SelectItem>
 												{operators.map((operator) => (
 													<SelectItem key={operator.id} value={operator.id.toString()}>
@@ -248,11 +248,11 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 						<DialogFooter className="gap-2">
 							<DialogClose asChild>
 								<Button disabled={updatingVehicle} type="button">
-									Annuler
+									{m.vehicle_action_cancel()}
 								</Button>
 							</DialogClose>
 							<Button disabled={updatingVehicle} type="submit" variant="branding-default">
-								Sauvegarder
+								{m.vehicle_action_edit_save()}
 							</Button>
 						</DialogFooter>
 					</form>

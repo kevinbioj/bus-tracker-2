@@ -4,6 +4,7 @@ import { match } from "ts-pattern";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
+import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { VehicleActivities } from "~/routes/_app/data/-components/vehicles/vehicle-activities";
 import { VehicleCharacteristics } from "~/routes/_app/data/-components/vehicles/vehicle-characteristics";
@@ -23,17 +24,21 @@ export function VehicleDetails() {
 		.with("FERRY", () => <ShipIcon className="align-top inline size-4" />)
 		.otherwise(() => <BusIcon className="align-top inline size-4" />);
 
-	const vehicleDesignation = vehicle.designation ?? "Véhicule";
+	const vehicleDesignation = vehicle.designation ?? m.vehicle_default_designation();
 
 	return (
 		<DataPageLayout
 			current={
 				<>
-					{vehicleIcon} Véhicule n°{vehicle.number}
+					{vehicleIcon} {m.vehicle_breadcrumb({ vehicleNumber: vehicle.number })}
 				</>
 			}
 			network={network}
-			title={`${vehicleDesignation} n°${vehicle.number} – ${network.name} – Données – Bus Tracker`}
+			title={m.page_title_vehicle_data({
+				designation: vehicleDesignation,
+				networkName: network.name,
+				vehicleNumber: vehicle.number,
+			})}
 		>
 			<div className="mt-1 flex flex-col lg:flex-row lg:items-start gap-3 w-full">
 				<div className="lg:sticky lg:top-16">

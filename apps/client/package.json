@@ -3,12 +3,16 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"dev": "vite",
-		"build": "tsc -b && NODE_ENV=production vite build",
+		"paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy localStorage preferredLanguage baseLocale --emit-ts-declarations",
+		"dev": "pnpm run paraglide && vite",
+		"build": "pnpm run paraglide && tsc -b && NODE_ENV=production vite build",
 		"preview": "vite preview"
 	},
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
+		"@inlang/paraglide-js": "^2.18.0",
+		"@inlang/plugin-m-function-matcher": "^2.2.6",
+		"@inlang/plugin-message-format": "^4.4.0",
 		"@tailwindcss/postcss": "^4.2.4",
 		"@tailwindcss/vite": "^4.2.4",
 		"@tanstack/router-plugin": "^1.167.31",

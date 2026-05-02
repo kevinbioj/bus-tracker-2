@@ -8,6 +8,7 @@ import { GetRegionsQuery } from "~/api/regions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import { NetworkSearchBar } from "~/components/vehicles-map/filter-module/network/network-search-bar";
 import { NetworkInnerList } from "~/components/vehicles-map/filter-module/network/networks-inner-list";
+import * as m from "~/paraglide/messages";
 
 const searchifyQuery = (query: string) =>
 	query
@@ -93,7 +94,7 @@ export function FilterModuleNetworkList({
 
 				return { title: region.name, networks };
 			}),
-			...(orphanNetworks !== undefined ? [{ title: "Autres réseaux", networks: orphanNetworks }] : []),
+			...(orphanNetworks !== undefined ? [{ title: m.map_network_other(), networks: orphanNetworks }] : []),
 		];
 	}, [regions, otherNetworks]);
 
@@ -101,14 +102,14 @@ export function FilterModuleNetworkList({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetTrigger
 				render={
-					<button aria-label="Filtrer par ligne" className="leaflet-bar-part leaflet-bar-part-single" type="button">
+					<button aria-label={m.map_filter_line()} className="leaflet-bar-part leaflet-bar-part-single" type="button">
 						<BusFrontIcon className="inline mb-0.5" />
 					</button>
 				}
 			/>
 			<SheetContent ref={scrollRef} className="gap-0 z-999 overflow-y-auto overscroll-none">
 				<SheetHeader className="bg-background shrink-0 sticky top-0 z-9999">
-					<SheetTitle>Liste des réseaux</SheetTitle>
+					<SheetTitle>{m.map_network_list_title()}</SheetTitle>
 					<NetworkSearchBar query={searchQuery} onQueryChange={setSearchQuery} />
 				</SheetHeader>
 				<NetworkInnerList

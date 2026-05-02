@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
@@ -69,11 +70,11 @@ export function LineVehicleAssignments() {
 						size="sm"
 						variant="outline"
 						className="border-[0.5px] h-5 ml-2 my-0 py-0 px-2"
-						title="Voir sur la carte"
+						title={m.view_on_map()}
 					>
 						<Link to="/" search={{ "line-id": line.id }}>
 							<MapIcon className="size-3.5" />
-							Voir sur la carte
+							{m.view_on_map()}
 						</Link>
 					</Button>
 				</>
@@ -81,7 +82,7 @@ export function LineVehicleAssignments() {
 			currentClassName="flex items-center gap-1"
 			network={network}
 			networkSearch={{ tab: "lines" }}
-			title={`${line.number} – ${network.name} – Données – Bus Tracker`}
+			title={m.page_title_line_data({ lineNumber: line.number, networkName: network.name })}
 		>
 			<section className="mt-1">
 				<PeriodNavigator
@@ -100,7 +101,7 @@ export function LineVehicleAssignments() {
 								})}
 							>
 								<ChevronLeft
-									aria-label="Période précédente"
+									aria-label={m.period_previous()}
 									className="mx-auto"
 									color="white"
 									width={32}
@@ -126,7 +127,7 @@ export function LineVehicleAssignments() {
 								})}
 							>
 								<ChevronRight
-									aria-label="Période suivante"
+									aria-label={m.period_next()}
 									className="mx-auto"
 									color="white"
 									width={32}
@@ -139,7 +140,7 @@ export function LineVehicleAssignments() {
 						)
 					}
 				>
-					<span className="hidden lg:inline">activité de </span>
+					<span className="hidden lg:inline">{m.activity_of()}</span>
 					{dayjs(month).format("MMMM YYYY")}
 				</PeriodNavigator>
 			</section>

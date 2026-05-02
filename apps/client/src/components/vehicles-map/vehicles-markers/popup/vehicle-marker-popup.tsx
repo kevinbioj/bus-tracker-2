@@ -10,6 +10,7 @@ import { Separator } from "~/components/ui/separator";
 import { VehicleGirouette } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-girouette";
 import { VehicleInformation } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-information";
 import { VehicleNextStops } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-next-stops";
+import * as m from "~/paraglide/messages";
 
 type VehicleDetailsProps = {
 	embedMode?: boolean;
@@ -42,11 +43,9 @@ export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDet
 		<div className="font-[Achemine] leading-tight mb-1.5 text-[13px]" style={{ width: popupWidth }}>
 			{isError ? (
 				<p className="px-3 text-balance text-center">
-					<span className="font-bold text-lg">☠️ Entrée introuvable</span>
+					<span className="font-bold text-lg">{m.marker_missing_title()}</span>
 					<br />
-					<span className="text-muted-foreground">
-						Cette entrée n'est plus d'actualité, elle devrait disparaitre au prochain rafraichissement de la carte.
-					</span>
+					<span className="text-muted-foreground">{m.marker_missing_description()}</span>
 				</p>
 			) : journey !== undefined ? (
 				<>

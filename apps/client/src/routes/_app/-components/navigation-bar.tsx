@@ -4,16 +4,17 @@ import { About } from "~/routes/_app/-components/about/about";
 import { Announcements } from "~/routes/_app/-components/announcements/announcements";
 import { Settings } from "~/routes/_app/-components/settings/settings";
 import { Button } from "~/components/ui/button";
+import * as m from "~/paraglide/messages";
 
 const links = [
 	{
 		href: "/",
-		label: "Carte",
+		label: m.nav_map,
 		isActive: (pathname: string) => pathname === "/",
 	},
 	{
 		href: "/data",
-		label: "Données",
+		label: m.nav_data,
 		isActive: (pathname: string) => pathname.startsWith("/data"),
 	},
 ] as const;
@@ -38,7 +39,7 @@ export function NavigationBar() {
 							variant={isActive(pathname) ? "on-branding-default" : "branding-ghost"}
 							className="px-3"
 						>
-							<Link to={href}>{label}</Link>
+							<Link to={href}>{label()}</Link>
 						</Button>
 					))}
 				</nav>

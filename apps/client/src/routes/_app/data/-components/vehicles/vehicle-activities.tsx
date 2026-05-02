@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 
 import { GetVehicleActivitiesQuery, GetVehicleQuery } from "~/api/vehicles";
+import * as m from "~/paraglide/messages";
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
 import { ActivityCard } from "~/routes/_app/data/-components/vehicles/activity-card";
 
@@ -31,7 +32,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 	});
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<div className="flex-1">
-			<h2 className="hidden">Activités du véhicule</h2>
+			<h2 className="hidden">{m.vehicle_activities_title()}</h2>
 			<PeriodNavigator
 				sticky
 				previous={
@@ -43,7 +44,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 							search={(prev) => ({ ...prev, month: vehicle.activeMonths.at(currentMonthIndex - 1) })}
 						>
 							<ChevronLeft
-								aria-label="Période précédente"
+								aria-label={m.period_previous()}
 								className="mx-auto"
 								color="white"
 								width={32}
@@ -64,7 +65,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 							search={(prev) => ({ ...prev, month: vehicle.activeMonths.at(currentMonthIndex + 1) })}
 						>
 							<ChevronRight
-								aria-label="Période suivante"
+								aria-label={m.period_next()}
 								className="mx-auto"
 								color="white"
 								width={32}
@@ -77,7 +78,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					)
 				}
 			>
-				<span className="hidden lg:inline">activité de </span>
+				<span className="hidden lg:inline">{m.activity_of()}</span>
 				{dayjs(month).format("MMMM YYYY")}
 			</PeriodNavigator>
 			<section className="flex flex-col gap-3 w-full">
@@ -104,8 +105,6 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 			</section>
 		</div>
 	) : (
-		<p className="mt-3 text-center text-muted-foreground text-xl">
-			Ce véhicule n&apos;a pas encore été observé en service commercial.
-		</p>
+		<p className="mt-3 text-center text-muted-foreground text-xl">{m.vehicle_no_activity()}</p>
 	);
 }

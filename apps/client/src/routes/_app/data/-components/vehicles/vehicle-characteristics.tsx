@@ -14,6 +14,7 @@ import { VehicleCharacteristicsActions } from "~/routes/_app/data/-components/ve
 import { Button } from "~/components/ui/button";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import tcInfosIcon from "~/icons/tc-infos.png";
+import * as m from "~/paraglide/messages";
 
 const getTcInfosLink = (tcId: number) => `https://tc-infos.fr/vehicule/${tcId}`;
 
@@ -22,6 +23,14 @@ type VehicleCharacteristicsProps = {
 };
 
 export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacteristicsProps>) {
+	const archivedReason = match(vehicle.archivedFor)
+		.with("FAILURE", () => m.vehicle_details_archive_reason_failure())
+		.with("FIRE", () => m.vehicle_details_archive_reason_fire())
+		.with("RETIRED", () => m.vehicle_details_archive_reason_retired())
+		.with("SOLD", () => m.vehicle_details_archive_reason_sold())
+		.with("TRANSFER", () => m.vehicle_details_archive_reason_transfer())
+		.otherwise(() => m.vehicle_details_archive_reason_archived());
+
 	const vehicleIcon = match(vehicle.type)
 		.with("SUBWAY", "TRAMWAY", "RAIL", () => <TramwayIcon className="align-baseline inline size-4" />)
 		.with("TROLLEY", () => <TrolleybusIcon className="align-baseline inline size-4" />)
@@ -31,16 +40,16 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 
 	return (
 		<div className="border border-border px-3 py-2 rounded-md shadow-lg lg:w-80 w-full relative">
-			<h2 className="hidden">Informations du véhicule</h2>
+			<h2 className="hidden">{m.vehicle_details_characteristics_title()}</h2>
 			<div className="flex justify-between gap-2">
 				<div>
 					<div className="font-bold text-lg">
-						{vehicleIcon} Véhicule n°{vehicle.number}
+						{vehicleIcon} {m.vehicle_details_number({ vehicleNumber: vehicle.number })}
 					</div>
 					{vehicle.designation !== null && <div>{vehicle.designation}</div>}
 					{vehicle.operator !== null && (
 						<div className="mt-0.5 text-xs text-muted-foreground">
-							Opéré par <span className="font-bold">{vehicle.operator.name}</span>
+							{m.vehicle_details_operated_by()} <span className="font-bold">{vehicle.operator.name}</span>
 						</div>
 					)}
 					{vehicle.archivedAt !== null && (
@@ -54,16 +63,11 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 								.otherwise(() => (
 									<ArchiveIcon className="align-text-bottom inline size-4" />
 								))}{" "}
-							Ce véhicule{" "}
-							{match(vehicle.archivedFor)
-								.with("FAILURE", () => "a subi une casse irrémédiable")
-								.with("FIRE", () => "a été victime d'un incendie")
-								.with("RETIRED", () => "a été réformé")
-								.with("SOLD", () => "a été vendu")
-								.with("TRANSFER", () => "a été transféré")
-								.otherwise(() => "a été archivé")}{" "}
-							le <span className="font-bold">{dayjs(vehicle.archivedAt).format("L")}</span> à{" "}
-							<span className="font-bold">{dayjs(vehicle.archivedAt).format("LT")}</span>.
+							{m.vehicle_details_archived_sentence({
+								reason: archivedReason,
+								date: dayjs(vehicle.archivedAt).format("L"),
+								time: dayjs(vehicle.archivedAt).format("LT"),
+							})}
 						</div>
 					)}
 				</div>
@@ -71,7 +75,7 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 					{vehicle.tcId ? (
 						<Button asChild className="" size="icon">
 							<a target="_blank" rel="noreferrer" href={getTcInfosLink(vehicle.tcId)}>
-								<img className="rounded-sm" src={tcInfosIcon} alt="Voir sur TC-Infos" />
+								<img className="rounded-sm" src={tcInfosIcon} alt={m.vehicle_details_tc_infos_alt()} />
 							</a>
 						</Button>
 					) : null}

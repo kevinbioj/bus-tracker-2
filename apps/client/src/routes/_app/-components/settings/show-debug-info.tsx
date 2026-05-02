@@ -3,6 +3,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import * as m from "~/paraglide/messages";
 
 export function ShowDebugInfoSetting() {
 	const id = useId();
@@ -12,9 +13,9 @@ export function ShowDebugInfoSetting() {
 		<div className="flex items-center justify-between gap-4">
 			<div className="grid gap-0.5">
 				<Label htmlFor={id} className="text-base cursor-pointer">
-					Mode débogage
+					{m.settings_show_debug_info_label()}
 				</Label>
-				<p className="text-sm text-muted-foreground">Voir les informations techniques de l'application.</p>
+				<p className="text-sm text-muted-foreground">{m.settings_show_debug_info_description()}</p>
 			</div>
 			<Switch id={id} checked={showDebugInfo} onCheckedChange={setShowDebugInfo} />
 		</div>

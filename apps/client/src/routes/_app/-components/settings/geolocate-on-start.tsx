@@ -3,6 +3,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import * as m from "~/paraglide/messages";
 
 export function GeolocateOnStartSetting() {
 	const id = useId();
@@ -12,9 +13,9 @@ export function GeolocateOnStartSetting() {
 		<div className="flex items-center justify-between gap-4">
 			<div className="grid gap-0.5">
 				<Label htmlFor={id} className="text-base cursor-pointer">
-					Géolocalisation automatique
+					{m.settings_geolocate_on_start_label()}
 				</Label>
-				<p className="text-sm text-muted-foreground">Me localiser à l'ouverture de l'application.</p>
+				<p className="text-sm text-muted-foreground">{m.settings_geolocate_on_start_description()}</p>
 			</div>
 			<Switch id={id} checked={geolocateOnStart} onCheckedChange={setGeolocateOnStart} />
 		</div>

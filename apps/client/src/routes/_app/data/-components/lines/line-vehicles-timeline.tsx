@@ -13,6 +13,8 @@ import {
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 
 import { GetNetworkQuery } from "~/api/networks";
+import { getLocale } from "~/paraglide/runtime";
+import * as m from "~/paraglide/messages";
 
 type LineVehiclesTimelineProps = {
 	lineId: number;
@@ -74,7 +76,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 				const end = act.endedAt ? dayjs(act.endedAt).tz(network.timezone) : undefined;
 				const timeRange = end
 					? `<span class="font-bold">${start.format("HH:mm")}</span> - <span class="font-bold">${end.format("HH:mm")}</span>`
-					: `depuis <span class="font-bold">${start.format("HH:mm")}</span>`;
+					: `${m.line_assignments_since()} <span class="font-bold">${start.format("HH:mm")}</span>`;
 
 				return {
 					id: `${a.id}-${index}-${act.startedAt}`,
@@ -108,7 +110,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 		const options = {
 			showCurrentTime: true,
-			locale: "fr",
+			locale: getLocale(),
 			orientation: "top",
 			align: "center",
 			maxHeight: `calc(100svh - ${window.innerWidth >= 640 ? 286 : 230}px)`,
@@ -243,7 +245,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			</Activity>
 			{assignments.vehicles.length === 0 ? (
 				<p className="mt-4 text-center text-muted-foreground">
-					Aucun véhicule n'a été observé sur cette ligne à cette date.
+					{m.line_assignments_empty()}
 				</p>
 			) : null}
 		</>

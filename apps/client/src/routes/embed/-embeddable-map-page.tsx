@@ -9,6 +9,7 @@ import { GetNetworkQuery } from "~/api/networks";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
 import { Signature } from "~/components/vehicles-map/signature";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
+import * as m from "~/paraglide/messages";
 
 export default function EmbeddableMapPage() {
 	const { networkId } = useParams({ from: "/embed/$networkId" });
@@ -56,7 +57,7 @@ export default function EmbeddableMapPage() {
 
 	return (
 		<>
-			<title>{`Carte du réseau ${network.name}`}</title>
+			<title>{m.page_title_embed_map({ networkName: network.name })}</title>
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			<MapComponent containerProps={{ className: "h-dvh relative" }} mapOptions={mapOptions} ref={onMap}>
 				<FilterModuleControl

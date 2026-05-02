@@ -5,6 +5,7 @@ import { type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useSt
 import type { Line } from "~/api/networks";
 import { TitleSeparator } from "~/components/ui/title-separator";
 import { FilterModuleLineCard } from "~/components/vehicles-map/filter-module/line/line-card";
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 type VirtualRow =
@@ -46,7 +47,7 @@ export function LinesInnerList({
 				key: "sep-favorites",
 				title: (
 					<>
-						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Lignes favorites
+						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> {m.map_lines_favorites()}
 					</>
 				),
 				first,
@@ -57,7 +58,7 @@ export function LinesInnerList({
 
 		if (runningLines.length > 0) {
 			if (favoriteLines.length > 0) {
-				rows.push({ kind: "separator", key: "sep-running", title: "Lignes en service", first });
+				rows.push({ kind: "separator", key: "sep-running", title: m.map_lines_running(), first });
 				first = false;
 			}
 			for (const line of runningLines) rows.push({ kind: "line", key: `line-${line.id}`, line, isFavorite: false });
@@ -124,8 +125,11 @@ export function LinesInnerList({
 							{row.kind === "info-banner" && (
 								<div className="bg-neutral-200 dark:bg-neutral-700 text-muted-foreground text-xs text-center p-2 rounded-md my-1.5 mx-3">
 									<InfoIcon className="inline size-4 align-text-bottom mr-1" />
-									Aucun véhicule ne circule sur{" "}
-									{row.runningCount > 0 ? "ces lignes" : row.favoriteCount > 0 ? "le reste du réseau" : "ce réseau"}.
+									{row.runningCount > 0
+										? m.map_lines_no_vehicle_these()
+										: row.favoriteCount > 0
+											? m.map_lines_no_vehicle_rest()
+											: m.map_lines_no_vehicle_network()}
 								</div>
 							)}
 						</div>

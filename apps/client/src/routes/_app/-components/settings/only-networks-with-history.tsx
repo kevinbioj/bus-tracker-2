@@ -2,6 +2,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import * as m from "~/paraglide/messages";
 
 export function OnlyNetworksWithHistorySetting() {
 	const [onlyNetworksWithHistory, setOnlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
@@ -9,10 +10,8 @@ export function OnlyNetworksWithHistorySetting() {
 	return (
 		<div>
 			<div className="grid gap-0.5 mb-1">
-				<Label className="text-base">Réseaux à afficher</Label>
-				<p className="text-sm text-muted-foreground">
-					Liste des réseaux à afficher sur la page de sélection de la page Données.
-				</p>
+				<Label className="text-base">{m.settings_only_networks_with_history_label()}</Label>
+				<p className="text-sm text-muted-foreground">{m.settings_only_networks_with_history_description()}</p>
 			</div>
 			<Tabs
 				value={onlyNetworksWithHistory ? "history" : "all"}
@@ -20,8 +19,8 @@ export function OnlyNetworksWithHistorySetting() {
 				className="w-full"
 			>
 				<TabsList className="grid w-full grid-cols-2">
-					<TabsTrigger value="all">Tous les réseaux</TabsTrigger>
-					<TabsTrigger value="history">Avec historique</TabsTrigger>
+					<TabsTrigger value="all">{m.settings_only_networks_with_history_all()}</TabsTrigger>
+					<TabsTrigger value="history">{m.settings_only_networks_with_history_history()}</TabsTrigger>
 				</TabsList>
 			</Tabs>
 		</div>

@@ -7,6 +7,7 @@ import { MapContainer, TileLayer } from "react-leaflet";
 
 import { GetLineQuery } from "~/api/lines";
 import type { Vehicle } from "~/api/vehicles";
+import * as m from "~/paraglide/messages";
 import ReactMoveableCircleMarker, { type MoveableCircleMarker } from "~/utils/moveable-circler-marker";
 
 type VehicleLiveProps = {
@@ -64,8 +65,8 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 				ref={mapRef}
 			>
 				<p className="absolute bg-white font-bold top-0.5 left-0.5 px-2 pt-0.5 rounded-md text-black z-400">
-					<CircleIcon className="align-text-bottom animate-pulse fill-red-500 stroke-none size-4 inline" /> CLIQUER POUR
-					VOIR EN DIRECT
+					<CircleIcon className="align-text-bottom animate-pulse fill-red-500 stroke-none size-4 inline" />{" "}
+					{m.vehicle_details_click_live()}
 				</p>
 				<TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 				<ReactMoveableCircleMarker

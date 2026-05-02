@@ -16,22 +16,23 @@ import { HighCrowdIcon } from "~/icons/crowd/high";
 import { LowCrowdIcon } from "~/icons/crowd/low";
 import { MediumCrowdIcon } from "~/icons/crowd/medium";
 import { NoPassengersIcon } from "~/icons/crowd/no-passengers";
+import * as m from "~/paraglide/messages";
 
 const positionIconDetails = {
 	GPS: {
 		iconColor: "#38A169",
 		tooltipClasses: "bg-green-600 dark:bg-green-700 text-white",
-		tooltipText: "Position GPS",
+		tooltipText: m.marker_position_gps,
 	},
 	ESTIMATED: {
 		iconColor: "#DD6B20",
 		tooltipClasses: "bg-orange-600 dark:bg-orange-700 text-white",
-		tooltipText: "Position estimée",
+		tooltipText: m.marker_position_estimated,
 	},
 	SCHEDULED: {
 		iconColor: "#E53E3E",
 		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
-		tooltipText: "Position théorique",
+		tooltipText: m.marker_position_scheduled,
 	},
 } as const;
 
@@ -40,25 +41,25 @@ const occupancyIconDetails = {
 		IconElement: LowCrowdIcon,
 		iconClass: "fill-green-600 size-4",
 		tooltipClasses: "bg-green-600 dark:bg-green-700 text-white",
-		tooltipText: "Faible affluence",
+		tooltipText: m.marker_occupancy_low,
 	},
 	MEDIUM: {
 		IconElement: MediumCrowdIcon,
 		iconClass: "fill-orange-600 size-5",
 		tooltipClasses: "bg-orange-600 dark:bg-orange-700 text-white",
-		tooltipText: "Affluence moyenne",
+		tooltipText: m.marker_occupancy_medium,
 	},
 	HIGH: {
 		IconElement: HighCrowdIcon,
 		iconClass: "fill-red-600 size-5",
 		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
-		tooltipText: "Forte affluence",
+		tooltipText: m.marker_occupancy_high,
 	},
 	NO_PASSENGERS: {
 		IconElement: NoPassengersIcon,
 		iconClass: "fill-red-600 size-5",
 		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
-		tooltipText: "Ne prend pas de voyageur",
+		tooltipText: m.marker_occupancy_no_passengers,
 	},
 } as const;
 
@@ -75,10 +76,10 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	const recordedAt = useDebouncedMemo(
 		() => {
 			if (displayAbsoluteTime) return dayjs(journey.position.recordedAt).format("HH:mm:ss");
-			if (dayjs().isBefore(journey.position.recordedAt)) return "avant-départ";
+			if (dayjs().isBefore(journey.position.recordedAt)) return m.marker_before_departure();
 
 			const duration = dayjs.duration(-dayjs().diff(journey.position.recordedAt));
-			if (Math.abs(duration.asSeconds()) < 10) return "à l'instant";
+			if (Math.abs(duration.asSeconds()) < 10) return m.marker_just_now();
 			return duration.humanize(true);
 		},
 		3_000,
@@ -163,7 +164,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				{occupancyInformation !== undefined && (
 					<CustomTooltip
 						className={clsx("font-bold", occupancyInformation.tooltipClasses)}
-						content={occupancyInformation.tooltipText}
+						content={occupancyInformation.tooltipText()}
 						place="left"
 					>
 						<occupancyInformation.IconElement className={clsx("align-middle", occupancyInformation.iconClass)} />
@@ -171,7 +172,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				)}
 				<CustomTooltip
 					className={clsx("font-bold", positionInformation.tooltipClasses)}
-					content={positionInformation.tooltipText}
+					content={positionInformation.tooltipText()}
 					place="left"
 				>
 					<SatelliteDishIcon className="size-5" color={positionInformation.iconColor} />

@@ -13,6 +13,7 @@ import { Button } from "~/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 import { Form } from "~/components/ui/form";
 import { useEditor } from "~/hooks/use-editor";
+import * as m from "~/paraglide/messages";
 
 const schema = z.object({
 	reason: z.enum(vehicleArchiveReasons),
@@ -20,13 +21,13 @@ const schema = z.object({
 	archivedAt: z.string().nullish(),
 });
 
-const vehicleArchiveReasonLabels: Record<VehicleArchiveReason, string> = {
-	FAILURE: "Casse matérielle",
-	FIRE: "Incendie",
-	RETIRED: "Réforme",
-	SOLD: "Vente",
-	TRANSFER: "Transfert",
-	OTHER: "Autre",
+const vehicleArchiveReasonLabels: Record<VehicleArchiveReason, () => string> = {
+	FAILURE: m.vehicle_action_archive_reason_failure,
+	FIRE: m.vehicle_action_archive_reason_fire,
+	RETIRED: m.vehicle_action_archive_reason_retired,
+	SOLD: m.vehicle_action_archive_reason_sold,
+	TRANSFER: m.vehicle_action_archive_reason_transfer,
+	OTHER: m.vehicle_action_archive_reason_other,
 };
 
 type VehicleCharacteristicsArchiveProps = {
@@ -55,13 +56,13 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 		try {
 			await archiveVehicle({ json, token: editorToken });
 
-			enqueueSnackbar({ message: "Ce véhicule a été archivé avec succès.", variant: "success" });
+			enqueueSnackbar({ message: m.vehicle_action_archive_success(), variant: "success" });
 
 			queryClient.invalidateQueries({ queryKey: ["network-vehicles", vehicle.networkId] });
 			queryClient.invalidateQueries({ queryKey: ["vehicles", vehicle.id] });
 			onOpenChange(false);
 		} catch {
-			enqueueSnackbar({ message: "Une erreur est survenue lors de l'archivage du véhicule.", variant: "error" });
+			enqueueSnackbar({ message: m.vehicle_action_archive_error(), variant: "error" });
 		}
 	};
 
@@ -69,19 +70,18 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent aria-describedby={undefined}>
 				<DialogHeader>
-					<DialogTitle>Archiver ce véhicule</DialogTitle>
+					<DialogTitle>{m.vehicle_action_archive_title()}</DialogTitle>
 				</DialogHeader>
 				<div className="text-muted-foreground text-sm">
-					Un véhicule peut être archivé pour les raisons suivantes :
+					{m.vehicle_action_archive_description_intro()}
 					<ul className="list-inside list-disc">
-						<li>
-							il est réformé <span className="italic">(TC-Infos fait foi)</span> ;
-						</li>
-						<li>il ne correspond pas à un réel véhicule du réseau.</li>
+						<li>{m.vehicle_action_archive_description_retired()}</li>
+						<li>{m.vehicle_action_archive_description_unreal()}</li>
 					</ul>
 					<br />
-					Cocher la case ci-dessous <span className="font-bold">si et seulement si</span> le numéro du véhicule est
-					susceptible d'être réutilisé à court terme sur le réseau.
+					{m.vehicle_action_archive_wipe_warning_before()}
+					<span className="font-bold">{m.vehicle_action_archive_wipe_warning_emphasis()}</span>
+					{m.vehicle_action_archive_wipe_warning_after()}
 				</div>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)}>
@@ -90,7 +90,7 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 							name="wipeReference"
 							label={
 								<>
-									Casser l'association <span className="font-mono">{vehicle.ref}</span> du véhicule
+									{m.vehicle_action_archive_break_ref({ vehicleRef: vehicle.ref })}
 								</>
 							}
 							itemProps={{ className: "mb-5" }}
@@ -101,24 +101,24 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 						<FormDateTimePicker
 							control={form.control}
 							name="archivedAt"
-							label="Date d'archivage"
+							label={m.vehicle_action_archive_date_label()}
 							itemProps={{ className: "mb-5" }}
 						/>
 						<FormSelect
 							control={form.control}
 							name="reason"
-							label="Raison de l'archivage"
-							options={Object.entries(vehicleArchiveReasonLabels).map(([value, label]) => ({ label, value }))}
+							label={m.vehicle_action_archive_reason_label()}
+							options={Object.entries(vehicleArchiveReasonLabels).map(([value, label]) => ({ label: label(), value }))}
 							itemProps={{ className: "mb-5" }}
 						/>
 						<DialogFooter className="gap-3">
 							<DialogClose asChild>
 								<Button type="button" variant="secondary">
-									Annuler
+									{m.vehicle_action_cancel()}
 								</Button>
 							</DialogClose>
 							<Button type="submit" variant="destructive">
-								Archiver
+								{m.vehicle_action_archive()}
 							</Button>
 						</DialogFooter>
 					</form>

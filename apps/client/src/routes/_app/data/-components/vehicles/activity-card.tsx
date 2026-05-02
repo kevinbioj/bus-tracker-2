@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import type { VehicleTimelineDayActivity } from "~/api/vehicles";
+import * as m from "~/paraglide/messages";
 
 type ActivityCardProps = { activity: VehicleTimelineDayActivity; day: string };
 
@@ -45,7 +46,7 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 			<p className="flex-1 flex items-center gap-1 my-auto text-2xl">
 				{ongoing ? (
 					<>
-						depuis <TimeDisplay at={startedAt} showDate={!didStartOnServiceDate} />
+						{m.vehicle_history_since()} <TimeDisplay at={startedAt} showDate={!didStartOnServiceDate} />
 					</>
 				) : (
 					<>

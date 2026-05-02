@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Link } from "~/components/ui/link";
 import { Separator } from "~/components/ui/separator";
+import * as m from "~/paraglide/messages";
 
 export const Route = createFileRoute("/_app/legal")({
 	component: LegalPage,
@@ -11,11 +12,11 @@ export const Route = createFileRoute("/_app/legal")({
 function LegalPage() {
 	return (
 		<>
-			<title>Mentions légales – Bus Tracker</title>
+			<title>{m.legal_page_title()}</title>
 			<main className="p-3 max-w-(--breakpoint-xl) w-full mx-auto space-y-4">
 				<div className="flex flex-col gap-2">
-					<h2 className="font-bold text-2xl">Mentions légales & Politique de confidentialité</h2>
-					<p className="text-muted-foreground text-sm uppercase tracking-widest">Dernière mise à jour : Mars 2026</p>
+					<h2 className="font-bold text-2xl">{m.legal_title()}</h2>
+					<p className="text-muted-foreground text-sm uppercase tracking-widest">{m.legal_updated_at()}</p>
 					<Separator />
 				</div>
 
@@ -27,22 +28,19 @@ function LegalPage() {
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									1
 								</span>{" "}
-								Édition du site
+								{m.legal_editor_title()}
 							</h3>
 							<div className="space-y-3">
 								<p className="leading-relaxed">
-									Le présent site est édité à des fins non professionnelles par un particulier, agissant dans le cadre
-									d'une activité de loisir.
+									{m.legal_editor_text()}
 								</p>
 								<Card className="bg-muted/50 border-none shadow-none">
 									<CardContent className="p-4 pt-4 italic text-sm text-muted-foreground leading-relaxed">
-										Conformément aux dispositions de l'article 6, III, 2° de la loi n° 2004-575 du 21 juin 2004 (LCEN),
-										l'éditeur a choisi de rester <strong>anonyme</strong>. Les coordonnées personnelles ont été
-										transmises en bonne et due forme à l'hébergeur.
+										{m.legal_editor_anonymous()}
 									</CardContent>
 								</Card>
 								<p className="flex items-center gap-2">
-									<span className="font-semibold">Contact :</span>
+									<span className="font-semibold">{m.legal_contact()}</span>
 									<Link to="mailto:contact@bus-tracker.fr" className="underline">
 										contact@bus-tracker.fr
 									</Link>
@@ -56,7 +54,7 @@ function LegalPage() {
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									2
 								</span>{" "}
-								Hébergement
+								{m.legal_hosting_title()}
 							</h3>
 							<Card>
 								<CardHeader className="p-4 pb-2">
@@ -67,10 +65,10 @@ function LegalPage() {
 									<p>78520 Limay, France</p>
 									<div className="pt-2 flex flex-col gap-1">
 										<p>
-											<span className="font-medium text-muted-foreground">E-mail :</span> contact[at]yorkhost.fr
+											<span className="font-medium text-muted-foreground">{m.legal_email()}</span> contact[at]yorkhost.fr
 										</p>
 										<p>
-											<span className="font-medium text-muted-foreground">Site :</span>{" "}
+											<span className="font-medium text-muted-foreground">{m.legal_site()}</span>{" "}
 											<Link to="https://www.yorkhost.fr" target="_blank" className="underline">
 												www.yorkhost.fr
 											</Link>
@@ -88,13 +86,12 @@ function LegalPage() {
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									3
 								</span>{" "}
-								Propriété Intellectuelle
+								{m.legal_ip_title()}
 							</h3>
 							<div className="space-y-4">
 								<div className="space-y-2">
 									<p className="text-sm leading-relaxed">
-										Le code source est mis à disposition sous licence <strong>GNU General Public License v3.0</strong>.
-										Vous êtes libre de le consulter et de le modifier selon les termes de cette licence sur{" "}
+										{m.legal_source_license()}{" "}
 										<Link className="underline" to="https://github.com/kevinbioj/bus-tracker-2" target="_blank">
 											GitHub
 										</Link>
@@ -103,13 +100,12 @@ function LegalPage() {
 								</div>
 								<Card className="bg-amber-500/10 border-amber-500/20 shadow-none">
 									<CardContent className="p-4 pt-4 space-y-2">
-										<h4 className="font-semibold text-amber-900 dark:text-amber-200">Contenus & Identité Visuelle</h4>
+										<h4 className="font-semibold text-amber-900 dark:text-amber-200">{m.legal_content_identity_title()}</h4>
 										<p className="text-amber-800 dark:text-amber-300 text-sm leading-relaxed">
-											L'accès au code source ne confère aucun droit sur les contenus rédactionnels, le logo ou la charte
-											graphique.
+											{m.legal_content_identity_text()}
 											<br />
 											<strong className="underline decoration-amber-500/50">
-												La copie servile du site ou de son identité visuelle est strictement interdite.
+												{m.legal_content_identity_warning()}
 											</strong>
 										</p>
 									</CardContent>
@@ -123,21 +119,20 @@ function LegalPage() {
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									4
 								</span>{" "}
-								Confidentialité (RGPD)
+								{m.legal_privacy_title()}
 							</h3>
 							<div className="space-y-3">
 								<p className="leading-relaxed">
-									<strong>PostHog EU</strong> collecte pour Bus Tracker les données suivantes à des fins d'analyse de la
-									fréquentation et d'aide à la résolution des anomalies :
+									{m.legal_privacy_intro()}
 								</p>
 								<ul className="list-disc ml-6 space-y-1 text-sm text-muted-foreground">
-									<li>Données techniques anonymisées (navigateur, système d'exploitation, type de terminal)</li>
-									<li>Pages visitées</li>
-									<li>Géolocalisation approximative (précise à la ville près)</li>
-									<li>Erreurs levées dans le cadre de l'exécution de l'application</li>
+									<li>{m.legal_privacy_technical_data()}</li>
+									<li>{m.legal_privacy_pages()}</li>
+									<li>{m.legal_privacy_location()}</li>
+									<li>{m.legal_privacy_errors()}</li>
 								</ul>
 								<p className="text-sm italic text-muted-foreground pt-2">
-									Vos droits (accès, suppression) peuvent être exercés par mail à{" "}
+									{m.legal_privacy_rights()}{" "}
 									<Link to="mailto:contact@bus-tracker.fr" className="font-medium underline decoration-primary/50">
 										contact@bus-tracker.fr
 									</Link>
@@ -152,17 +147,14 @@ function LegalPage() {
 								<span className="bg-primary text-primary-foreground rounded-full size-6 inline-flex items-center justify-center text-xs">
 									5
 								</span>{" "}
-								Responsabilité & Fiabilité
+								{m.legal_reliability_title()}
 							</h3>
 							<div className="space-y-3">
 								<p className="leading-relaxed">
-									Bien que les données soient considérées comme fiables pour la majorité des réseaux, elles sont
-									fournies <strong>à titre indicatif uniquement</strong>.
+									{m.legal_reliability_indicative()}
 								</p>
 								<p className="leading-relaxed">
-									Bus Tracker ne peut en aucun cas servir de preuve "légale" ou officielle (notamment devant un
-									employeur ou toute autre autorité). L'exactitude des positions et des horaires n'est pas garantie et
-									dépend des flux de données fournis par les opérateurs.
+									{m.legal_reliability_proof()}
 								</p>
 							</div>
 						</section>

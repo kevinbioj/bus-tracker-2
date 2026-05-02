@@ -10,6 +10,7 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
+import * as m from "~/paraglide/messages";
 
 import { NetworkHeader } from "./network-header";
 
@@ -39,7 +40,7 @@ export function DataPageLayout({
 					<BreadcrumbList>
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link to="/data">Données</Link>
+								<Link to="/data">{m.data_breadcrumb()}</Link>
 							</BreadcrumbLink>
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />

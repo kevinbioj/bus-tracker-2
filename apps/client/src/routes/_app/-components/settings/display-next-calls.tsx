@@ -3,6 +3,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import * as m from "~/paraglide/messages";
 
 export function DisplayNextCallsSetting() {
 	const id = useId();
@@ -12,9 +13,9 @@ export function DisplayNextCallsSetting() {
 		<div className="flex items-center justify-between gap-4">
 			<div className="grid gap-0.5">
 				<Label htmlFor={id} className="text-base cursor-pointer">
-					Prochains passages
+					{m.settings_display_next_calls_label()}
 				</Label>
-				<p className="text-sm text-muted-foreground">Afficher les arrêts suivants (si disponibles).</p>
+				<p className="text-sm text-muted-foreground">{m.settings_display_next_calls_description()}</p>
 			</div>
 			<Switch id={id} checked={displayNextCalls} onCheckedChange={setDisplayNextCalls} />
 		</div>

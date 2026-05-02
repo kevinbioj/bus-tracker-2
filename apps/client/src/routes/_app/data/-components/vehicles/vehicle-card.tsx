@@ -17,6 +17,7 @@ import type { Vehicle } from "~/api/vehicles";
 import { useLine } from "~/hooks/use-line";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import { Zzz } from "~/icons/zzz";
+import * as m from "~/paraglide/messages";
 
 export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
@@ -89,7 +90,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 					{vehicle.designation && <p className="font-bold">{vehicle.designation}</p>}
 					{vehicle.activity?.status === "online" ? (
 						<p>
-							En circulation depuis{" "}
+							{m.vehicle_details_running_since()}{" "}
 							<span className="font-bold tabular-nums">
 								{dayjs(vehicle.activity.since).tz(network?.timezone).format("HH:mm")}
 							</span>
@@ -98,7 +99,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 						<p>
 							{vehicle.archivedAt ? (
 								<>
-									Archivé le{" "}
+									{m.vehicle_details_archived_at()}{" "}
 									{dayjs().diff(vehicle.archivedAt, "years") >= 1 ? (
 										<span className="font-bold tabular-nums">
 											{dayjs(vehicle.archivedAt).tz(network?.timezone).format("DD/MM/YYYY")}
@@ -108,7 +109,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 											<span className="font-bold tabular-nums">
 												{dayjs(vehicle.archivedAt).tz(network?.timezone).format("DD/MM")}
 											</span>{" "}
-											à{" "}
+											{m.vehicle_time_at()}{" "}
 											<span className="font-bold tabular-nums">
 												{dayjs(vehicle.archivedAt).tz(network?.timezone).format("HH:mm")}
 											</span>
@@ -117,11 +118,11 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 								</>
 							) : (
 								<>
-									Hors-ligne
+									{m.vehicle_details_offline()}
 									{vehicle.activity.since !== null && (
 										<>
 											{" "}
-											depuis le{" "}
+											{m.vehicle_details_offline_since()}{" "}
 											{dayjs().diff(vehicle.activity.since, "years") >= 1 ? (
 												<span className="font-bold tabular-nums">
 													{dayjs(vehicle.activity.since).tz(network?.timezone).format("DD/MM/YYYY")}
@@ -131,7 +132,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 													<span className="font-bold tabular-nums">
 														{dayjs(vehicle.activity.since).tz(network?.timezone).format("DD/MM")}
 													</span>{" "}
-													à{" "}
+													{m.vehicle_time_at()}{" "}
 													<span className="font-bold tabular-nums">
 														{dayjs(vehicle.activity.since).tz(network?.timezone).format("HH:mm")}
 													</span>

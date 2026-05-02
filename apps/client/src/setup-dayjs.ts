@@ -8,6 +8,8 @@ import updateLocalePlugin from "dayjs/plugin/updateLocale";
 import utcPlugin from "dayjs/plugin/utc";
 import "dayjs/locale/en";
 
+import { getLocale } from "./paraglide/runtime";
+
 dayjs.extend(durationPlugin);
 dayjs.extend(localizedFormatPlugin);
 dayjs.extend(relativeTimePlugin);
@@ -22,4 +24,4 @@ dayjs.updateLocale("fr", {
 	},
 });
 
-dayjs.locale(navigator.language);
+dayjs.locale(getLocale());

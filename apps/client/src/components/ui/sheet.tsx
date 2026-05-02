@@ -2,6 +2,7 @@ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 export function Sheet({ ...props }: SheetPrimitive.Root.Props) {
@@ -63,7 +64,7 @@ export function SheetContent({
 						render={
 							<Button variant="ghost" className="absolute top-3 right-3" size="sm">
 								<XIcon />
-								<span className="sr-only">Close</span>
+								<span className="sr-only">{m.common_close()}</span>
 							</Button>
 						}
 					/>

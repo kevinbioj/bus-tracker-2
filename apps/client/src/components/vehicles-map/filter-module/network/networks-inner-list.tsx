@@ -5,6 +5,7 @@ import { type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useSt
 import type { Network } from "~/api/networks";
 import { TitleSeparator } from "~/components/ui/title-separator";
 import { FilterModuleNetworkCard } from "~/components/vehicles-map/filter-module/network/network-card";
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 type VirtualRow =
@@ -43,7 +44,7 @@ export function NetworkInnerList({
 				key: "sep-favorites",
 				title: (
 					<>
-						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> Réseaux favoris
+						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> {m.map_network_favorites()}
 					</>
 				),
 				first,

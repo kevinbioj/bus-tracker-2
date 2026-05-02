@@ -13,6 +13,7 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { useEditor } from "~/hooks/use-editor";
+import * as m from "~/paraglide/messages";
 
 type VehicleCharacteristicsActionsProps = {
 	vehicle: Vehicle;
@@ -35,19 +36,19 @@ export function VehicleCharacteristicsActions({ vehicle }: VehicleCharacteristic
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end" className="z-1000">
 					<DropdownMenuItem onClick={() => setActiveDialog("edit")}>
-						<PencilIcon /> Éditer
+						<PencilIcon /> {m.vehicle_action_edit()}
 					</DropdownMenuItem>
 					{vehicle.archivedAt === null ? (
 						<DropdownMenuItem
 							className="text-red-600 hover:!text-red-600 hover:!bg-red-600/20"
 							onClick={() => setActiveDialog("archive")}
 						>
-							<Trash2Icon /> Archiver
+							<Trash2Icon /> {m.vehicle_action_archive()}
 						</DropdownMenuItem>
 					) : (
 						!vehicle.ref.endsWith(":ARCHIVED") && (
 							<DropdownMenuItem onClick={() => setActiveDialog("unarchive")}>
-								<ArchiveIcon /> Désarchiver
+								<ArchiveIcon /> {m.vehicle_action_unarchive()}
 							</DropdownMenuItem>
 						)
 					)}

@@ -3,6 +3,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import * as m from "~/paraglide/messages";
 
 export function ShowIdentifiedVehiclesPanelSetting() {
 	const id = useId();
@@ -12,11 +13,9 @@ export function ShowIdentifiedVehiclesPanelSetting() {
 		<div className="flex items-center justify-between gap-4">
 			<div className="grid gap-0.5">
 				<Label className="text-base cursor-pointer" htmlFor={id}>
-					Tableau des véhicules identifiés
+					{m.settings_show_identified_vehicles_panel_label()}
 				</Label>
-				<p className="text-sm text-muted-foreground">
-					Lors du filtre par ligne sur la carte, affiche le tableau des véhicules identifiés circulant sur la ligne.
-				</p>
+				<p className="text-sm text-muted-foreground">{m.settings_show_identified_vehicles_panel_description()}</p>
 			</div>
 			<Switch checked={showPanel} id={id} onCheckedChange={setShowPanel} />
 		</div>

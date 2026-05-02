@@ -2,10 +2,11 @@ import { Slot } from "@radix-ui/react-slot";
 import { ChevronRight } from "lucide-react";
 import type * as React from "react";
 
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 export function Breadcrumb(props: React.ComponentProps<"nav">) {
-	return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />;
+	return <nav aria-label={m.breadcrumb_aria_label()} data-slot="breadcrumb" {...props} />;
 }
 
 export function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {

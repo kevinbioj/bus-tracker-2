@@ -4,6 +4,7 @@ import { match, P } from "ts-pattern";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { Girouette } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 import { useLine } from "~/hooks/use-line";
+import * as m from "~/paraglide/messages";
 
 const guessFont = (text: string) => {
 	if (text.length <= "KKKKKKKKKKKKKKKKK".length) return "1508SUPX";
@@ -23,7 +24,7 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 	const [, setLineId] = useQueryState("line-id", parseAsInteger);
 
 	const line = useLine(girouette ? undefined : journey.networkId, journey.lineId);
-	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName ?? "Destination inconnue";
+	const destination = journey.destination ?? journey.calls?.at(-1)?.stopName ?? m.marker_destination_unknown();
 
 	const defaultRouteNumber = line?.girouetteNumber ?? line?.number ?? "";
 

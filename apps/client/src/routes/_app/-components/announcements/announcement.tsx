@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { LucideCloudLightning, LucideInfo } from "lucide-react";
 
 import type { Announcement } from "~/api/announcements";
+import * as m from "~/paraglide/messages";
 
 type AnnouncementProps = {
 	announcement: Announcement;
@@ -27,15 +28,15 @@ export function AnnouncementContent({ announcement }: Readonly<AnnouncementProps
 				// biome-ignore lint/security/noDangerouslySetInnerHtml: content is controlled
 				<div dangerouslySetInnerHTML={{ __html: announcement.content }} />
 			) : (
-				<p className="text-muted-foreground">Cette actualité ne contient pas de détails.</p>
+				<p className="text-muted-foreground">{m.announcements_no_details()}</p>
 			)}
 			{(announcement.publishedAt !== null || announcement.updatedAt !== announcement.createdAt) && (
 				<p className="flex justify-end mt-3 text-muted-foreground text-sm">
 					{announcement.updatedAt !== announcement.createdAt && (
-						<>Mise à jour le {dayjs(announcement.updatedAt).format("DD/MM/YYYY [à] HH:mm")}</>
+						<>{m.announcements_updated_at({ date: dayjs(announcement.updatedAt).format("L LT") })}</>
 					)}
 					{announcement.publishedAt !== null && announcement.updatedAt !== announcement.createdAt && " • "}
-					{announcement.publishedAt !== null && dayjs(announcement.publishedAt).format("DD/MM/YYYY [à] HH:mm")}
+					{announcement.publishedAt !== null && dayjs(announcement.publishedAt).format("L LT")}
 				</p>
 			)}
 		</>

@@ -5,6 +5,7 @@ import { ArrowDownRight, ArrowUpRight, Rss } from "lucide-react";
 import { match, P } from "ts-pattern";
 
 import { CustomTooltip } from "~/components/ui/custom-tooltip";
+import * as m from "~/paraglide/messages";
 
 type NextStopsProps = { calls: VehicleJourneyCall[]; tooltipId?: string };
 
@@ -30,7 +31,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										() =>
 											({
 												className: "bg-red-600 dark:bg-red-700 font-bold text-white",
-												content: "Arrêt non desservi",
+												content: m.stop_call_skipped(),
 											}) as const,
 									)
 									.with(
@@ -38,7 +39,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										() =>
 											({
 												className: "bg-yellow-700 dark:bg-yellow-500 font-bold text-white dark:text-black",
-												content: "Desserte supplémentaire",
+												content: m.stop_call_extra(),
 											}) as const,
 									)
 									.with(
@@ -46,7 +47,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										([, delay]) =>
 											({
 												className: "bg-orange-600 dark:bg-orange-700 font-bold text-white",
-												content: `Retard de ${delay} minute${delay > 1 ? "s" : ""}`,
+												content: m.stop_call_delay({ count: delay, plural: delay > 1 ? "s" : "" }),
 											}) as const,
 									)
 									.with(
@@ -54,14 +55,14 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										([, delay]) =>
 											({
 												className: "bg-red-600 dark:bg-red-700 font-bold text-white",
-												content: `Avance de ${Math.abs(delay)} minute${delay < -1 ? "s" : ""}`,
+												content: m.stop_call_early({ count: Math.abs(delay), plural: delay < -1 ? "s" : "" }),
 											}) as const,
 									)
 									.otherwise(
 										() =>
 											({
 												className: "bg-green-600 dark:bg-green-700 font-bold text-white",
-												content: "À l'heure",
+												content: m.stop_call_on_time(),
 											}) as const,
 									)
 							: null;
