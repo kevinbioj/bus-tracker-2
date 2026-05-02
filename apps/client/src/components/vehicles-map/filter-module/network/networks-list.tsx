@@ -108,7 +108,7 @@ export function FilterModuleNetworkList({
 				}
 			/>
 			<SheetContent ref={scrollRef} className="gap-0 z-999 overflow-y-auto overscroll-none">
-				<SheetHeader className="bg-background shrink-0 sticky top-0 z-9999">
+				<SheetHeader className="bg-popover text-popover-foreground shrink-0 sticky top-0 z-9999">
 					<SheetTitle>{m.map_network_list_title()}</SheetTitle>
 					<NetworkSearchBar query={searchQuery} onQueryChange={setSearchQuery} />
 				</SheetHeader>

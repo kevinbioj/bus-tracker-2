@@ -58,6 +58,7 @@ export function EditorTokenInput() {
 							}}
 							type="button"
 							size="icon"
+							variant="secondary"
 							title={m.settings_editor_copy_token()}
 						>
 							<Copy />

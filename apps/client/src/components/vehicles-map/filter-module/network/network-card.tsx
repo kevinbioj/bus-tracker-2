@@ -18,7 +18,7 @@ export function FilterModuleNetworkCard({
 }: Readonly<FilterModuleNetworkCardProps>) {
 	return (
 		<div
-			className=" py-1 px-3 relative w-full"
+			className="py-1 px-3 relative w-full"
 			key={network.id}
 			style={network.color ? ({ "--network-color": network.color } as React.CSSProperties) : undefined}
 		>
@@ -31,7 +31,7 @@ export function FilterModuleNetworkCard({
 				{isFavorite ? <StarIcon className="fill-yellow-400 stroke-yellow-600" /> : <StarIcon />}
 			</Button>
 			<Button
-				className="h-16 border drop-shadow-sm flex justify-between items-center pr-4 pl-10 py-2 rounded-lg transition-colors w-full relative overflow-hidden bg-primary/25 text-neutral-800 dark:text-neutral-200 hover:text-primary-foreground card-network-background"
+				className="h-16 border drop-shadow-sm flex justify-between items-center pr-4 pl-10 py-2 rounded-lg transition-colors w-full relative overflow-hidden bg-accent text-accent-foreground hover:bg-accent/70 dark:text-neutral-200 card-network-background"
 				style={{
 					backgroundColor: network.color ? `${network.color}33` : undefined,
 					borderColor: network.color ?? undefined,

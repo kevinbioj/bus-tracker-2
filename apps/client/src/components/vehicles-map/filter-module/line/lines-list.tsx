@@ -71,7 +71,7 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 	return (
 		<Sheet open={network !== undefined} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent ref={scrollRef} className="z-999 gap-0 overflow-y-auto overscroll-none" showCloseButton={false}>
-				<SheetHeader className="pt-4 pb-1.5 shrink-0 sticky top-0 z-9999 bg-background">
+				<SheetHeader className="pt-4 pb-1.5 shrink-0 sticky top-0 z-9999 bg-popover text-popover-foreground">
 					<div className="flex items-start gap-2">
 						<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
 							<ArrowLeft className="size-full" />
@@ -88,7 +88,7 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 					<div className="flex flex-col gap-1">
 						{Array.from({ length: 10 }).map((_, index) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: safe here
-							<Skeleton className="bg-neutral-200 h-16 w-full shrink-0" key={index} />
+							<Skeleton className="bg-accent h-16 w-full shrink-0" key={index} />
 						))}
 					</div>
 				) : (

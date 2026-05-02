@@ -81,7 +81,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 				</h2>
 			</div>
 			<div
-				className="border-t sm:border-l border-black dark:border-white mx-2"
+				className="border-t sm:border-l border-black dark:border-white mx-2 my-1"
 				style={{ borderColor: line?.textColor ?? undefined }}
 			/>
 			<div className="flex gap-2 flex-1 mt-2 mx-2 sm:mt-0 sm:mx-0">

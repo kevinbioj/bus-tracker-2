@@ -292,9 +292,9 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					{/* Archive */}
 					{hasArchivedVehicles && (
 						<Button
-							className="mt-auto h-10 w-full"
+							className="mt-auto"
 							onClick={() => setShowArchived(showArchived ? null : true)}
-							size="icon"
+							size="icon-xl"
 							variant={showArchived ? "branding-default" : "secondary"}
 						>
 							<ArchiveIcon />
@@ -410,9 +410,9 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							</Select>
 							{hasArchivedVehicles && (
 								<Button
-									className="mt-0.5 size-9"
+									className="h-full"
 									onClick={() => setShowArchived(showArchived ? null : true)}
-									size="icon-sm"
+									size="icon-lg"
 									type="button"
 									variant={showArchived ? "branding-default" : "secondary"}
 								>

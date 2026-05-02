@@ -74,6 +74,7 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 				<div className="flex gap-2">
 					{vehicle.tcId !== null && (
 						<Button
+							className="border-none"
 							size="icon"
 							nativeButton={false}
 							render={

@@ -2,7 +2,7 @@ import type { ComponentProps } from "react";
 import type { ControllerProps, FieldValues } from "react-hook-form";
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 
 export type FormSelectOption = {
 	label: string;
@@ -58,11 +58,13 @@ export function FormSelect<T extends FieldValues = FieldValues>({
 							</SelectTrigger>
 						</FormControl>
 						<SelectContent className="z-10000">
-							{options.map(({ label, value }) => (
-								<SelectItem key={value} value={value}>
-									{label}
-								</SelectItem>
-							))}
+							<SelectGroup>
+								{options.map(({ label, value }) => (
+									<SelectItem key={value} value={value}>
+										{label}
+									</SelectItem>
+								))}
+							</SelectGroup>
 						</SelectContent>
 					</Select>
 					{fieldState.error && <FormMessage {...messageProps}>{fieldState.error.message}</FormMessage>}

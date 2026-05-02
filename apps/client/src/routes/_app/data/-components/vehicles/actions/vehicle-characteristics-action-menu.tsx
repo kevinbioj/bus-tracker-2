@@ -31,7 +31,7 @@ export function VehicleCharacteristicsActions({ vehicle }: VehicleCharacteristic
 			<DropdownMenu>
 				<DropdownMenuTrigger
 					render={
-						<Button type="button" size="icon">
+						<Button type="button" size="icon" variant="secondary">
 							<MoreHorizontalIcon />
 						</Button>
 					}
@@ -41,10 +41,7 @@ export function VehicleCharacteristicsActions({ vehicle }: VehicleCharacteristic
 						<PencilIcon /> {m.vehicle_action_edit()}
 					</DropdownMenuItem>
 					{vehicle.archivedAt === null ? (
-						<DropdownMenuItem
-							className="text-red-600 hover:text-red-600! hover:bg-red-600/20!"
-							onClick={() => setActiveDialog("archive")}
-						>
+						<DropdownMenuItem onClick={() => setActiveDialog("archive")} variant="destructive">
 							<Trash2Icon /> {m.vehicle_action_archive()}
 						</DropdownMenuItem>
 					) : (
