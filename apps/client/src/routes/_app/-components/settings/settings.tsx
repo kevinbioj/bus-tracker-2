@@ -30,50 +30,44 @@ export function Settings() {
 					<DialogTitle>{m.settings_title()}</DialogTitle>
 				</DialogHeader>
 
-				<div className="flex-1 overflow-y-auto px-1 flex flex-col gap-3">
-					<section className="space-y-3">
-						<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-							{m.settings_map_section()}
-						</h3>
-						<HideScheduledTripsSetting />
-						<PreviewVehicleNumberSetting />
-						<DisplayNextCallsSetting />
-						<ShowVehiclePathsSetting />
-						<ShowIdentifiedVehiclesPanelSetting />
-						<DisplayAbsoluteTimeSetting />
-						<StopLabelsStyleSetting />
-					</section>
-
-					<Separator />
-
-					<section className="space-y-4">
-						<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-							{m.settings_data_section()}
-						</h3>
-						<OnlyNetworksWithHistorySetting />
-					</section>
-
-					<Separator />
-
-					<section className="space-y-4">
-						<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-							{m.settings_expert_section()}
-						</h3>
-						<ShowDebugInfoSetting />
-					</section>
-
-					<Separator />
-
-					<EditorTokenInput />
-
-					<Separator />
-
-					<section className="space-y-4">
-						<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+				<div className="flex-1 overflow-y-auto px-1">
+					<section>
+						<h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
 							{m.settings_general_section()}
 						</h3>
 						<LanguageSetting />
 					</section>
+					<Separator className="my-3" />
+					<section>
+						<h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+							{m.settings_map_section()}
+						</h3>
+						<div className="flex flex-col gap-2">
+							<HideScheduledTripsSetting />
+							<PreviewVehicleNumberSetting />
+							<DisplayNextCallsSetting />
+							<ShowVehiclePathsSetting />
+							<ShowIdentifiedVehiclesPanelSetting />
+							<DisplayAbsoluteTimeSetting />
+							<StopLabelsStyleSetting />
+						</div>
+					</section>
+					<Separator className="my-3" />
+					<section>
+						<h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+							{m.settings_data_section()}
+						</h3>
+						<OnlyNetworksWithHistorySetting />
+					</section>
+					<Separator className="my-3" />
+					<section>
+						<h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+							{m.settings_expert_section()}
+						</h3>
+						<ShowDebugInfoSetting />
+					</section>
+					<Separator className="my-3" />
+					<EditorTokenInput />
 				</div>
 			</DialogContent>
 		</Dialog>

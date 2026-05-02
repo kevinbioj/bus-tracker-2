@@ -91,7 +91,7 @@ export function LineVehicleAssignments() {
 					previous={
 						currentMonthIndex > 0 ? (
 							<Link
-								className="transition-opacity hover:opacity-70"
+								className="transition-opacity hover:opacity-70 active:not-aria-[haspopup]:translate-y-px"
 								from="/data/lines/$lineId/vehicle-assignments"
 								to="."
 								search={(prev) => ({
@@ -117,7 +117,7 @@ export function LineVehicleAssignments() {
 					next={
 						currentMonthIndex < line.activeMonths.length - 1 ? (
 							<Link
-								className="transition-opacity hover:opacity-70"
+								className="transition-opacity hover:opacity-70 active:not-aria-[haspopup]:translate-y-px"
 								from="/data/lines/$lineId/vehicle-assignments"
 								to="."
 								search={(prev) => ({

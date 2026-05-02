@@ -43,7 +43,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 				previous={
 					currentMonthIndex > 0 ? (
 						<Link
-							className="transition-opacity hover:opacity-70"
+							className="transition-opacity hover:opacity-70 active:not-aria-[haspopup]:translate-y-px"
 							from="/data/vehicles/$vehicleId"
 							to="."
 							search={(prev) => ({ ...prev, month: vehicle.activeMonths.at(currentMonthIndex - 1) })}
@@ -64,7 +64,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 				next={
 					currentMonthIndex < vehicle.activeMonths.length - 1 ? (
 						<Link
-							className="transition-opacity hover:opacity-70"
+							className="transition-opacity hover:opacity-70 active:not-aria-[haspopup]:translate-y-px"
 							from="/data/vehicles/$vehicleId"
 							to="."
 							search={(prev) => ({ ...prev, month: vehicle.activeMonths.at(currentMonthIndex + 1) })}

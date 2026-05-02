@@ -125,7 +125,7 @@ function HelpPage() {
 							<Card>
 								<CardHeader className="pb-2">
 									<CardTitle className="text-lg flex items-center gap-2">
-										<PlusCircleIcon className="size-5 text-primary" /> {m.help_prioritization_title()}
+										<PlusCircleIcon className="size-5 text-green-600" /> {m.help_prioritization_title()}
 									</CardTitle>
 								</CardHeader>
 								<CardContent className="text-sm">{m.help_prioritization_text()}</CardContent>

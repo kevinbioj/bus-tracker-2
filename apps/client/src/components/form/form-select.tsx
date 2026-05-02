@@ -45,6 +45,7 @@ export function FormSelect<T extends FieldValues = FieldValues>({
 					<Select
 						{...inputProps}
 						{...field}
+						items={options}
 						onValueChange={(value, eventDetails) => {
 							field.onChange(value);
 							inputProps.onValueChange?.(value, eventDetails);

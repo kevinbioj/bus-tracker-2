@@ -1,3 +1,4 @@
+import type { AccordionValue } from "@base-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { LucideCircle, LucideMegaphone } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
@@ -53,7 +54,7 @@ export function Announcements() {
 				{announcements.length === 0 ? (
 					<p className="text-muted-foreground text-center py-8">{m.announcements_empty()}</p>
 				) : (
-					<Accordion>
+					<Accordion onValueChange={(id: AccordionValue<number>) => trackAnnouncementRead(String(id))}>
 						{announcements.map((announcement) => (
 							<AccordionItem key={announcement.id} value={announcement.id}>
 								<AccordionTrigger className="relative">

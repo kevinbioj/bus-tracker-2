@@ -26,7 +26,7 @@ export function FormCheckbox<T extends FieldValues = FieldValues>({
 			{...props}
 			render={({ field, fieldState }) => (
 				<FormItem {...itemProps} className={cn("flex gap-2 items-center", itemProps.className)}>
-					<FormControl>
+					<FormControl render>
 						<Checkbox
 							{...inputProps}
 							onCheckedChange={(checked, eventDetails) => {

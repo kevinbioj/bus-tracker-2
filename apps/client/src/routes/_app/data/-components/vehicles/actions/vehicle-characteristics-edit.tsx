@@ -25,7 +25,7 @@ import {
 } from "~/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { useEditor } from "~/hooks/use-editor";
 import * as m from "~/paraglide/messages";
 
@@ -36,6 +36,8 @@ const updateVehicleFormSchema = z.object({
 	type: vehicleJourneyLineTypeZodEnum,
 	operatorId: z.number().nullable(),
 });
+
+const noOperatorSelectValue = "none";
 
 type UpdateVehicleFormData = z.infer<typeof updateVehicleFormSchema>;
 
@@ -67,11 +69,6 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 
 	const { data: network } = useQuery(GetNetworkQuery(vehicle.networkId, true));
 
-	const operators = useMemo(
-		() => network?.operators.slice().sort((a, b) => a.sortOrder - b.sortOrder) ?? [],
-		[network],
-	);
-
 	const form = useForm<UpdateVehicleFormData>({
 		defaultValues: {
 			designation: vehicle.designation,
@@ -82,6 +79,19 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 		},
 		resolver: zodResolver(updateVehicleFormSchema),
 	});
+
+	const selectableOperators = useMemo(() => {
+		if (network === undefined) {
+			return;
+		}
+
+		return [
+			{ label: m.network_vehicle_operator_no(), value: noOperatorSelectValue },
+			...network.operators
+				.sort((a, b) => a.sortOrder - b.sortOrder)
+				.map((operator) => ({ label: operator.name, value: String(operator.id) })),
+		];
+	}, [network]);
 
 	const handleOpenChange = (open: boolean) => {
 		if (!open) form.reset();
@@ -195,25 +205,31 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>{m.vehicle_action_edit_type_label()}</FormLabel>
-									<Select onValueChange={field.onChange} defaultValue={field.value}>
+									<Select
+										items={vehicleJourneyLineTypes.map((type) => ({ label: lineTypeLabels[type](), value: type }))}
+										onValueChange={field.onChange}
+										value={field.value}
+									>
 										<FormControl>
 											<SelectTrigger>
 												<SelectValue />
 											</SelectTrigger>
 										</FormControl>
 										<SelectContent className="z-9999">
-											{vehicleJourneyLineTypes.map((type) => (
-												<SelectItem key={type} value={type}>
-													{lineTypeLabels[type]()}
-												</SelectItem>
-											))}
+											<SelectGroup>
+												{vehicleJourneyLineTypes.map((type) => (
+													<SelectItem key={type} value={type}>
+														{lineTypeLabels[type]()}
+													</SelectItem>
+												))}
+											</SelectGroup>
 										</SelectContent>
 									</Select>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
-						{operators.length > 0 ? (
+						{selectableOperators !== undefined && (
 							<FormField
 								control={form.control}
 								name="operatorId"
@@ -221,30 +237,36 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 									<FormItem>
 										<FormLabel>{m.vehicle_action_edit_operator_label()}</FormLabel>
 										<Select
-											onValueChange={(value) => field.onChange(value === null ? null : +value)}
-											value={field.value?.toString() ?? "none"}
+											items={selectableOperators}
+											onValueChange={(value) =>
+												field.onChange(value === noOperatorSelectValue || value === null ? null : +value)
+											}
+											value={field.value === null ? noOperatorSelectValue : String(field.value)}
 										>
 											<FormControl>
 												<SelectTrigger>
 													<SelectValue placeholder={m.vehicle_action_edit_operator_empty()} />
 												</SelectTrigger>
 											</FormControl>
-											<SelectContent className="z-9999">
-												<SelectItem value="none">
-													<span className="text-muted-foreground">{m.vehicle_action_edit_operator_empty()}</span>
-												</SelectItem>
-												{operators.map((operator) => (
-													<SelectItem key={operator.id} value={operator.id.toString()}>
-														{operator.name}
-													</SelectItem>
-												))}
+											<SelectContent className="z-9999 w-fit">
+												<SelectGroup>
+													{selectableOperators.map(({ label, value }) => (
+														<SelectItem key={value} value={value}>
+															{value === noOperatorSelectValue ? (
+																<span className="text-muted-foreground">{label}</span>
+															) : (
+																label
+															)}
+														</SelectItem>
+													))}
+												</SelectGroup>
 											</SelectContent>
 										</Select>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
-						) : null}
+						)}
 						<DialogFooter className="gap-2">
 							<DialogClose
 								render={
