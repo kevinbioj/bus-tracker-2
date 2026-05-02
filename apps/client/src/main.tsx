@@ -8,6 +8,10 @@ import "./setup-dayjs";
 
 history.scrollRestoration = "manual";
 
+window.addEventListener("vite:preloadError", () => {
+	window.location.reload();
+});
+
 import App from "./App.jsx";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "leaflet/dist/leaflet.css";
