@@ -330,7 +330,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 								hasArchivedVehicles ? "grid-cols-[4.5rem_1fr_5.25rem_2.25rem]" : "grid-cols-[4.5rem_1fr_5.25rem]",
 							)}
 						>
-							{availableNetworkTypeFilters.length > 2 && (
+							{availableNetworkTypeFilters.length > 2 ? (
 								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
 									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="w-full min-w-0 px-2" size="lg">
 										<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
@@ -357,8 +357,10 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 										</SelectGroup>
 									</SelectContent>
 								</Select>
+							) : (
+								<div />
 							)}
-							{selectableOperators !== undefined && (
+							{selectableOperators !== undefined ? (
 								<Select
 									items={selectableOperators}
 									value={operatorId === "ALL" ? null : Number(operatorId)}
@@ -385,6 +387,8 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 										</SelectGroup>
 									</SelectContent>
 								</Select>
+							) : (
+								<div />
 							)}
 							<Select value={sort} onValueChange={(newSort) => setSort(newSort as typeof sort)}>
 								<SelectTrigger aria-label={m.network_vehicle_sort_aria_label()} className="w-full min-w-0" size="lg">
