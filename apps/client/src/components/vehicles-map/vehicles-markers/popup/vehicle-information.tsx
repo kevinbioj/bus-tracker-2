@@ -8,8 +8,8 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { GetNetworkQuery } from "~/api/networks";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
+import { CustomTooltip } from "~/components/custom-tooltip";
 import { Button } from "~/components/ui/button";
-import { CustomTooltip } from "~/components/ui/custom-tooltip";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 import { HighCrowdIcon } from "~/icons/crowd/high";
@@ -88,14 +88,16 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 
 	const networkIdentifier = network?.logoHref ? (
 		<Tooltip>
-			<TooltipTrigger asChild>
-				<picture className="min-w-12 w-fit">
-					{network.darkModeLogoHref !== null && (
-						<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-					)}
-					<img className="h-5 object-contain m-auto" src={network.logoHref} alt="" />
-				</picture>
-			</TooltipTrigger>
+			<TooltipTrigger
+				render={
+					<picture className="min-w-12 w-fit">
+						{network.darkModeLogoHref !== null && (
+							<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
+						)}
+						<img className="h-5 object-contain m-auto" src={network.logoHref} alt="" />
+					</picture>
+				}
+			/>
 			<TooltipContent>{network.name}</TooltipContent>
 		</Tooltip>
 	) : (
@@ -106,11 +108,17 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 
 	const vehicleLink =
 		journey.vehicle?.id && !disableLinks ? (
-			<Button asChild className="gap-0.5 py-0.5" size="xs" variant="ghost">
-				<Link to="/data/vehicles/$vehicleId" params={{ vehicleId: String(journey.vehicle.id) }}>
-					{vehicleNumber}
-				</Link>
-			</Button>
+			<Button
+				className="gap-0.5 p-0.5"
+				size="xs"
+				variant="ghost"
+				nativeButton={false}
+				render={
+					<Link to="/data/vehicles/$vehicleId" params={{ vehicleId: String(journey.vehicle.id) }}>
+						{vehicleNumber}
+					</Link>
+				}
+			/>
 		) : (
 			<>{vehicleNumber} </>
 		);
@@ -130,15 +138,20 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	return (
 		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] px-1.5 py-1">
 			{network?.hasVehiclesFeature ? (
-				<Button asChild className="" size="xs" variant="ghost">
-					{disableLinks ? (
-						networkIdentifier
-					) : (
-						<Link to="/data/networks/$networkId" params={{ networkId: String(network?.id) }}>
-							{networkIdentifier}
-						</Link>
-					)}
-				</Button>
+				<Button
+					size="xs"
+					variant="ghost"
+					nativeButton={false}
+					render={
+						disableLinks ? (
+							networkIdentifier
+						) : (
+							<Link to="/data/networks/$networkId" params={{ networkId: String(network?.id) }}>
+								{networkIdentifier}
+							</Link>
+						)
+					}
+				/>
 			) : (
 				networkIdentifier
 			)}
@@ -147,7 +160,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 					<>
 						{journey.vehicle?.designation ? (
 							<Tooltip>
-								<TooltipTrigger asChild>{vehicleLink}</TooltipTrigger>
+								<TooltipTrigger render={vehicleLink} />
 								<TooltipContent className="shadow-xl" side="top" sideOffset={2}>
 									{journey.vehicle.designation}
 								</TooltipContent>

@@ -50,11 +50,13 @@ export function VehicleCharacteristicsUnarchive({
 				</DialogHeader>
 				<div className="text-muted-foreground text-sm">{m.vehicle_action_unarchive_confirm()}</div>
 				<DialogFooter className="gap-3">
-					<DialogClose asChild>
-						<Button type="button" variant="secondary" disabled={unarchivingVehicle}>
-							{m.vehicle_action_cancel()}
-						</Button>
-					</DialogClose>
+					<DialogClose
+						render={
+							<Button type="button" variant="secondary" disabled={unarchivingVehicle}>
+								{m.vehicle_action_cancel()}
+							</Button>
+						}
+					/>
 					<Button type="button" onClick={handleUnarchive} disabled={unarchivingVehicle} variant="branding-default">
 						{m.vehicle_action_unarchive()}
 					</Button>

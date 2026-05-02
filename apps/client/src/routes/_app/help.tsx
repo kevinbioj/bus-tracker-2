@@ -96,9 +96,7 @@ function HelpPage() {
 								<h4 className="font-semibold flex items-center gap-2 text-muted-foreground">
 									<ClockIcon className="size-5" /> {m.help_data_freshness()}
 								</h4>
-								<p className="text-sm leading-relaxed">
-									{m.help_data_freshness_text()}
-								</p>
+								<p className="text-sm leading-relaxed">{m.help_data_freshness_text()}</p>
 							</div>
 						</div>
 					</div>
@@ -111,12 +109,8 @@ function HelpPage() {
 						<CardContent className="p-4 flex gap-4">
 							<WifiIcon className="size-8 text-blue-600 shrink-0" />
 							<div className="text-sm space-y-2">
-								<p>
-									{m.help_realtime_depends()}
-								</p>
-								<p>
-									{m.help_realtime_unavailable()}
-								</p>
+								<p>{m.help_realtime_depends()}</p>
+								<p>{m.help_realtime_unavailable()}</p>
 							</div>
 						</CardContent>
 					</Card>
@@ -126,9 +120,7 @@ function HelpPage() {
 				<section className="space-y-4">
 					<h3 className="font-bold text-xl">{m.help_new_networks_title()}</h3>
 					<div className="space-y-4">
-						<p className="text-sm leading-relaxed">
-							{m.help_new_networks_discord()}
-						</p>
+						<p className="text-sm leading-relaxed">{m.help_new_networks_discord()}</p>
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 							<Card>
 								<CardHeader className="pb-2">
@@ -136,9 +128,7 @@ function HelpPage() {
 										<PlusCircleIcon className="size-5 text-primary" /> {m.help_prioritization_title()}
 									</CardTitle>
 								</CardHeader>
-								<CardContent className="text-sm">
-									{m.help_prioritization_text()}
-								</CardContent>
+								<CardContent className="text-sm">{m.help_prioritization_text()}</CardContent>
 							</Card>
 							<Card>
 								<CardHeader className="pb-2">
@@ -146,9 +136,7 @@ function HelpPage() {
 										<AlertTriangleIcon className="size-5 text-amber-500" /> {m.help_no_obligation_title()}
 									</CardTitle>
 								</CardHeader>
-								<CardContent className="text-sm">
-									{m.help_no_obligation_text()}
-								</CardContent>
+								<CardContent className="text-sm">{m.help_no_obligation_text()}</CardContent>
 							</Card>
 						</div>
 					</div>

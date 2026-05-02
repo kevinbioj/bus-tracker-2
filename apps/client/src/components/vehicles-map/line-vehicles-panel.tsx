@@ -35,7 +35,7 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 
 		map.addControl(control, "bottom-right");
 		const parent = container.parentElement;
-		if (parent) parent.style.zIndex = "1000";
+		if (parent) parent.style.zIndex = "10";
 		return () => {
 			map.removeControl(control);
 		};
@@ -85,15 +85,21 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 							>
 								<LocateIcon className="size-4 m-auto" />
 							</Button>
-							<Button asChild className="size-7 shrink-0" size="icon" variant="ghost">
-								<Link
-									title={m.map_vehicle_history()}
-									to="/data/vehicles/$vehicleId"
-									params={{ vehicleId: String(vehicle.id) }}
-								>
-									<HistoryIcon className="size-4 m-auto" />
-								</Link>
-							</Button>
+							<Button
+								className="size-7 shrink-0"
+								size="icon"
+								variant="ghost"
+								nativeButton={false}
+								render={
+									<Link
+										title={m.map_vehicle_history()}
+										to="/data/vehicles/$vehicleId"
+										params={{ vehicleId: String(vehicle.id) }}
+									>
+										<HistoryIcon className="size-4 m-auto" />
+									</Link>
+								}
+							/>
 						</li>
 					);
 				})}

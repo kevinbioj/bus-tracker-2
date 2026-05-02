@@ -221,7 +221,7 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 									<FormItem>
 										<FormLabel>{m.vehicle_action_edit_operator_label()}</FormLabel>
 										<Select
-											onValueChange={(value) => field.onChange(value === "none" ? null : +value)}
+											onValueChange={(value) => field.onChange(value === null ? null : +value)}
 											value={field.value?.toString() ?? "none"}
 										>
 											<FormControl>
@@ -246,11 +246,13 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 							/>
 						) : null}
 						<DialogFooter className="gap-2">
-							<DialogClose asChild>
-								<Button disabled={updatingVehicle} type="button">
-									{m.vehicle_action_cancel()}
-								</Button>
-							</DialogClose>
+							<DialogClose
+								render={
+									<Button disabled={updatingVehicle} type="button">
+										{m.vehicle_action_cancel()}
+									</Button>
+								}
+							/>
 							<Button disabled={updatingVehicle} type="submit" variant="branding-default">
 								{m.vehicle_action_edit_save()}
 							</Button>

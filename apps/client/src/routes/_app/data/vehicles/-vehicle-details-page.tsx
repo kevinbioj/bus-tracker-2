@@ -4,12 +4,12 @@ import { match } from "ts-pattern";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
+import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { VehicleActivities } from "~/routes/_app/data/-components/vehicles/vehicle-activities";
 import { VehicleCharacteristics } from "~/routes/_app/data/-components/vehicles/vehicle-characteristics";
 import { VehicleLive } from "~/routes/_app/data/-components/vehicles/vehicle-live";
-import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 
 export function VehicleDetails() {
 	const { vehicleId } = useParams({ from: "/_app/data/vehicles/$vehicleId" });

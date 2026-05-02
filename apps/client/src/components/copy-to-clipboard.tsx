@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 
-import { Button } from "~/components/ui/button";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
-type CopyToClipboardProps = React.ComponentProps<typeof Button> & {
-	data: string;
-};
+import { Button } from "./ui/button";
 
-export function CopyToClipboard({ className, data, ...props }: CopyToClipboardProps) {
+export function CopyToClipboard({
+	className,
+	data,
+	...props
+}: ComponentProps<typeof Button> & {
+	data: string;
+}) {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = () => {

@@ -7,11 +7,11 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { Button } from "~/components/ui/button";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
-import { Button } from "~/components/ui/button";
 import { cn } from "~/utils/cn";
 
 const parseMonth = (input: Dayjs, validMonths: string[]) => {
@@ -66,17 +66,18 @@ export function LineVehicleAssignments() {
 						line.number
 					)}
 					<Button
-						asChild
 						size="sm"
 						variant="outline"
 						className="border-[0.5px] h-5 ml-2 my-0 py-0 px-2"
 						title={m.view_on_map()}
-					>
-						<Link to="/" search={{ "line-id": line.id }}>
-							<MapIcon className="size-3.5" />
-							{m.view_on_map()}
-						</Link>
-					</Button>
+						nativeButton={false}
+						render={
+							<Link to="/" search={{ "line-id": line.id }}>
+								<MapIcon className="size-3.5" />
+								{m.view_on_map()}
+							</Link>
+						}
+					/>
 				</>
 			}
 			currentClassName="flex items-center gap-1"
@@ -155,7 +156,6 @@ export function LineVehicleAssignments() {
 					return (
 						<Button
 							key={dateStr}
-							asChild
 							variant={isSelected ? "branding-default" : "secondary"}
 							size="sm"
 							ref={isSelected ? currentDateRef : undefined}
@@ -163,16 +163,18 @@ export function LineVehicleAssignments() {
 								"flex flex-col gap-0 items-center justify-center h-full min-w-12 py-1",
 								(isFuture || !hasData) && "opacity-50 pointer-events-none hover:cursor-not-allowed",
 							)}
-						>
-							<Link
-								from="/data/lines/$lineId/vehicle-assignments"
-								to="."
-								search={(prev) => ({ ...prev, date: dateStr })}
-							>
-								<p className="uppercase">{d.format("ddd")}</p>
-								<p className="font-bold text-lg">{d.format("DD")}</p>
-							</Link>
-						</Button>
+							nativeButton={false}
+							render={
+								<Link
+									from="/data/lines/$lineId/vehicle-assignments"
+									to="."
+									search={(prev) => ({ ...prev, date: dateStr })}
+								>
+									<p className="uppercase">{d.format("ddd")}</p>
+									<p className="font-bold text-lg">{d.format("DD")}</p>
+								</Link>
+							}
+						/>
 					);
 				})}
 			</div>

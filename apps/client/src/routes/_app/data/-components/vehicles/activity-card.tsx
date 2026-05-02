@@ -43,7 +43,7 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 					borderColor: line?.textColor ? `#${line.textColor}` : undefined,
 				}}
 			/>
-			<p className="flex-1 flex items-center gap-1 my-auto text-2xl">
+			<div className="flex-1 flex items-center gap-1 my-auto text-2xl">
 				{ongoing ? (
 					<>
 						{m.vehicle_history_since()} <TimeDisplay at={startedAt} showDate={!didStartOnServiceDate} />
@@ -55,7 +55,7 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 						<TimeDisplay at={updatedAt} showDate={!didStartOnServiceDate || !didEndOnStartDate} />
 					</>
 				)}
-			</p>
+			</div>
 		</>
 	);
 

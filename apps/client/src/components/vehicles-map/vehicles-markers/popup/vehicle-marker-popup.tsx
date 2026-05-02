@@ -5,7 +5,7 @@ import { useLocalStorage, useScreen } from "usehooks-ts";
 
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetVehicleJourneyMarkersQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
-import { CopyToClipboard } from "~/components/ui/copy-to-clipboard";
+import { CopyToClipboard } from "~/components/copy-to-clipboard";
 import { Separator } from "~/components/ui/separator";
 import { VehicleGirouette } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-girouette";
 import { VehicleInformation } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-information";

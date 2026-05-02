@@ -75,7 +75,7 @@ export function EditorTokenInput() {
 				</div>
 			) : (
 				<form onSubmit={onSubmit}>
-					<Label htmlFor={id}>
+					<Label className="mb-2" htmlFor={id}>
 						<KeySquareIcon className="align-text-bottom inline size-4" /> {m.settings_editor_token_label()}
 					</Label>
 					<div className="flex gap-2">

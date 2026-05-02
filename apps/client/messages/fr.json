@@ -64,6 +64,7 @@
 	"network_vehicle_filter_label": "Filtrer par",
 	"network_vehicle_filter_placeholder": "numéro ou désignation",
 	"network_vehicle_operator_filter": "Opérateur",
+	"network_vehicle_operator_all": "Tous les opérateurs",
 	"network_vehicle_sort_activity": "Activité",
 	"network_vehicle_sort_aria_label": "Trier",
 	"network_vehicle_sort_label": "Tri",

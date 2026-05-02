@@ -2,9 +2,6 @@ import { ArchiveIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-
 import { useState } from "react";
 
 import type { Vehicle } from "~/api/vehicles";
-import { VehicleCharacteristicsArchive } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-archive";
-import { VehicleCharacteristicsEdit } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-edit";
-import { VehicleCharacteristicsUnarchive } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-unarchive";
 import { Button } from "~/components/ui/button";
 import {
 	DropdownMenu,
@@ -14,6 +11,9 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { useEditor } from "~/hooks/use-editor";
 import * as m from "~/paraglide/messages";
+import { VehicleCharacteristicsArchive } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-archive";
+import { VehicleCharacteristicsEdit } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-edit";
+import { VehicleCharacteristicsUnarchive } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-unarchive";
 
 type VehicleCharacteristicsActionsProps = {
 	vehicle: Vehicle;
@@ -29,18 +29,20 @@ export function VehicleCharacteristicsActions({ vehicle }: VehicleCharacteristic
 	return (
 		<>
 			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button type="button" size="icon">
-						<MoreHorizontalIcon />
-					</Button>
-				</DropdownMenuTrigger>
+				<DropdownMenuTrigger
+					render={
+						<Button type="button" size="icon">
+							<MoreHorizontalIcon />
+						</Button>
+					}
+				/>
 				<DropdownMenuContent align="end" className="z-1000">
 					<DropdownMenuItem onClick={() => setActiveDialog("edit")}>
 						<PencilIcon /> {m.vehicle_action_edit()}
 					</DropdownMenuItem>
 					{vehicle.archivedAt === null ? (
 						<DropdownMenuItem
-							className="text-red-600 hover:!text-red-600 hover:!bg-red-600/20"
+							className="text-red-600 hover:text-red-600! hover:bg-red-600/20!"
 							onClick={() => setActiveDialog("archive")}
 						>
 							<Trash2Icon /> {m.vehicle_action_archive()}

@@ -31,11 +31,9 @@ function LegalPage() {
 								{m.legal_editor_title()}
 							</h3>
 							<div className="space-y-3">
-								<p className="leading-relaxed">
-									{m.legal_editor_text()}
-								</p>
+								<p className="leading-relaxed">{m.legal_editor_text()}</p>
 								<Card className="bg-muted/50 border-none shadow-none">
-									<CardContent className="p-4 pt-4 italic text-sm text-muted-foreground leading-relaxed">
+									<CardContent className="italic text-sm text-muted-foreground leading-relaxed">
 										{m.legal_editor_anonymous()}
 									</CardContent>
 								</Card>
@@ -57,20 +55,19 @@ function LegalPage() {
 								{m.legal_hosting_title()}
 							</h3>
 							<Card>
-								<CardHeader className="p-4 pb-2">
-									<CardTitle className="text-lg font-bold uppercase">YorkHost SAS</CardTitle>
+								<CardHeader>
+									<CardTitle className="text-lg font-bold uppercase">Auto-Hébergement</CardTitle>
 								</CardHeader>
-								<CardContent className="p-4 pt-0 space-y-1 text-sm">
-									<p>20 rue Jacques Louis Duvivier</p>
-									<p>78520 Limay, France</p>
+								<CardContent className="space-y-1 text-sm">
 									<div className="pt-2 flex flex-col gap-1">
 										<p>
-											<span className="font-medium text-muted-foreground">{m.legal_email()}</span> contact[at]yorkhost.fr
+											<span className="font-medium text-muted-foreground">{m.legal_email()}</span>{" "}
+											contact[at]bus-tracker.fr
 										</p>
 										<p>
 											<span className="font-medium text-muted-foreground">{m.legal_site()}</span>{" "}
-											<Link to="https://www.yorkhost.fr" target="_blank" className="underline">
-												www.yorkhost.fr
+											<Link to="https://www.bus-tracker.fr" target="_blank" className="underline">
+												www.bus-tracker.fr
 											</Link>
 										</p>
 									</div>
@@ -99,8 +96,12 @@ function LegalPage() {
 									</p>
 								</div>
 								<Card className="bg-amber-500/10 border-amber-500/20 shadow-none">
-									<CardContent className="p-4 pt-4 space-y-2">
-										<h4 className="font-semibold text-amber-900 dark:text-amber-200">{m.legal_content_identity_title()}</h4>
+									<CardHeader>
+										<CardTitle className="font-semibold text-amber-900 dark:text-amber-200">
+											{m.legal_content_identity_title()}
+										</CardTitle>
+									</CardHeader>
+									<CardContent className="space-y-2">
 										<p className="text-amber-800 dark:text-amber-300 text-sm leading-relaxed">
 											{m.legal_content_identity_text()}
 											<br />
@@ -122,9 +123,7 @@ function LegalPage() {
 								{m.legal_privacy_title()}
 							</h3>
 							<div className="space-y-3">
-								<p className="leading-relaxed">
-									{m.legal_privacy_intro()}
-								</p>
+								<p className="leading-relaxed">{m.legal_privacy_intro()}</p>
 								<ul className="list-disc ml-6 space-y-1 text-sm text-muted-foreground">
 									<li>{m.legal_privacy_technical_data()}</li>
 									<li>{m.legal_privacy_pages()}</li>
@@ -150,12 +149,8 @@ function LegalPage() {
 								{m.legal_reliability_title()}
 							</h3>
 							<div className="space-y-3">
-								<p className="leading-relaxed">
-									{m.legal_reliability_indicative()}
-								</p>
-								<p className="leading-relaxed">
-									{m.legal_reliability_proof()}
-								</p>
+								<p className="leading-relaxed">{m.legal_reliability_indicative()}</p>
+								<p className="leading-relaxed">{m.legal_reliability_proof()}</p>
 							</div>
 						</section>
 					</div>

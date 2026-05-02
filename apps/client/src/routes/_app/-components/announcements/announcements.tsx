@@ -4,11 +4,11 @@ import { usePostHog } from "posthog-js/react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { GetAnnouncementsQuery } from "~/api/announcements";
-import { AnnouncementContent, AnnouncementTitle } from "~/routes/_app/-components/announcements/announcement";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import * as m from "~/paraglide/messages";
+import { AnnouncementContent, AnnouncementTitle } from "~/routes/_app/-components/announcements/announcement";
 
 export function Announcements() {
 	const { data: announcements } = useQuery(GetAnnouncementsQuery);
@@ -34,26 +34,28 @@ export function Announcements() {
 
 	return (
 		<Dialog>
-			<DialogTrigger asChild>
-				<Button className="relative" size="icon" variant="on-branding-outline">
-					<LucideMegaphone aria-label={m.announcements_aria_label()} />
-					{unreadAnnouncementsCount > 0 && (
-						<span className="absolute animate-pulse bg-green-600 -top-2 -left-2 size-4 rounded-full text-white text-xs z-10">
-							{unreadAnnouncementsCount}
-						</span>
-					)}
-				</Button>
-			</DialogTrigger>
-			<DialogContent aria-describedby={undefined} className="max-h-[95dvh] overflow-y-auto">
+			<DialogTrigger
+				render={
+					<Button className="relative" size="icon-lg" variant="on-branding-outline">
+						<LucideMegaphone aria-label={m.announcements_aria_label()} />
+						{unreadAnnouncementsCount > 0 && (
+							<span className="absolute animate-pulse bg-green-600 -top-2 -left-2 size-4 rounded-full text-white text-xs z-10">
+								{unreadAnnouncementsCount}
+							</span>
+						)}
+					</Button>
+				}
+			/>
+			<DialogContent aria-describedby={undefined} className="max-h-[80dvh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>{m.announcements_title()}</DialogTitle>
 				</DialogHeader>
 				{announcements.length === 0 ? (
 					<p className="text-muted-foreground text-center py-8">{m.announcements_empty()}</p>
 				) : (
-					<Accordion onValueChange={trackAnnouncementRead} type="single" collapsible>
+					<Accordion>
 						{announcements.map((announcement) => (
-							<AccordionItem key={announcement.id} value={announcement.id.toString()}>
+							<AccordionItem key={announcement.id} value={announcement.id}>
 								<AccordionTrigger className="relative">
 									<AnnouncementTitle announcement={announcement} />
 									{!announcementsRead.includes(announcement.id) && (

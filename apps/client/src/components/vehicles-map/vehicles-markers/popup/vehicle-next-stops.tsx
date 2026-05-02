@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { ArrowDownRight, ArrowUpRight, Rss } from "lucide-react";
 import { match, P } from "ts-pattern";
 
-import { CustomTooltip } from "~/components/ui/custom-tooltip";
+import { CustomTooltip } from "~/components/custom-tooltip";
 import * as m from "~/paraglide/messages";
 
 type NextStopsProps = { calls: VehicleJourneyCall[]; tooltipId?: string };

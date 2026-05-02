@@ -39,9 +39,7 @@ export function DataPageLayout({
 				<Breadcrumb>
 					<BreadcrumbList>
 						<BreadcrumbItem>
-							<BreadcrumbLink asChild>
-								<Link to="/data">{m.data_breadcrumb()}</Link>
-							</BreadcrumbLink>
+							<BreadcrumbLink render={<Link to="/data">{m.data_breadcrumb()}</Link>} />
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />
 						{current === undefined ? (
@@ -53,15 +51,17 @@ export function DataPageLayout({
 						) : (
 							<>
 								<BreadcrumbItem>
-									<BreadcrumbLink asChild>
-										<Link
-											to="/data/networks/$networkId"
-											params={{ networkId: String(network.id) }}
-											search={networkSearch}
-										>
-											<NetworkBreadcrumbLabel network={network} />
-										</Link>
-									</BreadcrumbLink>
+									<BreadcrumbLink
+										render={
+											<Link
+												to="/data/networks/$networkId"
+												params={{ networkId: String(network.id) }}
+												search={networkSearch}
+											>
+												<NetworkBreadcrumbLabel network={network} />
+											</Link>
+										}
+									/>
 								</BreadcrumbItem>
 								<BreadcrumbSeparator />
 								<BreadcrumbItem>

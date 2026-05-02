@@ -10,7 +10,7 @@ export function ShowDebugInfoSetting() {
 	const [showDebugInfo, setShowDebugInfo] = useLocalStorage("show-debug-info", false);
 
 	return (
-		<div className="flex items-center justify-between gap-4">
+		<div className="flex items-center justify-between">
 			<div className="grid gap-0.5">
 				<Label htmlFor={id} className="text-base cursor-pointer">
 					{m.settings_show_debug_info_label()}

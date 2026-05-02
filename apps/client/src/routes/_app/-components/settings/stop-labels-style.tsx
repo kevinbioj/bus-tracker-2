@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
@@ -6,6 +7,7 @@ import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-styl
 import * as m from "~/paraglide/messages";
 
 export function StopLabelsStyleSetting() {
+	const id = useId();
 	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", true);
 	const [stopLabelsStyle, setStopLabelsStyle] = useLocalStorage<StopLabelsStyle>(
 		"stop-labels-style",
@@ -18,13 +20,15 @@ export function StopLabelsStyleSetting() {
 
 	return (
 		<div>
-			<Label className="block mb-1 text-base">{m.settings_stop_labels_style_label()}</Label>
+			<Label className="block mb-1 text-base" htmlFor={id}>
+				{m.settings_stop_labels_style_label()}
+			</Label>
 			<Tabs
 				value={stopLabelsStyle}
 				onValueChange={(value) => setStopLabelsStyle(value as StopLabelsStyle)}
 				className="w-full"
 			>
-				<TabsList className="grid w-full grid-cols-3">
+				<TabsList className="grid w-full grid-cols-3" id={id}>
 					<TabsTrigger value="disabled">{m.settings_stop_labels_style_disabled()}</TabsTrigger>
 					<TabsTrigger value="without-background">{m.settings_stop_labels_style_without_background()}</TabsTrigger>
 					<TabsTrigger value="with-background">{m.settings_stop_labels_style_with_background()}</TabsTrigger>

@@ -1,5 +1,5 @@
 .maplibregl-popup {
-	z-index: 999;
+	z-index: 1;
 }
 
 .maplibregl-zooming-map .maplibregl-popup,

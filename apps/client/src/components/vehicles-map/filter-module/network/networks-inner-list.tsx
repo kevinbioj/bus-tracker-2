@@ -3,7 +3,7 @@ import { StarIcon } from "lucide-react";
 import { type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { Network } from "~/api/networks";
-import { TitleSeparator } from "~/components/ui/title-separator";
+import { TitleSeparator } from "~/components/title-separator";
 import { FilterModuleNetworkCard } from "~/components/vehicles-map/filter-module/network/network-card";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";

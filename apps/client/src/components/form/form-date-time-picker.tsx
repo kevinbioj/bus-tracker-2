@@ -76,17 +76,19 @@ function DateTimePickerField<
 			<FormLabel {...labelProps}>{label}</FormLabel>
 			<div className="flex gap-3">
 				<Popover>
-					<PopoverTrigger asChild>
-						<FormControl>
-							<Button
-								variant="outline"
-								className={cn("flex-1 pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-							>
-								{field.value ? value?.format("DD/MM/YYYY") : <span>{placeholder}</span>}
-								<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-							</Button>
-						</FormControl>
-					</PopoverTrigger>
+					<PopoverTrigger
+						render={
+							<FormControl>
+								<Button
+									variant="outline"
+									className={cn("flex-1 pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+								>
+									{field.value ? value?.format("DD/MM/YYYY") : <span>{placeholder}</span>}
+									<CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+								</Button>
+							</FormControl>
+						}
+					/>
 					<PopoverContent className="z-10000 w-auto overflow-hidden p-0" align="start">
 						<Calendar
 							mode="single"

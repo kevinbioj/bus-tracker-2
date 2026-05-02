@@ -88,11 +88,7 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 						<FormCheckbox
 							control={form.control}
 							name="wipeReference"
-							label={
-								<>
-									{m.vehicle_action_archive_break_ref({ vehicleRef: vehicle.ref })}
-								</>
-							}
+							label={m.vehicle_action_archive_break_ref({ vehicleRef: vehicle.ref })}
 							itemProps={{ className: "mb-5" }}
 							inputProps={{
 								className: "data-[state=checked]:bg-destructive data-[state=checked]:text-destructive-foreground",
@@ -112,11 +108,13 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 							itemProps={{ className: "mb-5" }}
 						/>
 						<DialogFooter className="gap-3">
-							<DialogClose asChild>
-								<Button type="button" variant="secondary">
-									{m.vehicle_action_cancel()}
-								</Button>
-							</DialogClose>
+							<DialogClose
+								render={
+									<Button type="button" variant="secondary">
+										{m.vehicle_action_cancel()}
+									</Button>
+								}
+							/>
 							<Button type="submit" variant="destructive">
 								{m.vehicle_action_archive()}
 							</Button>

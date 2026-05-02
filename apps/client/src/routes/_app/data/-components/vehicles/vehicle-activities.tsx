@@ -30,6 +30,11 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 		...GetVehicleActivitiesQuery(vehicle.id, month),
 		placeholderData: keepPreviousData,
 	});
+
+	if (activities?.timeline === undefined) {
+		return null;
+	}
+
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<div className="flex-1">
 			<h2 className="hidden">{m.vehicle_activities_title()}</h2>

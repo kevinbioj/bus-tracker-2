@@ -1,4 +1,3 @@
-import { Label } from "@radix-ui/react-label";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
@@ -7,12 +6,13 @@ import { useEffect, useMemo, useRef } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
-import { VehiclesTable } from "~/routes/_app/data/-components/vehicles/vehicles-table";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Label } from "~/components/ui/label";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import * as m from "~/paraglide/messages";
+import { VehiclesTable } from "~/routes/_app/data/-components/vehicles/vehicles-table";
 import { cn } from "~/utils/cn";
 
 const vehicleTypeOptions = {
@@ -90,6 +90,19 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 	const [debouncedFilter] = useDebounceValue(filter, 100);
 
+	const selectableOperators = useMemo(() => {
+		if (network.operators.length === 0) {
+			return;
+		}
+
+		return [
+			{ label: m.network_vehicle_operator_all(), value: null },
+			...network.operators
+				.sort((a, b) => a.sortOrder - b.sortOrder)
+				.map((operator) => ({ label: operator.name, value: operator.id })),
+		];
+	}, [network]);
+
 	const hasArchivedVehicles = useMemo(() => vehicles.some((vehicle) => vehicle.archivedAt !== null), [vehicles]);
 
 	const availableNetworkTypeFilters = useMemo(() => {
@@ -162,7 +175,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 	return (
 		<div>
-			<div className="sticky top-14 bg-background z-10 py-1">
+			<div className="sticky top-14 bg-background z-10 pt-2">
 				<div
 					className={cn("grid gap-1", hasArchivedVehicles ? "grid-cols-[1fr_4.5rem_2.3rem]" : "grid-cols-[1fr_4.5rem]")}
 				>
@@ -174,41 +187,48 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 						<div className="flex gap-1">
 							{availableNetworkTypeFilters.length > 2 && (
 								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
-									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="h-10 w-18">
+									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="w-18" size="lg">
 										<SelectValue>{vehicleTypeOptions[type].icon ?? vehicleTypeOptions.ALL.label()}</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
-										{availableNetworkTypeFilters.map((typeKey) => {
-											const item = vehicleTypeOptions[typeKey as keyof typeof vehicleTypeOptions];
-											return (
-												<SelectItem key={typeKey} value={typeKey}>
-													<div className="flex items-center gap-2">
-														{item.icon}
-														<span>{item.label()}</span>
-													</div>
-												</SelectItem>
-											);
-										})}
+										<SelectGroup>
+											{availableNetworkTypeFilters.map((typeKey) => {
+												const item = vehicleTypeOptions[typeKey as keyof typeof vehicleTypeOptions];
+												return (
+													<SelectItem key={typeKey} value={typeKey}>
+														<div className="flex items-center gap-2">
+															{item.icon}
+															<span>{item.label()}</span>
+														</div>
+													</SelectItem>
+												);
+											})}
+										</SelectGroup>
 									</SelectContent>
 								</Select>
 							)}
 							<div className="flex flex-1 gap-1 max-w-96">
-								{network.operators.length > 0 && (
-									<Select value={operatorId} onValueChange={setOperatorId}>
-										<SelectTrigger aria-label={m.network_vehicle_operator_filter()} className="h-10 w-1/2">
+								{selectableOperators !== undefined && (
+									<Select
+										items={selectableOperators}
+										value={operatorId === "ALL" ? null : Number(operatorId)}
+										onValueChange={(value) => setOperatorId(value ? String(value) : null)}
+									>
+										<SelectTrigger
+											aria-label={m.network_vehicle_operator_filter()}
+											className="overflow-hidden text-ellipsis whitespace-nowrap w-1/2"
+											size="lg"
+										>
 											<SelectValue />
 										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="ALL">
-												<span className="text-muted-foreground">{m.network_vehicle_operator_filter()}</span>
-											</SelectItem>
-											{network.operators
-												.toSorted((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
-												.map((operator) => (
-													<SelectItem key={operator.id} value={operator.id.toString()}>
-														{operator.name}
+										<SelectContent className="w-fit">
+											<SelectGroup>
+												{selectableOperators.map(({ label, value }) => (
+													<SelectItem key={value} value={value}>
+														{value ? label : <span className="text-muted-foreground">{label}</span>}
 													</SelectItem>
 												))}
+											</SelectGroup>
 										</SelectContent>
 									</Select>
 								)}
@@ -227,25 +247,27 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							<SortAscIcon size={16} /> {m.network_vehicle_sort_label()}
 						</Label>
 						<Select value={sort} onValueChange={(newSort) => setSort(newSort as typeof sort)}>
-							<SelectTrigger aria-label={m.network_vehicle_sort_aria_label()} className="h-10">
+							<SelectTrigger aria-label={m.network_vehicle_sort_aria_label()} size="lg">
 								<SelectValue>{sortingOptions[sort].icon}</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
-								{Object.entries(sortingOptions).map(([key, item]) => (
-									<SelectItem key={key} value={key}>
-										<div className="flex items-center gap-2">
-											{item.icon}
-											<span>{item.label()}</span>
-										</div>
-									</SelectItem>
-								))}
+								<SelectGroup>
+									{Object.entries(sortingOptions).map(([key, item]) => (
+										<SelectItem key={key} value={key}>
+											<div className="flex items-center gap-2">
+												{item.icon}
+												<span>{item.label()}</span>
+											</div>
+										</SelectItem>
+									))}
+								</SelectGroup>
 							</SelectContent>
 						</Select>
 					</div>
 					{/* Archive */}
 					{hasArchivedVehicles && (
 						<Button
-							className="mt-auto h-10"
+							className="mt-auto h-10 w-full"
 							onClick={() => setShowArchived(showArchived ? null : true)}
 							size="icon"
 							variant={showArchived ? "branding-default" : "secondary"}

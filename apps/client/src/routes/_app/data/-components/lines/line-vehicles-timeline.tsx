@@ -13,8 +13,8 @@ import {
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 
 import { GetNetworkQuery } from "~/api/networks";
-import { getLocale } from "~/paraglide/runtime";
 import * as m from "~/paraglide/messages";
+import { getLocale } from "~/paraglide/runtime";
 
 type LineVehiclesTimelineProps = {
 	lineId: number;
@@ -244,9 +244,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 				<div className="border rounded-lg bg-white dark:bg-neutral-900 vis-timeline-custom" ref={containerRef} />
 			</Activity>
 			{assignments.vehicles.length === 0 ? (
-				<p className="mt-4 text-center text-muted-foreground">
-					{m.line_assignments_empty()}
-				</p>
+				<p className="mt-4 text-center text-muted-foreground">{m.line_assignments_empty()}</p>
 			) : null}
 		</>
 	);

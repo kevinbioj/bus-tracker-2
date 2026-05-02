@@ -32,9 +32,8 @@ export function AnnouncementContent({ announcement }: Readonly<AnnouncementProps
 			)}
 			{(announcement.publishedAt !== null || announcement.updatedAt !== announcement.createdAt) && (
 				<p className="flex justify-end mt-3 text-muted-foreground text-sm">
-					{announcement.updatedAt !== announcement.createdAt && (
-						<>{m.announcements_updated_at({ date: dayjs(announcement.updatedAt).format("L LT") })}</>
-					)}
+					{announcement.updatedAt !== announcement.createdAt &&
+						m.announcements_updated_at({ date: dayjs(announcement.updatedAt).format("L LT") })}
 					{announcement.publishedAt !== null && announcement.updatedAt !== announcement.createdAt && " • "}
 					{announcement.publishedAt !== null && dayjs(announcement.publishedAt).format("L LT")}
 				</p>

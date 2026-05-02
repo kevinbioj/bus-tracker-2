@@ -64,6 +64,7 @@
 	"network_vehicle_filter_label": "Filter by",
 	"network_vehicle_filter_placeholder": "number or designation",
 	"network_vehicle_operator_filter": "Operator",
+	"network_vehicle_operator_all": "All operators",
 	"network_vehicle_sort_activity": "Activity",
 	"network_vehicle_sort_aria_label": "Sort",
 	"network_vehicle_sort_label": "Sort",

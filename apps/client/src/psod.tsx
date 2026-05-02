@@ -43,9 +43,12 @@ export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 							<br />
 							{m.psod_intro_reload()}
 						</p>
-						<Button asChild className="hover:cursor-default" variant="on-branding-default">
-							<a href={embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/"}>{m.psod_reload()}</a>
-						</Button>
+						<Button
+							className="hover:cursor-default"
+							variant="on-branding-default"
+							nativeButton={false}
+							render={<a href={embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/"}>{m.psod_reload()}</a>}
+						/>
 					</div>
 					<div className="flex flex-col items-start gap-2 mt-8">
 						<p>{m.psod_persistent()}</p>

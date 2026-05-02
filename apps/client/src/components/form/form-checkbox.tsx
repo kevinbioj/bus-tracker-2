@@ -29,9 +29,9 @@ export function FormCheckbox<T extends FieldValues = FieldValues>({
 					<FormControl>
 						<Checkbox
 							{...inputProps}
-							onCheckedChange={(checked) => {
+							onCheckedChange={(checked, eventDetails) => {
 								field.onChange(checked);
-								inputProps.onCheckedChange?.(checked);
+								inputProps.onCheckedChange?.(checked, eventDetails);
 							}}
 							checked={field.value}
 						/>
