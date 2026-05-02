@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { Network } from "~/api/networks";
 import { TitleSeparator } from "~/components/ui/title-separator";
-import { NetworksListCard } from "~/pages/networks-list/network-card";
+import { NetworksListCard } from "~/routes/_app/data/-networks-list/network-card";
 
 type NetworksListBlockProps = {
 	title: ReactNode;

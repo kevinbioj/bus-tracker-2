@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery, type Vehicle } from "~/api/vehicles";
-import { VehiclesTable } from "~/components/data/vehicles/vehicles-table";
+import { VehiclesTable } from "~/routes/_app/data/-components/vehicles/vehicles-table";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";

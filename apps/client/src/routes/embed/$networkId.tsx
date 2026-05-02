@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
 
-import EmbeddableMapPage from "~/pages/embeddable-map";
+import EmbeddableMapPage from "./-embeddable-map-page";
 
 export const Route = createFileRoute("/embed/$networkId")({
 	component: () => (

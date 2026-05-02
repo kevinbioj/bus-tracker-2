@@ -10,7 +10,7 @@ import {
 import { match } from "ts-pattern";
 
 import type { Vehicle } from "~/api/vehicles";
-import { VehicleCharacteristicsActions } from "~/components/data/vehicles/actions/vehicle-characteristics-action-menu";
+import { VehicleCharacteristicsActions } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-action-menu";
 import { Button } from "~/components/ui/button";
 import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import tcInfosIcon from "~/icons/tc-infos.png";

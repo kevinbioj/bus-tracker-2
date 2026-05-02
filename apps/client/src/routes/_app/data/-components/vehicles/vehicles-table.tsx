@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useMediaQuery } from "usehooks-ts";
 
 import type { Vehicle } from "~/api/vehicles";
-import { VehicleCard } from "~/components/data/vehicles/vehicle-card";
+import { VehicleCard } from "~/routes/_app/data/-components/vehicles/vehicle-card";
 
 type VehiclesTableProps = {
 	data: Vehicle[];

@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { GetVehicleActivitiesQuery, GetVehicleQuery } from "~/api/vehicles";
-import { ActivityCard } from "~/components/data/vehicles/activity-card";
+import { ActivityCard } from "~/routes/_app/data/-components/vehicles/activity-card";
 import { useSearchParams } from "~/hooks/use-search-params";
 
 const parseMonth = (input: string | null, validMonths: string[]) => {

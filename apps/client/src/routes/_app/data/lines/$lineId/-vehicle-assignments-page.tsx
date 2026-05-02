@@ -6,8 +6,8 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
-import { LineVehiclesTimeline } from "~/components/data/lines/line-vehicles-timeline";
-import { NetworkHeader } from "~/components/data/network-header";
+import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
+import { NetworkHeader } from "~/routes/_app/data/-components/network-header";
 import {
 	Breadcrumb,
 	BreadcrumbItem,

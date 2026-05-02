@@ -4,10 +4,10 @@ import { match } from "ts-pattern";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
-import { NetworkHeader } from "~/components/data/network-header";
-import { VehicleActivities } from "~/components/data/vehicles/vehicle-activities";
-import { VehicleCharacteristics } from "~/components/data/vehicles/vehicle-characteristics";
-import { VehicleLive } from "~/components/data/vehicles/vehicle-live";
+import { NetworkHeader } from "~/routes/_app/data/-components/network-header";
+import { VehicleActivities } from "~/routes/_app/data/-components/vehicles/vehicle-activities";
+import { VehicleCharacteristics } from "~/routes/_app/data/-components/vehicles/vehicle-characteristics";
+import { VehicleLive } from "~/routes/_app/data/-components/vehicles/vehicle-live";
 import {
 	Breadcrumb,
 	BreadcrumbItem,

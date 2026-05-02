@@ -1,8 +1,8 @@
 import { RouteIcon } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 
-import { NetworkLines } from "~/components/data/networks/network-lines";
-import { NetworkVehicles } from "~/components/data/networks/network-vehicles";
+import { NetworkLines } from "~/routes/_app/data/-components/networks/network-lines";
+import { NetworkVehicles } from "~/routes/_app/data/-components/networks/network-vehicles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { BusIcon } from "~/icons/means-of-transport";
 

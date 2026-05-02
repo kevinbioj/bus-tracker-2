@@ -8,7 +8,7 @@ import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
-import { NetworksListBlock } from "~/pages/networks-list/networks-block";
+import { NetworksListBlock } from "~/routes/_app/data/-networks-list/networks-block";
 
 const searchifyQuery = (query: string) =>
 	query

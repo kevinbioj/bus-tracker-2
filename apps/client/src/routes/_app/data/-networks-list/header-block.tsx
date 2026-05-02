@@ -2,7 +2,7 @@ import { SearchIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
 import { Input } from "~/components/ui/input";
-import { useNetworksListSearchQuery } from "~/pages/networks-list/use-search-query";
+import { useNetworksListSearchQuery } from "~/routes/_app/data/-networks-list/use-search-query";
 import { cn } from "~/utils/cn";
 
 export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<"div">) {

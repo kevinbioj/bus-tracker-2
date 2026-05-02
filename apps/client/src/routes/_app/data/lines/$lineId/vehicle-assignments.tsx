@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
-import { LineVehicleAssignments } from "~/pages/line-vehicle-assignments";
+import { LineVehicleAssignments } from "./-vehicle-assignments-page";
 
 const searchSchema = z.object({
 	date: z.string().optional(),

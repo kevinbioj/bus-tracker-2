@@ -4,7 +4,7 @@ import { usePostHog } from "posthog-js/react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { GetAnnouncementsQuery } from "~/api/announcements";
-import { AnnouncementContent, AnnouncementTitle } from "~/components/announcements/announcement";
+import { AnnouncementContent, AnnouncementTitle } from "~/routes/_app/-components/announcements/announcement";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";

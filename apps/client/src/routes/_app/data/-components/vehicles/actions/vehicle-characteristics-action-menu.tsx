@@ -2,9 +2,9 @@ import { ArchiveIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-
 import { useState } from "react";
 
 import type { Vehicle } from "~/api/vehicles";
-import { VehicleCharacteristicsArchive } from "~/components/data/vehicles/actions/vehicle-characteristics-archive";
-import { VehicleCharacteristicsEdit } from "~/components/data/vehicles/actions/vehicle-characteristics-edit";
-import { VehicleCharacteristicsUnarchive } from "~/components/data/vehicles/actions/vehicle-characteristics-unarchive";
+import { VehicleCharacteristicsArchive } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-archive";
+import { VehicleCharacteristicsEdit } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-edit";
+import { VehicleCharacteristicsUnarchive } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-unarchive";
 import { Button } from "~/components/ui/button";
 import {
 	DropdownMenu,

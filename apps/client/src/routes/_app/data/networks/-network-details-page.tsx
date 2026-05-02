@@ -2,8 +2,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 
 import { GetNetworkQuery } from "~/api/networks";
-import { NetworkHeader } from "~/components/data/network-header";
-import { NetworkPage } from "~/components/data/networks/network-page";
+import { NetworkHeader } from "~/routes/_app/data/-components/network-header";
+import { NetworkPage } from "~/routes/_app/data/-components/networks/network-page";
 import {
 	Breadcrumb,
 	BreadcrumbItem,

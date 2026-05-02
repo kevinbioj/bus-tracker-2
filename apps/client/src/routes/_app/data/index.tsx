@@ -3,7 +3,8 @@ import { z } from "zod";
 
 import { GetNetworksQuery } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
-import { NetworksListPage } from "~/pages/networks-list/page";
+import { NetworksListHeaderBlock } from "./-networks-list/header-block";
+import { NetworksListVirtualList } from "./-networks-list/virtual-list";
 
 const searchSchema = z.object({
 	q: z.coerce.string().optional(),
@@ -16,3 +17,15 @@ export const Route = createFileRoute("/_app/data/")({
 		await Promise.all([queryClient.ensureQueryData(GetRegionsQuery), queryClient.ensureQueryData(GetNetworksQuery)]);
 	},
 });
+
+function NetworksListPage() {
+	return (
+		<>
+			<title>Données des réseaux - Bus-Tracker</title>
+			<main>
+				<NetworksListHeaderBlock className="sticky top-14" />
+				<NetworksListVirtualList />
+			</main>
+		</>
+	);
+}

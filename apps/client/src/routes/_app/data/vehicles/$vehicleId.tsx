@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
-import { VehicleDetails } from "~/pages/vehicle-details";
+import { VehicleDetails } from "./-vehicle-details-page";
 
 const searchSchema = z.object({
 	month: z.string().optional(),

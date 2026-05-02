@@ -2,8 +2,7 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
-
-export type StopLabelsStyle = "disabled" | "without-background" | "with-background";
+import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 
 export function StopLabelsStyleSetting() {
 	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", true);

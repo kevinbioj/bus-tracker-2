@@ -1,8 +1,8 @@
 import { Link, useLocation } from "@tanstack/react-router";
 
-import { About } from "~/components/about/about";
-import { Announcements } from "~/components/announcements/announcements";
-import { Settings } from "~/components/settings/settings";
+import { About } from "~/routes/_app/-components/about/about";
+import { Announcements } from "~/routes/_app/-components/announcements/announcements";
+import { Settings } from "~/routes/_app/-components/settings/settings";
 import { Button } from "~/components/ui/button";
 
 const links = [

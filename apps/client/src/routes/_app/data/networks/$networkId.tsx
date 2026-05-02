@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery } from "~/api/vehicles";
-import { NetworkDetails } from "~/pages/network-details";
+import { NetworkDetails } from "./-network-details-page";
 
 const searchSchema = z.object({
 	tab: z.coerce.string().optional(),

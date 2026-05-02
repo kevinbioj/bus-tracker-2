@@ -7,7 +7,7 @@ import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { GetLineQuery } from "~/api/lines";
 import { GetPathQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
-import type { StopLabelsStyle } from "~/components/settings/stop-labels-style";
+import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 
 const pastPathStrokeLayer: maplibregl.AddLayerObject = {
 	id: "vehicle-path-past-stroke",

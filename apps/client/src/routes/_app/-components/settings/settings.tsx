@@ -1,15 +1,15 @@
 import { LucideSettings } from "lucide-react";
 
-import { DisplayNextCallsSetting } from "~/components/settings/display-next-calls";
-import { EditorTokenInput } from "~/components/settings/editor-token-input";
-import { HideScheduledTripsSetting } from "~/components/settings/hide-scheduled-trips";
-import { OnlyNetworksWithHistorySetting } from "~/components/settings/only-networks-with-history";
-import { PreviewVehicleNumberSetting } from "~/components/settings/preview-vehicle-number";
-import { ShowDebugInfoSetting } from "~/components/settings/show-debug-info";
-import { ShowIdentifiedVehiclesPanelSetting } from "~/components/settings/show-identified-vehicles-panel";
-import { ShowVehiclePathsSetting } from "~/components/settings/show-vehicle-paths";
-import { StopLabelsStyleSetting } from "~/components/settings/stop-labels-style";
-import { DisplayAbsoluteTimeSetting } from "~/components/settings/use-absolute-time";
+import { DisplayNextCallsSetting } from "~/routes/_app/-components/settings/display-next-calls";
+import { EditorTokenInput } from "~/routes/_app/-components/settings/editor-token-input";
+import { HideScheduledTripsSetting } from "~/routes/_app/-components/settings/hide-scheduled-trips";
+import { OnlyNetworksWithHistorySetting } from "~/routes/_app/-components/settings/only-networks-with-history";
+import { PreviewVehicleNumberSetting } from "~/routes/_app/-components/settings/preview-vehicle-number";
+import { ShowDebugInfoSetting } from "~/routes/_app/-components/settings/show-debug-info";
+import { ShowIdentifiedVehiclesPanelSetting } from "~/routes/_app/-components/settings/show-identified-vehicles-panel";
+import { ShowVehiclePathsSetting } from "~/routes/_app/-components/settings/show-vehicle-paths";
+import { StopLabelsStyleSetting } from "~/routes/_app/-components/settings/stop-labels-style";
+import { DisplayAbsoluteTimeSetting } from "~/routes/_app/-components/settings/use-absolute-time";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import { Separator } from "~/components/ui/separator";
