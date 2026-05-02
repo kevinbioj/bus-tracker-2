@@ -88,6 +88,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/cts/trip-updates"],
 		excludeScheduled: true,
 		getNetworkRef: () => "CTS",
+		mapLineRef: (lineRef) => lineRef.split("-")[0],
 	},
 	{
 		id: "troyes",
