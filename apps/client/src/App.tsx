@@ -33,7 +33,7 @@ export default function App() {
 	return (
 		<SnackbarProvider anchorOrigin={{ horizontal: "right", vertical: "top" }} autoHideDuration={2500}>
 			<QueryClientProvider client={queryClient}>
-				<TooltipProvider>
+				<TooltipProvider delay={600}>
 					<NuqsAdapter>
 						<RouterProvider router={routerInstance} />
 					</NuqsAdapter>
