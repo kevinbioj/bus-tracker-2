@@ -46,9 +46,9 @@ export function Settings() {
 							<HideScheduledTripsSetting />
 							<PreviewVehicleNumberSetting />
 							<DisplayNextCallsSetting />
-							<ShowVehiclePathsSetting />
 							<ShowIdentifiedVehiclesPanelSetting />
 							<DisplayAbsoluteTimeSetting />
+							<ShowVehiclePathsSetting />
 							<StopLabelsStyleSetting />
 						</div>
 					</section>

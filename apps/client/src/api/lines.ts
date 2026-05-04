@@ -1,4 +1,6 @@
+import type { LinePath } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { HTTPError } from "ky";
 
 import { client } from "./client";
 import type { Vehicle } from "./vehicles";
@@ -43,6 +45,22 @@ export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
 		refetchInterval: 5_000,
 		queryKey: ["lines", lineId, "online"],
 		queryFn: () => client.get(`/lines/${lineId}/online-vehicles`).then((response) => response.json<Vehicle[]>()),
+	});
+
+export const GetLinePathQuery = (lineId?: number) =>
+	queryOptions({
+		enabled: lineId !== undefined,
+		retry: false,
+		staleTime: 120_000,
+		queryKey: ["lines", lineId, "path"],
+		queryFn: async () => {
+			try {
+				return await client.get(`/lines/${lineId}/path`).json<LinePath>();
+			} catch (error) {
+				if (error instanceof HTTPError && error.response.status === 404) return undefined;
+				throw error;
+			}
+		},
 	});
 
 export const GetLineVehicleAssignmentsQuery = (lineId: number, date: string) =>

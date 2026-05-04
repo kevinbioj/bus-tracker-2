@@ -3,18 +3,19 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 import * as m from "~/paraglide/messages";
 
 export function StopLabelsStyleSetting() {
 	const id = useId();
-	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", true);
+	const [pathDisplayMode] = usePathDisplayMode();
 	const [stopLabelsStyle, setStopLabelsStyle] = useLocalStorage<StopLabelsStyle>(
 		"stop-labels-style",
 		"with-background",
 	);
 
-	if (!showVehiclePaths) {
+	if (pathDisplayMode === "disabled") {
 		return null;
 	}
 

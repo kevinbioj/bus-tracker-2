@@ -5,8 +5,9 @@ import { useLocalStorage } from "usehooks-ts";
 
 import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
-import { GetLineQuery } from "~/api/lines";
+import { GetLinePathQuery, GetLineQuery } from "~/api/lines";
 import { GetPathQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 
 const pastPathStrokeLayer: maplibregl.AddLayerObject = {
@@ -80,15 +81,19 @@ const initialSource: maplibregl.SourceSpecification = {
 
 type VehiclePathProps = {
 	journeyId?: string;
+	lineId?: number;
 };
 
-export function VehiclePath({ journeyId }: VehiclePathProps) {
-	const [showVehiclePaths] = useLocalStorage("show-vehicle-paths", true);
+export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
+	const [pathDisplayMode] = usePathDisplayMode();
 	const [stopLabelsStyle] = useLocalStorage<StopLabelsStyle>("stop-labels-style", "with-background");
+	const showJourneyPath = pathDisplayMode !== "disabled" && journeyId !== undefined;
+	const showLinePath = pathDisplayMode === "journeys-and-lines" && journeyId === undefined && lineId !== undefined;
 
-	const { data: journey } = useQuery(GetVehicleJourneyQuery(journeyId ?? null, true));
-	const { data: path } = useQuery(GetPathQuery(showVehiclePaths ? journey?.pathRef : undefined));
-	const { data: line } = useQuery(GetLineQuery(journey?.lineId));
+	const { data: journey } = useQuery(GetVehicleJourneyQuery(showJourneyPath ? journeyId : null, true));
+	const { data: path } = useQuery(GetPathQuery(showJourneyPath ? journey?.pathRef : undefined));
+	const { data: linePath } = useQuery(GetLinePathQuery(showLinePath ? lineId : undefined));
+	const { data: line } = useQuery(GetLineQuery(journey?.lineId ?? (showLinePath ? lineId : undefined)));
 
 	const stopsLabelLayer = useMemo<maplibregl.AddLayerObject>(
 		() => ({
@@ -173,7 +178,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 	);
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
-		if (journey?.id !== journeyId || !showVehiclePaths || line === undefined) {
+		if (pathDisplayMode === "disabled" || line === undefined) {
 			return { type: "FeatureCollection", features: [] };
 		}
 
@@ -184,6 +189,27 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 		const pathStrokeColor = textColor.startsWith("#") ? textColor : `#${textColor}`;
 
 		const features: GeoJSON.Feature[] = [];
+
+		if (showLinePath) {
+			if (linePath !== undefined) {
+				for (const segment of linePath.segments) {
+					const coordinates = segment.map(([latitude, longitude]) => [longitude, latitude]);
+					if (coordinates.length <= 1) continue;
+
+					features.push({
+						type: "Feature",
+						geometry: { type: "LineString", coordinates },
+						properties: { type: "future", color: pathColor, strokeColor: pathStrokeColor },
+					});
+				}
+			}
+
+			return { type: "FeatureCollection", features };
+		}
+
+		if (journey?.id !== journeyId) {
+			return { type: "FeatureCollection", features: [] };
+		}
 
 		if (path !== undefined) {
 			const points = path.p;
@@ -271,7 +297,7 @@ export function VehiclePath({ journeyId }: VehiclePathProps) {
 		}
 
 		return { type: "FeatureCollection", features };
-	}, [journey, journeyId, path, line, showVehiclePaths]);
+	}, [journey, journeyId, path, line, linePath, pathDisplayMode, showLinePath]);
 
 	const source = useMapSource<maplibregl.GeoJSONSource>("vehicle-path", initialSource);
 	useMapLayer(pastPathStrokeLayer, "vehicles-arrows");

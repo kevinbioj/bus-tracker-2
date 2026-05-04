@@ -159,7 +159,7 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 	return (
 		<>
 			<VehiclesMarkersData lineId={lineId} networkId={embeddedNetworkId} source={vehiclesSource} />
-			<VehiclesMarkersPopupRoot embedMode={Boolean(embeddedNetworkId)} layer={vehiclesLayer} />
+			<VehiclesMarkersPopupRoot embedMode={Boolean(embeddedNetworkId)} layer={vehiclesLayer} lineId={lineId} />
 		</>
 	);
 }
