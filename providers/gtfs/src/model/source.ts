@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { VehicleJourney } from "@bus-tracker/contracts";
+import type { EncodedLinePath, VehicleJourney } from "@bus-tracker/contracts";
 
 import { downloadGtfs } from "../download/download-gtfs.js";
 import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";
@@ -11,6 +11,7 @@ import { createStopWatch } from "../utils/stop-watch.js";
 import type { Gtfs } from "./gtfs.js";
 import type { TripUpdate, VehicleDescriptor, VehiclePosition } from "./gtfs-rt.js";
 import type { Journey } from "./journey.js";
+import { buildEncodedLinePaths } from "./line-path.js";
 import type { Trip } from "./trip.js";
 
 export type SourceAuth =
@@ -55,6 +56,7 @@ export type SourceOptions = {
 
 export class Source {
 	gtfs?: Gtfs;
+	linePaths = new Map<string, EncodedLinePath>();
 
 	constructor(
 		readonly id: string,
@@ -89,6 +91,8 @@ export class Source {
 				)),
 			};
 
+			this.linePaths = buildEncodedLinePaths(this, gtfs);
+
 			updateLog("%s 3/3 ► Pre-computing scheduled journeys...", sourceId);
 			if (typeof this.options.excludeScheduled !== "boolean") {
 				const now = Temporal.Now.zonedDateTimeISO();
@@ -107,13 +111,15 @@ export class Source {
 			}
 
 			updateLog(
-				"%s     ✓ Resource %s in %dms - %d journeys were pre-computed.\n",
+				"%s     ✓ Resource %s in %dms - %d journeys and %d line paths were pre-computed.\n",
 				sourceId,
 				updating ? "updated" : "imported",
 				watch.total(),
 				gtfs.journeys.size,
+				this.linePaths.size,
 			);
 			this.gtfs = gtfs;
+			return true;
 		} catch (cause) {
 			updateLog(
 				"%s     ✘ Something wrong occurred while %s the resource.",
@@ -149,7 +155,7 @@ export class Source {
 				return this.importGtfs(true);
 			}
 			updateLog("%s ℹ Current resource is fresh enough (no staleness data).", sourceId);
-			return;
+			return false;
 		}
 
 		try {
@@ -164,6 +170,7 @@ export class Source {
 				return this.importGtfs(true);
 			}
 			updateLog("%s ℹ Fetched staleness matches current staleness: keeping current resource.", sourceId);
+			return false;
 		} catch {
 			const delta = Temporal.Now.instant().since(this.gtfs.importedAt).total("minutes");
 			if (delta >= 60) {
@@ -174,6 +181,7 @@ export class Source {
 				return this.importGtfs(true);
 			}
 			updateLog("%s ⚠ Failed to fetch resource staleness, but current resource looks fresh enough.", sourceId);
+			return false;
 		} finally {
 			console.log();
 		}

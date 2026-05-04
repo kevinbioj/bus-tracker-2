@@ -4,9 +4,12 @@ import type { Source } from "../model/source.js";
 
 export async function updateResources(sources: Source[]) {
 	console.log("%s ► Checking resources staleness.", Temporal.Now.instant());
+	const updatedSources: Source[] = [];
 	for (const source of sources) {
 		try {
-			await source.updateGtfs();
+			if (await source.updateGtfs()) {
+				updatedSources.push(source);
+			}
 		} catch (e) {
 			console.log();
 			console.error(e);
@@ -16,4 +19,5 @@ export async function updateResources(sources: Source[]) {
 	}
 	console.log();
 	global.gc?.();
+	return updatedSources;
 }

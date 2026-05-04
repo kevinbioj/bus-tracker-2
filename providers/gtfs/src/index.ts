@@ -39,6 +39,7 @@ const redis = createClient({
 	url: process.env.REDIS_SOCK ? undefined : (process.env.REDIS_URL ?? "redis://127.0.0.1:6379"),
 });
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
+const linePathTtlSeconds = 172_800;
 await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
@@ -49,11 +50,13 @@ let lastUpdateAt = Date.now();
 let lastSweepAt = Date.now();
 
 await initializeResources(configuration.sources);
+await publishLinePaths(configuration.sources);
 while (true) {
 	console.log("%s ► Entering loop cycle.", Temporal.Now.instant());
 
 	if (Date.now() - lastUpdateAt > 600_000) {
-		await updateResources(configuration.sources);
+		const updatedSources = await updateResources(configuration.sources);
+		await publishLinePaths(updatedSources);
 		lastUpdateAt = Date.now();
 	}
 
@@ -117,6 +120,8 @@ async function computeCurrentJourneys() {
 						await redis.set(ref, JSON.stringify(path), { EX: 900 });
 					}
 
+					await refreshLinePathTtls(source);
+
 					return journeys.length;
 				}),
 			),
@@ -145,4 +150,18 @@ async function computeCurrentJourneys() {
 	}
 
 	console.log();
+}
+
+async function publishLinePaths(sources: typeof configuration.sources) {
+	for (const source of sources) {
+		for (const [ref, path] of source.linePaths) {
+			await redis.set(ref, JSON.stringify(path), { EX: linePathTtlSeconds });
+		}
+	}
+}
+
+async function refreshLinePathTtls(source: (typeof configuration.sources)[number]) {
+	if (source.linePaths.size === 0) return;
+
+	await Promise.all(Array.from(source.linePaths.keys(), (ref) => redis.expire(ref, linePathTtlSeconds)));
 }

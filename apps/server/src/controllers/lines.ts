@@ -1,8 +1,10 @@
+import { decodeLinePath, type EncodedLinePath } from "@bus-tracker/contracts";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 import { database } from "../core/database/database.js";
 import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
 import { journeyStore } from "../core/store/journey-store.js";
+import { redis } from "../index.js";
 import { hono } from "../server.js";
 import { keyBy } from "../utils/key-by.js";
 import { createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
@@ -87,6 +89,35 @@ hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSche
 			};
 		}),
 	);
+});
+
+hono.get("/lines/:id/path", createParamValidator(getLineByIdParamSchema), async (c) => {
+	const { id } = c.req.valid("param");
+
+	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
+	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
+
+	const refs = line.references ?? [];
+	if (refs.length === 0) return c.json({ error: `No path was found for line '${id}'.` }, 404);
+
+	const redisKeys = refs.map((ref) => `${ref}:LinePath`);
+	const rawPaths = await redis.mGet(redisKeys);
+	const encodedSegments = new Set<string>();
+
+	for (const rawPath of rawPaths) {
+		if (rawPath === null) continue;
+
+		const encodedPath = JSON.parse(rawPath) as EncodedLinePath;
+		if (encodedPath.v !== 1 || !Array.isArray(encodedPath.segments)) continue;
+
+		for (const segment of encodedPath.segments) {
+			encodedSegments.add(segment);
+		}
+	}
+
+	if (encodedSegments.size === 0) return c.json({ error: `No path was found for line '${id}'.` }, 404);
+
+	return c.json(decodeLinePath({ v: 1, segments: Array.from(encodedSegments) }));
 });
 
 hono.get(

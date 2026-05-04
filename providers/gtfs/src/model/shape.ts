@@ -27,6 +27,10 @@ export class Shape {
 		return this.points[index * 3 + 2];
 	}
 
+	getPoint(index: number): [number, number] {
+		return [this.getPointLatitude(index), this.getPointLongitude(index)];
+	}
+
 	findClosestPointDistance(lat: number, lon: number) {
 		let closestDist = Infinity;
 		let closestPointDist = 0;
