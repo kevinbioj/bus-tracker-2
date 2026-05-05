@@ -14,7 +14,10 @@ export async function getLines() {
 	const params = new URLSearchParams();
 	params.append("d", Date.now().toString());
 
-	const response = await fetch(`${linesEndpoint}?${params.toString()}`);
+	const response = await fetch(`${linesEndpoint}?${params.toString()}`, {
+		signal: AbortSignal.timeout(10_000),
+	});
+
 	if (!response.ok) throw new Error(`Failed to fetch lines from API (HTTP ${response.status})`);
 
 	return ((await response.json()) as { data: Line[] }).data;
@@ -31,7 +34,10 @@ export type Vehicle = {
 const vehiclesEndpoint = atob("aHR0cHM6Ly9jYXJ0ZS1pbnRlcmFjdGl2ZS5ydG0uZnIvV1Mvc2lyaS9WZWhpY2xlcw==");
 
 export async function getVehicles(lines: string[]) {
-	const response = await fetch(`${vehiclesEndpoint}?lines=${lines.join(";")}&d=${Date.now()}`);
+	const response = await fetch(`${vehiclesEndpoint}?lines=${lines.join(";")}&d=${Date.now()}`, {
+		signal: AbortSignal.timeout(10_000),
+	});
+
 	if (!response.ok) throw new Error(`Failed to fetch vehicles from API (HTTP ${response.status})`);
 
 	const vehicles = (await response.json()) as Vehicle[];

@@ -1,5 +1,5 @@
 {
-	"name": "@bus-tracker/processor-idelis",
+	"name": "@bus-tracker/processor-rtm",
 	"main": "dist/index.js",
 	"type": "module",
 	"private": true,

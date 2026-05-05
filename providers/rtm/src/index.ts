@@ -1,16 +1,15 @@
+import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
 import { initMonitoring } from "@bus-tracker/monitoring";
-import DraftLog from "draftlog";
 import { createClient } from "redis";
-import { Temporal } from "temporal-polyfill";
 import { match, P } from "ts-pattern";
 
-import { getLines, getVehicles } from "./data.js";
+import { REFRESH_INTERVAL } from "./config.js";
+import { getLines, getVehicles, type Line } from "./data.js";
 
-DraftLog(console, !process.stdout.isTTY)?.addLineListener(process.stdin);
 initMonitoring("processor-rtm");
 
-console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
+console.log("► Connecting to Redis.");
 const redis = createClient({
 	socket: process.env.REDIS_SOCK
 		? {
@@ -22,59 +21,88 @@ const redis = createClient({
 });
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
-console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
+console.log(`► Connected! Journeys will be published into '${channel}'.`);
 console.log();
 
-const lines = await getLines();
+let lines: Line[] = [];
+let linesUpdatedAt: number | undefined;
 
-async function mainLoop() {
-	const updateLog = console.draft("%s ► Fetching vehicles...", Temporal.Now.instant());
+while (true) {
+	const then = Date.now();
 
-	const { recordedAt, vehicles } = await getVehicles(lines.map(({ LineId }) => LineId));
+	if (linesUpdatedAt === undefined || then - linesUpdatedAt > 3_600_000) {
+		console.log("► Updating lines list.");
 
-	const vehicleJourneys: VehicleJourney[] = vehicles.map((vehicle) => {
-		const lineRef = vehicle.Line.split(":")[2];
-		const [operatorRef, , vehicleRef] = vehicle.Id.split(":");
+		try {
+			lines = await getLines();
+			linesUpdatedAt = Date.now();
 
-		const line = lines.find((l) => l.LineId === vehicle.Line);
+			const waitingTime = Math.max(10_000, REFRESH_INTERVAL / 2 - (Date.now() - then));
+			console.log(`✓ Updated list with ${lines.length} lines! Waiting for ${waitingTime}ms.`);
+			await setTimeout(waitingTime);
+		} catch (e) {
+			const waitingTime = Math.max(10_000, REFRESH_INTERVAL / 2 - (Date.now() - then));
+			console.error(`✘ Failed to update lines list! Waiting for ${waitingTime}ms.`, e);
+			await setTimeout(waitingTime);
+		}
 
-		// Culot complet
-		const destination = line?.LineName.split(" - ")[vehicle.Direction === "1" ? 1 : 0];
+		continue;
+	}
 
-		return {
-			id: `RTM:${operatorRef}:VehicleTracking:${vehicleRef}`,
-			line: {
-				ref: `RTM:Line:${lineRef}`,
-				number: line?.LineNumber ?? "?",
-				type: match(line?.Color)
-					.with("Metro", () => "SUBWAY" as const)
-					.with("Tramway", () => "TRAMWAY" as const)
-					.with(P.union("Bus", "DayEveningBus", "SchoolBus", "NightBus"), () => "BUS" as const)
-					.with("Ferry", () => "FERRY" as const)
-					.otherwise(() => "UNKNOWN" as const),
-				color: line?.Color.slice(1),
-				textColor: "FFFFFF",
-			},
-			direction: vehicle.Direction === "1" ? "OUTBOUND" : "INBOUND",
-			destination,
-			position: {
-				latitude: vehicle.Latitude,
-				longitude: vehicle.Longitude,
-				atStop: false,
-				type: "GPS",
-				recordedAt: recordedAt.toString({ timeZoneName: "never" }),
-			},
-			networkRef: "RTM",
-			operatorRef,
-			vehicleRef: `RTM:${operatorRef}:Vehicle:${+vehicleRef!.slice(3)}`,
-			updatedAt: recordedAt.toInstant().toString(),
-		};
-	});
+	console.log("► Fetching vehicles list.");
 
-	await redis.publish(channel, JSON.stringify(vehicleJourneys));
+	try {
+		const { recordedAt, vehicles } = await getVehicles(lines.map(({ LineId }) => LineId));
 
-	updateLog(`%s ► ${vehicleJourneys.length} vehicles have been fetched!`, Temporal.Now.instant());
+		const vehicleJourneys: VehicleJourney[] = vehicles.map((vehicle) => {
+			const lineRef = vehicle.Line.split(":")[2];
+			const [operatorRef, , vehicleRef] = vehicle.Id.split(":");
+
+			const line = lines.find((l) => l.LineId === vehicle.Line);
+
+			// Culot complet
+			const destination = line?.LineName.split(" - ")[vehicle.Direction === "1" ? 1 : 0];
+
+			return {
+				id: `RTM:${operatorRef}:VehicleTracking:${vehicleRef}`,
+				line: {
+					ref: `RTM:Line:${lineRef}`,
+					number: line?.LineNumber ?? "?",
+					type: match(line?.Color)
+						.with("Metro", () => "SUBWAY" as const)
+						.with("Tramway", () => "TRAMWAY" as const)
+						.with(P.union("Bus", "DayEveningBus", "SchoolBus", "NightBus"), () => "BUS" as const)
+						.with("Ferry", () => "FERRY" as const)
+						.otherwise(() => "UNKNOWN" as const),
+					color: line?.Color.slice(1),
+					textColor: "FFFFFF",
+				},
+				direction: vehicle.Direction === "1" ? "OUTBOUND" : "INBOUND",
+				destination,
+				position: {
+					latitude: vehicle.Latitude,
+					longitude: vehicle.Longitude,
+					atStop: false,
+					type: "GPS",
+					recordedAt: recordedAt.toString({ timeZoneName: "never" }),
+				},
+				networkRef: "RTM",
+				operatorRef,
+				vehicleRef: `RTM:${operatorRef}:Vehicle:${+vehicleRef!.slice(3)}`,
+				updatedAt: recordedAt.toInstant().toString(),
+			};
+		});
+
+		await redis.publish(channel, JSON.stringify(vehicleJourneys));
+
+		const waitingTime = Math.max(10_000, REFRESH_INTERVAL - (Date.now() - then));
+		console.log(
+			`✓ Published ${vehicleJourneys.length} vehicles in ${Date.now() - then}ms! Waiting for ${waitingTime}ms.`,
+		);
+		await setTimeout(waitingTime);
+	} catch (e) {
+		const waitingTime = Math.max(10_000, REFRESH_INTERVAL - (Date.now() - then));
+		console.error(`✘ Failed to fetch vehicles! Waiting for ${waitingTime}ms.`, e);
+		await setTimeout(waitingTime);
+	}
 }
-
-mainLoop();
-setInterval(mainLoop, 30_000);
