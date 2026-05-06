@@ -59,6 +59,16 @@ const sources = [
 					trip.route.agency.id = "IDFM:1088";
 				}
 
+				if (trip.route.agency.id === "IDFM:Operator_1039") {
+					// TàD Luzarches - Goussainville appartient à la DSP Haut Val d'Oise
+					trip.route.agency.id = "IDFM:1083";
+				}
+
+				if (trip.route.agency.id === "IDFM:Operator_1057") {
+					// Ligne EOLIEN : RATP
+					trip.route.agency.id = "IDFM:Operator_100";
+				}
+
 				if (trip.route.agency.id === "IDFM:Operator_334") {
 					// Autocars Dominique pour la Traverse
 					return false;
