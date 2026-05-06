@@ -133,7 +133,7 @@ const sources = [
 	{
 		id: "tours",
 		staticResourceHref:
-			"https://data.tours-metropole.fr/api/v2/catalog/datasets/horaires-temps-reel-gtfsrt-reseau-filbleu-tmvl/alternative_exports/filbleu_gtfszip",
+			"https://data.tours-metropole.fr/api/v2/catalog/datasets/horaires-temps-reel-gtfsrt-reseau-filbleu-tmvl/alternative_exports/filbleu_gtfs_zip",
 		realtimeResourceHrefs: [
 			"https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/trip-updates",
 			"https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/vehicle-positions",
@@ -143,7 +143,6 @@ const sources = [
 		getNetworkRef: () => "FILBLEU",
 		mapLineRef: (lineRef) => lineRef.slice(lineRef.lastIndexOf(":") + 1),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.lastIndexOf(":") + 1),
-		mapTripRef: (tripRef) => tripRef.slice(tripRef.indexOf(":") + 1),
 	},
 	{
 		id: "vendome",
