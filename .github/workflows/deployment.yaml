@@ -8,9 +8,11 @@ on:
       - apps/server/**/*
       - docker/**/*
       - libraries/**/*
+      - scripts/**/*
       - package.json
       - pnpm-lock.yaml
       - pnpm-workspace.yaml
+      - .dockerignore
       - .github/workflows/deployment.yaml
 
 env:

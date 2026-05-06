@@ -6,7 +6,6 @@
 		"paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy localStorage preferredLanguage baseLocale --emit-ts-declarations",
 		"dev": "pnpm run paraglide && vite",
 		"build": "pnpm run paraglide && tsc -b && NODE_ENV=production vite build",
-		"posthog:sourcemaps": "posthog-cli sourcemap process --directory dist --release-name bus-tracker-client --release-version ${VITE_BUILD_HASH:-dev} --delete-after",
 		"preview": "vite preview"
 	},
 	"devDependencies": {

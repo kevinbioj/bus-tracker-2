@@ -13,6 +13,7 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm fetch
 
 # Install dependencies
+COPY scripts/ ./scripts/
 COPY libraries/contracts/ ./libraries/contracts/
 COPY apps/client/ ./apps/client/
 RUN pnpm install -r
@@ -29,15 +30,7 @@ RUN --mount=type=secret,id=posthog_cli_api_key,required=false \
 	--mount=type=secret,id=posthog_cli_project_id,required=false \
 	--mount=type=secret,id=posthog_cli_host,required=false \
 	pnpm -r build && \
-	if [ -s /run/secrets/posthog_cli_api_key ] && [ -s /run/secrets/posthog_cli_project_id ]; then \
-		export POSTHOG_CLI_API_KEY="$(cat /run/secrets/posthog_cli_api_key)"; \
-		export POSTHOG_CLI_PROJECT_ID="$(cat /run/secrets/posthog_cli_project_id)"; \
-		if [ -s /run/secrets/posthog_cli_host ]; then export POSTHOG_CLI_HOST="$(cat /run/secrets/posthog_cli_host)"; fi; \
-		pnpm -C apps/client posthog:sourcemaps; \
-	else \
-		echo "Skipping PostHog sourcemap upload because POSTHOG_CLI_API_KEY or POSTHOG_CLI_PROJECT_ID is missing."; \
-		find apps/client/dist -name '*.map' -delete; \
-	fi
+	sh scripts/upload-posthog-sourcemaps.sh apps/client apps/client/dist bus-tracker-client "${VITE_BUILD_HASH:-dev}"
 
 ##########################################
 # STAGE 2 - Run distribution app         #

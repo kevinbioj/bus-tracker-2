@@ -15,12 +15,22 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm fetch
 
 # Install dependencies
+COPY scripts/ ./scripts/
 COPY libraries/contracts/ ./libraries/contracts/
 COPY apps/server/ ./apps/server/
 RUN pnpm install -r
 
-# Build server
-RUN pnpm -r build
+# Inject build information
+ARG BUILD_HASH
+ENV BUILD_HASH=${BUILD_HASH}
+
+# Build server, then upload and remove source maps from the resulting image.
+RUN --mount=type=secret,id=posthog_cli_api_key,required=false \
+	--mount=type=secret,id=posthog_cli_project_id,required=false \
+	--mount=type=secret,id=posthog_cli_host,required=false \
+	pnpm -C apps/server exec tsc -b --clean && \
+	pnpm -r build && \
+	sh scripts/upload-posthog-sourcemaps.sh apps/server apps/server/dist bus-tracker-server "${BUILD_HASH:-dev}"
 
 # Deploy server
 RUN pnpm deploy --legacy --filter=@bus-tracker/server --prod server-deployment
@@ -46,4 +56,3 @@ COPY --from=builder /bus-tracker/server-deployment/.env ./.env
 USER deno
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["deno", "run", "--allow-env", "--allow-read", "--allow-write", "--allow-net", "--env-file=.env", "dist/index.js"]
-
