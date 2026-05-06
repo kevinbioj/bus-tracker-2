@@ -17,7 +17,7 @@ function createSquareIcon(color = "#000000") {
 	ctx.beginPath();
 	ctx.rect(0, 0, size, size);
 	ctx.fill();
-	return canvas;
+	return ctx.getImageData(0, 0, size, size);
 }
 
 function createArrowIcon(color = "#000000") {
@@ -33,7 +33,7 @@ function createArrowIcon(color = "#000000") {
 	ctx.lineTo(0, size);
 	ctx.closePath();
 	ctx.fill();
-	return canvas;
+	return ctx.getImageData(0, 0, size, size);
 }
 
 const initialData: maplibregl.SourceSpecification = {
@@ -131,15 +131,17 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 		const arrowImageId = "arrow-icon";
 		const squareImageId = "square-icon";
 
-		const onLoad = async () => {
+		const onLoad = () => {
 			if (abort) return;
 			const arrowIcon = createArrowIcon("black");
-			const arrowBitmap = await createImageBitmap(arrowIcon);
-			map.addImage(arrowImageId, arrowBitmap, { sdf: true });
+			if (map.getImage(arrowImageId) === undefined) {
+				map.addImage(arrowImageId, arrowIcon, { sdf: true });
+			}
 
 			const squareIcon = createSquareIcon("black");
-			const squareBitmap = await createImageBitmap(squareIcon);
-			map.addImage(squareImageId, squareBitmap, { sdf: true });
+			if (map.getImage(squareImageId) === undefined) {
+				map.addImage(squareImageId, squareIcon, { sdf: true });
+			}
 		};
 
 		if (map.style._loaded) onLoad();
@@ -150,6 +152,8 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 			map.off("load", onLoad);
 			if (map.style?._loaded && map.getImage(arrowImageId) !== undefined) {
 				map.removeImage(arrowImageId);
+			}
+			if (map.style?._loaded && map.getImage(squareImageId) !== undefined) {
 				map.removeImage(squareImageId);
 			}
 		};
