@@ -22,10 +22,10 @@
 		"@hono/node-server": "^2.0.1",
 		"arktype": "^2.2.0",
 		"drizzle-orm": "^0.45.2",
-		"hono": "^4.12.16",
+		"hono": "^4.12.18",
 		"postgres": "^3.4.9",
 		"redis": "^5.12.1",
 		"ts-pattern": "^5.9.0",
-		"zod": "^4.4.1"
+		"zod": "^4.4.3"
 	}
 }
