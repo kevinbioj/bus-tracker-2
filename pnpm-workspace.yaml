@@ -11,6 +11,7 @@ packages:
   - providers/rtm
 
 onlyBuiltDependencies:
+  - '@posthog/cli'
   - '@swc/core'
   - core-js
   - esbuild

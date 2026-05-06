@@ -73,6 +73,10 @@ jobs:
           build-args: |
             BUILD_HASH=${{ steps.build-info.outputs.short_sha }}
             BUILD_TIMESTAMP=${{ steps.build-info.outputs.build_time }}
+          secrets: |
+            posthog_cli_api_key=${{ secrets.POSTHOG_CLI_API_KEY }}
+            posthog_cli_project_id=${{ secrets.POSTHOG_CLI_PROJECT_ID }}
+            posthog_cli_host=${{ secrets.POSTHOG_CLI_HOST }}
           context: .
           file: docker/Dockerfile-${{ matrix.component }}
           # platforms: linux/amd64,linux/arm64

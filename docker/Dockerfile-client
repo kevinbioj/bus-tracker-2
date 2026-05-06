@@ -24,8 +24,20 @@ ENV VITE_BUILD_HASH=${BUILD_HASH}
 ARG BUILD_TIMESTAMP
 ENV VITE_BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
 
-# Build client
-RUN pnpm -r build
+# Build client, then upload and remove source maps from the resulting image.
+RUN --mount=type=secret,id=posthog_cli_api_key,required=false \
+	--mount=type=secret,id=posthog_cli_project_id,required=false \
+	--mount=type=secret,id=posthog_cli_host,required=false \
+	pnpm -r build && \
+	if [ -s /run/secrets/posthog_cli_api_key ] && [ -s /run/secrets/posthog_cli_project_id ]; then \
+		export POSTHOG_CLI_API_KEY="$(cat /run/secrets/posthog_cli_api_key)"; \
+		export POSTHOG_CLI_PROJECT_ID="$(cat /run/secrets/posthog_cli_project_id)"; \
+		if [ -s /run/secrets/posthog_cli_host ]; then export POSTHOG_CLI_HOST="$(cat /run/secrets/posthog_cli_host)"; fi; \
+		pnpm -C apps/client posthog:sourcemaps; \
+	else \
+		echo "Skipping PostHog sourcemap upload because POSTHOG_CLI_API_KEY or POSTHOG_CLI_PROJECT_ID is missing."; \
+		find apps/client/dist -name '*.map' -delete; \
+	fi
 
 ##########################################
 # STAGE 2 - Run distribution app         #
