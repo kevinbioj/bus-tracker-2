@@ -201,6 +201,17 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allow
 	return trip;
 };
 
+const getStartDateFromTripDescriptor = (
+	trip: NonNullable<ReturnType<typeof getTripFromDescriptor>>,
+	tripDescriptor: TripDescriptor,
+	updatedAt: Temporal.Instant,
+) =>
+	tripDescriptor.startDate !== undefined
+		? Temporal.PlainDate.from(tripDescriptor.startDate)
+		: guessStartDate(trip.firstArrivalSecs, updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone));
+
+const getJourneyMapKey = (date: Temporal.PlainDate, tripId: string) => `${date.toString()}-${tripId}`;
+
 // const matchJourneyToTripDescriptor = (journey: Journey, tripDescriptor: TripDescriptor) => {
 // 	if (journey.trip.id !== tripDescriptor.tripId) return false;
 // 	if (tripDescriptor.routeId !== undefined && journey.trip.route.id !== tripDescriptor.routeId) return false;
@@ -227,25 +238,29 @@ export async function computeVehicleJourneys(source: Source) {
 		const paths = new Map<string, VehicleJourneyPath>();
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
+		const canceledJourneyIds = new Set<string>();
 
 		if (tripUpdates.length > 0) {
 			for (const tripUpdate of tripUpdates) {
-				if (tripUpdate.trip.scheduleRelationship === "CANCELED") continue;
-
 				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
-				if (trip === undefined || trip.stopTimeCount < 2) continue;
+				if (trip === undefined) continue;
 
-				const startDate =
-					tripUpdate.trip.startDate !== undefined
-						? Temporal.PlainDate.from(tripUpdate.trip.startDate)
-						: guessStartDate(trip.firstArrivalSecs, updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone));
+				const startDate = getStartDateFromTripDescriptor(trip, tripUpdate.trip, updatedAt);
 
-				let journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);
+				if (tripUpdate.trip.scheduleRelationship === "CANCELED") {
+					canceledJourneyIds.add(`${trip.id}:${startDate}`);
+					continue;
+				}
+
+				if (trip.stopTimeCount < 2) continue;
+				if (canceledJourneyIds.has(`${trip.id}:${startDate}`)) continue;
+
+				let journey = source.gtfs.journeys.get(getJourneyMapKey(startDate, trip.id));
 				if (journey === undefined) {
 					journey = trip.getScheduledJourney(startDate, true);
-					source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
+					source.gtfs.journeys.set(getJourneyMapKey(startDate, trip.id), journey);
 				}
 				journey.updateJourney(tripUpdate.stopTimeUpdate ?? [], source.options.appendTripUpdateInformation);
 				journey.setVehicleDescriptor(tripUpdate.vehicle, tripUpdate.timestamp * 1000);
@@ -292,10 +307,12 @@ export async function computeVehicleJourneys(source: Source) {
 								? guessStartDate(trip.firstArrivalSecs, updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone))
 								: Temporal.Now.plainDateISO();
 
-					journey = source.gtfs.journeys.get(`${startDate.toString()}-${trip.id}`);
+					if (canceledJourneyIds.has(`${trip.id}:${startDate}`)) continue;
+
+					journey = source.gtfs.journeys.get(getJourneyMapKey(startDate, trip.id));
 					if (journey === undefined) {
 						journey = trip.getScheduledJourney(startDate, true);
-						source.gtfs.journeys.set(`${startDate.toString()}-${trip.id}`, journey);
+						source.gtfs.journeys.set(getJourneyMapKey(startDate, trip.id), journey);
 					}
 
 					const minutesSinceUpdate = (now.epochMilliseconds - updatedAt.epochMilliseconds) / 60000;
@@ -338,7 +355,11 @@ export async function computeVehicleJourneys(source: Source) {
 							: getCalls(journey, now, () => Number.POSITIVE_INFINITY)
 					: createCallsFromTripUpdate(
 							source.gtfs,
-							tripUpdates.find((tripUpdate) => tripUpdate.trip.tripId === vehiclePosition.trip?.tripId),
+							tripUpdates.find(
+								(tripUpdate) =>
+									tripUpdate.trip.tripId === vehiclePosition.trip?.tripId &&
+									tripUpdate.trip.scheduleRelationship !== "CANCELED",
+							),
 						)?.filter(({ aimedDepartureTime }) => now.epochMilliseconds < aimedDepartureTime);
 
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
@@ -432,6 +453,7 @@ export async function computeVehicleJourneys(source: Source) {
 			const nowStr = now.toString();
 			for (const journey of source.gtfs.journeys.values()) {
 				if (handledJourneyIds.has(journey.id)) continue;
+				if (canceledJourneyIds.has(journey.id)) continue;
 				if (journey.trip.block !== undefined && handledBlockIds.has(journey.trip.block)) continue;
 
 				const vehicleDescriptor = journey.vehicleDescriptor;
