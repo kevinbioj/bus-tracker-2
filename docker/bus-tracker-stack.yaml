@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   traefik:
-    image: traefik:v3.6.15
+    image: traefik:v3.6.16
     command:
       - "--providers.swarm=true"
       - "--providers.swarm.exposedByDefault=false"
@@ -37,7 +37,7 @@ services:
       - database_data:/var/lib/postgresql
 
   redis:
-    image: redis:8.6.2-alpine
+    image: redis:8.6.3-alpine
     ports:
       - target: 6379
         published: 6379
