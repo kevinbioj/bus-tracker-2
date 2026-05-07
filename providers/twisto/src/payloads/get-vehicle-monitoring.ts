@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { Temporal } from "temporal-polyfill";
 
 import { requestorRef } from "../config.js";
 

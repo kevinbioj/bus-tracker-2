@@ -1,4 +1,4 @@
-FROM node:26.0.0 AS base
+FROM node:26.1.0 AS base
 
 ##########################################
 # STAGE 1 - Build project artifacts      #

@@ -1,5 +1,3 @@
-import { Temporal } from "temporal-polyfill";
-
 export type Line = {
 	LineNumber: string;
 	LineName: string;

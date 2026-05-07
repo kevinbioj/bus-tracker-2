@@ -1,7 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 import { captureException, initMonitoring } from "@bus-tracker/monitoring";
 import { createClient } from "redis";
-import { Temporal } from "temporal-polyfill";
 
 import { fetchMonitoredLines } from "./jobs/fetch-monitored-lines.js";
 import { fetchMonitoredVehicles } from "./jobs/fetch-monitored-vehicles.js";

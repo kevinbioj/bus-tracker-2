@@ -2,7 +2,6 @@ import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
 import { initMonitoring } from "@bus-tracker/monitoring";
 import { createClient } from "redis";
-import { Temporal } from "temporal-polyfill";
 
 if (process.argv.length < 3) {
 	console.error("Usage: flowly <flowly id> <network ref>");

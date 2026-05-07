@@ -18,7 +18,6 @@
 	},
 	"dependencies": {
 		"@bus-tracker/monitoring": "workspace:*",
-		"redis": "^5.12.1",
-		"temporal-polyfill": "^0.3.2"
+		"redis": "^5.12.1"
 	}
 }

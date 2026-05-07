@@ -20,7 +20,7 @@ As of March 2025, it is available in most of the biggest French transit networks
 
 Before running the project, please ensure:
 - you have Docker Engine on your machine
-- you run a decent version of Node (22+ preferrably)
+- you run Node 26+
 - you have installed `pnpm`'s wrapper (`corepack enable`)
 
 
@@ -29,7 +29,7 @@ Now, to run the project:
 2. Build `@bus-tracker/contracts`: `pnpm -C libraries/contracts build`
 3. Start the server app: `pnpm dev:server`
 4. Start the client app: `pnpm dev:client`
-5. Start one or more providers (e.g.: `pnpm dev:gtfs configurations/rouen-astuce.mjs`)
+5. Start one or more providers (e.g.: `pnpm dev:gtfs configurations/rouen.mjs`)
 6. Head to [http://localhost:3000](http://localhost:3000)
 
 ## Tech architecture

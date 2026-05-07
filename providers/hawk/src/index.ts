@@ -5,9 +5,7 @@ import dayjs from "dayjs";
 import customParseFormatPlugin from "dayjs/plugin/customParseFormat.js";
 import timezonePlugin from "dayjs/plugin/timezone.js";
 import utcPlugin from "dayjs/plugin/utc.js";
-import DraftLog from "draftlog";
 import { createClient } from "redis";
-import { Temporal } from "temporal-polyfill";
 
 import type { Vehicle } from "./vehicle.js";
 
@@ -25,7 +23,6 @@ const lineRegex = /(?:{Route}:|Ligne:)(?:\s*<\/?[^>]+>)*\s*(?:<[^>]+>)?([\w\d-]+
 const destinationRegex = /(?:{RunDestination}:|Destination:)\s*([^<\n]+)/i;
 const lastLocRegex = /(?:{LastLoc}:|Dernière position:)\s*([\d]{2}\/[\d]{2}\/[\d]{4} [\d]{2}:[\d]{2}:[\d]{2})/i;
 
-DraftLog(console, true)?.addLineListener(process.stdin);
 initMonitoring(`processor-hawk:${HAWK_ID}`);
 
 console.log("► Connecting to Redis.");
@@ -40,16 +37,16 @@ const redis = createClient({
 });
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
-console.log("► Connected! Journeys will be published into '%s'.", channel);
+console.log(`► Connected! Journeys will be published into '${channel}'.`);
 console.log();
 
 while (true) {
-	const updateLog = console.draft("► Fetching vehicles from Hawk <%s>...", HAWK_ID);
+	console.log(`► Fetching vehicles from Hawk <${HAWK_ID}>...`);
 	const response = await fetch(
 		`https://hawk.hanoverdisplays.com/${HAWK_ID}/api/vehicles/poi?info=${INFO_TOKEN}&isSAEIVMode=true&culture=fr-FR&hasOperator=false&hasTransporter=false&isUsingMetricSystem=true&hasCapacity=false&userId=1&driverInfo=1&ShowAssignedOnly=false&assignment_state_exists=false&vehicle_phone_number_exists=true`,
 	);
 	if (!response.ok) {
-		updateLog("✘ Failed to fetch data from Hawk (status %d).", response.status);
+		console.error(`✘ Failed to fetch data from Hawk (status ${response.status}).`);
 		await setTimeout(5000);
 		continue;
 	}
@@ -108,7 +105,7 @@ while (true) {
 	});
 
 	await redis.publish("journeys", JSON.stringify(vehicleJourneys));
-	updateLog(`✓ Published ${vehicleJourneys.length} vehicle journeys`);
+	console.log(`✓ Published ${vehicleJourneys.length} vehicle journeys`);
 	console.log();
 	await setTimeout(30_000);
 }

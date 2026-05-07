@@ -10,10 +10,9 @@ packages:
   - providers/twisto
   - providers/rtm
 
-onlyBuiltDependencies:
-  - '@posthog/cli'
-  - '@swc/core'
-  - core-js
-  - esbuild
-  - protobufjs
-  - sharp
+allowBuilds:
+  '@posthog/cli': true
+  core-js: false
+  esbuild: false
+  protobufjs: false
+  sharp: false
