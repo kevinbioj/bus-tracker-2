@@ -174,7 +174,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	useEffect(() => {
 		if (prevFilterSortKey.current === filterSortKey) return;
 		prevFilterSortKey.current = filterSortKey;
-		const stickyY = window.innerWidth >= 640 ? 140 : 84;
+		const stickyY = window.innerWidth >= 640 ? 134 : 76;
 		if (window.scrollY > stickyY) {
 			window.scrollTo({ top: stickyY, behavior: "instant" });
 		}
