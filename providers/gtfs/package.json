@@ -6,7 +6,7 @@
 	"scripts": {
 		"build": "tsc",
 		"dev": "pnpm build && pnpm start",
-		"start": "deno run --allow-env --allow-read --allow-write --allow-net --allow-sys --env-file=.env dist/index.js",
+		"start": "node dist/index.js",
 		"test": "vitest --run --exclude dist",
 		"test:watch": "vitest --exclude dist"
 	},

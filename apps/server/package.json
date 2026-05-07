@@ -7,7 +7,7 @@
 		"build": "tsc -b",
 		"dev": "pnpm build && pnpm start",
 		"package": "pkg",
-		"start": "deno run --allow-env --allow-read --allow-net --env-file=.env dist/index.js",
+		"start": "node --env-file-if-exists=.env dist/index.js",
 		"migrations:generate": "drizzle-kit generate",
 		"migrations:push": "drizzle-kit push"
 	},
