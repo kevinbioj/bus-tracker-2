@@ -49,7 +49,9 @@ export async function importShapes(gtfsDirectory: string, options: ImportGtfsOpt
 		const typedPoints = new Float64Array(indices.length * 3);
 		let currentDist = 0;
 
-		const computeDistances = options.computeShapeDistTraveled && data.dists.some((dist) => dist === undefined);
+		const computeDistances =
+			options.computeShapeDistTraveled === "always" ||
+			(options.computeShapeDistTraveled === "if-missing" && data.dists.some((dist) => dist === undefined));
 
 		for (let i = 0; i < indices.length; i++) {
 			const idx = indices[i]!;

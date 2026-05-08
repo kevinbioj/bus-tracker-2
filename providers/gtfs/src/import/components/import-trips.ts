@@ -230,15 +230,16 @@ export async function importTrips(
 	}
 
 	// Calcul des distanceTraveled si demandé.
-	if (computeShapeDistTraveled) {
+	if (computeShapeDistTraveled !== undefined) {
 		for (const trip of trips.values()) {
 			const start = tripStart[trip.idx]!;
 			const count = tripCount[trip.idx]!;
 			if (count === 0) continue;
 
+			const alwaysRecompute = computeShapeDistTraveled === "always";
 			const shapeRecalculated = !!trip.shape?.recalculatedDistances;
 
-			let needs = shapeRecalculated;
+			let needs = alwaysRecompute || shapeRecalculated;
 			if (!needs) {
 				for (let i = 0; i < count; i++) {
 					if (Number.isNaN(distanceTraveled[start + i]!)) {
@@ -254,7 +255,7 @@ export async function importTrips(
 				const idx = start + i;
 				const stop = stopRefs[idx]!;
 
-				if (shapeRecalculated || Number.isNaN(distanceTraveled[idx]!)) {
+				if (alwaysRecompute || shapeRecalculated || Number.isNaN(distanceTraveled[idx]!)) {
 					if (trip.shape !== undefined) {
 						distanceTraveled[idx] = trip.shape.findClosestPointDistance(stop.latitude, stop.longitude);
 					} else {

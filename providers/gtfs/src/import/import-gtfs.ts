@@ -8,6 +8,7 @@ import { importStops } from "./components/import-stops.js";
 import { importTrips } from "./components/import-trips.js";
 
 export type LoadShapesStrategy = "LOAD-IF-EXISTS" | "IGNORE";
+export type ComputeShapeDistTraveledStrategy = "always" | "if-missing";
 
 export type ImportGtfsOptions = {
 	filterTrips?: (trip: Trip) => boolean;
@@ -16,7 +17,7 @@ export type ImportGtfsOptions = {
 	mapRouteId?: (routeId: string) => string;
 	importAllStops?: boolean;
 	shapesStrategy?: LoadShapesStrategy;
-	computeShapeDistTraveled?: boolean;
+	computeShapeDistTraveled?: ComputeShapeDistTraveledStrategy;
 	ignoreBlocks?: boolean;
 	postLoad?: (resource: Awaited<ReturnType<typeof importGtfs>>) => unknown;
 };

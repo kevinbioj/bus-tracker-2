@@ -113,7 +113,7 @@ const sources = [
 		staticResourceHref:
 			"https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/ca_limoges_metropole-aggregated-gtfs.zip",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/limoges/trip-updates"],
-		gtfsOptions: { computeShapeDistTraveled: true },
+		gtfsOptions: { computeShapeDistTraveled: "if-missing" },
 		getNetworkRef: () => "LIMOGES",
 		mapLineRef: (lineRef) => lineRef.split(":")[2],
 		mapStopRef: (stopRef) => stopRef.split(":")[2],
