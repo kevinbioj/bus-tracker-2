@@ -71,7 +71,7 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 						networkId: embeddedNetworkId ? String(embeddedNetworkId) : undefined,
 						lineId: lineId ? String(lineId) : undefined,
 						excludeScheduled: hideScheduledTrips ? "true" : undefined,
-						includeMarker: activeMarkerId ?? undefined,
+						includeMarker: lineId === undefined ? (activeMarkerId ?? undefined) : undefined,
 					},
 				})
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
