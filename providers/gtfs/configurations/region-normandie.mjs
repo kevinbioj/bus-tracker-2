@@ -226,12 +226,11 @@ const sources = [
 	//- Ficibus
 	{
 		id: "ficibus",
-		staticResourceHref: "https://exs.atm.cityway.fr/gtfs.aspx?key=OPENDATA&operatorCode=FICIBUS",
+		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=FICIBUS&dataFormat=GTFS",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/ficibus/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/ficibus/vehicle-positions",
 		],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
 		getNetworkRef: () => "FICIBUS",
 		getVehicleRef: (vehicle) => vehicle?.id,
