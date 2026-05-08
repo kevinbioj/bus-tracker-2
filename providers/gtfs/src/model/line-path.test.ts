@@ -62,4 +62,22 @@ describe("buildMergedLinePathFromShapes", () => {
 
 		expect(result.segments.map(segmentKey)).toEqual(["49.00000,1.00000 49.00000,1.01000"]);
 	});
+
+	it("keeps intermediate source points", () => {
+		const result = buildMergedLinePathFromShapes([
+			shape("source", [
+				[49, 1],
+				[49.00001, 1.00001],
+				[49.00002, 1.00002],
+			]),
+		]);
+
+		expect(result.segments).toEqual([
+			[
+				[49, 1],
+				[49.00001, 1.00001],
+				[49.00002, 1.00002],
+			],
+		]);
+	});
 });
