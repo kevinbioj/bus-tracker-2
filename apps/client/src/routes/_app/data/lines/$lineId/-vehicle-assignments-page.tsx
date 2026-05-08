@@ -61,7 +61,7 @@ export function LineVehicleAssignments() {
 			current={
 				<>
 					{line.cartridgeHref ? (
-						<img className="h-5 object-contain rounded-sm" src={line.cartridgeHref} alt={line.number} />
+						<img className="h-5 object-contain" src={line.cartridgeHref} alt={line.number} />
 					) : (
 						line.number
 					)}
