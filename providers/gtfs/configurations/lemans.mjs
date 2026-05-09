@@ -7,7 +7,6 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/setram-lemans-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/setram-lemans-gtfs-rt-vehicle-position",
 		],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "SETRAM",

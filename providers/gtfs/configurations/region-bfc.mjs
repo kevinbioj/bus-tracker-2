@@ -7,7 +7,6 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/beaune-cote-et-bus-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 			"https://proxy.transport.data.gouv.fr/resource/beaune-cote-et-bus-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
 		excludeScheduled: true,
 		mapVehiclePosition: (vehicle) => {
@@ -20,7 +19,6 @@ const sources = [
 		id: "coeur-de-loire",
 		staticResourceHref: "https://pysae.com/api/v2/groups/coeur-de-loire/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/coeur-de-loire/gtfs-rt"],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "COEUR-LOIRE",
@@ -34,7 +32,6 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/divia-dijon-gtfs-rt-vehicle-position",
 		],
 		mode: "NO-TU",
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: (trip) =>
 			![
 				"4-PL",
@@ -73,7 +70,6 @@ const sources = [
 		id: "montbeliard",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/b45aa8d8-4bd4-4528-99c7-acfc980fdb09",
 		realtimeResourceHrefs: [],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "EVOLITY",
 	},
 	{
@@ -86,7 +82,6 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/moova-vesoul-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/moova-vesoul-gtfs-rt-vehicle-position",
 		],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "MOOVA",

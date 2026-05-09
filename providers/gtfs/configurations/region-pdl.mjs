@@ -7,7 +7,6 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-vehicle-position",
 		],
-		gtfsOptions: { shapesStrategy: "IGNORE" }, // shape distances unavailable
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: (journey) => journey?.trip?.route.agency.id.replace("_", "-") ?? "ALEOP",
@@ -50,7 +49,6 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		gtfsOptions: {
-			shapesStrategy: "IGNORE",
 			filterTrips: (trip) =>
 				[
 					"01",
@@ -90,7 +88,6 @@ const sources = [
 		id: "angers-sub",
 		staticResourceHref: "https://pysae.com/api/v2/groups/irigo/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/irigo/gtfs-rt"],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "IRIGO",
@@ -129,7 +126,6 @@ const sources = [
 		id: "roche-sur-yon",
 		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/impulsyon/current/revision/gtfs",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/impulsyon/realtime"],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) => {
 			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
@@ -153,7 +149,6 @@ const sources = [
 		id: "saumur",
 		staticResourceHref: "https://mobi-iti-pdl.okina.fr/static/mobiiti_saumur_val_de_loire/gtfs_imported-id_saumur.zip",
 		realtimeResourceHrefs: [],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		getNetworkRef: () => "OGALO",
 		getDestination: (journey) => journey?.calls.at(-1)?.stop.name,
 	},

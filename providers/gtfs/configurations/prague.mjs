@@ -11,7 +11,6 @@ const sources = [
 		id: "prague",
 		staticResourceHref: "https://data.pid.cz/PID_GTFS.zip",
 		realtimeResourceHrefs: ["https://api.golemio.cz/v2/vehiclepositions/gtfsrt/pid_feed.pb"],
-		gtfsOptions: { shapesStrategy: "IGNORE" },
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "PID",
