@@ -79,6 +79,9 @@ const sources = [
 			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
 			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
 		],
+		gtfsOptions: {
+			computeShapeDistTraveled: "always",
+		},
 		mode: "NO-TU",
 		getNetworkRef: () => "SEMO",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
