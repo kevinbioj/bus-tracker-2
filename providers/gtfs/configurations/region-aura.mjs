@@ -304,6 +304,7 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/citea-valence-gtfs-rt-vehicle-position",
 			"https://proxy.transport.data.gouv.fr/resource/citea-valence-gtfs-rt-trip-update",
 		],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "CITEA",
