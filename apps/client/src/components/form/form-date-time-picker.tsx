@@ -89,7 +89,7 @@ function DateTimePickerField<
 							</FormControl>
 						}
 					/>
-					<PopoverContent className="z-10000 w-auto overflow-hidden p-0" align="start">
+					<PopoverContent className="w-auto overflow-hidden p-0" positionerClassName="z-10000" align="start">
 						<Calendar
 							mode="single"
 							selected={dateValue}
