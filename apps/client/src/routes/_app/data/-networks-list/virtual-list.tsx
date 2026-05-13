@@ -10,6 +10,12 @@ import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import * as m from "~/paraglide/messages";
 import { NetworksListBlock } from "~/routes/_app/data/-networks-list/networks-block";
+import {
+	ALL_REGIONS_FILTER,
+	isSpecialRegionFilter,
+	OTHER_REGIONS_FILTER,
+	toRegionFilter,
+} from "~/routes/_app/data/-networks-list/region-filter";
 
 const searchifyQuery = (query: string) =>
 	query
@@ -23,13 +29,26 @@ type VirtualBlock = {
 	networks: Network[];
 };
 
+type NetworksRegionBlock = {
+	key: string;
+	title: string;
+	networks: Network[];
+};
+
 export function NetworksListVirtualList() {
 	const { data: regions } = useSuspenseQuery(GetRegionsQuery);
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
 	const listRef = useRef<HTMLDivElement>(null);
 	const [searchQuery] = useQueryState("q", parseAsString.withDefault(""));
+	const [regionFilterQuery] = useQueryState("region", parseAsString.withDefault(ALL_REGIONS_FILTER));
 	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
+	const parsedRegionFilter = toRegionFilter(regionFilterQuery);
+	const regionFilter =
+		isSpecialRegionFilter(parsedRegionFilter) || regions.some((region) => String(region.id) === parsedRegionFilter)
+			? parsedRegionFilter
+			: ALL_REGIONS_FILTER;
+	const hasSearchQuery = debouncedSearchifiedSearchQuery.length > 0;
 
 	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
 	const [favoriteNetworkIds] = useLocalStorage("favorite-networks", new Set<number>(), {
@@ -40,37 +59,45 @@ export function NetworksListVirtualList() {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
 	useEffect(() => {
 		window.scrollTo({ behavior: "instant", top: 0 });
-	}, [debouncedSearchifiedSearchQuery]);
+	}, [debouncedSearchifiedSearchQuery, regionFilter]);
 
-	const [favoriteNetworks, otherNetworks] = useMemo<[Network[], Network[]]>(() => {
+	const filteredNetworks = useMemo<Network[]>(() => {
 		let innerNetworks = networks;
 		if (innerNetworks === undefined) {
-			return [[], []];
+			return [];
 		}
 
 		if (onlyNetworksWithHistory) {
 			innerNetworks = innerNetworks.filter((network) => network.hasVehiclesFeature);
 		}
 
-		const groups = Map.groupBy(innerNetworks, (network) => {
-			if (debouncedSearchifiedSearchQuery.length > 0) {
-				const compareAgainst = [network.name, ...(network.authority ? [network.authority] : [])].map(searchifyQuery);
-				if (compareAgainst.every((value) => !value.includes(debouncedSearchifiedSearchQuery))) {
-					return "search-mismatch";
-				}
-			}
+		if (!hasSearchQuery) {
+			return innerNetworks;
+		}
 
-			return favoriteNetworkIds.has(network.id) ? "favorite" : "other";
+		return innerNetworks.filter((network) => {
+			const compareAgainst = [network.name, ...(network.authority ? [network.authority] : [])].map(searchifyQuery);
+			return compareAgainst.some((value) => value.includes(debouncedSearchifiedSearchQuery));
 		});
-		return [groups.get("favorite") ?? [], groups.get("other") ?? []];
-	}, [debouncedSearchifiedSearchQuery, favoriteNetworkIds, networks, onlyNetworksWithHistory]);
+	}, [debouncedSearchifiedSearchQuery, hasSearchQuery, networks, onlyNetworksWithHistory]);
 
-	const networksByRegion = useMemo(() => {
+	const [favoriteNetworks, regionNetworks] = useMemo<[Network[], Network[]]>(() => {
+		if (regionFilter !== ALL_REGIONS_FILTER) {
+			return [[], filteredNetworks];
+		}
+
+		const groups = Map.groupBy(filteredNetworks, (network) =>
+			favoriteNetworkIds.has(network.id) ? "favorite" : "region",
+		);
+		return [groups.get("favorite") ?? [], groups.get("region") ?? []];
+	}, [favoriteNetworkIds, filteredNetworks, regionFilter]);
+
+	const networksByRegion = useMemo<NetworksRegionBlock[]>(() => {
 		if (regions === undefined) {
 			return [];
 		}
 
-		const groups = Map.groupBy(otherNetworks, (network) => network.regionId ?? -1);
+		const groups = Map.groupBy(regionNetworks, (network) => network.regionId ?? -1);
 		const orphanNetworks = groups.get(-1);
 		return [
 			...regions.flatMap((region) => {
@@ -80,13 +107,16 @@ export function NetworksListVirtualList() {
 				}
 
 				return {
+					key: String(region.id),
 					title: region.name,
 					networks,
 				};
 			}),
-			...(orphanNetworks !== undefined ? [{ title: m.map_network_other(), networks: orphanNetworks }] : []),
+			...(orphanNetworks !== undefined
+				? [{ key: OTHER_REGIONS_FILTER, title: m.map_network_other(), networks: orphanNetworks }]
+				: []),
 		];
-	}, [regions, otherNetworks]);
+	}, [regions, regionNetworks]);
 
 	const virtualBlocks = useMemo<VirtualBlock[]>(() => {
 		const blocks: VirtualBlock[] = [];
@@ -103,12 +133,16 @@ export function NetworksListVirtualList() {
 			});
 		}
 
-		for (const { title, networks } of networksByRegion) {
-			blocks.push({ key: `region-${title}`, title, networks });
+		for (const { key, title, networks } of networksByRegion) {
+			if (regionFilter !== ALL_REGIONS_FILTER && regionFilter !== key) {
+				continue;
+			}
+
+			blocks.push({ key: `region-${key}`, title, networks });
 		}
 
 		return blocks;
-	}, [favoriteNetworks, networksByRegion]);
+	}, [favoriteNetworks, networksByRegion, regionFilter]);
 
 	const virtualizer = useWindowVirtualizer({
 		count: virtualBlocks.length,
@@ -131,6 +165,9 @@ export function NetworksListVirtualList() {
 
 	return (
 		<div ref={listRef} className="max-w-(--breakpoint-xl) mx-auto px-3">
+			{virtualBlocks.length === 0 && (
+				<p className="py-8 text-center text-sm text-muted-foreground">{m.networks_list_empty()}</p>
+			)}
 			<div className="relative" style={{ height: virtualizer.getTotalSize() }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
 					const block = virtualBlocks[virtualItem.index];

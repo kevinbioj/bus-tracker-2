@@ -1,5 +1,5 @@
 import { useQueryState } from "nuqs";
 
-export function useNetworksListSearchQuery() {
-	return useQueryState("q");
+export function useNetworksListSearchQuery(key = "q") {
+	return useQueryState(key);
 }

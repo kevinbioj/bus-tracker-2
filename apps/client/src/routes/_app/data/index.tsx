@@ -9,6 +9,7 @@ import { NetworksListVirtualList } from "./-networks-list/virtual-list";
 
 const searchSchema = z.object({
 	q: z.coerce.string().optional(),
+	region: z.coerce.string().optional(),
 });
 
 export const Route = createFileRoute("/_app/data/")({
