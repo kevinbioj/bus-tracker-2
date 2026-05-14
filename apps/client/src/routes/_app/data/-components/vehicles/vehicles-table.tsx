@@ -17,10 +17,11 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 	const virtualizer = useWindowVirtualizer({
 		count: data.length,
 		estimateSize: useCallback(() => (isDesktop ? 64 : 105), [isDesktop]),
+		getItemKey: useCallback((index: number) => data[index].id, [data]),
 		initialOffset: 0,
 		measureElement:
 			window !== undefined && navigator.userAgent.indexOf("Firefox") === -1
-				? (element) => element?.getBoundingClientRect().height
+				? (element) => Math.round(element?.getBoundingClientRect().height ?? 0)
 				: undefined,
 		overscan: 5,
 		scrollMargin: listRef.current?.offsetTop ?? 0,
@@ -41,9 +42,9 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 				const vehicle = data[virtualItem.index];
 				return (
 					<div
-						className="absolute py-1 top-0 left-0 w-full"
+						className="absolute py-1 top-0 left-0 w-full [will-change:transform]"
 						data-index={virtualItem.index}
-						key={vehicle.id}
+						key={virtualItem.key}
 						ref={virtualizer.measureElement}
 						style={{
 							transform: `translateY(${virtualItem.start - virtualizer.options.scrollMargin}px)`,
