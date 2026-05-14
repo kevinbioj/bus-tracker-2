@@ -84,6 +84,7 @@ export function NetworkInnerList({
 					const row = virtualRows[virtualItem.index];
 					return (
 						<div
+							className="[will-change:transform]"
 							key={virtualItem.key}
 							style={{
 								position: "absolute",

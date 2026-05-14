@@ -159,6 +159,7 @@ export function NetworksListVirtualList() {
 			return 48 + gridLines * 64 + (gridLines - 1) * 12;
 		},
 		getItemKey: (index) => virtualBlocks[index].key,
+		measureElement: (element) => Math.round(element?.getBoundingClientRect().height ?? 0),
 		overscan: 1,
 		scrollMargin: listRef.current?.offsetTop ?? 0,
 	});
@@ -173,7 +174,7 @@ export function NetworksListVirtualList() {
 					const block = virtualBlocks[virtualItem.index];
 					return (
 						<div
-							className="absolute py-2 w-full"
+							className="absolute py-2 w-full [will-change:transform]"
 							data-index={virtualItem.index}
 							key={virtualItem.key}
 							ref={virtualizer.measureElement}
