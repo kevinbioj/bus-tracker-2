@@ -31,7 +31,7 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 					key={line.id}
 					to="/data/lines/$lineId/vehicle-assignments"
 					params={{ lineId: String(line.id) }}
-					className="h-14 border flex items-center gap-1 rounded-lg hover:brightness-90 active:not-aria-[haspopup]:translate-y-px transition-[filter,transform]"
+					className="h-14 border flex items-center gap-1 rounded-lg pointer-fine:hover:brightness-90 active:not-aria-[haspopup]:translate-y-px"
 					style={{
 						backgroundColor: line.color ?? undefined,
 						color: line.textColor ?? undefined,

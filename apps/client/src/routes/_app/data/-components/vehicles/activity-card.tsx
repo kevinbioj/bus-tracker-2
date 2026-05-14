@@ -67,7 +67,7 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 	if (line) {
 		return (
 			<Link
-				className="border border-border flex h-14 px-2 py-1 rounded-md hover:brightness-90 transition-[filter,transform] active:not-aria-[haspopup]:translate-y-px"
+				className="border border-border flex h-14 px-2 py-1 rounded-md pointer-fine:hover:brightness-90 active:not-aria-[haspopup]:translate-y-px"
 				style={style}
 				to="/data/lines/$lineId/vehicle-assignments"
 				params={{ lineId: String(line.id) }}
