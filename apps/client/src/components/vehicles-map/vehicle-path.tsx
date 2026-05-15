@@ -88,12 +88,16 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	const [pathDisplayMode] = usePathDisplayMode();
 	const [stopLabelsStyle] = useLocalStorage<StopLabelsStyle>("stop-labels-style", "with-background");
 	const showJourneyPath = pathDisplayMode !== "disabled" && journeyId !== undefined;
-	const showLinePath = pathDisplayMode === "journeys-and-lines" && journeyId === undefined && lineId !== undefined;
 
 	const { data: journey } = useQuery(GetVehicleJourneyQuery(showJourneyPath ? journeyId : null, true));
 	const { data: path } = useQuery(GetPathQuery(showJourneyPath ? journey?.pathRef : undefined));
+
+	const journeyPathReady = journey?.id === journeyId && journey?.pathRef !== undefined && path !== undefined;
+	const showLinePath =
+		pathDisplayMode === "journeys-and-lines" && lineId !== undefined && (journeyId === undefined || !journeyPathReady);
+
 	const { data: linePath } = useQuery(GetLinePathQuery(showLinePath ? lineId : undefined));
-	const { data: line } = useQuery(GetLineQuery(journey?.lineId ?? (showLinePath ? lineId : undefined)));
+	const { data: line } = useQuery(GetLineQuery(journey?.lineId ?? lineId));
 
 	const stopsLabelLayer = useMemo<maplibregl.AddLayerObject>(
 		() => ({
@@ -190,25 +194,25 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 
 		const features: GeoJSON.Feature[] = [];
 
-		if (showLinePath) {
-			if (linePath !== undefined) {
-				for (const segment of linePath.segments) {
-					const coordinates = segment.map(([latitude, longitude]) => [longitude, latitude]);
-					if (coordinates.length <= 1) continue;
+		if (showLinePath && linePath !== undefined) {
+			for (const segment of linePath.segments) {
+				const coordinates = segment.map(([latitude, longitude]) => [longitude, latitude]);
+				if (coordinates.length <= 1) continue;
 
-					features.push({
-						type: "Feature",
-						geometry: { type: "LineString", coordinates },
-						properties: { type: "future", color: pathColor, strokeColor: pathStrokeColor },
-					});
-				}
+				features.push({
+					type: "Feature",
+					geometry: { type: "LineString", coordinates },
+					properties: { type: "future", color: pathColor, strokeColor: pathStrokeColor },
+				});
 			}
+		}
 
+		if (journeyId === undefined) {
 			return { type: "FeatureCollection", features };
 		}
 
 		if (journey?.id !== journeyId) {
-			return { type: "FeatureCollection", features: [] };
+			return { type: "FeatureCollection", features };
 		}
 
 		if (path !== undefined) {
