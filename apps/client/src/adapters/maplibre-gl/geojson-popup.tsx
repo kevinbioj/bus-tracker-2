@@ -1,10 +1,15 @@
 import maplibregl from "maplibre-gl";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useMediaQuery } from "usehooks-ts";
 
 import type { CircleMarkerFeature, CircleMarkerSource } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { cn } from "~/utils/cn";
+
+// Touch devices need a larger tap area than the 6px circle radius — expand the
+// queryRenderedFeatures bbox by 8px around the tap to make markers easier to hit with a finger.
+const COARSE_POINTER_HIT_PADDING = 8;
 
 type ActiveFeature = {
 	id: string;
@@ -25,6 +30,8 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 	const map = useMap();
 	const containerRef = useRef(document.createElement("div"));
 	const isMapDragged = useRef(false);
+	const isCoarsePointer = useMediaQuery("(pointer: coarse)");
+	const hitPadding = isCoarsePointer ? COARSE_POINTER_HIT_PADDING : 0;
 
 	const [popup] = useState(
 		() =>
@@ -133,14 +140,43 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 	}, [layer, map]);
 
 	useEffect(() => {
+		const queryArea = (point: maplibregl.Point): maplibregl.PointLike | [maplibregl.PointLike, maplibregl.PointLike] =>
+			hitPadding === 0
+				? point
+				: [
+						[point.x - hitPadding, point.y - hitPadding],
+						[point.x + hitPadding, point.y + hitPadding],
+					];
+
+		// queryRenderedFeatures with a bbox returns features in render order, not by distance to the
+		// tap point. In dense areas (terminus with several buses) we want the marker closest to the
+		// finger — fall back to the first feature on desktop (point query, single hit anyway).
+		const pickClosest = (features: maplibregl.MapGeoJSONFeature[], point: maplibregl.Point) => {
+			if (features.length <= 1 || hitPadding === 0) return features[0];
+			let best = features[0];
+			let bestDistSq = Number.POSITIVE_INFINITY;
+			for (const feature of features) {
+				const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
+				const projected = map.project([lng, lat]);
+				const dx = projected.x - point.x;
+				const dy = projected.y - point.y;
+				const distSq = dx * dx + dy * dy;
+				if (distSq < bestDistSq) {
+					bestDistSq = distSq;
+					best = feature;
+				}
+			}
+			return best;
+		};
+
 		const onMouseMove = (e: maplibregl.MapMouseEvent) => {
 			if (activeFeature?.type === "selected") return;
 
-			const features = map.queryRenderedFeatures(e.point, {
+			const features = map.queryRenderedFeatures(queryArea(e.point), {
 				layers: [layer.id],
 			});
 
-			const feature = features[0] as unknown as CircleMarkerFeature;
+			const feature = pickClosest(features, e.point) as unknown as CircleMarkerFeature;
 			if (feature === undefined) {
 				if (activeFeature?.type === "hover") {
 					closePopup();
@@ -155,11 +191,11 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 		};
 
 		const onClick = (e: maplibregl.MapMouseEvent) => {
-			const features = map.queryRenderedFeatures(e.point, {
+			const features = map.queryRenderedFeatures(queryArea(e.point), {
 				layers: [layer.id],
 			});
 
-			const feature = features[0] as unknown as CircleMarkerFeature;
+			const feature = pickClosest(features, e.point) as unknown as CircleMarkerFeature;
 			if (feature === undefined) {
 				if (activeFeature !== null) {
 					closePopup();
@@ -200,7 +236,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			map.off("click", onClick);
 			map.off("sourcedata", onSourceData);
 		};
-	}, [activeFeature, adjustPan, closePopup, layer, map, openPopup, popup]);
+	}, [activeFeature, adjustPan, closePopup, hitPadding, layer, map, openPopup, popup]);
 
 	return createPortal(
 		children({
