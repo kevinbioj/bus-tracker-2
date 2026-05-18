@@ -488,6 +488,16 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/tisseo"],
 		appendTripUpdateInformation: true,
 		addedTripShapeMatching: true,
+		gtfsOptions: {
+			postLoad: (resource) => {
+				resource.stops.set("code:06766", {
+					id: "code:06766",
+					name: "Saint Cyprien - République",
+					latitude: 43.5981022,
+					longitude: 1.4315255,
+				});
+			},
+		},
 		excludeScheduled: (trip) =>
 			[
 				"TELEO",
