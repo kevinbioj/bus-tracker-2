@@ -210,6 +210,7 @@ export class Journey {
 			if (timeUpdate?.scheduleRelationship === "NO_DATA") {
 				arrivalDelay = undefined;
 				departureDelay = undefined;
+				call.status = "SCHEDULED";
 				continue;
 			}
 
@@ -250,6 +251,8 @@ export class Journey {
 			if (departureDelay !== undefined) {
 				call.expectedDepartureTime = call.aimedDepartureTime + departureDelay * 1000;
 			}
+
+			call.status = "SCHEDULED";
 		}
 
 		// Mise à jour du flag RT basée sur l'état réel des calls.
