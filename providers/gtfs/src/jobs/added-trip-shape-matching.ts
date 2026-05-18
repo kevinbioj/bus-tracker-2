@@ -1,0 +1,252 @@
+import type { VehicleJourneyPosition } from "@bus-tracker/contracts";
+
+import type { Gtfs } from "../model/gtfs.js";
+import type { StopTimeUpdate, TripUpdate } from "../model/gtfs-rt.js";
+import type { JourneyCall } from "../model/journey.js";
+import type { Shape } from "../model/shape.js";
+import type { Trip } from "../model/trip.js";
+import { getDirection } from "../utils/get-direction.js";
+
+const DEFAULT_MAX_STOP_TIME_DELTA_SECONDS = 15 * 60;
+const DEFAULT_MIN_MATCHED_STOPS = 2;
+const DEFAULT_MIN_MATCHED_STOP_RATIO = 0.6;
+
+export type TripShapeMatchCandidate = {
+	date: Temporal.PlainDate;
+	trip: Trip;
+	calls: JourneyCall[];
+};
+
+export type AddedTripShapeMatch = {
+	candidate: TripShapeMatchCandidate;
+	calls: JourneyCall[];
+};
+
+function getStopTimeMs(stopTimeUpdate: StopTimeUpdate) {
+	const time = stopTimeUpdate.arrival?.time ?? stopTimeUpdate.departure?.time;
+	return typeof time === "number" ? time * 1000 : undefined;
+}
+
+export function createCallsFromTripUpdate(gtfs: Gtfs, tripUpdate?: TripUpdate): JourneyCall[] | undefined {
+	if (tripUpdate?.stopTimeUpdate === undefined) return;
+
+	const calls = tripUpdate.stopTimeUpdate.flatMap((stopTimeUpdate, index) => {
+		const arrivalTimeMs = getStopTimeMs(stopTimeUpdate);
+		if (arrivalTimeMs === undefined) return [];
+
+		const departureTimeMs = (stopTimeUpdate.departure?.time ?? stopTimeUpdate.arrival?.time)! * 1000;
+		const stop = gtfs.stops.get(stopTimeUpdate.stopId);
+		if (stop === undefined) return [];
+
+		return {
+			aimedArrivalTime: arrivalTimeMs,
+			expectedArrivalTime: arrivalTimeMs,
+			aimedDepartureTime: departureTimeMs,
+			expectedDepartureTime: departureTimeMs,
+			sequence: stopTimeUpdate.stopSequence ?? index,
+			stop,
+			platform: stopTimeUpdate.stopTimeProperties?.assignedStopId,
+			status: "UNSCHEDULED" as const,
+			flags: [],
+		};
+	});
+
+	return calls.length > 0 ? calls : undefined;
+}
+
+function getCallTimeMs(call: JourneyCall) {
+	return call.expectedArrivalTime ?? call.aimedArrivalTime;
+}
+
+function scoreCandidate(addedCalls: JourneyCall[], candidate: TripShapeMatchCandidate, maxStopTimeDeltaMs: number) {
+	const staticCallsByStopId = new Map<string, JourneyCall[]>();
+	for (const call of candidate.calls) {
+		let stopCalls = staticCallsByStopId.get(call.stop.id);
+		if (stopCalls === undefined) {
+			stopCalls = [];
+			staticCallsByStopId.set(call.stop.id, stopCalls);
+		}
+		stopCalls.push(call);
+	}
+
+	let matchedStops = 0;
+	let matchableStops = 0;
+	let totalDeltaMs = 0;
+	const matchedAddedCalls = new Set<JourneyCall>();
+	const usedStaticCalls = new Set<JourneyCall>();
+
+	for (const addedCall of addedCalls) {
+		const staticCalls = staticCallsByStopId.get(addedCall.stop.id);
+		if (staticCalls === undefined) continue;
+		matchableStops += 1;
+
+		const addedTimeMs = getCallTimeMs(addedCall);
+		let bestCall: JourneyCall | undefined;
+		let bestDeltaMs = Infinity;
+
+		for (const staticCall of staticCalls) {
+			if (usedStaticCalls.has(staticCall)) continue;
+			const deltaMs = Math.abs(getCallTimeMs(staticCall) - addedTimeMs);
+			if (deltaMs < bestDeltaMs) {
+				bestDeltaMs = deltaMs;
+				bestCall = staticCall;
+			}
+		}
+
+		if (bestCall === undefined || bestDeltaMs > maxStopTimeDeltaMs) continue;
+
+		usedStaticCalls.add(bestCall);
+		matchedAddedCalls.add(addedCall);
+		matchedStops += 1;
+		totalDeltaMs += bestDeltaMs;
+	}
+
+	return { matchedAddedCalls, matchedStops, matchableStops, totalDeltaMs };
+}
+
+export function findAddedTripShapeMatch(
+	tripUpdate: TripUpdate,
+	addedCalls: JourneyCall[],
+	startDate: Temporal.PlainDate,
+	candidates: Iterable<TripShapeMatchCandidate>,
+): AddedTripShapeMatch | undefined {
+	const routeId = tripUpdate.trip.routeId;
+	if (routeId === undefined) return;
+
+	const directionId = tripUpdate.trip.directionId ?? 0;
+	const maxStopTimeDeltaMs = DEFAULT_MAX_STOP_TIME_DELTA_SECONDS * 1000;
+	const minMatchedStops = DEFAULT_MIN_MATCHED_STOPS;
+	const minMatchedStopRatio = DEFAULT_MIN_MATCHED_STOP_RATIO;
+
+	let best:
+		| {
+				candidate: TripShapeMatchCandidate;
+				matchedAddedCalls: Set<JourneyCall>;
+				matchedStops: number;
+				matchableStops: number;
+				totalDeltaMs: number;
+		  }
+		| undefined;
+
+	for (const candidate of candidates) {
+		if (!candidate.date.equals(startDate)) continue;
+		if (candidate.trip.route.id !== routeId) continue;
+		if (candidate.trip.direction !== directionId) continue;
+		if (candidate.trip.shape === undefined) continue;
+
+		const score = scoreCandidate(addedCalls, candidate, maxStopTimeDeltaMs);
+		if (score.matchableStops === 0) continue;
+		if (score.matchedStops < Math.min(minMatchedStops, score.matchableStops)) continue;
+		if (score.matchedStops / score.matchableStops < minMatchedStopRatio) continue;
+
+		if (
+			best === undefined ||
+			score.matchedStops > best.matchedStops ||
+			(score.matchedStops === best.matchedStops && score.totalDeltaMs < best.totalDeltaMs)
+		) {
+			best = { candidate, ...score };
+		}
+	}
+
+	if (best === undefined) return;
+
+	return {
+		candidate: best.candidate,
+		calls: addedCalls.map((call) => ({
+			...call,
+			distanceTraveled: best.matchedAddedCalls.has(call)
+				? best.candidate.trip.shape!.findClosestPointDistance(call.stop.latitude, call.stop.longitude)
+				: undefined,
+		})),
+	};
+}
+
+export function findAddedTripShapeMatchWithFallback(
+	tripUpdate: TripUpdate,
+	addedCalls: JourneyCall[],
+	startDate: Temporal.PlainDate,
+	priorityCandidates: Iterable<TripShapeMatchCandidate>,
+	fallbackCandidates: Iterable<TripShapeMatchCandidate>,
+) {
+	return (
+		findAddedTripShapeMatch(tripUpdate, addedCalls, startDate, priorityCandidates) ??
+		findAddedTripShapeMatch(tripUpdate, addedCalls, startDate, fallbackCandidates)
+	);
+}
+
+function getPositionAtCall(call: JourneyCall, at: Temporal.Instant, timeZone: string): VehicleJourneyPosition {
+	return {
+		latitude: call.stop.latitude,
+		longitude: call.stop.longitude,
+		atStop: true,
+		type: "COMPUTED",
+		distanceTraveled: call.distanceTraveled,
+		recordedAt: at.toZonedDateTimeISO(timeZone).toString({ timeZoneName: "never" }),
+	};
+}
+
+export function guessPositionFromCalls(
+	calls: JourneyCall[],
+	shape: Shape,
+	at: Temporal.Instant,
+	timeZone: string,
+): VehicleJourneyPosition | undefined {
+	const activeCalls = calls.filter((call) => call.status !== "SKIPPED" && call.distanceTraveled !== undefined);
+	if (activeCalls.length === 0) return;
+
+	const atMs = at.epochMilliseconds;
+	const firstCall = activeCalls[0]!;
+	const lastCall = activeCalls[activeCalls.length - 1]!;
+
+	if (atMs <= (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime)) {
+		return getPositionAtCall(firstCall, at, timeZone);
+	}
+
+	if (atMs >= (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime)) {
+		return getPositionAtCall(lastCall, at, timeZone);
+	}
+
+	const currentCallIndex = activeCalls.findLastIndex(
+		(call) => atMs >= (call.expectedArrivalTime ?? call.aimedArrivalTime),
+	);
+	const currentCall = activeCalls[currentCallIndex]!;
+	const departureMs = currentCall.expectedDepartureTime ?? currentCall.aimedDepartureTime;
+
+	if (atMs <= departureMs) return getPositionAtCall(currentCall, at, timeZone);
+
+	const nextCall = activeCalls[currentCallIndex + 1];
+	if (currentCall.distanceTraveled === undefined || nextCall?.distanceTraveled === undefined) {
+		return getPositionAtCall(currentCall, at, timeZone);
+	}
+
+	let arrivalMs = nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime;
+	for (let i = currentCallIndex + 2; i < activeCalls.length; i++) {
+		const t = activeCalls[i]!.expectedArrivalTime ?? activeCalls[i]!.aimedArrivalTime;
+		if (t < arrivalMs) arrivalMs = t;
+	}
+
+	const ratio = Math.max(0, Math.min(1, (atMs - departureMs) / (arrivalMs - departureMs)));
+	const distanceTraveled =
+		currentCall.distanceTraveled + (nextCall.distanceTraveled - currentCall.distanceTraveled) * ratio;
+	const pointIndex = shape.findPointIndex(distanceTraveled);
+	if (pointIndex === undefined) return getPositionAtCall(currentCall, at, timeZone);
+
+	const nextPointIndex = Math.min(pointIndex + 1, shape.length - 1);
+	const currentLat = shape.getPointLatitude(pointIndex);
+	const currentLon = shape.getPointLongitude(pointIndex);
+	const currentDist = shape.getPointDistanceTraveled(pointIndex)!;
+	const nextLat = shape.getPointLatitude(nextPointIndex);
+	const nextLon = shape.getPointLongitude(nextPointIndex);
+	const nextDist = shape.getPointDistanceTraveled(nextPointIndex)!;
+	const pointRatio = nextDist === currentDist ? 0 : (distanceTraveled - currentDist) / (nextDist - currentDist);
+
+	return {
+		latitude: currentLat + (nextLat - currentLat) * pointRatio,
+		longitude: currentLon + (nextLon - currentLon) * pointRatio,
+		bearing: getDirection(currentLon, currentLat, nextLon, nextLat),
+		atStop: false,
+		type: "COMPUTED",
+		distanceTraveled,
+		recordedAt: at.toZonedDateTimeISO(timeZone).toString({ timeZoneName: "never" }),
+	};
+}

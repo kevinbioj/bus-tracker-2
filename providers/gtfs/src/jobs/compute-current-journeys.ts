@@ -9,6 +9,13 @@ import type { Source } from "../model/source.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
+import {
+	type AddedTripShapeMatch,
+	createCallsFromTripUpdate,
+	findAddedTripShapeMatchWithFallback,
+	guessPositionFromCalls,
+	type TripShapeMatchCandidate,
+} from "./added-trip-shape-matching.js";
 
 /**
  * A faster version of Temporal.ZonedDateTime.toString({ timeZoneName: "never" })
@@ -120,33 +127,6 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 	return journey.calls.slice(monitoredCallIndex);
 };
 
-const createCallsFromTripUpdate = (gtfs: Gtfs, tripUpdate?: TripUpdate): JourneyCall[] | undefined => {
-	if (tripUpdate?.stopTimeUpdate === undefined) return;
-	if (tripUpdate.stopTimeUpdate.some(({ stopId }) => !gtfs.stops.has(stopId))) return;
-
-	return tripUpdate.stopTimeUpdate.flatMap((stopTimeUpdate, index) => {
-		if (typeof stopTimeUpdate.arrival?.time !== "number" && typeof stopTimeUpdate.departure?.time !== "number")
-			return [];
-
-		const stop = gtfs.stops.get(stopTimeUpdate.stopId)!;
-
-		const arrivalTimeMs = (stopTimeUpdate?.arrival?.time ?? stopTimeUpdate.departure?.time)! * 1000;
-		const departureTimeMs = (stopTimeUpdate?.departure?.time ?? stopTimeUpdate.arrival?.time)! * 1000;
-
-		return {
-			aimedArrivalTime: arrivalTimeMs,
-			expectedArrivalTime: arrivalTimeMs,
-			aimedDepartureTime: departureTimeMs,
-			expectedDepartureTime: departureTimeMs,
-			sequence: stopTimeUpdate.stopSequence ?? index,
-			stop,
-			platform: stopTimeUpdate.stopTimeProperties?.assignedStopId,
-			status: "UNSCHEDULED",
-			flags: [],
-		};
-	});
-};
-
 const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allowTripGuessing?: boolean) => {
 	const trip = gtfs.trips.get(tripDescriptor.tripId);
 	if (trip !== undefined) {
@@ -212,6 +192,65 @@ const getStartDateFromTripDescriptor = (
 
 const getJourneyMapKey = (date: Temporal.PlainDate, tripId: string) => `${date.toString()}-${tripId}`;
 
+const getAddedTripStartDate = (gtfs: Gtfs, tripUpdate: TripUpdate, calls: JourneyCall[]) => {
+	if (tripUpdate.trip.startDate !== undefined) return Temporal.PlainDate.from(tripUpdate.trip.startDate);
+	if (tripUpdate.trip.routeId === undefined) return;
+
+	const route = gtfs.routes.get(tripUpdate.trip.routeId);
+	const firstCall = calls[0];
+	if (route === undefined || firstCall === undefined) return;
+
+	return Temporal.Instant.fromEpochMilliseconds(firstCall.aimedArrivalTime)
+		.toZonedDateTimeISO(route.agency.timeZone)
+		.toPlainDate();
+};
+
+const getActiveAddedCalls = (calls: JourneyCall[], at: Temporal.Instant, aheadTime = 0) => {
+	const atMs = at.epochMilliseconds;
+	const firstCall = calls[0];
+	const lastCall = calls[calls.length - 1];
+	if (firstCall === undefined || lastCall === undefined) return;
+	if (atMs + aheadTime * 1000 < firstCall.aimedArrivalTime) return;
+	if (atMs > lastCall.aimedDepartureTime) return;
+
+	const lastPassedIndex = calls.findLastIndex((call, index) => {
+		const callTime = index === calls.length - 1 ? call.aimedArrivalTime : call.aimedDepartureTime;
+		return atMs >= callTime;
+	});
+
+	return calls.slice(Math.min(lastPassedIndex + 1, calls.length - 1));
+};
+
+const getScheduledTripShapeCandidates = (
+	gtfs: Gtfs,
+	tripUpdate: TripUpdate,
+	addedCalls: JourneyCall[],
+	startDate: Temporal.PlainDate,
+) => {
+	const routeId = tripUpdate.trip.routeId;
+	if (routeId === undefined || addedCalls.length === 0) return [];
+
+	const directionId = tripUpdate.trip.directionId ?? 0;
+	const candidates: TripShapeMatchCandidate[] = [];
+
+	for (const trip of gtfs.trips.values()) {
+		if (trip.route.id !== routeId) continue;
+		if (trip.direction !== directionId) continue;
+		if (trip.shape === undefined) continue;
+
+		const journey = trip.getScheduledJourney(startDate);
+		if (journey === undefined) continue;
+
+		candidates.push({
+			date: startDate,
+			trip,
+			calls: journey.calls,
+		});
+	}
+
+	return candidates;
+};
+
 // const matchJourneyToTripDescriptor = (journey: Journey, tripDescriptor: TripDescriptor) => {
 // 	if (journey.trip.id !== tripDescriptor.tripId) return false;
 // 	if (tripDescriptor.routeId !== undefined && journey.trip.route.id !== tripDescriptor.routeId) return false;
@@ -239,6 +278,12 @@ export async function computeVehicleJourneys(source: Source) {
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
 		const canceledJourneyIds = new Set<string>();
+		const canceledTripCandidates: TripShapeMatchCandidate[] = [];
+		const addedTripShapeMatches: {
+			tripUpdate: TripUpdate;
+			match: AddedTripShapeMatch;
+			startDate: Temporal.PlainDate;
+		}[] = [];
 
 		if (tripUpdates.length > 0) {
 			for (const tripUpdate of tripUpdates) {
@@ -251,10 +296,50 @@ export async function computeVehicleJourneys(source: Source) {
 
 				if (tripUpdate.trip.scheduleRelationship === "CANCELED") {
 					canceledJourneyIds.add(`${trip.id}:${startDate}`);
+					if (source.options.addedTripShapeMatching === true && trip.shape !== undefined) {
+						canceledTripCandidates.push({
+							date: startDate,
+							trip,
+							calls: trip.getScheduledJourney(startDate, true).calls,
+						});
+					}
+				}
+			}
+
+			for (const tripUpdate of tripUpdates) {
+				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
+
+				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
+				if (trip === undefined) {
+					if (source.options.addedTripShapeMatching === true && tripUpdate.trip.scheduleRelationship === "ADDED") {
+						const calls = createCallsFromTripUpdate(source.gtfs, tripUpdate);
+						const startDate = calls !== undefined ? getAddedTripStartDate(source.gtfs, tripUpdate, calls) : undefined;
+						if (calls !== undefined && startDate !== undefined) {
+							const addedTripShapeMatch = findAddedTripShapeMatchWithFallback(
+								tripUpdate,
+								calls,
+								startDate,
+								canceledTripCandidates,
+								getScheduledTripShapeCandidates(source.gtfs, tripUpdate, calls, startDate),
+							);
+							if (addedTripShapeMatch !== undefined) {
+								addedTripShapeMatches.push({
+									tripUpdate,
+									match: addedTripShapeMatch,
+									startDate,
+								});
+							}
+						}
+					}
+					continue;
+				}
+
+				if (tripUpdate.trip.scheduleRelationship === "CANCELED") {
 					continue;
 				}
 
 				if (trip.stopTimeCount < 2) continue;
+				const startDate = getStartDateFromTripDescriptor(trip, tripUpdate.trip, updatedAt);
 				if (canceledJourneyIds.has(`${trip.id}:${startDate}`)) continue;
 
 				let journey = source.gtfs.journeys.get(getJourneyMapKey(startDate, trip.id));
@@ -446,6 +531,102 @@ export async function computeVehicleJourneys(source: Source) {
 
 			if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
 				activeJourneys.set(key, vehicleJourney);
+			}
+		}
+
+		if (source.options.mode !== "VP-ONLY" && source.options.mode !== "NO-TU") {
+			for (const { tripUpdate, match: addedTripShapeMatch, startDate } of addedTripShapeMatches) {
+				const candidateJourney = addedTripShapeMatch.candidate.trip.getScheduledJourney(
+					addedTripShapeMatch.candidate.date,
+					true,
+				);
+				const vehicleDescriptor = tripUpdate.vehicle;
+				const networkRef = source.options.getNetworkRef(candidateJourney, vehicleDescriptor);
+				const operatorRef = source.options.getOperatorRef?.(candidateJourney, vehicleDescriptor);
+				const vehicleRef =
+					source.options.getVehicleRef !== undefined
+						? source.options.getVehicleRef(vehicleDescriptor, candidateJourney)
+						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
+				const tripRef = source.options.mapTripRef?.(tripUpdate.trip.tripId) ?? tripUpdate.trip.tripId;
+				const key =
+					vehicleDescriptor !== undefined
+						? `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehicleDescriptor.id}`
+						: `${networkRef}:${operatorRef ?? ""}:ServiceJourney:${tripRef}:${startDate}`;
+
+				if (activeJourneys.has(key)) continue;
+
+				const calls = getActiveAddedCalls(
+					addedTripShapeMatch.calls,
+					now,
+					source.options.getAheadTime?.(candidateJourney) ?? 0,
+				);
+				if (calls === undefined || calls.length === 0) continue;
+
+				const shape = addedTripShapeMatch.candidate.trip.shape;
+				if (shape === undefined) continue;
+
+				const timeZone = addedTripShapeMatch.candidate.trip.route.agency.timeZone;
+				const position = guessPositionFromCalls(addedTripShapeMatch.calls, shape, now, timeZone);
+				if (position === undefined) continue;
+
+				const pathRef = !source.options.disableRoutePaths
+					? `${networkRef}:RoutePath:${source.id}:${shape.id}`
+					: undefined;
+
+				if (pathRef !== undefined && !paths.has(pathRef)) {
+					paths.set(pathRef, shape.asPath());
+				}
+
+				const offsetMs = getTimeZoneOffsetMs(timeZone, now.epochMilliseconds);
+				const route = addedTripShapeMatch.candidate.trip.route;
+				const vehicleJourney: VehicleJourney = {
+					id: key,
+					line: {
+						ref: `${networkRef}:Line:${source.options.mapLineRef?.(route.id) ?? route.id}`,
+						number: route.name,
+						type: route.type,
+						color: route.color,
+						textColor: route.textColor,
+					},
+					direction:
+						(tripUpdate.trip.directionId ?? addedTripShapeMatch.candidate.trip.direction) === 0
+							? "OUTBOUND"
+							: "INBOUND",
+					destination:
+						source.options.getDestination?.(candidateJourney, vehicleDescriptor) ??
+						addedTripShapeMatch.candidate.trip.headsign,
+					calls: calls.map((call, index) => {
+						const isLast = index === calls.length - 1;
+						const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
+						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
+
+						return {
+							aimedTime: fastFormatISO(aimedTimeMs, offsetMs),
+							expectedTime: expectedTimeMs ? fastFormatISO(expectedTimeMs, offsetMs) : undefined,
+							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
+							stopName: call.stop.name,
+							stopOrder: call.sequence,
+							distanceTraveled: call.distanceTraveled,
+							latitude: call.stop.latitude,
+							longitude: call.stop.longitude,
+							platformName: call.platform,
+							callStatus: call.status,
+							flags: call.flags,
+						};
+					}),
+					position,
+					pathRef,
+					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
+					networkRef,
+					operatorRef,
+					vehicleRef: vehicleRef !== undefined ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
+					serviceDate: startDate.toString(),
+					updatedAt: Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000).toString(),
+				};
+
+				if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
+					activeJourneys.set(key, vehicleJourney);
+				}
 			}
 		}
 

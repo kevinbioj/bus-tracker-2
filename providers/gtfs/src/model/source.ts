@@ -36,6 +36,7 @@ export type SourceOptions = {
 	gtfsOptions?: ImportGtfsOptions;
 	appendTripUpdateInformation?: boolean;
 	allowTripGuessing?: boolean;
+	addedTripShapeMatching?: boolean;
 	disableRoutePaths?: boolean;
 	// --- Additional data acquirance
 	mode?: "ALL" | "VP-ONLY" | "VP+TU" | "NO-TU";

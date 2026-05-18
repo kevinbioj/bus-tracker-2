@@ -73,7 +73,7 @@ export type TripDescriptor = {
 	scheduleRelationship?: TripScheduleRelationship;
 };
 
-export type TripScheduleRelationship = "SCHEDULED" | "CANCELED";
+export type TripScheduleRelationship = "SCHEDULED" | "ADDED" | "CANCELED";
 
 export type VehicleDescriptor = {
 	id: string;
