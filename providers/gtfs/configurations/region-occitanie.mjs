@@ -487,6 +487,7 @@ const sources = [
 			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/tisseo"],
 		appendTripUpdateInformation: true,
+		addedTripShapeMatching: true,
 		excludeScheduled: (trip) =>
 			[
 				"TELEO",
