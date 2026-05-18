@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
 import { ChevronLeft, ChevronRight, MapIcon } from "lucide-react";
@@ -13,6 +13,7 @@ import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout"
 import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
 import { cn } from "~/utils/cn";
+import { getLineVehicleAssignmentsDate } from "./-vehicle-assignments-date";
 
 const parseMonth = (input: Dayjs, validMonths: string[]) => {
 	if (!validMonths.includes(input.format("YYYY-MM"))) return validMonths.at(-1) ?? dayjs().format("YYYY-MM");
@@ -26,15 +27,12 @@ export function LineVehicleAssignments() {
 	const { data: line } = useSuspenseQuery(GetLineQuery(+lineId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
 
-	const currentDate = date ? dayjs(date) : dayjs(line.latestServiceDate ?? undefined);
+	const selectedDate = getLineVehicleAssignmentsDate(line, date ?? undefined);
+	const currentDate = dayjs(selectedDate);
 	const month = parseMonth(currentDate, line.activeMonths);
 	const currentMonthIndex = line.activeMonths.indexOf(month);
 
-	const { data: assignments } = useQuery({
-		...GetLineVehicleAssignmentsQuery(line.id, currentDate.format("YYYY-MM-DD")),
-		placeholderData: keepPreviousData,
-	});
-	if (!assignments) throw new Error("Assignments should be preloaded by route loader");
+	const { data: assignments } = useSuspenseQuery(GetLineVehicleAssignmentsQuery(line.id, selectedDate));
 
 	const currentDateRef = useRef<HTMLButtonElement>(null);
 
@@ -178,7 +176,7 @@ export function LineVehicleAssignments() {
 					);
 				})}
 			</div>
-			<LineVehiclesTimeline date={currentDate.format("YYYY-MM-DD")} lineId={line.id} />
+			<LineVehiclesTimeline date={selectedDate} lineId={line.id} />
 		</DataPageLayout>
 	);
 }

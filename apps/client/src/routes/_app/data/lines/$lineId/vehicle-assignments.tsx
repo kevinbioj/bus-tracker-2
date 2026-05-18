@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { z } from "zod";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { getLineVehicleAssignmentsDate } from "./-vehicle-assignments-date";
 import { LineVehicleAssignments } from "./-vehicle-assignments-page";
 
 const searchSchema = z.object({
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_app/data/lines/$lineId/vehicle-assignmen
 	loaderDeps: ({ search: { date } }) => ({ date }),
 	loader: async ({ context: { queryClient }, params: { lineId }, deps: { date } }) => {
 		const line = await queryClient.ensureQueryData(GetLineQuery(+lineId));
-		const effectiveDate = date ?? line.latestServiceDate ?? dayjs().format("YYYY-MM-DD");
+		const effectiveDate = getLineVehicleAssignmentsDate(line, date);
 		await Promise.all([
 			queryClient.ensureQueryData(GetNetworkQuery(line.networkId, true)),
 			queryClient.ensureQueryData(GetLineVehicleAssignmentsQuery(+lineId, effectiveDate)),

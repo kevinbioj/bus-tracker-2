@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
 import { Activity, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
@@ -52,11 +52,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(lineId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
-	const { data: assignments } = useQuery({
-		...GetLineVehicleAssignmentsQuery(lineId, date),
-		placeholderData: keepPreviousData,
-	});
-	if (!assignments) throw new Error("Assignments should be preloaded by route loader");
+	const { data: assignments } = useSuspenseQuery(GetLineVehicleAssignmentsQuery(lineId, date));
 
 	const currentDate = dayjs.tz(date, network.timezone);
 
