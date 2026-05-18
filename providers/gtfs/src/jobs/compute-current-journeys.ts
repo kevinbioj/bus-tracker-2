@@ -230,12 +230,10 @@ const getScheduledTripShapeCandidates = (
 	const routeId = tripUpdate.trip.routeId;
 	if (routeId === undefined || addedCalls.length === 0) return [];
 
-	const directionId = tripUpdate.trip.directionId ?? 0;
 	const candidates: TripShapeMatchCandidate[] = [];
 
 	for (const trip of gtfs.trips.values()) {
 		if (trip.route.id !== routeId) continue;
-		if (trip.direction !== directionId) continue;
 		if (trip.shape === undefined) continue;
 
 		const journey = trip.getScheduledJourney(startDate);

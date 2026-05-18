@@ -59,49 +59,90 @@ function getCallTimeMs(call: JourneyCall) {
 }
 
 function scoreCandidate(addedCalls: JourneyCall[], candidate: TripShapeMatchCandidate, maxStopTimeDeltaMs: number) {
-	const staticCallsByStopId = new Map<string, JourneyCall[]>();
+	const staticStopIds = new Set<string>();
 	for (const call of candidate.calls) {
-		let stopCalls = staticCallsByStopId.get(call.stop.id);
-		if (stopCalls === undefined) {
-			stopCalls = [];
-			staticCallsByStopId.set(call.stop.id, stopCalls);
-		}
-		stopCalls.push(call);
+		staticStopIds.add(call.stop.id);
 	}
 
-	let matchedStops = 0;
-	let matchableStops = 0;
-	let totalDeltaMs = 0;
-	const matchedAddedCalls = new Set<JourneyCall>();
-	const usedStaticCalls = new Set<JourneyCall>();
+	const matchableStops = addedCalls.filter((call) => staticStopIds.has(call.stop.id)).length;
+	const pairs: {
+		addedIndex: number;
+		staticIndex: number;
+		deltaMs: number;
+		matchedStops: number;
+		totalDeltaMs: number;
+		previousIndex?: number;
+	}[] = [];
 
-	for (const addedCall of addedCalls) {
-		const staticCalls = staticCallsByStopId.get(addedCall.stop.id);
-		if (staticCalls === undefined) continue;
-		matchableStops += 1;
-
+	for (let addedIndex = 0; addedIndex < addedCalls.length; addedIndex++) {
+		const addedCall = addedCalls[addedIndex]!;
 		const addedTimeMs = getCallTimeMs(addedCall);
-		let bestCall: JourneyCall | undefined;
-		let bestDeltaMs = Infinity;
 
-		for (const staticCall of staticCalls) {
-			if (usedStaticCalls.has(staticCall)) continue;
+		for (let staticIndex = 0; staticIndex < candidate.calls.length; staticIndex++) {
+			const staticCall = candidate.calls[staticIndex]!;
+			if (staticCall.stop.id !== addedCall.stop.id) continue;
+
 			const deltaMs = Math.abs(getCallTimeMs(staticCall) - addedTimeMs);
-			if (deltaMs < bestDeltaMs) {
-				bestDeltaMs = deltaMs;
-				bestCall = staticCall;
+			if (deltaMs > maxStopTimeDeltaMs) continue;
+
+			let bestPreviousIndex: number | undefined;
+			let matchedStops = 1;
+			let totalDeltaMs = deltaMs;
+
+			for (let previousIndex = 0; previousIndex < pairs.length; previousIndex++) {
+				const previousPair = pairs[previousIndex]!;
+				if (previousPair.addedIndex >= addedIndex || previousPair.staticIndex >= staticIndex) continue;
+
+				const candidateMatchedStops = previousPair.matchedStops + 1;
+				const candidateTotalDeltaMs = previousPair.totalDeltaMs + deltaMs;
+				if (
+					candidateMatchedStops > matchedStops ||
+					(candidateMatchedStops === matchedStops && candidateTotalDeltaMs < totalDeltaMs)
+				) {
+					bestPreviousIndex = previousIndex;
+					matchedStops = candidateMatchedStops;
+					totalDeltaMs = candidateTotalDeltaMs;
+				}
 			}
+
+			pairs.push({
+				addedIndex,
+				staticIndex,
+				deltaMs,
+				matchedStops,
+				totalDeltaMs,
+				previousIndex: bestPreviousIndex,
+			});
 		}
-
-		if (bestCall === undefined || bestDeltaMs > maxStopTimeDeltaMs) continue;
-
-		usedStaticCalls.add(bestCall);
-		matchedAddedCalls.add(addedCall);
-		matchedStops += 1;
-		totalDeltaMs += bestDeltaMs;
 	}
 
-	return { matchedAddedCalls, matchedStops, matchableStops, totalDeltaMs };
+	let bestPairIndex: number | undefined;
+	for (let index = 0; index < pairs.length; index++) {
+		const pair = pairs[index]!;
+		if (
+			bestPairIndex === undefined ||
+			pair.matchedStops > pairs[bestPairIndex]!.matchedStops ||
+			(pair.matchedStops === pairs[bestPairIndex]!.matchedStops &&
+				pair.totalDeltaMs < pairs[bestPairIndex]!.totalDeltaMs)
+		) {
+			bestPairIndex = index;
+		}
+	}
+
+	const matchedAddedCalls = new Set<JourneyCall>();
+	let cursor = bestPairIndex;
+	while (cursor !== undefined) {
+		const pair = pairs[cursor]!;
+		matchedAddedCalls.add(addedCalls[pair.addedIndex]!);
+		cursor = pair.previousIndex;
+	}
+
+	return {
+		matchedAddedCalls,
+		matchedStops: bestPairIndex !== undefined ? pairs[bestPairIndex]!.matchedStops : 0,
+		matchableStops,
+		totalDeltaMs: bestPairIndex !== undefined ? pairs[bestPairIndex]!.totalDeltaMs : 0,
+	};
 }
 
 export function findAddedTripShapeMatch(
@@ -113,7 +154,6 @@ export function findAddedTripShapeMatch(
 	const routeId = tripUpdate.trip.routeId;
 	if (routeId === undefined) return;
 
-	const directionId = tripUpdate.trip.directionId ?? 0;
 	const maxStopTimeDeltaMs = DEFAULT_MAX_STOP_TIME_DELTA_SECONDS * 1000;
 	const minMatchedStops = DEFAULT_MIN_MATCHED_STOPS;
 	const minMatchedStopRatio = DEFAULT_MIN_MATCHED_STOP_RATIO;
@@ -131,7 +171,6 @@ export function findAddedTripShapeMatch(
 	for (const candidate of candidates) {
 		if (!candidate.date.equals(startDate)) continue;
 		if (candidate.trip.route.id !== routeId) continue;
-		if (candidate.trip.direction !== directionId) continue;
 		if (candidate.trip.shape === undefined) continue;
 
 		const score = scoreCandidate(addedCalls, candidate, maxStopTimeDeltaMs);

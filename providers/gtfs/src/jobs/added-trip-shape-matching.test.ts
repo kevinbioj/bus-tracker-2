@@ -71,13 +71,13 @@ function makeGtfs() {
 	return { gtfs, route, trip };
 }
 
-function addedTripUpdate(routeId = "line:1", directionId = 0): TripUpdate {
+function addedTripUpdate(routeId = "line:1", directionId: number | undefined = 0): TripUpdate {
 	return {
 		timestamp: epochSeconds("2026-05-18T08:00:00Z"),
 		trip: {
 			tripId: "added",
 			routeId,
-			directionId,
+			...(directionId !== undefined ? { directionId } : {}),
 			startDate: "2026-05-18",
 			scheduleRelationship: "ADDED",
 		},
@@ -90,7 +90,7 @@ function addedTripUpdate(routeId = "line:1", directionId = 0): TripUpdate {
 }
 
 describe("findAddedTripShapeMatch", () => {
-	it("matches an ADDED trip to a static trip with the same route, direction, date and close stop times", () => {
+	it("matches an ADDED trip to a static trip with the same route, date and ordered close stop times", () => {
 		const { gtfs, trip } = makeGtfs();
 		const tripUpdate = addedTripUpdate();
 		const addedCalls = createCallsFromTripUpdate(gtfs, tripUpdate)!;
@@ -106,7 +106,7 @@ describe("findAddedTripShapeMatch", () => {
 		expect(result?.calls.map((call) => call.distanceTraveled)).toEqual([0, 2000, 3000]);
 	});
 
-	it("does not match when the route or direction is different", () => {
+	it("does not match when the route is different", () => {
 		const { gtfs, trip } = makeGtfs();
 		const staticCandidate = {
 			date: Temporal.PlainDate.from("2026-05-18"),
@@ -114,12 +114,58 @@ describe("findAddedTripShapeMatch", () => {
 			calls: trip.getScheduledJourney(Temporal.PlainDate.from("2026-05-18"), true).calls,
 		};
 
-		for (const tripUpdate of [addedTripUpdate("line:2", 0), addedTripUpdate("line:1", 1)]) {
-			const addedCalls = createCallsFromTripUpdate(gtfs, tripUpdate)!;
-			expect(
-				findAddedTripShapeMatch(tripUpdate, addedCalls, Temporal.PlainDate.from("2026-05-18"), [staticCandidate]),
-			).toBeUndefined();
-		}
+		const tripUpdate = addedTripUpdate("line:2", 0);
+		const addedCalls = createCallsFromTripUpdate(gtfs, tripUpdate)!;
+
+		expect(
+			findAddedTripShapeMatch(tripUpdate, addedCalls, Temporal.PlainDate.from("2026-05-18"), [staticCandidate]),
+		).toBeUndefined();
+	});
+
+	it("ignores direction_id and matches the candidate with the same stop order", () => {
+		const { gtfs, trip } = makeGtfs();
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const reverseStops = ["D", "C", "A"].map((stopId) => gtfs.stops.get(stopId)!);
+		const reverseStore = new StopTimeStore(
+			reverseStops,
+			new Uint8Array([1, 2, 3]),
+			new Uint8Array([0, 0, 0]),
+			new Uint32Array([8 * 3600, 8 * 3600 + 10 * 60, 8 * 3600 + 30 * 60]),
+			new Uint32Array([8 * 3600, 8 * 3600 + 10 * 60, 8 * 3600 + 30 * 60]),
+			new Float32Array([3000, 2000, 0]),
+			new Uint32Array([0]),
+			new Uint32Array([3]),
+			new Uint32Array([8 * 3600]),
+			new Uint32Array([8 * 3600 + 30 * 60]),
+			new Uint32Array([8 * 3600 + 30 * 60]),
+		);
+		const reverseTrip = new Trip(
+			0,
+			"reverse",
+			trip.route,
+			trip.service,
+			reverseStore,
+			1,
+			"Reverse",
+			undefined,
+			trip.shape,
+		);
+		const tripUpdate = addedTripUpdate("line:1", undefined);
+		tripUpdate.stopTimeUpdate = [
+			{ stopId: "D", stopSequence: 1, departure: { time: epochSeconds("2026-05-18T08:00:30Z") } },
+			{ stopId: "C", stopSequence: 2, arrival: { time: epochSeconds("2026-05-18T08:10:30Z") } },
+			{ stopId: "A", stopSequence: 3, arrival: { time: epochSeconds("2026-05-18T08:30:30Z") } },
+		];
+		const addedCalls = createCallsFromTripUpdate(gtfs, tripUpdate)!;
+
+		const result = findAddedTripShapeMatch(tripUpdate, addedCalls, date, [
+			{ date, trip, calls: trip.getScheduledJourney(date, true).calls },
+			{ date, trip: reverseTrip, calls: reverseTrip.getScheduledJourney(date, true).calls },
+		]);
+
+		expect(result?.candidate.trip.id).toBe("reverse");
+		expect(result?.candidate.trip.direction).toBe(1);
+		expect(result?.calls.map((call) => call.distanceTraveled)).toEqual([3000, 2000, 0]);
 	});
 
 	it("does not match when stop times exceed the configured tolerance", () => {
