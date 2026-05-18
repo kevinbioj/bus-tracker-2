@@ -567,6 +567,13 @@ const sources = [
 		mapLineRef: (lineRef) => `GTFS:${lineRef.slice(lineRef.indexOf(":") + 1)}`,
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 		getNetworkRef: () => "TISSEO",
+		getVehicleRef: (vehicle, journey) => {
+			if (journey?.trip.route.id === "line:204") {
+				return vehicle?.id.split(":")[0];
+			}
+
+			return vehicle?.id;
+		},
 		isValidJourney: (journey) =>
 			journey.id.includes("VehicleTracking") || journey.calls?.every((call) => call.expectedTime === undefined),
 	},
