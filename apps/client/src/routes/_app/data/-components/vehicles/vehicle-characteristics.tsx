@@ -11,7 +11,7 @@ import { match } from "ts-pattern";
 
 import type { Vehicle } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
-import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import tcInfosIcon from "~/icons/tc-infos.png";
 import * as m from "~/paraglide/messages";
 import { VehicleCharacteristicsActions } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-action-menu";
@@ -36,6 +36,7 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 		.with("TROLLEY", () => <TrolleybusIcon className="align-baseline inline size-4" />)
 		.with("COACH", () => <CoachIcon className="align-baseline inline size-4" />)
 		.with("FERRY", () => <ShipIcon className="align-baseline inline size-4" />)
+		.with("GONDOLA", () => <GondolaIcon className="align-baseline inline size-4" />)
 		.otherwise(() => <BusIcon className="align-baseline inline size-4" />);
 
 	return (

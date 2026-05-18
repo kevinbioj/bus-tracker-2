@@ -10,7 +10,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import * as m from "~/paraglide/messages";
 import { VehiclesTable } from "~/routes/_app/data/-components/vehicles/vehicles-table";
 import { cn } from "~/utils/cn";
@@ -39,6 +39,10 @@ const vehicleTypeOptions = {
 	FERRY: {
 		label: () => "Ferry",
 		icon: <ShipIcon className="size-5" />,
+	},
+	GONDOLA: {
+		label: () => m.vehicle_type_gondola(),
+		icon: <GondolaIcon className="size-5" />,
 	},
 };
 

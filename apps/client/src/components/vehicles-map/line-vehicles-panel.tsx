@@ -10,7 +10,7 @@ import { match } from "ts-pattern";
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { GetLineOnlineVehiclesQuery } from "~/api/lines";
 import { Button } from "~/components/ui/button";
-import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import * as m from "~/paraglide/messages";
 
 type LineVehiclesPanelProps = {
@@ -58,6 +58,7 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 						.with("TROLLEY", () => <TrolleybusIcon className="align-top inline size-4" />)
 						.with("COACH", () => <CoachIcon className="align-top inline size-4" />)
 						.with("FERRY", () => <ShipIcon className="align-top inline size-4" />)
+						.with("GONDOLA", () => <GondolaIcon className="align-top inline size-4" />)
 						.otherwise(() => <BusIcon className="align-top inline size-4" />);
 
 					return (

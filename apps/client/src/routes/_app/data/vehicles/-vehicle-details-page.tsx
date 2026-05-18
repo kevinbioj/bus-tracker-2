@@ -4,7 +4,7 @@ import { match } from "ts-pattern";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
-import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { VehicleActivities } from "~/routes/_app/data/-components/vehicles/vehicle-activities";
@@ -22,6 +22,7 @@ export function VehicleDetails() {
 		.with("TROLLEY", () => <TrolleybusIcon className="align-top inline size-4" />)
 		.with("COACH", () => <CoachIcon className="align-top inline size-4" />)
 		.with("FERRY", () => <ShipIcon className="align-top inline size-4" />)
+		.with("GONDOLA", () => <GondolaIcon className="align-top inline size-4" />)
 		.otherwise(() => <BusIcon className="align-top inline size-4" />);
 
 	const vehicleDesignation = vehicle.designation ?? m.vehicle_default_designation();

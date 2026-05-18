@@ -50,6 +50,7 @@ const lineTypeLabels: Record<VehicleJourneyLineType, () => string> = {
 	SUBWAY: m.vehicle_type_subway,
 	TRAMWAY: m.vehicle_type_tramway,
 	FUNICULAR: m.vehicle_type_funicular,
+	GONDOLA: m.vehicle_type_gondola,
 	UNKNOWN: m.vehicle_type_other,
 };
 

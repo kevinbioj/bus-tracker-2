@@ -15,7 +15,7 @@ import { GetNetworkQuery } from "~/api/networks";
 
 import type { Vehicle } from "~/api/vehicles";
 import { useLine } from "~/hooks/use-line";
-import { BusIcon, CoachIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
+import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import { Zzz } from "~/icons/zzz";
 import * as m from "~/paraglide/messages";
 
@@ -68,6 +68,9 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 					))
 					.with("COACH", () => (
 						<CoachIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+					))
+					.with("GONDOLA", () => (
+						<GondolaIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
 					))
 					.otherwise(() => (
 						<BusIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />

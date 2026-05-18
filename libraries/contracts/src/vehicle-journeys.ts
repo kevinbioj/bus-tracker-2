@@ -7,6 +7,7 @@ export const vehicleJourneyLineTypes = [
 	"RAIL",
 	"TROLLEY",
 	"FUNICULAR",
+	"GONDOLA",
 	"BUS",
 	"FERRY",
 	"COACH",
@@ -16,7 +17,7 @@ export const vehicleJourneyLineTypes = [
 export const vehicleJourneyLineTypeZodEnum = z.enum(vehicleJourneyLineTypes);
 
 export const vehicleJourneyLineTypeEnum = type(
-	"'TRAMWAY'|'SUBWAY'|'RAIL'|'TROLLEY'|'FUNICULAR'|'BUS'|'FERRY'|'COACH'|'UNKNOWN'",
+	"'TRAMWAY'|'SUBWAY'|'RAIL'|'TROLLEY'|'FUNICULAR'|'GONDOLA'|'BUS'|'FERRY'|'COACH'|'UNKNOWN'",
 );
 
 export type VehicleJourneyLineType = typeof vehicleJourneyLineTypeEnum.infer;

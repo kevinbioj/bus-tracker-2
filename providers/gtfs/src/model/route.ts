@@ -6,8 +6,12 @@ export const routeTypes = {
 	"2": "RAIL",
 	"3": "BUS",
 	"4": "FERRY",
+	"6": "GONDOLA",
 	"7": "FUNICULAR",
 	"700": "COACH",
+	"1300": "GONDOLA",
+	"1301": "GONDOLA",
+	"1302": "GONDOLA",
 	"-1": "UNKNOWN",
 } as const;
 

@@ -206,6 +206,7 @@
 	"vehicle_type_coach": "Coach",
 	"vehicle_type_ferry": "Ferry",
 	"vehicle_type_funicular": "Funicular",
+	"vehicle_type_gondola": "Gondola lift",
 	"vehicle_type_other": "Other",
 	"vehicle_type_rail": "Train",
 	"vehicle_type_subway": "Metro",
