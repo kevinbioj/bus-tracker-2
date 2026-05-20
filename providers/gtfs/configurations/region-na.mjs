@@ -162,9 +162,9 @@ const sources = [
 	{
 		id: "poitiers",
 		staticResourceHref:
-			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/2gwvlq16siyb7d9m3rqt1pb1/metadata-attachments/gtfs.zip",
+			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/offre-de-transport-du-reseau-vitalis/metadata-attachments/gtfs.zip",
 		realtimeResourceHrefs: [
-			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/2gwvlq16siyb7d9m3rqt1pb1/metadata-attachments/poitiers.pbf",
+			"https://data.grandpoitiers.fr/data-fair/api/v1/datasets/offre-de-transport-du-reseau-vitalis/metadata-attachments/poitiers.pbf",
 		],
 		getNetworkRef: () => "VITALIS",
 	},
