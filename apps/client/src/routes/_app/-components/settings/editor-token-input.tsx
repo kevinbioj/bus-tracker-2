@@ -1,11 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { Copy, KeySquareIcon, LogIn, LogOut, User } from "lucide-react";
+import { KeySquareIcon, LogIn, LogOut, User } from "lucide-react";
 import { useSnackbar } from "notistack";
 import { type FormEvent, useId } from "react";
-import { useLocalStorage } from "usehooks-ts";
 
-import { GetEditorSelf } from "~/api/editors";
+import { GetEditorSelf, loginEditor, logoutEditor } from "~/api/editors";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -16,9 +15,7 @@ export function EditorTokenInput() {
 	const { enqueueSnackbar } = useSnackbar();
 	const id = useId();
 
-	const [editorToken, setEditorToken] = useLocalStorage<string | null>("editor-token", null);
-
-	const { data: editor, isLoading } = useQuery(GetEditorSelf(editorToken));
+	const { data: editor, isLoading } = useQuery(GetEditorSelf);
 
 	const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -27,11 +24,19 @@ export function EditorTokenInput() {
 		const token = formData.get("token")!.toString();
 
 		try {
-			await queryClient.fetchQuery(GetEditorSelf(token));
-			setEditorToken(token);
+			await loginEditor(token);
+			localStorage.removeItem("editor-token");
+			await queryClient.invalidateQueries({ queryKey: ["editor"] });
 		} catch {
 			enqueueSnackbar(m.settings_editor_token_invalid(), { variant: "error" });
 		}
+	};
+
+	const onLogout = async () => {
+		await logoutEditor();
+		localStorage.removeItem("editor-token");
+		queryClient.setQueryData(["editor"], null);
+		await queryClient.invalidateQueries({ queryKey: ["editor"] });
 	};
 
 	return (
@@ -50,21 +55,7 @@ export function EditorTokenInput() {
 					</p>
 					<div className="space-x-2">
 						<Button
-							onClick={() => {
-								navigator.clipboard.writeText(editorToken!);
-								enqueueSnackbar(m.settings_editor_token_copied(), {
-									variant: "info",
-								});
-							}}
-							type="button"
-							size="icon"
-							variant="secondary"
-							title={m.settings_editor_copy_token()}
-						>
-							<Copy />
-						</Button>
-						<Button
-							onClick={() => setEditorToken(null)}
+							onClick={onLogout}
 							type="button"
 							variant="destructive"
 							size="icon"
@@ -80,7 +71,7 @@ export function EditorTokenInput() {
 						<KeySquareIcon className="align-text-bottom inline size-4" /> {m.settings_editor_token_label()}
 					</Label>
 					<div className="flex gap-2">
-						<Input id={id} name="token" defaultValue={editorToken ?? ""} required />
+						<Input id={id} name="token" required />
 						<Button disabled={isLoading} type="submit" size="icon" title={m.settings_editor_login()}>
 							<LogIn />
 						</Button>

@@ -39,7 +39,7 @@ type VehicleCharacteristicsArchiveProps = {
 export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: VehicleCharacteristicsArchiveProps) {
 	const queryClient = useQueryClient();
 	const { enqueueSnackbar } = useSnackbar();
-	const { editorToken } = useEditor();
+	const { editor } = useEditor();
 
 	const form = useForm({
 		defaultValues: { reason: "OTHER" as const, wipeReference: false, archivedAt: dayjs().toISOString() },
@@ -51,10 +51,10 @@ export function VehicleCharacteristicsArchive({ open, onOpenChange, vehicle }: V
 	if (vehicle.archivedAt !== null) return null;
 
 	const onSubmit = async (json: z.infer<typeof schema>) => {
-		if (editorToken === null) return;
+		if (editor == null) return;
 
 		try {
-			await archiveVehicle({ json, token: editorToken });
+			await archiveVehicle({ json });
 
 			enqueueSnackbar({ message: m.vehicle_action_archive_success(), variant: "success" });
 

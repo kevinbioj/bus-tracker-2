@@ -20,10 +20,10 @@ type VehicleCharacteristicsActionsProps = {
 };
 
 export function VehicleCharacteristicsActions({ vehicle }: VehicleCharacteristicsActionsProps) {
-	const { editor, editorToken } = useEditor();
+	const { editor } = useEditor();
 	const [activeDialog, setActiveDialog] = useState<"edit" | "archive" | "unarchive">();
 
-	const editable = editorToken !== null && (editor?.allowedNetworks.includes(vehicle.networkId) ?? false);
+	const editable = editor?.allowedNetworks.includes(vehicle.networkId) ?? false;
 	if (!editable) return null;
 
 	return (

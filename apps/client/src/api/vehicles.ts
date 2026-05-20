@@ -2,6 +2,7 @@ import type { VehicleJourneyLineType } from "@bus-tracker/contracts";
 import { mutationOptions, queryOptions } from "@tanstack/react-query";
 
 import { client } from "~/api/client";
+import { getLegacyEditorToken } from "~/api/editors";
 import type { Operator } from "~/api/networks";
 
 export const vehicleArchiveReasons = ["FAILURE", "FIRE", "RETIRED", "SOLD", "TRANSFER", "OTHER"] as const;
@@ -64,6 +65,11 @@ export type VehicleTimelineDayActivity = {
 	updatedAt: string;
 };
 
+function getLegacyEditorHeaders() {
+	const token = getLegacyEditorToken();
+	return token === null ? undefined : { "X-Editor-Token": token };
+}
+
 export const GetVehiclesQuery = (networkId?: number) =>
 	queryOptions({
 		enabled: networkId !== undefined,
@@ -94,9 +100,9 @@ export const GetVehicleActivitiesQuery = (vehicleId: number, month?: string) =>
 
 export const UpdateVehicleMutation = (vehicleId: number) =>
 	mutationOptions({
-		mutationFn: async ({ token, json }: { token: string; json: UpdateVehicleData }) => {
+		mutationFn: async ({ json }: { json: UpdateVehicleData }) => {
 			await client.put(`/vehicles/${vehicleId}`, {
-				headers: { "X-Editor-Token": token },
+				headers: getLegacyEditorHeaders(),
 				json,
 			});
 		},
@@ -104,9 +110,9 @@ export const UpdateVehicleMutation = (vehicleId: number) =>
 
 export const ArchiveVehicleMutation = (vehicleId: number) =>
 	mutationOptions({
-		mutationFn: async ({ token, json }: { token: string; json: ArchiveVehicleData }) => {
+		mutationFn: async ({ json }: { json: ArchiveVehicleData }) => {
 			await client.post(`/vehicles/${vehicleId}/archive`, {
-				headers: { "X-Editor-Token": token },
+				headers: getLegacyEditorHeaders(),
 				json,
 			});
 		},
@@ -114,9 +120,9 @@ export const ArchiveVehicleMutation = (vehicleId: number) =>
 
 export const UnarchiveVehicleMutation = (vehicleId: number) =>
 	mutationOptions({
-		mutationFn: async ({ token }: { token: string }) => {
+		mutationFn: async () => {
 			await client.post(`/vehicles/${vehicleId}/unarchive`, {
-				headers: { "X-Editor-Token": token },
+				headers: getLegacyEditorHeaders(),
 			});
 		},
 	});

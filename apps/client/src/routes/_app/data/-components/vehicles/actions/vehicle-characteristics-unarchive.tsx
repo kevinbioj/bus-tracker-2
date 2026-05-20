@@ -20,17 +20,17 @@ export function VehicleCharacteristicsUnarchive({
 }: Readonly<VehicleCharacteristicsUnarchiveProps>) {
 	const queryClient = useQueryClient();
 	const { enqueueSnackbar } = useSnackbar();
-	const { editorToken } = useEditor();
+	const { editor } = useEditor();
 
 	const { isPending: unarchivingVehicle, mutateAsync: unarchiveVehicle } = useMutation(
 		UnarchiveVehicleMutation(vehicle.id),
 	);
 
 	const handleUnarchive = async () => {
-		if (editorToken === null) return;
+		if (editor == null) return;
 
 		try {
-			await unarchiveVehicle({ token: editorToken });
+			await unarchiveVehicle();
 
 			enqueueSnackbar({ message: m.vehicle_action_unarchive_success(), variant: "success" });
 

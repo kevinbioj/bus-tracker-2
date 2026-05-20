@@ -6,6 +6,7 @@ export const hono = new Hono();
 hono.use(logger());
 hono.use(
 	cors({
+		credentials: true,
 		origin: [
 			"https://bus-tracker.fr",
 			"https://www.bus-tracker.fr",

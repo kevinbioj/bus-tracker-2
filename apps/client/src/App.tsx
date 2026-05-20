@@ -5,6 +5,7 @@ import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { useState } from "react";
 
 import { TooltipProvider } from "~/components/ui/tooltip.js";
+import { useEditor } from "~/hooks/use-editor.js";
 
 import { routeTree } from "./routeTree.gen";
 
@@ -24,6 +25,11 @@ function buildRouter(queryClient: QueryClient) {
 	});
 }
 
+function EditorSessionBootstrap() {
+	useEditor();
+	return null;
+}
+
 export default function App() {
 	const [{ queryClient, routerInstance }] = useState(() => {
 		const qc = new QueryClient();
@@ -33,6 +39,7 @@ export default function App() {
 	return (
 		<SnackbarProvider anchorOrigin={{ horizontal: "right", vertical: "top" }} autoHideDuration={2500}>
 			<QueryClientProvider client={queryClient}>
+				<EditorSessionBootstrap />
 				<TooltipProvider delay={600}>
 					<NuqsAdapter>
 						<RouterProvider router={routerInstance} />

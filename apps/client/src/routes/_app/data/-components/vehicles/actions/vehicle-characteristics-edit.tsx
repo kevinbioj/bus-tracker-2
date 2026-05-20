@@ -61,7 +61,7 @@ type VehicleCharacteristicsEditProps = {
 };
 
 export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Readonly<VehicleCharacteristicsEditProps>) {
-	const { editorToken } = useEditor();
+	const { editor } = useEditor();
 
 	const snackbar = useSnackbar();
 
@@ -100,10 +100,10 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 	};
 
 	const onSubmit = async (json: UpdateVehicleFormData) => {
-		if (editorToken === null) return;
+		if (editor == null) return;
 
 		try {
-			await updateVehicle({ token: editorToken, json });
+			await updateVehicle({ json });
 			snackbar.enqueueSnackbar(m.vehicle_action_edit_success(), {
 				variant: "success",
 			});
