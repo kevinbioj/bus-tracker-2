@@ -47,7 +47,8 @@ const sources = [
 	//- LiA
 	{
 		id: "lia",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/1e666e24-58ee-46b9-8952-ea2755ba88f2",
+		staticResourceHref:
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/80254/80254.20260420.111241.762352.zip",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/vehicle-positions",
