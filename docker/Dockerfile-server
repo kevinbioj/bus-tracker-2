@@ -1,4 +1,4 @@
-FROM node:26.1.0 AS base
+FROM node:26.2.0-alpine AS base
 
 ##########################################
 # STAGE 1 - Build project artifacts      #
@@ -44,9 +44,7 @@ RUN pnpm deploy --legacy --filter=@bus-tracker/server --prod server-deployment
 FROM base
 ENV NODE_ENV=production
 
-RUN apt update \
-	&& apt -y install tini \
-	&& rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl tini
 
 WORKDIR /bus-tracker/server
 
@@ -58,5 +56,5 @@ COPY --from=builder /bus-tracker/server-deployment/package.json ./package.json
 COPY --from=builder /bus-tracker/server-deployment/.env ./.env
 
 USER node
-ENTRYPOINT ["/usr/bin/tini", "--"]
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/index.js"]
