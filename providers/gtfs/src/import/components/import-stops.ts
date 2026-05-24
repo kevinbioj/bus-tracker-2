@@ -25,7 +25,7 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 			stopRecord.stop_name,
 			+stopRecord.stop_lat,
 			+stopRecord.stop_lon,
-			stopRecord.platform_code,
+			stopRecord.platform_code || undefined,
 		);
 
 		stops.set(stop.id, stop);
