@@ -345,7 +345,7 @@ export async function computeVehicleJourneys(source: Source) {
 					journey = trip.getScheduledJourney(startDate, true);
 					source.gtfs.journeys.set(getJourneyMapKey(startDate, trip.id), journey);
 				}
-				journey.updateJourney(tripUpdate.stopTimeUpdate ?? [], source.options.appendTripUpdateInformation);
+				journey.updateJourney(source.gtfs, tripUpdate.stopTimeUpdate ?? [], source.options.appendTripUpdateInformation);
 				journey.setVehicleDescriptor(tripUpdate.vehicle, tripUpdate.timestamp * 1000);
 			}
 
