@@ -28,10 +28,9 @@ const sources = [
 	{
 		id: "idfm",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
-		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
+		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-platforms-idfm"],
 		appendTripUpdateInformation: true,
 		gtfsOptions: {
-			computeShapeDistTraveled: "always",
 			filterTrips: (trip) => {
 				if (trip.route.agency.id === "IDFM:Operator_1041") {
 					trip.route.agency.id = "IDFM:1086";
