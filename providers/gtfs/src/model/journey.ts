@@ -2,11 +2,10 @@ import type { VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-track
 
 import { getDirection } from "../utils/get-direction.js";
 import { groupBy } from "../utils/group-by.js";
-
+import type { Gtfs } from "./gtfs.js";
 import type { StopTimeUpdate, VehicleDescriptor } from "./gtfs-rt.js";
 import type { Stop } from "./stop.js";
 import type { Trip } from "./trip.js";
-import type { Gtfs } from "./gtfs.js";
 
 export type JourneyCall = {
 	aimedArrivalTime: number;
