@@ -4,5 +4,6 @@ export class Stop {
 		readonly name: string,
 		readonly latitude: number,
 		readonly longitude: number,
+		readonly platformCode?: string,
 	) {}
 }

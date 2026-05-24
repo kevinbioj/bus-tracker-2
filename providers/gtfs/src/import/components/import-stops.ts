@@ -5,7 +5,7 @@ import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
 
-type StopRecord = CsvRecord<"stop_id" | "stop_name" | "stop_lat" | "stop_lon", "location_type">;
+type StopRecord = CsvRecord<"stop_id" | "stop_name" | "stop_lat" | "stop_lon", "location_type" | "platform_code">;
 
 export async function importStops(gtfsDirectory: string, { importAllStops, mapStopId }: ImportGtfsOptions) {
 	const stops = new Map<string, Stop>();
@@ -25,6 +25,7 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 			stopRecord.stop_name,
 			+stopRecord.stop_lat,
 			+stopRecord.stop_lon,
+			stopRecord.platform_code,
 		);
 
 		stops.set(stop.id, stop);

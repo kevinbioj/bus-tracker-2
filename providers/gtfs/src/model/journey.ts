@@ -6,6 +6,7 @@ import { groupBy } from "../utils/group-by.js";
 import type { StopTimeUpdate, VehicleDescriptor } from "./gtfs-rt.js";
 import type { Stop } from "./stop.js";
 import type { Trip } from "./trip.js";
+import type { Gtfs } from "./gtfs.js";
 
 export type JourneyCall = {
 	aimedArrivalTime: number;
@@ -181,7 +182,7 @@ export class Journey {
 		return this._hasRealtime;
 	}
 
-	updateJourney(stopTimeUpdates: StopTimeUpdate[], appendTripUpdateInformation?: boolean) {
+	updateJourney(gtfs: Gtfs, stopTimeUpdates: StopTimeUpdate[], appendTripUpdateInformation?: boolean) {
 		let arrivalDelay: number | undefined;
 		let departureDelay: number | undefined;
 
@@ -205,7 +206,14 @@ export class Journey {
 				timeUpdate = undefined;
 			}
 
-			call.platform = timeUpdate?.stopTimeProperties?.assignedStopId;
+			if (timeUpdate?.stopTimeProperties?.assignedStopId) {
+				const stop = gtfs.stops.get(timeUpdate.stopTimeProperties.assignedStopId);
+				if (stop !== undefined) {
+					call.platform = stop.platformCode;
+				}
+			} else if (!appendTripUpdateInformation) {
+				call.platform = undefined;
+			}
 
 			if (timeUpdate?.scheduleRelationship === "NO_DATA") {
 				arrivalDelay = undefined;
