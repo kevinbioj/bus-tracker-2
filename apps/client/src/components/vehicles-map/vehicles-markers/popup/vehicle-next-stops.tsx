@@ -93,7 +93,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 							{hasExtra && (
 								<div className="flex-1">
 									{call.platformName !== undefined && (
-										<span className="border-[0.5px] border-foreground leading-none px-0.5 pt-px text-[9px] text-nowrap uppercase">
+										<span className="inline-block ml-px bg-foreground text-background font-bold px-1 min-w-4 text-center rounded-xs text-xs">
 											{call.platformName}
 										</span>
 									)}
