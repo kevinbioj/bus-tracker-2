@@ -143,6 +143,31 @@ export const vehiclesTable = pgTable(
 
 export type VehicleEntity = InferSelectModel<typeof vehiclesTable>;
 
+export const vehicleReportFields = ["airConditioning"] as const;
+export const vehicleReportStatuses = ["PENDING", "APPLIED", "IGNORED"] as const;
+
+export const vehicleReportsTable = pgTable(
+	"vehicle_report",
+	{
+		id: serial("id").primaryKey(),
+		vehicleId: integer("vehicle_id")
+			.notNull()
+			.references(() => vehiclesTable.id),
+		field: varchar("field", { enum: vehicleReportFields, length: 64 }).notNull(),
+		value: varchar("value", { length: 64 }).notNull(),
+		reporterHash: varchar("reporter_hash", { length: 64 }).notNull(),
+		status: varchar("status", { enum: vehicleReportStatuses, length: 32 }).notNull().default("PENDING"),
+		createdAt: timestamp("created_at").notNull().default(sql`now()`),
+		appliedAt: timestamp("applied_at"),
+	},
+	(table) => [
+		index("vehicle_report_vehicle_field_status_index").on(table.vehicleId, table.field, table.status),
+		index("vehicle_report_reporter_index").on(table.reporterHash),
+	],
+);
+
+export type VehicleReportEntity = InferSelectModel<typeof vehicleReportsTable>;
+
 export const lineActivitiesTable = pgTable(
 	"line_activity",
 	{
@@ -200,9 +225,7 @@ export type EditorEntity = InferSelectModel<typeof editorsTable>;
 
 export const editionLogsTable = pgTable("edition_log", {
 	id: serial("id").primaryKey(),
-	editorId: integer("editor_id")
-		.notNull()
-		.references(() => editorsTable.id),
+	editorId: integer("editor_id").references(() => editorsTable.id),
 	networkId: integer("network_id")
 		.notNull()
 		.references(() => networksTable.id),

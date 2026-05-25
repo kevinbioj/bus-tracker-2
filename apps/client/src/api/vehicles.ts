@@ -44,6 +44,11 @@ export type ArchiveVehicleData = {
 	archivedAt?: string | null;
 };
 
+export type VehicleReportData = {
+	field: "airConditioning";
+	value: Extract<VehicleAirConditioningStatus, "PRESENT" | "OUT_OF_SERVICE">;
+};
+
 export type VehicleWithActiveMonths = Vehicle & {
 	activeMonths: string[];
 };
@@ -132,4 +137,14 @@ export const UnarchiveVehicleMutation = (vehicleId: number) =>
 				headers: getLegacyEditorHeaders(),
 			});
 		},
+	});
+
+export const CreateVehicleReportMutation = (vehicleId: number) =>
+	mutationOptions({
+		mutationFn: ({ json }: { json: VehicleReportData }) =>
+			client.post(`/vehicles/${vehicleId}/reports`, { json }).json<{
+				status: "applied" | "duplicate" | "recorded";
+				reportCount?: number;
+				threshold?: number;
+			}>(),
 	});

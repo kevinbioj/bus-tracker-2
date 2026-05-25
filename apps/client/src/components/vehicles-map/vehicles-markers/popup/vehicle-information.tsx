@@ -1,17 +1,30 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import dayjs from "dayjs";
-import { SatelliteDishIcon, SnowflakeIcon } from "lucide-react";
-import { useMemo } from "react";
+import { HTTPError } from "ky";
+import { SatelliteDishIcon } from "lucide-react";
+import { useSnackbar } from "notistack";
+import { useMemo, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { GetNetworkQuery } from "~/api/networks";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
+import { CreateVehicleReportMutation } from "~/api/vehicles";
 import { CustomTooltip } from "~/components/custom-tooltip";
 import { Button } from "~/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "~/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
+import { AirConditioningIcon, airConditioningIconDetails } from "~/icons/air-conditioning";
 import { HighCrowdIcon } from "~/icons/crowd/high";
 import { LowCrowdIcon } from "~/icons/crowd/low";
 import { MediumCrowdIcon } from "~/icons/crowd/medium";
@@ -63,26 +76,11 @@ const occupancyIconDetails = {
 	},
 } as const;
 
-const airConditioningIconDetails = {
-	PRESENT: {
-		disabled: false,
-		iconClass: "text-sky-600 dark:text-sky-400",
-		tooltipClasses: "bg-sky-600 dark:bg-sky-700 text-white",
-		tooltipText: m.marker_air_conditioning_present,
-	},
-	OUT_OF_SERVICE: {
-		disabled: true,
-		iconClass: "text-red-600 dark:text-red-400",
-		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
-		tooltipText: m.marker_air_conditioning_out_of_service,
-	},
-	ABSENT: {
-		disabled: true,
-		iconClass: "text-red-600 dark:text-red-400",
-		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
-		tooltipText: m.marker_air_conditioning_absent,
-	},
-} as const;
+const positiveReportButtonClasses =
+	"text-sky-600 dark:text-sky-400 hover:text-sky-600 dark:hover:text-sky-400 bg-sky-600/10 hover:bg-sky-600/20 dark:bg-sky-600/20 dark:hover:bg-sky-600/30 focus-visible:border-sky-600/40 focus-visible:ring-sky-600/20";
+
+const negativeReportButtonClasses =
+	"text-red-600 dark:text-red-400 hover:text-red-600 dark:hover:text-red-400 bg-red-600/10 hover:bg-red-600/20 dark:bg-red-600/20 dark:hover:bg-red-600/30 focus-visible:border-red-600/40 focus-visible:ring-red-600/20";
 
 type VehicleInformationProps = {
 	disableLinks?: boolean;
@@ -91,8 +89,14 @@ type VehicleInformationProps = {
 
 export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleInformationProps>) {
 	const [displayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
+	const [airConditioningReportOpen, setAirConditioningReportOpen] = useState(false);
+	const queryClient = useQueryClient();
+	const snackbar = useSnackbar();
 
 	const { data: network } = useQuery(GetNetworkQuery(journey.networkId, !journey.girouette));
+	const { isPending: reportingAirConditioning, mutateAsync: reportAirConditioning } = useMutation(
+		CreateVehicleReportMutation(journey.vehicle?.id ?? 0),
+	);
 
 	const recordedAt = useDebouncedMemo(
 		() => {
@@ -159,6 +163,36 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	const airConditioningInformation = journey.vehicle?.airConditioning
 		? airConditioningIconDetails[journey.vehicle.airConditioning]
 		: undefined;
+	const canReportAirConditioning =
+		journey.vehicle?.id !== undefined &&
+		(journey.vehicle.airConditioning === "PRESENT" || journey.vehicle.airConditioning === "OUT_OF_SERVICE");
+
+	const closeAirConditioningReport = () => setAirConditioningReportOpen(false);
+
+	const onAirConditioningReport = async (value: "PRESENT" | "OUT_OF_SERVICE") => {
+		if (!canReportAirConditioning || journey.vehicle?.id === undefined) return;
+
+		try {
+			const result = await reportAirConditioning({ json: { field: "airConditioning", value } });
+			snackbar.enqueueSnackbar(
+				result.status === "applied"
+					? m.marker_air_conditioning_report_applied()
+					: m.marker_air_conditioning_report_recorded(),
+				{ variant: "success" },
+			);
+			await queryClient.invalidateQueries({ queryKey: ["vehicle-journeys", journey.id] });
+			await queryClient.invalidateQueries({ queryKey: ["vehicles", journey.vehicle.id] });
+		} catch (error) {
+			snackbar.enqueueSnackbar(
+				error instanceof HTTPError && error.response.status === 409
+					? m.marker_air_conditioning_report_duplicate()
+					: m.marker_air_conditioning_report_error(),
+				{ variant: "error" },
+			);
+		} finally {
+			closeAirConditioningReport();
+		}
+	};
 
 	return (
 		<div className="grid grid-cols-[3.5rem_1fr_auto] px-1.5 py-1">
@@ -199,29 +233,102 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				{recordedAt}
 			</span>
 			<div className="flex items-center justify-end gap-1.5">
-				{airConditioningInformation !== undefined && (
+				{airConditioningInformation !== undefined && canReportAirConditioning && journey.vehicle?.airConditioning ? (
+					<Dialog open={airConditioningReportOpen} onOpenChange={setAirConditioningReportOpen}>
+						<CustomTooltip
+							className={clsx("font-bold", airConditioningInformation.tooltipClasses)}
+							content={m.marker_air_conditioning_report_hint({
+								status: airConditioningInformation.tooltipText(),
+							})}
+							place="left"
+						>
+							<DialogTrigger
+								render={
+									<Button
+										className="size-5 p-0"
+										size="icon"
+										title={airConditioningInformation.tooltipText()}
+										variant="ghost"
+									>
+										<AirConditioningIcon status={journey.vehicle.airConditioning} />
+									</Button>
+								}
+							/>
+						</CustomTooltip>
+						<DialogContent aria-describedby="air-conditioning-report-description" className="sm:max-w-sm">
+							<DialogHeader>
+								<DialogTitle>{m.marker_air_conditioning_report_title()}</DialogTitle>
+								<DialogDescription id="air-conditioning-report-description" className="whitespace-pre-wrap">
+									{journey.vehicle.airConditioning === "PRESENT"
+										? m.marker_air_conditioning_report_current_functional()
+										: m.marker_air_conditioning_report_current_broken()}
+								</DialogDescription>
+							</DialogHeader>
+							<DialogFooter className="gap-2">
+								<Button
+									className={clsx(
+										journey.vehicle.airConditioning === "PRESENT"
+											? positiveReportButtonClasses
+											: negativeReportButtonClasses,
+									)}
+									disabled={reportingAirConditioning}
+									onClick={() =>
+										onAirConditioningReport(
+											journey.vehicle?.airConditioning === "PRESENT" ? "PRESENT" : "OUT_OF_SERVICE",
+										)
+									}
+									variant="ghost"
+								>
+									{journey.vehicle.airConditioning === "PRESENT" ? (
+										<>
+											<AirConditioningIcon status="PRESENT" />
+											{m.marker_air_conditioning_report_still_functional()}
+										</>
+									) : (
+										<>
+											<AirConditioningIcon status="OUT_OF_SERVICE" />
+											{m.marker_air_conditioning_report_still_broken()}
+										</>
+									)}
+								</Button>
+								<Button
+									className={clsx(
+										journey.vehicle.airConditioning === "PRESENT"
+											? negativeReportButtonClasses
+											: positiveReportButtonClasses,
+									)}
+									disabled={reportingAirConditioning}
+									onClick={() =>
+										onAirConditioningReport(
+											journey.vehicle?.airConditioning === "PRESENT" ? "OUT_OF_SERVICE" : "PRESENT",
+										)
+									}
+									variant="ghost"
+								>
+									{journey.vehicle.airConditioning === "PRESENT" ? (
+										<>
+											<AirConditioningIcon status="OUT_OF_SERVICE" />
+											{m.marker_air_conditioning_report_mark_broken()}
+										</>
+									) : (
+										<>
+											<AirConditioningIcon status="PRESENT" />
+											{m.marker_air_conditioning_report_restored()}
+										</>
+									)}
+								</Button>
+							</DialogFooter>
+						</DialogContent>
+					</Dialog>
+				) : airConditioningInformation !== undefined && journey.vehicle?.airConditioning ? (
 					<CustomTooltip
 						className={clsx("font-bold", airConditioningInformation.tooltipClasses)}
 						content={airConditioningInformation.tooltipText()}
 						place="left"
 					>
-						<span className="relative inline-flex size-4 align-middle">
-							<SnowflakeIcon className={clsx("size-4", airConditioningInformation.iconClass)} />
-							{airConditioningInformation.disabled && (
-								<>
-									<span
-										className="absolute left-1/2 top-[calc(50%+1px)] h-1 w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-white"
-										aria-hidden="true"
-									/>
-									<span
-										className="absolute left-1/2 top-1/2 h-0.5 w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-red-600 dark:bg-red-400"
-										aria-hidden="true"
-									/>
-								</>
-							)}
-						</span>
+						<AirConditioningIcon status={journey.vehicle.airConditioning} />
 					</CustomTooltip>
-				)}
+				) : null}
 				{occupancyInformation !== undefined && (
 					<CustomTooltip
 						className={clsx("font-bold", occupancyInformation.tooltipClasses)}

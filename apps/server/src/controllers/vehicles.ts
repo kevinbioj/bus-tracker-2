@@ -1,5 +1,7 @@
+import { createHash, randomUUID } from "node:crypto";
 import { vehicleJourneyLineTypeZodEnum } from "@bus-tracker/contracts";
-import { and, asc, between, desc, eq, gt, ilike, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, asc, between, desc, eq, gt, ilike, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
+import { getCookie, setCookie } from "hono/cookie";
 import { match } from "ts-pattern";
 import { z } from "zod";
 
@@ -11,6 +13,7 @@ import {
 	operatorsTable,
 	vehicleAirConditioningStatuses,
 	vehicleArchiveReasons,
+	vehicleReportsTable,
 	vehiclesTable,
 } from "../core/database/schema.js";
 import { journeyStore } from "../core/store/journey-store.js";
@@ -20,6 +23,10 @@ import { createJsonValidator, createParamValidator, createQueryValidator } from 
 import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
+const vehicleReportWindow = sql`NOW() - INTERVAL '7 days'`;
+const vehicleReportThreshold = 3;
+const vehicleReporterCookieName = "bt_reporter_id";
+const reportHashSecret = process.env.REPORT_HASH_SECRET ?? "bus-tracker-report-fallback";
 
 const searchVehiclesSchema = z.object({
 	limit: z.coerce
@@ -84,6 +91,30 @@ const archiveVehicleBodySchema = z.object({
 		.optional()
 		.transform((value) => (value ? Temporal.Instant.from(value) : Temporal.Now.instant())),
 });
+
+const createVehicleReportBodySchema = z.object({
+	field: z.literal("airConditioning"),
+	value: z.enum(["PRESENT", "OUT_OF_SERVICE"]),
+});
+
+function getClientIp(headers: Headers) {
+	const cloudflareIp = headers.get("cf-connecting-ip");
+	if (cloudflareIp) return cloudflareIp;
+
+	const forwardedFor = headers.get("x-forwarded-for");
+	if (forwardedFor) return forwardedFor.split(",")[0]?.trim() ?? "unknown";
+
+	return "unknown";
+}
+
+function getReporterHash(reporterId: string, headers: Headers) {
+	return createHash("sha256")
+		.update(reportHashSecret)
+		.update(reporterId)
+		.update(getClientIp(headers))
+		.update(headers.get("user-agent") ?? "unknown")
+		.digest("hex");
+}
 
 hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
 	const { limit, page, networkId, operatorId, number, designation, sortBy, sortOrder, archived } = c.req.valid("query");
@@ -261,6 +292,124 @@ hono.get(
 				return { date, activities };
 			}),
 		});
+	},
+);
+
+hono.post(
+	"/vehicles/:id/reports",
+	createParamValidator(getVehicleByIdParamSchema),
+	createJsonValidator(createVehicleReportBodySchema),
+	async (c) => {
+		const { id } = c.req.valid("param");
+		const { field, value } = c.req.valid("json");
+
+		const [vehicle] = await database.select().from(vehiclesTable).where(eq(vehiclesTable.id, id));
+		if (vehicle === undefined) return c.json({ error: `No vehicle found with id '${id}'.` }, 404);
+
+		if (vehicle.airConditioning !== "PRESENT" && vehicle.airConditioning !== "OUT_OF_SERVICE") {
+			return c.json({ error: "This vehicle is not eligible for air conditioning reports." }, 400);
+		}
+
+		const reporterId = getCookie(c, vehicleReporterCookieName) ?? randomUUID();
+		setCookie(c, vehicleReporterCookieName, reporterId, {
+			httpOnly: true,
+			maxAge: 60 * 60 * 24 * 365,
+			path: "/",
+			sameSite: "Lax",
+			secure: true,
+		});
+
+		const reporterHash = getReporterHash(reporterId, c.req.raw.headers);
+
+		const recentReport = await database
+			.select({ id: vehicleReportsTable.id })
+			.from(vehicleReportsTable)
+			.where(
+				and(
+					eq(vehicleReportsTable.vehicleId, vehicle.id),
+					eq(vehicleReportsTable.field, field),
+					eq(vehicleReportsTable.reporterHash, reporterHash),
+					gt(vehicleReportsTable.createdAt, vehicleReportWindow),
+				),
+			)
+			.limit(1);
+
+		if (recentReport.length > 0) {
+			return c.json({ status: "duplicate" }, 409);
+		}
+
+		await database.insert(vehicleReportsTable).values({
+			vehicleId: vehicle.id,
+			field,
+			value,
+			reporterHash,
+		});
+
+		const concordantReports = await database
+			.select({ reporterHash: vehicleReportsTable.reporterHash })
+			.from(vehicleReportsTable)
+			.where(
+				and(
+					eq(vehicleReportsTable.vehicleId, vehicle.id),
+					eq(vehicleReportsTable.field, field),
+					eq(vehicleReportsTable.value, value),
+					eq(vehicleReportsTable.status, "PENDING"),
+					gt(vehicleReportsTable.createdAt, vehicleReportWindow),
+				),
+			);
+
+		const reportCount = new Set(concordantReports.map((report) => report.reporterHash)).size;
+		if (reportCount < vehicleReportThreshold) {
+			return c.json({ status: "recorded", reportCount, threshold: vehicleReportThreshold });
+		}
+
+		const appliedAt = Temporal.Now.instant();
+		await database
+			.update(vehicleReportsTable)
+			.set({ status: "APPLIED", appliedAt })
+			.where(
+				and(
+					eq(vehicleReportsTable.vehicleId, vehicle.id),
+					eq(vehicleReportsTable.field, field),
+					eq(vehicleReportsTable.value, value),
+					eq(vehicleReportsTable.status, "PENDING"),
+					gt(vehicleReportsTable.createdAt, vehicleReportWindow),
+				),
+			);
+
+		await database
+			.update(vehicleReportsTable)
+			.set({ status: "IGNORED", appliedAt })
+			.where(
+				and(
+					eq(vehicleReportsTable.vehicleId, vehicle.id),
+					eq(vehicleReportsTable.field, field),
+					ne(vehicleReportsTable.value, value),
+					eq(vehicleReportsTable.status, "PENDING"),
+					gt(vehicleReportsTable.createdAt, vehicleReportWindow),
+				),
+			);
+
+		if (vehicle.airConditioning !== value) {
+			await database.update(vehiclesTable).set({ airConditioning: value }).where(eq(vehiclesTable.id, vehicle.id));
+
+			await database.insert(editionLogsTable).values({
+				editorId: null,
+				networkId: vehicle.networkId,
+				vehicleId: vehicle.id,
+				updatedFields: [
+					{
+						field,
+						oldValue: vehicle.airConditioning,
+						newValue: value,
+						source: "community_report",
+						reportCount,
+					},
+				],
+			});
+		}
+
+		return c.json({ status: "applied", reportCount, threshold: vehicleReportThreshold });
 	},
 );
 
