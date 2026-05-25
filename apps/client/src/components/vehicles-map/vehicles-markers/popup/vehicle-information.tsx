@@ -245,7 +245,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 							<DialogTrigger
 								render={
 									<Button
-										className="size-5 p-0"
+										className="size-6 p-0 -mr-0.5"
 										size="icon"
 										title={airConditioningInformation.tooltipText()}
 										variant="ghost"
