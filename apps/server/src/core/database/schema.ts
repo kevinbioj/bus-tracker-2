@@ -108,6 +108,7 @@ export const girouettesTable = pgTable("girouette", {
 export type GirouetteEntity = InferSelectModel<typeof girouettesTable>;
 
 export const vehicleArchiveReasons = ["FAILURE", "FIRE", "RETIRED", "SOLD", "TRANSFER", "OTHER"] as const;
+export const vehicleAirConditioningStatuses = ["PRESENT", "OUT_OF_SERVICE", "ABSENT"] as const;
 
 export const vehiclesTable = pgTable(
 	"vehicle",
@@ -125,6 +126,11 @@ export const vehiclesTable = pgTable(
 		number: varchar("number").notNull(),
 		designation: varchar("designation"),
 		tcId: integer("tc_id"),
+		airConditioning: varchar("air_conditioning", {
+			enum: vehicleAirConditioningStatuses,
+			length: 32,
+		}),
+		usbPorts: boolean("usb_ports"),
 		lastSeenAt: timestamp("last_seen_at", { precision: 0 }),
 		archivedAt: timestamp("archived_at", { precision: 0 }),
 		archivedFor: varchar("archived_for", { enum: vehicleArchiveReasons }),

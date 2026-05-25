@@ -12,7 +12,12 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { GetNetworkQuery } from "~/api/networks";
-import { UpdateVehicleMutation, type Vehicle } from "~/api/vehicles";
+import {
+	UpdateVehicleMutation,
+	type Vehicle,
+	type VehicleAirConditioningStatus,
+	vehicleAirConditioningStatuses,
+} from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -35,9 +40,12 @@ const updateVehicleFormSchema = z.object({
 	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier.").nullable(),
 	type: vehicleJourneyLineTypeZodEnum,
 	operatorId: z.number().nullable(),
+	airConditioning: z.enum(vehicleAirConditioningStatuses).nullable(),
+	usbPorts: z.boolean().nullable(),
 });
 
 const noOperatorSelectValue = "none";
+const unknownSelectValue = "unknown";
 
 type UpdateVehicleFormData = z.infer<typeof updateVehicleFormSchema>;
 
@@ -52,6 +60,12 @@ const lineTypeLabels: Record<VehicleJourneyLineType, () => string> = {
 	FUNICULAR: m.vehicle_type_funicular,
 	GONDOLA: m.vehicle_type_gondola,
 	UNKNOWN: m.vehicle_type_other,
+};
+
+const airConditioningStatusLabels: Record<VehicleAirConditioningStatus, () => string> = {
+	PRESENT: m.vehicle_air_conditioning_present,
+	OUT_OF_SERVICE: m.vehicle_air_conditioning_out_of_service,
+	ABSENT: m.vehicle_air_conditioning_absent,
 };
 
 type VehicleCharacteristicsEditProps = {
@@ -77,6 +91,8 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 			tcId: vehicle.tcId,
 			type: vehicle.type,
 			operatorId: vehicle.operatorId,
+			airConditioning: vehicle.airConditioning,
+			usbPorts: vehicle.usbPorts,
 		},
 		resolver: zodResolver(updateVehicleFormSchema),
 	});
@@ -268,6 +284,79 @@ export function VehicleCharacteristicsEdit({ open, onOpenChange, vehicle }: Read
 								)}
 							/>
 						)}
+						<FormField
+							control={form.control}
+							name="airConditioning"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>{m.vehicle_action_edit_air_conditioning_label()}</FormLabel>
+									<Select
+										items={[
+											{ label: m.vehicle_action_edit_unknown(), value: unknownSelectValue },
+											...vehicleAirConditioningStatuses.map((status) => ({
+												label: airConditioningStatusLabels[status](),
+												value: status,
+											})),
+										]}
+										onValueChange={(value) => field.onChange(value === unknownSelectValue ? null : value)}
+										value={field.value ?? unknownSelectValue}
+									>
+										<FormControl>
+											<SelectTrigger>
+												<SelectValue />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent className="z-9999">
+											<SelectGroup>
+												<SelectItem value={unknownSelectValue}>
+													<span className="text-muted-foreground">{m.vehicle_action_edit_unknown()}</span>
+												</SelectItem>
+												{vehicleAirConditioningStatuses.map((status) => (
+													<SelectItem key={status} value={status}>
+														{airConditioningStatusLabels[status]()}
+													</SelectItem>
+												))}
+											</SelectGroup>
+										</SelectContent>
+									</Select>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="usbPorts"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>{m.vehicle_action_edit_usb_ports_label()}</FormLabel>
+									<Select
+										items={[
+											{ label: m.vehicle_action_edit_unknown(), value: unknownSelectValue },
+											{ label: m.common_yes(), value: "true" },
+											{ label: m.common_no(), value: "false" },
+										]}
+										onValueChange={(value) => field.onChange(value === unknownSelectValue ? null : value === "true")}
+										value={field.value === null ? unknownSelectValue : String(field.value)}
+									>
+										<FormControl>
+											<SelectTrigger>
+												<SelectValue />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent className="z-9999">
+											<SelectGroup>
+												<SelectItem value={unknownSelectValue}>
+													<span className="text-muted-foreground">{m.vehicle_action_edit_unknown()}</span>
+												</SelectItem>
+												<SelectItem value="true">{m.common_yes()}</SelectItem>
+												<SelectItem value="false">{m.common_no()}</SelectItem>
+											</SelectGroup>
+										</SelectContent>
+									</Select>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
 						<DialogFooter className="gap-2">
 							<DialogClose
 								render={

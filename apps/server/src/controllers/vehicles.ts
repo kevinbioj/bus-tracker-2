@@ -9,6 +9,7 @@ import {
 	lineActivitiesTable,
 	networksTable,
 	operatorsTable,
+	vehicleAirConditioningStatuses,
 	vehicleArchiveReasons,
 	vehiclesTable,
 } from "../core/database/schema.js";
@@ -70,6 +71,8 @@ const updateVehicleBodySchema = z.object({
 	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier.").nullable(),
 	type: vehicleJourneyLineTypeZodEnum,
 	operatorId: z.number().nullable(),
+	airConditioning: z.enum(vehicleAirConditioningStatuses).nullable(),
+	usbPorts: z.boolean().nullable(),
 });
 
 const archiveVehicleBodySchema = z.object({
@@ -282,7 +285,11 @@ hono.put(
 		}
 
 		const data = c.req.valid("json");
-		const updatedFields: { field: string; oldValue: string | number | null; newValue: string | number | null }[] = [];
+		const updatedFields: {
+			field: string;
+			oldValue: boolean | string | number | null;
+			newValue: boolean | string | number | null;
+		}[] = [];
 
 		if (vehicle.number !== data.number) {
 			updatedFields.push({ field: "number", oldValue: vehicle.number, newValue: data.number });
@@ -302,6 +309,18 @@ hono.put(
 
 		if (vehicle.operatorId !== data.operatorId) {
 			updatedFields.push({ field: "operatorId", oldValue: vehicle.operatorId, newValue: data.operatorId });
+		}
+
+		if (vehicle.airConditioning !== data.airConditioning) {
+			updatedFields.push({
+				field: "airConditioning",
+				oldValue: vehicle.airConditioning,
+				newValue: data.airConditioning,
+			});
+		}
+
+		if (vehicle.usbPorts !== data.usbPorts) {
+			updatedFields.push({ field: "usbPorts", oldValue: vehicle.usbPorts, newValue: data.usbPorts });
 		}
 
 		await database.update(vehiclesTable).set(data).where(eq(vehiclesTable.id, vehicle.id));

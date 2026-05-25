@@ -131,7 +131,11 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 	const vehicle = journey.vehicle?.id
 		? (
 				await database
-					.select({ designation: vehiclesTable.designation })
+					.select({
+						designation: vehiclesTable.designation,
+						airConditioning: vehiclesTable.airConditioning,
+						usbPorts: vehiclesTable.usbPorts,
+					})
 					.from(vehiclesTable)
 					.where(eq(vehiclesTable.id, journey.vehicle.id))
 			).at(0)
@@ -146,7 +150,14 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 
 	return c.json({
 		...journey,
-		vehicle: journey.vehicle ? { ...journey.vehicle, designation: vehicle?.designation ?? undefined } : undefined,
+		vehicle: journey.vehicle
+			? {
+					...journey.vehicle,
+					designation: vehicle?.designation ?? undefined,
+					airConditioning: vehicle?.airConditioning ?? undefined,
+					usbPorts: vehicle?.usbPorts ?? undefined,
+				}
+			: undefined,
 		girouette: girouette?.data,
 	});
 });

@@ -8,6 +8,9 @@ import type { Operator } from "~/api/networks";
 export const vehicleArchiveReasons = ["FAILURE", "FIRE", "RETIRED", "SOLD", "TRANSFER", "OTHER"] as const;
 export type VehicleArchiveReason = (typeof vehicleArchiveReasons)[number];
 
+export const vehicleAirConditioningStatuses = ["PRESENT", "OUT_OF_SERVICE", "ABSENT"] as const;
+export type VehicleAirConditioningStatus = (typeof vehicleAirConditioningStatuses)[number];
+
 export type Vehicle = {
 	id: number;
 	networkId: number;
@@ -18,6 +21,8 @@ export type Vehicle = {
 	type: VehicleJourneyLineType;
 	designation: string | null;
 	tcId: number | null;
+	airConditioning: VehicleAirConditioningStatus | null;
+	usbPorts: boolean | null;
 	archivedAt: string | null;
 	archivedFor: VehicleArchiveReason | null;
 	activity: VehicleActivity;
@@ -29,6 +34,8 @@ export type UpdateVehicleData = {
 	tcId: number | null;
 	type: VehicleJourneyLineType;
 	operatorId: number | null;
+	airConditioning: VehicleAirConditioningStatus | null;
+	usbPorts: boolean | null;
 };
 
 export type ArchiveVehicleData = {

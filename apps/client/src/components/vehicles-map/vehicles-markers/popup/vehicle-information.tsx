@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import dayjs from "dayjs";
-import { SatelliteDishIcon } from "lucide-react";
+import { SatelliteDishIcon, SnowflakeIcon } from "lucide-react";
 import { useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -60,6 +60,27 @@ const occupancyIconDetails = {
 		iconClass: "fill-red-600 size-5",
 		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
 		tooltipText: m.marker_occupancy_no_passengers,
+	},
+} as const;
+
+const airConditioningIconDetails = {
+	PRESENT: {
+		disabled: false,
+		iconClass: "text-sky-600 dark:text-sky-400",
+		tooltipClasses: "bg-sky-600 dark:bg-sky-700 text-white",
+		tooltipText: m.marker_air_conditioning_present,
+	},
+	OUT_OF_SERVICE: {
+		disabled: true,
+		iconClass: "text-red-600 dark:text-red-400",
+		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
+		tooltipText: m.marker_air_conditioning_out_of_service,
+	},
+	ABSENT: {
+		disabled: true,
+		iconClass: "text-red-600 dark:text-red-400",
+		tooltipClasses: "bg-red-600 dark:bg-red-700 text-white",
+		tooltipText: m.marker_air_conditioning_absent,
 	},
 } as const;
 
@@ -135,8 +156,12 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 		return occupancyIconDetails[journey.occupancy];
 	}, [journey]);
 
+	const airConditioningInformation = journey.vehicle?.airConditioning
+		? airConditioningIconDetails[journey.vehicle.airConditioning]
+		: undefined;
+
 	return (
-		<div className="grid grid-cols-[3.5rem_1fr_3.5rem] px-1.5 py-1">
+		<div className="grid grid-cols-[3.5rem_1fr_auto] px-1.5 py-1">
 			{network?.hasVehiclesFeature ? (
 				<Button
 					size="xs"
@@ -173,7 +198,30 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				) : null}
 				{recordedAt}
 			</span>
-			<div className="flex items-center justify-end gap-2">
+			<div className="flex items-center justify-end gap-1.5">
+				{airConditioningInformation !== undefined && (
+					<CustomTooltip
+						className={clsx("font-bold", airConditioningInformation.tooltipClasses)}
+						content={airConditioningInformation.tooltipText()}
+						place="left"
+					>
+						<span className="relative inline-flex size-4 align-middle">
+							<SnowflakeIcon className={clsx("size-4", airConditioningInformation.iconClass)} />
+							{airConditioningInformation.disabled && (
+								<>
+									<span
+										className="absolute left-1/2 top-[calc(50%+1px)] h-1 w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-white"
+										aria-hidden="true"
+									/>
+									<span
+										className="absolute left-1/2 top-1/2 h-0.5 w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-red-600 dark:bg-red-400"
+										aria-hidden="true"
+									/>
+								</>
+							)}
+						</span>
+					</CustomTooltip>
+				)}
 				{occupancyInformation !== undefined && (
 					<CustomTooltip
 						className={clsx("font-bold", occupancyInformation.tooltipClasses)}

@@ -3,8 +3,8 @@ import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
 import type { GirouetteData } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
-
 import { client } from "./client";
+import type { VehicleAirConditioningStatus } from "./vehicles";
 
 export type VehicleJourneyMarker = {
 	id: string;
@@ -45,7 +45,13 @@ export type DisposeableVehicleJourney = {
 	networkId: number;
 	operator?: number;
 	line?: { number: string; color?: string; textColor?: string };
-	vehicle?: { id?: number; number: string; designation?: string };
+	vehicle?: {
+		id?: number;
+		number: string;
+		designation?: string;
+		airConditioning?: VehicleAirConditioningStatus;
+		usbPorts?: boolean;
+	};
 	serviceDate?: string;
 	girouette?: GirouetteData;
 	updatedAt: string;
