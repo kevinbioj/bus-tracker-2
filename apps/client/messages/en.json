@@ -265,6 +265,7 @@
 	"vehicle_action_edit_description_before": "Please read ",
 	"vehicle_action_edit_designation_description": "Please provide a complete vehicle designation.",
 	"vehicle_action_edit_designation_label": "Vehicle designation",
+	"vehicle_action_edit_equipments_label": "Equipment",
 	"vehicle_action_edit_error_line_1": "An error occurred while saving the information.",
 	"vehicle_action_edit_error_line_2": "Check that the token is valid and that you have editing rights.",
 	"vehicle_action_edit_number_label": "Vehicle number",

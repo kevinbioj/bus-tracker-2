@@ -265,6 +265,7 @@
 	"vehicle_action_edit_description_before": "Merci de prendre connaissance ",
 	"vehicle_action_edit_designation_description": "Merci d'être complet dans la dénomination du véhicule.",
 	"vehicle_action_edit_designation_label": "Dénomination du véhicule",
+	"vehicle_action_edit_equipments_label": "Équipements",
 	"vehicle_action_edit_error_line_1": "Une erreur est survenue lors de l'enregistrement des informations.",
 	"vehicle_action_edit_error_line_2": "Vérifiez la validité du jeton et vos droits d'édition.",
 	"vehicle_action_edit_number_label": "Numéro du véhicule",
