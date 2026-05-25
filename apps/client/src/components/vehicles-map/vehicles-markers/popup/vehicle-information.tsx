@@ -255,7 +255,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 								}
 							/>
 						</CustomTooltip>
-						<DialogContent aria-describedby="air-conditioning-report-description" className="sm:max-w-sm">
+						<DialogContent aria-describedby="air-conditioning-report-description">
 							<DialogHeader>
 								<DialogTitle>{m.marker_air_conditioning_report_title()}</DialogTitle>
 								<DialogDescription id="air-conditioning-report-description" className="whitespace-pre-wrap">
