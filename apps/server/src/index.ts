@@ -3,6 +3,10 @@ import { serve } from "@hono/node-server";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
+import {
+	startVehicleReportCleanupService,
+	sweepExpiredVehicleReports,
+} from "./core/services/vehicle-report-cleanup-service.js";
 import { journeyStore } from "./core/store/journey-store.js";
 import { port } from "./options.js";
 import { hono } from "./server.js";
@@ -25,6 +29,8 @@ console.log(`,-----.                  ,--------.                   ,--.         
 
 console.log("► Running database migrations.");
 await migrateDatabase();
+await sweepExpiredVehicleReports();
+startVehicleReportCleanupService();
 
 let worker: Worker;
 
