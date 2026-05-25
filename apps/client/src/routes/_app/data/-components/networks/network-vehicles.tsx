@@ -21,23 +21,23 @@ const vehicleTypeOptions = {
 		icon: null,
 	},
 	TRAMWAY: {
-		label: () => "Tramway",
+		label: () => m.vehicle_type_tramway(),
 		icon: <TramwayIcon className="size-5" />,
 	},
 	TROLLEY: {
-		label: () => "Trolleybus",
+		label: () => m.vehicle_type_trolley(),
 		icon: <TrolleybusIcon className="size-5" />,
 	},
 	BUS: {
-		label: () => "Bus",
+		label: () => m.vehicle_type_bus(),
 		icon: <BusIcon className="size-5" />,
 	},
 	COACH: {
-		label: () => "Car",
+		label: () => m.vehicle_type_coach(),
 		icon: <CoachIcon className="size-5" />,
 	},
 	FERRY: {
-		label: () => "Ferry",
+		label: () => m.vehicle_type_ferry(),
 		icon: <ShipIcon className="size-5" />,
 	},
 	GONDOLA: {
