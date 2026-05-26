@@ -37,7 +37,7 @@ export function AirConditioningIcon({
 			{airConditioningInformation.disabled && (
 				<>
 					<span
-						className="absolute left-1/2 top-[calc(50%+1px)] h-1 w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-white"
+						className="absolute left-1/2 top-[calc(50%+1px)] h-1 w-5 -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-background"
 						aria-hidden="true"
 					/>
 					<span
