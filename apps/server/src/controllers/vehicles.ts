@@ -97,23 +97,8 @@ const createVehicleReportBodySchema = z.object({
 	value: z.enum(["PRESENT", "OUT_OF_SERVICE"]),
 });
 
-function getClientIp(headers: Headers) {
-	const cloudflareIp = headers.get("cf-connecting-ip");
-	if (cloudflareIp) return cloudflareIp;
-
-	const forwardedFor = headers.get("x-forwarded-for");
-	if (forwardedFor) return forwardedFor.split(",")[0]?.trim() ?? "unknown";
-
-	return "unknown";
-}
-
-function getReporterHash(reporterId: string, headers: Headers) {
-	return createHash("sha256")
-		.update(reportHashSecret)
-		.update(reporterId)
-		.update(getClientIp(headers))
-		.update(headers.get("user-agent") ?? "unknown")
-		.digest("hex");
+function getReporterHash(reporterId: string) {
+	return createHash("sha256").update(reportHashSecret).update(reporterId).digest("hex");
 }
 
 hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
@@ -319,7 +304,7 @@ hono.post(
 			secure: true,
 		});
 
-		const reporterHash = getReporterHash(reporterId, c.req.raw.headers);
+		const reporterHash = getReporterHash(reporterId);
 
 		const recentReport = await database
 			.select({ id: vehicleReportsTable.id })
