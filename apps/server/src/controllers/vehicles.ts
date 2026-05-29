@@ -24,7 +24,7 @@ import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
 const vehicleReportWindow = sql`NOW() - INTERVAL '7 days'`;
-const vehicleReportThreshold = 3;
+const vehicleReportThreshold = 2;
 const vehicleReporterCookieName = "bt_reporter_id";
 const reportHashSecret = process.env.REPORT_HASH_SECRET ?? "bus-tracker-report-fallback";
 
