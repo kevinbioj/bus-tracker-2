@@ -104,7 +104,9 @@ const sources = [
 			return vehicle?.id;
 		},
 		isValidJourney: (journey) =>
-			journey.id.includes("VehicleTracking") || journey.calls?.every((call) => call.expectedTime === undefined),
+			journey.line?.number === "13" ||
+			journey.id.includes("VehicleTracking") ||
+			journey.calls?.every((call) => call.expectedTime === undefined),
 	},
 ];
 
