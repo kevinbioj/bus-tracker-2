@@ -221,6 +221,24 @@ const getActiveAddedCalls = (calls: JourneyCall[], at: Temporal.Instant, aheadTi
 	return calls.slice(Math.min(lastPassedIndex + 1, calls.length - 1));
 };
 
+const getPositionFromLastPassedAddedCall = (calls: JourneyCall[], at: Temporal.Instant, timeZone: string) => {
+	const atMs = at.epochMilliseconds;
+	const lastPassedIndex = calls.findLastIndex((call, index) => {
+		const callTime = index === calls.length - 1 ? call.aimedArrivalTime : call.aimedDepartureTime;
+		return atMs >= callTime;
+	});
+	const call = calls[Math.max(0, lastPassedIndex)];
+	if (call === undefined) return;
+
+	return {
+		latitude: call.stop.latitude,
+		longitude: call.stop.longitude,
+		atStop: true,
+		type: "COMPUTED" as const,
+		recordedAt: at.toZonedDateTimeISO(timeZone).toString({ timeZoneName: "never" }),
+	};
+};
+
 const getScheduledTripShapeCandidates = (
 	gtfs: Gtfs,
 	tripUpdate: TripUpdate,
@@ -282,6 +300,11 @@ export async function computeVehicleJourneys(source: Source) {
 			match: AddedTripShapeMatch;
 			startDate: Temporal.PlainDate;
 		}[] = [];
+		const unmatchedAddedTrips: {
+			tripUpdate: TripUpdate;
+			calls: JourneyCall[];
+			startDate: Temporal.PlainDate;
+		}[] = [];
 
 		if (tripUpdates.length > 0) {
 			for (const tripUpdate of tripUpdates) {
@@ -324,6 +347,12 @@ export async function computeVehicleJourneys(source: Source) {
 								addedTripShapeMatches.push({
 									tripUpdate,
 									match: addedTripShapeMatch,
+									startDate,
+								});
+							} else {
+								unmatchedAddedTrips.push({
+									tripUpdate,
+									calls,
 									startDate,
 								});
 							}
@@ -615,6 +644,80 @@ export async function computeVehicleJourneys(source: Source) {
 					position,
 					pathRef,
 					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
+					networkRef,
+					operatorRef,
+					vehicleRef: vehicleRef !== undefined ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,
+					serviceDate: startDate.toString(),
+					updatedAt: Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000).toString(),
+				};
+
+				if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
+					activeJourneys.set(key, vehicleJourney);
+				}
+			}
+
+			for (const { tripUpdate, calls: addedCalls, startDate } of unmatchedAddedTrips) {
+				const vehicleDescriptor = tripUpdate.vehicle;
+				const route = tripUpdate.trip.routeId !== undefined ? source.gtfs.routes.get(tripUpdate.trip.routeId) : undefined;
+				const networkRef = source.options.getNetworkRef(undefined, vehicleDescriptor);
+				const operatorRef = source.options.getOperatorRef?.(undefined, vehicleDescriptor);
+				const vehicleRef =
+					source.options.getVehicleRef !== undefined
+						? source.options.getVehicleRef(vehicleDescriptor, undefined)
+						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
+				const tripRef = source.options.mapTripRef?.(tripUpdate.trip.tripId) ?? tripUpdate.trip.tripId;
+				const key =
+					vehicleDescriptor !== undefined
+						? `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehicleDescriptor.id}`
+						: `${networkRef}:${operatorRef ?? ""}:ServiceJourney:${tripRef}:${startDate}`;
+
+				if (activeJourneys.has(key)) continue;
+
+				const activeCalls = getActiveAddedCalls(addedCalls, now, source.options.getAheadTime?.() ?? 0);
+				if (activeCalls === undefined || activeCalls.length === 0) continue;
+
+				const timeZone = route?.agency.timeZone ?? "Europe/Paris";
+				const position = getPositionFromLastPassedAddedCall(addedCalls, now, timeZone);
+				if (position === undefined) continue;
+
+				const offsetMs = getTimeZoneOffsetMs(timeZone, now.epochMilliseconds);
+				const vehicleJourney: VehicleJourney = {
+					id: key,
+					line:
+						tripUpdate.trip.routeId !== undefined
+							? {
+									ref: `${networkRef}:Line:${
+										source.options.mapLineRef?.(tripUpdate.trip.routeId) ?? tripUpdate.trip.routeId
+									}`,
+									number: route?.name ?? tripUpdate.trip.routeId,
+									type: route?.type ?? "UNKNOWN",
+									color: route?.color,
+									textColor: route?.textColor,
+								}
+							: undefined,
+					...(tripUpdate.trip.directionId !== undefined
+						? { direction: tripUpdate.trip.directionId === 0 ? ("OUTBOUND" as const) : ("INBOUND" as const) }
+						: {}),
+					destination: source.options.getDestination?.(undefined, vehicleDescriptor),
+					calls: activeCalls.map((call, index) => {
+						const isLast = index === activeCalls.length - 1;
+						const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
+						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
+
+						return {
+							aimedTime: fastFormatISO(aimedTimeMs, offsetMs),
+							expectedTime: expectedTimeMs ? fastFormatISO(expectedTimeMs, offsetMs) : undefined,
+							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
+							stopName: call.stop.name,
+							stopOrder: call.sequence,
+							latitude: call.stop.latitude,
+							longitude: call.stop.longitude,
+							platformName: call.platform,
+							callStatus: call.status,
+							flags: call.flags,
+						};
+					}),
+					position,
 					networkRef,
 					operatorRef,
 					vehicleRef: vehicleRef !== undefined ? `${networkRef}:${operatorRef ?? ""}:Vehicle:${vehicleRef}` : undefined,

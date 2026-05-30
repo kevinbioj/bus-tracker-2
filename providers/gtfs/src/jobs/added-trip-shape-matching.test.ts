@@ -221,7 +221,7 @@ describe("findAddedTripShapeMatch", () => {
 		expect(result?.calls.map((call) => call.distanceTraveled)).toEqual([2000, 3000]);
 	});
 
-	it("ignores diversion stops for shape distances", () => {
+	it("does not match when an ADDED known stop is absent from the static candidate", () => {
 		const { gtfs, trip } = makeGtfs();
 		const tripUpdate = addedTripUpdate();
 		tripUpdate.stopTimeUpdate!.splice(1, 0, {
@@ -239,8 +239,51 @@ describe("findAddedTripShapeMatch", () => {
 			},
 		]);
 
-		expect(result?.calls.map((call) => call.stop.id)).toEqual(["A", "X", "C", "D"]);
-		expect(result?.calls.map((call) => call.distanceTraveled)).toEqual([0, undefined, 2000, 3000]);
+		expect(result).toBeUndefined();
+	});
+
+	it("does not use a partial opposite-direction match when a terminal is replaced", () => {
+		const { gtfs, trip } = makeGtfs();
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const reverseStops = ["D", "C", "B", "A"].map((stopId) => gtfs.stops.get(stopId)!);
+		const reverseStore = new StopTimeStore(
+			reverseStops,
+			new Uint8Array([1, 2, 3, 4]),
+			new Uint8Array([0, 0, 0, 0]),
+			new Uint32Array([8 * 3600, 8 * 3600 + 10 * 60, 8 * 3600 + 20 * 60, 8 * 3600 + 30 * 60]),
+			new Uint32Array([8 * 3600, 8 * 3600 + 10 * 60, 8 * 3600 + 20 * 60, 8 * 3600 + 30 * 60]),
+			new Float32Array([3000, 2000, 1000, 0]),
+			new Uint32Array([0]),
+			new Uint32Array([4]),
+			new Uint32Array([8 * 3600]),
+			new Uint32Array([8 * 3600 + 30 * 60]),
+			new Uint32Array([8 * 3600 + 30 * 60]),
+		);
+		const reverseTrip = new Trip(
+			0,
+			"reverse",
+			trip.route,
+			trip.service,
+			reverseStore,
+			1,
+			"Reverse",
+			undefined,
+			trip.shape,
+		);
+		const tripUpdate = addedTripUpdate("line:1", undefined);
+		tripUpdate.stopTimeUpdate = [
+			{ stopId: "X", stopSequence: 1, departure: { time: epochSeconds("2026-05-18T08:00:30Z") } },
+			{ stopId: "C", stopSequence: 2, arrival: { time: epochSeconds("2026-05-18T08:10:30Z") } },
+			{ stopId: "D", stopSequence: 3, arrival: { time: epochSeconds("2026-05-18T08:20:30Z") } },
+		];
+		const addedCalls = createCallsFromTripUpdate(gtfs, tripUpdate)!;
+
+		const result = findAddedTripShapeMatch(tripUpdate, addedCalls, date, [
+			{ date, trip, calls: trip.getScheduledJourney(date, true).calls },
+			{ date, trip: reverseTrip, calls: reverseTrip.getScheduledJourney(date, true).calls },
+		]);
+
+		expect(result).toBeUndefined();
 	});
 
 	it("ignores unknown stops in ADDED trip updates", () => {
@@ -335,17 +378,13 @@ describe("guessPositionFromCalls", () => {
 			stopSequence: 2,
 			arrival: { time: epochSeconds("2026-05-18T08:10:00Z") },
 		});
-		const addedCalls = createCallsFromTripUpdate(gtfs, tripUpdate)!;
-		const result = findAddedTripShapeMatch(tripUpdate, addedCalls, Temporal.PlainDate.from("2026-05-18"), [
-			{
-				date: Temporal.PlainDate.from("2026-05-18"),
-				trip,
-				calls: trip.getScheduledJourney(Temporal.PlainDate.from("2026-05-18"), true).calls,
-			},
-		])!;
+		const calls = createCallsFromTripUpdate(gtfs, tripUpdate)!.map((call) => ({
+			...call,
+			distanceTraveled: call.stop.id === "A" ? 0 : call.stop.id === "C" ? 2000 : call.stop.id === "D" ? 3000 : undefined,
+		}));
 
 		const position = guessPositionFromCalls(
-			result.calls,
+			calls,
 			trip.shape!,
 			Temporal.Instant.from("2026-05-18T08:10:30Z"),
 			"UTC",

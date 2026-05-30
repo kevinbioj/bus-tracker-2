@@ -59,12 +59,6 @@ function getCallTimeMs(call: JourneyCall) {
 }
 
 function scoreCandidate(addedCalls: JourneyCall[], candidate: TripShapeMatchCandidate, maxStopTimeDeltaMs: number) {
-	const staticStopIds = new Set<string>();
-	for (const call of candidate.calls) {
-		staticStopIds.add(call.stop.id);
-	}
-
-	const matchableStops = addedCalls.filter((call) => staticStopIds.has(call.stop.id)).length;
 	const pairs: {
 		addedIndex: number;
 		staticIndex: number;
@@ -129,18 +123,18 @@ function scoreCandidate(addedCalls: JourneyCall[], candidate: TripShapeMatchCand
 		}
 	}
 
-	const matchedAddedCalls = new Set<JourneyCall>();
+	const matchedStaticCalls = new Map<JourneyCall, JourneyCall>();
 	let cursor = bestPairIndex;
 	while (cursor !== undefined) {
 		const pair = pairs[cursor]!;
-		matchedAddedCalls.add(addedCalls[pair.addedIndex]!);
+		const addedCall = addedCalls[pair.addedIndex]!;
+		matchedStaticCalls.set(addedCall, candidate.calls[pair.staticIndex]!);
 		cursor = pair.previousIndex;
 	}
 
 	return {
-		matchedAddedCalls,
+		matchedStaticCalls,
 		matchedStops: bestPairIndex !== undefined ? pairs[bestPairIndex]!.matchedStops : 0,
-		matchableStops,
 		totalDeltaMs: bestPairIndex !== undefined ? pairs[bestPairIndex]!.totalDeltaMs : 0,
 	};
 }
@@ -161,9 +155,8 @@ export function findAddedTripShapeMatch(
 	let best:
 		| {
 				candidate: TripShapeMatchCandidate;
-				matchedAddedCalls: Set<JourneyCall>;
+				matchedStaticCalls: Map<JourneyCall, JourneyCall>;
 				matchedStops: number;
-				matchableStops: number;
 				totalDeltaMs: number;
 		  }
 		| undefined;
@@ -174,9 +167,9 @@ export function findAddedTripShapeMatch(
 		if (candidate.trip.shape === undefined) continue;
 
 		const score = scoreCandidate(addedCalls, candidate, maxStopTimeDeltaMs);
-		if (score.matchableStops === 0) continue;
-		if (score.matchedStops < Math.min(minMatchedStops, score.matchableStops)) continue;
-		if (score.matchedStops / score.matchableStops < minMatchedStopRatio) continue;
+		if (score.matchedStops !== addedCalls.length) continue;
+		if (score.matchedStops < Math.min(minMatchedStops, addedCalls.length)) continue;
+		if (score.matchedStops / addedCalls.length < minMatchedStopRatio) continue;
 
 		if (
 			best === undefined ||
@@ -191,12 +184,15 @@ export function findAddedTripShapeMatch(
 
 	return {
 		candidate: best.candidate,
-		calls: addedCalls.map((call) => ({
-			...call,
-			distanceTraveled: best.matchedAddedCalls.has(call)
-				? best.candidate.trip.shape!.findClosestPointDistance(call.stop.latitude, call.stop.longitude)
-				: undefined,
-		})),
+		calls: addedCalls.map((call) => {
+			const staticCall = best.matchedStaticCalls.get(call);
+			return {
+				...call,
+				distanceTraveled:
+					staticCall?.distanceTraveled ??
+					best.candidate.trip.shape!.findClosestPointDistance(call.stop.latitude, call.stop.longitude),
+			};
+		}),
 	};
 }
 
