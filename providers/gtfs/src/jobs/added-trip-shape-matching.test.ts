@@ -380,15 +380,11 @@ describe("guessPositionFromCalls", () => {
 		});
 		const calls = createCallsFromTripUpdate(gtfs, tripUpdate)!.map((call) => ({
 			...call,
-			distanceTraveled: call.stop.id === "A" ? 0 : call.stop.id === "C" ? 2000 : call.stop.id === "D" ? 3000 : undefined,
+			distanceTraveled:
+				call.stop.id === "A" ? 0 : call.stop.id === "C" ? 2000 : call.stop.id === "D" ? 3000 : undefined,
 		}));
 
-		const position = guessPositionFromCalls(
-			calls,
-			trip.shape!,
-			Temporal.Instant.from("2026-05-18T08:10:30Z"),
-			"UTC",
-		);
+		const position = guessPositionFromCalls(calls, trip.shape!, Temporal.Instant.from("2026-05-18T08:10:30Z"), "UTC");
 
 		expect(position?.type).toBe("COMPUTED");
 		expect(position?.atStop).toBe(false);

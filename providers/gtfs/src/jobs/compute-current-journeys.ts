@@ -658,7 +658,8 @@ export async function computeVehicleJourneys(source: Source) {
 
 			for (const { tripUpdate, calls: addedCalls, startDate } of unmatchedAddedTrips) {
 				const vehicleDescriptor = tripUpdate.vehicle;
-				const route = tripUpdate.trip.routeId !== undefined ? source.gtfs.routes.get(tripUpdate.trip.routeId) : undefined;
+				const route =
+					tripUpdate.trip.routeId !== undefined ? source.gtfs.routes.get(tripUpdate.trip.routeId) : undefined;
 				const networkRef = source.options.getNetworkRef(undefined, vehicleDescriptor);
 				const operatorRef = source.options.getOperatorRef?.(undefined, vehicleDescriptor);
 				const vehicleRef =
