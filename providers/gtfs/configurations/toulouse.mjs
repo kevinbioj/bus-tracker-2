@@ -107,13 +107,14 @@ const sources = [
 				return operatorRef;
 			}
 		},
-		getVehicleRef: (vehicle, journey) => {
-			if (journey?.trip.route.id === "line:204") {
-				return vehicle?.id.split(":")[0];
+		mapTripUpdate: (tripUpdate) => {
+			if (tripUpdate.trip.routeId === "line:204" && typeof tripUpdate.vehicle?.id === "string") {
+				tripUpdate.vehicle.id = vehicle?.id.split(":")[0];
 			}
 
-			return vehicle?.label ?? vehicle?.id;
+			return tripUpdate;
 		},
+		getVehicleRef: (vehicle) => vehicle?.label ?? vehicle?.id,
 		isValidJourney: (journey) =>
 			journey.line?.number === "13" ||
 			journey.id.includes("VehicleTracking") ||
