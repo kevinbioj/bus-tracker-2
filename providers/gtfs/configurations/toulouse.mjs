@@ -4,7 +4,11 @@ const sources = [
 		id: "toulouse",
 		staticResourceHref:
 			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
-		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/tisseo"],
+		realtimeResourceHrefs: [
+			"https://gtfs.bus-tracker.fr/gtfs-rt/tisseo",
+			"https://gtfs.willbrooks.fr/vehicle_positions.pb",
+			"https://gtfs.willbrooks.fr/trip_updates.pb",
+		],
 		appendTripUpdateInformation: true,
 		addedTripShapeMatching: true,
 		gtfsOptions: {
@@ -96,12 +100,19 @@ const sources = [
 		mapLineRef: (lineRef) => `GTFS:${lineRef.slice(lineRef.indexOf(":") + 1)}`,
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.indexOf(":") + 1),
 		getNetworkRef: () => "TISSEO",
+		getOperatorRef: (_, vehicle) => {
+			if (vehicle?.id === undefined) return;
+			const [operatorRef] = vehicle.id.split(":");
+			if (["ALCIS", "NEGOTI", "TRANSDEV", "VERDIE"].includes(operatorRef)) {
+				return operatorRef;
+			}
+		},
 		getVehicleRef: (vehicle, journey) => {
 			if (journey?.trip.route.id === "line:204") {
 				return vehicle?.id.split(":")[0];
 			}
 
-			return vehicle?.id;
+			return vehicle?.label ?? vehicle?.id;
 		},
 		isValidJourney: (journey) =>
 			journey.line?.number === "13" ||
