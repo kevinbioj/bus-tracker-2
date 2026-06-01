@@ -31,10 +31,10 @@ function makeGtfs() {
 	const service = new Service("service", [true, true, true, true, true, true, true]);
 	const shape = new Shape("shape:original", new Float64Array([0, 0, 0, 0, 0.01, 1000, 0, 0.02, 2000]));
 	const stops = [
-		new Stop("A", "A", 0, 0),
-		new Stop("B", "B", 0, 0.01),
-		new Stop("C", "C", 0, 0.02),
-		new Stop("X", "Replacement", 0.01, 0.01),
+		new Stop("A", "A", 0, 0, "1"),
+		new Stop("B", "B", 0, 0.01, "2"),
+		new Stop("C", "C", 0, 0.02, "3"),
+		new Stop("X", "Replacement", 0.01, 0.01, "4"),
 	];
 	const store = new StopTimeStore(
 		stops.slice(0, 3),
@@ -127,6 +127,37 @@ describe("computeVehicleJourneys", () => {
 		expect(journeys[0]?.journeyRef).toBeUndefined();
 		expect(journeys[0]?.direction).toBeUndefined();
 		expect(journeys[0]?.calls?.map((call) => call.stopName)).toEqual(["C"]);
+		expect(journeys[0]?.calls?.map((call) => call.platformName)).toEqual(["3"]);
 		expect(journeys[0]?.calls?.some((call) => call.distanceTraveled !== undefined)).toBe(false);
+	});
+
+	it("emits scheduled stop platforms on realtime vehicle position journeys", async () => {
+		vi.mocked(downloadGtfsRt).mockResolvedValue({
+			tripUpdates: [],
+			vehiclePositions: [
+				{
+					timestamp: epochSeconds("2026-05-18T08:12:00Z"),
+					trip: {
+						tripId: "original",
+						routeId: "line:1",
+						startDate: "2026-05-18",
+					},
+					vehicle: { id: "vehicle:1" },
+					position: { latitude: 0, longitude: 0.01 },
+					currentStopSequence: 2,
+				},
+			],
+		});
+		const source = new Source("test", {
+			staticResourceHref: "https://example.com/gtfs.zip",
+			getNetworkRef: () => "network",
+		});
+		source.gtfs = makeGtfs();
+
+		const { journeys } = await computeVehicleJourneys(source);
+
+		expect(journeys).toHaveLength(1);
+		expect(journeys[0]?.calls?.map((call) => call.stopName)).toEqual(["B", "C"]);
+		expect(journeys[0]?.calls?.map((call) => call.platformName)).toEqual(["2", "3"]);
 	});
 });

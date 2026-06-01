@@ -527,6 +527,7 @@ export async function computeVehicleJourneys(source: Source) {
 									distanceTraveled: call.distanceTraveled,
 									latitude: call.stop.latitude,
 									longitude: call.stop.longitude,
+									platformName: call.platform,
 									callStatus: call.status,
 									flags: call.flags,
 								};

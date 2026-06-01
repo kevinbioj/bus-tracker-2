@@ -37,6 +37,9 @@ export function createCallsFromTripUpdate(gtfs: Gtfs, tripUpdate?: TripUpdate): 
 		const departureTimeMs = (stopTimeUpdate.departure?.time ?? stopTimeUpdate.arrival?.time)! * 1000;
 		const stop = gtfs.stops.get(stopTimeUpdate.stopId);
 		if (stop === undefined) return [];
+		const assignedStop = stopTimeUpdate.stopTimeProperties?.assignedStopId
+			? gtfs.stops.get(stopTimeUpdate.stopTimeProperties.assignedStopId)
+			: undefined;
 
 		return {
 			aimedArrivalTime: arrivalTimeMs,
@@ -45,7 +48,7 @@ export function createCallsFromTripUpdate(gtfs: Gtfs, tripUpdate?: TripUpdate): 
 			expectedDepartureTime: departureTimeMs,
 			sequence: stopTimeUpdate.stopSequence ?? index,
 			stop,
-			platform: stopTimeUpdate.stopTimeProperties?.assignedStopId,
+			platform: assignedStop?.platformCode ?? stop.platformCode,
 			status: "UNSCHEDULED" as const,
 			flags: [],
 		};
