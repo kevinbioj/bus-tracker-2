@@ -28,7 +28,7 @@ const sources = [
 	{
 		id: "idfm",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
-		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-platforms-idfm"],
+		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
 		appendTripUpdateInformation: true,
 		gtfsOptions: {
 			filterTrips: (trip) => {
