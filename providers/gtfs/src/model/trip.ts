@@ -83,6 +83,7 @@ export class Trip {
 				expectedDepartureTime: undefined as number | undefined,
 				stop: stops[idx]!,
 				sequence: sequence[idx]!,
+				platform: stops[idx]!.platformCode,
 				distanceTraveled: Number.isNaN(dist) ? undefined : dist,
 				status: "SCHEDULED" as const,
 				flags: bitmaskToFlags(flagsBitmask[idx]!),

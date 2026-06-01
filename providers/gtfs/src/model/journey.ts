@@ -195,6 +195,7 @@ export class Journey {
 			if (!appendTripUpdateInformation) {
 				call.expectedArrivalTime = undefined;
 				call.expectedDepartureTime = undefined;
+				call.platform = call.stop.platformCode;
 				call.status = "SCHEDULED";
 			}
 
@@ -210,8 +211,6 @@ export class Journey {
 				if (stop !== undefined) {
 					call.platform = stop.platformCode;
 				}
-			} else if (!appendTripUpdateInformation) {
-				call.platform = undefined;
 			}
 
 			if (timeUpdate?.scheduleRelationship === "NO_DATA") {
