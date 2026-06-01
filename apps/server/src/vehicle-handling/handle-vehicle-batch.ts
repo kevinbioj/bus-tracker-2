@@ -80,7 +80,7 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 		}
 
 		if (network.hasVehiclesFeature) {
-			registerActivities(registerableActivities);
+			await registerActivities(registerableActivities);
 		}
 	}
 

@@ -1,8 +1,13 @@
 import { readFile } from "node:fs/promises";
+import { isMainThread } from "node:worker_threads";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import * as schema from "./schema.js";
+
+const SERVER_POOL_MAX = 32;
+const WORKER_POOL_MAX = 16;
+const IDLE_TIMEOUT_SECONDS = 30;
 
 let PG_PASSWORD = process.env.PG_PASSWORD;
 
@@ -17,8 +22,8 @@ const connection = postgres({
 	password: PG_PASSWORD,
 	database: process.env.PG_DATABASE,
 	path: process.env.PG_PATH,
-	max: 25,
-	idle_timeout: 120,
+	max: isMainThread ? SERVER_POOL_MAX : WORKER_POOL_MAX,
+	idle_timeout: IDLE_TIMEOUT_SECONDS,
 });
 
 export const database = drizzle(connection, {
