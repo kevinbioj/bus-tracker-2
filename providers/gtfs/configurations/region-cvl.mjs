@@ -130,7 +130,7 @@ const sources = [
 	{
 		id: "tours",
 		staticResourceHref:
-			"https://data.tours-metropole.fr/api/v2/catalog/datasets/horaires-temps-reel-gtfsrt-reseau-filbleu-tmvl/alternative_exports/filbleu_gtfs_zip",
+			"https://data.tours-metropole.fr/api/v2/catalog/datasets/horaires-temps-reel-gtfsrt-reseau-filbleu-tmvl/alternative_exports/filbleu_gtfszip",
 		realtimeResourceHrefs: [
 			"https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/trip-updates",
 			"https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/vehicle-positions",
