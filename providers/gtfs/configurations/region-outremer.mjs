@@ -27,6 +27,7 @@ const sources = [
 			},
 		},
 		getNetworkRef: () => "TUNGT",
+		getDestination: (journey) => journey?.calls.at(-1)?.stop.name ?? journey?.trip.headsign,
 	},
 	{
 		id: "972-sud-lib",
