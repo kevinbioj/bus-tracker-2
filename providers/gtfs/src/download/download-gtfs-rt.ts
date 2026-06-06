@@ -59,8 +59,9 @@ export async function downloadGtfsRt(source: Source) {
 						vehiclePositions.push(vehiclePosition);
 					}
 				}
-			} catch (error) {
-				captureException(error, {
+			} catch (cause) {
+				console.error(new Error(`Failed to download entities at '${realtimeFeedHref}'`, { cause }));
+				captureException(cause, {
 					sourceId: source.id,
 					realtimeFeedHref,
 					$exception_fingerprint: [`gtfs-rt-error`, source.id, realtimeFeedHref],
