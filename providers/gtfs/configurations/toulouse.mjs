@@ -5,7 +5,7 @@ const sources = [
 		staticResourceHref:
 			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
 		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tisseo",
+			"https://api.tisseo.fr/opendata/gtfsrt/GtfsRt.pb",
 			"https://gtfs.willbrooks.fr/vehicle_positions.pb",
 			"https://gtfs.willbrooks.fr/trip_updates.pb",
 		],
@@ -13,6 +13,13 @@ const sources = [
 		addedTripShapeMatching: true,
 		gtfsOptions: {
 			postLoad: (resource) => {
+				resource.stops.set("code:00189", {
+					id: "code:00189",
+					name: "Arènes",
+					latitude: 43.593745975607014,
+					longitude: 1.4179662944363263,
+				});
+
 				resource.stops.set("code:06766", {
 					id: "code:06766",
 					name: "Saint Cyprien - République",
@@ -109,7 +116,7 @@ const sources = [
 		},
 		mapTripUpdate: (tripUpdate) => {
 			if (tripUpdate.trip.routeId === "line:204" && typeof tripUpdate.vehicle?.id === "string") {
-				tripUpdate.vehicle.id = vehicle?.id.split(":")[0];
+				tripUpdate.vehicle.id = tripUpdate.vehicle.id.split(":")[0];
 			}
 
 			return tripUpdate;
