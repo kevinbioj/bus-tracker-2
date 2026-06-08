@@ -1,6 +1,6 @@
 services:
   database:
-    image: postgres:18.3-alpine
+    image: postgres:18.4-alpine
     environment:
       POSTGRES_USER: bustracker
       POSTGRES_PASSWORD: QsPkHJ0696UDf6UX
@@ -10,7 +10,7 @@ services:
       - database_data:/var/lib/postgresql
 
   redis:
-    image: redis:8.6.3-alpine
+    image: redis:8.0.0-alpine
     ports:
       - 6379:6379
     volumes:

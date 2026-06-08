@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   traefik:
-    image: traefik:v3.6.16
+    image: traefik:v3.7.4
     command:
       - "--providers.swarm=true"
       - "--providers.swarm.exposedByDefault=false"
@@ -21,7 +21,7 @@ services:
           - node.role == manager
 
   database:
-    image: postgres:18.3-alpine
+    image: postgres:18.4-alpine
     environment:
       - "POSTGRES_USER=bustracker"
       - "POSTGRES_PASSWORD_FILE=/run/secrets/database_password"
@@ -37,7 +37,7 @@ services:
       - database_data:/var/lib/postgresql
 
   redis:
-    image: redis:8.6.3-alpine
+    image: redis:8.8.0-alpine
     ports:
       - target: 6379
         published: 6379

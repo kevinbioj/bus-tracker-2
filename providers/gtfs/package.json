@@ -13,11 +13,11 @@
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@types/decompress": "^4.2.7",
-		"@types/node": "^25.9.1",
+		"@types/node": "^25.9.2",
 		"@types/papaparse": "^5.5.2",
 		"tsx": "^4.22.4",
 		"typescript": "^6.0.3",
-		"vitest": "^4.1.7"
+		"vitest": "^4.1.8"
 	},
 	"dependencies": {
 		"@bus-tracker/monitoring": "workspace:*",
