@@ -69,7 +69,7 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 			<Link
 				className="border border-border flex h-14 px-2 py-1 rounded-md hover:brightness-90 transition-all active:not-aria-[haspopup]:translate-y-px"
 				style={style}
-				to="/data/lines/$lineId/vehicle-assignments"
+				to="/data/lines/$lineId"
 				params={{ lineId: String(line.id) }}
 				search={{ date: day }}
 			>

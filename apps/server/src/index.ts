@@ -14,6 +14,7 @@ import type { DisposeableVehicleJourney } from "./types/disposeable-vehicle-jour
 
 import "./controllers/announcements.js";
 import "./controllers/editors.js";
+import "./controllers/girouettes.js";
 import "./controllers/lines.js";
 import "./controllers/networks.js";
 import "./controllers/ping.js";

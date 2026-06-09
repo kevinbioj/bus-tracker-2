@@ -20,6 +20,16 @@ export const girouette = z.object({
 	directionId: z.number().nullable(),
 	destinations: z.array(z.string()),
 	data: z.string(),
+	enabled: z.boolean(),
 });
 
 export type Girouette = z.infer<typeof girouette>;
+
+export const girouetteInput = z.object({
+	directionId: z.number().int().min(0).max(1).nullable(),
+	destinations: z.array(z.string()),
+	data: z.record(z.string(), z.unknown()),
+	enabled: z.boolean().default(true),
+});
+
+export type GirouetteInput = z.infer<typeof girouetteInput>;

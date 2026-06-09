@@ -25,13 +25,13 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 	);
 
 	return (
-		<div className="overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mt-2">
+		<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mt-2">
 			{sortedLines.map((line) => (
 				<Link
 					key={line.id}
-					to="/data/lines/$lineId/vehicle-assignments"
+					to="/data/lines/$lineId"
 					params={{ lineId: String(line.id) }}
-					className="h-14 border flex items-center gap-1 rounded-lg hover:brightness-90 active:not-aria-[haspopup]:translate-y-px transition-all"
+					className="h-14 border flex items-center gap-1 rounded-lg hover:brightness-90 active:translate-y-px transition-all"
 					style={{
 						backgroundColor: line.color ?? undefined,
 						color: line.textColor ?? undefined,

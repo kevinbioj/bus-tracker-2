@@ -17,7 +17,10 @@ import { Route as AppHelpRouteImport } from './routes/_app/help'
 import { Route as AppDataIndexRouteImport } from './routes/_app/data/index'
 import { Route as AppDataVehiclesVehicleIdRouteImport } from './routes/_app/data/vehicles/$vehicleId'
 import { Route as AppDataNetworksNetworkIdRouteImport } from './routes/_app/data/networks/$networkId'
+import { Route as AppDataLinesLineIdIndexRouteImport } from './routes/_app/data/lines/$lineId/index'
 import { Route as AppDataLinesLineIdVehicleAssignmentsRouteImport } from './routes/_app/data/lines/$lineId/vehicle-assignments'
+import { Route as AppDataLinesLineIdGirouettesNewRouteImport } from './routes/_app/data/lines/$lineId/girouettes_.new'
+import { Route as AppDataLinesLineIdGirouettesGirouetteIdEditRouteImport } from './routes/_app/data/lines/$lineId/girouettes_.$girouetteId.edit'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -60,10 +63,27 @@ const AppDataNetworksNetworkIdRoute =
     path: '/data/networks/$networkId',
     getParentRoute: () => AppRoute,
   } as any)
+const AppDataLinesLineIdIndexRoute = AppDataLinesLineIdIndexRouteImport.update({
+  id: '/data/lines/$lineId/',
+  path: '/data/lines/$lineId/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDataLinesLineIdVehicleAssignmentsRoute =
   AppDataLinesLineIdVehicleAssignmentsRouteImport.update({
     id: '/data/lines/$lineId/vehicle-assignments',
     path: '/data/lines/$lineId/vehicle-assignments',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppDataLinesLineIdGirouettesNewRoute =
+  AppDataLinesLineIdGirouettesNewRouteImport.update({
+    id: '/data/lines/$lineId/girouettes_/new',
+    path: '/data/lines/$lineId/girouettes/new',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppDataLinesLineIdGirouettesGirouetteIdEditRoute =
+  AppDataLinesLineIdGirouettesGirouetteIdEditRouteImport.update({
+    id: '/data/lines/$lineId/girouettes_/$girouetteId/edit',
+    path: '/data/lines/$lineId/girouettes/$girouetteId/edit',
     getParentRoute: () => AppRoute,
   } as any)
 
@@ -76,6 +96,9 @@ export interface FileRoutesByFullPath {
   '/data/networks/$networkId': typeof AppDataNetworksNetworkIdRoute
   '/data/vehicles/$vehicleId': typeof AppDataVehiclesVehicleIdRoute
   '/data/lines/$lineId/vehicle-assignments': typeof AppDataLinesLineIdVehicleAssignmentsRoute
+  '/data/lines/$lineId/': typeof AppDataLinesLineIdIndexRoute
+  '/data/lines/$lineId/girouettes/new': typeof AppDataLinesLineIdGirouettesNewRoute
+  '/data/lines/$lineId/girouettes/$girouetteId/edit': typeof AppDataLinesLineIdGirouettesGirouetteIdEditRoute
 }
 export interface FileRoutesByTo {
   '/help': typeof AppHelpRoute
@@ -86,6 +109,9 @@ export interface FileRoutesByTo {
   '/data/networks/$networkId': typeof AppDataNetworksNetworkIdRoute
   '/data/vehicles/$vehicleId': typeof AppDataVehiclesVehicleIdRoute
   '/data/lines/$lineId/vehicle-assignments': typeof AppDataLinesLineIdVehicleAssignmentsRoute
+  '/data/lines/$lineId': typeof AppDataLinesLineIdIndexRoute
+  '/data/lines/$lineId/girouettes/new': typeof AppDataLinesLineIdGirouettesNewRoute
+  '/data/lines/$lineId/girouettes/$girouetteId/edit': typeof AppDataLinesLineIdGirouettesGirouetteIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +124,9 @@ export interface FileRoutesById {
   '/_app/data/networks/$networkId': typeof AppDataNetworksNetworkIdRoute
   '/_app/data/vehicles/$vehicleId': typeof AppDataVehiclesVehicleIdRoute
   '/_app/data/lines/$lineId/vehicle-assignments': typeof AppDataLinesLineIdVehicleAssignmentsRoute
+  '/_app/data/lines/$lineId/': typeof AppDataLinesLineIdIndexRoute
+  '/_app/data/lines/$lineId/girouettes_/new': typeof AppDataLinesLineIdGirouettesNewRoute
+  '/_app/data/lines/$lineId/girouettes_/$girouetteId/edit': typeof AppDataLinesLineIdGirouettesGirouetteIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,6 +139,9 @@ export interface FileRouteTypes {
     | '/data/networks/$networkId'
     | '/data/vehicles/$vehicleId'
     | '/data/lines/$lineId/vehicle-assignments'
+    | '/data/lines/$lineId/'
+    | '/data/lines/$lineId/girouettes/new'
+    | '/data/lines/$lineId/girouettes/$girouetteId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/help'
@@ -120,6 +152,9 @@ export interface FileRouteTypes {
     | '/data/networks/$networkId'
     | '/data/vehicles/$vehicleId'
     | '/data/lines/$lineId/vehicle-assignments'
+    | '/data/lines/$lineId'
+    | '/data/lines/$lineId/girouettes/new'
+    | '/data/lines/$lineId/girouettes/$girouetteId/edit'
   id:
     | '__root__'
     | '/_app'
@@ -131,6 +166,9 @@ export interface FileRouteTypes {
     | '/_app/data/networks/$networkId'
     | '/_app/data/vehicles/$vehicleId'
     | '/_app/data/lines/$lineId/vehicle-assignments'
+    | '/_app/data/lines/$lineId/'
+    | '/_app/data/lines/$lineId/girouettes_/new'
+    | '/_app/data/lines/$lineId/girouettes_/$girouetteId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -196,11 +234,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDataNetworksNetworkIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/data/lines/$lineId/': {
+      id: '/_app/data/lines/$lineId/'
+      path: '/data/lines/$lineId'
+      fullPath: '/data/lines/$lineId/'
+      preLoaderRoute: typeof AppDataLinesLineIdIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/data/lines/$lineId/vehicle-assignments': {
       id: '/_app/data/lines/$lineId/vehicle-assignments'
       path: '/data/lines/$lineId/vehicle-assignments'
       fullPath: '/data/lines/$lineId/vehicle-assignments'
       preLoaderRoute: typeof AppDataLinesLineIdVehicleAssignmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/data/lines/$lineId/girouettes_/new': {
+      id: '/_app/data/lines/$lineId/girouettes_/new'
+      path: '/data/lines/$lineId/girouettes/new'
+      fullPath: '/data/lines/$lineId/girouettes/new'
+      preLoaderRoute: typeof AppDataLinesLineIdGirouettesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/data/lines/$lineId/girouettes_/$girouetteId/edit': {
+      id: '/_app/data/lines/$lineId/girouettes_/$girouetteId/edit'
+      path: '/data/lines/$lineId/girouettes/$girouetteId/edit'
+      fullPath: '/data/lines/$lineId/girouettes/$girouetteId/edit'
+      preLoaderRoute: typeof AppDataLinesLineIdGirouettesGirouetteIdEditRouteImport
       parentRoute: typeof AppRoute
     }
   }
@@ -214,6 +273,9 @@ interface AppRouteChildren {
   AppDataNetworksNetworkIdRoute: typeof AppDataNetworksNetworkIdRoute
   AppDataVehiclesVehicleIdRoute: typeof AppDataVehiclesVehicleIdRoute
   AppDataLinesLineIdVehicleAssignmentsRoute: typeof AppDataLinesLineIdVehicleAssignmentsRoute
+  AppDataLinesLineIdIndexRoute: typeof AppDataLinesLineIdIndexRoute
+  AppDataLinesLineIdGirouettesNewRoute: typeof AppDataLinesLineIdGirouettesNewRoute
+  AppDataLinesLineIdGirouettesGirouetteIdEditRoute: typeof AppDataLinesLineIdGirouettesGirouetteIdEditRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -225,6 +287,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppDataVehiclesVehicleIdRoute: AppDataVehiclesVehicleIdRoute,
   AppDataLinesLineIdVehicleAssignmentsRoute:
     AppDataLinesLineIdVehicleAssignmentsRoute,
+  AppDataLinesLineIdIndexRoute: AppDataLinesLineIdIndexRoute,
+  AppDataLinesLineIdGirouettesNewRoute: AppDataLinesLineIdGirouettesNewRoute,
+  AppDataLinesLineIdGirouettesGirouetteIdEditRoute:
+    AppDataLinesLineIdGirouettesGirouetteIdEditRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

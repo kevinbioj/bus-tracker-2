@@ -14,10 +14,19 @@ import * as m from "~/paraglide/messages";
 
 import { NetworkHeader } from "./network-header";
 
+type BreadcrumbEntry = {
+	label: ReactNode;
+	to: string;
+	params?: Record<string, string>;
+	search?: Record<string, string>;
+};
+
 type DataPageLayoutProps = {
 	children: ReactNode;
 	current?: ReactNode;
 	currentClassName?: string;
+	/** Extra breadcrumb levels inserted between the network and the current page */
+	breadcrumbMiddle?: BreadcrumbEntry[];
 	network: Network;
 	networkSearch?: { tab?: string };
 	title: string;
@@ -27,6 +36,7 @@ export function DataPageLayout({
 	children,
 	current,
 	currentClassName,
+	breadcrumbMiddle,
 	network,
 	networkSearch,
 	title,
@@ -42,7 +52,7 @@ export function DataPageLayout({
 							<BreadcrumbLink render={<Link to="/data">{m.data_breadcrumb()}</Link>} />
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />
-						{current === undefined ? (
+						{current === undefined && (breadcrumbMiddle === undefined || breadcrumbMiddle.length === 0) ? (
 							<BreadcrumbItem>
 								<BreadcrumbPage>
 									<NetworkBreadcrumbLabel network={network} />
@@ -63,10 +73,28 @@ export function DataPageLayout({
 										}
 									/>
 								</BreadcrumbItem>
-								<BreadcrumbSeparator />
-								<BreadcrumbItem>
-									<BreadcrumbPage className={currentClassName}>{current}</BreadcrumbPage>
-								</BreadcrumbItem>
+								{breadcrumbMiddle?.map((entry) => (
+									<>
+										<BreadcrumbSeparator key={`sep-${entry.to}`} />
+										<BreadcrumbItem key={entry.to}>
+											<BreadcrumbLink
+												render={
+													<Link to={entry.to} params={entry.params ?? {}} search={entry.search ?? {}}>
+														{entry.label}
+													</Link>
+												}
+											/>
+										</BreadcrumbItem>
+									</>
+								))}
+								{current !== undefined && (
+									<>
+										<BreadcrumbSeparator />
+										<BreadcrumbItem>
+											<BreadcrumbPage className={currentClassName}>{current}</BreadcrumbPage>
+										</BreadcrumbItem>
+									</>
+								)}
 							</>
 						)}
 					</BreadcrumbList>

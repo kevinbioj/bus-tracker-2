@@ -4,6 +4,16 @@ import { match } from "ts-pattern";
 
 const paneBgColor = "#1D1D1B";
 
+function processText(text: string): string {
+	return text
+		.trimEnd()
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/\\n/g, "<br>")
+		.replaceAll(" ", "&nbsp;");
+}
+
 const fontProperties = {
 	// Hanover Graphic fonts
 	"0808B2E1": { height: 8, spacing: 1, extraSpacing: false },
@@ -30,7 +40,7 @@ const fontProperties = {
 } as const;
 
 type Font = keyof typeof fontProperties;
-type TextSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type TextSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 const ledColors = {
 	YELLOW: "#FF8000",
@@ -193,10 +203,8 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 		>
 			<span
 				className={clsx({ "animate-route-number": routeNumber.scroll })}
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: ain't coming from user input
-				dangerouslySetInnerHTML={{
-					__html: routeNumber.text.trimEnd().replaceAll(" ", "&nbsp;"),
-				}}
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
+				dangerouslySetInnerHTML={{ __html: processText(routeNumber.text) }}
 			/>
 		</button>
 	);
@@ -245,14 +253,13 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 					line.font !== undefined && line.font in fontProperties ? line.font : oneLine ? "1513B3E1" : "0808B2E1";
 				const spacing = onePixel * (line.spacing ?? fontProperties[fontFamily].spacing);
 				const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
-				const processedText = line.text.trimEnd().replaceAll(" ", "&nbsp;");
 				return (
 					<span
 						className={clsx("overflow-hidden whitespace-nowrap", {
 							"animate-page": line.scroll,
 						})}
-						// biome-ignore lint/security/noDangerouslySetInnerHtml: ain't coming from user input
-						dangerouslySetInnerHTML={{ __html: processedText }}
+						// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
+						dangerouslySetInnerHTML={{ __html: processText(line.text) }}
 						key={line.text}
 						style={{
 							//- Font, placement & spacing
