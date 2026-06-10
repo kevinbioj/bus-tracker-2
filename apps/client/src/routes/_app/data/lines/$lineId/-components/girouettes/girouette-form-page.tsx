@@ -29,7 +29,7 @@ import {
 	type TextSpacing,
 } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 import * as m from "~/paraglide/messages";
-import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
+import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
 import { cn } from "~/utils/cn";
 import { ALL_FONTS, type AllowedFont, DEFAULT_FONT_VARIANT, getFontLabel, getFontsForDualLine } from "./font-config";
 
@@ -198,7 +198,7 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 		);
 	};
 
-	const backToList = () => navigate({ to: "/data/lines/$lineId", params: { lineId: String(lineId) } });
+	const backToList = () => navigate({ to: "/data/lines/$lineId/girouettes", params: { lineId: String(lineId) } });
 
 	const createMutation = useMutation({
 		...CreateGirouetteMutation(lineId),
@@ -262,8 +262,13 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 			current={isEdit ? m.line_girouettes_form_edit_title() : m.line_girouettes_form_create_title()}
 			breadcrumbMiddle={[
 				{
-					label: line.number,
+					label: <LineBreadcrumbLabel line={line} />,
 					to: "/data/lines/$lineId",
+					params: { lineId: String(lineId) },
+				},
+				{
+					label: m.line_girouettes_breadcrumb(),
+					to: "/data/lines/$lineId/girouettes",
 					params: { lineId: String(lineId) },
 				},
 			]}
@@ -271,14 +276,14 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 			networkSearch={{ tab: "lines" }}
 			title={m.line_girouettes_page_title({ lineNumber: line.number, networkName: network.name })}
 		>
-			<div className="mt-4 flex flex-col gap-2">
-				<p className="text-sm font-semibold">{m.line_girouettes_form_preview_title()}</p>
+			<div className="sticky top-14 z-10 bg-background mt-4 pb-3 border-b flex flex-col gap-2">
+				<p className="text-sm font-semibold pt-1">{m.line_girouettes_form_preview_title()}</p>
 				<div className="overflow-x-auto">
 					<GirouettePreview width={Math.min(width - 26, 512)} {...previewData} />
 				</div>
 			</div>
 
-			<form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 flex flex-col gap-6">
+			<form onSubmit={form.handleSubmit(onSubmit)} className="mt-3 flex flex-col gap-6">
 				<div className="flex flex-col gap-6">
 					<div className="flex flex-col md:flex-row gap-4">
 						<div className="grid gap-2">

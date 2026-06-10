@@ -34,7 +34,7 @@ export function GirouettesTable({ girouettes, lineId }: Readonly<GirouettesTable
 	});
 
 	return (
-		<div className="border rounded-lg overflow-x-auto">
+		<div className="border rounded-lg overflow-x-auto mt-1">
 			<table className="w-full text-sm">
 				<thead>
 					<tr className="border-b bg-muted/50">

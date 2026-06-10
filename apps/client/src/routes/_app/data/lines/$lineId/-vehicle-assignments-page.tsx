@@ -9,7 +9,7 @@ import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import * as m from "~/paraglide/messages";
-import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
+import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
 import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
 import { cn } from "~/utils/cn";
@@ -58,11 +58,7 @@ export function LineVehicleAssignments() {
 		<DataPageLayout
 			current={
 				<>
-					{line.cartridgeHref ? (
-						<img className="h-5 object-contain" src={line.cartridgeHref} alt={line.number} />
-					) : (
-						line.number
-					)}
+					{m.network_lines_assignments_action()}
 					<Button
 						size="sm"
 						variant="outline"
@@ -79,6 +75,13 @@ export function LineVehicleAssignments() {
 				</>
 			}
 			currentClassName="flex items-center gap-1"
+			breadcrumbMiddle={[
+				{
+					label: <LineBreadcrumbLabel line={line} />,
+					to: "/data/lines/$lineId",
+					params: { lineId: String(lineId) },
+				},
+			]}
 			network={network}
 			networkSearch={{ tab: "lines" }}
 			title={m.page_title_line_data({ lineNumber: line.number, networkName: network.name })}

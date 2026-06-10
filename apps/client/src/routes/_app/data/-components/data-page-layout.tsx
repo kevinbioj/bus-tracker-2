@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
+import type { Line } from "~/api/lines";
 import type { Network } from "~/api/networks";
 import {
 	Breadcrumb,
@@ -115,5 +116,13 @@ function NetworkBreadcrumbLabel({ network }: Readonly<{ network: Network }>) {
 		</picture>
 	) : (
 		network.name
+	);
+}
+
+export function LineBreadcrumbLabel({ line }: Readonly<{ line: Pick<Line, "number" | "cartridgeHref"> }>) {
+	return line.cartridgeHref ? (
+		<img className="h-5 object-contain" src={line.cartridgeHref} alt={line.number} />
+	) : (
+		line.number
 	);
 }

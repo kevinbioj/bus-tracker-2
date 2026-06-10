@@ -1,21 +1,19 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
-import { ChevronLeft, ChevronRight, MapIcon, PlusIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapIcon } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
-import { GetLineGirouettesQuery, type Girouette } from "~/api/girouettes";
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { useEditor } from "~/hooks/use-editor";
 import * as m from "~/paraglide/messages";
-import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
+import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
 import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
 import { cn } from "~/utils/cn";
-import { GirouettesTable } from "./-components/girouettes/girouettes-table";
 import { getLineVehicleAssignmentsDate } from "./-vehicle-assignments-date";
 
 const parseMonth = (input: Dayjs, validMonths: string[]) => {
@@ -64,11 +62,7 @@ export function LinePage() {
 		<DataPageLayout
 			current={
 				<>
-					{line.cartridgeHref ? (
-						<img className="h-5 object-contain" src={line.cartridgeHref} alt={line.number} />
-					) : (
-						line.number
-					)}
+					<LineBreadcrumbLabel line={line} />
 					<Button
 						size="sm"
 						variant="outline"
@@ -82,6 +76,19 @@ export function LinePage() {
 							</Link>
 						}
 					/>
+					{isNetworkEditor && (
+						<Button
+							size="sm"
+							variant="outline"
+							className="border-[0.5px] h-5 my-0 py-0 px-2"
+							nativeButton={false}
+							render={
+								<Link to="/data/lines/$lineId/girouettes" params={{ lineId }}>
+									{m.network_lines_girouettes_action()}
+								</Link>
+							}
+						/>
+					)}
 				</>
 			}
 			currentClassName="flex items-center gap-1"
@@ -90,7 +97,6 @@ export function LinePage() {
 			title={m.page_title_line_data({ lineNumber: line.number, networkName: network.name })}
 		>
 			<section className="mt-4">
-				{isNetworkEditor && <h2 className="text-sm font-semibold mb-2">{m.network_lines_assignments_action()}</h2>}
 				<PeriodNavigator
 					className="mb-2"
 					previous={
@@ -181,38 +187,6 @@ export function LinePage() {
 
 				<LineVehiclesTimeline date={selectedDate} lineId={line.id} />
 			</section>
-
-			{isNetworkEditor && (
-				<Suspense>
-					<GirouettesSectionLoader lineId={+lineId} />
-				</Suspense>
-			)}
 		</DataPageLayout>
-	);
-}
-
-function GirouettesSectionLoader({ lineId }: Readonly<{ lineId: number }>) {
-	const { data: girouettes } = useSuspenseQuery(GetLineGirouettesQuery(lineId));
-	return <GirouettesSection lineId={lineId} girouettes={girouettes} />;
-}
-
-function GirouettesSection({ lineId, girouettes }: Readonly<{ lineId: number; girouettes: Girouette[] }>) {
-	return (
-		<section className="mt-6 pt-4 border-t">
-			<div className="flex items-center justify-between mb-2">
-				<h2 className="text-sm font-semibold">{m.line_girouettes_breadcrumb()}</h2>
-				<Button
-					size="sm"
-					nativeButton={false}
-					render={
-						<Link to="/data/lines/$lineId/girouettes/new" params={{ lineId: String(lineId) }}>
-							<PlusIcon />
-							{m.line_girouettes_create()}
-						</Link>
-					}
-				/>
-			</div>
-			<GirouettesTable girouettes={girouettes} lineId={lineId} />
-		</section>
 	);
 }
