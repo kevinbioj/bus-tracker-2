@@ -12,7 +12,7 @@
 		"migrations:push": "drizzle-kit push"
 	},
 	"devDependencies": {
-		"@posthog/cli": "^0.7.21",
+		"@posthog/cli": "^0.7.22",
 		"@types/node": "^25.9.2",
 		"drizzle-kit": "^0.31.10",
 		"typescript": "^6.0.3"
@@ -22,7 +22,7 @@
 		"@hono/node-server": "^2.0.4",
 		"arktype": "^2.2.0",
 		"drizzle-orm": "^0.45.2",
-		"hono": "^4.12.23",
+		"hono": "^4.12.25",
 		"postgres": "^3.4.9",
 		"redis": "^6.0.0",
 		"ts-pattern": "^5.9.0",
