@@ -139,6 +139,7 @@ const sources = [
 		excludeScheduled: (trip) => nantesExcludedLines.includes(trip.route.name),
 		getNetworkRef: () => "NAOLIB",
 		getVehicleRef: () => undefined,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		isValidJourney: (journey) => !nantesExcludedLines.includes(journey.line?.number),
 		mapLineRef: (lineRef) => lineRef.slice(lineRef.lastIndexOf(":") + 1),
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.lastIndexOf(":") + 1),
