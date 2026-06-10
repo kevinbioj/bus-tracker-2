@@ -11,12 +11,16 @@ function nthIndexOf(input, pattern, n) {
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
-	// {
-	// 	id: "avignon",
-	// 	staticResourceHref: "https://gtfs.bus-tracker.fr/orizo.zip",
-	// 	// realtimeResourceHrefs: ["https://export.tcra2.cityway.fr/GtfsRt/GtfsRT.TCRA.pb"],
-	// 	getNetworkRef: () => "ORIZO",
-	// },
+	{
+		id: "avignon",
+		staticResourceHref: "https://api.maas-fr.cityway.fr/dataflow/offre-tc/download?provider=ORIZO&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.maas-fr.cityway.fr/dataflow/vehicule-tc-tr/download?provider=ORIZO&dataFormat=GTFS-RT",
+			"https://api.maas-fr.cityway.fr/dataflow/horaire-tc-tr/download?provider=ORIZO&dataFormat=GTFS-RT",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "ORIZO",
+	},
 	{
 		id: "cannes",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/47bc8088-6c72-43ad-a959-a5bbdd1aa14f",
