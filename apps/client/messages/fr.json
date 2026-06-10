@@ -321,6 +321,8 @@
 	"line_girouettes_form_led_white": "Blanc",
 	"line_girouettes_form_led_yellow": "Jaune",
 	"line_girouettes_form_outline_color_label": "Couleur de contour",
+	"line_girouettes_form_line_add": "Ajouter une ligne",
+	"line_girouettes_form_line_n": "Ligne {n}",
 	"line_girouettes_form_page_add": "Ajouter une page",
 	"line_girouettes_form_page_n": "Page {n}",
 	"line_girouettes_form_page_remove": "Supprimer",

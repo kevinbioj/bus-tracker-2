@@ -36,16 +36,22 @@ import {
 	type AllowedFontFamily,
 	DEFAULT_FONT_FAMILY,
 	DEFAULT_FONT_VARIANT,
+	DUAL_LINE_MAX_HEIGHT,
 	FONT_HEIGHTS,
+	getFirstValidVariant,
 	getFontFamily,
 } from "./font-config";
 
-const pageSchema = z.object({
+const lineSchema = z.object({
 	text: z.string(),
-	fontFamily: z.string(),
 	fontVariant: z.string(),
 	scroll: z.boolean(),
 	spacing: z.number().int().min(0).max(10).nullable(),
+});
+
+const pageSchema = z.object({
+	fontFamily: z.string(),
+	lines: z.array(lineSchema).min(1).max(2),
 });
 
 const formSchema = z.object({
@@ -67,12 +73,16 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const defaultPage = (): FormValues["pages"][number] => ({
+const defaultLine = (fontVariant = DEFAULT_FONT_VARIANT): FormValues["pages"][number]["lines"][number] => ({
 	text: "",
-	fontFamily: DEFAULT_FONT_FAMILY,
-	fontVariant: DEFAULT_FONT_VARIANT,
+	fontVariant,
 	scroll: false,
 	spacing: null,
+});
+
+const defaultPage = (): FormValues["pages"][number] => ({
+	fontFamily: DEFAULT_FONT_FAMILY,
+	lines: [defaultLine()],
 });
 
 const defaultValues = (girouette?: Girouette): FormValues => {
@@ -115,14 +125,16 @@ const defaultValues = (girouette?: Girouette): FormValues => {
 		pages:
 			(d.pages ?? []).length > 0
 				? (d.pages ?? []).map((page) => {
-						const p = Array.isArray(page) ? page[0] : page;
-						const font = p.font ?? DEFAULT_FONT_VARIANT;
+						const rawLines = Array.isArray(page) ? page : [page];
+						const firstFont = rawLines[0]?.font ?? DEFAULT_FONT_VARIANT;
 						return {
-							text: p.text,
-							fontFamily: getFontFamily(font),
-							fontVariant: font,
-							scroll: p.scroll ?? false,
-							spacing: p.spacing ?? null,
+							fontFamily: getFontFamily(firstFont),
+							lines: rawLines.map((line) => ({
+								text: line.text,
+								fontVariant: line.font ?? DEFAULT_FONT_VARIANT,
+								scroll: line.scroll ?? false,
+								spacing: line.spacing ?? null,
+							})),
 						};
 					})
 				: [defaultPage()],
@@ -130,6 +142,8 @@ const defaultValues = (girouette?: Girouette): FormValues => {
 };
 
 function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInput {
+	type PageLine = { font?: AllowedFont; scroll?: boolean; spacing?: TextSpacing; text: string };
+
 	const data: GirouetteData = {
 		ledColor: "WHITE",
 		routeNumber: {
@@ -142,12 +156,15 @@ function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInpu
 			spacing: (values.routeNumber.spacing ?? undefined) as TextSpacing | undefined,
 			halfPattern: values.routeNumber.halfPattern ?? undefined,
 		},
-		pages: values.pages.map((page) => ({
-			text: page.text,
-			font: page.fontVariant as AllowedFont,
-			scroll: page.scroll || undefined,
-			spacing: page.spacing ?? undefined,
-		})),
+		pages: values.pages.map((page) => {
+			const lines: PageLine[] = page.lines.map((line) => ({
+				text: line.text,
+				font: line.fontVariant as AllowedFont,
+				scroll: line.scroll || undefined,
+				spacing: (line.spacing ?? undefined) as TextSpacing | undefined,
+			}));
+			return lines.length === 2 ? (lines as [PageLine, PageLine]) : lines[0];
+		}) as GirouetteData["pages"],
 	};
 
 	return {
@@ -240,12 +257,17 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 					halfPattern: watchedValues.routeNumber.halfPattern ?? undefined,
 				}
 			: { text: "" },
-		pages: (watchedValues.pages ?? []).map((page) => ({
-			text: page?.text ?? "",
-			font: (page?.fontVariant as AllowedFont) ?? DEFAULT_FONT_VARIANT,
-			scroll: page?.scroll || undefined,
-			spacing: page?.spacing ?? undefined,
-		})),
+		pages: (watchedValues.pages ?? []).map((page) => {
+			const lines = (page?.lines ?? []).map((line) => ({
+				text: line?.text ?? "",
+				font: (line?.fontVariant as AllowedFont) ?? DEFAULT_FONT_VARIANT,
+				scroll: line?.scroll || undefined,
+				spacing: line?.spacing ?? undefined,
+			}));
+			return lines.length === 2
+				? (lines as unknown as [{ text: string; font: AllowedFont }, { text: string; font: AllowedFont }])
+				: (lines[0] ?? { text: "" });
+		}) as GirouetteData["pages"],
 	};
 
 	const isPending = createMutation.isPending || updateMutation.isPending;
@@ -357,13 +379,14 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 					<fieldset className="border rounded-lg p-4 flex flex-col gap-4">
 						<legend className="text-sm font-semibold px-1">{m.line_girouettes_form_route_number_title()}</legend>
 
-						<div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+						<div className="flex gap-5">
 							<div className="grid gap-2">
 								<Label>{m.line_girouettes_form_route_number_text_label()}</Label>
 								<Input {...form.register("routeNumber.text")} />
 							</div>
 							<FontFamilySelect form={form} familyName="routeNumber.fontFamily" variantName="routeNumber.fontVariant" />
 							<SpacingField form={form} name="routeNumber.spacing" />
+							<ScrollField form={form} name="routeNumber.scroll" />
 						</div>
 
 						<div className="flex flex-wrap items-end gap-3">
@@ -416,57 +439,20 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 									}}
 								/>
 							</div>
-							<Controller
-								control={form.control}
-								name="routeNumber.scroll"
-								render={({ field }) => (
-									<Label className="ml-4 flex items-center gap-2 cursor-pointer w-fit pb-1">
-										<Switch checked={field.value} onCheckedChange={field.onChange} />
-										{m.line_girouettes_form_scroll_label()}
-									</Label>
-								)}
-							/>
 						</div>
 					</fieldset>
 
 					<fieldset className="border rounded-lg p-4 flex flex-col gap-4">
 						<legend className="text-sm font-semibold px-1">{m.line_girouettes_form_pages_title()}</legend>
 
-						{pageFields.map((field, index) => (
-							<div key={field.id} className={cn("flex flex-col gap-3", index > 0 && "border-t pt-3")}>
-								<div className="flex items-center justify-between">
-									<span className="text-sm font-medium">{m.line_girouettes_form_page_n({ n: index + 1 })}</span>
-									{pageFields.length > 1 && (
-										<Button type="button" variant="ghost" size="icon-sm" onClick={() => remove(index)}>
-											<TrashIcon />
-										</Button>
-									)}
-								</div>
-
-								<div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-									<div className="grid gap-2">
-										<Label>{m.line_girouettes_form_page_text_label()}</Label>
-										<Input {...form.register(`pages.${index}.text`)} />
-									</div>
-									<FontFamilySelect
-										form={form}
-										familyName={`pages.${index}.fontFamily`}
-										variantName={`pages.${index}.fontVariant`}
-									/>
-									<SpacingField form={form} name={`pages.${index}.spacing`} />
-								</div>
-
-								<Controller
-									control={form.control}
-									name={`pages.${index}.scroll`}
-									render={({ field }) => (
-										<Label className="flex items-center gap-2 cursor-pointer w-fit">
-											<Switch checked={field.value} onCheckedChange={field.onChange} />
-											{m.line_girouettes_form_scroll_label()}
-										</Label>
-									)}
-								/>
-							</div>
+						{pageFields.map((field, pageIndex) => (
+							<PageFields
+								key={field.id}
+								form={form}
+								pageIndex={pageIndex}
+								isOnlyPage={pageFields.length === 1}
+								onRemovePage={() => remove(pageIndex)}
+							/>
 						))}
 
 						{pageFields.length < 10 && (
@@ -497,6 +483,188 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 	);
 }
 
+// ---
+
+type PageFieldsProps = {
+	form: ReturnType<typeof useForm<FormValues>>;
+	pageIndex: number;
+	isOnlyPage: boolean;
+	onRemovePage: () => void;
+};
+
+function PageFields({ form, pageIndex, isOnlyPage, onRemovePage }: Readonly<PageFieldsProps>) {
+	const lines = useWatch({ control: form.control, name: `pages.${pageIndex}.lines` }) ?? [];
+	const fontFamily = (useWatch({ control: form.control, name: `pages.${pageIndex}.fontFamily` }) ??
+		DEFAULT_FONT_FAMILY) as AllowedFontFamily;
+	const hasTwoLines = lines.length === 2;
+	const familyMaxHeight = DUAL_LINE_MAX_HEIGHT[fontFamily];
+	const maxHeight = hasTwoLines ? familyMaxHeight : undefined;
+
+	const handleAddLine = () => {
+		const validVariant = getFirstValidVariant(fontFamily, familyMaxHeight);
+		const currentVariant = form.getValues(`pages.${pageIndex}.lines.0.fontVariant`) as AllowedFont;
+		if (FONT_HEIGHTS[currentVariant] > familyMaxHeight) {
+			form.setValue(`pages.${pageIndex}.lines.0.fontVariant`, validVariant);
+		}
+		const currentLines = form.getValues(`pages.${pageIndex}.lines`);
+		form.setValue(`pages.${pageIndex}.lines`, [...currentLines, defaultLine(validVariant)]);
+	};
+
+	const handleRemoveLine = (lineIndex: number) => {
+		const currentLines = form.getValues(`pages.${pageIndex}.lines`);
+		form.setValue(
+			`pages.${pageIndex}.lines`,
+			currentLines.filter((_, i) => i !== lineIndex),
+		);
+	};
+
+	return (
+		<div className={cn("flex flex-col gap-3", pageIndex > 0 && "border-t pt-3")}>
+			<div className="flex items-center justify-between">
+				<span className="text-sm font-medium">{m.line_girouettes_form_page_n({ n: pageIndex + 1 })}</span>
+				{!isOnlyPage && (
+					<Button type="button" variant="ghost" size="icon-sm" onClick={onRemovePage}>
+						<TrashIcon />
+					</Button>
+				)}
+			</div>
+
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+				<PageFontFamilyField form={form} pageIndex={pageIndex} maxHeight={maxHeight} />
+			</div>
+
+			{lines.map((_, lineIndex) => (
+				<div
+					// biome-ignore lint/suspicious/noArrayIndexKey: stable order
+					key={lineIndex}
+					className="flex items-end gap-2"
+				>
+					<div className="flex gap-5">
+						<div className="grid gap-2">
+							<Label>{m.line_girouettes_form_page_text_label()}</Label>
+							<Input {...form.register(`pages.${pageIndex}.lines.${lineIndex}.text`)} />
+						</div>
+						<LineVariantField form={form} pageIndex={pageIndex} lineIndex={lineIndex} maxHeight={maxHeight} />
+						<SpacingField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.spacing`} />
+						<ScrollField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.scroll`} />
+					</div>
+					{lineIndex === 0 && !hasTwoLines && (
+						<Button className="ml-auto" type="button" variant="outline" size="icon-sm" onClick={handleAddLine}>
+							<PlusIcon />
+						</Button>
+					)}
+					{lineIndex === 1 && (
+						<Button
+							className="ml-auto"
+							type="button"
+							variant="ghost"
+							size="icon-sm"
+							onClick={() => handleRemoveLine(lineIndex)}
+						>
+							<TrashIcon />
+						</Button>
+					)}
+				</div>
+			))}
+		</div>
+	);
+}
+
+// ---
+
+type PageFontFamilyFieldProps = {
+	form: ReturnType<typeof useForm<FormValues>>;
+	pageIndex: number;
+	maxHeight: number | undefined;
+};
+
+function PageFontFamilyField({ form, pageIndex, maxHeight }: Readonly<PageFontFamilyFieldProps>) {
+	const familyFieldName = `pages.${pageIndex}.fontFamily` as "routeNumber.fontFamily";
+
+	return (
+		<div className="grid gap-2">
+			<Label>{m.line_girouettes_form_font_family_label()}</Label>
+			<Controller
+				control={form.control}
+				name={familyFieldName}
+				render={({ field }) => (
+					<Select
+						value={field.value}
+						onValueChange={(v) => {
+							field.onChange(v);
+							const newMaxHeight = maxHeight !== undefined ? DUAL_LINE_MAX_HEIGHT[v as AllowedFontFamily] : undefined;
+							const firstVariant = getFirstValidVariant(v as AllowedFontFamily, newMaxHeight);
+							const lines = form.getValues(`pages.${pageIndex}.lines`);
+							for (let i = 0; i < lines.length; i++) {
+								form.setValue(`pages.${pageIndex}.lines.${i}.fontVariant` as "routeNumber.fontVariant", firstVariant);
+							}
+						}}
+					>
+						<SelectTrigger className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							{(Object.keys(ALLOWED_FONT_FAMILIES) as AllowedFontFamily[]).map((fam) => (
+								<SelectItem key={fam} value={fam}>
+									{fam}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				)}
+			/>
+		</div>
+	);
+}
+
+// ---
+
+type LineVariantFieldProps = {
+	form: ReturnType<typeof useForm<FormValues>>;
+	pageIndex: number;
+	lineIndex: number;
+	maxHeight: number | undefined;
+};
+
+function LineVariantField({ form, pageIndex, lineIndex, maxHeight }: Readonly<LineVariantFieldProps>) {
+	const familyFieldName = `pages.${pageIndex}.fontFamily` as "routeNumber.fontFamily";
+	const variantFieldName = `pages.${pageIndex}.lines.${lineIndex}.fontVariant` as "routeNumber.fontVariant";
+	const fontFamily = (useWatch({ control: form.control, name: familyFieldName }) ??
+		DEFAULT_FONT_FAMILY) as AllowedFontFamily;
+
+	const allVariants =
+		(ALLOWED_FONT_FAMILIES[fontFamily] as readonly string[] | undefined) ??
+		(ALLOWED_FONT_FAMILIES[DEFAULT_FONT_FAMILY] as readonly string[]);
+	const variants =
+		maxHeight !== undefined ? allVariants.filter((v) => FONT_HEIGHTS[v as AllowedFont] <= maxHeight) : allVariants;
+
+	return (
+		<div className="grid gap-2 w-30">
+			<Label>{m.line_girouettes_form_font_variant_label()}</Label>
+			<Controller
+				control={form.control}
+				name={variantFieldName}
+				render={({ field }) => (
+					<Select value={field.value} onValueChange={field.onChange}>
+						<SelectTrigger className="w-full">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							{variants.map((v) => (
+								<SelectItem key={v} value={v}>
+									{v} ({FONT_HEIGHTS[v as AllowedFont]}px)
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				)}
+			/>
+		</div>
+	);
+}
+
+// ---
+
 type FontFamilySelectProps = {
 	form: ReturnType<typeof useForm<FormValues>>;
 	familyName: string;
@@ -511,7 +679,7 @@ function FontFamilySelect({ form, familyName, variantName }: Readonly<FontFamily
 
 	return (
 		<>
-			<div className="grid gap-2">
+			<div className="grid gap-2 w-40">
 				<Label>{m.line_girouettes_form_font_family_label()}</Label>
 				<Controller
 					control={form.control}
@@ -540,7 +708,7 @@ function FontFamilySelect({ form, familyName, variantName }: Readonly<FontFamily
 				/>
 			</div>
 
-			<div className="grid gap-2">
+			<div className="grid gap-2 w-30">
 				<Label>{m.line_girouettes_form_font_variant_label()}</Label>
 				<Controller
 					control={form.control}
@@ -565,6 +733,8 @@ function FontFamilySelect({ form, familyName, variantName }: Readonly<FontFamily
 	);
 }
 
+// ---
+
 type ColorPickerFieldProps = {
 	form: ReturnType<typeof useForm<FormValues>>;
 	name: string;
@@ -583,6 +753,32 @@ function ColorPickerField({ form, name, label }: Readonly<ColorPickerFieldProps>
 		</div>
 	);
 }
+
+// ---
+
+type ScrollFieldProps = {
+	form: ReturnType<typeof useForm<FormValues>>;
+	name: string;
+};
+
+function ScrollField({ form, name }: Readonly<ScrollFieldProps>) {
+	return (
+		<Controller
+			control={form.control}
+			name={name as "routeNumber.scroll"}
+			render={({ field }) => (
+				<Label className="flex flex-col gap-2 cursor-pointer font-normal">
+					<span className="text-sm font-medium leading-none">{m.line_girouettes_form_scroll_label()}</span>
+					<div className="flex h-9 items-center">
+						<Switch checked={field.value} onCheckedChange={field.onChange} />
+					</div>
+				</Label>
+			)}
+		/>
+	);
+}
+
+// ---
 
 type SpacingFieldProps = {
 	form: ReturnType<typeof useForm<FormValues>>;

@@ -248,7 +248,7 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 				justifyContent: lines.length === 1 ? "center" : "space-between",
 			}}
 		>
-			{lines.filter(Boolean).map((line) => {
+			{lines.filter(Boolean).map((line, lineIndex) => {
 				const fontFamily =
 					line.font !== undefined && line.font in fontProperties ? line.font : oneLine ? "1513B3E1" : "0808B2E1";
 				const spacing = onePixel * (line.spacing ?? fontProperties[fontFamily].spacing);
@@ -260,7 +260,8 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 						})}
 						// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
 						dangerouslySetInnerHTML={{ __html: processText(line.text) }}
-						key={line.text}
+						// biome-ignore lint/suspicious/noArrayIndexKey: safe here
+						key={lineIndex}
 						style={{
 							//- Font, placement & spacing
 							fontFamily: `"${fontFamily}"`,

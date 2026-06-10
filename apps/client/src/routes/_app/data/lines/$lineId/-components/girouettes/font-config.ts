@@ -23,9 +23,20 @@ export const FONT_HEIGHTS: Record<AllowedFont, number> = {
 export const DEFAULT_FONT_FAMILY: AllowedFontFamily = "Hanover Graphic";
 export const DEFAULT_FONT_VARIANT: AllowedFont = "1513B3E1";
 
+export const DUAL_LINE_MAX_HEIGHT: Record<AllowedFontFamily, number> = {
+	"Hanover Graphic": 8,
+	"Hanover Super-X": 11,
+};
+
 export function getFontFamily(fontVariant: string): AllowedFontFamily {
 	for (const [family, fonts] of Object.entries(ALLOWED_FONT_FAMILIES) as [AllowedFontFamily, readonly string[]][]) {
 		if (fonts.includes(fontVariant)) return family;
 	}
 	return DEFAULT_FONT_FAMILY;
+}
+
+export function getFirstValidVariant(family: AllowedFontFamily, maxHeight?: number): AllowedFont {
+	const variants = ALLOWED_FONT_FAMILIES[family] as readonly AllowedFont[];
+	if (maxHeight === undefined) return variants[0];
+	return variants.find((v) => FONT_HEIGHTS[v] <= maxHeight) ?? variants[0];
 }
