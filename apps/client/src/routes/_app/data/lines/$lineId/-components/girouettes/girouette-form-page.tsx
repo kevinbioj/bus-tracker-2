@@ -5,6 +5,7 @@ import { PlusIcon, TrashIcon, XIcon } from "lucide-react";
 import { useSnackbar } from "notistack";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { useWindowSize } from "usehooks-ts";
 import { z } from "zod";
 
 import {
@@ -30,17 +31,7 @@ import {
 import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { cn } from "~/utils/cn";
-import {
-	ALLOWED_FONT_FAMILIES,
-	type AllowedFont,
-	type AllowedFontFamily,
-	DEFAULT_FONT_FAMILY,
-	DEFAULT_FONT_VARIANT,
-	DUAL_LINE_MAX_HEIGHT,
-	FONT_HEIGHTS,
-	getFirstValidVariant,
-	getFontFamily,
-} from "./font-config";
+import { ALL_FONTS, type AllowedFont, DEFAULT_FONT_VARIANT, getFontLabel, getFontsForDualLine } from "./font-config";
 
 const lineSchema = z.object({
 	text: z.string(),
@@ -50,7 +41,6 @@ const lineSchema = z.object({
 });
 
 const pageSchema = z.object({
-	fontFamily: z.string(),
 	lines: z.array(lineSchema).min(1).max(2),
 });
 
@@ -59,7 +49,6 @@ const formSchema = z.object({
 	destinations: z.array(z.string()),
 	routeNumber: z.object({
 		text: z.string(),
-		fontFamily: z.string(),
 		fontVariant: z.string(),
 		textColor: z.string(),
 		backgroundColor: z.string(),
@@ -81,7 +70,6 @@ const defaultLine = (fontVariant = DEFAULT_FONT_VARIANT): FormValues["pages"][nu
 });
 
 const defaultPage = (): FormValues["pages"][number] => ({
-	fontFamily: DEFAULT_FONT_FAMILY,
 	lines: [defaultLine()],
 });
 
@@ -92,7 +80,6 @@ const defaultValues = (girouette?: Girouette): FormValues => {
 			destinations: [],
 			routeNumber: {
 				text: "",
-				fontFamily: DEFAULT_FONT_FAMILY,
 				fontVariant: DEFAULT_FONT_VARIANT,
 				textColor: "",
 				backgroundColor: "",
@@ -106,15 +93,13 @@ const defaultValues = (girouette?: Girouette): FormValues => {
 	}
 
 	const d = girouette.data;
-	const rnFont = d.routeNumber?.font ?? DEFAULT_FONT_VARIANT;
 
 	return {
 		directionId: girouette.directionId !== null ? String(girouette.directionId) : null,
 		destinations: girouette.destinations,
 		routeNumber: {
 			text: d.routeNumber?.text ?? "",
-			fontFamily: getFontFamily(rnFont),
-			fontVariant: rnFont,
+			fontVariant: d.routeNumber?.font ?? DEFAULT_FONT_VARIANT,
 			textColor: d.routeNumber?.textColor ?? "",
 			backgroundColor: d.routeNumber?.backgroundColor ?? "",
 			outlineColor: d.routeNumber?.outlineColor ?? "",
@@ -126,9 +111,7 @@ const defaultValues = (girouette?: Girouette): FormValues => {
 			(d.pages ?? []).length > 0
 				? (d.pages ?? []).map((page) => {
 						const rawLines = Array.isArray(page) ? page : [page];
-						const firstFont = rawLines[0]?.font ?? DEFAULT_FONT_VARIANT;
 						return {
-							fontFamily: getFontFamily(firstFont),
 							lines: rawLines.map((line) => ({
 								text: line.text,
 								fontVariant: line.font ?? DEFAULT_FONT_VARIANT,
@@ -163,7 +146,7 @@ function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInpu
 				scroll: line.scroll || undefined,
 				spacing: (line.spacing ?? undefined) as TextSpacing | undefined,
 			}));
-			return lines.length === 2 ? (lines as [PageLine, PageLine]) : lines[0];
+			return lines.length === 2 ? (lines as unknown as [PageLine, PageLine]) : lines[0];
 		}) as GirouetteData["pages"],
 	};
 
@@ -184,6 +167,7 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const snackbar = useSnackbar();
+	const { width } = useWindowSize();
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(lineId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
@@ -290,13 +274,13 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 			<div className="mt-4 flex flex-col gap-2">
 				<p className="text-sm font-semibold">{m.line_girouettes_form_preview_title()}</p>
 				<div className="overflow-x-auto">
-					<GirouettePreview width={560} {...previewData} />
+					<GirouettePreview width={Math.min(width - 26, 512)} {...previewData} />
 				</div>
 			</div>
 
 			<form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 flex flex-col gap-6">
 				<div className="flex flex-col gap-6">
-					<div className="flex flex-wrap items-end gap-4">
+					<div className="flex flex-col md:flex-row gap-4">
 						<div className="grid gap-2">
 							<Label>{m.line_girouettes_form_direction_label()}</Label>
 							<Controller
@@ -379,12 +363,12 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 					<fieldset className="border rounded-lg p-4 flex flex-col gap-4">
 						<legend className="text-sm font-semibold px-1">{m.line_girouettes_form_route_number_title()}</legend>
 
-						<div className="flex gap-5">
+						<div className="flex flex-wrap gap-5">
 							<div className="grid gap-2">
 								<Label>{m.line_girouettes_form_route_number_text_label()}</Label>
 								<Input {...form.register("routeNumber.text")} />
 							</div>
-							<FontFamilySelect form={form} familyName="routeNumber.fontFamily" variantName="routeNumber.fontVariant" />
+							<FontVariantField form={form} fieldName="routeNumber.fontVariant" fonts={ALL_FONTS} />
 							<SpacingField form={form} name="routeNumber.spacing" />
 							<ScrollField form={form} name="routeNumber.scroll" />
 						</div>
@@ -494,20 +478,20 @@ type PageFieldsProps = {
 
 function PageFields({ form, pageIndex, isOnlyPage, onRemovePage }: Readonly<PageFieldsProps>) {
 	const lines = useWatch({ control: form.control, name: `pages.${pageIndex}.lines` }) ?? [];
-	const fontFamily = (useWatch({ control: form.control, name: `pages.${pageIndex}.fontFamily` }) ??
-		DEFAULT_FONT_FAMILY) as AllowedFontFamily;
+	const line1Variant = (useWatch({
+		control: form.control,
+		name: `pages.${pageIndex}.lines.0.fontVariant`,
+	}) ?? DEFAULT_FONT_VARIANT) as AllowedFont;
 	const hasTwoLines = lines.length === 2;
-	const familyMaxHeight = DUAL_LINE_MAX_HEIGHT[fontFamily];
-	const maxHeight = hasTwoLines ? familyMaxHeight : undefined;
+	const line2Fonts = getFontsForDualLine(line1Variant);
 
 	const handleAddLine = () => {
-		const validVariant = getFirstValidVariant(fontFamily, familyMaxHeight);
-		const currentVariant = form.getValues(`pages.${pageIndex}.lines.0.fontVariant`) as AllowedFont;
-		if (FONT_HEIGHTS[currentVariant] > familyMaxHeight) {
-			form.setValue(`pages.${pageIndex}.lines.0.fontVariant`, validVariant);
-		}
 		const currentLines = form.getValues(`pages.${pageIndex}.lines`);
-		form.setValue(`pages.${pageIndex}.lines`, [...currentLines, defaultLine(validVariant)]);
+		const availableForLine2 = getFontsForDualLine(line1Variant);
+		form.setValue(`pages.${pageIndex}.lines`, [
+			...currentLines,
+			defaultLine(availableForLine2[0] ?? DEFAULT_FONT_VARIANT),
+		]);
 	};
 
 	const handleRemoveLine = (lineIndex: number) => {
@@ -516,6 +500,18 @@ function PageFields({ form, pageIndex, isOnlyPage, onRemovePage }: Readonly<Page
 			`pages.${pageIndex}.lines`,
 			currentLines.filter((_, i) => i !== lineIndex),
 		);
+	};
+
+	const handleLine1FontChange = (newVariant: string) => {
+		if (!hasTwoLines) return;
+		const validFonts = getFontsForDualLine(newVariant as AllowedFont);
+		const line2Variant = form.getValues(`pages.${pageIndex}.lines.1.fontVariant`) as AllowedFont;
+		if (!validFonts.includes(line2Variant)) {
+			form.setValue(
+				`pages.${pageIndex}.lines.1.fontVariant` as "routeNumber.fontVariant",
+				validFonts[0] ?? DEFAULT_FONT_VARIANT,
+			);
+		}
 	};
 
 	return (
@@ -529,22 +525,23 @@ function PageFields({ form, pageIndex, isOnlyPage, onRemovePage }: Readonly<Page
 				)}
 			</div>
 
-			<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-				<PageFontFamilyField form={form} pageIndex={pageIndex} maxHeight={maxHeight} />
-			</div>
-
 			{lines.map((_, lineIndex) => (
 				<div
 					// biome-ignore lint/suspicious/noArrayIndexKey: stable order
 					key={lineIndex}
 					className="flex items-end gap-2"
 				>
-					<div className="flex gap-5">
+					<div className="flex flex-wrap gap-5">
 						<div className="grid gap-2">
 							<Label>{m.line_girouettes_form_page_text_label()}</Label>
 							<Input {...form.register(`pages.${pageIndex}.lines.${lineIndex}.text`)} />
 						</div>
-						<LineVariantField form={form} pageIndex={pageIndex} lineIndex={lineIndex} maxHeight={maxHeight} />
+						<FontVariantField
+							form={form}
+							fieldName={`pages.${pageIndex}.lines.${lineIndex}.fontVariant`}
+							fonts={lineIndex === 0 ? ALL_FONTS : line2Fonts}
+							onAfterChange={lineIndex === 0 ? handleLine1FontChange : undefined}
+						/>
 						<SpacingField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.spacing`} />
 						<ScrollField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.scroll`} />
 					</div>
@@ -572,87 +569,36 @@ function PageFields({ form, pageIndex, isOnlyPage, onRemovePage }: Readonly<Page
 
 // ---
 
-type PageFontFamilyFieldProps = {
+type FontVariantFieldProps = {
 	form: ReturnType<typeof useForm<FormValues>>;
-	pageIndex: number;
-	maxHeight: number | undefined;
+	fieldName: string;
+	fonts: readonly AllowedFont[];
+	onAfterChange?: (v: string) => void;
 };
 
-function PageFontFamilyField({ form, pageIndex, maxHeight }: Readonly<PageFontFamilyFieldProps>) {
-	const familyFieldName = `pages.${pageIndex}.fontFamily` as "routeNumber.fontFamily";
-
+function FontVariantField({ form, fieldName, fonts, onAfterChange }: Readonly<FontVariantFieldProps>) {
 	return (
 		<div className="grid gap-2">
-			<Label>{m.line_girouettes_form_font_family_label()}</Label>
+			<Label>{m.line_girouettes_form_font_variant_label()}</Label>
 			<Controller
 				control={form.control}
-				name={familyFieldName}
+				name={fieldName as "routeNumber.fontVariant"}
 				render={({ field }) => (
 					<Select
+						key={fonts.join(",")}
 						value={field.value}
 						onValueChange={(v) => {
 							field.onChange(v);
-							const newMaxHeight = maxHeight !== undefined ? DUAL_LINE_MAX_HEIGHT[v as AllowedFontFamily] : undefined;
-							const firstVariant = getFirstValidVariant(v as AllowedFontFamily, newMaxHeight);
-							const lines = form.getValues(`pages.${pageIndex}.lines`);
-							for (let i = 0; i < lines.length; i++) {
-								form.setValue(`pages.${pageIndex}.lines.${i}.fontVariant` as "routeNumber.fontVariant", firstVariant);
-							}
+							if (v !== null) onAfterChange?.(v);
 						}}
 					>
 						<SelectTrigger className="w-full">
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
-							{(Object.keys(ALLOWED_FONT_FAMILIES) as AllowedFontFamily[]).map((fam) => (
-								<SelectItem key={fam} value={fam}>
-									{fam}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				)}
-			/>
-		</div>
-	);
-}
-
-// ---
-
-type LineVariantFieldProps = {
-	form: ReturnType<typeof useForm<FormValues>>;
-	pageIndex: number;
-	lineIndex: number;
-	maxHeight: number | undefined;
-};
-
-function LineVariantField({ form, pageIndex, lineIndex, maxHeight }: Readonly<LineVariantFieldProps>) {
-	const familyFieldName = `pages.${pageIndex}.fontFamily` as "routeNumber.fontFamily";
-	const variantFieldName = `pages.${pageIndex}.lines.${lineIndex}.fontVariant` as "routeNumber.fontVariant";
-	const fontFamily = (useWatch({ control: form.control, name: familyFieldName }) ??
-		DEFAULT_FONT_FAMILY) as AllowedFontFamily;
-
-	const allVariants =
-		(ALLOWED_FONT_FAMILIES[fontFamily] as readonly string[] | undefined) ??
-		(ALLOWED_FONT_FAMILIES[DEFAULT_FONT_FAMILY] as readonly string[]);
-	const variants =
-		maxHeight !== undefined ? allVariants.filter((v) => FONT_HEIGHTS[v as AllowedFont] <= maxHeight) : allVariants;
-
-	return (
-		<div className="grid gap-2 w-30">
-			<Label>{m.line_girouettes_form_font_variant_label()}</Label>
-			<Controller
-				control={form.control}
-				name={variantFieldName}
-				render={({ field }) => (
-					<Select value={field.value} onValueChange={field.onChange}>
-						<SelectTrigger className="w-full">
-							<SelectValue />
-						</SelectTrigger>
-						<SelectContent>
-							{variants.map((v) => (
+							{fonts.map((v) => (
 								<SelectItem key={v} value={v}>
-									{v} ({FONT_HEIGHTS[v as AllowedFont]}px)
+									{getFontLabel(v)}
 								</SelectItem>
 							))}
 						</SelectContent>
@@ -660,76 +606,6 @@ function LineVariantField({ form, pageIndex, lineIndex, maxHeight }: Readonly<Li
 				)}
 			/>
 		</div>
-	);
-}
-
-// ---
-
-type FontFamilySelectProps = {
-	form: ReturnType<typeof useForm<FormValues>>;
-	familyName: string;
-	variantName: string;
-};
-
-function FontFamilySelect({ form, familyName, variantName }: Readonly<FontFamilySelectProps>) {
-	const fontFamily = useWatch({ control: form.control, name: familyName as "routeNumber.fontFamily" });
-	const variants =
-		(ALLOWED_FONT_FAMILIES[fontFamily as AllowedFontFamily] as readonly string[] | undefined) ??
-		(ALLOWED_FONT_FAMILIES[DEFAULT_FONT_FAMILY] as readonly string[]);
-
-	return (
-		<>
-			<div className="grid gap-2 w-40">
-				<Label>{m.line_girouettes_form_font_family_label()}</Label>
-				<Controller
-					control={form.control}
-					name={familyName as "routeNumber.fontFamily"}
-					render={({ field }) => (
-						<Select
-							value={field.value}
-							onValueChange={(v) => {
-								field.onChange(v);
-								const first = ALLOWED_FONT_FAMILIES[v as AllowedFontFamily]?.[0];
-								if (first) form.setValue(variantName as "routeNumber.fontVariant", first);
-							}}
-						>
-							<SelectTrigger className="w-full">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{(Object.keys(ALLOWED_FONT_FAMILIES) as AllowedFontFamily[]).map((fam) => (
-									<SelectItem key={fam} value={fam}>
-										{fam}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					)}
-				/>
-			</div>
-
-			<div className="grid gap-2 w-30">
-				<Label>{m.line_girouettes_form_font_variant_label()}</Label>
-				<Controller
-					control={form.control}
-					name={variantName as "routeNumber.fontVariant"}
-					render={({ field }) => (
-						<Select value={field.value} onValueChange={field.onChange}>
-							<SelectTrigger className="w-full">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{variants.map((v) => (
-									<SelectItem key={v} value={v}>
-										{v} ({FONT_HEIGHTS[v as AllowedFont]}px)
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					)}
-				/>
-			</div>
-		</>
 	);
 }
 

@@ -6,7 +6,6 @@ const paneBgColor = "#1D1D1B";
 
 function processText(text: string): string {
 	return text
-		.trimEnd()
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;")
