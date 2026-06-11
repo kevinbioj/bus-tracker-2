@@ -443,7 +443,7 @@ const sources = [
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	id: "normandie",
-	computeDelayMs: 10_000,
+	computeDelayMs: 20_000,
 	sources,
 };
 

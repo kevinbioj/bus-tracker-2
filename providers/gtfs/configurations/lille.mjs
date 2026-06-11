@@ -12,7 +12,7 @@ const sources = [
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	id: "lille",
-	computeDelayMs: 60_000,
+	computeDelayMs: 30_000,
 	sources,
 };
 

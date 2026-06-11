@@ -162,7 +162,7 @@ const sources = [
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	id: "sncf",
-	computeDelayMs: 10_000,
+	computeDelayMs: 15_000,
 	sources,
 };
 
