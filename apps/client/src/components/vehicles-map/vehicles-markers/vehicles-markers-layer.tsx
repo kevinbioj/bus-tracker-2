@@ -115,6 +115,7 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 
 	useEffect(() => {
 		if (textLayer === null) return;
+		if (!map.style) return;
 		if (lineId !== undefined) {
 			map.setPaintProperty("vehicles-text", "icon-opacity", 0.7);
 			map.setPaintProperty("vehicles-text", "text-opacity", 1);
