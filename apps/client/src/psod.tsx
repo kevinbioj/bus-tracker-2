@@ -7,6 +7,11 @@ import { Button } from "~/components/ui/button";
 import { Link } from "~/components/ui/link";
 import * as m from "~/paraglide/messages";
 
+const isWebGLError = (error: unknown) => {
+	const msg = String(error);
+	return msg.includes("webglcontextcreationerror") || msg.includes("Failed to initialize WebGL");
+};
+
 export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 	const pathname = useLocation({ select: (state) => state.pathname });
 	const embeddedNetworkId = pathname.startsWith("/embed/") ? pathname.split("/")[2] : undefined;
@@ -25,6 +30,8 @@ export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 		location.href = embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/";
 	};
 
+	const webgl = error !== undefined && isWebGLError(error);
+
 	return (
 		<div className="bg-branding text-branding-foreground h-dvh">
 			<header className="h-16 p-3 flex justify-center items-center gap-3">
@@ -37,25 +44,43 @@ export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 						<FrownIcon className="size-12" />
 						<h1 className="font-bold text-3xl">{m.psod_title()}</h1>
 					</div>
-					<div className="flex flex-col items-start gap-2 mt-3">
-						<p>
-							{m.psod_intro()}
-							<br />
-							{m.psod_intro_reload()}
-						</p>
-						<Button
-							className="hover:cursor-default"
-							variant="on-branding-default"
-							nativeButton={false}
-							render={<a href={embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/"}>{m.psod_reload()}</a>}
-						/>
-					</div>
-					<div className="flex flex-col items-start gap-2 mt-8">
-						<p>{m.psod_persistent()}</p>
-						<Button onClick={resetApp} variant="on-branding-default">
-							{m.psod_reset()}
-						</Button>
-					</div>
+					{webgl ? (
+						<div className="flex flex-col items-start gap-2 mt-3">
+							<p>
+								{m.psod_webgl_intro()}
+								<br />
+								{m.psod_webgl_fix()}
+							</p>
+							<Button
+								className="hover:cursor-default"
+								variant="on-branding-default"
+								nativeButton={false}
+								render={<a href={embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/"}>{m.psod_reload()}</a>}
+							/>
+						</div>
+					) : (
+						<>
+							<div className="flex flex-col items-start gap-2 mt-3">
+								<p>
+									{m.psod_intro()}
+									<br />
+									{m.psod_intro_reload()}
+								</p>
+								<Button
+									className="hover:cursor-default"
+									variant="on-branding-default"
+									nativeButton={false}
+									render={<a href={embeddedNetworkId ? `/embed/${embeddedNetworkId}` : "/"}>{m.psod_reload()}</a>}
+								/>
+							</div>
+							<div className="flex flex-col items-start gap-2 mt-8">
+								<p>{m.psod_persistent()}</p>
+								<Button onClick={resetApp} variant="on-branding-default">
+									{m.psod_reset()}
+								</Button>
+							</div>
+						</>
+					)}
 					<div className="flex flex-col items-start gap-2 mt-8">
 						<p>
 							{m.psod_contact_before()}

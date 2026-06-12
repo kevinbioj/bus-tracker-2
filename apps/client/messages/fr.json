@@ -154,6 +154,8 @@
 	"psod_title": "Une erreur est survenue",
 	"psod_contact_before": "Enfin, un contact est possible à l'adresse ",
 	"psod_contact_after": " avec le rapport d'erreur ci-dessous.",
+	"psod_webgl_intro": "Bus Tracker nécessite l'accélération matérielle (WebGL) pour afficher la carte, mais votre navigateur n'a pas pu l'initialiser.",
+	"psod_webgl_fix": "Ce problème est généralement causé par l'accélération matérielle désactivée dans les paramètres de votre navigateur. Activez-la, puis rechargez la page.",
 	"settings_aria_label": "Paramètres",
 	"settings_data_section": "Données",
 	"settings_expert_section": "Expert",

@@ -154,6 +154,8 @@
 	"psod_title": "An error occurred",
 	"psod_contact_before": "Finally, you can contact me at ",
 	"psod_contact_after": " with the error report below.",
+	"psod_webgl_intro": "Bus Tracker requires hardware acceleration (WebGL) to display the map, but your browser failed to initialize it.",
+	"psod_webgl_fix": "This issue is usually caused by hardware acceleration being disabled in your browser settings. Enable it, then reload the page.",
 	"settings_aria_label": "Settings",
 	"settings_data_section": "Data",
 	"settings_expert_section": "Expert",
