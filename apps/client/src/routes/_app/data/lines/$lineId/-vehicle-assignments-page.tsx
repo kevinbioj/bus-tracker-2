@@ -16,7 +16,7 @@ import { cn } from "~/utils/cn";
 import { getLineVehicleAssignmentsDate } from "./-vehicle-assignments-date";
 
 const parseMonth = (input: Dayjs, validMonths: string[]) => {
-	if (!validMonths.includes(input.format("YYYY-MM"))) return validMonths.at(-1) ?? dayjs().format("YYYY-MM");
+	if (!validMonths.includes(input.format("YYYY-MM"))) return validMonths[validMonths.length - 1] ?? dayjs().format("YYYY-MM");
 	return input.format("YYYY-MM");
 };
 
@@ -97,7 +97,7 @@ export function LineVehicleAssignments() {
 								to="."
 								search={(prev) => ({
 									...prev,
-									date: dayjs(line.activeMonths.at(currentMonthIndex - 1))
+									date: dayjs(line.activeMonths[currentMonthIndex - 1])
 										.endOf("month")
 										.format("YYYY-MM-DD"),
 								})}
@@ -123,7 +123,7 @@ export function LineVehicleAssignments() {
 								to="."
 								search={(prev) => ({
 									...prev,
-									date: dayjs(line.activeMonths.at(currentMonthIndex + 1))
+									date: dayjs(line.activeMonths[currentMonthIndex + 1])
 										.startOf("month")
 										.format("YYYY-MM-DD"),
 								})}

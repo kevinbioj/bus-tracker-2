@@ -10,7 +10,7 @@ import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator
 import { ActivityCard } from "~/routes/_app/data/-components/vehicles/activity-card";
 
 const parseMonth = (input: string | null, validMonths: string[]) => {
-	if (input === null || !validMonths.includes(input)) return validMonths.at(-1) ?? dayjs().format("YYYY-MM");
+	if (input === null || !validMonths.includes(input)) return validMonths[validMonths.length - 1] ?? dayjs().format("YYYY-MM");
 	return input;
 };
 
@@ -46,7 +46,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 							className="transition-opacity hover:opacity-70 active:not-aria-[haspopup]:translate-y-px"
 							from="/data/vehicles/$vehicleId"
 							to="."
-							search={(prev) => ({ ...prev, month: vehicle.activeMonths.at(currentMonthIndex - 1) })}
+							search={(prev) => ({ ...prev, month: vehicle.activeMonths[currentMonthIndex - 1] })}
 						>
 							<ChevronLeft
 								aria-label={m.period_previous()}
@@ -67,7 +67,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 							className="transition-opacity hover:opacity-70 active:not-aria-[haspopup]:translate-y-px"
 							from="/data/vehicles/$vehicleId"
 							to="."
-							search={(prev) => ({ ...prev, month: vehicle.activeMonths.at(currentMonthIndex + 1) })}
+							search={(prev) => ({ ...prev, month: vehicle.activeMonths[currentMonthIndex + 1] })}
 						>
 							<ChevronRight
 								aria-label={m.period_next()}

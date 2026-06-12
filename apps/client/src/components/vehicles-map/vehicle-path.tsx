@@ -241,7 +241,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 							futurePoints.push(interpCoords);
 						} else if (pastPoints.length > 0 && futurePoints.length === 0) {
 							// Add the last past point to future points to have a continuous line
-							futurePoints.push(pastPoints.at(-1)!);
+							futurePoints.push(pastPoints[pastPoints.length - 1]!);
 						}
 						futurePoints.push(coords);
 					}
