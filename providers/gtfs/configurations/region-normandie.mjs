@@ -229,7 +229,7 @@ const sources = [
 	//- Ficibus
 	{
 		id: "ficibus",
-		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=FICIBUS&dataFormat=GTFS",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/ficibus.zip",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/ficibus/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/ficibus/vehicle-positions",
