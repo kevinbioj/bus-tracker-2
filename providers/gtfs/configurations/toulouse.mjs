@@ -26,6 +26,9 @@ const sources = [
 					latitude: 43.5981022,
 					longitude: 1.4315255,
 				});
+
+				resource.stops.set("code:06981", resource.stops.get("stop_point:SP_212"));
+				resource.stops.set("code:02763", resource.stops.get("stop_point:SP_3541"));
 			},
 		},
 		excludeScheduled: (trip) =>
