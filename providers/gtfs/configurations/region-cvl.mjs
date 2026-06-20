@@ -23,7 +23,9 @@ const sources = [
 	},
 	{
 		id: "chartres",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/8d4c3e5c-1702-4649-b47a-b16c6016dcc6",
+		// 2026-06-20: use previous GTFS as "current" only starts on July 4th
+		staticResourceHref:
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/80587/80587.20260211.113050.276767.zip",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/chartres/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/chartres/vehicle-positions",
