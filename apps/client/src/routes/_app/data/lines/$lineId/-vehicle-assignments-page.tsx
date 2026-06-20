@@ -16,7 +16,8 @@ import { cn } from "~/utils/cn";
 import { getLineVehicleAssignmentsDate } from "./-vehicle-assignments-date";
 
 const parseMonth = (input: Dayjs, validMonths: string[]) => {
-	if (!validMonths.includes(input.format("YYYY-MM"))) return validMonths[validMonths.length - 1] ?? dayjs().format("YYYY-MM");
+	if (!validMonths.includes(input.format("YYYY-MM")))
+		return validMonths[validMonths.length - 1] ?? dayjs().format("YYYY-MM");
 	return input.format("YYYY-MM");
 };
 

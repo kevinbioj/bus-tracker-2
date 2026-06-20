@@ -10,7 +10,8 @@ import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator
 import { ActivityCard } from "~/routes/_app/data/-components/vehicles/activity-card";
 
 const parseMonth = (input: string | null, validMonths: string[]) => {
-	if (input === null || !validMonths.includes(input)) return validMonths[validMonths.length - 1] ?? dayjs().format("YYYY-MM");
+	if (input === null || !validMonths.includes(input))
+		return validMonths[validMonths.length - 1] ?? dayjs().format("YYYY-MM");
 	return input;
 };
 

@@ -110,8 +110,18 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 	const map = useMap();
 	const vehiclesSource = useMapSource<maplibregl.GeoJSONSource>("vehicles", initialData);
 	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
-	useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
+	const arrowsLayer = useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
 	const textLayer = useMapLayer(textLayerObject);
+
+	useEffect(() => {
+		if (arrowsLayer === null) return;
+		if (!map.style) return;
+		if (lineId !== undefined) {
+			map.setPaintProperty("vehicles-arrows", "icon-color", ["get", "color"]);
+		} else {
+			map.setPaintProperty("vehicles-arrows", "icon-color", ["get", "fillColor"]);
+		}
+	}, [arrowsLayer, lineId, map]);
 
 	useEffect(() => {
 		if (textLayer === null) return;

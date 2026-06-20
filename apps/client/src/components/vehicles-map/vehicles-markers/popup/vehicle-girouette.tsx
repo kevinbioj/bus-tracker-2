@@ -24,7 +24,8 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 	const [, setLineId] = useQueryState("line-id", parseAsInteger);
 
 	const line = useLine(girouette ? undefined : journey.networkId, journey.lineId);
-	const destination = journey.destination ?? journey.calls?.[journey.calls.length - 1]?.stopName ?? m.marker_destination_unknown();
+	const destination =
+		journey.destination ?? journey.calls?.[journey.calls.length - 1]?.stopName ?? m.marker_destination_unknown();
 
 	const defaultRouteNumber = line?.girouetteNumber ?? line?.number ?? "";
 
