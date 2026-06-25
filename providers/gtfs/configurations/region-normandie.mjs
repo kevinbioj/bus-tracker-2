@@ -47,18 +47,18 @@ const sources = [
 	//- LiA
 	{
 		id: "lia",
-		staticResourceHref:
-			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/80254/80254.20260420.111241.762352.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/lia.zip",
 		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/trip-updates",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/vehicle-positions",
+			"https://opendata.transports-lia.fr/gtfs-rt/TripUpdate.pb",
+			"https://opendata.transports-lia.fr/gtfs-rt/VehiclePosition.pb",
 		],
 		mode: "NO-TU",
 		getAheadTime: () => 60,
-		excludeScheduled: (trip) => !["12", "13", "21", "Funi"].includes(trip.route.id),
+		excludeScheduled: (trip) => !["12", "13", "21", "60", "70", "71", "91", "FUNI", "NB"].includes(trip.route.id),
 		getNetworkRef: () => "LIA",
-		getVehicleRef: (vehicle) => vehicle?.id,
-		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
+		getVehicleRef: (vehicle) => vehicle?.id.padStart(3, "0"),
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+		mapLineRef: (lineRef) => lineRef.split("-")[1],
 	},
 	//- Cap Cotentin
 	{
