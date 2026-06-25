@@ -6,8 +6,8 @@ const sources = [
 			"https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
 		realtimeResourceHrefs: [
 			"https://api.tisseo.fr/opendata/gtfsrt/GtfsRt.pb",
-			"https://gtfs.willbrooks.fr/vehicle_positions.pb",
-			"https://gtfs.willbrooks.fr/trip_updates.pb",
+			"https://1.gtfs.download/tisseo/vehicle_positions.pb",
+			"https://1.gtfs.download/tisseo/trip_updates.pb",
 		],
 		appendTripUpdateInformation: true,
 		addedTripShapeMatching: true,
