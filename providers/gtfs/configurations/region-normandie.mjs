@@ -49,16 +49,15 @@ const sources = [
 		id: "lia",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/lia.zip",
 		realtimeResourceHrefs: [
-			"https://opendata.transports-lia.fr/gtfs-rt/TripUpdate.pb",
-			"https://opendata.transports-lia.fr/gtfs-rt/VehiclePosition.pb",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/trip-updates",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/vehicle-positions",
 		],
 		mode: "NO-TU",
 		getAheadTime: () => 60,
 		excludeScheduled: (trip) => !["12", "13", "21", "60", "70", "71", "91", "FUNI", "NB"].includes(trip.route.id),
 		getNetworkRef: () => "LIA",
-		getVehicleRef: (vehicle) => vehicle?.id.padStart(3, "0"),
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
-		mapLineRef: (lineRef) => lineRef.split("-")[1],
+		getVehicleRef: (vehicle) => vehicle?.id,
 	},
 	//- Cap Cotentin
 	{
