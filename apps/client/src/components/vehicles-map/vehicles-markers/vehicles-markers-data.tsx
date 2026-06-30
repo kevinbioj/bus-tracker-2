@@ -9,10 +9,29 @@ import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { VehiclesMarkersStatusControl } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-status-control";
 
-const noise = ([lon, lat]: [number, number]): [number, number] => [
-	lon + ((Math.random() * 2 - 1) * 2.5) / 111111,
-	lat + ((Math.random() * 2 - 1) * 2.5) / 75000,
-];
+const hashSeed = (str: string): number => {
+	let h = 1779033703 ^ str.length;
+	for (let i = 0; i < str.length; i++) {
+		h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+		h = (h << 13) | (h >>> 19);
+	}
+	return h >>> 0;
+};
+
+const mulberry32 = (seed: number) => () => {
+	seed |= 0;
+	seed = (seed + 0x6d2b79f5) | 0;
+	let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+	t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+	return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+
+// Offset déterministe seedé sur l'id de la course : même véhicule → même bruit,
+// ce qui évite que les marqueurs COMPUTED sautent à chaque refetch/déplacement de carte.
+const noise = ([lon, lat]: [number, number], seed: string): [number, number] => {
+	const rand = mulberry32(hashSeed(seed));
+	return [lon + ((rand() * 2 - 1) * 2.5) / 111111, lat + ((rand() * 2 - 1) * 2.5) / 75000];
+};
 
 type VehiclesMarkersDataProps = {
 	lineId?: number;
@@ -82,7 +101,7 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 					id: -1,
 					geometry: {
 						type: "Point",
-						coordinates: item.position.type === "COMPUTED" ? noise(coordinates) : coordinates,
+						coordinates: item.position.type === "COMPUTED" ? noise(coordinates, item.id) : coordinates,
 					},
 					properties: {
 						...item,
