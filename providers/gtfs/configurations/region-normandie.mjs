@@ -56,7 +56,14 @@ const sources = [
 		getAheadTime: () => 60,
 		excludeScheduled: (trip) => !["12", "13", "21", "60", "70", "71", "91", "FUNI", "NB"].includes(trip.route.id),
 		getNetworkRef: () => "LIA",
-		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+		getDestination: (journey) => {
+			const lastCall = journey?.calls.at(-1);
+			if (lastCall === undefined || lastCall.status !== "SKIPPED") {
+				return journey?.trip.headsign;
+			}
+
+			return journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name;
+		},
 		getVehicleRef: (vehicle) => vehicle?.id,
 	},
 	//- Cap Cotentin
