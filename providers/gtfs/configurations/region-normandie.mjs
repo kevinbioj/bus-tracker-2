@@ -306,13 +306,19 @@ const sources = [
 		id: "slambus",
 		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=SLAM&dataFormat=GTFS",
 		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/slambus/trip-updates",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/slambus/vehicle-positions",
+			`https://saintloagglo.plateforme-2cloud.com/api/gtfsrt/2.0/vehiclepositions/${process.env.SLAMBUS_API_KEY}/bin`,
+			`https://saintloagglo.plateforme-2cloud.com/api/gtfsrt/2.0/tripupdates/${process.env.SLAMBUS_API_KEY}/bin`,
 		],
+		mode: "NO-TU",
+		gtfsOptions: {
+			mapRouteId: (routeId) => routeId.slice(nthIndexOf(routeId, ":", 2) + 1, nthIndexOf(routeId, ":", 3)),
+			mapTripId: (tripId) =>
+				tripId.slice(nthIndexOf(tripId, ":", 2) + 1, nthIndexOf(tripId, ":", 3)).replaceAll("x", "-"),
+			mapStopId: (stopId) =>
+				stopId.slice(nthIndexOf(stopId, ":", 3) + 1, nthIndexOf(stopId, ":", 4)).replaceAll("x", "-"),
+		},
 		getNetworkRef: () => "SLAMBUS",
-		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
-		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
-		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
+		getVehicleRef: (vehicle) => vehicle?.label?.padStart(2, "0"),
 	},
 	//- Vikibus
 	{
