@@ -1,8 +1,7 @@
 import { parseAsInteger, useQueryState } from "nuqs";
-import { match, P } from "ts-pattern";
 
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
-import { Girouette } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
+import { Girouette, getAutoOutlineColor } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 import { useLine } from "~/hooks/use-line";
 import * as m from "~/paraglide/messages";
 
@@ -44,10 +43,7 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 							? {
 									backgroundColor: line.color ?? undefined,
 									textColor: line.textColor ?? undefined,
-									outlineColor: match([line.textColor, line.color])
-										.with(["#FFFFFF", P.string], () => "#000000")
-										.with([null, null], () => undefined)
-										.otherwise(() => "#FFFFFF"),
+									outlineColor: getAutoOutlineColor(line.textColor, line.color),
 									font: defaultRouteNumber.length <= 3 ? "1508SUPX" : "1407SUPX",
 									scroll: defaultRouteNumber.length >= "KKKKK".length,
 									spacing: defaultRouteNumber.length >= 4 ? 0 : 1,

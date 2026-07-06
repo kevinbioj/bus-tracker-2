@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { PlusIcon, TrashIcon, XIcon } from "lucide-react";
+import { ArrowLeftRightIcon, PaletteIcon, PlusIcon, TrashIcon, XIcon } from "lucide-react";
 import { useSnackbar } from "notistack";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -26,6 +26,7 @@ import { Switch } from "~/components/ui/switch";
 import {
 	type GirouetteData,
 	Girouette as GirouettePreview,
+	getAutoOutlineColor,
 	type TextSpacing,
 } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 import * as m from "~/paraglide/messages";
@@ -196,6 +197,24 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 			"destinations",
 			watchedDestinations.filter((_, i) => i !== index),
 		);
+	};
+
+	const handleSwapRouteColors = () => {
+		const textColor = form.getValues("routeNumber.textColor");
+		const backgroundColor = form.getValues("routeNumber.backgroundColor");
+		form.setValue("routeNumber.textColor", backgroundColor, { shouldDirty: true });
+		form.setValue("routeNumber.backgroundColor", textColor, { shouldDirty: true });
+	};
+
+	const handleApplyLineColors = () => {
+		const withHash = (color: string) => (color ? (color.startsWith("#") ? color : `#${color}`) : "");
+		const backgroundColor = withHash(line.color);
+		const textColor = withHash(line.textColor);
+		form.setValue("routeNumber.backgroundColor", backgroundColor, { shouldDirty: true });
+		form.setValue("routeNumber.textColor", textColor, { shouldDirty: true });
+		form.setValue("routeNumber.outlineColor", getAutoOutlineColor(textColor || null, backgroundColor || null) ?? "", {
+			shouldDirty: true,
+		});
 	};
 
 	const backToList = () => navigate({ to: "/data/lines/$lineId/girouettes", params: { lineId: String(lineId) } });
@@ -394,6 +413,16 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 								name="routeNumber.outlineColor"
 								label={m.line_girouettes_form_outline_color_label()}
 							/>
+							<div className="flex flex-wrap items-center gap-2">
+								<Button type="button" variant="outline" size="sm" onClick={handleSwapRouteColors}>
+									<ArrowLeftRightIcon />
+									{m.line_girouettes_form_swap_colors()}
+								</Button>
+								<Button type="button" variant="outline" size="sm" onClick={handleApplyLineColors}>
+									<PaletteIcon />
+									{m.line_girouettes_form_use_line_colors()}
+								</Button>
+							</div>
 							<div className="grid gap-2">
 								<Label>{m.line_girouettes_form_half_pattern_label()}</Label>
 								<Controller

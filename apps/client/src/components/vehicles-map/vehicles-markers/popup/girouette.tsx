@@ -1,8 +1,22 @@
 import { clsx } from "clsx";
 import { type ComponentPropsWithoutRef, useEffect, useState } from "react";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 const paneBgColor = "#1D1D1B";
+
+/**
+ * Determines the outline color for an automatically-generated route number,
+ * following the rule in effect for automatic girouettes:
+ * - white text over any background → black outline
+ * - no text and no background → no outline
+ * - anything else → white outline
+ */
+export function getAutoOutlineColor(textColor?: string | null, backgroundColor?: string | null): string | undefined {
+	return match([textColor?.toUpperCase() ?? null, backgroundColor ?? null])
+		.with(["#FFFFFF", P.string], () => "#000000")
+		.with([null, null], () => undefined)
+		.otherwise(() => "#FFFFFF");
+}
 
 function processText(text: string): string {
 	return text

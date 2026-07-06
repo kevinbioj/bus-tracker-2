@@ -343,6 +343,8 @@
 	"line_girouettes_form_half_pattern_bl": "↙ Bas gauche",
 	"line_girouettes_form_half_pattern_br": "↘ Bas droite",
 	"line_girouettes_form_text_color_label": "Couleur du texte",
+	"line_girouettes_form_swap_colors": "Inverser texte / fond",
+	"line_girouettes_form_use_line_colors": "Couleurs de la ligne",
 	"line_girouettes_page_title": "Girouettes – {lineNumber} – {networkName} – Bus Tracker",
 	"line_girouettes_title": "Girouettes de la ligne {lineNumber}",
 	"line_girouettes_update_success": "Girouette mise à jour avec succès.",

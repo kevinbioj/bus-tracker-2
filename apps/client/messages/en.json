@@ -343,6 +343,8 @@
 	"line_girouettes_form_half_pattern_bl": "↙ Bottom left",
 	"line_girouettes_form_half_pattern_br": "↘ Bottom right",
 	"line_girouettes_form_text_color_label": "Text color",
+	"line_girouettes_form_swap_colors": "Swap text / background",
+	"line_girouettes_form_use_line_colors": "Line colors",
 	"line_girouettes_page_title": "Destination boards – {lineNumber} – {networkName} – Bus Tracker",
 	"line_girouettes_title": "Destination boards for line {lineNumber}",
 	"line_girouettes_update_success": "Destination board updated successfully.",
