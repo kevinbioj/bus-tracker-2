@@ -154,7 +154,10 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 	const [halfPattern, setHalfPattern] = useState<RouteNumberData["halfPattern"]>();
 
 	useEffect(() => {
-		if (routeNumber.halfPattern === undefined) return;
+		if (routeNumber.halfPattern === undefined) {
+			setHalfPattern(undefined);
+			return;
+		}
 
 		let showingHalfPattern = false;
 
