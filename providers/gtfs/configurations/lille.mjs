@@ -2,9 +2,10 @@
 const sources = [
 	{
 		id: "lille",
-		staticResourceHref: "https://media.ilevia.fr/opendata/gtfs.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/ilevia.zip",
 		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/ilevia-lille-gtfs-rt"],
-		excludeScheduled: true,
+		appendTripUpdateInformation: true,
+		excludeScheduled: (trip) => /\d{2}R/.test(trip.route.id),
 		getNetworkRef: () => "ILLEVIA",
 	},
 ];
@@ -12,7 +13,7 @@ const sources = [
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	id: "lille",
-	computeDelayMs: 30_000,
+	computeDelayMs: 15_000,
 	sources,
 };
 
