@@ -195,6 +195,48 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.id,
 		mapLineRef: (lineRef) => (lineRef.includes("geo") ? lineRef.split("_")[0] : lineRef),
 	},
+	{
+		id: "valenciennes",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/valenciennes.zip",
+		realtimeResourceHrefs: ["https://ara-api.enroute.mobi/transvilles/gtfs"],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		mode: "NO-TU",
+		getNetworkRef: () => "VALENCIENNES",
+		mapVehiclePosition: (vehicle) => {
+			if (typeof vehicle.stopId === "string") {
+				vehicle.stopId = vehicle.stopId.split(":")[3];
+			}
+
+			if (typeof vehicle.trip?.tripId === "string") {
+				vehicle.trip.tripId = vehicle.trip.tripId.split(":")[3];
+			}
+
+			if (typeof vehicle.trip?.routeId === "string") {
+				vehicle.trip.routeId = vehicle.trip.routeId.split(":")[3];
+			}
+
+			return vehicle;
+		},
+		mapTripUpdate: (tripUpdate) => {
+			if (Array.isArray(tripUpdate.stopTimeUpdate)) {
+				for (const stopTimeUpdate of tripUpdate.stopTimeUpdate) {
+					if (typeof stopTimeUpdate.stopId === "string") {
+						stopTimeUpdate.stopId = stopTimeUpdate.stopId.split(":")[3];
+					}
+				}
+			}
+
+			if (typeof tripUpdate.trip.tripId === "string") {
+				tripUpdate.trip.tripId = tripUpdate.trip.tripId.split(":")[3];
+			}
+
+			if (typeof tripUpdate.trip.routeId === "string") {
+				tripUpdate.trip.routeId = tripUpdate.trip.routeId.split(":")[3];
+			}
+
+			return tripUpdate;
+		},
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
