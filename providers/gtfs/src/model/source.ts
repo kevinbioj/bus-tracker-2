@@ -26,10 +26,16 @@ export type SourceAuth =
 			value: string;
 	  };
 
+export type RealtimeResource = {
+	href: string;
+	/** Intervalle de polling minimal en ms. Si absent, le flux est re-téléchargé à chaque cycle. */
+	pollMs?: number;
+};
+
 export type SourceOptions = {
 	// --- Data provisioning
 	staticResourceHref: string;
-	realtimeResourceHrefs?: string[];
+	realtimeResourceHrefs?: (string | RealtimeResource)[];
 	auth?: SourceAuth;
 	staticAuth?: SourceAuth;
 	realtimeAuth?: SourceAuth;
@@ -58,6 +64,10 @@ export type SourceOptions = {
 export class Source {
 	gtfs?: Gtfs;
 	linePaths = new Map<string, EncodedLinePath>();
+	realtimeFeedCache = new Map<
+		string,
+		{ at: number; tripUpdates: TripUpdate[]; vehiclePositions: VehiclePosition[] }
+	>();
 
 	constructor(
 		readonly id: string,

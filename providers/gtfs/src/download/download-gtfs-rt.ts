@@ -10,13 +10,24 @@ import { getAuthHeaders } from "../utils/auth.js";
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
 
 export async function downloadGtfsRt(source: Source) {
-	const realtimeFeedHrefs = source.options.realtimeResourceHrefs ?? [];
+	const realtimeResources = (source.options.realtimeResourceHrefs ?? []).map((resource) =>
+		typeof resource === "string" ? { href: resource } : resource,
+	);
 
 	const tripUpdates: TripUpdate[] = [];
 	const vehiclePositions: VehiclePosition[] = [];
 
 	await Promise.allSettled(
-		realtimeFeedHrefs.map(async (realtimeFeedHref) => {
+		realtimeResources.map(async ({ href: realtimeFeedHref, pollMs }) => {
+			const cached = source.realtimeFeedCache.get(realtimeFeedHref);
+
+			// Réutilise la donnée en cache tant qu'elle est plus fraîche que l'intervalle de polling.
+			if (pollMs !== undefined && cached !== undefined && Date.now() - cached.at < pollMs) {
+				tripUpdates.push(...cached.tripUpdates);
+				vehiclePositions.push(...cached.vehiclePositions);
+				return;
+			}
+
 			try {
 				const response = await fetch(realtimeFeedHref, {
 					headers: {
@@ -38,6 +49,9 @@ export async function downloadGtfsRt(source: Source) {
 				}) as GtfsRt;
 				const entities = gtfsRt.entity ?? [];
 
+				const feedTripUpdates: TripUpdate[] = [];
+				const feedVehiclePositions: VehiclePosition[] = [];
+
 				for (const entity of entities) {
 					if (entity.tripUpdate) {
 						const tripUpdate =
@@ -46,7 +60,7 @@ export async function downloadGtfsRt(source: Source) {
 								: entity.tripUpdate;
 						if (tripUpdate === undefined) continue;
 						tripUpdate.timestamp ||= gtfsRt.header.timestamp;
-						tripUpdates.push(tripUpdate);
+						feedTripUpdates.push(tripUpdate);
 					}
 
 					if (entity.vehicle) {
@@ -56,10 +70,28 @@ export async function downloadGtfsRt(source: Source) {
 								: entity.vehicle;
 						if (vehiclePosition === undefined) continue;
 						vehiclePosition.timestamp ||= gtfsRt.header.timestamp;
-						vehiclePositions.push(vehiclePosition);
+						feedVehiclePositions.push(vehiclePosition);
 					}
 				}
+
+				if (pollMs !== undefined) {
+					source.realtimeFeedCache.set(realtimeFeedHref, {
+						at: Date.now(),
+						tripUpdates: feedTripUpdates,
+						vehiclePositions: feedVehiclePositions,
+					});
+				}
+
+				tripUpdates.push(...feedTripUpdates);
+				vehiclePositions.push(...feedVehiclePositions);
 			} catch (cause) {
+				// Sur un flux à polling, en cas d'échec on préfère servir la dernière donnée connue
+				// plutôt que de perdre tous les véhicules du flux.
+				if (pollMs !== undefined && cached !== undefined) {
+					tripUpdates.push(...cached.tripUpdates);
+					vehiclePositions.push(...cached.vehiclePositions);
+				}
+
 				console.error(new Error(`Failed to download entities at '${realtimeFeedHref}'`, { cause }));
 				captureException(cause, {
 					sourceId: source.id,
