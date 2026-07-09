@@ -133,7 +133,10 @@ const sources = [
 		id: "nantes",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/naolib.zip",
 		realtimeResourceHrefs: [
-			`https://api.okina.fr/gateway/semgtfsrt/realtime/trip-updates/NAOLIBORG?api-key=${process.env.GRAVITEE_NAOLIBORG_API_KEY}`,
+			{
+				href: `https://api.okina.fr/gateway/semgtfsrt/realtime/trip-updates/NAOLIBORG?api-key=${process.env.GRAVITEE_NAOLIBORG_API_KEY}`,
+				pollMs: 60_000,
+			},
 			// "https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
 		],
 		excludeScheduled: (trip) => nantesExcludedLines.includes(trip.route.name),
@@ -165,7 +168,7 @@ const sources = [
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	id: "nantes",
-	computeDelayMs: 30_000,
+	computeDelayMs: 15_000,
 	sources,
 };
 
