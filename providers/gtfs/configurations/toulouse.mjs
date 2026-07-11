@@ -1,3 +1,5 @@
+import Papaparse from 'papaparse';
+
 // Options partagées par les deux sources : elles s'appuient sur le même GTFS
 // statique Tisséo, mais consomment des feeds temps réel d'origines différentes.
 /** @type {import('../src/model/source.ts').SourceOptions} */
@@ -7,29 +9,26 @@ const commonOptions = {
 	appendTripUpdateInformation: true,
 	gtfsOptions: {
 		postLoad: (resource) => {
-			resource.stops.set("code:00189", {
-				id: "code:00189",
-				name: "Arènes",
-				latitude: 43.593745975607014,
-				longitude: 1.4179662944363263,
-			});
+			const enrichStops = async () => {
+				const response = await fetch('https://gtfs.bus-tracker.fr/tisseo_stops.txt');
+				if (!response.ok) {
+					return;
+				}
 
-			resource.stops.set("code:06766", {
-				id: "code:06766",
-				name: "Saint Cyprien - République",
-				latitude: 43.5981022,
-				longitude: 1.4315255,
-			});
+				const raw = await response.text();
+				const parsed = Papaparse.parse(raw, { header: true, skipEmptyLines: true });
 
-			resource.stops.set("code:05781", {
-				id: "code:05781",
-				name: "Pader",
-				latitude: 43.6359222,
-				longitude: 1.4331975,
-			});
+				parsed.data.forEach((row) => {
+					resource.stops.set(row.stop_id, {
+						id: row.stop_id,
+						name: row.stop_name,
+						latitude: +row.stop_lat,
+						longitude: +row.stop_lon,
+					});
+				});
+			};
 
-			resource.stops.set("code:06981", resource.stops.get("stop_point:SP_212"));
-			resource.stops.set("code:02763", resource.stops.get("stop_point:SP_3541"));
+			enrichStops();
 		},
 	},
 	mapLineRef: (lineRef) => `GTFS:${lineRef.slice(lineRef.indexOf(":") + 1)}`,
