@@ -1,4 +1,4 @@
-import Papaparse from 'papaparse';
+import Papaparse from "papaparse";
 
 // Options partagées par les deux sources : elles s'appuient sur le même GTFS
 // statique Tisséo, mais consomment des feeds temps réel d'origines différentes.
@@ -10,7 +10,7 @@ const commonOptions = {
 	gtfsOptions: {
 		postLoad: (resource) => {
 			const enrichStops = async () => {
-				const response = await fetch('https://gtfs.bus-tracker.fr/tisseo_stops.txt');
+				const response = await fetch("https://gtfs.bus-tracker.fr/tisseo_stops.txt");
 				if (!response.ok) {
 					return;
 				}

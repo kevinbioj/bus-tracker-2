@@ -64,10 +64,7 @@ export type SourceOptions = {
 export class Source {
 	gtfs?: Gtfs;
 	linePaths = new Map<string, EncodedLinePath>();
-	realtimeFeedCache = new Map<
-		string,
-		{ at: number; tripUpdates: TripUpdate[]; vehiclePositions: VehiclePosition[] }
-	>();
+	realtimeFeedCache = new Map<string, { at: number; tripUpdates: TripUpdate[]; vehiclePositions: VehiclePosition[] }>();
 
 	constructor(
 		readonly id: string,
