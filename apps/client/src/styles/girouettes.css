@@ -105,3 +105,9 @@
 	font-family: "LUMIPLAN-2";
 	src: url("../fonts/girouette/LUMIPLAN-2.ttf");
 }
+
+@font-face {
+	font-display: block;
+	font-family: "17SYMBOLS";
+	src: url("../fonts/girouette/17SYMBOLS.ttf");
+}

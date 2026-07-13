@@ -1,5 +1,5 @@
 export const ALLOWED_FONT_FAMILIES = {
-	"Hanover Graphic": ["0808B2E1", "1310C2E1", "1508C2E1", "1510N2E1", "1513B3E1"],
+	"Hanover Graphic": ["0808B2E1", "1310C2E1", "1508C2E1", "1510N2E1", "1513B3E1", "17SYMBOLS"],
 	"Hanover Super-X": ["0505SUPX", "1107SUPX", "1407SUPX", "1507SUPX", "1508SUPX", "1710SUPX"],
 } as const;
 
@@ -18,6 +18,7 @@ export const FONT_HEIGHTS: Record<AllowedFont, number> = {
 	"1507SUPX": 15,
 	"1508SUPX": 15,
 	"1710SUPX": 17,
+	"17SYMBOLS": 17,
 };
 
 export const DEFAULT_FONT_FAMILY: AllowedFontFamily = "Hanover Graphic";

@@ -50,6 +50,7 @@ const fontProperties = {
 	METRO: { height: 16, spacing: 0, extraSpacing: false },
 	"1510N2E1-TCAR": { height: 15, spacing: 2, extraSpacing: false },
 	"1513B3E1-TCAR": { height: 15, spacing: 2, extraSpacing: false },
+	"17SYMBOLS": { height: 17, spacing: 2, extraSpacing: false },
 } as const;
 
 type Font = keyof typeof fontProperties;
