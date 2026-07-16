@@ -13,13 +13,13 @@
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@types/node": "^26.1.1",
-		"tsx": "^4.23.0",
+		"tsx": "^4.23.1",
 		"typescript": "^7.0.2"
 	},
 	"dependencies": {
 		"@bus-tracker/monitoring": "workspace:*",
 		"croner": "^10.0.1",
-		"fast-xml-parser": "^5.9.3",
+		"fast-xml-parser": "^5.10.0",
 		"ky": "^2.0.2",
 		"redis": "^6.1.0"
 	}

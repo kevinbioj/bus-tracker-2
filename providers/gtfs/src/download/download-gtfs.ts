@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import decompress from "decompress";
+import decompress from "@xhmikosr/decompress";
 
 import { USER_AGENT } from "../constants.js";
 import type { Source } from "../model/source.js";

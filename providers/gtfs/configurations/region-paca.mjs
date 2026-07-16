@@ -55,7 +55,7 @@ const sources = [
 		id: "gap",
 		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/cagtd/current/revision/gtfs",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/cagtd/realtime"],
-		gtfsOptions: { computeShapeDistTraveled: 'always' },
+		gtfsOptions: { computeShapeDistTraveled: "always" },
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) => {
 			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
