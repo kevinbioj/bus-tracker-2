@@ -304,13 +304,13 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	}, [journey, journeyId, path, line, linePath, pathDisplayMode, showLinePath]);
 
 	const source = useMapSource<maplibregl.GeoJSONSource>("vehicle-path", initialSource);
-	useMapLayer(pastPathStrokeLayer, "vehicles-arrows");
-	useMapLayer(pastPathLayer, "vehicles-arrows");
-	useMapLayer(futurePathStrokeLayer, "vehicles-arrows");
-	useMapLayer(futurePathLayer, "vehicles-arrows");
-	useMapLayer(stopsLayer, "vehicles-arrows");
-	useMapLayer(skippedStopMarkerLayer, "vehicles-arrows");
-	useMapLayer(stopsLabelLayer, "vehicles-arrows");
+	useMapLayer(pastPathStrokeLayer, "vehicles-arrows-outline");
+	useMapLayer(pastPathLayer, "vehicles-arrows-outline");
+	useMapLayer(futurePathStrokeLayer, "vehicles-arrows-outline");
+	useMapLayer(futurePathLayer, "vehicles-arrows-outline");
+	useMapLayer(stopsLayer, "vehicles-arrows-outline");
+	useMapLayer(skippedStopMarkerLayer, "vehicles-arrows-outline");
+	useMapLayer(stopsLabelLayer, "vehicles-arrows-outline");
 
 	useEffect(() => {
 		if (source) {

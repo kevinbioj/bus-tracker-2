@@ -20,20 +20,45 @@ function createSquareIcon(color = "#000000") {
 	return ctx.getImageData(0, 0, size, size);
 }
 
+const ARROW_ICON_SIZE = 32;
+const ARROW_ICON_MARGIN = 6;
+
+function traceArrowPath(ctx: CanvasRenderingContext2D) {
+	const size = ARROW_ICON_SIZE;
+	const m = ARROW_ICON_MARGIN;
+	ctx.beginPath();
+	ctx.moveTo(size / 2, m);
+	ctx.lineTo(size - m, size - m);
+	ctx.lineTo(m, size - m);
+	ctx.closePath();
+}
+
 function createArrowIcon(color = "#000000") {
 	const canvas = document.createElement("canvas");
-	const size = 32;
-	canvas.width = size;
-	canvas.height = size;
+	canvas.width = ARROW_ICON_SIZE;
+	canvas.height = ARROW_ICON_SIZE;
 	const ctx = canvas.getContext("2d")!;
 	ctx.fillStyle = color;
-	ctx.beginPath();
-	ctx.moveTo(size / 2, 0);
-	ctx.lineTo(size, size);
-	ctx.lineTo(0, size);
-	ctx.closePath();
+	traceArrowPath(ctx);
 	ctx.fill();
-	return ctx.getImageData(0, 0, size, size);
+	return ctx.getImageData(0, 0, ARROW_ICON_SIZE, ARROW_ICON_SIZE);
+}
+
+// Silhouette élargie de la flèche : même triangle épaissi par un stroke, pour servir de
+// contour de contraste sous la flèche de remplissage (même principe que le contour du cercle).
+function createArrowOutlineIcon(color = "#000000") {
+	const canvas = document.createElement("canvas");
+	canvas.width = ARROW_ICON_SIZE;
+	canvas.height = ARROW_ICON_SIZE;
+	const ctx = canvas.getContext("2d")!;
+	ctx.fillStyle = color;
+	ctx.strokeStyle = color;
+	ctx.lineJoin = "round";
+	ctx.lineWidth = 3.5;
+	traceArrowPath(ctx);
+	ctx.fill();
+	ctx.stroke();
+	return ctx.getImageData(0, 0, ARROW_ICON_SIZE, ARROW_ICON_SIZE);
 }
 
 const initialData: maplibregl.SourceSpecification = {
@@ -53,24 +78,56 @@ const vehiclesLayerObject: maplibregl.AddLayerObject = {
 	},
 };
 
+const arrowsLayout: maplibregl.SymbolLayerSpecification["layout"] = {
+	"icon-size": 0.7,
+	"icon-allow-overlap": true,
+	"icon-ignore-placement": true,
+	"icon-rotation-alignment": "map",
+	"icon-rotate": ["get", "bearing"],
+	"icon-offset": [0, -14],
+};
+
+const arrowsOpacity: maplibregl.DataDrivenPropertyValueSpecification<number> = [
+	"interpolate",
+	["linear"],
+	["zoom"],
+	10,
+	0,
+	12,
+	1,
+];
+
+// Contour de contraste, rendu sous la flèche de remplissage (couleur = `color`, comme le
+// contour du cercle du marqueur). Une silhouette légèrement plus large déborde de la flèche.
+const arrowsOutlineLayerObject: maplibregl.AddLayerObject = {
+	id: "vehicles-arrows-outline",
+	source: "vehicles",
+	type: "symbol",
+	minzoom: 10,
+	layout: {
+		...arrowsLayout,
+		"icon-image": "arrow-outline-icon",
+	},
+	filter: ["!=", ["get", "bearing"], null],
+	paint: {
+		"icon-color": ["coalesce", ["get", "color"], "#FFFFFF"],
+		"icon-opacity": arrowsOpacity,
+	},
+};
+
 const arrowsLayerObject: maplibregl.AddLayerObject = {
 	id: "vehicles-arrows",
 	source: "vehicles",
 	type: "symbol",
 	minzoom: 10,
 	layout: {
+		...arrowsLayout,
 		"icon-image": "arrow-icon",
-		"icon-size": 0.5,
-		"icon-allow-overlap": true,
-		"icon-ignore-placement": true,
-		"icon-rotation-alignment": "map",
-		"icon-rotate": ["get", "bearing"],
-		"icon-offset": [0, -20],
 	},
 	filter: ["!=", ["get", "bearing"], null],
 	paint: {
 		"icon-color": ["get", "fillColor"],
-		"icon-opacity": ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 1],
+		"icon-opacity": arrowsOpacity,
 	},
 };
 
@@ -111,6 +168,7 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 	const vehiclesSource = useMapSource<maplibregl.GeoJSONSource>("vehicles", initialData);
 	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
 	useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
+	useMapLayer(arrowsOutlineLayerObject, arrowsLayerObject.id);
 	const textLayer = useMapLayer(textLayerObject);
 
 	useEffect(() => {
@@ -130,6 +188,7 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 	useEffect(() => {
 		let abort = false;
 		const arrowImageId = "arrow-icon";
+		const arrowOutlineImageId = "arrow-outline-icon";
 		const squareImageId = "square-icon";
 
 		const onLoad = () => {
@@ -137,6 +196,11 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 			const arrowIcon = createArrowIcon("black");
 			if (map.getImage(arrowImageId) === undefined) {
 				map.addImage(arrowImageId, arrowIcon, { sdf: true });
+			}
+
+			const arrowOutlineIcon = createArrowOutlineIcon("black");
+			if (map.getImage(arrowOutlineImageId) === undefined) {
+				map.addImage(arrowOutlineImageId, arrowOutlineIcon, { sdf: true });
 			}
 
 			const squareIcon = createSquareIcon("black");
@@ -153,6 +217,9 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 			map.off("load", onLoad);
 			if (map.style?._loaded && map.getImage(arrowImageId) !== undefined) {
 				map.removeImage(arrowImageId);
+			}
+			if (map.style?._loaded && map.getImage(arrowOutlineImageId) !== undefined) {
+				map.removeImage(arrowOutlineImageId);
 			}
 			if (map.style?._loaded && map.getImage(squareImageId) !== undefined) {
 				map.removeImage(squareImageId);
