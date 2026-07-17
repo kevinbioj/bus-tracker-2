@@ -1,3 +1,4 @@
+import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 import { useQuery } from "@tanstack/react-query";
 import type maplibregl from "maplibre-gl";
 import { useEffect, useMemo } from "react";
@@ -78,6 +79,84 @@ const initialSource: maplibregl.SourceSpecification = {
 	type: "geojson",
 	data: { type: "FeatureCollection", features: [] },
 };
+
+/**
+ * Découpe un tracé en deux portions (déjà parcourue / à venir) en projetant
+ * « à la louche » une position sur le polyligne.
+ *
+ * Utilisé pour les positions GPS, qui — contrairement aux positions calculées —
+ * n'ont pas de `distanceTraveled` exploitable (souvent absent ou incomplet sur
+ * le tracé). On se base donc uniquement sur la géométrie : on cherche le point
+ * du tracé le plus proche du véhicule et on coupe à cet endroit.
+ *
+ * Les coordonnées retournées sont au format GeoJSON `[longitude, latitude]`.
+ */
+function splitPathAtNearestPoint(
+	points: VehicleJourneyPath["p"],
+	latitude: number,
+	longitude: number,
+): { pastPoints: number[][]; futurePoints: number[][] } {
+	// Projection équirectangulaire locale : on corrige la longitude par cos(lat)
+	// pour que les distances soient à peu près isotropes autour du véhicule.
+	const cosLat = Math.cos((latitude * Math.PI) / 180);
+	const px = longitude * cosLat;
+	const py = latitude;
+
+	let bestDistanceSquared = Number.POSITIVE_INFINITY;
+	let bestSegment = 0;
+	let bestT = 0;
+
+	for (let index = 0; index < points.length - 1; index += 1) {
+		const [aLat, aLon] = points[index]!;
+		const [bLat, bLon] = points[index + 1]!;
+
+		const ax = aLon * cosLat;
+		const ay = aLat;
+		const bx = bLon * cosLat;
+		const by = bLat;
+
+		const dx = bx - ax;
+		const dy = by - ay;
+		const segmentLengthSquared = dx * dx + dy * dy;
+
+		let t = segmentLengthSquared === 0 ? 0 : ((px - ax) * dx + (py - ay) * dy) / segmentLengthSquared;
+		t = Math.max(0, Math.min(1, t));
+
+		const closestX = ax + t * dx;
+		const closestY = ay + t * dy;
+		const offsetX = px - closestX;
+		const offsetY = py - closestY;
+		const distanceSquared = offsetX * offsetX + offsetY * offsetY;
+
+		if (distanceSquared < bestDistanceSquared) {
+			bestDistanceSquared = distanceSquared;
+			bestSegment = index;
+			bestT = t;
+		}
+	}
+
+	// Point de jonction interpolé sur le segment le plus proche.
+	const [segStartLat, segStartLon] = points[bestSegment]!;
+	const [segEndLat, segEndLon] = points[bestSegment + 1]!;
+	const junctionLat = segStartLat + bestT * (segEndLat - segStartLat);
+	const junctionLon = segStartLon + bestT * (segEndLon - segStartLon);
+	const junction = [junctionLon, junctionLat];
+
+	const pastPoints: number[][] = [];
+	for (let index = 0; index <= bestSegment; index += 1) {
+		const [lat, lon] = points[index]!;
+		pastPoints.push([lon, lat]);
+	}
+	pastPoints.push(junction);
+
+	const futurePoints: number[][] = [junction];
+	for (let index = bestSegment + 1; index < points.length; index += 1) {
+		const [lat, lon] = points[index]!;
+		futurePoints.push([lon, lat]);
+	}
+
+	return { pastPoints, futurePoints };
+}
 
 type VehiclePathProps = {
 	journeyId?: string;
@@ -217,47 +296,56 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 
 		if (path !== undefined) {
 			const points = path.p;
-			const currentDistanceTraveled = journey?.position.distanceTraveled ?? 0;
 
-			const pastPoints: number[][] = [];
-			const futurePoints: number[][] = [];
+			let pastPoints: number[][] = [];
+			let futurePoints: number[][] = [];
 
-			let lastPoint: (typeof points)[number] | undefined;
-			for (const point of points) {
-				const [latitude, longitude, distanceTraveled] = point;
-				const coords = [longitude, latitude];
+			if (journey.position.distanceTraveled === undefined) {
+				// Position GPS : pas de `distanceTraveled` fiable, on découpe le
+				// tracé « à la louche » au point géométriquement le plus proche.
+				if (points.length > 1) {
+					({ pastPoints, futurePoints } = splitPathAtNearestPoint(
+						points,
+						journey.position.latitude,
+						journey.position.longitude,
+					));
+				}
+			} else {
+				// Position calculée : découpe exacte via `distanceTraveled`.
+				const currentDistanceTraveled = journey.position.distanceTraveled;
 
-				if (distanceTraveled !== undefined) {
-					if (distanceTraveled <= currentDistanceTraveled) {
-						pastPoints.push(coords);
-					} else {
-						if (lastPoint !== undefined && lastPoint[2] !== undefined && lastPoint[2] < currentDistanceTraveled) {
-							const [lastLat, lastLon, lastDist] = lastPoint;
-							const t = (currentDistanceTraveled - lastDist) / (distanceTraveled - lastDist);
-							const interpLat = lastLat + t * (latitude - lastLat);
-							const interpLon = lastLon + t * (longitude - lastLon);
-							const interpCoords = [interpLon, interpLat];
-							pastPoints.push(interpCoords);
-							futurePoints.push(interpCoords);
-						} else if (pastPoints.length > 0 && futurePoints.length === 0) {
-							// Add the last past point to future points to have a continuous line
-							futurePoints.push(pastPoints[pastPoints.length - 1]!);
+				let lastPoint: (typeof points)[number] | undefined;
+				for (const point of points) {
+					const [latitude, longitude, distanceTraveled] = point;
+					const coords = [longitude, latitude];
+
+					if (distanceTraveled !== undefined) {
+						if (distanceTraveled <= currentDistanceTraveled) {
+							pastPoints.push(coords);
+						} else {
+							if (lastPoint !== undefined && lastPoint[2] !== undefined && lastPoint[2] < currentDistanceTraveled) {
+								const [lastLat, lastLon, lastDist] = lastPoint;
+								const t = (currentDistanceTraveled - lastDist) / (distanceTraveled - lastDist);
+								const interpLat = lastLat + t * (latitude - lastLat);
+								const interpLon = lastLon + t * (longitude - lastLon);
+								const interpCoords = [interpLon, interpLat];
+								pastPoints.push(interpCoords);
+								futurePoints.push(interpCoords);
+							} else if (pastPoints.length > 0 && futurePoints.length === 0) {
+								// Add the last past point to future points to have a continuous line
+								futurePoints.push(pastPoints[pastPoints.length - 1]!);
+							}
+							futurePoints.push(coords);
 						}
+					} else {
+						// Fallback if no distanceTraveled
 						futurePoints.push(coords);
 					}
-				} else {
-					// Fallback if no distanceTraveled
-					futurePoints.push(coords);
+					lastPoint = point;
 				}
-				lastPoint = point;
 			}
 
-			// If all points are in futurePoints but we are at the start
-			if (futurePoints.length === 0 && pastPoints.length > 0) {
-				// All points are in the past
-			}
-
-			// If no distanceTraveled was provided, we just show everything as future
+			// If no split was possible, we just show everything as future
 			if (futurePoints.length === 0 && pastPoints.length === 0 && points.length > 0) {
 				for (const [latitude, longitude] of points) {
 					futurePoints.push([longitude, latitude]);
