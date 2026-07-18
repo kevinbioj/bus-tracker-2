@@ -19,6 +19,7 @@ const gpsoZenbusIdToVehicleLabel = new Map([
 	["240420002", "0529"],
 	["226790001", "0821"],
 	["258800001", "0822"],
+	["4850028595118080", "FP-512-DA"],
 ]);
 
 const saclayZenbusIdToVehicleLabel = new Map();
