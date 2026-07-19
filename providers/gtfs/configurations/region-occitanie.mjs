@@ -445,7 +445,7 @@ const sources = [
 	},
 	{
 		id: "pays-or",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/bbbd5a29-2fbf-47ae-84fd-6d1ebb758eeb",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/84a0902b-ed56-4a09-8eb7-bb58601ba084",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/transpor-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/transpor-gtfs-rt-vehicle-position",
