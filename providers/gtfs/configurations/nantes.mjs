@@ -148,7 +148,7 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(stopRef.lastIndexOf(":") + 1),
 		mapTripRef: (tripRef) => tripRef.slice(tripRef.lastIndexOf(":") + 1),
 		mapTripUpdate: (tripUpdate) => {
-			tripUpdate.trip.tripId = `NAOLIBORG:VehicleJourney:${tripUpdate.trip.tripId.split(":").slice(2).join(":").trim()}`;
+			tripUpdate.trip.tripId = `FR_NAOLIB:VehicleJourney:${tripUpdate.trip.tripId.split(":").slice(2).join(":").trim()}`;
 			tripUpdate.vehicle = undefined;
 			return tripUpdate;
 		},
