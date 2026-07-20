@@ -2,6 +2,8 @@ import { clsx } from "clsx";
 import { type ComponentPropsWithoutRef, useEffect, useState } from "react";
 import { match, P } from "ts-pattern";
 
+import { cn } from "~/utils/cn";
+
 const paneBgColor = "#1D1D1B";
 
 /**
@@ -121,7 +123,7 @@ export function Girouette({
 }: Readonly<GirouetteProps>) {
 	return (
 		<div
-			className={clsx("flex border-white", className)}
+			className={cn("flex border-white", className)}
 			style={{
 				aspectRatio: (dimensions.rnWidth + dimensions.destinationWidth) / dimensions.height,
 				backgroundColor: paneBgColor,

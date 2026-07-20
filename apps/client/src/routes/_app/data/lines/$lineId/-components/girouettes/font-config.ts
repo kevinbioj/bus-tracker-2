@@ -52,21 +52,30 @@ export function getFirstValidVariant(family: AllowedFontFamily, maxHeight?: numb
 	return variants.find((v) => FONT_HEIGHTS[v] <= maxHeight) ?? variants[0];
 }
 
+/** Fonts allowed on either line when a page holds two lines. */
+export const DUAL_LINE_FONTS: readonly AllowedFont[] = ["0808B2E1", "0505SUPX", "1107SUPX"] as const;
+
+const DUAL_LINE_FONTS_BY_FAMILY = (family: AllowedFontFamily) =>
+	DUAL_LINE_FONTS.filter((v) => getFontFamily(v) === family);
+
+/**
+ * Returns the font line 1 must fall back to when a second line is added,
+ * keeping the current family whenever possible.
+ */
+export function getLine1FontForDualLine(line1Font: AllowedFont): AllowedFont {
+	if (DUAL_LINE_FONTS.includes(line1Font)) return line1Font;
+	return getFontFamily(line1Font) === "Hanover Super-X" ? "1107SUPX" : "0808B2E1";
+}
+
 /**
  * Returns the fonts available for line 2 given line 1's font.
- * - Graphic line 1 → Graphic fonts ≤ 8px
- * - Super-X line 1 → Super-X fonts ≤ 8px + Graphic 8px (0808B2E1)
+ * - Graphic line 1 → Graphic dual-line fonts
+ * - Super-X line 1 → Super-X dual-line fonts + Graphic ones
  */
 export function getFontsForDualLine(line1Font: AllowedFont): readonly AllowedFont[] {
-	const LINE2_MAX = 8;
-	const graphicSmall = (ALLOWED_FONT_FAMILIES["Hanover Graphic"] as readonly AllowedFont[]).filter(
-		(v) => FONT_HEIGHTS[v] <= LINE2_MAX,
-	);
+	const graphic = DUAL_LINE_FONTS_BY_FAMILY("Hanover Graphic");
 	if (getFontFamily(line1Font) === "Hanover Graphic") {
-		return graphicSmall;
+		return graphic;
 	}
-	const superXSmall = (ALLOWED_FONT_FAMILIES["Hanover Super-X"] as readonly AllowedFont[]).filter(
-		(v) => FONT_HEIGHTS[v] <= LINE2_MAX,
-	);
-	return [...superXSmall, ...graphicSmall];
+	return [...DUAL_LINE_FONTS_BY_FAMILY("Hanover Super-X"), ...graphic];
 }

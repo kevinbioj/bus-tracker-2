@@ -1,8 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeftRightIcon, PaletteIcon, PlusIcon, TrashIcon, XIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowLeftRightIcon, ArrowUpIcon, PaletteIcon, PlusIcon, TrashIcon, XIcon } from "lucide-react";
 import { useSnackbar } from "notistack";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useWindowSize } from "usehooks-ts";
@@ -32,7 +33,15 @@ import {
 import * as m from "~/paraglide/messages";
 import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
 import { cn } from "~/utils/cn";
-import { ALL_FONTS, type AllowedFont, DEFAULT_FONT_VARIANT, getFontLabel, getFontsForDualLine } from "./font-config";
+import {
+	ALL_FONTS,
+	type AllowedFont,
+	DEFAULT_FONT_VARIANT,
+	DUAL_LINE_FONTS,
+	getFontLabel,
+	getFontsForDualLine,
+	getLine1FontForDualLine,
+} from "./font-config";
 
 const lineSchema = z.object({
 	text: z.string(),
@@ -181,7 +190,7 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 		defaultValues: defaultValues(girouette),
 	});
 
-	const { fields: pageFields, append, remove } = useFieldArray({ control: form.control, name: "pages" });
+	const { fields: pageFields, append, remove, move } = useFieldArray({ control: form.control, name: "pages" });
 	const [newDest, setNewDest] = useState("");
 	const watchedDestinations = useWatch({ control: form.control, name: "destinations" }) ?? [];
 
@@ -240,7 +249,19 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 	});
 
 	const onSubmit = (values: FormValues) => {
-		const input = formToGirouetteInput(values, girouette?.enabled ?? true);
+		// A destination still sitting in the input field was never validated: take it anyway.
+		const pendingDestination = newDest.trim();
+		const destinations =
+			pendingDestination && !values.destinations.includes(pendingDestination)
+				? [...values.destinations, pendingDestination]
+				: values.destinations;
+
+		if (destinations !== values.destinations) {
+			form.setValue("destinations", destinations);
+			setNewDest("");
+		}
+
+		const input = formToGirouetteInput({ ...values, destinations }, girouette?.enabled ?? true);
 		if (girouette) updateMutation.mutate(input);
 		else createMutation.mutate(input);
 	};
@@ -298,155 +319,36 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 			<div className="sticky top-14 z-10 bg-background mt-4 pb-3 border-b flex flex-col gap-2">
 				<p className="text-sm font-semibold pt-1">{m.line_girouettes_form_preview_title()}</p>
 				<div className="overflow-x-auto">
-					<GirouettePreview width={Math.min(width - 26, 512)} {...previewData} />
+					<GirouettePreview className="border border-[#444444]" width={Math.min(width - 26, 512)} {...previewData} />
 				</div>
 			</div>
 
-			<form onSubmit={form.handleSubmit(onSubmit)} className="mt-3 flex flex-col gap-6">
-				<div className="flex flex-col gap-6">
-					<div className="flex flex-col md:flex-row gap-4">
-						<div className="grid gap-2">
-							<Label>{m.line_girouettes_form_direction_label()}</Label>
-							<Controller
-								control={form.control}
-								name="directionId"
-								render={({ field }) => {
-									const directionItems = [
-										{ value: "none", label: m.line_girouettes_form_direction_any() },
-										{ value: "0", label: m.line_girouettes_form_direction_outbound() },
-										{ value: "1", label: m.line_girouettes_form_direction_inbound() },
-									];
-									return (
-										<Select
-											value={field.value ?? "none"}
-											onValueChange={(v) => field.onChange(v === "none" ? null : v)}
-											items={directionItems}
-										>
-											<SelectTrigger>
-												<SelectValue />
-											</SelectTrigger>
-											<SelectContent>
-												{directionItems.map((item) => (
-													<SelectItem key={item.value} value={item.value}>
-														{item.label}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-									);
-								}}
-							/>
-						</div>
-
-						<div className="grid gap-2 flex-1 min-w-0">
-							<Label>{m.line_girouettes_form_destination_label()}</Label>
-							<div className="flex flex-wrap items-center gap-1.5">
-								<Input
-									className="w-44 shrink-0"
-									value={newDest}
-									onChange={(e) => setNewDest(e.target.value)}
-									onKeyDown={(e) => {
-										if (e.key === "Enter") {
-											e.preventDefault();
-											handleAddDestination();
-										}
-									}}
-									placeholder={m.line_girouettes_form_destination_placeholder()}
-								/>
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									onClick={handleAddDestination}
-									disabled={!newDest.trim() || watchedDestinations.includes(newDest.trim())}
-								>
-									<PlusIcon />
-								</Button>
-								{watchedDestinations.map((dest, index) => (
-									<span
-										key={`${dest}-${
-											// biome-ignore lint/suspicious/noArrayIndexKey: it's alright
-											index
-										}`}
-										className="flex items-center gap-1 bg-muted rounded-md px-2 py-0.5 text-sm"
-									>
-										{dest}
-										<button
-											type="button"
-											onClick={() => handleRemoveDestination(index)}
-											className="text-muted-foreground hover:text-foreground"
-										>
-											<XIcon className="size-3" />
-										</button>
-									</span>
-								))}
-							</div>
-						</div>
-					</div>
-
-					<fieldset className="border rounded-lg p-4 flex flex-col gap-4">
-						<legend className="text-sm font-semibold px-1">{m.line_girouettes_form_route_number_title()}</legend>
-
-						<div className="flex flex-wrap gap-5">
-							<div className="grid gap-2">
-								<Label>{m.line_girouettes_form_route_number_text_label()}</Label>
-								<Input {...form.register("routeNumber.text")} />
-							</div>
-							<FontVariantField form={form} fieldName="routeNumber.fontVariant" fonts={ALL_FONTS} />
-							<SpacingField form={form} name="routeNumber.spacing" />
-							<ScrollField form={form} name="routeNumber.scroll" />
-						</div>
-
-						<div className="flex flex-wrap items-end gap-3">
-							<ColorPickerField
-								form={form}
-								name="routeNumber.textColor"
-								label={m.line_girouettes_form_text_color_label()}
-							/>
-							<ColorPickerField
-								form={form}
-								name="routeNumber.backgroundColor"
-								label={m.line_girouettes_form_bg_color_label()}
-							/>
-							<ColorPickerField
-								form={form}
-								name="routeNumber.outlineColor"
-								label={m.line_girouettes_form_outline_color_label()}
-							/>
-							<div className="flex flex-wrap items-center gap-2">
-								<Button type="button" variant="outline" size="sm" onClick={handleSwapRouteColors}>
-									<ArrowLeftRightIcon />
-									{m.line_girouettes_form_swap_colors()}
-								</Button>
-								<Button type="button" variant="outline" size="sm" onClick={handleApplyLineColors}>
-									<PaletteIcon />
-									{m.line_girouettes_form_use_line_colors()}
-								</Button>
-							</div>
-							<div className="grid gap-2">
-								<Label>{m.line_girouettes_form_half_pattern_label()}</Label>
+			<form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
+				<div className="flex flex-col gap-4">
+					<FormSection title={m.line_girouettes_form_identification_title()}>
+						<div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+							<div className="grid gap-2 sm:w-44 sm:shrink-0">
+								<Label>{m.line_girouettes_form_direction_label()}</Label>
 								<Controller
 									control={form.control}
-									name="routeNumber.halfPattern"
+									name="directionId"
 									render={({ field }) => {
-										const halfPatternItems = [
-											{ value: "none", label: m.line_girouettes_form_half_pattern_none() },
-											{ value: "tl", label: m.line_girouettes_form_half_pattern_tl() },
-											{ value: "tr", label: m.line_girouettes_form_half_pattern_tr() },
-											{ value: "bl", label: m.line_girouettes_form_half_pattern_bl() },
-											{ value: "br", label: m.line_girouettes_form_half_pattern_br() },
+										const directionItems = [
+											{ value: "none", label: m.line_girouettes_form_direction_any() },
+											{ value: "0", label: m.line_girouettes_form_direction_outbound() },
+											{ value: "1", label: m.line_girouettes_form_direction_inbound() },
 										];
 										return (
 											<Select
 												value={field.value ?? "none"}
 												onValueChange={(v) => field.onChange(v === "none" ? null : v)}
-												items={halfPatternItems}
+												items={directionItems}
 											>
-												<SelectTrigger>
+												<SelectTrigger className="w-full">
 													<SelectValue />
 												</SelectTrigger>
 												<SelectContent>
-													{halfPatternItems.map((item) => (
+													{directionItems.map((item) => (
 														<SelectItem key={item.value} value={item.value}>
 															{item.label}
 														</SelectItem>
@@ -457,18 +359,160 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 									}}
 								/>
 							</div>
+
+							<div className="grid gap-2 min-w-0 flex-1">
+								<Label>{m.line_girouettes_form_destination_label()}</Label>
+								<div className="flex items-center gap-1.5">
+									<Input
+										className="min-w-0 flex-1"
+										value={newDest}
+										onChange={(e) => setNewDest(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter") {
+												e.preventDefault();
+												handleAddDestination();
+											}
+										}}
+										placeholder={m.line_girouettes_form_destination_placeholder()}
+									/>
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										onClick={handleAddDestination}
+										disabled={!newDest.trim() || watchedDestinations.includes(newDest.trim())}
+									>
+										<PlusIcon />
+									</Button>
+								</div>
+								{watchedDestinations.length > 0 && (
+									<div className="flex flex-wrap items-center gap-1.5">
+										{watchedDestinations.map((dest, index) => (
+											<span
+												key={`${dest}-${
+													// biome-ignore lint/suspicious/noArrayIndexKey: it's alright
+													index
+												}`}
+												className="flex items-center gap-1 bg-muted rounded-md px-2 py-0.5 text-sm"
+											>
+												{dest}
+												<button
+													type="button"
+													onClick={() => handleRemoveDestination(index)}
+													className="text-muted-foreground hover:text-foreground"
+												>
+													<XIcon className="size-3" />
+												</button>
+											</span>
+										))}
+									</div>
+								)}
+							</div>
 						</div>
-					</fieldset>
+					</FormSection>
 
-					<fieldset className="border rounded-lg p-4 flex flex-col gap-4">
-						<legend className="text-sm font-semibold px-1">{m.line_girouettes_form_pages_title()}</legend>
+					<FormSection title={m.line_girouettes_form_route_number_title()}>
+						<div className="flex flex-col gap-4">
+							<div className="flex flex-col sm:flex-row sm:items-start gap-3">
+								<div className="grid gap-2 flex-1 min-w-0">
+									<Label>{m.line_girouettes_form_route_number_text_label()}</Label>
+									<Input {...form.register("routeNumber.text")} />
+								</div>
+								<FontVariantField
+									className="flex-1 min-w-0"
+									form={form}
+									fieldName="routeNumber.fontVariant"
+									fonts={ALL_FONTS}
+								/>
+								<div className="flex shrink-0 items-start gap-3">
+									<SpacingField form={form} name="routeNumber.spacing" />
+									<ScrollField form={form} name="routeNumber.scroll" />
+								</div>
+							</div>
 
+							<div className="flex flex-col sm:flex-row sm:items-end gap-3">
+								<ColorPickerField
+									className="flex-1 min-w-0"
+									form={form}
+									name="routeNumber.backgroundColor"
+									label={m.line_girouettes_form_bg_color_label()}
+								/>
+								<ColorPickerField
+									className="flex-1 min-w-0"
+									form={form}
+									name="routeNumber.textColor"
+									label={m.line_girouettes_form_text_color_label()}
+								/>
+								<ColorPickerField
+									className="flex-1 min-w-0"
+									form={form}
+									name="routeNumber.outlineColor"
+									label={m.line_girouettes_form_outline_color_label()}
+								/>
+							</div>
+
+							<div className="flex flex-col sm:flex-row sm:items-end gap-3">
+								<div className="grid gap-2 sm:w-44 sm:shrink-0">
+									<Label>{m.line_girouettes_form_half_pattern_label()}</Label>
+									<Controller
+										control={form.control}
+										name="routeNumber.halfPattern"
+										render={({ field }) => {
+											const halfPatternItems = [
+												{ value: "none", label: m.line_girouettes_form_half_pattern_none() },
+												{ value: "tl", label: m.line_girouettes_form_half_pattern_tl() },
+												{ value: "tr", label: m.line_girouettes_form_half_pattern_tr() },
+												{ value: "bl", label: m.line_girouettes_form_half_pattern_bl() },
+												{ value: "br", label: m.line_girouettes_form_half_pattern_br() },
+											];
+											return (
+												<Select
+													value={field.value ?? "none"}
+													onValueChange={(v) => field.onChange(v === "none" ? null : v)}
+													items={halfPatternItems}
+												>
+													<SelectTrigger className="w-full">
+														<SelectValue />
+													</SelectTrigger>
+													<SelectContent>
+														{halfPatternItems.map((item) => (
+															<SelectItem key={item.value} value={item.value}>
+																{item.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+											);
+										}}
+									/>
+								</div>
+								<div className="flex flex-wrap items-center gap-2">
+									<Button type="button" variant="outline" size="sm" onClick={handleSwapRouteColors}>
+										<ArrowLeftRightIcon />
+										{m.line_girouettes_form_swap_colors()}
+									</Button>
+									<Button type="button" variant="outline" size="sm" onClick={handleApplyLineColors}>
+										<PaletteIcon />
+										{m.line_girouettes_form_use_line_colors()}
+									</Button>
+								</div>
+							</div>
+						</div>
+					</FormSection>
+				</div>
+
+				<FormSection title={m.line_girouettes_form_pages_title()}>
+					<div className="flex flex-col gap-4">
 						{pageFields.map((field, pageIndex) => (
 							<PageFields
 								key={field.id}
 								form={form}
 								pageIndex={pageIndex}
 								isOnlyPage={pageFields.length === 1}
+								isFirstPage={pageIndex === 0}
+								isLastPage={pageIndex === pageFields.length - 1}
+								onMovePageUp={() => move(pageIndex, pageIndex - 1)}
+								onMovePageDown={() => move(pageIndex, pageIndex + 1)}
 								onRemovePage={() => remove(pageIndex)}
 							/>
 						))}
@@ -478,26 +522,43 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 								type="button"
 								variant="outline"
 								size="sm"
-								className="self-start mt-1"
+								className="self-start"
 								onClick={() => append(defaultPage())}
 							>
 								<PlusIcon />
 								{m.line_girouettes_form_page_add()}
 							</Button>
 						)}
-					</fieldset>
-
-					<div className="flex gap-3">
-						<Button variant="branding-default" type="submit" disabled={isPending}>
-							{m.line_girouettes_form_save()}
-						</Button>
-						<Button type="button" variant="outline" onClick={backToList} disabled={isPending}>
-							{m.line_girouettes_form_cancel()}
-						</Button>
 					</div>
+				</FormSection>
+
+				<div className="flex justify-end gap-3 lg:col-span-2">
+					<Button type="button" variant="outline" onClick={backToList} disabled={isPending}>
+						{m.line_girouettes_form_cancel()}
+					</Button>
+					<Button variant="branding-default" type="submit" disabled={isPending}>
+						{m.line_girouettes_form_save()}
+					</Button>
 				</div>
 			</form>
 		</DataPageLayout>
+	);
+}
+
+// ---
+
+type FormSectionProps = {
+	children: ReactNode;
+	title: string;
+};
+
+/** Bordered section whose title sits within the top border, fieldset/legend style. */
+function FormSection({ children, title }: Readonly<FormSectionProps>) {
+	return (
+		<fieldset className="min-w-0 rounded-xl border border-foreground/15 bg-card px-3 pt-2 pb-3">
+			<legend className="cn-font-heading mx-1 px-1.5 text-sm font-medium">{title}</legend>
+			{children}
+		</fieldset>
 	);
 }
 
@@ -507,23 +568,40 @@ type PageFieldsProps = {
 	form: ReturnType<typeof useForm<FormValues>>;
 	pageIndex: number;
 	isOnlyPage: boolean;
+	isFirstPage: boolean;
+	isLastPage: boolean;
+	onMovePageUp: () => void;
+	onMovePageDown: () => void;
 	onRemovePage: () => void;
 };
 
-function PageFields({ form, pageIndex, isOnlyPage, onRemovePage }: Readonly<PageFieldsProps>) {
+function PageFields({
+	form,
+	pageIndex,
+	isOnlyPage,
+	isFirstPage,
+	isLastPage,
+	onMovePageUp,
+	onMovePageDown,
+	onRemovePage,
+}: Readonly<PageFieldsProps>) {
 	const lines = useWatch({ control: form.control, name: `pages.${pageIndex}.lines` }) ?? [];
 	const line1Variant = (useWatch({
 		control: form.control,
 		name: `pages.${pageIndex}.lines.0.fontVariant`,
 	}) ?? DEFAULT_FONT_VARIANT) as AllowedFont;
 	const hasTwoLines = lines.length === 2;
+	const line1Fonts = hasTwoLines ? DUAL_LINE_FONTS : ALL_FONTS;
 	const line2Fonts = getFontsForDualLine(line1Variant);
 
 	const handleAddLine = () => {
 		const currentLines = form.getValues(`pages.${pageIndex}.lines`);
-		const availableForLine2 = getFontsForDualLine(line1Variant);
+		// Line 1 is limited to short fonts once a second line shares the pane.
+		const newLine1Font = getLine1FontForDualLine(line1Variant);
+		const availableForLine2 = getFontsForDualLine(newLine1Font);
 		form.setValue(`pages.${pageIndex}.lines`, [
-			...currentLines,
+			{ ...currentLines[0], fontVariant: newLine1Font },
+			...currentLines.slice(1),
 			defaultLine(availableForLine2[0] ?? DEFAULT_FONT_VARIANT),
 		]);
 	};
@@ -549,54 +627,100 @@ function PageFields({ form, pageIndex, isOnlyPage, onRemovePage }: Readonly<Page
 	};
 
 	return (
-		<div className={cn("flex flex-col gap-3", pageIndex > 0 && "border-t pt-3")}>
-			<div className="flex items-center justify-between">
+		<div className="flex flex-col gap-3">
+			<div className="-mx-3 flex h-8 items-center justify-between gap-2 border-y bg-muted/40 px-3">
 				<span className="text-sm font-medium">{m.line_girouettes_form_page_n({ n: pageIndex + 1 })}</span>
-				{!isOnlyPage && (
-					<Button type="button" variant="ghost" size="icon-sm" onClick={onRemovePage}>
-						<TrashIcon />
-					</Button>
-				)}
+				<div className="flex items-center gap-0.5">
+					{!isOnlyPage && (
+						<>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								title={m.line_girouettes_form_page_move_up()}
+								disabled={isFirstPage}
+								onClick={onMovePageUp}
+							>
+								<ArrowUpIcon />
+							</Button>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								title={m.line_girouettes_form_page_move_down()}
+								disabled={isLastPage}
+								onClick={onMovePageDown}
+							>
+								<ArrowDownIcon />
+							</Button>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								title={m.line_girouettes_form_page_remove()}
+								onClick={onRemovePage}
+							>
+								<TrashIcon className="text-destructive" />
+							</Button>
+						</>
+					)}
+				</div>
 			</div>
 
 			{lines.map((_, lineIndex) => (
 				<div
 					// biome-ignore lint/suspicious/noArrayIndexKey: stable order
 					key={lineIndex}
-					className="flex items-end gap-2"
+					className={cn("flex flex-col gap-2", lineIndex > 0 && "pt-1")}
 				>
-					<div className="flex flex-wrap gap-5">
-						<div className="grid gap-2">
+					<div className="flex items-center justify-between gap-2">
+						<span className="text-xs font-medium text-muted-foreground">
+							{m.line_girouettes_form_line_n({ n: lineIndex + 1 })}
+						</span>
+						{lineIndex === 1 && (
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								title={m.line_girouettes_form_line_remove_second()}
+								onClick={() => handleRemoveLine(lineIndex)}
+							>
+								<TrashIcon className="text-destructive" />
+							</Button>
+						)}
+					</div>
+					<div className="flex flex-col sm:flex-row sm:items-start gap-3">
+						<div className="grid gap-2 flex-1 min-w-0">
 							<Label>{m.line_girouettes_form_page_text_label()}</Label>
 							<Input {...form.register(`pages.${pageIndex}.lines.${lineIndex}.text`)} />
 						</div>
 						<FontVariantField
+							className="flex-1 min-w-0"
 							form={form}
 							fieldName={`pages.${pageIndex}.lines.${lineIndex}.fontVariant`}
-							fonts={lineIndex === 0 ? ALL_FONTS : line2Fonts}
+							fonts={lineIndex === 0 ? line1Fonts : line2Fonts}
 							onAfterChange={lineIndex === 0 ? handleLine1FontChange : undefined}
 						/>
-						<SpacingField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.spacing`} />
-						<ScrollField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.scroll`} />
+						<div className="flex shrink-0 items-start gap-3">
+							<SpacingField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.spacing`} />
+							<ScrollField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.scroll`} />
+						</div>
 					</div>
-					{lineIndex === 0 && !hasTwoLines && (
-						<Button className="ml-auto" type="button" variant="outline" size="icon-sm" onClick={handleAddLine}>
-							<PlusIcon />
-						</Button>
-					)}
-					{lineIndex === 1 && (
-						<Button
-							className="ml-auto"
-							type="button"
-							variant="ghost"
-							size="icon-sm"
-							onClick={() => handleRemoveLine(lineIndex)}
-						>
-							<TrashIcon />
-						</Button>
-					)}
 				</div>
 			))}
+
+			{!hasTwoLines && (
+				<Button
+					className="w-full border-dashed text-muted-foreground"
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={handleAddLine}
+				>
+					<PlusIcon />
+					{m.line_girouettes_form_line_add_second()}
+				</Button>
+			)}
 		</div>
 	);
 }
@@ -604,15 +728,16 @@ function PageFields({ form, pageIndex, isOnlyPage, onRemovePage }: Readonly<Page
 // ---
 
 type FontVariantFieldProps = {
+	className?: string;
 	form: ReturnType<typeof useForm<FormValues>>;
 	fieldName: string;
 	fonts: readonly AllowedFont[];
 	onAfterChange?: (v: string) => void;
 };
 
-function FontVariantField({ form, fieldName, fonts, onAfterChange }: Readonly<FontVariantFieldProps>) {
+function FontVariantField({ className, form, fieldName, fonts, onAfterChange }: Readonly<FontVariantFieldProps>) {
 	return (
-		<div className="grid gap-2">
+		<div className={cn("grid gap-2", className)}>
 			<Label>{m.line_girouettes_form_font_variant_label()}</Label>
 			<Controller
 				control={form.control}
@@ -646,14 +771,15 @@ function FontVariantField({ form, fieldName, fonts, onAfterChange }: Readonly<Fo
 // ---
 
 type ColorPickerFieldProps = {
+	className?: string;
 	form: ReturnType<typeof useForm<FormValues>>;
 	name: string;
 	label: string;
 };
 
-function ColorPickerField({ form, name, label }: Readonly<ColorPickerFieldProps>) {
+function ColorPickerField({ className, form, name, label }: Readonly<ColorPickerFieldProps>) {
 	return (
-		<div className="grid gap-2">
+		<div className={cn("grid gap-2", className)}>
 			<Label>{label}</Label>
 			<Controller
 				control={form.control}
@@ -667,18 +793,21 @@ function ColorPickerField({ form, name, label }: Readonly<ColorPickerFieldProps>
 // ---
 
 type ScrollFieldProps = {
+	className?: string;
 	form: ReturnType<typeof useForm<FormValues>>;
 	name: string;
 };
 
-function ScrollField({ form, name }: Readonly<ScrollFieldProps>) {
+function ScrollField({ className, form, name }: Readonly<ScrollFieldProps>) {
 	return (
 		<Controller
 			control={form.control}
 			name={name as "routeNumber.scroll"}
 			render={({ field }) => (
-				<Label className="flex flex-col gap-2 cursor-pointer font-normal">
-					<span className="text-sm font-medium leading-none">{m.line_girouettes_form_scroll_label()}</span>
+				<Label className={cn("flex flex-col gap-2 cursor-pointer font-normal", className)}>
+					<span className="text-sm font-medium leading-none whitespace-nowrap">
+						{m.line_girouettes_form_scroll_label()}
+					</span>
 					<div className="flex h-9 items-center">
 						<Switch checked={field.value} onCheckedChange={field.onChange} />
 					</div>
@@ -691,21 +820,22 @@ function ScrollField({ form, name }: Readonly<ScrollFieldProps>) {
 // ---
 
 type SpacingFieldProps = {
+	className?: string;
 	form: ReturnType<typeof useForm<FormValues>>;
 	name: string;
 };
 
-function SpacingField({ form, name }: Readonly<SpacingFieldProps>) {
+function SpacingField({ className, form, name }: Readonly<SpacingFieldProps>) {
 	return (
-		<div className="grid gap-2">
-			<Label>{m.line_girouettes_form_spacing_label()}</Label>
+		<div className={cn("grid gap-2", className)}>
+			<Label className="whitespace-nowrap">{m.line_girouettes_form_spacing_label()}</Label>
 			<Controller
 				control={form.control}
 				name={name as "routeNumber.spacing"}
 				render={({ field }) => {
 					const value = field.value as number | null;
 					return (
-						<div className="flex items-center gap-1">
+						<div className="flex h-9 items-center gap-1">
 							<Button
 								type="button"
 								variant="outline"
