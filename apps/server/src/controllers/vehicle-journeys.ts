@@ -7,6 +7,7 @@ import { findGirouette } from "../core/services/girouette-service.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import { redis } from "../index.js";
 import { hono } from "../server.js";
+import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { keyBy } from "../utils/key-by.js";
 import { createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
 
@@ -17,6 +18,11 @@ const getVehicleJourneyMarkersQuery = z.object({
 	neLon: z.coerce.number().min(-180).max(180),
 	includeMarker: z.string().optional(),
 	excludeScheduled: z.coerce.boolean().optional(),
+	positionTypes: z
+		.string()
+		.optional()
+		.transform((value) => (value !== undefined ? value.split(",") : undefined))
+		.pipe(z.array(z.enum(["GPS", "ESTIMATED", "SCHEDULED"])).optional()),
 	networkId: z
 		.union([z.coerce.number(), z.array(z.coerce.number())])
 		.optional()
@@ -27,18 +33,24 @@ const getVehicleJourneyMarkersQuery = z.object({
 		.transform((values) => (typeof values === "number" ? [values] : values)),
 });
 
+const getPositionType = (journey: DisposeableVehicleJourney) => {
+	if (journey.position.type === "GPS") return "GPS";
+	return journey.calls?.some((call) => call.expectedTime !== undefined) ? "ESTIMATED" : "SCHEDULED";
+};
+
 hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
-	const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled, lineId, networkId } = c.req.valid("query");
+	const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled, positionTypes, lineId, networkId } =
+		c.req.valid("query");
 
 	const boundedLineIds = new Set<number>();
 	const boundedJourneys = journeyStore
 		.values()
 		.filter((journey) => {
-			if (
-				excludeScheduled &&
-				journey.position.type === "COMPUTED" &&
-				journey.calls?.every((call) => call.expectedTime === undefined)
-			) {
+			if (positionTypes !== undefined) {
+				if (!positionTypes.includes(getPositionType(journey))) {
+					return false;
+				}
+			} else if (excludeScheduled && getPositionType(journey) === "SCHEDULED") {
 				return false;
 			}
 

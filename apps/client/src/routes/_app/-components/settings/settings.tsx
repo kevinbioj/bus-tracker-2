@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from "~/components/ui/separator";
 import * as m from "~/paraglide/messages";
 import { DisplayNextCallsSetting } from "~/routes/_app/-components/settings/display-next-calls";
+import { DisplayedVehiclesSetting } from "~/routes/_app/-components/settings/displayed-vehicles";
 import { EditorTokenInput } from "~/routes/_app/-components/settings/editor-token-input";
-import { HideScheduledTripsSetting } from "~/routes/_app/-components/settings/hide-scheduled-trips";
 import { OnlyNetworksWithHistorySetting } from "~/routes/_app/-components/settings/only-networks-with-history";
 import { PreviewVehicleNumberSetting } from "~/routes/_app/-components/settings/preview-vehicle-number";
 import { ShowDebugInfoSetting } from "~/routes/_app/-components/settings/show-debug-info";
@@ -25,7 +25,7 @@ export function Settings() {
 					</Button>
 				}
 			/>
-			<DialogContent aria-describedby={undefined} className="max-h-[80dvh] overflow-hidden flex flex-col">
+			<DialogContent aria-describedby={undefined} className="max-h-[80dvh] sm:max-w-xl overflow-hidden flex flex-col">
 				<DialogHeader>
 					<DialogTitle>{m.settings_title()}</DialogTitle>
 				</DialogHeader>
@@ -43,7 +43,7 @@ export function Settings() {
 							{m.settings_map_section()}
 						</h3>
 						<div className="flex flex-col gap-2">
-							<HideScheduledTripsSetting />
+							<DisplayedVehiclesSetting />
 							<PreviewVehicleNumberSetting />
 							<DisplayNextCallsSetting />
 							<ShowIdentifiedVehiclesPanelSetting />

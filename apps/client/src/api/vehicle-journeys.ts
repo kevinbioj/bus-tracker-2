@@ -2,6 +2,7 @@ import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
+import { positionTypes, readDisplayedPositionTypes } from "~/components/vehicles-map/displayed-position-types";
 import type { GirouetteData } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 import { client } from "./client";
 import type { VehicleAirConditioningStatus } from "./vehicles";
@@ -65,7 +66,7 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 		queryKey: ["vehicle-journeys", embeddedNetworkId, lineId],
 		queryFn: () => {
 			const activeMarkerId = localStorage.getItem("active-feature");
-			const hideScheduledTrips = embeddedNetworkId ? false : localStorage.getItem("hide-scheduled-trips") === "true";
+			const displayedPositionTypes = embeddedNetworkId ? positionTypes : readDisplayedPositionTypes();
 
 			return client
 				.get("/vehicle-journeys/markers", {
@@ -76,7 +77,8 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 						neLon: String(Math.min(bounds.getNorthEast().lng, 180)),
 						networkId: embeddedNetworkId ? String(embeddedNetworkId) : undefined,
 						lineId: lineId ? String(lineId) : undefined,
-						excludeScheduled: hideScheduledTrips ? "true" : undefined,
+						positionTypes:
+							displayedPositionTypes.length < positionTypes.length ? displayedPositionTypes.join(",") : undefined,
 						includeMarker: lineId === undefined ? (activeMarkerId ?? undefined) : undefined,
 					},
 				})
