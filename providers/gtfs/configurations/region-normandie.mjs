@@ -366,24 +366,24 @@ const sources = [
 						password: process.env.GTFS_PRIVATE_AUTH_PASSWORD,
 					},
 					realtimeResourceHrefs: [
-						`https://www.maxtrip.fr/api/v1/Export/GtfsRealtime/boubet?apiKey=${process.env.BOUBET_API_KEY}`,
+						`https://boubet2.maxtrip.fr/api/v1/Export/GtfsRealtime/boubet?apiKey=${process.env.BOUBET_API_KEY}`,
 					],
 					mode: "NO-TU",
 					getNetworkRef: () => "BAGNOLES",
-					mapTripUpdate: (tripUpdate, gtfs) => {
-						if (!gtfs.routes.has(tripUpdate.trip.routeId)) {
-							return;
-						}
+					// mapTripUpdate: (tripUpdate, gtfs) => {
+					// 	if (!gtfs.routes.has(tripUpdate.trip.routeId)) {
+					// 		return;
+					// 	}
 
-						return tripUpdate;
-					},
-					mapVehiclePosition: (vehiclePosition, gtfs) => {
-						if (!gtfs.routes.has(vehiclePosition.trip?.routeId)) {
-							return;
-						}
+					// 	return tripUpdate;
+					// },
+					// mapVehiclePosition: (vehiclePosition, gtfs) => {
+					// 	if (!gtfs.routes.has(vehiclePosition.trip?.routeId)) {
+					// 		return;
+					// 	}
 
-						return vehiclePosition;
-					},
+					// 	return vehiclePosition;
+					// },
 				},
 			]
 		: []),
