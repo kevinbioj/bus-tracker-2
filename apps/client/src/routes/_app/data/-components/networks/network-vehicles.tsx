@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { ArchiveIcon, BinaryIcon, ClockIcon, FilterIcon, SortAscIcon } from "lucide-react";
-import { parseAsBoolean, parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
+import { parseAsArrayOf, parseAsBoolean, parseAsInteger, parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
@@ -87,7 +87,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	const { data: vehicles } = useSuspenseQuery(GetVehiclesQuery(networkId));
 
 	const [type, setType] = useQueryState("type", parseAsStringEnum(vehicleTypeKeys).withDefault("ALL"));
-	const [operatorId, setOperatorId] = useQueryState("operatorId", parseAsString.withDefault("ALL"));
+	const [operatorIds, setOperatorIds] = useQueryState("operatorId", parseAsArrayOf(parseAsInteger).withDefault([]));
 	const [filter, setFilter] = useQueryState("filter", parseAsString.withDefault(""));
 	const [sort, setSort] = useQueryState("sort", parseAsStringEnum(sortingKeys).withDefault("number"));
 	const [showArchived, setShowArchived] = useQueryState("archived", parseAsBoolean.withDefault(false));
@@ -101,18 +101,18 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 			return;
 		}
 
-		return [
-			{ label: m.network_vehicle_operator_all(), value: null },
-			...network.operators
-				.sort((a, b) => a.sortOrder - b.sortOrder)
-				.map((operator) => ({ label: operator.name, value: operator.id })),
-		];
+		return network.operators
+			.sort((a, b) => a.sortOrder - b.sortOrder)
+			.map((operator) => ({ label: operator.name, value: operator.id }));
 	}, [network]);
 
 	const selectedOperatorLabel = useMemo(() => {
-		const selectedValue = operatorId === "ALL" ? null : Number(operatorId);
-		return selectableOperators?.find(({ value }) => value === selectedValue)?.label ?? "";
-	}, [operatorId, selectableOperators]);
+		if (operatorIds.length === 0) return m.network_vehicle_operator_all();
+		if (operatorIds.length === 1) {
+			return selectableOperators?.find(({ value }) => value === operatorIds[0])?.label ?? "";
+		}
+		return m.network_vehicle_operator_count({ count: operatorIds.length });
+	}, [operatorIds, selectableOperators]);
 
 	const hasArchivedVehicles = useMemo(() => vehicles.some((vehicle) => vehicle.archivedAt !== null), [vehicles]);
 
@@ -133,7 +133,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 				if (showArchived && v.archivedAt === null) return false;
 				if (!showArchived && v.archivedAt !== null) return false;
 				if (type !== "ALL" && v.type !== type) return false;
-				if (operatorId !== "ALL" && +operatorId !== v.operatorId) return false;
+				if (operatorIds.length > 0 && (v.operatorId === null || !operatorIds.includes(v.operatorId))) return false;
 				if (debouncedFilter === "") return true;
 				return pattern instanceof RegExp
 					? pattern.test(v.number.toString()) || pattern.test(v.designation ?? "")
@@ -151,7 +151,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 				return numberSort(a, b);
 			});
-	}, [debouncedFilter, operatorId, showArchived, sort, type, vehicles]);
+	}, [debouncedFilter, operatorIds, showArchived, sort, type, vehicles]);
 
 	const onlineVehicles = useMemo(
 		() => filteredAndSortedVehicles.filter(({ activity }) => activity.lineId !== undefined),
@@ -173,7 +173,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		});
 	}, [filteredAndSortedVehicles, onlineVehicles, showArchived]);
 
-	const filterSortKey = `${type}|${operatorId}|${debouncedFilter}|${sort}|${showArchived}`;
+	const filterSortKey = `${type}|${operatorIds.join(",")}|${debouncedFilter}|${sort}|${showArchived}`;
 	const prevFilterSortKey = useRef(filterSortKey);
 	useEffect(() => {
 		if (prevFilterSortKey.current === filterSortKey) return;
@@ -235,9 +235,10 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							>
 								{selectableOperators !== undefined && (
 									<Select
+										multiple
 										items={selectableOperators}
-										value={operatorId === "ALL" ? null : Number(operatorId)}
-										onValueChange={(value) => setOperatorId(value ? String(value) : null)}
+										value={operatorIds}
+										onValueChange={(value) => setOperatorIds(value.length > 0 ? value : null)}
 									>
 										<SelectTrigger
 											aria-label={m.network_vehicle_operator_filter()}
@@ -254,7 +255,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 											<SelectGroup>
 												{selectableOperators.map(({ label, value }) => (
 													<SelectItem key={value} value={value}>
-														{value ? label : <span className="text-muted-foreground">{label}</span>}
+														{label}
 													</SelectItem>
 												))}
 											</SelectGroup>
@@ -366,9 +367,10 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							)}
 							{selectableOperators !== undefined ? (
 								<Select
+									multiple
 									items={selectableOperators}
-									value={operatorId === "ALL" ? null : Number(operatorId)}
-									onValueChange={(value) => setOperatorId(value ? String(value) : null)}
+									value={operatorIds}
+									onValueChange={(value) => setOperatorIds(value.length > 0 ? value : null)}
 								>
 									<SelectTrigger
 										aria-label={m.network_vehicle_operator_filter()}

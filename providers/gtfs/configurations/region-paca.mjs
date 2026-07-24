@@ -22,11 +22,11 @@ const sources = [
 		getNetworkRef: () => "ORIZO",
 	},
 	{
-		id: 'briancon',
-		staticResourceHref: 'https://www.data.gouv.fr/api/1/datasets/r/3ee23301-f454-4175-ba53-4734c30d5245',
+		id: "briancon",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/3ee23301-f454-4175-ba53-4734c30d5245",
 		realtimeResourceHrefs: [],
-		gtfsOptions: { computeShapeDistTraveled: 'always' },
-		getNetworkRef: () => 'BRIANCON',
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		getNetworkRef: () => "BRIANCON",
 	},
 	{
 		id: "cannes",

@@ -70,6 +70,7 @@
 	"network_vehicle_filter_placeholder": "number or designation",
 	"network_vehicle_operator_filter": "Operator",
 	"network_vehicle_operator_all": "All operators",
+	"network_vehicle_operator_count": "{count} operators",
 	"network_vehicle_operator_no": "No operator",
 	"network_vehicle_sort_activity": "Activity",
 	"network_vehicle_sort_aria_label": "Sort",
