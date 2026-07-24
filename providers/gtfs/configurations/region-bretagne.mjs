@@ -58,6 +58,12 @@ const sources = [
 				tripUpdate.vehicle.id = vehicleNumber;
 			}
 
+			tripUpdate.stopTimeUpdate?.forEach((stopTimeUpdate) => {
+				if (typeof stopTimeUpdate.stopSequence === "number") {
+					stopTimeUpdate.stopSequence += 1;
+				}
+			});
+
 			return tripUpdate;
 		},
 		mapVehiclePosition: (vehicle) => {
