@@ -118,6 +118,13 @@ const sources = [
 		getOperatorRef: () => "TNI",
 		mapLineRef: (lineRef) => lineRef.replace("TNI:", ""),
 	},
+	{
+		id: 'jumieges',
+		staticResourceHref: 'https://gtfs.bus-tracker.fr/jumieges_2026.zip',
+		realtimeResourceHrefs: [],
+		getAheadTime: () => 60 * 10,
+		getNetworkRef: () => 'ASTUCE',
+	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
