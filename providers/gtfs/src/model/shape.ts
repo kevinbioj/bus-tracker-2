@@ -1,5 +1,6 @@
 import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 
+import { getDirection } from "../utils/get-direction.js";
 import { getDistance } from "../utils/get-distance.js";
 
 const pathCache = new WeakMap<Shape, VehicleJourneyPath>();
@@ -70,6 +71,35 @@ export class Shape {
 		}
 
 		return Math.max(0, high);
+	}
+
+	/**
+	 * Projette une distance curviligne sur le tracé : interpolation linéaire entre les deux
+	 * points de shape qui l'encadrent, et cap du segment ainsi obtenu.
+	 */
+	interpolateAt(distanceTraveled: number): { latitude: number; longitude: number; bearing: number } | undefined {
+		const pointIndex = this.findPointIndex(distanceTraveled);
+		if (pointIndex === undefined) return;
+
+		const nextPointIndex = Math.min(pointIndex + 1, this.length - 1);
+
+		const currentDistance = this.getPointDistanceTraveled(pointIndex);
+		const nextDistance = this.getPointDistanceTraveled(nextPointIndex);
+		if (currentDistance === undefined || nextDistance === undefined) return;
+
+		const currentLatitude = this.getPointLatitude(pointIndex);
+		const currentLongitude = this.getPointLongitude(pointIndex);
+		const nextLatitude = this.getPointLatitude(nextPointIndex);
+		const nextLongitude = this.getPointLongitude(nextPointIndex);
+
+		const pointRatio =
+			nextDistance === currentDistance ? 0 : (distanceTraveled - currentDistance) / (nextDistance - currentDistance);
+
+		return {
+			latitude: currentLatitude + (nextLatitude - currentLatitude) * pointRatio,
+			longitude: currentLongitude + (nextLongitude - currentLongitude) * pointRatio,
+			bearing: getDirection(currentLongitude, currentLatitude, nextLongitude, nextLatitude),
+		};
 	}
 
 	asPath(): VehicleJourneyPath {

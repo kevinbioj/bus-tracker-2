@@ -82,6 +82,26 @@ function unmatchedAddedTripUpdate(): TripUpdate {
 	};
 }
 
+function delayedTripUpdate(delaySeconds: number): TripUpdate {
+	return {
+		timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+		trip: {
+			tripId: "original",
+			routeId: "line:1",
+			startDate: "2026-05-18",
+		},
+		vehicle: { id: "vehicle:1" },
+		stopTimeUpdate: [
+			{
+				stopId: "B",
+				stopSequence: 2,
+				arrival: { delay: delaySeconds },
+				departure: { delay: delaySeconds },
+			},
+		],
+	};
+}
+
 describe("computeVehicleJourneys", () => {
 	beforeEach(() => {
 		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:12:00Z"));
@@ -159,5 +179,26 @@ describe("computeVehicleJourneys", () => {
 		expect(journeys).toHaveLength(1);
 		expect(journeys[0]?.calls?.map((call) => call.stopName)).toEqual(["B", "C"]);
 		expect(journeys[0]?.calls?.map((call) => call.platformName)).toEqual(["2", "3"]);
+	});
+
+	it("does not let a journey move backwards between two cycles when its delay increases", async () => {
+		const source = new Source("test", {
+			staticResourceHref: "https://example.com/gtfs.zip",
+			getNetworkRef: () => "network",
+		});
+		source.gtfs = makeGtfs();
+
+		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:05:00Z"));
+		vi.mocked(downloadGtfsRt).mockResolvedValue({ tripUpdates: [delayedTripUpdate(2 * 60)], vehiclePositions: [] });
+		const first = await computeVehicleJourneys(source);
+
+		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:05:30Z"));
+		vi.mocked(downloadGtfsRt).mockResolvedValue({ tripUpdates: [delayedTripUpdate(5 * 60)], vehiclePositions: [] });
+		const second = await computeVehicleJourneys(source);
+
+		const firstDistance = first.journeys[0]?.position.distanceTraveled;
+		expect(firstDistance).toBeCloseTo(416.67, 1);
+		// Sans guard, le retard passé de 2 à 5 min ferait retomber la position à ~367 m.
+		expect(second.journeys[0]?.position.distanceTraveled).toBe(firstDistance);
 	});
 });

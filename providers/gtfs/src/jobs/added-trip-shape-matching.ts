@@ -2,10 +2,9 @@ import type { VehicleJourneyPosition } from "@bus-tracker/contracts";
 
 import type { Gtfs } from "../model/gtfs.js";
 import type { StopTimeUpdate, TripUpdate } from "../model/gtfs-rt.js";
-import type { JourneyCall } from "../model/journey.js";
+import { getBoundedArrivalMs, type JourneyCall } from "../model/journey.js";
 import type { Shape } from "../model/shape.js";
 import type { Trip } from "../model/trip.js";
-import { getDirection } from "../utils/get-direction.js";
 
 const DEFAULT_MAX_STOP_TIME_DELTA_SECONDS = 15 * 60;
 const DEFAULT_MIN_MATCHED_STOPS = 2;
@@ -223,6 +222,12 @@ function getPositionAtCall(call: JourneyCall, at: Temporal.Instant, timeZone: st
 	};
 }
 
+/**
+ * Équivalent stateless de {@link Journey.guessPosition} pour les courses ADDED, qui n'ont pas
+ * d'objet Journey. Le guard anti-recul ne s'y applique donc pas : leur distanceTraveled provient
+ * d'un appariement de shape recalculé à chaque cycle, une distance mémorisée pourrait changer de
+ * référentiel d'un cycle à l'autre.
+ */
 export function guessPositionFromCalls(
 	calls: JourneyCall[],
 	shape: Shape,
@@ -257,31 +262,18 @@ export function guessPositionFromCalls(
 		return getPositionAtCall(currentCall, at, timeZone);
 	}
 
-	let arrivalMs = nextCall.expectedArrivalTime ?? nextCall.aimedArrivalTime;
-	for (let i = currentCallIndex + 2; i < activeCalls.length; i++) {
-		const t = activeCalls[i]!.expectedArrivalTime ?? activeCalls[i]!.aimedArrivalTime;
-		if (t < arrivalMs) arrivalMs = t;
-	}
+	const arrivalMs = getBoundedArrivalMs(activeCalls, currentCallIndex + 1);
 
 	const ratio = Math.max(0, Math.min(1, (atMs - departureMs) / (arrivalMs - departureMs)));
 	const distanceTraveled =
 		currentCall.distanceTraveled + (nextCall.distanceTraveled - currentCall.distanceTraveled) * ratio;
-	const pointIndex = shape.findPointIndex(distanceTraveled);
-	if (pointIndex === undefined) return getPositionAtCall(currentCall, at, timeZone);
-
-	const nextPointIndex = Math.min(pointIndex + 1, shape.length - 1);
-	const currentLat = shape.getPointLatitude(pointIndex);
-	const currentLon = shape.getPointLongitude(pointIndex);
-	const currentDist = shape.getPointDistanceTraveled(pointIndex)!;
-	const nextLat = shape.getPointLatitude(nextPointIndex);
-	const nextLon = shape.getPointLongitude(nextPointIndex);
-	const nextDist = shape.getPointDistanceTraveled(nextPointIndex)!;
-	const pointRatio = nextDist === currentDist ? 0 : (distanceTraveled - currentDist) / (nextDist - currentDist);
+	const point = shape.interpolateAt(distanceTraveled);
+	if (point === undefined) return getPositionAtCall(currentCall, at, timeZone);
 
 	return {
-		latitude: currentLat + (nextLat - currentLat) * pointRatio,
-		longitude: currentLon + (nextLon - currentLon) * pointRatio,
-		bearing: getDirection(currentLon, currentLat, nextLon, nextLat),
+		latitude: point.latitude,
+		longitude: point.longitude,
+		bearing: point.bearing,
 		atStop: false,
 		type: "COMPUTED",
 		distanceTraveled,
