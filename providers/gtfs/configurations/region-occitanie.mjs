@@ -107,302 +107,70 @@ const sources = [
 		id: "lio-global",
 		staticResourceHref:
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/lio?apiKey=2b160d626f783808095373766f18714901325e45&type=gtfs_lio",
-		realtimeResourceHrefs: [],
-		// -- REQUEST TO GET REALTIME LINES
-		// with realtime_lines as (
-		// 	select distinct l."number" as line_number
-		// 	from line l
-		// 	join line_activity la on la.line_id = l.id
-		// 	where la.vehicle_id in (select v.id from vehicle v where v.network_id = 83)
-		// 	order by l."number" asc
-		// )
-		// select json_agg(line_number) from realtime_lines;
-		excludeScheduled: (trip) =>
-			[
-				"101",
-				"102",
-				"103",
-				"104",
-				"105",
-				"106",
-				"108",
-				"109",
-				"110",
-				"112",
-				"113",
-				"114",
-				"115",
-				"121",
-				"122",
-				"123",
-				"125",
-				"130",
-				"132",
-				"133",
-				"134",
-				"135",
-				"136",
-				"140",
-				"141",
-				"142",
-				"150",
-				"151",
-				"152",
-				"401",
-				"402",
-				"404",
-				"408",
-				"500",
-				"503",
-				"510",
-				"520",
-				"521",
-				"530",
-				"540",
-				"541",
-				"542",
-				"543",
-				"550",
-				"560",
-				"570",
-				"571",
-				"572",
-				"573",
-				"574",
-				"8001",
-				"8003",
-				"8011",
-				"8012",
-				"8013",
-				"8015",
-				"8016",
-				"8031",
-				"8033",
-				"8035",
-				"8050",
-				"8061",
-				"8062",
-				"8063",
-				"8081",
-				"8083",
-				"8084",
-				"8091",
-				"8092",
-				"8101",
-				"8102",
-				"8103",
-				"8106",
-				"8111",
-				"8112",
-				"8113",
-				"8121",
-				"8124",
-				"8125",
-				"8126",
-				"8131",
-				"8132",
-				"8134",
-				"8141",
-				"8142",
-				"8143",
-				"8151",
-				"8152",
-				"8153",
-				"8154",
-				"8155",
-				"8157",
-				"8158",
-				"8159",
-				"8160",
-				"8162",
-				"8181",
-				"8191",
-				"8192",
-				"8201",
-				"8202",
-				"8203",
-				"8211",
-				"8212",
-				"8213",
-				"8222",
-				"8231",
-				"8244",
-				"8250",
-				"8261",
-				"8270",
-				"8271",
-				"8272",
-				"8273",
-				"8281",
-				"8282",
-				"8283",
-				"8284",
-				"8290",
-				"8300",
-				"8310",
-				"8311",
-				"8312",
-				"8314",
-				"8321",
-				"8331",
-				"8332",
-				"8333",
-				"8340",
-				"8341",
-				"8342",
-				"8343",
-				"8344",
-				"8350",
-				"8361",
-				"8362",
-				"8371",
-				"8372",
-				"8373",
-				"8391",
-				"8392",
-				"8400",
-				"8410",
-				"8432",
-				"8501",
-				"8502",
-				"8503",
-				"8504",
-				"8505",
-				"8506",
-				"8507",
-				"8508",
-				"8509",
-				"8601",
-				"8602",
-				"8603",
-				"8604",
-				"8605",
-				"8606",
-				"8607",
-				"8608",
-				"8609",
-				"8610",
-				"8611",
-				"8612",
-				"8613",
-				"8614",
-				"8615",
-				"8616",
-				"8617",
-				"8618",
-				"8620",
-				"8621",
-				"8623",
-				"8624",
-				"8625",
-				"8626",
-				"8627",
-				"8628",
-				"8630",
-				"8631",
-				"8632",
-				"8633",
-				"8634",
-				"8635",
-				"8636",
-				"8637",
-				"8638",
-				"8639",
-				"8640",
-				"8641",
-				"8642",
-				"8643",
-				"8700",
-				"8701",
-				"8702",
-				"8703",
-				"8704",
-				"8705",
-				"8706",
-				"8707",
-				"8708",
-				"8709",
-				"8710",
-				"8711",
-				"8712",
-				"8713",
-				"878",
-				"8810",
-				"8811",
-				"8820",
-				"8830",
-				"8840",
-				"889",
-				"890",
-				"891",
-				"8931",
-				"8932",
-				"8933",
-				"8934",
-				"8941",
-				"8942",
-				"8943",
-				"COOP",
-				"Navette Grau-du-Roi",
-			].includes(trip.route.id),
+		realtimeResourceHrefs: [
+			"https://lio.2cloud.app/api/gtfsrt/2.0/tripupdates/LIO65-6765-2617-7480/bin",
+			"https://lio.2cloud.app/api/gtfsrt/2.0/vehiclepositions/LIO65-6765-2617-7480/bin",
+		],
 		getNetworkRef: (journey) => {
+			if (journey.trip.route.id === 'NAV_GRAU') return 'LIO-30';
 			if (journey.trip.route.agency.name === "Herault Transport") return "HERAULT-TRANSPORT";
-			if (journey.trip.route.agency.name === "liO Occitanie 09") return "LIO-09";
-			if (journey.trip.route.agency.name === "liO Occitanie 11") return "LIO-11";
-			if (journey.trip.route.agency.name === "liO Occitanie 12") return "LIO-12";
-			if (journey.trip.route.agency.name === "liO Occitanie 30") return "LIO-30";
-			if (journey.trip.route.agency.name === "liO Occitanie 31") return "LIO-31";
-			if (journey.trip.route.agency.name === "liO Occitanie 32") return "LIO-32";
-			if (journey.trip.route.agency.name === "liO Occitanie 46") return "LIO-46";
-			if (journey.trip.route.agency.name === "liO Occitanie 48") return "LIO-48";
-			if (journey.trip.route.agency.name === "liO Occitanie 65") return "LIO-65";
-			if (journey.trip.route.agency.name === "liO Occitanie 66") return "LIO-66";
-			if (journey.trip.route.agency.name === "liO Occitanie 81") return "LIO-81";
-			if (journey.trip.route.agency.name === "liO Occitanie 82") return "LIO-82";
+			if (journey.trip.route.agency.name === ".liO 09") return "LIO-09";
+			if (journey.trip.route.agency.name === ".liO 11") return "LIO-11";
+			if (journey.trip.route.agency.name === ".liO 12") return "LIO-12";
+			if (journey.trip.route.agency.name === ".liO 30") return "LIO-30";
+			if (journey.trip.route.agency.name === ".liO 31") return "LIO-31";
+			if (journey.trip.route.agency.name === ".liO 32") return "LIO-32";
+			if (journey.trip.route.agency.name === ".liO 46") return "LIO-46";
+			if (journey.trip.route.agency.name === ".liO 48") return "LIO-48";
+			if (journey.trip.route.agency.name === ".liO 65") return "LIO-65";
+			if (journey.trip.route.agency.name === ".liO 66") return "LIO-66";
+			if (journey.trip.route.agency.name === ".liO 81") return "LIO-81";
+			if (journey.trip.route.agency.name === ".liO 82") return "LIO-82";
 			return null; // will be ignored
 		},
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
-	{
-		id: "lio-gard",
-		staticResourceHref: "https://pysae.com/api/v2/groups/lio-gard/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/lio-gard/gtfs-rt"],
-		excludeScheduled: true,
-		mode: "NO-TU",
-		mapLineRef: (lineRef) => lineRef.split("|")[0],
-		getNetworkRef: () => "LIO-30",
-		getVehicleRef: (vehicle) => {
-			if (typeof vehicle?.label !== "string") return;
-			if (vehicle.label.startsWith("LOT")) return;
-			return vehicle.label;
-		},
-	},
-	{
-		id: "lio-gard-keolis",
-		staticResourceHref: "https://pysae.com/api/v2/groups/lio-gard-keolis/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/lio-gard-keolis/gtfs-rt"],
-		excludeScheduled: true,
-		mode: "NO-TU",
-		getNetworkRef: () => "LIO-30",
-		getVehicleRef: (vehicle) => {
-			if (typeof vehicle?.label !== "string") return;
-			if (vehicle.label.startsWith("LOT")) return;
-			return vehicle.label;
-		},
-	},
-	{
-		id: "lio-lot",
-		staticResourceHref: "https://pysae.com/api/v2/groups/lio-lot/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/lio-lot/gtfs-rt"],
-		excludeScheduled: true,
-		mode: "NO-TU",
-		mapLineRef: (lineRef) => lineRef.split("|")[0],
-		getNetworkRef: () => "LIO-46",
-		getVehicleRef: (vehicle) => {
-			if (typeof vehicle?.label !== "string") return;
-			if (vehicle.label.startsWith("LOT")) return;
-			return vehicle.label;
-		},
-	},
+	// {
+	// 	id: "lio-gard",
+	// 	staticResourceHref: "https://pysae.com/api/v2/groups/lio-gard/gtfs/pub",
+	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/lio-gard/gtfs-rt"],
+	// 	excludeScheduled: true,
+	// 	mode: "NO-TU",
+	// 	mapLineRef: (lineRef) => lineRef.split("|")[0],
+	// 	getNetworkRef: () => "LIO-30",
+	// 	getVehicleRef: (vehicle) => {
+	// 		if (typeof vehicle?.label !== "string") return;
+	// 		if (vehicle.label.startsWith("LOT")) return;
+	// 		return vehicle.label;
+	// 	},
+	// },
+	// {
+	// 	id: "lio-gard-keolis",
+	// 	staticResourceHref: "https://pysae.com/api/v2/groups/lio-gard-keolis/gtfs/pub",
+	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/lio-gard-keolis/gtfs-rt"],
+	// 	excludeScheduled: true,
+	// 	mode: "NO-TU",
+	// 	getNetworkRef: () => "LIO-30",
+	// 	getVehicleRef: (vehicle) => {
+	// 		if (typeof vehicle?.label !== "string") return;
+	// 		if (vehicle.label.startsWith("LOT")) return;
+	// 		return vehicle.label;
+	// 	},
+	// },
+	// {
+	// 	id: "lio-lot",
+	// 	staticResourceHref: "https://pysae.com/api/v2/groups/lio-lot/gtfs/pub",
+	// 	realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/lio-lot/gtfs-rt"],
+	// 	excludeScheduled: true,
+	// 	mode: "NO-TU",
+	// 	mapLineRef: (lineRef) => lineRef.split("|")[0],
+	// 	getNetworkRef: () => "LIO-46",
+	// 	getVehicleRef: (vehicle) => {
+	// 		if (typeof vehicle?.label !== "string") return;
+	// 		if (vehicle.label.startsWith("LOT")) return;
+	// 		return vehicle.label;
+	// 	},
+	// },
 	{
 		id: "lunel",
 		staticResourceHref:
