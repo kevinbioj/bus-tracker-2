@@ -111,8 +111,10 @@ const sources = [
 			"https://lio.2cloud.app/api/gtfsrt/2.0/tripupdates/LIO65-6765-2617-7480/bin",
 			"https://lio.2cloud.app/api/gtfsrt/2.0/vehiclepositions/LIO65-6765-2617-7480/bin",
 		],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
 		getNetworkRef: (journey) => {
-			if (journey.trip.route.id === 'NAV_GRAU') return 'LIO-30';
+			if (journey.trip.route.id === "NAV_GRAU") return "LIO-30";
+			if (journey.trip.route.id === "NAV2_P2V") return "LIO-65";
 			if (journey.trip.route.agency.name === "Herault Transport") return "HERAULT-TRANSPORT";
 			if (journey.trip.route.agency.name === ".liO 09") return "LIO-09";
 			if (journey.trip.route.agency.name === ".liO 11") return "LIO-11";
