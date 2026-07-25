@@ -61,15 +61,35 @@ export type SourceOptions = {
 	isValidJourney?: (vehicleJourney: VehicleJourney) => boolean;
 };
 
+/**
+ * Plafond de la fenêtre de grâce accordée à une course qui vient d'atteindre son terminus.
+ * Doit rester supérieur à la période nominale d'un cycle (bornée à 120 s par index.ts), sinon
+ * la publication finale ne se déclenche jamais. Borne l'effet d'une source restée muette
+ * plusieurs minutes, qui republierait sinon d'un coup tous les terminus manqués entre-temps.
+ */
+export const MAX_TERMINUS_GRACE_MS = 120_000;
+
 export class Source {
 	gtfs?: Gtfs;
 	linePaths = new Map<string, EncodedLinePath>();
 	realtimeFeedCache = new Map<string, { at: number; tripUpdates: TripUpdate[]; vehiclePositions: VehiclePosition[] }>();
+	/** Instant (epoch ms) du dernier cycle de calcul réussi. Undefined avant le premier. */
+	lastComputeAtMs?: number;
 
 	constructor(
 		readonly id: string,
 		readonly options: SourceOptions,
 	) {}
+
+	/**
+	 * Durée écoulée depuis le dernier calcul réussi, plafonnée. Une course dont le terminus a été
+	 * franchi dans cette fenêtre est publiée une dernière fois, ancrée à son terminus, pour ne pas
+	 * disparaître de la carte avant d'y être arrivée.
+	 */
+	getTerminusGraceMs(nowMs: number) {
+		if (this.lastComputeAtMs === undefined) return 0;
+		return Math.min(Math.max(0, nowMs - this.lastComputeAtMs), MAX_TERMINUS_GRACE_MS);
+	}
 
 	/**
 	 * Imports the latest GTFS resource available for this source. Overwrites the
@@ -240,8 +260,10 @@ export class Source {
 			// lastCallDepartureMs est précalculé et évite de matérialiser les calls.
 			// Pour les courses RT très en avance, on pourrait sweeper légèrement trop tôt,
 			// mais l'écart est négligeable (quelques minutes max) et le gain en perf vaut la peine.
+			// La marge vaut le plafond de la fenêtre de grâce : une course dont le terminus vient
+			// d'être franchi doit survivre jusqu'au cycle suivant pour y être publiée une dernière fois.
 			const lastDepartureMs = journey.lastCallDepartureMs;
-			if (now > lastDepartureMs) {
+			if (now - MAX_TERMINUS_GRACE_MS > lastDepartureMs) {
 				this.gtfs.journeys.delete(id);
 			}
 		}

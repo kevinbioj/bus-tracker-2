@@ -91,6 +91,8 @@ export class Journey {
 	private _calls: JourneyCall[] | null = null;
 	private _hasRealtime = false;
 	private _positionGuard: PositionGuardState | undefined;
+	/** Instant (epoch ms) du dernier VehiclePosition reçu pour cette course. */
+	lastVehiclePositionAtMs: number | undefined;
 
 	constructor(
 		readonly id: string,

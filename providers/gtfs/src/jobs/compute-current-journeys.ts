@@ -18,6 +18,12 @@ import {
 } from "./added-trip-shape-matching.js";
 
 /**
+ * Durée pendant laquelle une course ayant reçu une position GPS est considérée comme encore suivie
+ * en GPS en aval. Calquée sur la rétention des positions GPS du store serveur.
+ */
+const VEHICLE_POSITION_RETENTION_MS = 10 * 60 * 1000;
+
+/**
  * A faster version of Temporal.ZonedDateTime.toString({ timeZoneName: "never" })
  * using native Date and manual offset calculation.
  * To be removed whenever Temporal gets fast enough.
@@ -78,13 +84,19 @@ function getTimeZoneOffsetMs(timeZone: string, epochMs: number): number {
 	return offset;
 }
 
-const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journey: Journey) => number) => {
+const getCalls = (
+	journey: Journey,
+	at: Temporal.Instant,
+	getAheadTime?: (journey: Journey) => number,
+	/** Fenêtre pendant laquelle une course dont le terminus vient d'être franchi reste publiable. */
+	graceMs = 0,
+) => {
 	const aheadTime = getAheadTime?.(journey) ?? 0;
 	const atMs = at.epochMilliseconds;
 
 	// Rejet rapide via les bornes précalculées, sans matérialiser le tableau calls.
 	if (atMs + aheadTime * 1000 < journey.firstCallArrivalMs) return;
-	if (atMs > journey.lastCallDepartureMs) return;
+	if (atMs - graceMs > journey.lastCallDepartureMs) return;
 
 	// Le voyage est dans la fenêtre : on accède aux calls (matérialisation si nécessaire).
 	const firstCall = journey.calls[0];
@@ -95,7 +107,8 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 		return;
 
 	const lastCall = journey.calls[journey.calls.length - 1];
-	if (lastCall === undefined || atMs > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime)) return;
+	if (lastCall === undefined || atMs - graceMs > (lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime))
+		return;
 
 	const getCallTime = (call: JourneyCall, index: number) =>
 		index === journey.calls.length - 1
@@ -108,7 +121,15 @@ const getCalls = (journey: Journey, at: Temporal.Instant, getAheadTime?: (journe
 	const lastPassedIndex = journey.calls.findLastIndex((call, index) => atMs >= getCallTime(call, index));
 
 	const firstCandidateIndex = lastPassedIndex + 1;
-	if (firstCandidateIndex >= journey.calls.length) return;
+	if (firstCandidateIndex >= journey.calls.length) {
+		// Tous les arrêts sont desservis : le terminus est atteint. La course est publiée une
+		// dernière fois — guessPosition ancre alors sa position au terminus — si l'arrivée a eu lieu
+		// depuis le dernier cycle, sans quoi elle disparaîtrait de la carte avant d'y être arrivée.
+		// Le test est strict : au cycle suivant `atMs - graceMs` a dépassé l'arrivée, donc une seule
+		// publication de grâce a lieu.
+		if (atMs - graceMs >= (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime)) return;
+		return [lastCall];
+	}
 
 	// Parmi les arrêts restants, le monitoredCall est celui dont l'heure est la plus petite.
 	// Cela gère le cas d'une course en avance où un arrêt tardif (temps réel) a une heure
@@ -279,6 +300,7 @@ export async function computeVehicleJourneys(source: Source) {
 	if (source.gtfs === undefined) return { journeys: [], paths: [] };
 
 	const now = Temporal.Now.instant();
+	const nowMs = now.epochMilliseconds;
 	const watch = createStopWatch();
 	const sourceId = padSourceId(source);
 	const updateLog = console.draft("%s     ► Generating active journeys list.", sourceId);
@@ -435,6 +457,7 @@ export async function computeVehicleJourneys(source: Source) {
 						}
 					}
 					handledJourneyIds.add(journey.id);
+					journey.lastVehiclePositionAtMs = nowMs;
 					if (journey.trip.block !== undefined) {
 						handledBlockIds.add(journey.trip.block);
 					}
@@ -735,6 +758,13 @@ export async function computeVehicleJourneys(source: Source) {
 
 		if (source.options.mode !== "VP-ONLY") {
 			const nowStr = now.toString();
+			const graceMs = source.getTerminusGraceMs(nowMs);
+			// Publications finales des courses arrivées à leur terminus depuis le dernier cycle. Elles
+			// sont différées car l'ordre d'itération de la Map n'est pas chronologique : itérées avant
+			// la course suivante du même roulement, elles lui voleraient sa clé et la feraient
+			// disparaître alors qu'elle est bien en service.
+			const endedJourneys: { key: string; block: string | undefined; vehicleJourney: VehicleJourney }[] = [];
+
 			for (const journey of source.gtfs.journeys.values()) {
 				if (handledJourneyIds.has(journey.id)) continue;
 				if (canceledJourneyIds.has(journey.id)) continue;
@@ -763,15 +793,29 @@ export async function computeVehicleJourneys(source: Source) {
 
 				if (activeJourneys.has(key)) continue;
 
-				const calls = getCalls(journey, now, source.options.getAheadTime);
+				const calls = getCalls(journey, now, source.options.getAheadTime, graceMs);
 				if (calls === undefined || calls.length === 0) continue;
+
+				// getCalls renvoie toujours un suffixe des calls : son dernier élément est le terminus.
+				const terminusCall = calls[calls.length - 1]!;
+				const hasEnded = nowMs >= (terminusCall.expectedArrivalTime ?? terminusCall.aimedArrivalTime);
+
+				// Une course suivie en GPS a déjà sa propre entrée dans le store aval (clé
+				// VehicleTracking, conservée jusqu'à 10 min) : une publication de grâce sous une autre
+				// clé la dupliquerait.
+				if (
+					hasEnded &&
+					journey.lastVehiclePositionAtMs !== undefined &&
+					nowMs - journey.lastVehiclePositionAtMs < VEHICLE_POSITION_RETENTION_MS
+				)
+					continue;
 
 				const vehicleRef =
 					source.options.getVehicleRef !== undefined
 						? source.options.getVehicleRef(vehicleDescriptor, journey)
 						: (vehicleDescriptor?.label ?? vehicleDescriptor?.id);
 
-				if (journey.trip.block !== undefined) {
+				if (journey.trip.block !== undefined && !hasEnded) {
 					handledBlockIds.add(journey.trip.block);
 				}
 
@@ -828,14 +872,27 @@ export async function computeVehicleJourneys(source: Source) {
 				};
 
 				if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
-					activeJourneys.set(key, vehicleJourney);
+					if (hasEnded) {
+						endedJourneys.push({ key, block: journey.trip.block, vehicleJourney });
+					} else {
+						activeJourneys.set(key, vehicleJourney);
+					}
 				}
+			}
+
+			// Une course active occupe toujours la place en priorité sur une publication finale.
+			for (const { key, block, vehicleJourney } of endedJourneys) {
+				if (activeJourneys.has(key)) continue;
+				if (block !== undefined) {
+					if (handledBlockIds.has(block)) continue;
+					handledBlockIds.add(block);
+				}
+				activeJourneys.set(key, vehicleJourney);
 			}
 		}
 
 		// Libère les calls des voyages terminés sans RT. Les voyages actifs/futurs conservent
 		// leur cache pour éviter de re-calculer computeCallsForDate() à chaque cycle.
-		const nowMs = now.epochMilliseconds;
 		for (const journey of source.gtfs!.journeys.values()) {
 			journey.releaseUnmodifiedCalls(nowMs);
 		}
@@ -850,6 +907,11 @@ export async function computeVehicleJourneys(source: Source) {
 			downloadTime,
 			computeTime,
 		);
+
+		// Écrit en toute fin de bloc `try` : la fenêtre de grâce se mesure depuis le dernier cycle
+		// effectivement publié. En cas d'échec (téléchargement du flux RT le plus souvent), rien n'est
+		// publié et l'affichage date toujours du dernier succès : la fenêtre doit remonter jusqu'à lui.
+		source.lastComputeAtMs = nowMs;
 
 		return {
 			journeys: Array.from(activeJourneys.values()),
