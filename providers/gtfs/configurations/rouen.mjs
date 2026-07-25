@@ -119,11 +119,11 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.replace("TNI:", ""),
 	},
 	{
-		id: 'jumieges',
-		staticResourceHref: 'https://gtfs.bus-tracker.fr/jumieges_2026.zip',
+		id: "jumieges",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/jumieges_2026.zip",
 		realtimeResourceHrefs: [],
 		getAheadTime: () => 60 * 10,
-		getNetworkRef: () => 'ASTUCE',
+		getNetworkRef: () => "ASTUCE",
 	},
 ];
 
