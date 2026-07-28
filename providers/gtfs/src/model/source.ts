@@ -41,6 +41,13 @@ export type SourceOptions = {
 	realtimeAuth?: SourceAuth;
 	gtfsOptions?: ImportGtfsOptions;
 	appendTripUpdateInformation?: boolean;
+	/**
+	 * Durée (ms) pendant laquelle les informations d'un TripUpdate disparu du flux restent
+	 * appliquées à la course. Passé ce délai, la course revient à son horaire théorique et ses
+	 * arrêts SKIPPED redeviennent desservis. Vaut {@link DEFAULT_TRIP_UPDATE_TTL_MS} par défaut ;
+	 * mettre 0 pour abandonner le temps réel dès le premier cycle où la course quitte le flux.
+	 */
+	tripUpdateTtlMs?: number;
 	allowTripGuessing?: boolean;
 	addedTripShapeMatching?: boolean;
 	disableRoutePaths?: boolean;
@@ -68,6 +75,13 @@ export type SourceOptions = {
  * plusieurs minutes, qui republierait sinon d'un coup tous les terminus manqués entre-temps.
  */
 export const MAX_TERMINUS_GRACE_MS = 120_000;
+
+/**
+ * Délai de tolérance par défaut avant d'abandonner les informations d'un TripUpdate disparu du
+ * flux. Amortit les producteurs dont le flux est intermittent : une course qui en sort le temps
+ * d'un cycle ne perd pas son retard ni ses arrêts supprimés.
+ */
+export const DEFAULT_TRIP_UPDATE_TTL_MS = 10 * 60 * 1000;
 
 export class Source {
 	gtfs?: Gtfs;

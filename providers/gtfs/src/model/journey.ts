@@ -91,8 +91,13 @@ export class Journey {
 	private _calls: JourneyCall[] | null = null;
 	private _hasRealtime = false;
 	private _positionGuard: PositionGuardState | undefined;
+	/** Bornes théoriques, mémorisées pour restaurer l'état initial quand le temps réel expire. */
+	private readonly aimedFirstCallArrivalMs: number;
+	private readonly aimedLastCallDepartureMs: number;
 	/** Instant (epoch ms) du dernier VehiclePosition reçu pour cette course. */
 	lastVehiclePositionAtMs: number | undefined;
+	/** Instant (epoch ms) du dernier cycle ayant appliqué un TripUpdate à cette course. */
+	lastTripUpdateAtMs: number | undefined;
 
 	constructor(
 		readonly id: string,
@@ -102,7 +107,10 @@ export class Journey {
 		public firstCallArrivalMs: number,
 		/** Heure de départ au dernier arrêt (epoch ms). Initialisé sur l'heure théorique, mis à jour par updateJourney avec l'heure temps réel. */
 		public lastCallDepartureMs: number,
-	) {}
+	) {
+		this.aimedFirstCallArrivalMs = firstCallArrivalMs;
+		this.aimedLastCallDepartureMs = lastCallDepartureMs;
+	}
 
 	/**
 	 * Tableau des appels de la journée. Calculé à la demande (lazy) et mis en cache.
@@ -128,6 +136,30 @@ export class Journey {
 				this._calls = null;
 			}
 		}
+	}
+
+	/**
+	 * Abandonne les informations temps réel d'une course dont le TripUpdate a disparu du flux depuis
+	 * plus de `ttlMs`, en restaurant l'horaire théorique. Un flux GTFS-RT est un instantané complet :
+	 * une course absente n'a plus d'information temps réel, y compris ses exceptions de desserte.
+	 *
+	 * Sans cela, un arrêt SKIPPED resterait affiché comme supprimé jusqu'à la fin de la course alors
+	 * que le producteur a levé la perturbation — rien ne vient le corriger quand le flux ne porte
+	 * aucun horaire temps réel, puisque {@link updateJourney} n'est plus appelé pour cette course.
+	 *
+	 * @returns true si l'état temps réel a été abandonné.
+	 */
+	expireStaleRealtime(nowMs: number, ttlMs: number) {
+		if (this.lastTripUpdateAtMs === undefined) return false;
+		if (nowMs - this.lastTripUpdateAtMs <= ttlMs) return false;
+
+		this.lastTripUpdateAtMs = undefined;
+		this._hasRealtime = false;
+		// Les calls sont re-calculés à la demande depuis l'horaire théorique.
+		this._calls = null;
+		this.firstCallArrivalMs = this.aimedFirstCallArrivalMs;
+		this.lastCallDepartureMs = this.aimedLastCallDepartureMs;
+		return true;
 	}
 
 	get vehicleDescriptor(): VehicleDescriptor | undefined {

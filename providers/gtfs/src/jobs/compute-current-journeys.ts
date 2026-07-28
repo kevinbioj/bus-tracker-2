@@ -5,7 +5,7 @@ import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
 import type { Gtfs } from "../model/gtfs.js";
 import type { TripDescriptor, TripUpdate } from "../model/gtfs-rt.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
-import type { Source } from "../model/source.js";
+import { DEFAULT_TRIP_UPDATE_TTL_MS, type Source } from "../model/source.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
@@ -307,7 +307,7 @@ export async function computeVehicleJourneys(source: Source) {
 
 	try {
 		updateLog("%s 1/2 ► Downloading real-time data from feeds.", sourceId);
-		const { tripUpdates, vehiclePositions } = await downloadGtfsRt(source);
+		const { tripUpdates, vehiclePositions, failedFeedCount } = await downloadGtfsRt(source);
 		const downloadTime = watch.step();
 
 		updateLog("%s 2/2 ► Computing active journeys.", sourceId);
@@ -398,6 +398,7 @@ export async function computeVehicleJourneys(source: Source) {
 				}
 				journey.updateJourney(source.gtfs, tripUpdate.stopTimeUpdate ?? [], source.options.appendTripUpdateInformation);
 				journey.setVehicleDescriptor(tripUpdate.vehicle, tripUpdate.timestamp * 1000);
+				journey.lastTripUpdateAtMs = nowMs;
 			}
 
 			// source.gtfs.journeys.sort((a, b) => {
@@ -405,6 +406,19 @@ export async function computeVehicleJourneys(source: Source) {
 			// 	const bStart = b.calls.at(0)!.expectedArrivalTime ?? b.calls.at(0)!.aimedArrivalTime;
 			// 	return aStart - bStart;
 			// });
+		}
+
+		// Un flux GTFS-RT est un instantané complet : une course qui en a disparu n'a plus
+		// d'information temps réel. Sans cette expiration, ses arrêts supprimés le resteraient
+		// jusqu'à la fin de la course, faute d'un updateJourney pour les rétablir — c'est le seul
+		// recours quand le flux ne porte aucun horaire temps réel. Appliquée avant la publication
+		// pour que le rétablissement prenne effet dès ce cycle. Les cycles où un flux n'a pas
+		// répondu sont ignorés : l'absence d'une course n'y prouve rien.
+		if (failedFeedCount === 0) {
+			const tripUpdateTtlMs = source.options.tripUpdateTtlMs ?? DEFAULT_TRIP_UPDATE_TTL_MS;
+			for (const journey of source.gtfs.journeys.values()) {
+				journey.expireStaleRealtime(nowMs, tripUpdateTtlMs);
+			}
 		}
 
 		for (const vehiclePosition of vehiclePositions) {

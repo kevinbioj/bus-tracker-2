@@ -16,6 +16,8 @@ export async function downloadGtfsRt(source: Source) {
 
 	const tripUpdates: TripUpdate[] = [];
 	const vehiclePositions: VehiclePosition[] = [];
+	/** Flux dont aucune donnée n'a pu être obtenue, cache de repli compris. */
+	let failedFeedCount = 0;
 
 	await Promise.allSettled(
 		realtimeResources.map(async ({ href: realtimeFeedHref, pollMs }) => {
@@ -37,7 +39,14 @@ export async function downloadGtfsRt(source: Source) {
 					signal: AbortSignal.timeout(15_000),
 				});
 
-				if ([204, 429].includes(response.status)) return;
+				// 204 : le producteur signale explicitement un flux vide, la donnée lue est à jour.
+				if (response.status === 204) return;
+
+				// 429 : rien n'a pu être lu, le flux est indisponible pour ce cycle.
+				if (response.status === 429) {
+					failedFeedCount += 1;
+					return;
+				}
 
 				if (!response.ok)
 					throw new Error(`Failed to download feed at '${realtimeFeedHref}' (status ${response.status}).`);
@@ -90,6 +99,8 @@ export async function downloadGtfsRt(source: Source) {
 				if (pollMs !== undefined && cached !== undefined) {
 					tripUpdates.push(...cached.tripUpdates);
 					vehiclePositions.push(...cached.vehiclePositions);
+				} else {
+					failedFeedCount += 1;
 				}
 
 				console.error(new Error(`Failed to download entities at '${realtimeFeedHref}'`, { cause }));
@@ -102,5 +113,5 @@ export async function downloadGtfsRt(source: Source) {
 		}),
 	);
 
-	return { tripUpdates, vehiclePositions };
+	return { tripUpdates, vehiclePositions, failedFeedCount };
 }

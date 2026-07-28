@@ -122,13 +122,32 @@ function scheduledSource(options?: Partial<SourceOptions>) {
 }
 
 /** Un cycle de calcul à l'heure donnée, sans donnée temps réel sauf indication contraire. */
-async function cycleAt(source: Source, time: string, realtime?: { vehiclePositions?: VehiclePosition[] }) {
+async function cycleAt(
+	source: Source,
+	time: string,
+	realtime?: { tripUpdates?: TripUpdate[]; vehiclePositions?: VehiclePosition[]; failedFeedCount?: number },
+) {
 	vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from(`2026-05-18T${time}Z`));
 	vi.mocked(downloadGtfsRt).mockResolvedValue({
-		tripUpdates: [],
+		tripUpdates: realtime?.tripUpdates ?? [],
 		vehiclePositions: realtime?.vehiclePositions ?? [],
+		failedFeedCount: realtime?.failedFeedCount ?? 0,
 	});
 	return computeVehicleJourneys(source);
+}
+
+/** Un TripUpdate ne portant aucun horaire temps réel, seulement la suppression de l'arrêt B. */
+function skippedTripUpdate(time: string): TripUpdate {
+	return {
+		timestamp: epochSeconds(`2026-05-18T${time}Z`),
+		trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18" },
+		stopTimeUpdate: [{ stopId: "B", stopSequence: 2, scheduleRelationship: "SKIPPED" }],
+	};
+}
+
+/** Statut publié pour l'arrêt B de la course `original`. */
+function statusOfB(result: Awaited<ReturnType<typeof computeVehicleJourneys>>) {
+	return result.journeys[0]?.calls?.find((call) => call.stopRef.endsWith(":B"))?.callStatus;
 }
 
 /**
@@ -202,6 +221,7 @@ describe("computeVehicleJourneys", () => {
 		vi.mocked(downloadGtfsRt).mockResolvedValue({
 			tripUpdates: [unmatchedAddedTripUpdate()],
 			vehiclePositions: [],
+			failedFeedCount: 0,
 		});
 		const source = new Source("test", {
 			staticResourceHref: "https://example.com/gtfs.zip",
@@ -252,6 +272,7 @@ describe("computeVehicleJourneys", () => {
 					currentStopSequence: 2,
 				},
 			],
+			failedFeedCount: 0,
 		});
 		const source = new Source("test", {
 			staticResourceHref: "https://example.com/gtfs.zip",
@@ -274,11 +295,19 @@ describe("computeVehicleJourneys", () => {
 		source.gtfs = makeGtfs();
 
 		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:05:00Z"));
-		vi.mocked(downloadGtfsRt).mockResolvedValue({ tripUpdates: [delayedTripUpdate(2 * 60)], vehiclePositions: [] });
+		vi.mocked(downloadGtfsRt).mockResolvedValue({
+			tripUpdates: [delayedTripUpdate(2 * 60)],
+			vehiclePositions: [],
+			failedFeedCount: 0,
+		});
 		const first = await computeVehicleJourneys(source);
 
 		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:05:30Z"));
-		vi.mocked(downloadGtfsRt).mockResolvedValue({ tripUpdates: [delayedTripUpdate(5 * 60)], vehiclePositions: [] });
+		vi.mocked(downloadGtfsRt).mockResolvedValue({
+			tripUpdates: [delayedTripUpdate(5 * 60)],
+			vehiclePositions: [],
+			failedFeedCount: 0,
+		});
 		const second = await computeVehicleJourneys(source);
 
 		const firstDistance = first.journeys[0]?.position.distanceTraveled;
@@ -363,6 +392,72 @@ describe("computeVehicleJourneys (arrivée au terminus)", () => {
 		// La position GPS reste dans le store aval sous sa propre clé : republier la course
 		// théorique afficherait deux marqueurs pour le même bus.
 		expect((await cycleAt(source, "08:20:15")).journeys).toHaveLength(0);
+	});
+});
+
+describe("computeVehicleJourneys (expiration des TripUpdate disparus)", () => {
+	beforeEach(() => {
+		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		Reflect.deleteProperty(console, "draft");
+	});
+
+	it("rétablit un arrêt supprimé dès que le TripUpdate quitte le flux", async () => {
+		const source = scheduledSource({ tripUpdateTtlMs: 0 });
+
+		const skipped = await cycleAt(source, "08:02:00", { tripUpdates: [skippedTripUpdate("08:02:00")] });
+		expect(statusOfB(skipped)).toBe("SKIPPED");
+
+		// Le producteur a levé la perturbation : la course n'est plus dans le flux, et aucun horaire
+		// temps réel n'a jamais été publié pour elle.
+		const restored = await cycleAt(source, "08:03:00");
+		expect(statusOfB(restored)).toBe("SCHEDULED");
+	});
+
+	it("conserve l'arrêt supprimé tant que le délai de tolérance n'est pas écoulé", async () => {
+		const source = scheduledSource();
+		const journey = source.gtfs!.journeys.get(`${DATE}-original`)!;
+		// B n'est plus publié une fois son heure passée : l'état est lu sur la course elle-même.
+		const statusOfCallB = () => journey.calls[1]?.status;
+
+		await cycleAt(source, "08:02:00", { tripUpdates: [skippedTripUpdate("08:02:00")] });
+		expect(statusOfCallB()).toBe("SKIPPED");
+
+		// Flux intermittent : une absence ponctuelle ne doit pas effacer la perturbation.
+		await cycleAt(source, "08:03:00");
+		expect(statusOfCallB()).toBe("SKIPPED");
+
+		await cycleAt(source, "08:12:30");
+		expect(statusOfCallB()).toBe("SCHEDULED");
+	});
+
+	it("n'expire rien lors d'un cycle où un flux n'a pas répondu", async () => {
+		const source = scheduledSource({ tripUpdateTtlMs: 0 });
+
+		await cycleAt(source, "08:02:00", { tripUpdates: [skippedTripUpdate("08:02:00")] });
+
+		const failed = await cycleAt(source, "08:03:00", { failedFeedCount: 1 });
+		expect(statusOfB(failed)).toBe("SKIPPED");
+
+		const recovered = await cycleAt(source, "08:04:00");
+		expect(statusOfB(recovered)).toBe("SCHEDULED");
+	});
+
+	it("restaure les horaires théoriques et les bornes de la course", async () => {
+		const source = scheduledSource({ tripUpdateTtlMs: 0 });
+		const journey = source.gtfs!.journeys.get(`${DATE}-original`)!;
+
+		await cycleAt(source, "08:05:00", { tripUpdates: [delayedTripUpdate(5 * 60)] });
+		expect(journey.hasRealtime()).toBe(true);
+		expect(journey.lastCallDepartureMs).toBe(Temporal.Instant.from("2026-05-18T08:25:00Z").epochMilliseconds);
+
+		const restored = await cycleAt(source, "08:06:00");
+		expect(journey.hasRealtime()).toBe(false);
+		expect(journey.lastCallDepartureMs).toBe(Temporal.Instant.from("2026-05-18T08:20:00Z").epochMilliseconds);
+		expect(restored.journeys[0]?.calls?.every((call) => call.expectedTime === undefined)).toBe(true);
 	});
 });
 
