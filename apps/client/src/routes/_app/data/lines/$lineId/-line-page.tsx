@@ -1,8 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
 import { ChevronLeft, ChevronRight, MapIcon } from "lucide-react";
-import { parseAsString, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
@@ -24,7 +23,9 @@ const parseMonth = (input: Dayjs, validMonths: string[]) => {
 
 export function LinePage() {
 	const { lineId } = useParams({ from: "/_app/data/lines/$lineId/" });
-	const [date] = useQueryState("date", parseAsString);
+	// Lu depuis le match (et non via nuqs) pour rester aligné sur ce que le loader a préchargé :
+	// la location du routeur change dès le clic, avant que les données du nouveau mois soient en cache.
+	const { date } = useSearch({ from: "/_app/data/lines/$lineId/" });
 
 	const { data: line } = useSuspenseQuery(GetLineQuery(+lineId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
@@ -32,7 +33,7 @@ export function LinePage() {
 
 	const isNetworkEditor = editor?.allowedNetworks.includes(line.networkId);
 
-	const selectedDate = getLineVehicleAssignmentsDate(line, date ?? undefined);
+	const selectedDate = getLineVehicleAssignmentsDate(line, date);
 	const currentDate = dayjs(selectedDate);
 	const month = parseMonth(currentDate, line.activeMonths);
 	const currentMonthIndex = line.activeMonths.indexOf(month);

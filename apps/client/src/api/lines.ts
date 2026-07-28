@@ -1,5 +1,5 @@
 import type { LinePath } from "@bus-tracker/contracts";
-import { keepPreviousData, queryOptions } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { HTTPError } from "ky";
 
 import { client } from "./client";
@@ -65,7 +65,6 @@ export const GetLinePathQuery = (lineId?: number) =>
 
 export const GetLineVehicleAssignmentsQuery = (lineId: number, date: string) =>
 	queryOptions({
-		placeholderData: keepPreviousData,
 		staleTime: 10_000,
 		refetchInterval: 10_000,
 		queryKey: ["lines", lineId, "vehicle-assignments", date],

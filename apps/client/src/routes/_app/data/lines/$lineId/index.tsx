@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Suspense } from "react";
 import { z } from "zod";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
@@ -10,8 +11,14 @@ const searchSchema = z.object({
 	date: z.string().optional(),
 });
 
+// Le contenu est enveloppé dans un Suspense : sans boundary, une suspension remonterait
+// jusqu'à la racine et bloquerait le routeur au lieu de simplement dégrader l'affichage.
 export const Route = createFileRoute("/_app/data/lines/$lineId/")({
-	component: LinePage,
+	component: () => (
+		<Suspense fallback={null}>
+			<LinePage />
+		</Suspense>
+	),
 	validateSearch: searchSchema,
 	loaderDeps: ({ search: { date } }) => ({ date }),
 	loader: async ({ context: { queryClient }, params: { lineId }, deps: { date } }) => {
