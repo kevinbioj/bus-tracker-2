@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, CircleIcon, FilterIcon, FilterXIcon } from "lucide-react";
-import type maplibregl from "maplibre-gl";
+import type { IControl } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -34,7 +34,7 @@ export function FilterModuleControl({
 	useEffect(() => {
 		if (activatorRef.current === null) return;
 
-		const control: maplibregl.IControl = {
+		const control: IControl = {
 			onAdd: () => activatorRef.current!,
 			onRemove: () => void 0,
 		};

@@ -1,11 +1,11 @@
-import type maplibregl from "maplibre-gl";
+import type { AddLayerObject, StyleLayer } from "maplibre-gl";
 import { useEffect, useState } from "react";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 
-export function useMapLayer(layerOptions: maplibregl.AddLayerObject, beforeId?: string) {
+export function useMapLayer(layerOptions: AddLayerObject, beforeId?: string) {
 	const map = useMap();
-	const [layer, setLayer] = useState<maplibregl.StyleLayer | null>(null);
+	const [layer, setLayer] = useState<StyleLayer | null>(null);
 
 	useEffect(() => {
 		let abort = false;

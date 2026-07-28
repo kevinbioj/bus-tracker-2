@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import maplibregl from "maplibre-gl";
+import { FullscreenControl, GeolocateControl, type Map as MaplibreMap, NavigationControl } from "maplibre-gl";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useCallback, useMemo } from "react";
 
@@ -34,18 +34,18 @@ export default function EmbeddableMapPage() {
 	);
 
 	const onMap = useCallback(
-		(map: maplibregl.Map) => {
+		(map: MaplibreMap) => {
 			setTimeout(() => {
-				const navigationControl = new maplibregl.NavigationControl();
+				const navigationControl = new NavigationControl();
 				map.addControl(navigationControl, "top-left");
 
 				if (withFullscreen !== null) {
-					const fullscreenControl = new maplibregl.FullscreenControl();
+					const fullscreenControl = new FullscreenControl();
 					map.addControl(fullscreenControl, "top-right");
 				}
 
 				if (withGeolocate !== null) {
-					const geolocateControl = new maplibregl.GeolocateControl({
+					const geolocateControl = new GeolocateControl({
 						trackUserLocation: true,
 					});
 					map.addControl(geolocateControl, "top-right");

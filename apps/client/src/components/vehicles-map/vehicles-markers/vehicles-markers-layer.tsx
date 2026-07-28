@@ -1,4 +1,10 @@
-import type maplibregl from "maplibre-gl";
+import type {
+	AddLayerObject,
+	DataDrivenPropertyValueSpecification,
+	GeoJSONSource,
+	SourceSpecification,
+	SymbolLayerSpecification,
+} from "maplibre-gl";
 import { useEffect } from "react";
 import { useMap } from "~/adapters/maplibre-gl/map";
 
@@ -61,12 +67,12 @@ function createArrowOutlineIcon(color = "#000000") {
 	return ctx.getImageData(0, 0, ARROW_ICON_SIZE, ARROW_ICON_SIZE);
 }
 
-const initialData: maplibregl.SourceSpecification = {
+const initialData: SourceSpecification = {
 	type: "geojson",
 	data: { type: "FeatureCollection", features: [] },
 };
 
-const vehiclesLayerObject: maplibregl.AddLayerObject = {
+const vehiclesLayerObject: AddLayerObject = {
 	id: "vehicles",
 	source: "vehicles",
 	type: "circle",
@@ -78,7 +84,7 @@ const vehiclesLayerObject: maplibregl.AddLayerObject = {
 	},
 };
 
-const arrowsLayout: maplibregl.SymbolLayerSpecification["layout"] = {
+const arrowsLayout: SymbolLayerSpecification["layout"] = {
 	"icon-size": 0.7,
 	"icon-allow-overlap": true,
 	"icon-ignore-placement": true,
@@ -87,19 +93,11 @@ const arrowsLayout: maplibregl.SymbolLayerSpecification["layout"] = {
 	"icon-offset": [0, -14],
 };
 
-const arrowsOpacity: maplibregl.DataDrivenPropertyValueSpecification<number> = [
-	"interpolate",
-	["linear"],
-	["zoom"],
-	10,
-	0,
-	12,
-	1,
-];
+const arrowsOpacity: DataDrivenPropertyValueSpecification<number> = ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 1];
 
 // Contour de contraste, rendu sous la flèche de remplissage (couleur = `color`, comme le
 // contour du cercle du marqueur). Une silhouette légèrement plus large déborde de la flèche.
-const arrowsOutlineLayerObject: maplibregl.AddLayerObject = {
+const arrowsOutlineLayerObject: AddLayerObject = {
 	id: "vehicles-arrows-outline",
 	source: "vehicles",
 	type: "symbol",
@@ -115,7 +113,7 @@ const arrowsOutlineLayerObject: maplibregl.AddLayerObject = {
 	},
 };
 
-const arrowsLayerObject: maplibregl.AddLayerObject = {
+const arrowsLayerObject: AddLayerObject = {
 	id: "vehicles-arrows",
 	source: "vehicles",
 	type: "symbol",
@@ -131,7 +129,7 @@ const arrowsLayerObject: maplibregl.AddLayerObject = {
 	},
 };
 
-const textLayerObject: maplibregl.AddLayerObject = {
+const textLayerObject: AddLayerObject = {
 	id: "vehicles-text",
 	type: "symbol",
 	source: "vehicles",
@@ -165,7 +163,7 @@ type VehicleMarkersProps = {
 
 export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersProps) {
 	const map = useMap();
-	const vehiclesSource = useMapSource<maplibregl.GeoJSONSource>("vehicles", initialData);
+	const vehiclesSource = useMapSource<GeoJSONSource>("vehicles", initialData);
 	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
 	useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
 	useMapLayer(arrowsOutlineLayerObject, arrowsLayerObject.id);

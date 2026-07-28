@@ -1,4 +1,4 @@
-import maplibregl from "maplibre-gl";
+import { Map as MaplibreMap, type MapOptions } from "maplibre-gl";
 import {
 	type ComponentPropsWithoutRef,
 	createContext,
@@ -12,21 +12,21 @@ import {
 
 type MapComponentProps = PropsWithChildren & {
 	containerProps?: ComponentPropsWithoutRef<"div">;
-	mapOptions?: Omit<maplibregl.MapOptions, "container">;
-	ref?: Ref<maplibregl.Map>;
+	mapOptions?: Omit<MapOptions, "container">;
+	ref?: Ref<MaplibreMap>;
 };
 
-const MapContext = createContext<maplibregl.Map | null>(null);
+const MapContext = createContext<MaplibreMap | null>(null);
 
 export function MapComponent({ children, containerProps, mapOptions, ref }: MapComponentProps) {
-	const [map, setMap] = useState<maplibregl.Map | null>(null);
+	const [map, setMap] = useState<MaplibreMap | null>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const container = containerRef.current;
 		if (container === null) return;
 
-		const instance = new maplibregl.Map({
+		const instance = new MaplibreMap({
 			...mapOptions,
 			container,
 		});

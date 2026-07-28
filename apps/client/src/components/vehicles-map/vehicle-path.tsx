@@ -1,6 +1,6 @@
 import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 import { useQuery } from "@tanstack/react-query";
-import type maplibregl from "maplibre-gl";
+import type { AddLayerObject, GeoJSONSource, SourceSpecification } from "maplibre-gl";
 import { useEffect, useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -11,7 +11,7 @@ import { GetPathQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 
-const pastPathStrokeLayer: maplibregl.AddLayerObject = {
+const pastPathStrokeLayer: AddLayerObject = {
 	id: "vehicle-path-past-stroke",
 	source: "vehicle-path",
 	type: "line",
@@ -27,7 +27,7 @@ const pastPathStrokeLayer: maplibregl.AddLayerObject = {
 	filter: ["==", ["get", "type"], "past"],
 };
 
-const pastPathLayer: maplibregl.AddLayerObject = {
+const pastPathLayer: AddLayerObject = {
 	id: "vehicle-path-past",
 	source: "vehicle-path",
 	type: "line",
@@ -43,7 +43,7 @@ const pastPathLayer: maplibregl.AddLayerObject = {
 	filter: ["==", ["get", "type"], "past"],
 };
 
-const futurePathStrokeLayer: maplibregl.AddLayerObject = {
+const futurePathStrokeLayer: AddLayerObject = {
 	id: "vehicle-path-future-stroke",
 	source: "vehicle-path",
 	type: "line",
@@ -59,7 +59,7 @@ const futurePathStrokeLayer: maplibregl.AddLayerObject = {
 	filter: ["==", ["get", "type"], "future"],
 };
 
-const futurePathLayer: maplibregl.AddLayerObject = {
+const futurePathLayer: AddLayerObject = {
 	id: "vehicle-path-future",
 	source: "vehicle-path",
 	type: "line",
@@ -75,7 +75,7 @@ const futurePathLayer: maplibregl.AddLayerObject = {
 	filter: ["==", ["get", "type"], "future"],
 };
 
-const initialSource: maplibregl.SourceSpecification = {
+const initialSource: SourceSpecification = {
 	type: "geojson",
 	data: { type: "FeatureCollection", features: [] },
 };
@@ -178,7 +178,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	const { data: linePath } = useQuery(GetLinePathQuery(showLinePath ? lineId : undefined));
 	const { data: line } = useQuery(GetLineQuery(journey?.lineId ?? lineId));
 
-	const stopsLabelLayer = useMemo<maplibregl.AddLayerObject>(
+	const stopsLabelLayer = useMemo<AddLayerObject>(
 		() => ({
 			id: "vehicle-path-stops-label",
 			source: "vehicle-path",
@@ -217,7 +217,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 		[stopLabelsStyle],
 	);
 
-	const stopsLayer = useMemo<maplibregl.AddLayerObject>(
+	const stopsLayer = useMemo<AddLayerObject>(
 		() => ({
 			id: "vehicle-path-stops",
 			source: "vehicle-path",
@@ -236,7 +236,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 		[stopLabelsStyle],
 	);
 
-	const skippedStopMarkerLayer = useMemo<maplibregl.AddLayerObject>(
+	const skippedStopMarkerLayer = useMemo<AddLayerObject>(
 		() => ({
 			id: "vehicle-path-stops-skipped",
 			source: "vehicle-path",
@@ -391,7 +391,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 		return { type: "FeatureCollection", features };
 	}, [journey, journeyId, path, line, linePath, pathDisplayMode, showLinePath]);
 
-	const source = useMapSource<maplibregl.GeoJSONSource>("vehicle-path", initialSource);
+	const source = useMapSource<GeoJSONSource>("vehicle-path", initialSource);
 	useMapLayer(pastPathStrokeLayer, "vehicles-arrows-outline");
 	useMapLayer(pastPathLayer, "vehicles-arrows-outline");
 	useMapLayer(futurePathStrokeLayer, "vehicles-arrows-outline");

@@ -1,4 +1,4 @@
-import type maplibregl from "maplibre-gl";
+import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect } from "react";
 
 export type CircleMarkerSource = {
@@ -22,7 +22,7 @@ export type CircleMarkerFeature<T = { id: string; bearing: number | null }> = {
 
 type MapCircleMarkersProps<T extends { id: string; bearing: number | null }> = {
 	features: CircleMarkerFeature<T>[];
-	source: maplibregl.GeoJSONSource;
+	source: GeoJSONSource;
 };
 
 export function GeojsonCircles<T extends { id: string; bearing: number | null }>({

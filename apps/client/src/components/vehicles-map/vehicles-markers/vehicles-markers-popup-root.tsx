@@ -1,11 +1,11 @@
-import type maplibregl from "maplibre-gl";
+import type { PopupOptions, StyleLayer } from "maplibre-gl";
 
 import { GeojsonPopup } from "~/adapters/maplibre-gl/geojson-popup";
 import { VehiclePath } from "~/components/vehicles-map/vehicle-path";
 import { VehicleMarkerPopup } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-marker-popup";
 import { JumpTo } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-jump-to";
 
-const popupOptions: maplibregl.PopupOptions = {
+const popupOptions: PopupOptions = {
 	anchor: "bottom",
 	closeButton: false,
 	closeOnClick: false,
@@ -15,7 +15,7 @@ const popupOptions: maplibregl.PopupOptions = {
 
 type VehiclesMarkersPopupRootProps = {
 	embedMode?: boolean;
-	layer: maplibregl.StyleLayer;
+	layer: StyleLayer;
 	lineId?: number;
 };
 

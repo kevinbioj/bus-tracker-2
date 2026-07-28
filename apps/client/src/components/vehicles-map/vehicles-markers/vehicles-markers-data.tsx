@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import maplibregl from "maplibre-gl";
+import { type GeoJSONSource, LngLatBounds } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
 import { useDebounceValue, useLocalStorage, useWindowSize } from "usehooks-ts";
 
@@ -37,7 +37,7 @@ const noise = ([lon, lat]: [number, number], seed: string): [number, number] => 
 type VehiclesMarkersDataProps = {
 	lineId?: number;
 	networkId?: number;
-	source: maplibregl.GeoJSONSource;
+	source: GeoJSONSource;
 };
 
 export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarkersDataProps) {
@@ -80,7 +80,7 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 
 			if (validPositions.length === 0) return;
 
-			const boundsObj = new maplibregl.LngLatBounds(validPositions[0], validPositions[0]);
+			const boundsObj = new LngLatBounds(validPositions[0], validPositions[0]);
 			for (const pos of validPositions) {
 				boundsObj.extend(pos);
 			}

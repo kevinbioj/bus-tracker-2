@@ -1,4 +1,5 @@
 import { RefreshCwIcon } from "lucide-react";
+import type { IControl } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -24,7 +25,7 @@ export function VehiclesMarkersStatusControl({ loading, onClick }: VehiclesMarke
 
 		controlRef.classList.add("maplibregl-ctrl", "maplibregl-ctrl-group");
 
-		const control: maplibregl.IControl = {
+		const control: IControl = {
 			onAdd: () => controlRef,
 			onRemove: () => void 0,
 		};

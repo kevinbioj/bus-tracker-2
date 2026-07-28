@@ -1,9 +1,9 @@
-import type { SourceSpecification } from "maplibre-gl";
+import type { Source, SourceSpecification } from "maplibre-gl";
 import { useCallback, useEffect, useState } from "react";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 
-export function useMapSource<T extends maplibregl.Source>(id: string, specification: SourceSpecification) {
+export function useMapSource<T extends Source>(id: string, specification: SourceSpecification) {
 	const map = useMap();
 	const [source, setSource] = useState<T | null>(null);
 

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
-import maplibregl from "maplibre-gl";
+import { FullscreenControl, GeolocateControl, type Map as MaplibreGl, NavigationControl } from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { type ComponentPropsWithoutRef, useCallback, useMemo, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
@@ -55,15 +55,15 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		[initialLocation],
 	);
 
-	const onMap = useCallback((map: maplibregl.Map) => {
+	const onMap = useCallback((map: MaplibreGl) => {
 		setTimeout(() => {
-			const navigationControl = new maplibregl.NavigationControl();
+			const navigationControl = new NavigationControl();
 			map.addControl(navigationControl, "top-left");
 
-			const fullscreenControl = new maplibregl.FullscreenControl();
+			const fullscreenControl = new FullscreenControl();
 			map.addControl(fullscreenControl, "top-right");
 
-			const geolocateControl = new maplibregl.GeolocateControl({
+			const geolocateControl = new GeolocateControl({
 				trackUserLocation: true,
 			});
 			map.addControl(geolocateControl, "top-right");
