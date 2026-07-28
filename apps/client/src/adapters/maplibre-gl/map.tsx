@@ -1,4 +1,5 @@
-import { Map as MaplibreMap, type MapOptions } from "maplibre-gl";
+import { Map as MaplibreMap, type MapOptions, setWorkerUrl } from "maplibre-gl";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import {
 	type ComponentPropsWithoutRef,
 	createContext,
@@ -9,6 +10,8 @@ import {
 	useRef,
 	useState,
 } from "react";
+
+setWorkerUrl(maplibreWorkerUrl);
 
 type MapComponentProps = PropsWithChildren & {
 	containerProps?: ComponentPropsWithoutRef<"div">;

@@ -10,6 +10,9 @@ export default defineConfig({
 	build: {
 		sourcemap: true,
 	},
+	worker: {
+		format: "es",
+	},
 	plugins: [
 		paraglideVitePlugin({
 			emitTsDeclarations: true,
