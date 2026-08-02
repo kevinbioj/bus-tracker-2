@@ -30,7 +30,7 @@ export function Settings() {
 					<DialogTitle>{m.settings_title()}</DialogTitle>
 				</DialogHeader>
 
-				<div className="flex-1 overflow-y-auto px-1">
+				<div className="flex-1 overflow-y-auto">
 					<section>
 						<h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
 							{m.settings_general_section()}

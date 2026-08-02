@@ -19,6 +19,12 @@ import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon 
 import { Zzz } from "~/icons/zzz";
 import * as m from "~/paraglide/messages";
 
+function lineNumberTextSize(number: string) {
+	if (number.length > 12) return "text-sm";
+	if (number.length > 8) return "text-lg";
+	return "text-2xl";
+}
+
 export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 	const { data: network } = useQuery(GetNetworkQuery(vehicle.networkId, true));
@@ -37,9 +43,13 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 		if (line === undefined) return <Zzz className="h-full mx-auto" />;
 
 		return line.cartridgeHref ? (
-			<img className="h-full mx-auto object-contain" src={line.cartridgeHref} alt={line.number} />
+			<img className="h-full max-w-full mx-auto object-contain" src={line.cartridgeHref} alt={line.number} />
 		) : (
-			<p className="flex items-center justify-center h-full font-bold text-2xl">{line.number}</p>
+			<p
+				className={`font-bold text-center leading-tight wrap-break-words line-clamp-2 ${lineNumberTextSize(line.number)}`}
+			>
+				{line.number}
+			</p>
 		);
 	}, [line, vehicle]);
 
@@ -88,8 +98,10 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 				style={{ borderColor: line?.textColor ?? undefined }}
 			/>
 			<div className="flex gap-2 flex-1 mt-2 mx-2 sm:mt-0 sm:mx-0">
-				<div className="h-12 min-w-16 lg:max-w-36">{activeLine}</div>
-				<div className="flex flex-col justify-center text-base">
+				<div className="flex items-center justify-center h-12 min-w-16 max-w-28 lg:max-w-36 shrink-0 overflow-hidden">
+					{activeLine}
+				</div>
+				<div className="flex flex-col justify-center min-w-0 text-base">
 					{vehicle.designation && <p className="font-bold">{vehicle.designation}</p>}
 					{vehicle.activity?.status === "online" ? (
 						<p>

@@ -2,10 +2,11 @@ import { useId } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Tabs } from "~/components/ui/tabs";
 import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 import * as m from "~/paraglide/messages";
+import { SettingTabsList, SettingTabsTrigger } from "~/routes/_app/-components/settings/setting-tabs";
 
 export function StopLabelsStyleSetting() {
 	const id = useId();
@@ -29,11 +30,15 @@ export function StopLabelsStyleSetting() {
 				onValueChange={(value) => setStopLabelsStyle(value as StopLabelsStyle)}
 				className="w-full"
 			>
-				<TabsList className="grid w-full grid-cols-3" id={id}>
-					<TabsTrigger value="disabled">{m.settings_stop_labels_style_disabled()}</TabsTrigger>
-					<TabsTrigger value="without-background">{m.settings_stop_labels_style_without_background()}</TabsTrigger>
-					<TabsTrigger value="with-background">{m.settings_stop_labels_style_with_background()}</TabsTrigger>
-				</TabsList>
+				<SettingTabsList className="grid-cols-3" id={id}>
+					<SettingTabsTrigger value="disabled">{m.settings_stop_labels_style_disabled()}</SettingTabsTrigger>
+					<SettingTabsTrigger value="without-background">
+						{m.settings_stop_labels_style_without_background()}
+					</SettingTabsTrigger>
+					<SettingTabsTrigger value="with-background">
+						{m.settings_stop_labels_style_with_background()}
+					</SettingTabsTrigger>
+				</SettingTabsList>
 			</Tabs>
 		</div>
 	);

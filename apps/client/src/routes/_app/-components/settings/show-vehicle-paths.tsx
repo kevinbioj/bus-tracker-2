@@ -1,9 +1,10 @@
 import { useId } from "react";
 
 import { Label } from "~/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Tabs } from "~/components/ui/tabs";
 import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import * as m from "~/paraglide/messages";
+import { SettingTabsList, SettingTabsTrigger } from "~/routes/_app/-components/settings/setting-tabs";
 
 export function ShowVehiclePathsSetting() {
 	const id = useId();
@@ -15,17 +16,13 @@ export function ShowVehiclePathsSetting() {
 				{m.settings_show_vehicle_paths_label()}
 			</Label>
 			<Tabs value={pathDisplayMode} onValueChange={(value) => setPathDisplayMode(value as typeof pathDisplayMode)}>
-				<TabsList className="grid h-auto w-full grid-cols-3" id={id}>
-					<TabsTrigger className="whitespace-normal py-1.5 text-center leading-tight" value="disabled">
-						{m.settings_show_vehicle_paths_disabled()}
-					</TabsTrigger>
-					<TabsTrigger className="whitespace-normal py-1.5 text-center leading-tight" value="journeys">
-						{m.settings_show_vehicle_paths_journeys()}
-					</TabsTrigger>
-					<TabsTrigger className="whitespace-normal py-1.5 text-center leading-tight" value="journeys-and-lines">
+				<SettingTabsList className="grid-cols-3" id={id}>
+					<SettingTabsTrigger value="disabled">{m.settings_show_vehicle_paths_disabled()}</SettingTabsTrigger>
+					<SettingTabsTrigger value="journeys">{m.settings_show_vehicle_paths_journeys()}</SettingTabsTrigger>
+					<SettingTabsTrigger value="journeys-and-lines">
 						{m.settings_show_vehicle_paths_journeys_and_lines()}
-					</TabsTrigger>
-				</TabsList>
+					</SettingTabsTrigger>
+				</SettingTabsList>
 			</Tabs>
 		</div>
 	);

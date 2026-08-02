@@ -50,7 +50,8 @@ export function DisplayedVehiclesSetting() {
 		<fieldset>
 			<legend className="text-base font-medium">{m.settings_displayed_vehicles_label()}</legend>
 			<p className="mb-2 text-sm text-muted-foreground">{m.settings_displayed_vehicles_description()}</p>
-			<div className="grid grid-cols-3 gap-2">
+			{/* Stacked below `sm`: three columns leave too little room for the labels on a phone. */}
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
 				{positionTypes.map((type) => {
 					const { iconClass, checkedClass, checkboxClass, label } = positionTypeDetails[type];
 					const checked = displayedPositionTypes.includes(type);
@@ -59,7 +60,7 @@ export function DisplayedVehiclesSetting() {
 						<Label
 							key={type}
 							className={cn(
-								"items-center gap-2 rounded-md border p-2 text-xs cursor-pointer transition-colors has-disabled:cursor-not-allowed has-disabled:opacity-50",
+								"items-center gap-2 min-w-0 rounded-md border p-2 text-xs cursor-pointer transition-colors has-disabled:cursor-not-allowed has-disabled:opacity-50",
 								checked ? checkedClass : "bg-card",
 							)}
 						>
@@ -70,7 +71,7 @@ export function DisplayedVehiclesSetting() {
 								onCheckedChange={(value) => onChange(type, value)}
 							/>
 							<SatelliteDishIcon className={cn("size-4 shrink-0", iconClass)} />
-							{label()}
+							<span className="min-w-0 wrap-break-words">{label()}</span>
 						</Label>
 					);
 				})}

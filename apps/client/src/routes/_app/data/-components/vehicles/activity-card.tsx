@@ -10,6 +10,12 @@ import * as m from "~/paraglide/messages";
 
 type ActivityCardProps = { activity: VehicleTimelineDayActivity; day: string };
 
+function lineNumberTextSize(number: string) {
+	if (number.length > 12) return "text-sm";
+	if (number.length > 8) return "text-lg";
+	return "text-2xl";
+}
+
 const TimeDisplay = ({ at, showDate }: { at: dayjs.Dayjs; showDate: boolean }) => (
 	<div className="flex flex-col gap-0.5">
 		{showDate && <span className="leading-none text-xs">{at.format("DD/MM")}</span>}
@@ -30,13 +36,17 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 
 	const cardContent = (
 		<>
-			{line?.cartridgeHref ? (
-				<div className="h-full max-w-16">
-					<img className="h-full" alt={line.number} src={line.cartridgeHref} />
-				</div>
-			) : (
-				<p className="font-bold min-w-12 my-auto pt-px text-2xl text-center">{line?.number}</p>
-			)}
+			<div className="flex items-center justify-center h-full min-w-12 shrink- overflow-hidden">
+				{line?.cartridgeHref ? (
+					<img className="h-full max-w-16 object-contain" alt={line.number} src={line.cartridgeHref} />
+				) : (
+					<p
+						className={`font-bold text-center leading-tight wrap-break-words line-clamp-2 ${lineNumberTextSize(line?.number ?? "")}`}
+					>
+						{line?.number}
+					</p>
+				)}
+			</div>
 			<div
 				className="border-l mx-2"
 				style={{

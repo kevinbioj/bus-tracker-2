@@ -2,8 +2,9 @@ import { useId } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Tabs } from "~/components/ui/tabs";
 import * as m from "~/paraglide/messages";
+import { SettingTabsList, SettingTabsTrigger } from "~/routes/_app/-components/settings/setting-tabs";
 
 export function DisplayAbsoluteTimeSetting() {
 	const id = useId();
@@ -18,10 +19,10 @@ export function DisplayAbsoluteTimeSetting() {
 				value={displayAbsoluteTime ? "absolute" : "relative"}
 				onValueChange={(v) => setDisplayAbsoluteTime(v === "absolute")}
 			>
-				<TabsList className="grid grid-cols-2 w-full" id={id}>
-					<TabsTrigger value="relative">{m.settings_time_display_relative()}</TabsTrigger>
-					<TabsTrigger value="absolute">{m.settings_time_display_absolute()}</TabsTrigger>
-				</TabsList>
+				<SettingTabsList className="grid-cols-2" id={id}>
+					<SettingTabsTrigger value="relative">{m.settings_time_display_relative()}</SettingTabsTrigger>
+					<SettingTabsTrigger value="absolute">{m.settings_time_display_absolute()}</SettingTabsTrigger>
+				</SettingTabsList>
 			</Tabs>
 		</div>
 	);

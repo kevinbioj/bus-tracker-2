@@ -2,8 +2,9 @@ import { useId } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Tabs } from "~/components/ui/tabs";
 import * as m from "~/paraglide/messages";
+import { SettingTabsList, SettingTabsTrigger } from "~/routes/_app/-components/settings/setting-tabs";
 
 export function OnlyNetworksWithHistorySetting() {
 	const id = useId();
@@ -22,10 +23,10 @@ export function OnlyNetworksWithHistorySetting() {
 				onValueChange={(v) => setOnlyNetworksWithHistory(v === "history")}
 				className="w-full"
 			>
-				<TabsList className="grid w-full grid-cols-2" id={id}>
-					<TabsTrigger value="all">{m.settings_only_networks_with_history_all()}</TabsTrigger>
-					<TabsTrigger value="history">{m.settings_only_networks_with_history_history()}</TabsTrigger>
-				</TabsList>
+				<SettingTabsList className="grid-cols-2" id={id}>
+					<SettingTabsTrigger value="all">{m.settings_only_networks_with_history_all()}</SettingTabsTrigger>
+					<SettingTabsTrigger value="history">{m.settings_only_networks_with_history_history()}</SettingTabsTrigger>
+				</SettingTabsList>
 			</Tabs>
 		</div>
 	);

@@ -45,15 +45,15 @@ export function EditorTokenInput() {
 				{m.settings_contribution_section()}
 			</h3>
 			{editor ? (
-				<div className="flex justify-between">
-					<p>
+				<div className="flex items-center justify-between gap-2">
+					<p className="min-w-0 wrap-break-words">
 						<User className="align-text-bottom inline size-5" /> {editor.username}
 						<br />
 						<span className="text-muted-foreground text-sm">
 							{m.settings_editor_connected_since({ date: dayjs(editor.createdAt).format("L") })}
 						</span>
 					</p>
-					<div className="space-x-2">
+					<div className="shrink-0 space-x-2">
 						<Button
 							onClick={onLogout}
 							type="button"

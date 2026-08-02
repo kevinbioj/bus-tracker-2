@@ -11,15 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
-import { Route as EmbedNetworkIdRouteImport } from './routes/embed/$networkId'
-import { Route as AppLegalRouteImport } from './routes/_app/legal'
 import { Route as AppHelpRouteImport } from './routes/_app/help'
+import { Route as AppLegalRouteImport } from './routes/_app/legal'
+import { Route as EmbedNetworkIdRouteImport } from './routes/embed/$networkId'
 import { Route as AppDataIndexRouteImport } from './routes/_app/data/index'
-import { Route as AppDataVehiclesVehicleIdRouteImport } from './routes/_app/data/vehicles/$vehicleId'
 import { Route as AppDataNetworksNetworkIdRouteImport } from './routes/_app/data/networks/$networkId'
+import { Route as AppDataVehiclesVehicleIdRouteImport } from './routes/_app/data/vehicles/$vehicleId'
 import { Route as AppDataLinesLineIdIndexRouteImport } from './routes/_app/data/lines/$lineId/index'
-import { Route as AppDataLinesLineIdVehicleAssignmentsRouteImport } from './routes/_app/data/lines/$lineId/vehicle-assignments'
 import { Route as AppDataLinesLineIdGirouettesRouteImport } from './routes/_app/data/lines/$lineId/girouettes'
+import { Route as AppDataLinesLineIdVehicleAssignmentsRouteImport } from './routes/_app/data/lines/$lineId/vehicle-assignments'
 import { Route as AppDataLinesLineIdGirouettesNewRouteImport } from './routes/_app/data/lines/$lineId/girouettes_.new'
 import { Route as AppDataLinesLineIdGirouettesGirouetteIdEditRouteImport } from './routes/_app/data/lines/$lineId/girouettes_.$girouetteId.edit'
 
@@ -32,36 +32,36 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const EmbedNetworkIdRoute = EmbedNetworkIdRouteImport.update({
-  id: '/embed/$networkId',
-  path: '/embed/$networkId',
-  getParentRoute: () => rootRouteImport,
+const AppHelpRoute = AppHelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppLegalRoute = AppLegalRouteImport.update({
   id: '/legal',
   path: '/legal',
   getParentRoute: () => AppRoute,
 } as any)
-const AppHelpRoute = AppHelpRouteImport.update({
-  id: '/help',
-  path: '/help',
-  getParentRoute: () => AppRoute,
+const EmbedNetworkIdRoute = EmbedNetworkIdRouteImport.update({
+  id: '/embed/$networkId',
+  path: '/embed/$networkId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppDataIndexRoute = AppDataIndexRouteImport.update({
   id: '/data/',
   path: '/data/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppDataVehiclesVehicleIdRoute =
-  AppDataVehiclesVehicleIdRouteImport.update({
-    id: '/data/vehicles/$vehicleId',
-    path: '/data/vehicles/$vehicleId',
-    getParentRoute: () => AppRoute,
-  } as any)
 const AppDataNetworksNetworkIdRoute =
   AppDataNetworksNetworkIdRouteImport.update({
     id: '/data/networks/$networkId',
     path: '/data/networks/$networkId',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppDataVehiclesVehicleIdRoute =
+  AppDataVehiclesVehicleIdRouteImport.update({
+    id: '/data/vehicles/$vehicleId',
+    path: '/data/vehicles/$vehicleId',
     getParentRoute: () => AppRoute,
   } as any)
 const AppDataLinesLineIdIndexRoute = AppDataLinesLineIdIndexRouteImport.update({
@@ -69,16 +69,16 @@ const AppDataLinesLineIdIndexRoute = AppDataLinesLineIdIndexRouteImport.update({
   path: '/data/lines/$lineId/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppDataLinesLineIdVehicleAssignmentsRoute =
-  AppDataLinesLineIdVehicleAssignmentsRouteImport.update({
-    id: '/data/lines/$lineId/vehicle-assignments',
-    path: '/data/lines/$lineId/vehicle-assignments',
-    getParentRoute: () => AppRoute,
-  } as any)
 const AppDataLinesLineIdGirouettesRoute =
   AppDataLinesLineIdGirouettesRouteImport.update({
     id: '/data/lines/$lineId/girouettes',
     path: '/data/lines/$lineId/girouettes',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppDataLinesLineIdVehicleAssignmentsRoute =
+  AppDataLinesLineIdVehicleAssignmentsRouteImport.update({
+    id: '/data/lines/$lineId/vehicle-assignments',
+    path: '/data/lines/$lineId/vehicle-assignments',
     getParentRoute: () => AppRoute,
   } as any)
 const AppDataLinesLineIdGirouettesNewRoute =
@@ -205,12 +205,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/embed/$networkId': {
-      id: '/embed/$networkId'
-      path: '/embed/$networkId'
-      fullPath: '/embed/$networkId'
-      preLoaderRoute: typeof EmbedNetworkIdRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_app/help': {
+      id: '/_app/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof AppHelpRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/legal': {
       id: '/_app/legal'
@@ -219,25 +219,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLegalRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/help': {
-      id: '/_app/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof AppHelpRouteImport
-      parentRoute: typeof AppRoute
+    '/embed/$networkId': {
+      id: '/embed/$networkId'
+      path: '/embed/$networkId'
+      fullPath: '/embed/$networkId'
+      preLoaderRoute: typeof EmbedNetworkIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/data/': {
       id: '/_app/data/'
       path: '/data'
       fullPath: '/data/'
       preLoaderRoute: typeof AppDataIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/data/vehicles/$vehicleId': {
-      id: '/_app/data/vehicles/$vehicleId'
-      path: '/data/vehicles/$vehicleId'
-      fullPath: '/data/vehicles/$vehicleId'
-      preLoaderRoute: typeof AppDataVehiclesVehicleIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/data/networks/$networkId': {
@@ -247,6 +240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDataNetworksNetworkIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/data/vehicles/$vehicleId': {
+      id: '/_app/data/vehicles/$vehicleId'
+      path: '/data/vehicles/$vehicleId'
+      fullPath: '/data/vehicles/$vehicleId'
+      preLoaderRoute: typeof AppDataVehiclesVehicleIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/data/lines/$lineId/': {
       id: '/_app/data/lines/$lineId/'
       path: '/data/lines/$lineId'
@@ -254,18 +254,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDataLinesLineIdIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/data/lines/$lineId/vehicle-assignments': {
-      id: '/_app/data/lines/$lineId/vehicle-assignments'
-      path: '/data/lines/$lineId/vehicle-assignments'
-      fullPath: '/data/lines/$lineId/vehicle-assignments'
-      preLoaderRoute: typeof AppDataLinesLineIdVehicleAssignmentsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/data/lines/$lineId/girouettes': {
       id: '/_app/data/lines/$lineId/girouettes'
       path: '/data/lines/$lineId/girouettes'
       fullPath: '/data/lines/$lineId/girouettes'
       preLoaderRoute: typeof AppDataLinesLineIdGirouettesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/data/lines/$lineId/vehicle-assignments': {
+      id: '/_app/data/lines/$lineId/vehicle-assignments'
+      path: '/data/lines/$lineId/vehicle-assignments'
+      fullPath: '/data/lines/$lineId/vehicle-assignments'
+      preLoaderRoute: typeof AppDataLinesLineIdVehicleAssignmentsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/data/lines/$lineId/girouettes_/new': {
