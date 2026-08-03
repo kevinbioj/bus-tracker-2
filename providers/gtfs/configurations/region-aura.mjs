@@ -317,17 +317,23 @@ const sources = [
 	},
 	{
 		id: "vichy",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/4653683f-48a6-4f84-b313-058687fc5d04",
+		staticResourceHref: "https://h36.hanoverdisplays.com/keolis_vichy/gtfs/prod/GTFS_Prod_keolis_vichy.zip",
 		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/vichy/trip-updates",
+			"https://proxy.transport.data.gouv.fr/resource/mobivie-vichy-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			"https://proxy.transport.data.gouv.fr/resource/mobivie-vichy-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/vichy/vehicle-positions",
 		],
 		mode: "NO-TU",
 		excludeScheduled: true,
+		mapVehiclePosition: (vehicle) => {
+			if (typeof vehicle.vehicle.id !== "string") {
+				vehicle.vehicle.id = vehicle.vehicle.label;
+			}
+			return vehicle;
+		},
 		getNetworkRef: () => "MOBIVIE",
 		getVehicleRef: (vehicle) => vehicle?.id,
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
-		mapLineRef: (lineRef) => lineRef.split("-")[0],
 	},
 	{
 		id: "vienne",
