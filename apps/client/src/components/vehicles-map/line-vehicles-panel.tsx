@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { HistoryIcon, LocateIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef } from "react";
@@ -12,6 +11,7 @@ import { GetLineOnlineVehiclesQuery } from "~/api/lines";
 import { Button } from "~/components/ui/button";
 import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import * as m from "~/paraglide/messages";
+import { dayjsTz } from "~/utils/timezone";
 
 type LineVehiclesPanelProps = {
 	lineId: number;
@@ -70,7 +70,7 @@ export function LineVehiclesPanel({ lineId, timezone }: LineVehiclesPanelProps) 
 									</span>
 									{vehicle.activity.since && (
 										<span className="ml-1.5 text-xs text-muted-foreground tabular-nums">
-											{m.map_vehicle_since()} {dayjs(vehicle.activity.since).tz(timezone).format("HH:mm")}
+											{m.map_vehicle_since()} {dayjsTz(vehicle.activity.since, timezone).format("HH:mm")}
 										</span>
 									)}
 								</div>

@@ -7,6 +7,7 @@ import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import type { VehicleTimelineDayActivity } from "~/api/vehicles";
 import * as m from "~/paraglide/messages";
+import { dayjsTz } from "~/utils/timezone";
 
 type ActivityCardProps = { activity: VehicleTimelineDayActivity; day: string };
 
@@ -27,8 +28,8 @@ export function ActivityCard({ activity, day }: Readonly<ActivityCardProps>) {
 	const { data: line } = useQuery(GetLineQuery(activity.lineId));
 	const { data: network } = useQuery(GetNetworkQuery(line?.networkId, true));
 
-	const startedAt = dayjs(activity.startedAt).tz(network?.timezone);
-	const updatedAt = dayjs(activity.updatedAt).tz(network?.timezone);
+	const startedAt = dayjsTz(activity.startedAt, network?.timezone);
+	const updatedAt = dayjsTz(activity.updatedAt, network?.timezone);
 	const ongoing = dayjs().diff(updatedAt, "minutes") < 10;
 
 	const didStartOnServiceDate = startedAt.isSame(day, "day");

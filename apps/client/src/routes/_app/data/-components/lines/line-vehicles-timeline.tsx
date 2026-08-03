@@ -15,6 +15,7 @@ import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import * as m from "~/paraglide/messages";
 import { getLocale } from "~/paraglide/runtime";
+import { dayjsTz, resolveTimezone } from "~/utils/timezone";
 
 type LineVehiclesTimelineProps = {
 	lineId: number;
@@ -38,8 +39,8 @@ const numberSort = (aNumber: string, bNumber: string) => {
 	return numberifiedA - numberifiedB;
 };
 
-const toTimelineDate = (value: Dayjs, timezone: string) => {
-	return new Date(dayjs(value).tz(timezone).format("YYYY-MM-DDTHH:mm:ss.SSS"));
+const toTimelineDate = (value: Dayjs, timezone?: string) => {
+	return new Date(dayjsTz(value, timezone).format("YYYY-MM-DDTHH:mm:ss.SSS"));
 };
 
 export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTimelineProps>) {
@@ -54,10 +55,11 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(line.networkId, true));
 	const { data: assignments } = useSuspenseQuery(GetLineVehicleAssignmentsQuery(lineId, date));
 
-	const currentDate = dayjs.tz(date, network.timezone);
+	const timezone = resolveTimezone(network.timezone);
+	const currentDate = dayjs.tz(date, timezone);
 
 	const { newGroups, newItems, minStartedAt, maxUpdatedAt } = useMemo(() => {
-		const now = dayjs().tz(network.timezone);
+		const now = dayjs().tz(timezone);
 		const groups = assignments.vehicles
 			.toSorted((a, b) => numberSort(a.number, b.number))
 			.map((a) => ({
@@ -68,8 +70,8 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 		const items = assignments.vehicles.flatMap((a) =>
 			a.activities.map((act, index) => {
-				const start = dayjs(act.startedAt).tz(network.timezone);
-				const end = act.endedAt ? dayjs(act.endedAt).tz(network.timezone) : undefined;
+				const start = dayjs(act.startedAt).tz(timezone);
+				const end = act.endedAt ? dayjs(act.endedAt).tz(timezone) : undefined;
 				const timeRange = end
 					? `<span class="font-bold">${start.format("HH:mm")}</span> - <span class="font-bold">${end.format("HH:mm")}</span>`
 					: `${m.line_assignments_since()} <span class="font-bold">${start.format("HH:mm")}</span>`;
@@ -77,8 +79,8 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 				return {
 					id: `${a.id}-${index}-${act.startedAt}`,
 					group: a.id,
-					start: toTimelineDate(start, network.timezone),
-					end: toTimelineDate(end ?? now, network.timezone),
+					start: toTimelineDate(start, timezone),
+					end: toTimelineDate(end ?? now, timezone),
 					type: "range",
 					content: `<div class="leading-none overflow-hidden whitespace-nowrap">${timeRange}</div>`,
 					title: `<div>${timeRange}</div>`,
@@ -86,20 +88,20 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			}),
 		);
 
-		let min = dayjs.tz("2099-12-31", network.timezone);
-		let max = dayjs.tz("2000-01-01", network.timezone);
+		let min = dayjs.tz("2099-12-31", timezone);
+		let max = dayjs.tz("2000-01-01", timezone);
 
 		for (const vehicle of assignments.vehicles) {
 			for (const activity of vehicle.activities) {
-				const startedAt = dayjs(activity.startedAt).tz(network.timezone);
-				const endedAt = activity.endedAt ? dayjs(activity.endedAt).tz(network.timezone) : now;
+				const startedAt = dayjs(activity.startedAt).tz(timezone);
+				const endedAt = activity.endedAt ? dayjs(activity.endedAt).tz(timezone) : now;
 				if (startedAt.isBefore(min)) min = startedAt;
 				if (endedAt.isAfter(max)) max = endedAt;
 			}
 		}
 
 		return { newGroups: groups, newItems: items, minStartedAt: min, maxUpdatedAt: max };
-	}, [assignments, network.timezone]);
+	}, [assignments, timezone]);
 
 	useEffect(() => {
 		if (containerRef.current === null) return;
@@ -140,14 +142,14 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 		if (!timeline) return;
 
 		const update = () => {
-			timeline.setCurrentTime(toTimelineDate(dayjs(), network.timezone));
+			timeline.setCurrentTime(toTimelineDate(dayjs(), timezone));
 		};
 
 		update();
 		const interval = setInterval(update, 10_000);
 
 		return () => clearInterval(interval);
-	}, [timeline, network.timezone]);
+	}, [timeline, timezone]);
 
 	const updateTimelineStartEnd = useEffectEvent(() => {
 		if (!timeline) return;
@@ -159,8 +161,8 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 		lastConfiguredRef.current = { timeline, date: formattedCurrentDate };
 		timeline.setOptions({
-			start: toTimelineDate(currentDate.startOf("day").add(4, "hours"), network.timezone),
-			end: toTimelineDate(currentDate.endOf("day").add(2, "hours"), network.timezone),
+			start: toTimelineDate(currentDate.startOf("day").add(4, "hours"), timezone),
+			end: toTimelineDate(currentDate.endOf("day").add(2, "hours"), timezone),
 		});
 	});
 
@@ -179,12 +181,12 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 		if (itemsToRemove.length > 0) items.remove(itemsToRemove);
 
 		timeline.setOptions({
-			min: toTimelineDate(minStartedAt.subtract(1, "hour"), network.timezone),
-			max: toTimelineDate(maxUpdatedAt.add(1, "hour"), network.timezone),
+			min: toTimelineDate(minStartedAt.subtract(1, "hour"), timezone),
+			max: toTimelineDate(maxUpdatedAt.add(1, "hour"), timezone),
 		});
 
 		updateTimelineStartEnd();
-	}, [newGroups, newItems, minStartedAt, maxUpdatedAt, timeline, network.timezone, groups, items]);
+	}, [newGroups, newItems, minStartedAt, maxUpdatedAt, timeline, timezone, groups, items]);
 
 	return (
 		<>

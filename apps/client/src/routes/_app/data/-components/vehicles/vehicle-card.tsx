@@ -18,6 +18,7 @@ import { useLine } from "~/hooks/use-line";
 import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import { Zzz } from "~/icons/zzz";
 import * as m from "~/paraglide/messages";
+import { dayjsTz } from "~/utils/timezone";
 
 function lineNumberTextSize(number: string) {
 	if (number.length > 12) return "text-sm";
@@ -107,7 +108,7 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 						<p>
 							{m.vehicle_details_running_since()}{" "}
 							<span className="font-bold tabular-nums">
-								{dayjs(vehicle.activity.since).tz(network?.timezone).format("HH:mm")}
+								{dayjsTz(vehicle.activity.since, network?.timezone).format("HH:mm")}
 							</span>
 						</p>
 					) : (
@@ -117,16 +118,16 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 									{m.vehicle_details_archived_at()}{" "}
 									{dayjs().diff(vehicle.archivedAt, "years") >= 1 ? (
 										<span className="font-bold tabular-nums">
-											{dayjs(vehicle.archivedAt).tz(network?.timezone).format("DD/MM/YYYY")}
+											{dayjsTz(vehicle.archivedAt, network?.timezone).format("DD/MM/YYYY")}
 										</span>
 									) : (
 										<>
 											<span className="font-bold tabular-nums">
-												{dayjs(vehicle.archivedAt).tz(network?.timezone).format("DD/MM")}
+												{dayjsTz(vehicle.archivedAt, network?.timezone).format("DD/MM")}
 											</span>{" "}
 											{m.vehicle_time_at()}{" "}
 											<span className="font-bold tabular-nums">
-												{dayjs(vehicle.archivedAt).tz(network?.timezone).format("HH:mm")}
+												{dayjsTz(vehicle.archivedAt, network?.timezone).format("HH:mm")}
 											</span>
 										</>
 									)}
@@ -140,16 +141,16 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 											{m.vehicle_details_offline_since()}{" "}
 											{dayjs().diff(vehicle.activity.since, "years") >= 1 ? (
 												<span className="font-bold tabular-nums">
-													{dayjs(vehicle.activity.since).tz(network?.timezone).format("DD/MM/YYYY")}
+													{dayjsTz(vehicle.activity.since, network?.timezone).format("DD/MM/YYYY")}
 												</span>
 											) : (
 												<>
 													<span className="font-bold tabular-nums">
-														{dayjs(vehicle.activity.since).tz(network?.timezone).format("DD/MM")}
+														{dayjsTz(vehicle.activity.since, network?.timezone).format("DD/MM")}
 													</span>{" "}
 													{m.vehicle_time_at()}{" "}
 													<span className="font-bold tabular-nums">
-														{dayjs(vehicle.activity.since).tz(network?.timezone).format("HH:mm")}
+														{dayjsTz(vehicle.activity.since, network?.timezone).format("HH:mm")}
 													</span>
 												</>
 											)}
