@@ -13,7 +13,9 @@ RUN npm install -g --force corepack@latest
 RUN corepack enable
 
 # Fetch dependencies
-COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+# The root package.json must be present before the first pnpm invocation so that
+# corepack pins the version declared in `packageManager` instead of the latest one.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm fetch
 
 # Install dependencies
