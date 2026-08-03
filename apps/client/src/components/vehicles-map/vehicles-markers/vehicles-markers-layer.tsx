@@ -8,6 +8,7 @@ import type {
 import { useEffect } from "react";
 import { useMap } from "~/adapters/maplibre-gl/map";
 
+import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
 import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { VehiclesMarkersData } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-data";
@@ -171,7 +172,7 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 
 	useEffect(() => {
 		if (textLayer === null) return;
-		if (!map.style) return;
+		if (!isStyleLoaded(map)) return;
 		if (lineId !== undefined) {
 			map.setPaintProperty("vehicles-text", "icon-opacity", 0.7);
 			map.setPaintProperty("vehicles-text", "text-opacity", 1);
@@ -189,8 +190,10 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 		const arrowOutlineImageId = "arrow-outline-icon";
 		const squareImageId = "square-icon";
 
-		const onLoad = () => {
+		const addImagesWhenReady = () => {
 			if (abort) return;
+			if (!isStyleLoaded(map)) return;
+
 			const arrowIcon = createArrowIcon("black");
 			if (map.getImage(arrowImageId) === undefined) {
 				map.addImage(arrowImageId, arrowIcon, { sdf: true });
@@ -207,19 +210,27 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 			}
 		};
 
-		if (map.style._loaded) onLoad();
-		else map.on("load", onLoad);
+		addImagesWhenReady();
+
+		map.on("load", addImagesWhenReady);
+		// the style images are lost along with the style itself, they have to be added back
+		// once a new style has been loaded (style change, WebGL context restored)
+		map.on("styledata", addImagesWhenReady);
 
 		return () => {
 			abort = true;
-			map.off("load", onLoad);
-			if (map.style?._loaded && map.getImage(arrowImageId) !== undefined) {
+			map.off("load", addImagesWhenReady);
+			map.off("styledata", addImagesWhenReady);
+
+			if (!isStyleLoaded(map)) return;
+
+			if (map.getImage(arrowImageId) !== undefined) {
 				map.removeImage(arrowImageId);
 			}
-			if (map.style?._loaded && map.getImage(arrowOutlineImageId) !== undefined) {
+			if (map.getImage(arrowOutlineImageId) !== undefined) {
 				map.removeImage(arrowOutlineImageId);
 			}
-			if (map.style?._loaded && map.getImage(squareImageId) !== undefined) {
+			if (map.getImage(squareImageId) !== undefined) {
 				map.removeImage(squareImageId);
 			}
 		};

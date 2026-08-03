@@ -2,6 +2,7 @@ import type { AddLayerObject, StyleLayer } from "maplibre-gl";
 import { useEffect, useState } from "react";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
+import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
 
 export function useMapLayer(layerOptions: AddLayerObject, beforeId?: string) {
 	const map = useMap();
@@ -24,7 +25,7 @@ export function useMapLayer(layerOptions: AddLayerObject, beforeId?: string) {
 
 		const addLayerWhenReady = () => {
 			if (abort) return;
-			if (!map.style._loaded) return;
+			if (!isStyleLoaded(map)) return;
 
 			const existingLayer = map.getLayer(layerOptions.id);
 			if (existingLayer !== undefined) {
@@ -46,21 +47,27 @@ export function useMapLayer(layerOptions: AddLayerObject, beforeId?: string) {
 			setLayer(map.getLayer(layerOptions.id)!);
 		};
 
-		if (map.style._loaded) addLayerWhenReady();
-		else map.on("load", addLayerWhenReady);
+		// losing the WebGL context destroys the style along with its layers, they are re-created
+		// once the style has been reloaded ("styledata")
+		const onContextLost = () => setLayer(null);
 
+		addLayerWhenReady();
+
+		map.on("load", addLayerWhenReady);
 		map.on("styledata", addLayerWhenReady);
+		map.on("webglcontextlost", onContextLost);
 
 		return () => {
 			abort = true;
 			map.off("load", addLayerWhenReady);
 			map.off("styledata", addLayerWhenReady);
+			map.off("webglcontextlost", onContextLost);
 
 			if (retryTimeout !== null) {
 				clearTimeout(retryTimeout);
 			}
 
-			if (map.style !== undefined && map.getLayer(layerOptions.id) !== undefined) {
+			if (isStyleLoaded(map) && map.getLayer(layerOptions.id) !== undefined) {
 				map.removeLayer(layerOptions.id);
 			}
 

@@ -2,6 +2,7 @@ import type { Source, SourceSpecification } from "maplibre-gl";
 import { useCallback, useEffect, useState } from "react";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
+import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
 
 export function useMapSource<T extends Source>(id: string, specification: SourceSpecification) {
 	const map = useMap();
@@ -25,25 +26,37 @@ export function useMapSource<T extends Source>(id: string, specification: Source
 	useEffect(() => {
 		let abort = false;
 
-		const onLoad = () => {
+		const addSourceWhenReady = () => {
 			if (abort) return;
+			if (!isStyleLoaded(map)) return;
 
-			if (map.getSource(id) !== undefined) {
-				removeSource();
+			const existingSource = map.getSource<T>(id);
+			if (existingSource !== undefined) {
+				setSource(existingSource);
+				return;
 			}
 
 			map.addSource(id, specification);
 			setSource(map.getSource<T>(id)!);
 		};
 
-		if (map.style._loaded) onLoad();
-		else map.on("load", onLoad);
+		// losing the WebGL context destroys the style along with its sources, they are re-created
+		// once the style has been reloaded ("styledata")
+		const onContextLost = () => setSource(null);
+
+		addSourceWhenReady();
+
+		map.on("load", addSourceWhenReady);
+		map.on("styledata", addSourceWhenReady);
+		map.on("webglcontextlost", onContextLost);
 
 		return () => {
 			abort = true;
-			map.off("load", onLoad);
+			map.off("load", addSourceWhenReady);
+			map.off("styledata", addSourceWhenReady);
+			map.off("webglcontextlost", onContextLost);
 
-			if (map.style !== undefined && map.getSource(id) !== undefined) {
+			if (isStyleLoaded(map)) {
 				removeSource();
 			}
 

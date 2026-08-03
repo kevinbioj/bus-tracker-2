@@ -21,8 +21,12 @@ type MapComponentProps = PropsWithChildren & {
 
 const MapContext = createContext<MaplibreMap | null>(null);
 
+// Matched by `isWebGLError()` in the error screen to show the dedicated hardware acceleration message.
+const WEBGL_INITIALIZATION_ERROR = "Failed to initialize WebGL: the browser provided no WebGL2 context.";
+
 export function MapComponent({ children, containerProps, mapOptions, ref }: MapComponentProps) {
 	const [map, setMap] = useState<MaplibreMap | null>(null);
+	const [initializationError, setInitializationError] = useState<Error | null>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -33,6 +37,14 @@ export function MapComponent({ children, containerProps, mapOptions, ref }: MapC
 			...mapOptions,
 			container,
 		});
+
+		// When no WebGL2 context can be created, maplibre only fires an error event from within the
+		// constructor – too early for us to listen to it – and leaves the map without a painter.
+		// Such a map renders nothing and cannot even be removed: `remove()` destroys its painter.
+		if (instance.painter === undefined) {
+			setInitializationError(new Error(WEBGL_INITIALIZATION_ERROR));
+			return;
+		}
 
 		setMap(instance);
 
@@ -78,6 +90,9 @@ export function MapComponent({ children, containerProps, mapOptions, ref }: MapC
 			if (timeout !== null) clearTimeout(timeout);
 		};
 	}, []);
+
+	// thrown during render so the nearest error boundary can display it
+	if (initializationError !== null) throw initializationError;
 
 	return (
 		<div ref={containerRef} {...containerProps}>

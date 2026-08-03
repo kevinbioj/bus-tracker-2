@@ -9,7 +9,13 @@ import * as m from "~/paraglide/messages";
 
 const isWebGLError = (error: unknown) => {
 	const msg = String(error);
-	return msg.includes("webglcontextcreationerror") || msg.includes("Failed to initialize WebGL");
+	return (
+		msg.includes("webglcontextcreationerror") ||
+		msg.includes("Failed to initialize WebGL") ||
+		// maplibre-gl v6 wording, in case the error comes from the library itself
+		msg.includes("GPUInitializationError") ||
+		msg.includes("WebGL2 is required")
+	);
 };
 
 export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
