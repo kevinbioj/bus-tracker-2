@@ -8,6 +8,7 @@ import type { Journey, JourneyCall } from "../model/journey.js";
 import { DEFAULT_TRIP_UPDATE_TTL_MS, type Source } from "../model/source.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
+import { scatterOverlappingPositions } from "../utils/scatter-overlapping-positions.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 import {
 	type AddedTripShapeMatch,
@@ -911,15 +912,20 @@ export async function computeVehicleJourneys(source: Source) {
 			journey.releaseUnmodifiedCalls(nowMs);
 		}
 
+		// Certains SAE recalent plusieurs véhicules sur un point identique du tracé : on les écarte
+		// juste avant publication pour qu'ils restent tous visibles et sélectionnables sur la carte.
+		const scatteredCount = scatterOverlappingPositions(activeJourneys.values());
+
 		const computeTime = watch.step();
 		updateLog(
-			"%s     ✓ Computed %d journeys and %d paths in %dms (%dms download - %dms compute).",
+			"%s     ✓ Computed %d journeys and %d paths in %dms (%dms download - %dms compute)%s.",
 			sourceId,
 			activeJourneys.size,
 			paths.size,
 			watch.total(),
 			downloadTime,
 			computeTime,
+			scatteredCount > 0 ? ` - ${scatteredCount} overlapping positions scattered` : "",
 		);
 
 		// Écrit en toute fin de bloc `try` : la fenêtre de grâce se mesure depuis le dernier cycle
