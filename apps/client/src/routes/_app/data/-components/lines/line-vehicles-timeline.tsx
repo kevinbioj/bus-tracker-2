@@ -45,8 +45,7 @@ const toTimelineDate = (value: Dayjs, timezone?: string) => {
 
 export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTimelineProps>) {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const lastConfiguredRef = useRef<{ timeline: Timeline; date: string } | null>(null);
-	const [timeline, setTimeline] = useState<Timeline | null>(null);
+	const timelineRef = useRef<Timeline | null>(null);
 	const [groups] = useState(() => new DataSet());
 	const [items] = useState(() => new DataSet());
 	const navigate = useNavigate();
@@ -100,11 +99,50 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			}
 		}
 
+		// Aucune activité : les bornes restent inversées, on retombe sur la journée sélectionnée.
+		if (max.isBefore(min)) {
+			const selectedDay = dayjs.tz(date, timezone);
+			min = selectedDay.startOf("day");
+			max = selectedDay.endOf("day");
+		}
+
 		return { newGroups: groups, newItems: items, minStartedAt: min, maxUpdatedAt: max };
-	}, [assignments, timezone]);
+	}, [assignments, timezone, date]);
+
+	// Applique les données courantes aux DataSets. Extrait en effect event pour pouvoir être
+	// appelé au moment de la construction de la timeline, sans dépendre d'un rendu supplémentaire.
+	const syncDataSets = useEffectEvent(() => {
+		groups.update(newGroups);
+		items.update(newItems);
+
+		const currentGroupIds = new Set(newGroups.map((g) => g.id));
+		const groupsToRemove = groups.getIds().filter((id) => !currentGroupIds.has(id as number));
+		if (groupsToRemove.length > 0) groups.remove(groupsToRemove);
+
+		const currentItemIds = new Set(newItems.map((i) => i.id));
+		const itemsToRemove = items.getIds().filter((id) => !currentItemIds.has(id as string));
+		if (itemsToRemove.length > 0) items.remove(itemsToRemove);
+	});
+
+	const getBounds = useEffectEvent(() => ({
+		min: toTimelineDate(minStartedAt.subtract(1, "hour"), timezone),
+		max: toTimelineDate(maxUpdatedAt.add(1, "hour"), timezone),
+	}));
+
+	const getWindow = useEffectEvent(() => ({
+		start: toTimelineDate(currentDate.startOf("day").add(4, "hours"), timezone),
+		end: toTimelineDate(currentDate.endOf("day").add(2, "hours"), timezone),
+	}));
+
+	const handleClick = useEffectEvent((props: { what?: string | null; group?: string | number | null }) => {
+		if (props.what === "group-label" && props.group) {
+			void navigate({ to: "/data/vehicles/$vehicleId", params: { vehicleId: String(props.group) } });
+		}
+	});
 
 	useEffect(() => {
-		if (containerRef.current === null) return;
+		const container = containerRef.current;
+		if (container === null) return;
 
 		const options = {
 			showCurrentTime: true,
@@ -117,76 +155,66 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			horizontalScroll: true,
 			xss: { disabled: false, filterOptions: { whiteList: { div: ["class"], span: ["class"] } } },
 			groupOrder: (a: { number: string }, b: { number: string }) => numberSort(a.number, b.number),
+			...getBounds(),
+			...getWindow(),
 		} satisfies TimelineOptions;
 
+		// Les DataSets sont remplis AVANT la construction : la timeline naît avec ses données
+		// et sa fenêtre. Sans ça, elle serait créée vide et n'aurait été alimentée qu'au rendu
+		// suivant — rendu qui n'a pas toujours lieu (suspension d'une query, <Activity>, remount).
+		syncDataSets();
+
 		const currentTimeline = new Timeline(
-			containerRef.current,
+			container,
 			items as unknown as DataItemCollectionType,
 			groups as unknown as DataGroupCollectionType,
 			options,
 		);
-		currentTimeline.on("click", (props) => {
-			if (props.what === "group-label" && props.group) {
-				void navigate({ to: "/data/vehicles/$vehicleId", params: { vehicleId: String(props.group) } });
-			}
-		});
+		currentTimeline.on("click", handleClick);
+		timelineRef.current = currentTimeline;
 
-		setTimeline(currentTimeline);
+		// Le conteneur peut encore mesurer 0px à la construction (révélé juste après par
+		// <Activity> ou par la levée d'un Suspense) : vis-timeline dessinerait alors dans le vide.
+		const resizeObserver = new ResizeObserver(() => currentTimeline.redraw());
+		resizeObserver.observe(container);
+
 		return () => {
-			setTimeline(null);
+			resizeObserver.disconnect();
+			timelineRef.current = null;
 			currentTimeline.destroy();
 		};
-	}, [navigate, items, groups]);
+	}, [items, groups]);
 
 	useEffect(() => {
-		if (!timeline) return;
-
 		const update = () => {
-			timeline.setCurrentTime(toTimelineDate(dayjs(), timezone));
+			timelineRef.current?.setCurrentTime(toTimelineDate(dayjs(), timezone));
 		};
 
 		update();
 		const interval = setInterval(update, 10_000);
 
 		return () => clearInterval(interval);
-	}, [timeline, timezone]);
+	}, [timezone]);
 
-	const updateTimelineStartEnd = useEffectEvent(() => {
-		if (!timeline) return;
-
-		const formattedCurrentDate = currentDate.format("YYYY-MM-DD");
-		if (lastConfiguredRef.current?.timeline === timeline && lastConfiguredRef.current?.date === formattedCurrentDate) {
-			return;
-		}
-
-		lastConfiguredRef.current = { timeline, date: formattedCurrentDate };
-		timeline.setOptions({
-			start: toTimelineDate(currentDate.startOf("day").add(4, "hours"), timezone),
-			end: toTimelineDate(currentDate.endOf("day").add(2, "hours"), timezone),
-		});
-	});
-
+	// biome-ignore lint/correctness/useExhaustiveDependencies: doit se relancer à chaque changement de données, lues via des effect events
 	useEffect(() => {
+		const timeline = timelineRef.current;
 		if (timeline === null) return;
 
-		groups.update(newGroups);
-		items.update(newItems);
+		syncDataSets();
+		timeline.setOptions(getBounds());
+	}, [newGroups, newItems, minStartedAt, maxUpdatedAt, timezone]);
 
-		const currentGroupIds = new Set(newGroups.map((g) => g.id));
-		const groupsToRemove = groups.getIds().filter((id) => !currentGroupIds.has(id as number));
-		if (groupsToRemove.length > 0) groups.remove(groupsToRemove);
+	// Recadre la fenêtre visible uniquement sur changement de jour, pour ne pas écraser
+	// le zoom/défilement de l'utilisateur à chaque rafraîchissement des données.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: la fenêtre est lue via un effect event
+	useEffect(() => {
+		const timeline = timelineRef.current;
+		if (timeline === null) return;
 
-		const currentItemIds = new Set(newItems.map((i) => i.id));
-		const itemsToRemove = items.getIds().filter((id) => !currentItemIds.has(id as string));
-		if (itemsToRemove.length > 0) items.remove(itemsToRemove);
-
-		timeline.setOptions({
-			min: toTimelineDate(minStartedAt.subtract(1, "hour"), timezone),
-			max: toTimelineDate(maxUpdatedAt.add(1, "hour"), timezone),
-		});
-
-		updateTimelineStartEnd();
-	}, [newGroups, newItems, minStartedAt, maxUpdatedAt, timeline, timezone, groups, items]);
+		const { start, end } = getWindow();
+		timeline.setWindow(start, end, { animation: false });
+	}, [date, timezone]);
 
 	return (
 		<>
