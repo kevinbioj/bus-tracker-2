@@ -134,10 +134,24 @@ const defaultValues = (girouette?: Girouette): FormValues => {
 	};
 };
 
+/**
+ * A route number with neither text nor background color displays nothing:
+ * give its whole width to the destination block. Girouettes that don't
+ * carry dimensions keep the renderer's default 32/160 split.
+ */
+function girouetteDimensions(routeNumber: { text?: string; backgroundColor?: string }): GirouetteData["dimensions"] {
+	const isRouteNumberEmpty = (routeNumber.text ?? "").trim() === "" && !routeNumber.backgroundColor;
+	return isRouteNumberEmpty ? { height: 17, rnWidth: 0, destinationWidth: 192 } : undefined;
+}
+
 function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInput {
 	type PageLine = { font?: AllowedFont; scroll?: boolean; spacing?: TextSpacing; text: string };
 
 	const data: GirouetteData = {
+		dimensions: girouetteDimensions({
+			text: values.routeNumber.text,
+			backgroundColor: values.routeNumber.backgroundColor || undefined,
+		}),
 		ledColor: "WHITE",
 		routeNumber: {
 			text: values.routeNumber.text,
@@ -268,6 +282,10 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 
 	const watchedValues = useWatch({ control: form.control });
 	const previewData: GirouetteData = {
+		dimensions: girouetteDimensions({
+			text: watchedValues.routeNumber?.text,
+			backgroundColor: watchedValues.routeNumber?.backgroundColor || undefined,
+		}),
 		ledColor: "WHITE",
 		routeNumber: watchedValues.routeNumber
 			? {

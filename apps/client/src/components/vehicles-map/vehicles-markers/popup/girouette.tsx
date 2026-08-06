@@ -172,7 +172,9 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 		return () => clearInterval(interval);
 	}, [routeNumber.halfPattern]);
 
-	if (routeNumber === undefined) return null;
+	// A zero-width route number block is collapsed away entirely, so that its
+	// padding and letter-spacing don't eat into the destination block.
+	if (routeNumber === undefined || dimensions.rnWidth === 0) return null;
 
 	const fontFamily =
 		routeNumber.font !== undefined && routeNumber.font in fontProperties ? routeNumber.font : "1513B3E1";
