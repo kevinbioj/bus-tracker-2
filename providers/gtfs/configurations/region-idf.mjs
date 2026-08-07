@@ -77,6 +77,10 @@ const sources = [
 					return false;
 				}
 
+				if (trip.route.agency.id === "IDFM:Operator_1010") {
+					trip.route.agency.id = "IDFM:1051";
+				}
+
 				if (trip.route.agency.id === "IDFM:Operator_1044") {
 					trip.route.agency.id = "IDFM:1088";
 				}
