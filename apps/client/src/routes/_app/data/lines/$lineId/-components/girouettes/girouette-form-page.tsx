@@ -83,7 +83,12 @@ const defaultPage = (): FormValues["pages"][number] => ({
 	lines: [defaultLine()],
 });
 
-const defaultValues = (girouette?: Girouette): FormValues => {
+/**
+ * Builds the form values from an existing girouette. When duplicating, everything
+ * is copied but the matching criteria (direction and destinations), which must be
+ * filled in again so that the copy doesn't compete with its source.
+ */
+const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => {
 	if (!girouette) {
 		return {
 			directionId: null,
@@ -105,8 +110,8 @@ const defaultValues = (girouette?: Girouette): FormValues => {
 	const d = girouette.data;
 
 	return {
-		directionId: girouette.directionId !== null ? String(girouette.directionId) : null,
-		destinations: girouette.destinations,
+		directionId: duplicate || girouette.directionId === null ? null : String(girouette.directionId),
+		destinations: duplicate ? [] : girouette.destinations,
 		routeNumber: {
 			text: d.routeNumber?.text ?? "",
 			fontVariant: d.routeNumber?.font ?? DEFAULT_FONT_VARIANT,
@@ -185,9 +190,11 @@ function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInpu
 type GirouetteFormPageProps = {
 	lineId: number;
 	girouetteId?: number;
+	/** Creation mode only: girouette whose appearance is used as a starting point. */
+	duplicateFromId?: number;
 };
 
-export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFormPageProps>) {
+export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Readonly<GirouetteFormPageProps>) {
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const snackbar = useSnackbar();
@@ -198,10 +205,14 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 	const { data: girouettes } = useSuspenseQuery(GetLineGirouettesQuery(lineId));
 
 	const girouette = girouetteId !== undefined ? girouettes.find((g) => g.id === girouetteId) : undefined;
+	const duplicatedGirouette =
+		girouette === undefined && duplicateFromId !== undefined
+			? girouettes.find((g) => g.id === duplicateFromId)
+			: undefined;
 
 	const form = useForm<FormValues>({
 		resolver: zodResolver(formSchema),
-		defaultValues: defaultValues(girouette),
+		defaultValues: defaultValues(girouette ?? duplicatedGirouette, duplicatedGirouette !== undefined),
 	});
 
 	const { fields: pageFields, append, remove, move } = useFieldArray({ control: form.control, name: "pages" });
@@ -275,7 +286,11 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 			setNewDest("");
 		}
 
-		const input = formToGirouetteInput({ ...values, destinations }, girouette?.enabled ?? true);
+		// A copy inherits the enabled state of its source, like the rest of its settings.
+		const input = formToGirouetteInput(
+			{ ...values, destinations },
+			girouette?.enabled ?? duplicatedGirouette?.enabled ?? true,
+		);
 		if (girouette) updateMutation.mutate(input);
 		else createMutation.mutate(input);
 	};
@@ -313,11 +328,16 @@ export function GirouetteFormPage({ lineId, girouetteId }: Readonly<GirouetteFor
 	};
 
 	const isPending = createMutation.isPending || updateMutation.isPending;
-	const isEdit = girouette !== undefined;
+	const title =
+		girouette !== undefined
+			? m.line_girouettes_form_edit_title()
+			: duplicatedGirouette !== undefined
+				? m.line_girouettes_form_duplicate_title()
+				: m.line_girouettes_form_create_title();
 
 	return (
 		<DataPageLayout
-			current={isEdit ? m.line_girouettes_form_edit_title() : m.line_girouettes_form_create_title()}
+			current={title}
 			breadcrumbMiddle={[
 				{
 					label: <LineBreadcrumbLabel line={line} />,

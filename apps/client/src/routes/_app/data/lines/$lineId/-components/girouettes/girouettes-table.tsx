@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { EyeIcon, EyeOffIcon, PencilIcon, TrashIcon } from "lucide-react";
+import { CopyIcon, EyeIcon, EyeOffIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { useSnackbar } from "notistack";
 import { useState } from "react";
 
@@ -129,6 +129,21 @@ function GirouetteRow({ girouette, lineId }: Readonly<GirouetteRowProps>) {
 								params={{ lineId: String(lineId), girouetteId: String(girouette.id) }}
 							>
 								<PencilIcon />
+							</Link>
+						}
+					/>
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						title={m.line_girouettes_duplicate()}
+						nativeButton={false}
+						render={
+							<Link
+								to="/data/lines/$lineId/girouettes/new"
+								params={{ lineId: String(lineId) }}
+								search={{ duplicateFrom: girouette.id }}
+							>
+								<CopyIcon />
 							</Link>
 						}
 					/>
