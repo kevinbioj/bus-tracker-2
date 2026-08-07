@@ -219,6 +219,8 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "REZOBUS",
 		getVehicleRef: (vehicle) => vehicle?.label,
+		getDestination: (journey) =>
+			journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name ?? journey?.trip.headsign,
 	},
 	//- Neva
 	{
