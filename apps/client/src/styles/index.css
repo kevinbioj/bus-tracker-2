@@ -6,8 +6,6 @@
 @import "tw-animate-css";
 
 @theme inline {
-	--animate-route-number: route-number 3s linear infinite;
-	--animate-page: page 6s linear infinite;
 	--animate-accordion-down: accordion-down 0.2s ease-out;
 	--animate-accordion-up: accordion-up 0.2s ease-out;
 
@@ -56,24 +54,6 @@
 	--radius-2xl: calc(var(--radius) * 1.8);
 	--radius-3xl: calc(var(--radius) * 2.2);
 	--radius-4xl: calc(var(--radius) * 2.6);
-
-	@keyframes route-number {
-		0% {
-			transform: translateX(100%);
-		}
-		100% {
-			transform: translateX(-100%);
-		}
-	}
-
-	@keyframes page {
-		0% {
-			transform: translateX(100%);
-		}
-		100% {
-			transform: translateX(-100%);
-		}
-	}
 
 	@keyframes accordion-down {
 		from {

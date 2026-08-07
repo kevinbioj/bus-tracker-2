@@ -1,3 +1,17 @@
+/*
+ * Scrolling of girouette texts. The start/end offsets are set inline by the
+ * Girouette component from the measured widths, along with a duration derived
+ * from the distance to travel so that the speed stays constant.
+ */
+@keyframes girouette-scroll {
+	0% {
+		transform: translateX(var(--scroll-from, 100%));
+	}
+	100% {
+		transform: translateX(var(--scroll-to, -100%));
+	}
+}
+
 @font-face {
 	font-display: block;
 	font-family: "0808B2E1";

@@ -1,10 +1,23 @@
-import { clsx } from "clsx";
-import { type ComponentPropsWithoutRef, useEffect, useState } from "react";
+import {
+	type ComponentPropsWithoutRef,
+	type CSSProperties,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react";
 import { match, P } from "ts-pattern";
 
 import { cn } from "~/utils/cn";
 
 const paneBgColor = "#1D1D1B";
+
+/** Scrolling speed of texts, expressed in matrix pixels per second. */
+const scrollSpeed = 50;
+
+/** Time a page stays displayed when none of its lines scrolls, in milliseconds. */
+const staticPageDuration = 3000;
 
 /**
  * Determines the outline color for an automatically-generated route number,
@@ -145,6 +158,84 @@ export function Girouette({
 
 // ---
 
+type ScrollingTextProps = {
+	className?: string;
+	/** Notified with the duration of a full scrolling cycle, in milliseconds (0 when the text doesn't scroll). */
+	onDurationChange?: (duration: number) => void;
+	/** Size of a single matrix pixel, in CSS pixels. */
+	onePixel: number;
+	scroll?: boolean;
+	style?: CSSProperties;
+	text: string;
+};
+
+/**
+ * Renders a girouette text, optionally scrolling it at a constant speed: the
+ * animation duration is derived from the distance to travel, so that a long
+ * text takes longer to scroll instead of scrolling faster.
+ */
+function ScrollingText({ className, onDurationChange, onePixel, scroll, style, text }: Readonly<ScrollingTextProps>) {
+	const ref = useRef<HTMLSpanElement>(null);
+	const [metrics, setMetrics] = useState<{ containerWidth: number; textWidth: number }>();
+
+	useLayoutEffect(() => {
+		const element = ref.current;
+		if (!scroll || element === null) {
+			setMetrics(undefined);
+			return;
+		}
+
+		// Observing both the text and its container covers every change that
+		// affects the travelled distance: text, font size, spacing, girouette
+		// width, and the asynchronous loading of the LED fonts.
+		const observer = new ResizeObserver(() => {
+			const containerWidth = element.parentElement?.clientWidth ?? 0;
+			const textWidth = element.scrollWidth;
+			setMetrics((current) =>
+				current?.containerWidth === containerWidth && current.textWidth === textWidth
+					? current
+					: { containerWidth, textWidth },
+			);
+		});
+
+		observer.observe(element);
+		if (element.parentElement !== null) observer.observe(element.parentElement);
+
+		return () => observer.disconnect();
+	}, [scroll]);
+
+	const duration =
+		metrics !== undefined && onePixel > 0 ? (metrics.containerWidth + metrics.textWidth) / (scrollSpeed * onePixel) : 0;
+
+	useEffect(() => {
+		onDurationChange?.(duration * 1000);
+	}, [duration, onDurationChange]);
+
+	return (
+		<span
+			className={className}
+			// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
+			dangerouslySetInnerHTML={{ __html: processText(text) }}
+			ref={ref}
+			style={{
+				...style,
+				...(duration > 0 && metrics !== undefined
+					? ({
+							// Cancels the centering of the parent (both in row and column
+							// direction) so that the scroll starts from the left edge.
+							marginRight: "auto",
+							animation: `girouette-scroll ${duration}s linear infinite`,
+							"--scroll-from": `${metrics.containerWidth}px`,
+							"--scroll-to": `${-metrics.textWidth}px`,
+						} as CSSProperties)
+					: {}),
+			}}
+		/>
+	);
+}
+
+// ---
+
 type RouteNumberProps = {
 	dimensions: GirouetteDimensions;
 	ledColor: LedColor;
@@ -186,7 +277,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 	const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 	return (
 		<button
-			className={clsx("flex items-center justify-center overflow-hidden whitespace-nowrap")}
+			className="flex items-center justify-center overflow-hidden whitespace-nowrap"
 			onClick={onClick}
 			type="button"
 			style={{
@@ -222,11 +313,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 					: {}),
 			}}
 		>
-			<span
-				className={clsx({ "animate-route-number": routeNumber.scroll })}
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
-				dangerouslySetInnerHTML={{ __html: processText(routeNumber.text) }}
-			/>
+			<ScrollingText onePixel={onePixel} scroll={routeNumber.scroll} text={routeNumber.text} />
 		</button>
 	);
 }
@@ -242,18 +329,30 @@ type PagesProps = {
 
 function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 	const [currentPageIndex, setCurrentPageIndex] = useState(0);
-	useEffect(() => {
-		const nextPage = () => {
-			setCurrentPageIndex((i) => (i < pages.length - 1 ? i + 1 : 0));
-		};
-		const interval = setInterval(nextPage, 3000);
-		return () => clearInterval(interval);
-	}, [pages]);
 
-	const activePage = pages[currentPageIndex];
+	// Scrolling durations of the lines of the displayed page, keyed by line index.
+	const [scrollDurations, setScrollDurations] = useState<Record<number, number>>({});
+	const handleDurationChange = useCallback((lineIndex: number, duration: number) => {
+		setScrollDurations((current) =>
+			current[lineIndex] === duration ? current : { ...current, [lineIndex]: duration },
+		);
+	}, []);
+
+	const pageIndex = pages.length > 0 ? currentPageIndex % pages.length : 0;
+	const activePage = pages[pageIndex];
+	const lines = activePage === undefined ? [] : Array.isArray(activePage) ? activePage : [activePage];
+
+	// A page is displayed at least until its slowest line has scrolled entirely once.
+	const pageDuration = Math.max(staticPageDuration, ...lines.map((_, lineIndex) => scrollDurations[lineIndex] ?? 0));
+
+	useEffect(() => {
+		if (pages.length <= 1) return;
+		const timeout = setTimeout(() => setCurrentPageIndex(pageIndex + 1), pageDuration);
+		return () => clearTimeout(timeout);
+	}, [pageDuration, pageIndex, pages.length]);
+
 	if (activePage === undefined) return null;
 
-	const lines = Array.isArray(activePage) ? activePage : [activePage];
 	const oneLine = lines.length === 1;
 
 	const height = (dimensions.height * width) / (dimensions.rnWidth + dimensions.destinationWidth);
@@ -275,14 +374,15 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 				const spacing = onePixel * (line.spacing ?? fontProperties[fontFamily].spacing);
 				const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 				return (
-					<span
-						className={clsx("overflow-hidden whitespace-nowrap", {
-							"animate-page": line.scroll,
-						})}
-						// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
-						dangerouslySetInnerHTML={{ __html: processText(line.text) }}
+					<ScrollingText
+						className="overflow-hidden whitespace-nowrap"
+						// Remounting on page change restarts the scrolling animation from its beginning.
 						// biome-ignore lint/suspicious/noArrayIndexKey: safe here
-						key={lineIndex}
+						key={`${pageIndex}-${lineIndex}`}
+						onDurationChange={(duration) => handleDurationChange(lineIndex, duration)}
+						onePixel={onePixel}
+						scroll={line.scroll}
+						text={line.text}
 						style={{
 							//- Font, placement & spacing
 							fontFamily: `"${fontFamily}"`,
