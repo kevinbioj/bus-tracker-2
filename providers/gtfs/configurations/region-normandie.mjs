@@ -1,3 +1,5 @@
+const semoPositions = new Map();
+
 function nthIndexOf(input, pattern, n) {
 	const length = input.length;
 	let i = -1;
@@ -90,6 +92,29 @@ const sources = [
 			computeShapeDistTraveled: "always",
 		},
 		mode: "NO-TU",
+		mapVehiclePosition: (vehiclePosition) => {
+			if (vehiclePosition.position === undefined || vehiclePosition.vehicle.id === undefined) return vehiclePosition;
+
+			const { latitude, longitude } = vehiclePosition.position;
+			const nowMs = Date.now();
+			const nowSecs = Math.floor(nowMs / 1000);
+
+			for (const [key, entry] of semoPositions) {
+				if (nowMs - entry.seenAt > 3_600_000) semoPositions.delete(key);
+			}
+
+			const tracked = semoPositions.get(vehiclePosition.vehicle.id);
+			if (tracked === undefined || tracked.latitude !== latitude || tracked.longitude !== longitude) {
+				semoPositions.set(vehiclePosition.vehicle.id, { latitude, longitude, movedAt: nowSecs, seenAt: nowMs });
+				vehiclePosition.timestamp = nowSecs;
+				return vehiclePosition;
+			}
+
+			if (vehiclePosition.timestamp > tracked.movedAt) tracked.movedAt = Math.min(vehiclePosition.timestamp, nowSecs);
+			tracked.seenAt = nowMs;
+			vehiclePosition.timestamp = tracked.movedAt;
+			return vehiclePosition;
+		},
 		getNetworkRef: () => "SEMO",
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
