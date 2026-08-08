@@ -108,7 +108,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 			return duration.humanize(true);
 		},
 		3_000,
-		[journey],
+		[journey, displayAbsoluteTime],
 	);
 
 	const networkIdentifier = network?.logoHref ? (
