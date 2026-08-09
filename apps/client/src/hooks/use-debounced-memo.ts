@@ -1,13 +1,16 @@
-import { type DependencyList, useEffect, useState } from "react";
+import { type DependencyList, useEffect, useRef, useState } from "react";
 
 export function useDebouncedMemo<T>(fn: () => T, debounceDelayMs: number, deps: DependencyList) {
+	const fnRef = useRef(fn);
+	fnRef.current = fn;
+
 	const [debouncedValue, setDebouncedValue] = useState(() => fn());
 
 	useEffect(() => {
-		setDebouncedValue(fn());
-		const interval = setInterval(() => setDebouncedValue(fn()), debounceDelayMs);
+		setDebouncedValue(fnRef.current());
+		const interval = setInterval(() => setDebouncedValue(fnRef.current()), debounceDelayMs);
 		return () => clearInterval(interval);
-	}, [fn, debounceDelayMs, ...deps]);
+	}, [debounceDelayMs, ...deps]);
 
 	return debouncedValue;
 }
