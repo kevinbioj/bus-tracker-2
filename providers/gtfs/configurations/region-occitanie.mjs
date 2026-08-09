@@ -241,7 +241,7 @@ const sources = [
 	},
 	{
 		id: "sete",
-		staticResourceHref: "https://sete.ceccli.com/gtfs/gtfs.zip",
+		staticResourceHref: "https://drive.google.com/uc?export=download&id=1PUISUlg0tpVFTdr7NOzJ2w9KthNXpQNn",
 		realtimeResourceHrefs: [
 			"https://sete.ceccli.com/gtfs/TripUpdates.pb",
 			"https://sete.ceccli.com/gtfs/VehiclePositions.pb",
