@@ -16,6 +16,13 @@ const paneBgColor = "#1D1D1B";
 /** Scrolling speed of texts, expressed in matrix pixels per second. */
 const scrollSpeed = 50;
 
+/**
+ * Speed multiplier applied to the route number block. Its pane is much narrower
+ * than the destination one, so at the nominal speed its cycle restarts far too
+ * often: scrolling it half as fast keeps it readable.
+ */
+const routeNumberSpeedRatio = 0.5;
+
 /** Time a page stays displayed when none of its lines scrolls, in milliseconds. */
 const staticPageDuration = 3000;
 
@@ -165,6 +172,8 @@ type ScrollingTextProps = {
 	/** Size of a single matrix pixel, in CSS pixels. */
 	onePixel: number;
 	scroll?: boolean;
+	/** Multiplier applied to the nominal scrolling speed. */
+	speedRatio?: number;
 	style?: CSSProperties;
 	text: string;
 };
@@ -174,7 +183,15 @@ type ScrollingTextProps = {
  * animation duration is derived from the distance to travel, so that a long
  * text takes longer to scroll instead of scrolling faster.
  */
-function ScrollingText({ className, onDurationChange, onePixel, scroll, style, text }: Readonly<ScrollingTextProps>) {
+function ScrollingText({
+	className,
+	onDurationChange,
+	onePixel,
+	scroll,
+	speedRatio = 1,
+	style,
+	text,
+}: Readonly<ScrollingTextProps>) {
 	const ref = useRef<HTMLSpanElement>(null);
 	const [metrics, setMetrics] = useState<{ containerWidth: number; textWidth: number }>();
 
@@ -205,7 +222,9 @@ function ScrollingText({ className, onDurationChange, onePixel, scroll, style, t
 	}, [scroll]);
 
 	const duration =
-		metrics !== undefined && onePixel > 0 ? (metrics.containerWidth + metrics.textWidth) / (scrollSpeed * onePixel) : 0;
+		metrics !== undefined && onePixel > 0 && speedRatio > 0
+			? (metrics.containerWidth + metrics.textWidth) / (scrollSpeed * speedRatio * onePixel)
+			: 0;
 
 	useEffect(() => {
 		onDurationChange?.(duration * 1000);
@@ -313,7 +332,12 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 					: {}),
 			}}
 		>
-			<ScrollingText onePixel={onePixel} scroll={routeNumber.scroll} text={routeNumber.text} />
+			<ScrollingText
+				onePixel={onePixel}
+				scroll={routeNumber.scroll}
+				speedRatio={routeNumberSpeedRatio}
+				text={routeNumber.text}
+			/>
 		</button>
 	);
 }
