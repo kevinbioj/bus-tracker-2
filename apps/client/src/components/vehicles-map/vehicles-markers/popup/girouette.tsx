@@ -193,11 +193,12 @@ function ScrollingText({
 	text,
 }: Readonly<ScrollingTextProps>) {
 	const ref = useRef<HTMLSpanElement>(null);
-	const [metrics, setMetrics] = useState<{ containerWidth: number; textWidth: number }>();
+	const [metrics, setMetrics] = useState<{ from: number; to: number }>();
 
 	useLayoutEffect(() => {
 		const element = ref.current;
-		if (!scroll || element === null) {
+		const container = element?.parentElement;
+		if (!scroll || element == null || container == null) {
 			setMetrics(undefined);
 			return;
 		}
@@ -206,50 +207,63 @@ function ScrollingText({
 		// affects the travelled distance: text, font size, spacing, girouette
 		// width, and the asynchronous loading of the LED fonts.
 		const observer = new ResizeObserver(() => {
-			const containerWidth = element.parentElement?.clientWidth ?? 0;
-			const textWidth = element.scrollWidth;
-			setMetrics((current) =>
-				current?.containerWidth === containerWidth && current.textWidth === textWidth
-					? current
-					: { containerWidth, textWidth },
-			);
+			const { paddingLeft } = getComputedStyle(container);
+			// The text lays out at the left edge of the content box: offsetting it
+			// by the padding gives the distances to the visible edges of the pane.
+			const leftPadding = Number.parseFloat(paddingLeft) || 0;
+			const from = container.clientWidth - leftPadding;
+			const to = -(element.scrollWidth + leftPadding);
+			setMetrics((current) => (current?.from === from && current.to === to ? current : { from, to }));
 		});
 
 		observer.observe(element);
-		if (element.parentElement !== null) observer.observe(element.parentElement);
+		observer.observe(container);
 
 		return () => observer.disconnect();
 	}, [scroll]);
 
 	const duration =
 		metrics !== undefined && onePixel > 0 && speedRatio > 0
-			? (metrics.containerWidth + metrics.textWidth) / (scrollSpeed * speedRatio * onePixel)
+			? (metrics.from - metrics.to) / (scrollSpeed * speedRatio * onePixel)
 			: 0;
 
 	useEffect(() => {
 		onDurationChange?.(duration * 1000);
 	}, [duration, onDurationChange]);
 
-	return (
-		<span
-			className={className}
+	const html = { __html: processText(text) };
+
+	// A text that doesn't scroll is left to the centering of its parent, which
+	// also keeps an overflowing one centered on the pane.
+	if (!scroll) {
+		return (
 			// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
-			dangerouslySetInnerHTML={{ __html: processText(text) }}
-			ref={ref}
-			style={{
-				...style,
-				...(duration > 0 && metrics !== undefined
-					? ({
-							// Cancels the centering of the parent (both in row and column
-							// direction) so that the scroll starts from the left edge.
-							marginRight: "auto",
-							animation: `girouette-scroll ${duration}s linear infinite`,
-							"--scroll-from": `${metrics.containerWidth}px`,
-							"--scroll-to": `${-metrics.textWidth}px`,
-						} as CSSProperties)
-					: {}),
-			}}
-		/>
+			<span className={className} dangerouslySetInnerHTML={html} style={style} />
+		);
+	}
+
+	// A scrolling text, on the other hand, is wrapped in a full-width block so
+	// that the centering of the parent (`justify-center` or `items-center`) never
+	// shifts it: `margin: auto` doesn't cancel that centering once the text
+	// overflows, as the free space is then negative.
+	return (
+		<span className={cn("block w-full", className)} style={style}>
+			<span
+				className="inline-block"
+				// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
+				dangerouslySetInnerHTML={html}
+				ref={ref}
+				style={
+					duration > 0 && metrics !== undefined
+						? ({
+								animation: `girouette-scroll ${duration}s linear infinite`,
+								"--scroll-from": `${metrics.from}px`,
+								"--scroll-to": `${metrics.to}px`,
+							} as CSSProperties)
+						: undefined
+				}
+			/>
+		</span>
 	);
 }
 
@@ -307,7 +321,6 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 				fontSize: `${virtualHeight}px`,
 				letterSpacing: `${spacing}px`,
 				lineHeight: `${virtualHeight}px`,
-				paddingLeft: `${spacing}px`,
 				//- Colors
 				...(halfPattern
 					? {
@@ -336,6 +349,9 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 				onePixel={onePixel}
 				scroll={routeNumber.scroll}
 				speedRatio={routeNumberSpeedRatio}
+				// Carried by the text wrapper rather than the pane so that the scrolling
+				// distances, which are measured against it, stay exact.
+				style={{ paddingLeft: `${spacing}px` }}
 				text={routeNumber.text}
 			/>
 		</button>
