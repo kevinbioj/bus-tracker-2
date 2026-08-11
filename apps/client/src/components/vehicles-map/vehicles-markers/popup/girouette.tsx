@@ -128,6 +128,13 @@ export type GirouetteData = {
 type GirouetteProps = ComponentPropsWithoutRef<"div"> &
 	GirouetteData & {
 		onRouteNumberClick?: () => void;
+		/**
+		 * Displays that page instead of cycling through them automatically. The
+		 * index is wrapped around the number of pages, so it may grow indefinitely.
+		 */
+		pageIndex?: number;
+		/** Notified with the index of the displayed page, whether it changed on its own or not. */
+		onPageIndexChange?: (pageIndex: number) => void;
 		width: number;
 	};
 
@@ -135,7 +142,9 @@ export function Girouette({
 	className,
 	dimensions = defaultDimensions,
 	ledColor = "WHITE",
+	onPageIndexChange,
 	onRouteNumberClick,
+	pageIndex,
 	pages = [],
 	routeNumber = { text: "" },
 	width,
@@ -158,7 +167,14 @@ export function Girouette({
 				routeNumber={routeNumber}
 				width={width}
 			/>
-			<Pages dimensions={dimensions} ledColor={ledColor} pages={pages} width={width} />
+			<Pages
+				controlledPageIndex={pageIndex}
+				dimensions={dimensions}
+				ledColor={ledColor}
+				onPageIndexChange={onPageIndexChange}
+				pages={pages}
+				width={width}
+			/>
 		</div>
 	);
 }
@@ -361,13 +377,16 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 // ---
 
 type PagesProps = {
+	/** When set, that page is displayed and the automatic cycling is suspended. */
+	controlledPageIndex?: number;
 	dimensions: GirouetteDimensions;
 	ledColor: LedColor;
+	onPageIndexChange?: (pageIndex: number) => void;
 	pages: PagesData[];
 	width: number;
 };
 
-function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
+function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, pages, width }: Readonly<PagesProps>) {
 	const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
 	// Scrolling durations of the lines of the displayed page, keyed by line index.
@@ -378,7 +397,13 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 		);
 	}, []);
 
-	const pageIndex = pages.length > 0 ? currentPageIndex % pages.length : 0;
+	const isControlled = controlledPageIndex !== undefined;
+	// The modulo is normalized so that a controlled index walking backwards past
+	// the first page wraps around to the last one.
+	const pageIndex =
+		pages.length > 0
+			? (((isControlled ? controlledPageIndex : currentPageIndex) % pages.length) + pages.length) % pages.length
+			: 0;
 	const activePage = pages[pageIndex];
 	const lines = activePage === undefined ? [] : Array.isArray(activePage) ? activePage : [activePage];
 
@@ -386,10 +411,14 @@ function Pages({ dimensions, ledColor, pages, width }: Readonly<PagesProps>) {
 	const pageDuration = Math.max(staticPageDuration, ...lines.map((_, lineIndex) => scrollDurations[lineIndex] ?? 0));
 
 	useEffect(() => {
-		if (pages.length <= 1) return;
+		onPageIndexChange?.(pageIndex);
+	}, [onPageIndexChange, pageIndex]);
+
+	useEffect(() => {
+		if (isControlled || pages.length <= 1) return;
 		const timeout = setTimeout(() => setCurrentPageIndex(pageIndex + 1), pageDuration);
 		return () => clearTimeout(timeout);
-	}, [pageDuration, pageIndex, pages.length]);
+	}, [isControlled, pageDuration, pageIndex, pages.length]);
 
 	if (activePage === undefined) return null;
 

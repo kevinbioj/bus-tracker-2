@@ -217,6 +217,20 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 
 	const { fields: pageFields, append, remove, move } = useFieldArray({ control: form.control, name: "pages" });
 	const [newDest, setNewDest] = useState("");
+
+	// Page cycling of the preview: automatic by default, manual once one of the
+	// arrows is used, and back to automatic through the "A" button.
+	const [autoPages, setAutoPages] = useState(true);
+	const [previewPageIndex, setPreviewPageIndex] = useState(0);
+	const goToPage = (delta: number) => {
+		setAutoPages(false);
+		setPreviewPageIndex((index) => index + delta);
+	};
+	// The renderer wraps the index around on its own and reports the wrapped one
+	// back, but a click and a page removal both leave it out of bounds for a render.
+	const displayedPageNumber =
+		pageFields.length > 0 ? (((previewPageIndex % pageFields.length) + pageFields.length) % pageFields.length) + 1 : 0;
+
 	const watchedDestinations = useWatch({ control: form.control, name: "destinations" }) ?? [];
 
 	const handleAddDestination = () => {
@@ -356,8 +370,57 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 		>
 			<div className="sticky top-14 z-10 bg-background mt-4 pb-3 border-b flex flex-col gap-2">
 				<p className="text-sm font-semibold pt-1">{m.line_girouettes_form_preview_title()}</p>
-				<div className="overflow-x-auto">
-					<GirouettePreview className="border border-[#444444]" width={Math.min(width - 26, 512)} {...previewData} />
+				<div className="flex items-center gap-1.5 overflow-x-auto">
+					<GirouettePreview
+						className="border border-[#444444]"
+						onPageIndexChange={setPreviewPageIndex}
+						pageIndex={autoPages ? undefined : previewPageIndex}
+						width={Math.min(width - 92, 512)}
+						{...previewData}
+					/>
+					<div className="flex shrink-0 items-center gap-1">
+						{/* Both arrows form a single vertical block: only the outer corners stay
+						    rounded, and the lower button climbs over the border of the upper one. */}
+						<div className="flex flex-col">
+							<Button
+								className="rounded-b-none"
+								type="button"
+								variant="outline"
+								size="icon-sm"
+								title={m.line_girouettes_form_preview_previous_page()}
+								disabled={pageFields.length <= 1}
+								onClick={() => goToPage(-1)}
+							>
+								<ArrowUpIcon />
+							</Button>
+							<Button
+								className="-mt-px rounded-t-none"
+								type="button"
+								variant="outline"
+								size="icon-sm"
+								title={m.line_girouettes_form_preview_next_page()}
+								disabled={pageFields.length <= 1}
+								onClick={() => goToPage(1)}
+							>
+								<ArrowDownIcon />
+							</Button>
+						</div>
+						<div className="flex flex-col items-center">
+							<span className="mb-2.5 w-8 shrink-0 text-center text-xs tabular-nums text-muted-foreground select-none">
+							{displayedPageNumber}/{pageFields.length}
+						</span>
+						<Button
+							type="button"
+							variant={autoPages ? "branding-default" : "outline"}
+							size="icon-sm"
+							title={m.line_girouettes_form_preview_auto_pages()}
+							aria-pressed={autoPages}
+							onClick={() => setAutoPages((auto) => !auto)}
+						>
+							A
+						</Button>
+						</div>
+					</div>
 				</div>
 			</div>
 
