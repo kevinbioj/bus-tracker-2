@@ -65,22 +65,61 @@
 	"networks_list_title": "Network data",
 	"network_lines_label": "Line {lineNumber}",
 	"network_lines_tab": "Lines",
-	"network_online_vehicle_count": "{count} vehicle{plural} online",
+	"network_online_vehicle_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} vehicle online",
+				"countPlural=other": "{count} vehicles online"
+			}
+		}
+	],
 	"network_vehicle_filter_label": "Filter by",
 	"network_vehicle_filter_placeholder": "number or designation",
 	"network_vehicle_operator_filter": "Operator",
 	"network_vehicle_operator_all": "All operators",
-	"network_vehicle_operator_count": "{count} operators",
+	"network_vehicle_operator_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} operator",
+				"countPlural=other": "{count} operators"
+			}
+		}
+	],
 	"network_vehicle_operator_no": "No operator",
 	"network_vehicle_sort_activity": "Activity",
 	"network_vehicle_sort_aria_label": "Sort",
 	"network_vehicle_sort_label": "Sort",
 	"network_vehicle_sort_number": "Number",
 	"network_vehicle_type_filter": "Type",
-	"network_vehicles_archived_count": "{count} archived vehicle{plural}",
+	"network_vehicles_archived_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} archived vehicle",
+				"countPlural=other": "{count} archived vehicles"
+			}
+		}
+	],
 	"network_vehicles_empty": "No vehicle matches these search criteria",
 	"network_vehicles_none_online": "No vehicle out of {count} is in service",
-	"network_vehicles_online_count": "{onlineCount}/{totalCount} vehicle{plural} in service",
+	"network_vehicles_online_count": [
+		{
+			"declarations": [
+				"input totalCount",
+				"local totalCountPlural = totalCount: plural"
+			],
+			"selectors": ["totalCountPlural"],
+			"match": {
+				"totalCountPlural=one": "{onlineCount}/{totalCount} vehicle in service",
+				"totalCountPlural=other": "{onlineCount}/{totalCount} vehicles in service"
+			}
+		}
+	],
 	"network_vehicles_tab": "Vehicles",
 	"map_filter_disable": "Disable filter",
 	"map_filter_line": "Filter by line",
@@ -134,8 +173,26 @@
 	"marker_destination_unknown": "Unknown destination",
 	"stop_call_skipped": "Stop not served",
 	"stop_call_extra": "Additional stop",
-	"stop_call_delay": "{count} minute{plural} late",
-	"stop_call_early": "{count} minute{plural} early",
+	"stop_call_delay": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} minute late",
+				"countPlural=other": "{count} minutes late"
+			}
+		}
+	],
+	"stop_call_early": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} minute early",
+				"countPlural=other": "{count} minutes early"
+			}
+		}
+	],
 	"stop_call_on_time": "On time",
 	"stop_call_imminent": "Due",
 	"stop_call_in_minutes": "{count} min",
@@ -181,7 +238,16 @@
 	"settings_displayed_countries_empty": "No country found.",
 	"settings_displayed_countries_label": "Countries to display",
 	"settings_displayed_countries_search_placeholder": "Search for a country…",
-	"settings_displayed_countries_summary": "{count} countries selected",
+	"settings_displayed_countries_summary": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} country selected",
+				"countPlural=other": "{count} countries selected"
+			}
+		}
+	],
 	"settings_displayed_vehicles_description": "Choose which vehicles are shown on the map based on how their position is obtained.",
 	"settings_displayed_vehicles_estimated": "Estimated",
 	"settings_displayed_vehicles_gps": "GPS",
@@ -401,5 +467,6 @@
 	"legal_reliability_indicative": "Although the data is considered reliable for most networks, it is provided for information purposes only.",
 	"legal_reliability_proof": "Bus Tracker cannot under any circumstances be used as \"legal\" or official evidence (including before an employer or any other authority). The accuracy of positions and schedules is not guaranteed and depends on the data feeds provided by operators.",
 	"vehicle_no_activity": "This vehicle has not been observed in commercial service yet.",
-	"view_on_map": "View on map"
+	"view_on_map": "View on map",
+	"language_german": "German"
 }

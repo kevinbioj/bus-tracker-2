@@ -12,6 +12,7 @@ const languages = [
 	{ label: m.language_system(), value: "system" },
 	{ label: m.language_french(), value: "fr" },
 	{ label: m.language_english(), value: "en" },
+	{ label: m.language_german(), value: "de" },
 ];
 
 export function LanguageSetting() {

@@ -75,7 +75,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										([, delay]) =>
 											({
 												className: "bg-orange-600 dark:bg-orange-700 font-bold text-white",
-												content: m.stop_call_delay({ count: delay, plural: delay > 1 ? "s" : "" }),
+												content: m.stop_call_delay({ count: delay }),
 											}) as const,
 									)
 									.with(
@@ -83,7 +83,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 										([, delay]) =>
 											({
 												className: "bg-red-600 dark:bg-red-700 font-bold text-white",
-												content: m.stop_call_early({ count: Math.abs(delay), plural: delay < -1 ? "s" : "" }),
+												content: m.stop_call_early({ count: Math.abs(delay) }),
 											}) as const,
 									)
 									.otherwise(

@@ -159,17 +159,12 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	);
 
 	const activeVehiclesLabel = useMemo(() => {
-		if (showArchived)
-			return m.network_vehicles_archived_count({
-				count: filteredAndSortedVehicles.length,
-				plural: filteredAndSortedVehicles.length > 1 ? "s" : "",
-			});
+		if (showArchived) return m.network_vehicles_archived_count({ count: filteredAndSortedVehicles.length });
 		if (filteredAndSortedVehicles.length === 0) return m.network_vehicles_empty();
 		if (onlineVehicles.length === 0) return m.network_vehicles_none_online({ count: filteredAndSortedVehicles.length });
 		return m.network_vehicles_online_count({
 			onlineCount: onlineVehicles.length,
 			totalCount: filteredAndSortedVehicles.length,
-			plural: filteredAndSortedVehicles.length > 1 ? "s" : "",
 		});
 	}, [filteredAndSortedVehicles, onlineVehicles, showArchived]);
 

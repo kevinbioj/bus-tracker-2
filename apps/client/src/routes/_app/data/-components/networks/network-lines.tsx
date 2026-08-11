@@ -49,10 +49,7 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 							{line.girouetteNumber ? line.number : m.network_lines_label({ lineNumber: line.number })}
 						</p>
 						<div className="flex items-center gap-1.5 text-sm">
-							{m.network_online_vehicle_count({
-								count: line.onlineVehicleCount ?? 0,
-								plural: (line.onlineVehicleCount ?? 0) > 1 ? "s" : "",
-							})}
+							{m.network_online_vehicle_count({ count: line.onlineVehicleCount ?? 0 })}
 						</div>
 					</div>
 				</Link>

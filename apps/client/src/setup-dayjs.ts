@@ -7,6 +7,7 @@ import timezonePlugin from "dayjs/plugin/timezone";
 import updateLocalePlugin from "dayjs/plugin/updateLocale";
 import utcPlugin from "dayjs/plugin/utc";
 import "dayjs/locale/en";
+import "dayjs/locale/de";
 
 import { getLocale } from "./paraglide/runtime";
 
