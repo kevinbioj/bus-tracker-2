@@ -7,6 +7,7 @@ import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
+import { useDisplayedCountryCodes } from "~/components/vehicles-map/displayed-countries";
 import { useDisplayedPositionTypes } from "~/components/vehicles-map/displayed-position-types";
 import { VehiclesMarkersStatusControl } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-status-control";
 
@@ -45,6 +46,7 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 	const { width: windowWidth } = useWindowSize();
 	const [previewVehicleNumber] = useLocalStorage("preview-vehicle-number", false);
 	const [displayedPositionTypes] = useDisplayedPositionTypes();
+	const [displayedCountryCodes] = useDisplayedCountryCodes();
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
 
 	const { data, isFetching, isPlaceholderData, refetch } = useQuery(
@@ -56,7 +58,7 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to refetch if that setting changes
 	useEffect(() => {
 		refetch();
-	}, [bounds, displayedPositionTypes.join(","), lineId, networkId]);
+	}, [bounds, displayedPositionTypes.join(","), displayedCountryCodes.join(","), lineId, networkId]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: only refocus when data is fresh and lineId changed
 	useEffect(() => {

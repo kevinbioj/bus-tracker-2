@@ -2,6 +2,7 @@ import type { VehicleJourneyPath } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
+import { readDisplayedCountryCodes } from "~/components/vehicles-map/displayed-countries";
 import { positionTypes, readDisplayedPositionTypes } from "~/components/vehicles-map/displayed-position-types";
 import type { GirouetteData } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 import { client } from "./client";
@@ -18,6 +19,7 @@ export type VehicleJourneyMarker = {
 
 export type DisposeableVehicleJourney = {
 	id: string;
+	countryCode: string;
 	lineId?: number;
 	direction?: "OUTBOUND" | "INBOUND";
 	destination?: string;
@@ -67,6 +69,8 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 		queryFn: () => {
 			const activeMarkerId = localStorage.getItem("active-feature");
 			const displayedPositionTypes = embeddedNetworkId ? positionTypes : readDisplayedPositionTypes();
+			// En mode embarqué le réseau est imposé : filtrer par pays n'aurait aucun sens.
+			const displayedCountryCodes = embeddedNetworkId ? undefined : readDisplayedCountryCodes();
 
 			return client
 				.get("/vehicle-journeys/markers", {
@@ -79,6 +83,7 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 						lineId: lineId ? String(lineId) : undefined,
 						positionTypes:
 							displayedPositionTypes.length < positionTypes.length ? displayedPositionTypes.join(",") : undefined,
+						countryCodes: displayedCountryCodes?.join(","),
 						includeMarker: lineId === undefined ? (activeMarkerId ?? undefined) : undefined,
 					},
 				})

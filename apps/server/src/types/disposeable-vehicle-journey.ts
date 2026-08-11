@@ -1,5 +1,7 @@
 export type DisposeableVehicleJourney = {
 	id: string;
+	/** Code pays ISO 3166-1 alpha-2 hérité du réseau (défaut "FR" en base). */
+	countryCode: string;
 	lineId?: number;
 	direction?: "OUTBOUND" | "INBOUND";
 	destination?: string;

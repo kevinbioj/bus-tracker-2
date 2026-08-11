@@ -7,6 +7,7 @@ export type Network = {
 	ref: string;
 	name: string;
 	authority: string | null;
+	countryCode: string;
 	logoHref: string | null;
 	darkModeLogoHref: string | null;
 	color: string | null;

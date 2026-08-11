@@ -7,7 +7,7 @@ import { match, P } from "ts-pattern";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
-import { GetRegionsQuery } from "~/api/regions";
+import { useIsCountryDisplayed } from "~/components/vehicles-map/displayed-countries";
 import * as m from "~/paraglide/messages";
 import { NetworksListBlock } from "~/routes/_app/data/-networks-list/networks-block";
 import {
@@ -16,6 +16,7 @@ import {
 	OTHER_REGIONS_FILTER,
 	toRegionFilter,
 } from "~/routes/_app/data/-networks-list/region-filter";
+import { useDisplayedRegions } from "~/routes/_app/data/-networks-list/use-displayed-regions";
 
 const searchifyQuery = (query: string) =>
 	query
@@ -36,7 +37,7 @@ type NetworksRegionBlock = {
 };
 
 export function NetworksListVirtualList() {
-	const { data: regions } = useSuspenseQuery(GetRegionsQuery);
+	const regions = useDisplayedRegions();
 	const { data: networks } = useSuspenseQuery(GetNetworksQuery);
 
 	const listRef = useRef<HTMLDivElement>(null);
@@ -50,6 +51,7 @@ export function NetworksListVirtualList() {
 			: ALL_REGIONS_FILTER;
 	const hasSearchQuery = debouncedSearchifiedSearchQuery.length > 0;
 
+	const isCountryDisplayed = useIsCountryDisplayed();
 	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
 	const [favoriteNetworkIds] = useLocalStorage("favorite-networks", new Set<number>(), {
 		deserializer: (value) => new Set(JSON.parse(value)),
@@ -67,6 +69,9 @@ export function NetworksListVirtualList() {
 			return [];
 		}
 
+		// Même réglage que la carte : les réseaux des pays masqués n'apparaissent nulle part.
+		innerNetworks = innerNetworks.filter((network) => isCountryDisplayed(network.countryCode));
+
 		if (onlyNetworksWithHistory) {
 			innerNetworks = innerNetworks.filter((network) => network.hasVehiclesFeature);
 		}
@@ -79,7 +84,7 @@ export function NetworksListVirtualList() {
 			const compareAgainst = [network.name, ...(network.authority ? [network.authority] : [])].map(searchifyQuery);
 			return compareAgainst.some((value) => value.includes(debouncedSearchifiedSearchQuery));
 		});
-	}, [debouncedSearchifiedSearchQuery, hasSearchQuery, networks, onlyNetworksWithHistory]);
+	}, [debouncedSearchifiedSearchQuery, hasSearchQuery, isCountryDisplayed, networks, onlyNetworksWithHistory]);
 
 	const [favoriteNetworks, regionNetworks] = useMemo<[Network[], Network[]]>(() => {
 		if (regionFilter !== ALL_REGIONS_FILTER) {

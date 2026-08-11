@@ -47,6 +47,8 @@ export const networksTable = pgTable("network", {
 	ref: varchar("ref").notNull().unique(),
 	name: varchar("name").notNull(),
 	authority: varchar("authority"),
+	/** Code pays ISO 3166-1 alpha-2 du réseau, utilisé pour filtrer les véhicules affichés. */
+	countryCode: char("country_code", { length: 2 }).notNull().default("FR"),
 	timezone: varchar("timezone").notNull().default("Europe/Paris"),
 	logoHref: varchar("logo_href"),
 	darkModeLogoHref: varchar("dark_mode_logo_href"),

@@ -407,18 +407,18 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 						</div>
 						<div className="flex flex-col items-center">
 							<span className="mb-2.5 w-8 shrink-0 text-center text-xs tabular-nums text-muted-foreground select-none">
-							{displayedPageNumber}/{pageFields.length}
-						</span>
-						<Button
-							type="button"
-							variant={autoPages ? "branding-default" : "outline"}
-							size="icon-sm"
-							title={m.line_girouettes_form_preview_auto_pages()}
-							aria-pressed={autoPages}
-							onClick={() => setAutoPages((auto) => !auto)}
-						>
-							A
-						</Button>
+								{displayedPageNumber}/{pageFields.length}
+							</span>
+							<Button
+								type="button"
+								variant={autoPages ? "branding-default" : "outline"}
+								size="icon-sm"
+								title={m.line_girouettes_form_preview_auto_pages()}
+								aria-pressed={autoPages}
+								onClick={() => setAutoPages((auto) => !auto)}
+							>
+								A
+							</Button>
 						</div>
 					</div>
 				</div>

@@ -1,8 +1,6 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
 import { SearchIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
-import { GetRegionsQuery } from "~/api/regions";
 import { Input } from "~/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import * as m from "~/paraglide/messages";
@@ -12,11 +10,12 @@ import {
 	OTHER_REGIONS_FILTER,
 	toRegionFilter,
 } from "~/routes/_app/data/-networks-list/region-filter";
+import { useDisplayedRegions } from "~/routes/_app/data/-networks-list/use-displayed-regions";
 import { useNetworksListSearchQuery } from "~/routes/_app/data/-networks-list/use-search-query";
 import { cn } from "~/utils/cn";
 
 export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<"div">) {
-	const { data: regions } = useSuspenseQuery(GetRegionsQuery);
+	const regions = useDisplayedRegions();
 	const [searchQuery, setSearchQuery] = useNetworksListSearchQuery();
 	const [regionFilter, setRegionFilter] = useNetworksListSearchQuery("region");
 	const parsedRegionFilter = toRegionFilter(regionFilter);

@@ -1,0 +1,1 @@
+ALTER TABLE "network" ADD COLUMN "country_code" char(2) DEFAULT 'FR' NOT NULL;

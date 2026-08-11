@@ -18,6 +18,12 @@ const getVehicleJourneyMarkersQuery = z.object({
 	neLon: z.coerce.number().min(-180).max(180),
 	includeMarker: z.string().optional(),
 	excludeScheduled: z.coerce.boolean().optional(),
+	// Absent = aucun filtrage pays, pour rester compatible avec les clients existants.
+	countryCodes: z
+		.string()
+		.optional()
+		.transform((value) => (value !== undefined ? value.split(",").filter((code) => code.length > 0) : undefined))
+		.transform((codes) => (codes !== undefined && codes.length > 0 ? new Set(codes) : undefined)),
 	positionTypes: z
 		.string()
 		.optional()
@@ -39,13 +45,27 @@ const getPositionType = (journey: DisposeableVehicleJourney) => {
 };
 
 hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
-	const { swLat, swLon, neLat, neLon, includeMarker, excludeScheduled, positionTypes, lineId, networkId } =
-		c.req.valid("query");
+	const {
+		swLat,
+		swLon,
+		neLat,
+		neLon,
+		includeMarker,
+		excludeScheduled,
+		positionTypes,
+		lineId,
+		networkId,
+		countryCodes,
+	} = c.req.valid("query");
 
 	const boundedLineIds = new Set<number>();
 	const boundedJourneys = journeyStore
 		.values()
 		.filter((journey) => {
+			if (countryCodes !== undefined && !countryCodes.has(journey.countryCode)) {
+				return false;
+			}
+
 			if (positionTypes !== undefined) {
 				if (!positionTypes.includes(getPositionType(journey))) {
 					return false;

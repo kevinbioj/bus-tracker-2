@@ -6,6 +6,7 @@ import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
+import { useIsCountryDisplayed } from "~/components/vehicles-map/displayed-countries";
 import { NetworkSearchBar } from "~/components/vehicles-map/filter-module/network/network-search-bar";
 import { NetworkInnerList } from "~/components/vehicles-map/filter-module/network/networks-inner-list";
 import * as m from "~/paraglide/messages";
@@ -28,7 +29,15 @@ export function FilterModuleNetworkList({
 	onNetworkSelect,
 }: Readonly<FilterModuleNetworkListProps>) {
 	const { data: regions } = useQuery(GetRegionsQuery);
-	const { data: networks } = useQuery(GetNetworksQuery);
+	const { data: allNetworks } = useQuery(GetNetworksQuery);
+	const isCountryDisplayed = useIsCountryDisplayed();
+
+	// La liste suit le réglage « Pays à afficher » : proposer un réseau dont aucun véhicule ne peut
+	// apparaître sur la carte n'aurait pas de sens.
+	const networks = useMemo(
+		() => allNetworks?.filter((network) => isCountryDisplayed(network.countryCode)),
+		[allNetworks, isCountryDisplayed],
+	);
 
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");

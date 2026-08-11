@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from "~/components/ui/separator";
 import * as m from "~/paraglide/messages";
 import { DisplayNextCallsSetting } from "~/routes/_app/-components/settings/display-next-calls";
+import { DisplayedCountriesSetting } from "~/routes/_app/-components/settings/displayed-countries";
 import { DisplayedVehiclesSetting } from "~/routes/_app/-components/settings/displayed-vehicles";
 import { EditorTokenInput } from "~/routes/_app/-components/settings/editor-token-input";
 import { OnlyNetworksWithHistorySetting } from "~/routes/_app/-components/settings/only-networks-with-history";
@@ -43,6 +44,7 @@ export function Settings() {
 							{m.settings_map_section()}
 						</h3>
 						<div className="flex flex-col gap-2">
+							<DisplayedCountriesSetting />
 							<DisplayedVehiclesSetting />
 							<PreviewVehicleNumberSetting />
 							<DisplayNextCallsSetting />
