@@ -74,12 +74,16 @@ export function enrichSncfJourneyWithSiriLitePlatforms(vehicleJourney, siriLiteJ
 
 	const siriLiteCallsByStopRef = new Map();
 	for (const call of getSiriLiteCalls(siriLiteJourney)) {
-		if (call.StopPointRef === undefined || call.ArrivalPlatformName === undefined) continue;
+		if (
+			call.StopPointRef === undefined ||
+			(call.ArrivalPlatformName === undefined && call.DeparturePlatformName === undefined)
+		)
+			continue;
 
 		const stopRef = normalizeSncfStopRef(call.StopPointRef);
 		if (stopRef === undefined || siriLiteCallsByStopRef.has(stopRef)) continue;
 
-		siriLiteCallsByStopRef.set(stopRef, String(call.ArrivalPlatformName));
+		siriLiteCallsByStopRef.set(stopRef, String(call.ArrivalPlatformName ?? call.DeparturePlatformName));
 	}
 
 	for (const call of vehicleJourney.calls) {
