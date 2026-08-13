@@ -44,6 +44,7 @@ const sources = [
 		id: "calais",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=sitac-calais-rt",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=sitac-calais-rt"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
 		excludeScheduled: true,
 		mode: "VP-ONLY",
 		getNetworkRef: () => "SITAC",

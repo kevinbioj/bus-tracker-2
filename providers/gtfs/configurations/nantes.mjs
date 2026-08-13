@@ -157,6 +157,7 @@ const sources = [
 		id: "nantes-zenbus",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=tan",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=tan"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
 		getNetworkRef: () => "NAOLIB",
 		getVehicleRef: (vehicle) => (vehicle ? nantesZenbusVehicleIdToLabel.get(vehicle.id) : undefined),

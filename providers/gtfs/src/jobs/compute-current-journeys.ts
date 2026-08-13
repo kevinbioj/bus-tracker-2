@@ -422,9 +422,19 @@ export async function computeVehicleJourneys(source: Source) {
 			}
 		}
 
+		const maxVehiclePositionAgeMs = source.options.maxVehiclePositionAgeMs;
+
 		for (const vehiclePosition of vehiclePositions) {
 			// 👏 https://transport.data.gouv.fr/resources/81925
 			if (vehiclePosition.position === undefined) continue;
+
+			// Position figée : le terminal embarqué a cessé d'émettre alors que la course reste ouverte
+			// dans le flux. Un timestamp nul signale un producteur qui n'en fournit aucun (même pas dans
+			// l'en-tête du flux) : rien ne permet alors de juger de la fraîcheur.
+			const isStalePosition =
+				maxVehiclePositionAgeMs !== undefined &&
+				vehiclePosition.timestamp > 0 &&
+				nowMs - vehiclePosition.timestamp * 1000 >= maxVehiclePositionAgeMs;
 
 			// nomad-car-geo3d patch
 			if (source.id === "nomad-car-geo3d") {
@@ -464,6 +474,15 @@ export async function computeVehicleJourneys(source: Source) {
 						source.gtfs.journeys.set(getJourneyMapKey(startDate, trip.id), journey);
 					}
 
+					// La course n'est pas marquée comme suivie : elle retombe sur son traitement plus bas —
+					// ou disparaît si la source ne le publie pas (`mode: "VP-ONLY"`, `excludeScheduled`).
+					// Son temps réel part avec la position : le TripUpdate qui continue de dériver derrière
+					// un terminal muet ne décrit plus la course, l'horaire théorique reprend la main.
+					if (isStalePosition) {
+						journey.dropRealtime();
+						continue;
+					}
+
 					const minutesSinceUpdate = (now.epochMilliseconds - updatedAt.epochMilliseconds) / 60000;
 					if (minutesSinceUpdate >= 10) {
 						const lastCall = journey.calls[journey.calls.length - 1]!;
@@ -479,7 +498,13 @@ export async function computeVehicleJourneys(source: Source) {
 				}
 			}
 
-			if (journey === undefined && (now.epochMilliseconds - updatedAt.epochMilliseconds) / 60000 >= 5) continue;
+			// Un véhicule sans course rattachée n'a rien qui prenne le relais : sa position figée est
+			// simplement écartée.
+			if (
+				journey === undefined &&
+				(isStalePosition || (now.epochMilliseconds - updatedAt.epochMilliseconds) / 60000 >= 5)
+			)
+				continue;
 
 			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
 			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);

@@ -48,6 +48,15 @@ export type SourceOptions = {
 	 * mettre 0 pour abandonner le temps réel dès le premier cycle où la course quitte le flux.
 	 */
 	tripUpdateTtlMs?: number;
+	/**
+	 * Âge (ms) au-delà duquel une VehiclePosition est jugée figée et ignorée. Vise les producteurs
+	 * qui laissent une course ouverte quand le terminal embarqué se déconnecte (Zenbus notamment) :
+	 * la position ne bouge plus tandis que le TripUpdate continue de dériver, et le véhicule
+	 * resterait affiché indéfiniment sur sa dernière position connue. Passé ce délai, la course
+	 * retombe sur son traitement théorique / TripUpdate, ou disparaît si la source ne le publie pas
+	 * (`mode: "VP-ONLY"`, `excludeScheduled`). Absent, aucune position n'est écartée sur ce critère.
+	 */
+	maxVehiclePositionAgeMs?: number;
 	allowTripGuessing?: boolean;
 	addedTripShapeMatching?: boolean;
 	disableRoutePaths?: boolean;

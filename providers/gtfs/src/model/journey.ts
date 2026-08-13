@@ -153,13 +153,22 @@ export class Journey {
 		if (this.lastTripUpdateAtMs === undefined) return false;
 		if (nowMs - this.lastTripUpdateAtMs <= ttlMs) return false;
 
+		this.dropRealtime();
+		return true;
+	}
+
+	/**
+	 * Abandonne inconditionnellement l'état temps réel de la course et restaure son horaire théorique.
+	 * Employé lorsque le temps réel est jugé faux plutôt qu'absent — une course dont la position s'est
+	 * figée alors que son TripUpdate continue de dériver, par exemple.
+	 */
+	dropRealtime() {
 		this.lastTripUpdateAtMs = undefined;
 		this._hasRealtime = false;
 		// Les calls sont re-calculés à la demande depuis l'horaire théorique.
 		this._calls = null;
 		this.firstCallArrivalMs = this.aimedFirstCallArrivalMs;
 		this.lastCallDepartureMs = this.aimedLastCallDepartureMs;
-		return true;
 	}
 
 	get vehicleDescriptor(): VehicleDescriptor | undefined {

@@ -22,6 +22,7 @@ const sources = [
 		id: "30direct-bordeaux",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=bordeaux-navettes-aeroport",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=bordeaux-navettes-aeroport"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
 		excludeScheduled: true,
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
@@ -40,6 +41,7 @@ const sources = [
 		id: "agen",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/c1415ff3-7457-4b51-aead-aacbf03a474e",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-urbain"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
 		excludeScheduled: true,
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
@@ -55,6 +57,7 @@ const sources = [
 		id: "agen-scolaire",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/3fd582f2-e2ef-4ad7-894c-6f057b53b006",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-scolaire"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
 		excludeScheduled: true,
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) =>
@@ -172,6 +175,7 @@ const sources = [
 		id: "respire",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=iledere75923021",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=iledere75923021"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
 		getNetworkRef: () => "RESPIRE",
 		getVehicleRef: () => undefined,
@@ -183,6 +187,7 @@ const sources = [
 		id: "saintes",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=buss-cdasaintes",
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=buss-cdasaintes"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "SAINTES",

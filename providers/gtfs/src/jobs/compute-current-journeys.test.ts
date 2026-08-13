@@ -461,6 +461,62 @@ describe("computeVehicleJourneys (expiration des TripUpdate disparus)", () => {
 	});
 });
 
+describe("computeVehicleJourneys (positions figées)", () => {
+	beforeEach(() => {
+		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		Reflect.deleteProperty(console, "draft");
+	});
+
+	/** Position émise à `time` puis plus jamais : le terminal embarqué s'est déconnecté. */
+	function frozenVehiclePosition(time: string): VehiclePosition {
+		return {
+			timestamp: epochSeconds(`2026-05-18T${time}Z`),
+			trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18" },
+			vehicle: { id: "vehicle:1" },
+			position: { latitude: 0, longitude: 0.005 },
+		};
+	}
+
+	const frozen = { vehiclePositions: [frozenVehiclePosition("08:05:00")], tripUpdates: [delayedTripUpdate(5 * 60)] };
+
+	it("publie la position figée tant que le délai n'est pas écoulé", async () => {
+		const source = scheduledSource({ maxVehiclePositionAgeMs: 10 * 60_000 });
+
+		const result = await cycleAt(source, "08:14:00", frozen);
+		expect(result.journeys[0]?.position).toMatchObject({ type: "GPS", longitude: 0.005 });
+	});
+
+	it("écarte la position figée et rend la main à l'horaire théorique", async () => {
+		const source = scheduledSource({ maxVehiclePositionAgeMs: 10 * 60_000 });
+		const journey = source.gtfs!.journeys.get(`${DATE}-original`)!;
+
+		// Le TripUpdate est toujours dans le flux et continue de dériver derrière le terminal muet.
+		const result = await cycleAt(source, "08:16:00", frozen);
+
+		expect(journey.hasRealtime()).toBe(false);
+		expect(result.journeys).toHaveLength(1);
+		expect(result.journeys[0]?.position.type).toBe("COMPUTED");
+		expect(result.journeys[0]?.calls?.every((call) => call.expectedTime === undefined)).toBe(true);
+	});
+
+	it("fait disparaître le véhicule quand la source ne publie pas le théorique", async () => {
+		const source = scheduledSource({ maxVehiclePositionAgeMs: 10 * 60_000, excludeScheduled: true });
+
+		expect((await cycleAt(source, "08:16:00", frozen)).journeys).toHaveLength(0);
+	});
+
+	it("conserve la position figée en l'absence de l'option", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:16:00", frozen);
+		expect(result.journeys[0]?.position).toMatchObject({ type: "GPS", longitude: 0.005 });
+	});
+});
+
 describe("Source#sweepJourneys", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
