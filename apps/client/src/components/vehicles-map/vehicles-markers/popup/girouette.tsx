@@ -27,6 +27,12 @@ const routeNumberSpeedRatio = 0.5;
 const staticPageDuration = 3000;
 
 /**
+ * Blinking cycle of a flashing text. The share of it the text stays displayed
+ * is carried by the keyframes, so only the total is expressed here.
+ */
+const flashAnimation = "girouette-flash 1.25s steps(1, end) infinite";
+
+/**
  * Determines the outline color for an automatically-generated route number,
  * following the rule in effect for automatic girouettes:
  * - white text over any background → black outline
@@ -99,6 +105,7 @@ export type RouteNumberData = {
 	text: string;
 	//- Font & spacing
 	font?: Font;
+	flash?: boolean;
 	scroll?: boolean;
 	spacing?: TextSpacing;
 	//- Colors
@@ -110,6 +117,7 @@ export type RouteNumberData = {
 
 type PageLine = {
 	font?: Font;
+	flash?: boolean;
 	scroll?: boolean;
 	spacing?: number;
 	text: string;
@@ -183,6 +191,8 @@ export function Girouette({
 
 type ScrollingTextProps = {
 	className?: string;
+	/** Blinks the text on and off, independently of its scrolling. */
+	flash?: boolean;
 	/** Notified with the duration of a full scrolling cycle, in milliseconds (0 when the text doesn't scroll). */
 	onDurationChange?: (duration: number) => void;
 	/** Size of a single matrix pixel, in CSS pixels. */
@@ -201,6 +211,7 @@ type ScrollingTextProps = {
  */
 function ScrollingText({
 	className,
+	flash,
 	onDurationChange,
 	onePixel,
 	scroll,
@@ -249,12 +260,16 @@ function ScrollingText({
 
 	const html = { __html: processText(text) };
 
+	// Blinking is carried by the outer element in both cases, so that it composes
+	// with the scrolling animation rather than replacing it.
+	const flashStyle: CSSProperties | undefined = flash ? { ...style, animation: flashAnimation } : style;
+
 	// A text that doesn't scroll is left to the centering of its parent, which
 	// also keeps an overflowing one centered on the pane.
 	if (!scroll) {
 		return (
 			// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
-			<span className={className} dangerouslySetInnerHTML={html} style={style} />
+			<span className={className} dangerouslySetInnerHTML={html} style={flashStyle} />
 		);
 	}
 
@@ -263,7 +278,7 @@ function ScrollingText({
 	// shifts it: `margin: auto` doesn't cancel that centering once the text
 	// overflows, as the free space is then negative.
 	return (
-		<span className={cn("block w-full", className)} style={style}>
+		<span className={cn("block w-full", className)} style={flashStyle}>
 			<span
 				className="inline-block"
 				// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
@@ -362,6 +377,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 			}}
 		>
 			<ScrollingText
+				flash={routeNumber.flash}
 				onePixel={onePixel}
 				scroll={routeNumber.scroll}
 				speedRatio={routeNumberSpeedRatio}
@@ -448,6 +464,7 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 						// Remounting on page change restarts the scrolling animation from its beginning.
 						// biome-ignore lint/suspicious/noArrayIndexKey: safe here
 						key={`${pageIndex}-${lineIndex}`}
+						flash={line.flash}
 						onDurationChange={(duration) => handleDurationChange(lineIndex, duration)}
 						onePixel={onePixel}
 						scroll={line.scroll}

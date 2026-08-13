@@ -12,6 +12,19 @@
 	}
 }
 
+/*
+ * Blinking of girouette texts: the stepped timing turns the two keyframes into a
+ * hard on/off cycle, displayed for the first part of the cycle then hidden.
+ */
+@keyframes girouette-flash {
+	0% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0;
+	}
+}
+
 @font-face {
 	font-display: block;
 	font-family: "0808B2E1";

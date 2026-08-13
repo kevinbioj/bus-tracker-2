@@ -1,7 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowDownIcon, ArrowLeftRightIcon, ArrowUpIcon, PaletteIcon, PlusIcon, TrashIcon, XIcon } from "lucide-react";
+import {
+	ArrowDownIcon,
+	ArrowLeftRightIcon,
+	ArrowUpIcon,
+	ChevronsLeftRightIcon,
+	ChevronsRightLeftIcon,
+	FastForwardIcon,
+	PaletteIcon,
+	PlusIcon,
+	TrashIcon,
+	XIcon,
+	ZapIcon,
+} from "lucide-react";
 import { useSnackbar } from "notistack";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -23,7 +35,6 @@ import { ColorPicker } from "~/components/ui/color-picker";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
-import { Switch } from "~/components/ui/switch";
 import {
 	type GirouetteData,
 	Girouette as GirouettePreview,
@@ -46,6 +57,7 @@ import {
 const lineSchema = z.object({
 	text: z.string(),
 	fontVariant: z.string(),
+	flash: z.boolean(),
 	scroll: z.boolean(),
 	spacing: z.number().int().min(0).max(10).nullable(),
 });
@@ -63,6 +75,7 @@ const formSchema = z.object({
 		textColor: z.string(),
 		backgroundColor: z.string(),
 		outlineColor: z.string(),
+		flash: z.boolean(),
 		scroll: z.boolean(),
 		spacing: z.number().int().min(0).max(10).nullable(),
 		halfPattern: z.enum(["tl", "tr", "bl", "br"]).nullable(),
@@ -75,6 +88,7 @@ type FormValues = z.infer<typeof formSchema>;
 const defaultLine = (fontVariant = DEFAULT_FONT_VARIANT): FormValues["pages"][number]["lines"][number] => ({
 	text: "",
 	fontVariant,
+	flash: false,
 	scroll: false,
 	spacing: null,
 });
@@ -99,6 +113,7 @@ const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => 
 				textColor: "",
 				backgroundColor: "",
 				outlineColor: "",
+				flash: false,
 				scroll: false,
 				spacing: null,
 				halfPattern: null,
@@ -118,6 +133,7 @@ const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => 
 			textColor: d.routeNumber?.textColor ?? "",
 			backgroundColor: d.routeNumber?.backgroundColor ?? "",
 			outlineColor: d.routeNumber?.outlineColor ?? "",
+			flash: d.routeNumber?.flash ?? false,
 			scroll: d.routeNumber?.scroll ?? false,
 			spacing: d.routeNumber?.spacing ?? null,
 			halfPattern: d.routeNumber?.halfPattern ?? null,
@@ -130,6 +146,7 @@ const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => 
 							lines: rawLines.map((line) => ({
 								text: line.text,
 								fontVariant: line.font ?? DEFAULT_FONT_VARIANT,
+								flash: line.flash ?? false,
 								scroll: line.scroll ?? false,
 								spacing: line.spacing ?? null,
 							})),
@@ -150,7 +167,7 @@ function girouetteDimensions(routeNumber: { text?: string; backgroundColor?: str
 }
 
 function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInput {
-	type PageLine = { font?: AllowedFont; scroll?: boolean; spacing?: TextSpacing; text: string };
+	type PageLine = { font?: AllowedFont; flash?: boolean; scroll?: boolean; spacing?: TextSpacing; text: string };
 
 	const data: GirouetteData = {
 		dimensions: girouetteDimensions({
@@ -164,6 +181,7 @@ function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInpu
 			textColor: values.routeNumber.textColor || undefined,
 			backgroundColor: values.routeNumber.backgroundColor || undefined,
 			outlineColor: values.routeNumber.outlineColor || undefined,
+			flash: values.routeNumber.flash || undefined,
 			scroll: values.routeNumber.scroll || undefined,
 			spacing: (values.routeNumber.spacing ?? undefined) as TextSpacing | undefined,
 			halfPattern: values.routeNumber.halfPattern ?? undefined,
@@ -172,6 +190,7 @@ function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInpu
 			const lines: PageLine[] = page.lines.map((line) => ({
 				text: line.text,
 				font: line.fontVariant as AllowedFont,
+				flash: line.flash || undefined,
 				scroll: line.scroll || undefined,
 				spacing: (line.spacing ?? undefined) as TextSpacing | undefined,
 			}));
@@ -323,6 +342,7 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 					textColor: watchedValues.routeNumber.textColor || undefined,
 					backgroundColor: watchedValues.routeNumber.backgroundColor || undefined,
 					outlineColor: watchedValues.routeNumber.outlineColor || undefined,
+					flash: watchedValues.routeNumber.flash || undefined,
 					scroll: watchedValues.routeNumber.scroll || undefined,
 					spacing: (watchedValues.routeNumber.spacing ?? undefined) as TextSpacing | undefined,
 					halfPattern: watchedValues.routeNumber.halfPattern ?? undefined,
@@ -332,6 +352,7 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 			const lines = (page?.lines ?? []).map((line) => ({
 				text: line?.text ?? "",
 				font: (line?.fontVariant as AllowedFont) ?? DEFAULT_FONT_VARIANT,
+				flash: line?.flash || undefined,
 				scroll: line?.scroll || undefined,
 				spacing: line?.spacing ?? undefined,
 			}));
@@ -520,14 +541,30 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 									<Input {...form.register("routeNumber.text")} />
 								</div>
 								<FontVariantField
-									className="flex-1 min-w-0"
+									className="min-w-0 shrink grow-0 sm:basis-40"
 									form={form}
 									fieldName="routeNumber.fontVariant"
 									fonts={ALL_FONTS}
 								/>
-								<div className="flex shrink-0 items-start gap-3">
-									<SpacingField form={form} name="routeNumber.spacing" />
-									<ScrollField form={form} name="routeNumber.scroll" />
+								<div className="grid shrink-0 gap-2">
+									<Label className="whitespace-nowrap">{m.line_girouettes_form_options_label()}</Label>
+									<div className="flex h-9 items-center gap-2">
+										<SpacingField form={form} name="routeNumber.spacing" />
+										<div className="flex items-center gap-1.5">
+											<ToggleField
+												form={form}
+												name="routeNumber.scroll"
+												icon={<FastForwardIcon />}
+												label={m.line_girouettes_form_scroll_label()}
+											/>
+											<ToggleField
+												form={form}
+												name="routeNumber.flash"
+												icon={<ZapIcon />}
+												label={m.line_girouettes_form_flash_label()}
+											/>
+										</div>
+									</div>
 								</div>
 							</div>
 
@@ -772,39 +809,53 @@ function PageFields({
 				<div
 					// biome-ignore lint/suspicious/noArrayIndexKey: stable order
 					key={lineIndex}
-					className={cn("flex flex-col gap-2", lineIndex > 0 && "pt-1")}
+					className={cn("flex flex-col gap-1", lineIndex > 0 && "pt-1")}
 				>
-					<div className="flex items-center justify-between gap-2">
-						<span className="text-xs font-medium text-muted-foreground">
-							{m.line_girouettes_form_line_n({ n: lineIndex + 1 })}
-						</span>
-						{lineIndex === 1 && (
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								title={m.line_girouettes_form_line_remove_second()}
-								onClick={() => handleRemoveLine(lineIndex)}
-							>
-								<TrashIcon className="text-destructive" />
-							</Button>
-						)}
-					</div>
 					<div className="flex flex-col sm:flex-row sm:items-start gap-3">
 						<div className="grid gap-2 flex-1 min-w-0">
-							<Label>{m.line_girouettes_form_page_text_label()}</Label>
+							<Label>{lines.length > 1 ? m.line_girouettes_form_line_n({ n: lineIndex + 1 }) : m.line_girouettes_form_page_text_label()}</Label>
 							<Input {...form.register(`pages.${pageIndex}.lines.${lineIndex}.text`)} />
 						</div>
 						<FontVariantField
-							className="flex-1 min-w-0"
+							className="min-w-0 shrink grow-0 sm:basis-40"
 							form={form}
 							fieldName={`pages.${pageIndex}.lines.${lineIndex}.fontVariant`}
 							fonts={lineIndex === 0 ? line1Fonts : line2Fonts}
 							onAfterChange={lineIndex === 0 ? handleLine1FontChange : undefined}
 						/>
-						<div className="flex shrink-0 items-start gap-3">
-							<SpacingField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.spacing`} />
-							<ScrollField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.scroll`} />
+						<div className="grid shrink-0 gap-2">
+							<Label className="whitespace-nowrap">{m.line_girouettes_form_options_label()}</Label>
+							<div className="flex h-9 items-center gap-2">
+								<SpacingField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.spacing`} />
+								<div className="flex items-center gap-1.5">
+									<ToggleField
+										form={form}
+										name={`pages.${pageIndex}.lines.${lineIndex}.scroll`}
+										icon={<FastForwardIcon />}
+										label={m.line_girouettes_form_scroll_label()}
+									/>
+									<ToggleField
+										form={form}
+										name={`pages.${pageIndex}.lines.${lineIndex}.flash`}
+										icon={<ZapIcon />}
+										label={m.line_girouettes_form_flash_label()}
+									/>
+								</div>
+								{/* Sits on the controls row rather than above it, so that the lines
+								    don't need a header of their own just to carry it. */}
+								{hasTwoLines && (
+									<Button
+										type="button"
+					variant="outline"
+										size="icon-sm"
+										title={m.line_girouettes_form_line_remove()}
+										aria-label={m.line_girouettes_form_line_remove()}
+										onClick={() => handleRemoveLine(lineIndex)}
+									>
+										<TrashIcon className="text-destructive" />
+									</Button>
+								)}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -893,26 +944,34 @@ function ColorPickerField({ className, form, name, label }: Readonly<ColorPicker
 
 // ---
 
-type ScrollFieldProps = {
+type ToggleFieldProps = {
 	className?: string;
 	form: ReturnType<typeof useForm<FormValues>>;
+	icon: ReactNode;
+	/** Carried by the tooltip and the accessible name, as the button shows only its icon. */
+	label: string;
 	name: string;
 };
 
-function ScrollField({ className, form, name }: Readonly<ScrollFieldProps>) {
+/** Icon button toggling a boolean field of the form, lit up while it is on. */
+function ToggleField({ className, form, icon, label, name }: Readonly<ToggleFieldProps>) {
 	return (
 		<Controller
 			control={form.control}
 			name={name as "routeNumber.scroll"}
 			render={({ field }) => (
-				<Label className={cn("flex flex-col gap-2 cursor-pointer font-normal", className)}>
-					<span className="text-sm font-medium leading-none whitespace-nowrap">
-						{m.line_girouettes_form_scroll_label()}
-					</span>
-					<div className="flex h-9 items-center">
-						<Switch checked={field.value} onCheckedChange={field.onChange} />
-					</div>
-				</Label>
+				<Button
+					className={className}
+					type="button"
+					variant={field.value ? "branding-default" : "outline"}
+					size="icon-sm"
+					title={label}
+					aria-label={label}
+					aria-pressed={field.value}
+					onClick={() => field.onChange(!field.value)}
+				>
+					{icon}
+				</Button>
 			)}
 		/>
 	);
@@ -926,42 +985,53 @@ type SpacingFieldProps = {
 	name: string;
 };
 
+/**
+ * The two steppers and the current value form a single block: each segment keeps
+ * only its outer corners rounded and overlaps the border of its neighbour, and
+ * the labels live in the tooltips so that the whole thing fits on one row.
+ */
 function SpacingField({ className, form, name }: Readonly<SpacingFieldProps>) {
 	return (
-		<div className={cn("grid gap-2", className)}>
-			<Label className="whitespace-nowrap">{m.line_girouettes_form_spacing_label()}</Label>
-			<Controller
-				control={form.control}
-				name={name as "routeNumber.spacing"}
-				render={({ field }) => {
-					const value = field.value as number | null;
-					return (
-						<div className="flex h-9 items-center gap-1">
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								className="px-2 font-mono"
-								disabled={value === null}
-								onClick={() => field.onChange(value === 0 ? null : (value ?? 0) - 1)}
-							>
-								{"><"}
-							</Button>
-							<span className="w-8 text-center text-sm tabular-nums select-none">{value ?? "–"}</span>
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								className="px-2 font-mono"
-								disabled={value === 10}
-								onClick={() => field.onChange(value === null ? 0 : value + 1)}
-							>
-								{"<>"}
-							</Button>
-						</div>
-					);
-				}}
-			/>
-		</div>
+		<Controller
+			control={form.control}
+			name={name as "routeNumber.spacing"}
+			render={({ field }) => {
+				const value = field.value as number | null;
+				return (
+					<div className={cn("flex items-center", className)}>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							className="rounded-r-none px-2"
+							title={m.line_girouettes_form_spacing_decrease()}
+							aria-label={m.line_girouettes_form_spacing_decrease()}
+							disabled={value === null}
+							onClick={() => field.onChange(value === 0 ? null : (value ?? 0) - 1)}
+						>
+							<ChevronsRightLeftIcon />
+						</Button>
+						<span
+							className="-mx-px flex h-7 w-8 items-center justify-center border border-border bg-background text-sm tabular-nums select-none dark:border-input dark:bg-input/30"
+							title={m.line_girouettes_form_spacing_label()}
+						>
+							{value ?? "–"}
+						</span>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							className="rounded-l-none px-2"
+							title={m.line_girouettes_form_spacing_increase()}
+							aria-label={m.line_girouettes_form_spacing_increase()}
+							disabled={value === 10}
+							onClick={() => field.onChange(value === null ? 0 : value + 1)}
+						>
+							<ChevronsLeftRightIcon />
+						</Button>
+					</div>
+				);
+			}}
+		/>
 	);
 }
