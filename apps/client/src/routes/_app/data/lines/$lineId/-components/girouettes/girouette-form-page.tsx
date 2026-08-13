@@ -813,7 +813,11 @@ function PageFields({
 				>
 					<div className="flex flex-col sm:flex-row sm:items-start gap-3">
 						<div className="grid gap-2 flex-1 min-w-0">
-							<Label>{lines.length > 1 ? m.line_girouettes_form_line_n({ n: lineIndex + 1 }) : m.line_girouettes_form_page_text_label()}</Label>
+							<Label>
+								{lines.length > 1
+									? m.line_girouettes_form_line_n({ n: lineIndex + 1 })
+									: m.line_girouettes_form_page_text_label()}
+							</Label>
 							<Input {...form.register(`pages.${pageIndex}.lines.${lineIndex}.text`)} />
 						</div>
 						<FontVariantField
@@ -846,7 +850,7 @@ function PageFields({
 								{hasTwoLines && (
 									<Button
 										type="button"
-					variant="outline"
+										variant="outline"
 										size="icon-sm"
 										title={m.line_girouettes_form_line_remove()}
 										aria-label={m.line_girouettes_form_line_remove()}
