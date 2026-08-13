@@ -144,7 +144,7 @@ if (process.env.NODE_ENV !== "test") {
 const sources = [
 	{
 		id: "sncf",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/sncf.zip",
+		staticResourceHref: "https://1.gtfs.download/sncf/sncf.zip",
 		realtimeResourceHrefs: [GTFS_RT_TRIP_UPDATES_URL],
 		excludeScheduled: true,
 		gtfsOptions: { ignoreBlocks: true },
