@@ -203,6 +203,7 @@
 		}
 	],
 	"stop_call_on_time": "Pünktlich",
+	"stop_call_cancelled": "Entfällt",
 	"stop_call_imminent": "Sofort",
 	"stop_call_in_minutes": "{count} Min.",
 	"stop_call_in_hours": "{hours} Std {minutes}",

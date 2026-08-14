@@ -19,20 +19,19 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 			calls.map((call) => {
 				const time = call.expectedTime ?? call.aimedTime;
 				if (nextCallsDisplayMode === "absolute") {
-					return { label: dayjs(time.slice(0, -6)).format("HH:mm"), blinking: false };
+					return dayjs(time.slice(0, -6)).format("HH:mm");
 				}
 
-				const minutes = dayjs(time).diff(dayjs(), "minutes");
-				if (minutes < 1) return { label: m.stop_call_imminent(), blinking: true };
-				if (minutes < 60) return { label: m.stop_call_in_minutes({ count: minutes }), blinking: false };
+				if (call.callStatus === "SKIPPED") return m.stop_call_cancelled();
 
-				return {
-					label: m.stop_call_in_hours({
-						hours: Math.floor(minutes / 60),
-						minutes: String(minutes % 60).padStart(2, "0"),
-					}),
-					blinking: false,
-				};
+				const minutes = dayjs(time).diff(dayjs(), "minutes");
+				if (minutes < 1) return m.stop_call_imminent();
+				if (minutes < 60) return m.stop_call_in_minutes({ count: minutes });
+
+				return m.stop_call_in_hours({
+					hours: Math.floor(minutes / 60),
+					minutes: String(minutes % 60).padStart(2, "0"),
+				});
 			}),
 		10_000,
 		[calls, nextCallsDisplayMode],
@@ -43,7 +42,7 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 		<div className="-my-0.5">
 			<div className="flex max-h-24 flex-col gap-1 overflow-y-auto overscroll-contain py-0.5 px-1.5">
 				{calls.map((call, index) => {
-					const time = times[index] ?? { label: "", blinking: false };
+					const label = times[index] ?? "";
 
 					const accentColor = match([call.callStatus, call.expectedTime])
 						.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")
@@ -105,11 +104,10 @@ export function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 							<span
 								className={clsx(
 									"select-none hover:cursor-default",
-									call.callStatus === "SKIPPED" && "line-through",
-									time.blinking && "animate-blink",
+									call.callStatus === "SKIPPED" && nextCallsDisplayMode === "absolute" && "line-through",
 								)}
 							>
-								{time.label}
+								{label}
 							</span>
 						</div>
 					);

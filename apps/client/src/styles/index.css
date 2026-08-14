@@ -8,7 +8,6 @@
 @theme inline {
 	--animate-accordion-down: accordion-down 0.2s ease-out;
 	--animate-accordion-up: accordion-up 0.2s ease-out;
-	--animate-blink: blink 2s steps(1, end) infinite;
 
 	--color-branding: var(--branding);
 	--color-branding-foreground: var(--branding-foreground);
@@ -71,17 +70,6 @@
 		}
 		to {
 			height: 0;
-		}
-	}
-
-	@keyframes blink {
-		0%,
-		75% {
-			opacity: 1;
-		}
-		75.01%,
-		100% {
-			opacity: 0;
 		}
 	}
 }

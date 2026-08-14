@@ -194,6 +194,7 @@
 		}
 	],
 	"stop_call_on_time": "À l'heure",
+	"stop_call_cancelled": "Supprimé",
 	"stop_call_imminent": "Imminent",
 	"stop_call_in_minutes": "{count} min",
 	"stop_call_in_hours": "{hours}h{minutes}",
