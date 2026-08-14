@@ -517,6 +517,139 @@ describe("computeVehicleJourneys (positions figées)", () => {
 	});
 });
 
+/**
+ * Course transfrontalière d'une agence déclarée en `Europe/Paris` (UTC+2 en mai) dont le dernier
+ * arrêt est portugais (UTC+1) : A 10:00, B 10:30, C 11:00 heures locales respectives.
+ */
+function crossBorderSource() {
+	const source = makeSource();
+	const agency = new Agency("agency", "Agency", "Europe/Paris");
+	const route = new Route("line:1", agency, "1", "COACH");
+	const service = new Service("service", [true, true, true, true, true, true, true]);
+	const stops = [
+		new Stop("A", "A", 0, 0),
+		new Stop("B", "B", 0, 0.01),
+		new Stop("C", "C", 0, 0.02, undefined, "Europe/Lisbon"),
+	];
+	const store = new StopTimeStore(
+		stops,
+		new Uint8Array([1, 2, 3]),
+		new Uint8Array([0, 0, 0]),
+		new Uint32Array([10 * 3600, 10 * 3600 + 30 * 60, 11 * 3600]),
+		new Uint32Array([10 * 3600, 10 * 3600 + 30 * 60, 11 * 3600]),
+		new Float32Array([0, 1000, 2000]),
+		new Uint32Array([0]),
+		new Uint32Array([3]),
+		new Uint32Array([10 * 3600]),
+		new Uint32Array([11 * 3600]),
+		new Uint32Array([11 * 3600]),
+	);
+	const trip = new Trip(0, "original", route, service, store, 0, "Terminus");
+	source.gtfs = {
+		routes: new Map([[route.id, route]]),
+		stops: new Map(stops.map((stop) => [stop.id, stop])),
+		trips: new Map([[trip.id, trip]]),
+		journeys: new Map([[`${DATE}-original`, trip.getScheduledJourney(DATE, true)]]),
+		stopTimeStore: store,
+		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
+		lastModified: null,
+		etag: null,
+	};
+	return source;
+}
+
+/**
+ * Réplique de `configurations/macron-bus.mjs` : agence déclarée en `UTC`, arrêts portant tous
+ * `stop_timezone=Europe/Paris`, suivi par positions GPS uniquement.
+ *
+ * A 10:00 → B 10:30 → C 11:00, heures locales françaises.
+ */
+function flixbusLikeSource() {
+	const source = makeSource({ excludeScheduled: true, mode: "NO-TU", isValidJourney: (vj) => vj.line !== undefined });
+	const agency = new Agency("agency", "Agency", "UTC");
+	const route = new Route("line:1", agency, "1", "COACH");
+	const service = new Service("service", [true, true, true, true, true, true, true]);
+	const stops = [
+		new Stop("A", "A", 0, 0, undefined, "Europe/Paris"),
+		new Stop("B", "B", 0, 0.01, undefined, "Europe/Paris"),
+		new Stop("C", "C", 0, 0.02, undefined, "Europe/Paris"),
+	];
+	const store = new StopTimeStore(
+		stops,
+		new Uint8Array([1, 2, 3]),
+		new Uint8Array([0, 0, 0]),
+		new Uint32Array([10 * 3600, 10 * 3600 + 30 * 60, 11 * 3600]),
+		new Uint32Array([10 * 3600, 10 * 3600 + 30 * 60, 11 * 3600]),
+		new Float32Array([0, 1000, 2000]),
+		new Uint32Array([0]),
+		new Uint32Array([3]),
+		new Uint32Array([10 * 3600]),
+		new Uint32Array([11 * 3600]),
+		new Uint32Array([11 * 3600]),
+	);
+	const trip = new Trip(0, "original", route, service, store, 0, "Terminus");
+	source.gtfs = {
+		routes: new Map([[route.id, route]]),
+		stops: new Map(stops.map((stop) => [stop.id, stop])),
+		trips: new Map([[trip.id, trip]]),
+		journeys: new Map(),
+		stopTimeStore: store,
+		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
+		lastModified: null,
+		etag: null,
+	};
+	return source;
+}
+
+describe("computeVehicleJourneys (course multi-fuseaux)", () => {
+	beforeEach(() => {
+		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		Reflect.deleteProperty(console, "draft");
+	});
+
+	it("restitue chaque arrêt en heure locale sans déplacer l'instant", async () => {
+		// 08:15 UTC : la course a quitté A (08:00 UTC) et n'a pas encore atteint B (08:30 UTC).
+		const { journeys } = await cycleAt(crossBorderSource(), "08:15:00");
+
+		const calls = journeys[0]!.calls!;
+		// C est atteint à 11:00 heure de l'agence (09:00 UTC), soit 10:00 heure locale portugaise :
+		// l'heure murale recule en franchissant la frontière, l'instant lui continue d'avancer.
+		expect(calls.map((call) => call.aimedTime)).toEqual([
+			"2026-05-18T10:30:00+02:00", // B, heure locale française
+			"2026-05-18T10:00:00+01:00", // C, heure locale portugaise
+		]);
+		expect(new Date(calls[1]!.aimedTime).toISOString()).toBe("2026-05-18T09:00:00.000Z");
+	});
+
+	it("applique le fuseau de l'arrêt à une course suivie en GPS", async () => {
+		// Réplique de la configuration FlixBus : agence en UTC — donc horaires exprimés en UTC —
+		// et arrêts en Europe/Paris, suivis par un flux VehiclePosition seul (`NO-TU`).
+		const source = flixbusLikeSource();
+
+		const { journeys } = await cycleAt(source, "10:15:00", {
+			vehiclePositions: [
+				{
+					timestamp: epochSeconds("2026-05-18T10:15:00Z"),
+					trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18" },
+					vehicle: { id: "vehicle:1" },
+					position: { latitude: 0, longitude: 0.005 },
+				},
+			],
+		});
+
+		expect(journeys[0]!.position.type).toBe("GPS");
+		// 10:30 UTC au fichier, publié en 12:30 heure de Paris — et non 10:30+02:00.
+		expect(journeys[0]!.calls!.map((call) => call.aimedTime)).toEqual([
+			"2026-05-18T12:30:00+02:00", // B
+			"2026-05-18T13:00:00+02:00", // C
+		]);
+	});
+});
+
 describe("Source#sweepJourneys", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();

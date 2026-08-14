@@ -218,7 +218,7 @@ function getPositionAtCall(call: JourneyCall, at: Temporal.Instant, timeZone: st
 		atStop: true,
 		type: "COMPUTED",
 		distanceTraveled: call.distanceTraveled,
-		recordedAt: at.toZonedDateTimeISO(timeZone).toString({ timeZoneName: "never" }),
+		recordedAt: at.toZonedDateTimeISO(call.stop.timeZone ?? timeZone).toString({ timeZoneName: "never" }),
 	};
 }
 
@@ -277,6 +277,6 @@ export function guessPositionFromCalls(
 		atStop: false,
 		type: "COMPUTED",
 		distanceTraveled,
-		recordedAt: at.toZonedDateTimeISO(timeZone).toString({ timeZoneName: "never" }),
+		recordedAt: at.toZonedDateTimeISO(currentCall.stop.timeZone ?? timeZone).toString({ timeZoneName: "never" }),
 	};
 }

@@ -6,6 +6,7 @@ import { importServices } from "./components/import-services.js";
 import { importShapes } from "./components/import-shapes.js";
 import { importStops } from "./components/import-stops.js";
 import { importTrips } from "./components/import-trips.js";
+import { pruneStopTimeZones } from "./components/prune-stop-time-zones.js";
 
 export type LoadShapesStrategy = "LOAD-IF-EXISTS" | "IGNORE";
 export type ComputeShapeDistTraveledStrategy = "always" | "if-missing";
@@ -29,6 +30,7 @@ export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptio
 		importShapes(gtfsDirectory, options),
 		importStops(gtfsDirectory, options),
 	]);
+	pruneStopTimeZones(stops, agencies);
 	const routes = await importRoutes(gtfsDirectory, options, agencies);
 	const { trips, stopTimeStore } = await importTrips(gtfsDirectory, options, routes, services, shapes, stops);
 	const gtfs = { routes, stops, trips, journeys: new Map(), stopTimeStore };

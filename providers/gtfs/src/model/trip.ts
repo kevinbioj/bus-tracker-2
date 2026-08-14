@@ -62,6 +62,10 @@ export class Trip {
 	computeCallsForDate(date: Temporal.PlainDate) {
 		const start = this.stopTimeStart;
 		const count = this.stopTimeCount;
+		// Les heures de stop_times.txt sont toujours exprimées dans le fuseau de l'agence, jamais
+		// dans celui de l'arrêt (spec GTFS) : c'est ce qui garantit que les heures d'une course
+		// croissent même lorsqu'elle traverse des fuseaux. `stop_timezone` ne sert qu'à restituer
+		// l'instant obtenu en heure locale de l'arrêt, à la sérialisation.
 		const tz = this.route.agency.timeZone;
 		const { stops, sequence, flagsBitmask, arrivalSecs, departureSecs, distanceTraveled } = this.store;
 
@@ -70,6 +74,7 @@ export class Trip {
 			const idx = start + i;
 			const aSecs = arrivalSecs[idx]!;
 			const dSecs = departureSecs[idx]!;
+			const stop = stops[idx]!;
 
 			const aimedArrivalTimeMs = createZonedDateTimeFromSecs(date, aSecs, tz).epochMilliseconds;
 			const aimedDepartureTimeMs =
@@ -81,9 +86,9 @@ export class Trip {
 				expectedArrivalTime: undefined as number | undefined,
 				aimedDepartureTime: aimedDepartureTimeMs,
 				expectedDepartureTime: undefined as number | undefined,
-				stop: stops[idx]!,
+				stop,
 				sequence: sequence[idx]!,
-				platform: stops[idx]!.platformCode,
+				platform: stop.platformCode,
 				distanceTraveled: Number.isNaN(dist) ? undefined : dist,
 				status: "SCHEDULED" as const,
 				flags: bitmaskToFlags(flagsBitmask[idx]!),

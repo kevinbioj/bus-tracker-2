@@ -80,9 +80,19 @@ function getTimeZoneOffsetMs(timeZone: string, epochMs: number): number {
 		offset = tzDate.getTime() - utcDate.getTime();
 		offsetCache.set(cacheKey, offset);
 
-		if (offsetCache.size > 1000) offsetCache.clear();
+		// Plafond large : un jeu de données continental combine une dizaine de fuseaux à autant
+		// d'heures distinctes, une purge trop précoce annulerait le bénéfice du cache.
+		if (offsetCache.size > 8192) offsetCache.clear();
 	}
 	return offset;
+}
+
+/**
+ * Sérialise l'heure d'un arrêt avec l'offset de *son* fuseau à *cet* instant : une course peut
+ * traverser plusieurs fuseaux, et un changement d'heure.
+ */
+function formatCallTime(epochMs: number, stopTimeZone: string | undefined, journeyTimeZone: string): string {
+	return fastFormatISO(epochMs, getTimeZoneOffsetMs(stopTimeZone ?? journeyTimeZone, epochMs));
 }
 
 const getCalls = (
@@ -257,7 +267,7 @@ const getPositionFromLastPassedAddedCall = (calls: JourneyCall[], at: Temporal.I
 		longitude: call.stop.longitude,
 		atStop: true,
 		type: "COMPUTED" as const,
-		recordedAt: at.toZonedDateTimeISO(timeZone).toString({ timeZoneName: "never" }),
+		recordedAt: at.toZonedDateTimeISO(call.stop.timeZone ?? timeZone).toString({ timeZoneName: "never" }),
 	};
 };
 
@@ -582,8 +592,11 @@ export async function computeVehicleJourneys(source: Source) {
 								const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
 
 								return {
-									aimedTime: fastFormatISO(aimedTimeMs, offsetMs),
-									expectedTime: expectedTimeMs ? fastFormatISO(expectedTimeMs, offsetMs) : undefined,
+									aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
+									expectedTime:
+										expectedTimeMs !== undefined
+											? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone)
+											: undefined,
 									stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 									stopName: call.stop.name,
 									stopOrder: call.sequence,
@@ -668,7 +681,6 @@ export async function computeVehicleJourneys(source: Source) {
 					paths.set(pathRef, shape.asPath());
 				}
 
-				const offsetMs = getTimeZoneOffsetMs(timeZone, now.epochMilliseconds);
 				const route = addedTripShapeMatch.candidate.trip.route;
 				const vehicleJourney: VehicleJourney = {
 					id: key,
@@ -692,8 +704,9 @@ export async function computeVehicleJourneys(source: Source) {
 						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
 
 						return {
-							aimedTime: fastFormatISO(aimedTimeMs, offsetMs),
-							expectedTime: expectedTimeMs ? fastFormatISO(expectedTimeMs, offsetMs) : undefined,
+							aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
+							expectedTime:
+								expectedTimeMs !== undefined ? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone) : undefined,
 							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 							stopName: call.stop.name,
 							stopOrder: call.sequence,
@@ -745,7 +758,6 @@ export async function computeVehicleJourneys(source: Source) {
 				const position = getPositionFromLastPassedAddedCall(addedCalls, now, timeZone);
 				if (position === undefined) continue;
 
-				const offsetMs = getTimeZoneOffsetMs(timeZone, now.epochMilliseconds);
 				const vehicleJourney: VehicleJourney = {
 					id: key,
 					line:
@@ -770,8 +782,9 @@ export async function computeVehicleJourneys(source: Source) {
 						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
 
 						return {
-							aimedTime: fastFormatISO(aimedTimeMs, offsetMs),
-							expectedTime: expectedTimeMs ? fastFormatISO(expectedTimeMs, offsetMs) : undefined,
+							aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
+							expectedTime:
+								expectedTimeMs !== undefined ? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone) : undefined,
 							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 							stopName: call.stop.name,
 							stopOrder: call.sequence,
@@ -869,7 +882,6 @@ export async function computeVehicleJourneys(source: Source) {
 				}
 
 				const timeZone = journey.trip.route.agency.timeZone;
-				const offsetMs = getTimeZoneOffsetMs(timeZone, now.epochMilliseconds);
 
 				const vehicleJourney: VehicleJourney = {
 					id: key,
@@ -888,8 +900,9 @@ export async function computeVehicleJourneys(source: Source) {
 						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
 
 						return {
-							aimedTime: fastFormatISO(aimedTimeMs, offsetMs),
-							expectedTime: expectedTimeMs ? fastFormatISO(expectedTimeMs, offsetMs) : undefined,
+							aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
+							expectedTime:
+								expectedTimeMs !== undefined ? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone) : undefined,
 							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
 							stopName: call.stop.name,
 							stopOrder: call.sequence,

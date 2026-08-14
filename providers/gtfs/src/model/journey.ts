@@ -253,7 +253,9 @@ export class Journey {
 			atStop: false,
 			type: "COMPUTED",
 			distanceTraveled,
-			recordedAt: at.toZonedDateTimeISO(this.trip.route.agency.timeZone).toString({ timeZoneName: "never" }),
+			recordedAt: at
+				.toZonedDateTimeISO(currentCall.stop.timeZone ?? this.trip.route.agency.timeZone)
+				.toString({ timeZoneName: "never" }),
 		};
 	}
 
@@ -423,7 +425,7 @@ export class Journey {
 			type: "COMPUTED",
 			distanceTraveled: call.distanceTraveled,
 			recordedAt: Temporal.Instant.fromEpochMilliseconds(recordedAtMs)
-				.toZonedDateTimeISO(this.trip.route.agency.timeZone)
+				.toZonedDateTimeISO(call.stop.timeZone ?? this.trip.route.agency.timeZone)
 				.toString({ timeZoneName: "never" }),
 		};
 	}
