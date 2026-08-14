@@ -5,7 +5,7 @@ const sources = [
 		staticResourceHref: "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
 		realtimeResourceHrefs: ["https://rt.flix.baguette.pirnet.si/rt.pb"],
 		excludeScheduled: true,
-		mode: 'NO-TU',
+		mode: "NO-TU",
 		gtfsOptions: { ignoreBlocks: true },
 		getNetworkRef: () => "FLIXBUS",
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
