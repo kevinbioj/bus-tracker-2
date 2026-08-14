@@ -91,6 +91,22 @@ hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSche
 	);
 });
 
+hono.get("/lines/:id/online-destinations", createParamValidator(getLineByIdParamSchema), async (c) => {
+	const { id } = c.req.valid("param");
+
+	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
+	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
+
+	const destinations = new Set<string>();
+	for (const journey of journeyStore.values()) {
+		if (journey.lineId !== line.id) continue;
+		const destination = journey.destination?.trim();
+		if (destination) destinations.add(destination);
+	}
+
+	return c.json(Array.from(destinations).toSorted((a, b) => a.localeCompare(b)));
+});
+
 hono.get("/lines/:id/path", createParamValidator(getLineByIdParamSchema), async (c) => {
 	const { id } = c.req.valid("param");
 

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
 	ArrowDownIcon,
@@ -29,7 +29,7 @@ import {
 	type GirouetteInput,
 	UpdateGirouetteMutation,
 } from "~/api/girouettes";
-import { GetLineQuery } from "~/api/lines";
+import { GetLineOnlineDestinationsQuery, GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { ColorPicker } from "~/components/ui/color-picker";
@@ -238,6 +238,7 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 
 	const { fields: pageFields, append, remove, move } = useFieldArray({ control: form.control, name: "pages" });
 	const [newDest, setNewDest] = useState("");
+	const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
 	// Page cycling of the preview: automatic by default, manual once one of the
 	// arrows is used, and back to automatic through the "A" button.
@@ -254,11 +255,18 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 
 	const watchedDestinations = useWatch({ control: form.control, name: "destinations" }) ?? [];
 
-	const handleAddDestination = () => {
-		const trimmed = newDest.trim();
+	const { data: onlineDestinations } = useQuery(GetLineOnlineDestinationsQuery(line.id));
+	const destinationSuggestions = (onlineDestinations ?? []).filter(
+		(destination) =>
+			!watchedDestinations.includes(destination) && destination.toLowerCase().includes(newDest.trim().toLowerCase()),
+	);
+
+	const handleAddDestination = (destination = newDest) => {
+		const trimmed = destination.trim();
 		if (!trimmed || watchedDestinations.includes(trimmed)) return;
 		form.setValue("destinations", [...watchedDestinations, trimmed]);
 		setNewDest("");
+		setSuggestionsOpen(false);
 	};
 
 	const handleRemoveDestination = (index: number) => {
@@ -504,23 +512,49 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 									</Tooltip>
 								</div>
 								<div className="flex items-center gap-1.5">
-									<Input
-										className="min-w-0 flex-1"
-										value={newDest}
-										onChange={(e) => setNewDest(e.target.value)}
-										onKeyDown={(e) => {
-											if (e.key === "Enter") {
-												e.preventDefault();
-												handleAddDestination();
-											}
-										}}
-										placeholder={m.line_girouettes_form_destination_placeholder()}
-									/>
+									<div className="relative min-w-0 flex-1">
+										<Input
+											className="w-full"
+											value={newDest}
+											onChange={(e) => {
+												setNewDest(e.target.value);
+												setSuggestionsOpen(true);
+											}}
+											onFocus={() => setSuggestionsOpen(true)}
+											onClick={() => setSuggestionsOpen(true)}
+											onBlur={() => setSuggestionsOpen(false)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													e.preventDefault();
+													handleAddDestination();
+												} else if (e.key === "Escape") {
+													setSuggestionsOpen(false);
+												}
+											}}
+											placeholder={m.line_girouettes_form_destination_placeholder()}
+										/>
+										{suggestionsOpen && destinationSuggestions.length > 0 && (
+											<ul className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-md border bg-background shadow-md">
+												{destinationSuggestions.map((destination) => (
+													<li key={destination}>
+														<button
+															className="w-full px-2 py-1.5 text-left text-sm hover:bg-muted"
+															onMouseDown={(e) => e.preventDefault()}
+															onClick={() => handleAddDestination(destination)}
+															type="button"
+														>
+															{destination}
+														</button>
+													</li>
+												))}
+											</ul>
+										)}
+									</div>
 									<Button
 										type="button"
 										variant="outline"
 										size="sm"
-										onClick={handleAddDestination}
+										onClick={() => handleAddDestination()}
 										disabled={!newDest.trim() || watchedDestinations.includes(newDest.trim())}
 									>
 										<PlusIcon />

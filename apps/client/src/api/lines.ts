@@ -47,6 +47,15 @@ export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
 		queryFn: () => client.get(`/lines/${lineId}/online-vehicles`).then((response) => response.json<Vehicle[]>()),
 	});
 
+export const GetLineOnlineDestinationsQuery = (lineId?: number) =>
+	queryOptions({
+		enabled: lineId !== undefined,
+		staleTime: 15_000,
+		refetchInterval: 30_000,
+		queryKey: ["lines", lineId, "online-destinations"],
+		queryFn: () => client.get(`/lines/${lineId}/online-destinations`).then((response) => response.json<string[]>()),
+	});
+
 export const GetLinePathQuery = (lineId?: number) =>
 	queryOptions({
 		enabled: lineId !== undefined,
