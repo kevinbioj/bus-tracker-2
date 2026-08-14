@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, CircleIcon, FilterIcon, FilterXIcon } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ChevronRight, CircleIcon, FilterIcon, FilterXIcon, HistoryIcon } from "lucide-react";
 import type { IControl } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
@@ -16,6 +17,7 @@ type FilterModuleControlProps = {
 	filteredNetwork?: Network;
 	fixedNetworkId?: number;
 	onFilterChange: (line?: Line) => void;
+	withLineDataLink?: boolean;
 };
 
 export function FilterModuleControl({
@@ -23,6 +25,7 @@ export function FilterModuleControl({
 	filteredNetwork,
 	fixedNetworkId,
 	onFilterChange,
+	withLineDataLink = true,
 }: Readonly<FilterModuleControlProps>) {
 	const map = useMap();
 	const activatorRef = useRef<HTMLDivElement>(null);
@@ -80,6 +83,21 @@ export function FilterModuleControl({
 								</span>
 							)}
 						</div>
+
+						{withLineDataLink && (
+							<>
+								<span aria-hidden className="bg-black/15 h-5 w-px" />
+
+								<Link
+									className="flex items-center"
+									params={{ lineId: `${filteredLine.id}` }}
+									title={m.map_filter_line_data()}
+									to="/data/lines/$lineId"
+								>
+									<HistoryIcon className="size-5" />
+								</Link>
+							</>
+						)}
 					</div>
 				) : (
 					<button onClick={() => setOpen(true)} title={m.map_filter_vehicles()} type="button">

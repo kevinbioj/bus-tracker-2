@@ -65,6 +65,7 @@ export default function EmbeddableMapPage() {
 					filteredNetwork={network}
 					fixedNetworkId={+networkId}
 					onFilterChange={(line) => setLineId(line?.id ?? null)}
+					withLineDataLink={false}
 				/>
 				<VehiclesMarkers embeddedNetworkId={+networkId} lineId={filteredLine?.id} />
 				<Signature />

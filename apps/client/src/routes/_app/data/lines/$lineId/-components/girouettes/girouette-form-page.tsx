@@ -8,6 +8,7 @@ import {
 	ChevronsLeftRightIcon,
 	ChevronsRightLeftIcon,
 	FastForwardIcon,
+	InfoIcon,
 	PaletteIcon,
 	PlusIcon,
 	TrashIcon,
@@ -35,6 +36,7 @@ import { ColorPicker } from "~/components/ui/color-picker";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import {
 	type GirouetteData,
 	Girouette as GirouettePreview,
@@ -483,7 +485,24 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 							</div>
 
 							<div className="grid gap-2 min-w-0 flex-1">
-								<Label>{m.line_girouettes_form_destination_label()}</Label>
+								<div className="flex items-center gap-1.5">
+									<Label>{m.line_girouettes_form_destination_label()}</Label>
+									<Tooltip>
+										<TooltipTrigger
+											render={
+												<button className="text-muted-foreground hover:text-foreground" type="button">
+													<InfoIcon className="size-3.5" />
+												</button>
+											}
+										/>
+										<TooltipContent className="shadow-xl">
+											<ul className="list-disc list-outside pl-3.5 space-y-1 text-xs">
+												<li>{m.line_girouettes_form_destination_hint_unknown()}</li>
+												<li>{m.line_girouettes_form_destination_hint_replace()}</li>
+											</ul>
+										</TooltipContent>
+									</Tooltip>
+								</div>
 								<div className="flex items-center gap-1.5">
 									<Input
 										className="min-w-0 flex-1"
