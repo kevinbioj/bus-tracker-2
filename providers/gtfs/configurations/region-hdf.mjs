@@ -38,6 +38,7 @@ const sources = [
 			"https://proxy.transport.data.gouv.fr/resource/marineo-boulonnais-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
 		getNetworkRef: () => "MARINEO",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== 'SKIPPED')?.stop.name,
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
