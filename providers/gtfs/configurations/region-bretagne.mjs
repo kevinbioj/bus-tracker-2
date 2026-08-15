@@ -183,6 +183,15 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "transdev-oceane",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/tdoceane/current/revision/gtfs",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/tdoceane/realtime"],
+		gtfsOptions: { computeShapeDistTraveled: 'always' },
+		mode: "NO-TU",
+		getNetworkRef: () => "BZHOCEANE",
+		mapLineRef: (lineRef) => `TDO${lineRef}`,
+	},
+	{
 		id: "vannes",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/565533c0-64ae-44d6-9dfa-169be5b805c6",
 		realtimeResourceHrefs: [
