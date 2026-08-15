@@ -23,7 +23,27 @@ const sources = [
 		],
 		getAheadTime: () => 5 * 60,
 		excludeScheduled: (trip) => ["216", "228", "407", "423", "425", "424", "527", "530"].includes(trip.route.name),
-		getNetworkRef: () => "NOMAD-CAR",
+		getNetworkRef: (journey) => {
+			if (journey?.trip.route.name.startsWith("1")) {
+				return "NOMAD-14";
+			}
+
+			if (journey?.trip.route.name.startsWith("2")) {
+				return "NOMAD-27";
+			}
+
+			if (journey?.trip.route.name.startsWith("3")) {
+				return "NOMAD-50";
+			}
+
+			if (journey?.trip.route.name.startsWith("4")) {
+				return "NOMAD-61";
+			}
+
+			if (journey?.trip.route.name.startsWith("5")) {
+				return "NOMAD-76";
+			}
+		},
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
@@ -36,7 +56,27 @@ const sources = [
 			"https://lrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
 		],
 		mode: "NO-TU",
-		getNetworkRef: () => "NOMAD-CAR",
+		getNetworkRef: (journey) => {
+			if (journey?.trip.route.name.startsWith("1")) {
+				return "NOMAD-14";
+			}
+
+			if (journey?.trip.route.name.startsWith("2")) {
+				return "NOMAD-27";
+			}
+
+			if (journey?.trip.route.name.startsWith("3")) {
+				return "NOMAD-50";
+			}
+
+			if (journey?.trip.route.name.startsWith("4")) {
+				return "NOMAD-61";
+			}
+
+			if (journey?.trip.route.name.startsWith("5")) {
+				return "NOMAD-76";
+			}
+		},
 		mapTripUpdate: (tripUpdate) => {
 			// no vehicle data = trip ain't actually performed
 			if (typeof tripUpdate.vehicle?.id !== "string") {

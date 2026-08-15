@@ -186,7 +186,7 @@ const sources = [
 		id: "transdev-oceane",
 		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/tdoceane/current/revision/gtfs",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/tdoceane/realtime"],
-		gtfsOptions: { computeShapeDistTraveled: 'always' },
+		gtfsOptions: { computeShapeDistTraveled: "always" },
 		mode: "NO-TU",
 		getNetworkRef: () => "BZHOCEANE",
 		mapLineRef: (lineRef) => `TDO${lineRef}`,
