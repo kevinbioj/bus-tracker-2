@@ -124,6 +124,12 @@ const sources = [
 		getVehicleRef: (vehicleDescriptor) => vehicleDescriptor?.label?.padStart(3, "0"),
 	},
 	{
+		id: "toulon-telepherique",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/9bba0b17-2863-4ee1-a38a-c7a445f820d1",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "MISTRAL",
+	},
+	{
 		id: "zou-proximite",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/",
 		realtimeResourceHrefs: [
