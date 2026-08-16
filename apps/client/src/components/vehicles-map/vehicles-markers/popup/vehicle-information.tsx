@@ -103,9 +103,10 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 			if (displayAbsoluteTime) return dayjs(journey.position.recordedAt).format("HH:mm:ss");
 			if (dayjs().isBefore(journey.position.recordedAt)) return m.marker_before_departure();
 
-			const duration = dayjs.duration(-dayjs().diff(journey.position.recordedAt));
-			if (Math.abs(duration.asSeconds()) < 10) return m.marker_just_now();
-			return duration.humanize(true);
+			const seconds = dayjs().diff(journey.position.recordedAt, "second");
+			if (seconds < 60) return m.marker_recorded_ago_seconds({ count: seconds });
+			if (seconds < 3_600) return m.marker_recorded_ago_minutes({ count: Math.floor(seconds / 60) });
+			return m.marker_recorded_ago_hours({ count: Math.floor(seconds / 3_600) });
 		},
 		3_000,
 		[journey, displayAbsoluteTime],
@@ -195,9 +196,10 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	};
 
 	return (
-		<div className="grid grid-cols-[3.5rem_1fr_auto] px-1.5 py-1">
+		<div className="grid grid-cols-[1fr_2fr_1fr] px-1 py-1.5">
 			{network?.hasVehiclesFeature ? (
 				<Button
+					className="h-auto mr-auto"
 					size="xs"
 					variant="ghost"
 					nativeButton={false}
