@@ -110,6 +110,14 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "landerneau",
+		staticResourceHref: "https://pysae.com/api/v4/groups/ar-bus/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v4/groups/ar-bus/gtfs-rt"],
+		mode: "NO-TU",
+		getNetworkRef: () => "LANDERNEAU",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "lorient",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/izilo.zip",
 		realtimeResourceHrefs: ["https://feed-rdla-lorient.ratpdev.com/GTFS-RT"],
