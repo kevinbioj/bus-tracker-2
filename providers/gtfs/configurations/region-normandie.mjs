@@ -57,6 +57,10 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: (journey) => {
+			if (journey?.trip.route.name === "1010") {
+				return "SNCF-10";
+			}
+
 			if (journey?.trip.route.name.startsWith("1")) {
 				return "NOMAD-14";
 			}
