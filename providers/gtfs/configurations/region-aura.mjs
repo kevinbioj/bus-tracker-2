@@ -216,6 +216,16 @@ const sources = [
 		},
 	},
 	{
+		id: "montlucon",
+		staticResourceHref: "https://saeiv-p01.navocap.com/NvpGTFS/72/api/static/getzip",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/maelis-montlucon-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			"https://proxy.transport.data.gouv.fr/resource/maelis-montlucon-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "MONTLUCON",
+	},
+	{
 		id: "montelimar",
 		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/974cede8-3a14-4c7b-b94d-b2655c31932e",
 		realtimeResourceHrefs: [
@@ -321,19 +331,14 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/mobivie-vichy-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 			"https://proxy.transport.data.gouv.fr/resource/mobivie-vichy-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/vichy/vehicle-positions",
 		],
 		mode: "NO-TU",
 		excludeScheduled: true,
 		mapVehiclePosition: (vehicle) => {
-			if (typeof vehicle.vehicle.id !== "string") {
-				vehicle.vehicle.id = vehicle.vehicle.label;
-			}
+			vehicle.vehicle.id = vehicle.vehicle.label;
 			return vehicle;
 		},
 		getNetworkRef: () => "MOBIVIE",
-		getVehicleRef: (vehicle) => vehicle?.id,
-		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 	},
 	{
 		id: "vienne",
