@@ -50,46 +50,63 @@ export function FilterModuleControl({
 
 	return (
 		<>
-			<div className="maplibregl-ctrl maplibregl-ctrl-group text-black" ref={activatorRef}>
+			<div
+				className="maplibregl-ctrl maplibregl-ctrl-group max-w-[calc(100vw-6.5rem)] text-black"
+				ref={activatorRef}
+			>
 				{filteredLine ? (
-					<div className="font-sans flex items-center gap-1.5 mr-1">
-						<button onClick={() => onFilterChange(undefined)} title={m.map_filter_disable()} type="button">
+					<div className="font-sans flex items-center gap-1.5 min-w-0 mr-1">
+						<button
+							className="shrink-0"
+							onClick={() => onFilterChange(undefined)}
+							title={m.map_filter_disable()}
+							type="button"
+						>
 							<FilterXIcon className="m-auto size-5" />
 						</button>
 
 						{filteredNetwork ? (
-							<div className="flex items-center gap-1.5">
+							<>
 								{filteredNetwork.logoHref === null ? (
-									<span className="text-base">{filteredNetwork.name}</span>
+									<span className="max-w-24 shrink text-base truncate" title={filteredNetwork.name}>
+										{filteredNetwork.name}
+									</span>
 								) : (
-									<picture className="h-5">
-										<img className="h-full object-contain" src={filteredNetwork.logoHref} alt={filteredNetwork.name} />
-									</picture>
+									<img
+										className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
+										src={filteredNetwork.logoHref}
+										alt={filteredNetwork.name}
+									/>
 								)}
-								<ChevronRight className="size-3 text-muted-foreground" />
-							</div>
+								<ChevronRight className="shrink-0 size-3 text-muted-foreground" />
+							</>
 						) : null}
 
-						<div className="flex items-center gap-1.5">
-							{filteredLine?.cartridgeHref ? (
-								<img className="h-5 object-contain" src={filteredLine.cartridgeHref} alt={filteredLine.number} />
-							) : (
-								<span className="mr-1 text-base">{filteredLine.number}</span>
-							)}
-							{!isPlaceholderData && (
-								<span className="text-muted-foreground tabular-nums">
-									{data?.items.length ?? 0}
-									<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
-								</span>
-							)}
-						</div>
+						{filteredLine?.cartridgeHref ? (
+							<img
+								className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
+								src={filteredLine.cartridgeHref}
+								alt={filteredLine.number}
+							/>
+						) : (
+							<span className="flex-1 max-w-64 min-w-0 text-base truncate" title={filteredLine.number}>
+								{filteredLine.number}
+							</span>
+						)}
+
+						{!isPlaceholderData && (
+							<span className="shrink-0 text-muted-foreground tabular-nums">
+								{data?.items.length ?? 0}
+								<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
+							</span>
+						)}
 
 						{withLineDataLink && (
 							<>
-								<span aria-hidden className="bg-black/15 h-5 w-px" />
+								<span aria-hidden className="bg-black/15 h-5 shrink-0 w-px" />
 
 								<Link
-									className="flex items-center"
+									className="flex items-center shrink-0"
 									params={{ lineId: `${filteredLine.id}` }}
 									title={m.map_filter_line_data()}
 									to="/data/lines/$lineId"
