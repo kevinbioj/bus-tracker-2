@@ -89,6 +89,7 @@ export const vehicleJourneySchema = type({
 	"journeyRef?": "string",
 	"operatorRef?": "string",
 	"vehicleRef?": "string",
+	"hasRealVehicle?": "boolean",
 	"serviceDate?": "string.date",
 	updatedAt: "string.date.iso",
 });

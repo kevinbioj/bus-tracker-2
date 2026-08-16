@@ -67,6 +67,7 @@ export type SourceOptions = {
 	getNetworkRef: (journey?: Journey, vehicle?: VehicleDescriptor) => string;
 	getOperatorRef?: (journey?: Journey, vehicle?: VehicleDescriptor) => string | undefined;
 	getVehicleRef?: (vehicle?: VehicleDescriptor, journey?: Journey) => string | undefined;
+	hasRealVehicles?: boolean;
 	getDestination?: (journey?: Journey, vehicle?: VehicleDescriptor) => string | undefined;
 	// --- Data transformation
 	mapLineRef?: (lineRef: string) => string;

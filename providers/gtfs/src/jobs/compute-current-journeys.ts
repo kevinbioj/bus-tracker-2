@@ -971,8 +971,16 @@ export async function computeVehicleJourneys(source: Source) {
 		// publié et l'affichage date toujours du dernier succès : la fenêtre doit remonter jusqu'à lui.
 		source.lastComputeAtMs = nowMs;
 
+		const journeys = Array.from(activeJourneys.values());
+
+		if (source.options.hasRealVehicles === false) {
+			for (const journey of journeys) {
+				journey.hasRealVehicle = false;
+			}
+		}
+
 		return {
-			journeys: Array.from(activeJourneys.values()),
+			journeys,
 			paths: Object.fromEntries(paths),
 		};
 	} catch (cause) {

@@ -25,7 +25,7 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 					lineDataAcc.set(vehicleJourney.line.ref, vehicleJourney.line);
 				}
 
-				if (networkRef !== "SNCF" && vehicleJourney.vehicleRef !== undefined) {
+				if (vehicleJourney.hasRealVehicle !== false && vehicleJourney.vehicleRef !== undefined) {
 					vehicleRefAcc.add(vehicleJourney.vehicleRef);
 				}
 
