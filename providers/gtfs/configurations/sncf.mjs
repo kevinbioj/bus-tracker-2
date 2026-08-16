@@ -147,7 +147,26 @@ const sources = [
 		staticResourceHref: "https://1.gtfs.download/sncf/sncf.zip",
 		realtimeResourceHrefs: [GTFS_RT_TRIP_UPDATES_URL],
 		excludeScheduled: true,
-		gtfsOptions: { ignoreBlocks: true },
+		gtfsOptions: {
+			filterTrips: (trip) => {
+				// Doublons Nomad Car
+				if (
+					trip.route.id === "FR:Line::2605eb39-8779-45db-9cd8-ee1564cf4744:" ||
+					trip.route.id === "FR:Line::2605eb39-8779-45db-9cd8-ee1564cf4744:BUS:"
+				) {
+					// 305
+					return false;
+				}
+
+				if (trip.route.id === "OCESN-87693325-87413013:BUS:") {
+					// 122 Le Havre <> Honfleur
+					return false;
+				}
+
+				return true;
+			},
+			ignoreBlocks: true,
+		},
 		getAheadTime: () => 10 * 60,
 		getNetworkRef: (journey) =>
 			journey?.trip.route.agency.id === "22" ? "SOLEA" : `SNCF-${journey?.trip.route.agency.id ?? "UKN"}`,
