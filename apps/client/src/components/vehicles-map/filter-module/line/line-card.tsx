@@ -6,6 +6,13 @@ import type { Line } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/utils/cn";
 
+function lineNumberTextSize(number: string) {
+	if (number.length > 40) return "text-sm";
+	if (number.length > 28) return "text-base";
+	if (number.length > 18) return "text-lg";
+	return "text-xl";
+}
+
 export type FilterModuleLineCardProps = {
 	line: Line;
 	isFavorite: boolean;
@@ -35,7 +42,7 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 			</Button>
 			<Button
 				className={cn(
-					"border border-border flex justify-between items-center h-16 min-h-16 p-2 pl-12 rounded-lg transition text-primary-foreground w-full drop-shadow-xs",
+					"border border-border flex justify-between items-center h-16 min-h-16 px-2 py-1 pl-12 rounded-lg transition text-primary-foreground w-full drop-shadow-xs",
 					!line.onlineMarkerCount && "brightness-90 cursor-not-allowed",
 				)}
 				onClick={() => onSelect?.(line)}
@@ -44,14 +51,21 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 					color: line.textColor ?? undefined,
 				}}
 			>
-				<div className="flex flex-1 items-center h-full gap-2">
+				<div className="flex flex-1 items-center h-full gap-2 min-w-0">
 					{line.cartridgeHref === null ? (
-						<p className="align-middle font-bold min-w-12 text-xl">{line.number}</p>
+						<p
+							className={cn(
+								"align-middle font-bold flex-1 min-w-12 leading-tight text-left text-balance whitespace-normal break-words line-clamp-2",
+								lineNumberTextSize(line.number),
+							)}
+						>
+							{line.number}
+						</p>
 					) : (
 						<img className="h-full max-w-24" src={line.cartridgeHref} alt={line.number} />
 					)}
 					{typeof line.onlineMarkerCount === "number" && line.onlineMarkerCount > 0 ? (
-						<p className="align-middle font-bold text-xl text-end flex-1 text-wrap relative">
+						<p className="align-middle font-bold text-xl text-end shrink-0 ml-auto relative">
 							{line.onlineMarkerCount}
 							<span
 								className="absolute animate-pulse border top-0 -right-1.5 bg-green-600 rounded-full size-1.5"
