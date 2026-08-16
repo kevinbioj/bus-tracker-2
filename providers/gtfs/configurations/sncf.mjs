@@ -149,7 +149,8 @@ const sources = [
 		excludeScheduled: true,
 		gtfsOptions: { ignoreBlocks: true },
 		getAheadTime: () => 10 * 60,
-		getNetworkRef: () => "SNCF",
+		getNetworkRef: (journey) =>
+			journey?.trip.route.agency.id === "22" ? "SOLEA" : `SNCF-${journey?.trip.route.agency.id ?? "UKN"}`,
 		getVehicleRef: (_, journey) => journey?.trip.headsign,
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapStopRef: (stopRef) => {
