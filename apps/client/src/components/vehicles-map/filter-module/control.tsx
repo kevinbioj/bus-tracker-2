@@ -50,10 +50,7 @@ export function FilterModuleControl({
 
 	return (
 		<>
-			<div
-				className="maplibregl-ctrl maplibregl-ctrl-group max-w-[calc(100vw-6.5rem)] text-black"
-				ref={activatorRef}
-			>
+			<div className="maplibregl-ctrl maplibregl-ctrl-group max-w-[calc(100vw-6.5rem)] text-black" ref={activatorRef}>
 				{filteredLine ? (
 					<div className="font-sans flex items-center gap-1.5 min-w-0 mr-1">
 						<button

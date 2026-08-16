@@ -149,17 +149,30 @@ const sources = [
 		excludeScheduled: true,
 		gtfsOptions: {
 			filterTrips: (trip) => {
-				// Doublons Nomad Car
+				// Doublons Normandie
 				if (
-					trip.route.id === "FR:Line::2605eb39-8779-45db-9cd8-ee1564cf4744:" ||
-					trip.route.id === "FR:Line::2605eb39-8779-45db-9cd8-ee1564cf4744:BUS:"
+					trip.route.id === "FR:Line::468ae350-abdc-4193-8de6-62521e916759::BUS:" ||
+					trip.route.id === "FR:Line::468ae350-abdc-4193-8de6-62521e916759:" ||
+					trip.route.id === "OCESN-87444372-87693325:BUS:"
 				) {
-					// 305
+					// 111 Trouville-Deauville <> Honfleur
 					return false;
 				}
 
-				if (trip.route.id === "OCESN-87693325-87413013:BUS:") {
+				if (
+					trip.route.id === "FR:Line::75b8e6bc-5b7a-4ea6-96ba-d2ae6b4d0c47::BUS:" ||
+					trip.route.id === "OCESN-87693325-87413013:BUS:" ||
+					trip.route.id === "OCESN-87413013-87693325:BUS:"
+				) {
 					// 122 Le Havre <> Honfleur
+					return false;
+				}
+
+				if (
+					trip.route.id === "FR:Line::2605eb39-8779-45db-9cd8-ee1564cf4744:" ||
+					trip.route.id === "FR:Line::2605eb39-8779-45db-9cd8-ee1564cf4744::BUS:"
+				) {
+					// 305
 					return false;
 				}
 
