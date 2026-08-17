@@ -130,7 +130,8 @@ const sources = [
 	{
 		id: "lens-bethune",
 		staticResourceHref: "https://chouette.enroute.mobi/api/v1/datas/opendata/gtfs.zip",
-		realtimeResourceHrefs: [],
+		realtimeResourceHrefs: ["https://ara-api.enroute.mobi/tadao_production/gtfs"],
+		mode: "NO-TU",
 		getNetworkRef: () => "TADAO",
 	},
 	{
