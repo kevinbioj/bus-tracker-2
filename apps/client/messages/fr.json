@@ -121,9 +121,12 @@
 		}
 	],
 	"network_vehicles_tab": "Véhicules",
+	"network_vehicles_tab_unavailable": "Ce réseau ne suit pas son parc de véhicules",
 	"map_filter_disable": "Désactiver le filtre",
 	"map_filter_line": "Filtrer par ligne",
 	"map_filter_line_data": "Voir les données de la ligne",
+	"map_filter_network_data": "Voir les données du réseau",
+	"map_filter_whole_network": "Voir tout le réseau",
 	"map_filter_vehicles": "Filtrer les véhicules",
 	"map_lines_favorites": "Lignes favorites",
 	"map_lines_running": "Lignes en service",

@@ -5,6 +5,7 @@ import { GetNetworkQuery } from "~/api/networks";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { NetworkPage } from "~/routes/_app/data/-components/networks/network-page";
+import { ViewOnMapButton } from "~/routes/_app/data/-components/view-on-map-button";
 
 export function NetworkDetails() {
 	const { networkId } = useParams({ from: "/_app/data/networks/$networkId" });
@@ -12,8 +13,12 @@ export function NetworkDetails() {
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 
 	return (
-		<DataPageLayout network={network} title={m.page_title_network_data({ networkName: network.name })}>
-			<NetworkPage networkId={network.id} />
+		<DataPageLayout
+			network={network}
+			networkAction={<ViewOnMapButton search={{ "network-id": network.id }} />}
+			title={m.page_title_network_data({ networkName: network.name })}
+		>
+			<NetworkPage hasVehiclesFeature={network.hasVehiclesFeature} networkId={network.id} />
 		</DataPageLayout>
 	);
 }

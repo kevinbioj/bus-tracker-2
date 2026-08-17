@@ -25,6 +25,8 @@ type BreadcrumbEntry = {
 type DataPageLayoutProps = {
 	children: ReactNode;
 	current?: ReactNode;
+	/** Action affichée à côté du réseau lorsque celui-ci est lui-même la page courante. */
+	networkAction?: ReactNode;
 	currentClassName?: string;
 	/** Extra breadcrumb levels inserted between the network and the current page */
 	breadcrumbMiddle?: BreadcrumbEntry[];
@@ -36,6 +38,7 @@ type DataPageLayoutProps = {
 export function DataPageLayout({
 	children,
 	current,
+	networkAction,
 	currentClassName,
 	breadcrumbMiddle,
 	network,
@@ -55,8 +58,9 @@ export function DataPageLayout({
 						<BreadcrumbSeparator />
 						{current === undefined && (breadcrumbMiddle === undefined || breadcrumbMiddle.length === 0) ? (
 							<BreadcrumbItem>
-								<BreadcrumbPage>
+								<BreadcrumbPage className={networkAction ? "flex items-center gap-1" : undefined}>
 									<NetworkBreadcrumbLabel network={network} />
+									{networkAction}
 								</BreadcrumbPage>
 							</BreadcrumbItem>
 						) : (

@@ -159,10 +159,11 @@ const textLayerObject: AddLayerObject = {
 
 type VehicleMarkersProps = {
 	embeddedNetworkId?: number;
+	filteredNetworkId?: number;
 	lineId?: number;
 };
 
-export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersProps) {
+export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineId }: VehicleMarkersProps) {
 	const map = useMap();
 	const vehiclesSource = useMapSource<GeoJSONSource>("vehicles", initialData);
 	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
@@ -239,7 +240,12 @@ export function VehiclesMarkers({ embeddedNetworkId, lineId }: VehicleMarkersPro
 	if (vehiclesLayer === null || vehiclesSource === null) return null;
 	return (
 		<>
-			<VehiclesMarkersData lineId={lineId} networkId={embeddedNetworkId} source={vehiclesSource} />
+			<VehiclesMarkersData
+				embeddedNetworkId={embeddedNetworkId}
+				filteredNetworkId={filteredNetworkId}
+				lineId={lineId}
+				source={vehiclesSource}
+			/>
 			<VehiclesMarkersPopupRoot embedMode={Boolean(embeddedNetworkId)} layer={vehiclesLayer} lineId={lineId} />
 		</>
 	);

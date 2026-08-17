@@ -61,11 +61,10 @@ export default function EmbeddableMapPage() {
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			<MapComponent containerProps={{ className: "h-dvh relative" }} mapOptions={mapOptions} ref={onMap}>
 				<FilterModuleControl
-					filteredLine={filteredLine}
-					filteredNetwork={network}
+					filter={filteredLine ? { kind: "line", network, line: filteredLine } : undefined}
 					fixedNetworkId={+networkId}
-					onFilterChange={(line) => setLineId(line?.id ?? null)}
-					withLineDataLink={false}
+					onFilterChange={(filter) => setLineId(filter?.kind === "line" ? filter.line.id : null)}
+					withDataLink={false}
 				/>
 				<VehiclesMarkers embeddedNetworkId={+networkId} lineId={filteredLine?.id} />
 				<Signature />

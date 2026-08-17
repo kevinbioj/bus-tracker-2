@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
-import { ChevronLeft, ChevronRight, MapIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -12,6 +12,7 @@ import * as m from "~/paraglide/messages";
 import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
 import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
+import { ViewOnMapButton } from "~/routes/_app/data/-components/view-on-map-button";
 import { cn } from "~/utils/cn";
 import { getLineVehicleAssignmentsDate } from "./-vehicle-assignments-date";
 
@@ -60,19 +61,7 @@ export function LineVehicleAssignments() {
 			current={
 				<>
 					{m.network_lines_assignments_action()}
-					<Button
-						size="sm"
-						variant="outline"
-						className="border-[0.5px] h-5 ml-2 my-0 py-0 px-2"
-						title={m.view_on_map()}
-						nativeButton={false}
-						render={
-							<Link to="/" search={{ "line-id": line.id }}>
-								<MapIcon className="size-3.5" />
-								{m.view_on_map()}
-							</Link>
-						}
-					/>
+					<ViewOnMapButton search={{ "line-id": line.id }} />
 				</>
 			}
 			currentClassName="flex items-center gap-1"

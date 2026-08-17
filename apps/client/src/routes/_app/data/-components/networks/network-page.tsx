@@ -7,15 +7,27 @@ import * as m from "~/paraglide/messages";
 import { NetworkLines } from "~/routes/_app/data/-components/networks/network-lines";
 import { NetworkVehicles } from "~/routes/_app/data/-components/networks/network-vehicles";
 
-type NetworkVehiclesProps = { networkId: number };
+type NetworkVehiclesProps = { hasVehiclesFeature: boolean; networkId: number };
 
-export function NetworkPage({ networkId }: Readonly<NetworkVehiclesProps>) {
-	const [tab, setTab] = useQueryState("tab", parseAsStringEnum(["lines", "vehicles"]).withDefault("vehicles"));
+export function NetworkPage({ hasVehiclesFeature, networkId }: Readonly<NetworkVehiclesProps>) {
+	const [tab, setTab] = useQueryState(
+		"tab",
+		parseAsStringEnum(["lines", "vehicles"]).withDefault(hasVehiclesFeature ? "vehicles" : "lines"),
+	);
+
+	// Un réseau qui ne suit pas son parc n'a rien à montrer côté véhicules : l'onglet reste
+	// inatteignable, y compris via un `?tab=vehicles` recopié à la main.
+	const activeTab = hasVehiclesFeature ? tab : "lines";
 
 	return (
-		<Tabs className="gap-0 mt-1" value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
+		<Tabs className="gap-0 mt-1" value={activeTab} onValueChange={(value) => setTab(value as typeof tab)}>
 			<TabsList className="grid grid-cols-2 w-full">
-				<TabsTrigger value="vehicles" className="flex items-center gap-1.5 font-bold">
+				<TabsTrigger
+					value="vehicles"
+					className="flex items-center gap-1.5 font-bold"
+					disabled={!hasVehiclesFeature}
+					title={hasVehiclesFeature ? undefined : m.network_vehicles_tab_unavailable()}
+				>
 					<BusIcon className="size-4" /> {m.network_vehicles_tab()}
 				</TabsTrigger>
 				<TabsTrigger value="lines" className="flex items-center gap-1.5 font-bold">
@@ -23,9 +35,11 @@ export function NetworkPage({ networkId }: Readonly<NetworkVehiclesProps>) {
 				</TabsTrigger>
 			</TabsList>
 
-			<TabsContent value="vehicles">
-				<NetworkVehicles networkId={networkId} />
-			</TabsContent>
+			{hasVehiclesFeature && (
+				<TabsContent value="vehicles">
+					<NetworkVehicles networkId={networkId} />
+				</TabsContent>
+			)}
 			<TabsContent value="lines">
 				<NetworkLines networkId={networkId} />
 			</TabsContent>

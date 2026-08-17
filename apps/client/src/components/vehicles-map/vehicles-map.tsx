@@ -9,6 +9,7 @@ import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
+import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import { LineVehiclesPanel } from "~/components/vehicles-map/line-vehicles-panel";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
@@ -19,11 +20,20 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	const locationHash = useLocation({ select: (state) => state.hash });
 
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
+	const [networkId, setNetworkId] = useQueryState("network-id", parseAsInteger);
 	const [showIdentifiedVehiclesPanel] = useLocalStorage("show-identified-vehicles-panel", false);
 
 	const { data: line } = useQuery(GetLineQuery(lineId ?? undefined));
-	const { data: filteredNetwork } = useQuery(GetNetworkQuery(line?.networkId, true));
+	// Une ligne filtrée impose son réseau ; sinon le réseau filtré vient directement de l'URL.
+	const { data: filteredNetwork } = useQuery(GetNetworkQuery(line?.networkId ?? networkId ?? undefined, true));
 	const filteredLine = filteredNetwork?.lines.find((line) => line.id === lineId);
+	const filteredNetworkOnly = lineId === null && networkId !== null ? filteredNetwork : undefined;
+
+	const filter = useMemo<MapFilter | undefined>(() => {
+		if (filteredLine !== undefined) return { kind: "line", network: filteredNetwork, line: filteredLine };
+		if (filteredNetworkOnly !== undefined) return { kind: "network", network: filteredNetworkOnly };
+		return undefined;
+	}, [filteredLine, filteredNetwork, filteredNetworkOnly]);
 
 	const [initialLocation] = useState(() => {
 		// location in url has priority over local storage location
@@ -70,20 +80,23 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		}, 100);
 	}, []);
 
-	const onFilterChange = useCallback((line?: { id: number }) => setLineId(line?.id ?? null), [setLineId]);
+	// Les deux filtres sont mutuellement exclusifs : en poser un efface toujours l'autre.
+	const onFilterChange = useCallback(
+		(filter?: MapFilter) => {
+			setLineId(filter?.kind === "line" ? filter.line.id : null);
+			setNetworkId(filter?.kind === "network" ? filter.network.id : null);
+		},
+		[setLineId, setNetworkId],
+	);
 
 	return (
 		<MapComponent containerProps={props} mapOptions={mapOptions} ref={onMap}>
 			<PositionSave />
-			<VehiclesMarkers lineId={filteredLine?.id} />
+			<VehiclesMarkers filteredNetworkId={filteredNetworkOnly?.id} lineId={filteredLine?.id} />
 			{showIdentifiedVehiclesPanel && filteredLine !== undefined && (
 				<LineVehiclesPanel lineId={filteredLine.id} timezone={filteredNetwork?.timezone} />
 			)}
-			<FilterModuleControl
-				filteredLine={filteredLine}
-				filteredNetwork={filteredNetwork}
-				onFilterChange={onFilterChange}
-			/>
+			<FilterModuleControl filter={filter} onFilterChange={onFilterChange} />
 		</MapComponent>
 	);
 }

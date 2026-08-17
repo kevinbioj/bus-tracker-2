@@ -130,9 +130,12 @@
 		}
 	],
 	"network_vehicles_tab": "Fahrzeuge",
+	"network_vehicles_tab_unavailable": "Dieses Netz erfasst seinen Fahrzeugbestand nicht",
 	"map_filter_disable": "Filter entfernen",
 	"map_filter_line": "Nach Linie filtern",
 	"map_filter_line_data": "Liniendaten anzeigen",
+	"map_filter_network_data": "Netzdaten anzeigen",
+	"map_filter_whole_network": "Gesamtes Netz anzeigen",
 	"map_filter_vehicles": "Fahrzeuge filtern",
 	"map_lines_favorites": "Favoritenlinien",
 	"map_lines_running": "Linien im Betrieb",

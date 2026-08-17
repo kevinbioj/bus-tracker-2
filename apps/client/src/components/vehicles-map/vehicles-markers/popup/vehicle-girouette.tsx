@@ -21,6 +21,7 @@ type VehicleGirouetteProps = {
 export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouetteProps>) {
 	const girouette = journey.girouette;
 	const [, setLineId] = useQueryState("line-id", parseAsInteger);
+	const [, setNetworkId] = useQueryState("network-id", parseAsInteger);
 
 	const line = useLine(girouette ? undefined : journey.networkId, journey.lineId);
 	const destination =
@@ -28,7 +29,11 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 
 	const defaultRouteNumber = line?.girouetteNumber ?? line?.number ?? "";
 
-	const onRouteNumberClick = () => setLineId(journey.lineId ?? null);
+	// Les deux filtres sont exclusifs : passer sur une ligne lève un éventuel filtre réseau.
+	const onRouteNumberClick = () => {
+		setLineId(journey.lineId ?? null);
+		setNetworkId(null);
+	};
 
 	return (
 		<div className="border-b-[1px] border-black">

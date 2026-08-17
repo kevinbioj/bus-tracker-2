@@ -196,27 +196,23 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	};
 
 	return (
-		<div className="grid grid-cols-[1fr_2fr_1fr] px-1 py-1.5">
-			{network?.hasVehiclesFeature ? (
+		<div className="grid grid-cols-[1fr_minmax(150px,1fr)_1fr]">
+			{network !== undefined && !disableLinks ? (
 				<Button
-					className="h-auto mr-auto"
+					className="h-full mr-auto px-1 ml-0.5"
 					size="xs"
 					variant="ghost"
 					nativeButton={false}
 					render={
-						disableLinks ? (
-							networkIdentifier
-						) : (
-							<Link to="/data/networks/$networkId" params={{ networkId: String(network?.id) }}>
-								{networkIdentifier}
-							</Link>
-						)
+						<Link title={m.map_filter_whole_network()} to="/" search={{ "network-id": network.id }}>
+							{networkIdentifier}
+						</Link>
 					}
 				/>
 			) : (
 				networkIdentifier
 			)}
-			<span className="my-auto text-center">
+			<span className="my-auto text-center py-1">
 				{vehicleNumber ? (
 					<>
 						{journey.vehicle?.designation ? (
@@ -234,7 +230,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				) : null}
 				{recordedAt}
 			</span>
-			<div className="flex items-center justify-end gap-1.5">
+			<div className="flex items-center justify-end gap-1.5 py-1 pr-1.5">
 				{airConditioningInformation !== undefined && canReportAirConditioning && journey.vehicle?.airConditioning ? (
 					<Dialog open={airConditioningReportOpen} onOpenChange={setAirConditioningReportOpen}>
 						<CustomTooltip

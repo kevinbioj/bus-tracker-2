@@ -60,17 +60,31 @@ export type DisposeableVehicleJourney = {
 	updatedAt: string;
 };
 
-export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetworkId?: number, lineId?: number) =>
+export type VehicleJourneyMarkersFilter = {
+	/** Réseau imposé par le mode embarqué : il court-circuite les préférences d'affichage. */
+	embeddedNetworkId?: number;
+	/** Réseau choisi par l'utilisateur depuis le module de filtre. */
+	filteredNetworkId?: number;
+	lineId?: number;
+};
+
+export const GetVehicleJourneyMarkersQuery = (
+	bounds: LngLatBounds,
+	{ embeddedNetworkId, filteredNetworkId, lineId }: VehicleJourneyMarkersFilter = {},
+) =>
 	queryOptions({
 		placeholderData: keepPreviousData,
 		refetchInterval: 10_000,
 		staleTime: 20_000,
-		queryKey: ["vehicle-journeys", embeddedNetworkId, lineId],
+		queryKey: ["vehicle-journeys", embeddedNetworkId, filteredNetworkId, lineId],
 		queryFn: () => {
 			const activeMarkerId = localStorage.getItem("active-feature");
+			const networkId = embeddedNetworkId ?? filteredNetworkId;
+			// En mode embarqué seulement : les réglages d'affichage de l'utilisateur ne s'appliquent pas.
 			const displayedPositionTypes = embeddedNetworkId ? positionTypes : readDisplayedPositionTypes();
-			// En mode embarqué le réseau est imposé : filtrer par pays n'aurait aucun sens.
-			const displayedCountryCodes = embeddedNetworkId ? undefined : readDisplayedCountryCodes();
+			// Le réseau étant imposé, filtrer par pays serait redondant — et masquerait tout si le pays
+			// du réseau se trouve décoché dans les préférences.
+			const displayedCountryCodes = networkId ? undefined : readDisplayedCountryCodes();
 
 			return client
 				.get("/vehicle-journeys/markers", {
@@ -79,12 +93,14 @@ export const GetVehicleJourneyMarkersQuery = (bounds: LngLatBounds, embeddedNetw
 						swLon: String(Math.max(bounds.getSouthWest().lng, -180)),
 						neLat: String(Math.min(bounds.getNorthEast().lat, 90)),
 						neLon: String(Math.min(bounds.getNorthEast().lng, 180)),
-						networkId: embeddedNetworkId ? String(embeddedNetworkId) : undefined,
+						networkId: networkId ? String(networkId) : undefined,
 						lineId: lineId ? String(lineId) : undefined,
 						positionTypes:
 							displayedPositionTypes.length < positionTypes.length ? displayedPositionTypes.join(",") : undefined,
 						countryCodes: displayedCountryCodes?.join(","),
-						includeMarker: lineId === undefined ? (activeMarkerId ?? undefined) : undefined,
+						// Ne pas réintroduire de force un véhicule qui n'appartient pas au filtre demandé.
+						includeMarker:
+							lineId === undefined && filteredNetworkId === undefined ? (activeMarkerId ?? undefined) : undefined,
 					},
 				})
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());

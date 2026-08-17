@@ -6,6 +6,7 @@ import * as m from "~/paraglide/messages";
 
 const searchSchema = z.object({
 	"line-id": z.coerce.number().optional(),
+	"network-id": z.coerce.number().optional(),
 	"marker-id": z.string().optional(),
 	from_old: z.string().optional(),
 });

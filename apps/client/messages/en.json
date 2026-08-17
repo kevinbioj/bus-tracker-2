@@ -121,9 +121,12 @@
 		}
 	],
 	"network_vehicles_tab": "Vehicles",
+	"network_vehicles_tab_unavailable": "This network does not track its vehicle fleet",
 	"map_filter_disable": "Disable filter",
 	"map_filter_line": "Filter by line",
 	"map_filter_line_data": "View line data",
+	"map_filter_network_data": "View network data",
+	"map_filter_whole_network": "View the whole network",
 	"map_filter_vehicles": "Filter vehicles",
 	"map_lines_favorites": "Favorite lines",
 	"map_lines_running": "Lines in service",

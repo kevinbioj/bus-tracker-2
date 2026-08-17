@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronRight, WaypointsIcon } from "lucide-react";
 import { useCallback, useMemo, useRef } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -10,14 +10,22 @@ import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Skeleton } from "~/components/ui/skeleton";
 import { LinesInnerList } from "~/components/vehicles-map/filter-module/line/lines-inner-list";
+import * as m from "~/paraglide/messages";
 
 type FilterModuleLinesList = {
 	network?: Network;
 	onClose: () => void;
 	onLineChange: (line?: Line) => void;
+	/** Absent lorsque filtrer le réseau entier n'a pas de sens (mode embarqué). */
+	onNetworkChange?: (network: Network) => void;
 };
 
-export function FilterModuleLinesList({ network, onClose, onLineChange }: Readonly<FilterModuleLinesList>) {
+export function FilterModuleLinesList({
+	network,
+	onClose,
+	onLineChange,
+	onNetworkChange,
+}: Readonly<FilterModuleLinesList>) {
 	const { data: networkWithLines, isLoading, isPlaceholderData } = useQuery(GetNetworkQuery(network?.id, true, true));
 
 	const currentNetwork = useRef(network);
@@ -83,6 +91,20 @@ export function FilterModuleLinesList({ network, onClose, onLineChange }: Readon
 							)}
 						</SheetTitle>
 					</div>
+					{onNetworkChange && currentNetwork.current && (
+						<Button
+							className="h-11 justify-between mt-2.5 px-3.5 text-[0.9375rem] w-full"
+							onClick={() => onNetworkChange(currentNetwork.current!)}
+							size="lg"
+							variant="branding-default"
+						>
+							<span className="flex items-center gap-2.5">
+								<WaypointsIcon />
+								{m.map_filter_whole_network()}
+							</span>
+							<ChevronRight className="size-4 opacity-70" />
+						</Button>
+					)}
 				</SheetHeader>
 				{isLoading || isPlaceholderData ? (
 					<div className="flex flex-col gap-1">

@@ -1,13 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { GetNetworkQuery, type Line, type Network } from "~/api/networks";
+import { GetNetworkQuery, type Network } from "~/api/networks";
 import { FilterModuleLinesList } from "~/components/vehicles-map/filter-module/line/lines-list";
+import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import { FilterModuleNetworkList } from "~/components/vehicles-map/filter-module/network/networks-list";
 
 type FilterModuleManagerProps = {
 	fixedNetworkId?: number;
-	onFilterChange: (line?: Line) => void;
+	onFilterChange: (filter?: MapFilter) => void;
 	open: boolean;
 	setOpen: (open: boolean) => void;
 };
@@ -27,6 +28,8 @@ export function FilterModuleManager({
 		setOpen(false);
 	};
 
+	const network = open ? (fixedNetwork ?? selectedNetwork) : undefined;
+
 	return (
 		<>
 			{fixedNetwork ? null : (
@@ -37,14 +40,24 @@ export function FilterModuleManager({
 				/>
 			)}
 			<FilterModuleLinesList
-				network={open ? (fixedNetwork ?? selectedNetwork) : undefined}
+				network={network}
 				onClose={handleClose}
 				onLineChange={(line) => {
 					if (line !== undefined) {
-						onFilterChange(line);
+						onFilterChange({ kind: "line", network, line });
 						setOpen(false);
 					}
 				}}
+				// En mode embarqué le réseau est déjà l'intégralité de ce qui s'affiche.
+				onNetworkChange={
+					fixedNetworkId !== undefined
+						? undefined
+						: (network) => {
+								onFilterChange({ kind: "network", network });
+								setSelectedNetwork(undefined);
+								setOpen(false);
+							}
+				}
 			/>
 		</>
 	);

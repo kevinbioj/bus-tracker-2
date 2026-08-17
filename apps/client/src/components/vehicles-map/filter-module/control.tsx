@@ -1,38 +1,60 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, CircleIcon, FilterIcon, FilterXIcon, HistoryIcon } from "lucide-react";
+import { ChevronRight, CircleIcon, FilterIcon, FilterXIcon, HistoryIcon, TableIcon } from "lucide-react";
 import type { IControl } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
-import type { Line, Network } from "~/api/networks";
+import type { Network } from "~/api/networks";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { FilterModuleManager } from "~/components/vehicles-map/filter-module/manager";
+import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import * as m from "~/paraglide/messages";
 
+type NetworkBadgeProps = {
+	network: Network;
+};
+
+function NetworkBadge({ network }: Readonly<NetworkBadgeProps>) {
+	if (network.logoHref === null) {
+		return (
+			<span className="max-w-24 shrink text-base truncate" title={network.name}>
+				{network.name}
+			</span>
+		);
+	}
+
+	return <img className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0" src={network.logoHref} alt={network.name} />;
+}
+
 type FilterModuleControlProps = {
-	filteredLine?: Line;
-	filteredNetwork?: Network;
+	filter?: MapFilter;
 	fixedNetworkId?: number;
-	onFilterChange: (line?: Line) => void;
-	withLineDataLink?: boolean;
+	onFilterChange: (filter?: MapFilter) => void;
+	withDataLink?: boolean;
 };
 
 export function FilterModuleControl({
-	filteredLine,
-	filteredNetwork,
+	filter,
 	fixedNetworkId,
 	onFilterChange,
-	withLineDataLink = true,
+	withDataLink = true,
 }: Readonly<FilterModuleControlProps>) {
 	const map = useMap();
 	const activatorRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
 
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
-	const { data, isPlaceholderData } = useQuery(GetVehicleJourneyMarkersQuery(bounds, fixedNetworkId, filteredLine?.id));
+	// Mêmes arguments que ceux de la couche de marqueurs : les deux partagent le cache de la query.
+	const { data, isPlaceholderData } = useQuery(
+		GetVehicleJourneyMarkersQuery(bounds, {
+			embeddedNetworkId: fixedNetworkId,
+			filteredNetworkId: filter?.kind === "network" ? filter.network.id : undefined,
+			lineId: filter?.kind === "line" ? filter.line.id : undefined,
+		}),
+	);
 
 	useEffect(() => {
 		if (activatorRef.current === null) return;
@@ -51,7 +73,7 @@ export function FilterModuleControl({
 	return (
 		<>
 			<div className="maplibregl-ctrl maplibregl-ctrl-group max-w-[calc(100vw-6.5rem)] text-black" ref={activatorRef}>
-				{filteredLine ? (
+				{filter ? (
 					<div className="font-sans flex items-center gap-1.5 min-w-0 mr-1">
 						<button
 							className="shrink-0"
@@ -62,33 +84,29 @@ export function FilterModuleControl({
 							<FilterXIcon className="m-auto size-5" />
 						</button>
 
-						{filteredNetwork ? (
+						{filter.kind === "network" ? (
+							<NetworkBadge network={filter.network} />
+						) : (
 							<>
-								{filteredNetwork.logoHref === null ? (
-									<span className="max-w-24 shrink text-base truncate" title={filteredNetwork.name}>
-										{filteredNetwork.name}
-									</span>
-								) : (
+								{filter.network ? (
+									<>
+										<NetworkBadge network={filter.network} />
+										<ChevronRight className="shrink-0 size-3 text-muted-foreground" />
+									</>
+								) : null}
+
+								{filter.line.cartridgeHref ? (
 									<img
 										className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
-										src={filteredNetwork.logoHref}
-										alt={filteredNetwork.name}
+										src={filter.line.cartridgeHref}
+										alt={filter.line.number}
 									/>
+								) : (
+									<span className="flex-1 max-w-64 min-w-0 text-base truncate" title={filter.line.number}>
+										{filter.line.number}
+									</span>
 								)}
-								<ChevronRight className="shrink-0 size-3 text-muted-foreground" />
 							</>
-						) : null}
-
-						{filteredLine?.cartridgeHref ? (
-							<img
-								className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
-								src={filteredLine.cartridgeHref}
-								alt={filteredLine.number}
-							/>
-						) : (
-							<span className="flex-1 max-w-64 min-w-0 text-base truncate" title={filteredLine.number}>
-								{filteredLine.number}
-							</span>
 						)}
 
 						{!isPlaceholderData && (
@@ -98,18 +116,30 @@ export function FilterModuleControl({
 							</span>
 						)}
 
-						{withLineDataLink && (
+						{withDataLink && (
 							<>
 								<span aria-hidden className="bg-black/15 h-5 shrink-0 w-px" />
 
-								<Link
-									className="flex items-center shrink-0"
-									params={{ lineId: `${filteredLine.id}` }}
-									title={m.map_filter_line_data()}
-									to="/data/lines/$lineId"
-								>
-									<HistoryIcon className="size-5" />
-								</Link>
+								{filter.kind === "network" ? (
+									<Link
+										className="flex items-center shrink-0"
+										params={{ networkId: `${filter.network.id}` }}
+										title={m.map_filter_network_data()}
+										to="/data/networks/$networkId"
+									>
+										{/* La page réseau liste le parc et les lignes : un inventaire, pas un historique. */}
+										<TableIcon className="size-5" />
+									</Link>
+								) : (
+									<Link
+										className="flex items-center shrink-0"
+										params={{ lineId: `${filter.line.id}` }}
+										title={m.map_filter_line_data()}
+										to="/data/lines/$lineId"
+									>
+										<HistoryIcon className="size-5" />
+									</Link>
+								)}
 							</>
 						)}
 					</div>

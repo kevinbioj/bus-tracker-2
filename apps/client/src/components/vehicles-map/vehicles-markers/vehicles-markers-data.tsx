@@ -36,12 +36,18 @@ const noise = ([lon, lat]: [number, number], seed: string): [number, number] => 
 };
 
 type VehiclesMarkersDataProps = {
+	embeddedNetworkId?: number;
+	filteredNetworkId?: number;
 	lineId?: number;
-	networkId?: number;
 	source: GeoJSONSource;
 };
 
-export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarkersDataProps) {
+export function VehiclesMarkersData({
+	embeddedNetworkId,
+	filteredNetworkId,
+	lineId,
+	source,
+}: VehiclesMarkersDataProps) {
 	const map = useMap();
 	const { width: windowWidth } = useWindowSize();
 	const [previewVehicleNumber] = useLocalStorage("preview-vehicle-number", false);
@@ -50,24 +56,38 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
 
 	const { data, isFetching, isPlaceholderData, refetch } = useQuery(
-		GetVehicleJourneyMarkersQuery(bounds, networkId, lineId),
+		GetVehicleJourneyMarkersQuery(bounds, { embeddedNetworkId, filteredNetworkId, lineId }),
 	);
 
-	const lastRefocusedLineId = useRef<number | undefined>(undefined);
+	// Clé du filtre actif, pour ne recadrer qu'une fois par filtre (ligne comme réseau).
+	const refocusKey =
+		lineId !== undefined
+			? `line:${lineId}`
+			: filteredNetworkId !== undefined
+				? `network:${filteredNetworkId}`
+				: undefined;
+	const lastRefocusedFilter = useRef<string | undefined>(undefined);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to refetch if that setting changes
 	useEffect(() => {
 		refetch();
-	}, [bounds, displayedPositionTypes.join(","), displayedCountryCodes.join(","), lineId, networkId]);
+	}, [
+		bounds,
+		displayedPositionTypes.join(","),
+		displayedCountryCodes.join(","),
+		lineId,
+		embeddedNetworkId,
+		filteredNetworkId,
+	]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: only refocus when data is fresh and lineId changed
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only refocus when data is fresh and the filter changed
 	useEffect(() => {
-		if (lineId === undefined) {
-			lastRefocusedLineId.current = undefined;
+		if (refocusKey === undefined) {
+			lastRefocusedFilter.current = undefined;
 			return;
 		}
 
-		if (isPlaceholderData || isFetching || data === undefined || lastRefocusedLineId.current === lineId) {
+		if (isPlaceholderData || isFetching || data === undefined || lastRefocusedFilter.current === refocusKey) {
 			return;
 		}
 
@@ -89,11 +109,11 @@ export function VehiclesMarkersData({ lineId, networkId, source }: VehiclesMarke
 
 			const padding = windowWidth < 640 ? 40 : windowWidth < 1024 ? 100 : 200;
 			map.fitBounds(boundsObj, { padding, maxZoom: 15 });
-			lastRefocusedLineId.current = lineId;
+			lastRefocusedFilter.current = refocusKey;
 		};
 
 		refocus();
-	}, [lineId, data, isPlaceholderData, isFetching, map]);
+	}, [refocusKey, data, isPlaceholderData, isFetching, map]);
 
 	const features = useMemo<CircleMarkerFeature[]>(
 		() =>
