@@ -1,4 +1,4 @@
-FROM node:26.5.1-alpine AS base
+FROM node:26.7.0-alpine AS base
 RUN corepack enable
 
 #####################################

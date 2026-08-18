@@ -5,6 +5,7 @@ import {
 	type PointLike,
 	Popup,
 	type PopupOptions,
+	type SourceSpecification,
 	type StyleLayer,
 } from "maplibre-gl";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
@@ -216,10 +217,10 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			adjustPan();
 		};
 
-		const onSourceData = (e: { sourceId: string; source: CircleMarkerSource; sourceDataType: "content" | string }) => {
+		const onSourceData = (e: { sourceId: string; source: SourceSpecification; sourceDataType: "content" | string }) => {
 			if (e.sourceId !== "vehicles" || e.sourceDataType !== "content") return;
 
-			const source = e.source;
+			const source = e.source as CircleMarkerSource;
 			const feature = source.data?.features?.find((feature) => feature.properties.id === activeFeature?.id);
 			if (feature === undefined) {
 				if (activeFeature !== null) {

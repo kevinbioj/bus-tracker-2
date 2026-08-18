@@ -1,3 +1,4 @@
+import type { SourceSpecification } from "maplibre-gl";
 import { useQueryState } from "nuqs";
 import { useEffect } from "react";
 
@@ -32,8 +33,8 @@ export function JumpTo({ openPopup }: JumpToProps) {
 				map.setZoom(13);
 
 				let done = false;
-				const onSourceData = (e: { source: CircleMarkerSource; sourceDataType: "content" | string }) => {
-					const source = e.source;
+				const onSourceData = (e: { source: SourceSpecification; sourceDataType: "content" | string }) => {
+					const source = e.source as CircleMarkerSource;
 					const feature = source.data?.features?.find((feature) => feature.properties.id === journey.id);
 					if (feature === undefined) return;
 
