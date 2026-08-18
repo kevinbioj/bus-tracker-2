@@ -137,6 +137,15 @@ const sources = [
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 	},
 	{
+		id: "quiberon",
+		staticResourceHref: "https://api.pysae.com/api/v4/groups/glazgo/gtfs/pub",
+		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/glazgo/gtfs-rt"],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		mode: "NO-TU",
+		getNetworkRef: () => "QUIBERON",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "quimper",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/qbo/exports/medias.zip",
