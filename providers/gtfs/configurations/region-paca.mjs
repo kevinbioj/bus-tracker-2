@@ -60,7 +60,7 @@ const sources = [
 	},
 	{
 		id: "gap",
-		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/cagtd/current/revision/gtfs",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/cagtd/current/gtfs",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/cagtd/realtime"],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		mode: "NO-TU",
