@@ -162,7 +162,8 @@ const sources = [
 				if (
 					trip.route.id === "FR:Line::75b8e6bc-5b7a-4ea6-96ba-d2ae6b4d0c47::BUS:" ||
 					trip.route.id === "OCESN-87693325-87413013:BUS:" ||
-					trip.route.id === "OCESN-87413013-87693325:BUS:"
+					trip.route.id === "OCESN-87413013-87693325:BUS:" ||
+					trip.route.id === "OCESN-87693325-87444372:BUS:"
 				) {
 					// 122 Le Havre <> Honfleur
 					return false;
