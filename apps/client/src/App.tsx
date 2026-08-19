@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { SnackbarProvider } from "notistack";
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { useState } from "react";
 
 import { TooltipProvider } from "~/components/ui/tooltip.js";
@@ -41,9 +40,7 @@ export default function App() {
 			<QueryClientProvider client={queryClient}>
 				<EditorSessionBootstrap />
 				<TooltipProvider delay={600}>
-					<NuqsAdapter>
-						<RouterProvider router={routerInstance} />
-					</NuqsAdapter>
+					<RouterProvider router={routerInstance} />
 				</TooltipProvider>
 			</QueryClientProvider>
 		</SnackbarProvider>
