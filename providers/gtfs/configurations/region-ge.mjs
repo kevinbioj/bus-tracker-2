@@ -1,6 +1,16 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "epinal",
+		staticResourceHref:
+			"https://transport.data.gouv.fr/resources/80461/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/fluo-imagine-epinal-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		getNetworkRef: () => "EPINAL",
+	},
+	{
 		id: "fluo68",
 		staticResourceHref: "https://pysae.com/api/v2/groups/fluo68-transdev/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/fluo68-transdev/gtfs-rt"],
