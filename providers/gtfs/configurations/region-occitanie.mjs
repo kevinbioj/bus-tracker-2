@@ -84,10 +84,10 @@ const sources = [
 	{
 		id: "beziers",
 		staticResourceHref:
-			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rdbm/exports/medias.zip",
+			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rdbm/exports/gtfs-pour-le-pan.zip",
 		realtimeResourceHrefs: [
-			"https://h34.hanoverdisplays.com/beziers/gtfsrt/api-1.0/gtfs-rt/vehicle-positions",
-			"https://h34.hanoverdisplays.com/beziers/gtfsrt/api-1.0/gtfs-rt/trip-updates",
+			"https://feed-beemob-beziers.ratpdev.com/GTFS-RT_tripUpdate/gtfs-rt.bin",
+			"https://feed-beemob-beziers.ratpdev.com/GTFS-RT_vehiclePosition/gtfs-rt.bin",
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "BEEMOB",
