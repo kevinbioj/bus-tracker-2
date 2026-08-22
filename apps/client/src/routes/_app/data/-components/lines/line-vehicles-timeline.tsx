@@ -156,12 +156,11 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 			xss: { disabled: false, filterOptions: { whiteList: { div: ["class"], span: ["class"] } } },
 			groupOrder: (a: { number: string }, b: { number: string }) => numberSort(a.number, b.number),
 			...getBounds(),
-			...getWindow(),
 		} satisfies TimelineOptions;
 
-		// Les DataSets sont remplis AVANT la construction : la timeline naît avec ses données
-		// et sa fenêtre. Sans ça, elle serait créée vide et n'aurait été alimentée qu'au rendu
-		// suivant — rendu qui n'a pas toujours lieu (suspension d'une query, <Activity>, remount).
+		// Les DataSets sont remplis AVANT la construction : la timeline naît avec ses données.
+		// Sans ça, elle serait créée vide et n'aurait été alimentée qu'au rendu suivant — rendu
+		// qui n'a pas toujours lieu (suspension d'une query, <Activity>, remount).
 		syncDataSets();
 
 		const currentTimeline = new Timeline(
@@ -173,6 +172,26 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 		currentTimeline.on("click", handleClick);
 		timelineRef.current = currentTimeline;
 
+		// vis-timeline naît en `visibility: hidden` et ne se dévoile qu'à la fin de son premier
+		// dessin. Or ce dessin n'est réputé terminé que si aucune fenêtre n'a été passée en
+		// options : sinon la bibliothèque attend un « rangechanged » qui ne vient jamais, la
+		// fenêtre initiale étant déjà celle demandée. La timeline restait donc invisible jusqu'au
+		// premier redimensionnement. La fenêtre est donc posée après la construction, et non en
+		// options — synchroniquement, pour que le premier dessin ait déjà le bon cadrage.
+		const { start, end } = getWindow();
+		currentTimeline.setWindow(start, end, { animation: false });
+
+		// Contrepartie : sans fenêtre en options, vis-timeline effectue un `fit()` automatique
+		// sur l'amplitude des données lors de son premier dessin. On rétablit notre cadrage juste
+		// derrière (nos listeners passent après ceux de la bibliothèque) avant la frame suivante.
+		let initialFitOverridden = false;
+		const overrideInitialFit = () => {
+			if (initialFitOverridden) return;
+			initialFitOverridden = true;
+			currentTimeline.setWindow(start, end, { animation: false });
+		};
+		currentTimeline.on("changed", overrideInitialFit);
+
 		// Le conteneur peut encore mesurer 0px à la construction (révélé juste après par
 		// <Activity> ou par la levée d'un Suspense) : vis-timeline dessinerait alors dans le vide.
 		const resizeObserver = new ResizeObserver(() => currentTimeline.redraw());
@@ -180,6 +199,7 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 		return () => {
 			resizeObserver.disconnect();
+			currentTimeline.off("changed", overrideInitialFit);
 			timelineRef.current = null;
 			currentTimeline.destroy();
 		};
