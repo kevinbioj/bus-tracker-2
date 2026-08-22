@@ -50,6 +50,14 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 	},
 	{
+		id: "digne-les-bains",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/0d9ebca0-d18e-44ad-ab95-d89e8a72d781",
+		realtimeResourceHrefs: [],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		getNetworkRef: () => "DIGNE-LES-BAINS",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+	},
+	{
 		id: "draguignan",
 		staticResourceHref: "https://pysae.com/api/v2/groups/draguignan/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/draguignan/gtfs-rt"],
@@ -57,6 +65,13 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "DRAGUIGNAN",
 		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "durance-luberon-verdon",
+		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3941/resource/5123/download/",
+		realtimeResourceHrefs: [],
+		gtfsOptions: { computeShapeDistTraveled: "always", filterTrips: (trip) => !trip.route.name.startsWith("PMR") },
+		getNetworkRef: () => "DURANCE-LUBERON-VERDON",
 	},
 	{
 		id: "gap",
