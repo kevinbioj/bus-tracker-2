@@ -7,15 +7,10 @@ import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import { useIsCountryDisplayed } from "~/components/vehicles-map/displayed-countries";
-import { NetworkSearchBar } from "~/components/vehicles-map/filter-module/network/network-search-bar";
 import { NetworkInnerList } from "~/components/vehicles-map/filter-module/network/networks-inner-list";
+import { FilterModuleSearchBar } from "~/components/vehicles-map/filter-module/search-bar";
 import * as m from "~/paraglide/messages";
-
-const searchifyQuery = (query: string) =>
-	query
-		.toLowerCase()
-		.normalize("NFD")
-		.replace(/\p{Diacritic}/gu, "");
+import { searchNetworks } from "~/utils/network-search";
 
 type FilterModuleNetworkListProps = {
 	open: boolean;
@@ -41,7 +36,7 @@ export function FilterModuleNetworkList({
 
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
+	const [debouncedSearchQuery] = useDebounceValue(searchQuery, 300);
 
 	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage("favorite-networks", new Set<number>(), {
 		deserializer: (value) => new Set(JSON.parse(value)),
@@ -74,18 +69,18 @@ export function FilterModuleNetworkList({
 			return [[], []];
 		}
 
-		const groups = Map.groupBy(networks, (network) => {
-			if (debouncedSearchifiedSearchQuery.length > 0) {
-				const compareAgainst = [network.name, ...(network.authority ? [network.authority] : [])].map(searchifyQuery);
-				if (compareAgainst.every((value) => !value.includes(debouncedSearchifiedSearchQuery))) {
-					return "search-mismatch";
-				}
-			}
-
-			return favoriteNetworkIds.has(network.id) ? "favorite" : "other";
-		});
+		const groups = Map.groupBy(networks, (network) => (favoriteNetworkIds.has(network.id) ? "favorite" : "other"));
 		return [groups.get("favorite") ?? [], groups.get("other") ?? []];
-	}, [debouncedSearchifiedSearchQuery, favoriteNetworkIds, networks]);
+	}, [favoriteNetworkIds, networks]);
+
+	// Une recherche active remplace le classement par région par un classement par pertinence.
+	const searchResults = useMemo(() => {
+		if (debouncedSearchQuery.trim().length === 0 || networks === undefined) {
+			return null;
+		}
+
+		return searchNetworks(networks, debouncedSearchQuery);
+	}, [debouncedSearchQuery, networks]);
 
 	const networksByRegion = useMemo(() => {
 		if (regions === undefined) {
@@ -119,11 +114,17 @@ export function FilterModuleNetworkList({
 			<SheetContent ref={scrollRef} className="gap-0 z-999 overflow-y-auto overscroll-none">
 				<SheetHeader className="bg-popover text-popover-foreground shrink-0 sticky top-0 z-9999">
 					<SheetTitle>{m.map_network_list_title()}</SheetTitle>
-					<NetworkSearchBar query={searchQuery} onQueryChange={setSearchQuery} />
+					<FilterModuleSearchBar
+						placeholder={m.map_network_search_placeholder()}
+						query={searchQuery}
+						onQueryChange={setSearchQuery}
+					/>
 				</SheetHeader>
 				<NetworkInnerList
 					favoriteNetworks={favoriteNetworks}
 					networksByRegion={networksByRegion}
+					searchResults={searchResults}
+					favoriteNetworkIds={favoriteNetworkIds}
 					onNetworkSelect={onNetworkSelect}
 					toggleFavoriteNetworkId={toggleFavoriteNetworkId}
 					scrollRef={scrollRef}

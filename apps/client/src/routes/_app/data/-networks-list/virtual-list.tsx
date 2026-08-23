@@ -17,12 +17,7 @@ import {
 	toRegionFilter,
 } from "~/routes/_app/data/-networks-list/region-filter";
 import { useDisplayedRegions } from "~/routes/_app/data/-networks-list/use-displayed-regions";
-
-const searchifyQuery = (query: string) =>
-	query
-		.toLowerCase()
-		.normalize("NFD")
-		.replace(/\p{Diacritic}/gu, "");
+import { searchNetworks } from "~/utils/network-search";
 
 type VirtualBlock = {
 	key: string;
@@ -43,13 +38,13 @@ export function NetworksListVirtualList() {
 	const listRef = useRef<HTMLDivElement>(null);
 	const [searchQuery] = useQueryState("q", parseAsString.withDefault(""));
 	const [regionFilterQuery] = useQueryState("region", parseAsString.withDefault(ALL_REGIONS_FILTER));
-	const [debouncedSearchifiedSearchQuery] = useDebounceValue(searchifyQuery(searchQuery), 300);
+	const [debouncedSearchQuery] = useDebounceValue(searchQuery.trim(), 300);
 	const parsedRegionFilter = toRegionFilter(regionFilterQuery);
 	const regionFilter =
 		isSpecialRegionFilter(parsedRegionFilter) || regions.some((region) => String(region.id) === parsedRegionFilter)
 			? parsedRegionFilter
 			: ALL_REGIONS_FILTER;
-	const hasSearchQuery = debouncedSearchifiedSearchQuery.length > 0;
+	const hasSearchQuery = debouncedSearchQuery.length > 0;
 
 	const isCountryDisplayed = useIsCountryDisplayed();
 	const [onlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
@@ -61,7 +56,7 @@ export function NetworksListVirtualList() {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
 	useEffect(() => {
 		window.scrollTo({ behavior: "instant", top: 0 });
-	}, [debouncedSearchifiedSearchQuery, regionFilter]);
+	}, [debouncedSearchQuery, regionFilter]);
 
 	const filteredNetworks = useMemo<Network[]>(() => {
 		let innerNetworks = networks;
@@ -76,15 +71,9 @@ export function NetworksListVirtualList() {
 			innerNetworks = innerNetworks.filter((network) => network.hasVehiclesFeature);
 		}
 
-		if (!hasSearchQuery) {
-			return innerNetworks;
-		}
-
-		return innerNetworks.filter((network) => {
-			const compareAgainst = [network.name, ...(network.authority ? [network.authority] : [])].map(searchifyQuery);
-			return compareAgainst.some((value) => value.includes(debouncedSearchifiedSearchQuery));
-		});
-	}, [debouncedSearchifiedSearchQuery, hasSearchQuery, isCountryDisplayed, networks, onlyNetworksWithHistory]);
+		// Les réseaux correspondants sont classés par pertinence : l'ordre est conservé au sein de chaque bloc.
+		return searchNetworks(innerNetworks, debouncedSearchQuery);
+	}, [debouncedSearchQuery, isCountryDisplayed, networks, onlyNetworksWithHistory]);
 
 	const [favoriteNetworks, regionNetworks] = useMemo<[Network[], Network[]]>(() => {
 		if (regionFilter !== ALL_REGIONS_FILTER) {
@@ -126,6 +115,14 @@ export function NetworksListVirtualList() {
 	const virtualBlocks = useMemo<VirtualBlock[]>(() => {
 		const blocks: VirtualBlock[] = [];
 
+		// Une recherche sans filtre de région donne un bloc unique, classé par pertinence : découper par
+		// région reléguerait le meilleur résultat au milieu de la page.
+		if (hasSearchQuery && regionFilter === ALL_REGIONS_FILTER) {
+			return filteredNetworks.length > 0
+				? [{ key: "search-results", title: m.networks_list_search_results(), networks: filteredNetworks }]
+				: [];
+		}
+
 		if (favoriteNetworks.length > 0) {
 			blocks.push({
 				key: "favorites",
@@ -147,7 +144,7 @@ export function NetworksListVirtualList() {
 		}
 
 		return blocks;
-	}, [favoriteNetworks, networksByRegion, regionFilter]);
+	}, [favoriteNetworks, filteredNetworks, hasSearchQuery, networksByRegion, regionFilter]);
 
 	const virtualizer = useWindowVirtualizer({
 		count: virtualBlocks.length,

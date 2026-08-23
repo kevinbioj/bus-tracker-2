@@ -10,11 +10,15 @@ import { cn } from "~/utils/cn";
 
 type VirtualRow =
 	| { kind: "separator"; key: string; title: ReactNode; first: boolean }
-	| { kind: "network"; key: string; network: Network; isFavorite: boolean };
+	| { kind: "network"; key: string; network: Network; isFavorite: boolean }
+	| { kind: "no-result"; key: string };
 
 type NetworkInnerListProps = {
 	favoriteNetworks: Network[];
 	networksByRegion: { title: string; networks: Network[] }[];
+	/** Lorsqu'une recherche est en cours, remplace les groupes par les résultats classés par pertinence. */
+	searchResults?: Network[] | null;
+	favoriteNetworkIds: Set<number>;
 	onNetworkSelect: (network: Network) => void;
 	toggleFavoriteNetworkId: (network: Network) => void;
 	scrollRef: RefObject<HTMLDivElement | null>; // points to SheetContent (the scroll container)
@@ -23,6 +27,8 @@ type NetworkInnerListProps = {
 export function NetworkInnerList({
 	favoriteNetworks,
 	networksByRegion,
+	searchResults,
+	favoriteNetworkIds,
 	onNetworkSelect,
 	toggleFavoriteNetworkId,
 	scrollRef,
@@ -37,6 +43,23 @@ export function NetworkInnerList({
 	const virtualRows = useMemo<VirtualRow[]>(() => {
 		const rows: VirtualRow[] = [];
 		let first = true;
+
+		if (searchResults != null) {
+			if (searchResults.length === 0) {
+				return [{ kind: "no-result", key: "no-result" }];
+			}
+
+			rows.push({ kind: "separator", key: "sep-search", title: m.map_network_search_results(), first: true });
+			for (const network of searchResults) {
+				rows.push({
+					kind: "network",
+					key: `net-${network.id}`,
+					network,
+					isFavorite: favoriteNetworkIds.has(network.id),
+				});
+			}
+			return rows;
+		}
 
 		if (favoriteNetworks.length > 0) {
 			rows.push({
@@ -62,7 +85,7 @@ export function NetworkInnerList({
 		}
 
 		return rows;
-	}, [favoriteNetworks, networksByRegion]);
+	}, [favoriteNetworks, networksByRegion, searchResults, favoriteNetworkIds]);
 
 	const virtualizer = useVirtualizer({
 		count: virtualRows.length,
@@ -71,6 +94,7 @@ export function NetworkInnerList({
 		estimateSize: (index) => {
 			const row = virtualRows[index];
 			if (row.kind === "separator") return row.first ? 32 : 44;
+			if (row.kind === "no-result") return 80;
 			return 72; // py-1 (8px) + h-16 (64px)
 		},
 		overscan: 5,
@@ -99,6 +123,9 @@ export function NetworkInnerList({
 								<div className={cn("px-3", !row.first && "pt-3")}>
 									<TitleSeparator className="flex items-center gap-2 text-base">{row.title}</TitleSeparator>
 								</div>
+							)}
+							{row.kind === "no-result" && (
+								<p className="text-muted-foreground text-sm text-center px-6 py-6">{m.map_network_search_empty()}</p>
 							)}
 							{row.kind === "network" && (
 								<FilterModuleNetworkCard

@@ -11,12 +11,16 @@ import { cn } from "~/utils/cn";
 type VirtualRow =
 	| { kind: "separator"; key: string; title: ReactNode; first: boolean }
 	| { kind: "line"; key: string; line: Line; isFavorite: boolean }
-	| { kind: "info-banner"; key: string; runningCount: number; favoriteCount: number };
+	| { kind: "info-banner"; key: string; runningCount: number; favoriteCount: number }
+	| { kind: "no-result"; key: string };
 
 type LinesInnerListProps = {
 	favoriteLines: Line[];
 	runningLines: Line[];
 	nonRunningLines: Line[];
+	/** Lorsqu'une recherche est en cours, remplace les groupes par les résultats classés par pertinence. */
+	searchResults?: Line[] | null;
+	favoriteLineIds: Set<number>;
 	onLineSelect: (line: Line) => void;
 	toggleFavoriteLineId: (line: Line) => void;
 	scrollRef: RefObject<HTMLDivElement | null>;
@@ -26,6 +30,8 @@ export function LinesInnerList({
 	favoriteLines,
 	runningLines,
 	nonRunningLines,
+	searchResults,
+	favoriteLineIds,
 	onLineSelect,
 	toggleFavoriteLineId,
 	scrollRef,
@@ -40,6 +46,18 @@ export function LinesInnerList({
 	const virtualRows = useMemo<VirtualRow[]>(() => {
 		const rows: VirtualRow[] = [];
 		let first = true;
+
+		if (searchResults != null) {
+			if (searchResults.length === 0) {
+				return [{ kind: "no-result", key: "no-result" }];
+			}
+
+			rows.push({ kind: "separator", key: "sep-search", title: m.map_lines_search_results(), first: true });
+			for (const line of searchResults) {
+				rows.push({ kind: "line", key: `line-${line.id}`, line, isFavorite: favoriteLineIds.has(line.id) });
+			}
+			return rows;
+		}
 
 		if (favoriteLines.length > 0) {
 			rows.push({
@@ -75,7 +93,7 @@ export function LinesInnerList({
 		}
 
 		return rows;
-	}, [favoriteLines, runningLines, nonRunningLines]);
+	}, [favoriteLines, runningLines, nonRunningLines, searchResults, favoriteLineIds]);
 
 	const virtualizer = useVirtualizer({
 		count: virtualRows.length,
@@ -85,6 +103,7 @@ export function LinesInnerList({
 			const row = virtualRows[index];
 			if (row.kind === "separator") return row.first ? 32 : 44;
 			if (row.kind === "info-banner") return 48;
+			if (row.kind === "no-result") return 80;
 			return 68; // h-16 (64px) + py-0.5 (4px)
 		},
 		overscan: 5,
@@ -122,6 +141,9 @@ export function LinesInnerList({
 									onSelect={onLineSelect}
 									onToggleFavorite={toggleFavoriteLineId}
 								/>
+							)}
+							{row.kind === "no-result" && (
+								<p className="text-muted-foreground text-sm text-center px-6 py-6">{m.map_lines_search_empty()}</p>
 							)}
 							{row.kind === "info-banner" && (
 								<div className="bg-neutral-200 dark:bg-neutral-700 text-muted-foreground text-xs text-center p-2 rounded-md my-1.5 mx-3">

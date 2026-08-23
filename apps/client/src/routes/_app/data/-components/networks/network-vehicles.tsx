@@ -14,6 +14,7 @@ import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon 
 import * as m from "~/paraglide/messages";
 import { VehiclesTable } from "~/routes/_app/data/-components/vehicles/vehicles-table";
 import { cn } from "~/utils/cn";
+import { filterVehicles } from "~/utils/vehicle-search";
 
 const vehicleTypeOptions = {
 	ALL: {
@@ -122,35 +123,29 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	}, [vehicles]);
 
 	const filteredAndSortedVehicles = useMemo(() => {
-		let pattern: RegExp | string = debouncedFilter;
-
-		try {
-			pattern = new RegExp(debouncedFilter.replaceAll("_", "\\d"), "i");
-		} catch {}
-
-		return vehicles
-			.filter((v) => {
+		const matchingVehicles = filterVehicles(
+			vehicles.filter((v) => {
 				if (showArchived && v.archivedAt === null) return false;
 				if (!showArchived && v.archivedAt !== null) return false;
 				if (type !== "ALL" && v.type !== type) return false;
 				if (operatorIds.length > 0 && (v.operatorId === null || !operatorIds.includes(v.operatorId))) return false;
-				if (debouncedFilter === "") return true;
-				return pattern instanceof RegExp
-					? pattern.test(v.number.toString()) || pattern.test(v.designation ?? "")
-					: v.number.toString().includes(pattern);
-			})
-			.sort((a, b) => {
-				if (sort === "activity") {
-					if (a.activity.lineId !== undefined && b.activity.lineId !== undefined) return numberSort(a, b);
-					if (typeof a.activity.lineId === "number") return -1;
-					if (typeof b.activity.lineId === "number") return 1;
-					if (a.activity.since === null) return 1;
-					if (b.activity.since === null) return -1;
-					return b.activity.since.localeCompare(a.activity.since);
-				}
+				return true;
+			}),
+			debouncedFilter,
+		);
 
-				return numberSort(a, b);
-			});
+		return matchingVehicles.sort((a, b) => {
+			if (sort === "activity") {
+				if (a.activity.lineId !== undefined && b.activity.lineId !== undefined) return numberSort(a, b);
+				if (typeof a.activity.lineId === "number") return -1;
+				if (typeof b.activity.lineId === "number") return 1;
+				if (a.activity.since === null) return 1;
+				if (b.activity.since === null) return -1;
+				return b.activity.since.localeCompare(a.activity.since);
+			}
+
+			return numberSort(a, b);
+		});
 	}, [debouncedFilter, operatorIds, showArchived, sort, type, vehicles]);
 
 	const onlineVehicles = useMemo(

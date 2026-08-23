@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { ArrowLeft, ChevronRight, WaypointsIcon } from "lucide-react";
-import { useCallback, useMemo, useRef } from "react";
-import { useLocalStorage } from "usehooks-ts";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import type { Line } from "~/api/networks";
 import { GetNetworkQuery, type Network } from "~/api/networks";
@@ -10,7 +10,9 @@ import { Button } from "~/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Skeleton } from "~/components/ui/skeleton";
 import { LinesInnerList } from "~/components/vehicles-map/filter-module/line/lines-inner-list";
+import { FilterModuleSearchBar } from "~/components/vehicles-map/filter-module/search-bar";
 import * as m from "~/paraglide/messages";
+import { searchLines } from "~/utils/line-search";
 
 type FilterModuleLinesList = {
 	network?: Network;
@@ -33,6 +35,22 @@ export function FilterModuleLinesList({
 	if (network !== undefined) {
 		currentNetwork.current = network;
 	}
+
+	const scrollRef = useRef<HTMLDivElement>(null);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [debouncedSearchQuery] = useDebounceValue(searchQuery, 200);
+
+	// Repartir du haut de la liste dès que les résultats changent.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
+	useEffect(() => {
+		scrollRef.current?.scrollTo({ behavior: "smooth", top: 0 });
+	}, [searchQuery]);
+
+	// Une nouvelle sélection de réseau repart d'une recherche vierge.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on network updates
+	useEffect(() => {
+		setSearchQuery("");
+	}, [network?.id]);
 
 	const [favoriteLineIds, setFavoriteLineIds] = useLocalStorage("favorite-lines", new Set<number>(), {
 		deserializer: (value) => new Set(JSON.parse(value)),
@@ -74,7 +92,16 @@ export function FilterModuleLinesList({
 		return [groups.get("favorite") ?? [], groups.get("running") ?? [], groups.get("non-running") ?? []];
 	}, [favoriteLineIds, networkWithLines]);
 
-	const scrollRef = useRef<HTMLDivElement>(null);
+	const searchResults = useMemo(() => {
+		if (debouncedSearchQuery.trim().length === 0 || networkWithLines?.lines === undefined) {
+			return null;
+		}
+
+		const activeLines = networkWithLines.lines.filter(
+			(line) => line.archivedAt === null || dayjs().isBefore(line.archivedAt),
+		);
+		return searchLines(activeLines, debouncedSearchQuery);
+	}, [debouncedSearchQuery, networkWithLines]);
 
 	return (
 		<Sheet open={network !== undefined} onOpenChange={(open) => !open && onClose()}>
@@ -105,6 +132,11 @@ export function FilterModuleLinesList({
 							<ChevronRight className="size-4 opacity-70" />
 						</Button>
 					)}
+					<FilterModuleSearchBar
+						placeholder={m.map_lines_search_placeholder()}
+						query={searchQuery}
+						onQueryChange={setSearchQuery}
+					/>
 				</SheetHeader>
 				{isLoading || isPlaceholderData ? (
 					<div className="flex flex-col gap-1">
@@ -118,6 +150,8 @@ export function FilterModuleLinesList({
 						favoriteLines={favoriteLines}
 						runningLines={runningLines}
 						nonRunningLines={nonRunningLines}
+						searchResults={searchResults}
+						favoriteLineIds={favoriteLineIds}
 						onLineSelect={onLineChange}
 						toggleFavoriteLineId={toggleFavoriteLineId}
 						scrollRef={scrollRef}
