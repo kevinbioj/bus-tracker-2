@@ -74,6 +74,15 @@ const sources = [
 		getNetworkRef: () => "DURANCE-LUBERON-VERDON",
 	},
 	{
+		id: "esterel",
+		staticResourceHref: "https://api.pysae.com/api/v4/groups/agglobus-cavem/gtfs/pub",
+		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/agglobus-cavem/gtfs-rt"],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		mode: "NO-TU",
+		getNetworkRef: () => "ESTEREL",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "gap",
 		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/cagtd/current/gtfs",
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/cagtd/realtime"],
