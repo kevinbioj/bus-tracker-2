@@ -11,6 +11,8 @@ import {
 	useState,
 } from "react";
 
+import { useMapDiagnostics } from "~/adapters/maplibre-gl/use-map-diagnostics";
+
 setWorkerUrl(maplibreWorkerUrl);
 
 type MapComponentProps = PropsWithChildren & {
@@ -90,6 +92,8 @@ export function MapComponent({ children, containerProps, mapOptions, ref }: MapC
 			if (timeout !== null) clearTimeout(timeout);
 		};
 	}, []);
+
+	useMapDiagnostics(map, typeof mapOptions?.style === "string" ? mapOptions.style : undefined);
 
 	// thrown during render so the nearest error boundary can display it
 	if (initializationError !== null) throw initializationError;

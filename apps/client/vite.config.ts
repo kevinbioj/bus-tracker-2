@@ -64,11 +64,12 @@ export default defineConfig({
 						options: {
 							cacheName: "map-tiles-cache",
 							expiration: {
-								maxEntries: 500,
+								maxEntries: 150,
 								maxAgeSeconds: 60 * 60 * 24 * 30,
+								purgeOnQuotaError: true,
 							},
 							cacheableResponse: {
-								statuses: [0, 200],
+								statuses: [200],
 							},
 						},
 					},
@@ -80,6 +81,7 @@ export default defineConfig({
 							expiration: {
 								maxEntries: 10,
 								maxAgeSeconds: 60 * 60 * 24,
+								purgeOnQuotaError: true,
 							},
 						},
 					},
