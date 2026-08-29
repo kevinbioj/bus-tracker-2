@@ -44,6 +44,12 @@ export type ArchiveVehicleData = {
 	archivedAt?: string | null;
 };
 
+export type VehicleReport = {
+	field: "airConditioning";
+	value: VehicleAirConditioningStatus;
+	reportedAt: string;
+};
+
 export type VehicleReportData = {
 	field: "airConditioning";
 	value: Extract<VehicleAirConditioningStatus, "PRESENT" | "OUT_OF_SERVICE">;
@@ -137,6 +143,15 @@ export const UnarchiveVehicleMutation = (vehicleId: number) =>
 				headers: getLegacyEditorHeaders(),
 			});
 		},
+	});
+
+/** Chargé à la demande : seule la fenêtre de signalement s'en sert. */
+export const GetLastVehicleReportQuery = (vehicleId: number | undefined, enabled: boolean) =>
+	queryOptions({
+		enabled: enabled && vehicleId !== undefined,
+		queryKey: ["vehicles", vehicleId, "reports", "last"],
+		queryFn: () =>
+			client.get(`/vehicles/${vehicleId}/reports/last`).then((response) => response.json<VehicleReport | null>()),
 	});
 
 export const CreateVehicleReportMutation = (vehicleId: number) =>

@@ -280,6 +280,24 @@ hono.get(
 	},
 );
 
+hono.get("/vehicles/:id/reports/last", createParamValidator(getVehicleByIdParamSchema), async (c) => {
+	const { id } = c.req.valid("param");
+
+	// Les signalements de plus de sept jours étant purgés, l'absence de résultat est le cas courant.
+	const [lastReport] = await database
+		.select({
+			field: vehicleReportsTable.field,
+			value: vehicleReportsTable.value,
+			reportedAt: vehicleReportsTable.createdAt,
+		})
+		.from(vehicleReportsTable)
+		.where(eq(vehicleReportsTable.vehicleId, id))
+		.orderBy(desc(vehicleReportsTable.createdAt))
+		.limit(1);
+
+	return c.json(lastReport ?? null);
+});
+
 hono.post(
 	"/vehicles/:id/reports",
 	createParamValidator(getVehicleByIdParamSchema),

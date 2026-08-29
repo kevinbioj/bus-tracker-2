@@ -1,4 +1,6 @@
+import type { VehicleJourneyLineType } from "@bus-tracker/contracts";
 import type { ComponentPropsWithoutRef } from "react";
+import { match } from "ts-pattern";
 
 type IconProps = Omit<ComponentPropsWithoutRef<"svg">, "xmlns" | "version" | "viewBox">;
 
@@ -97,4 +99,22 @@ export function GondolaIcon(props: Readonly<IconProps>) {
 			/>
 		</svg>
 	);
+}
+
+/**
+ * Icône du mode de transport correspondant au type de véhicule. Renvoie `null` quand le type est
+ * inconnu, plutôt qu'une icône de repli qui laisserait croire à une information avérée.
+ */
+export function MeansOfTransportIcon({
+	className,
+	type,
+}: Readonly<{ className?: string; type?: VehicleJourneyLineType }>) {
+	return match(type)
+		.with("SUBWAY", "TRAMWAY", "RAIL", "FUNICULAR", () => <TramwayIcon className={className} />)
+		.with("TROLLEY", () => <TrolleybusIcon className={className} />)
+		.with("COACH", () => <CoachIcon className={className} />)
+		.with("FERRY", () => <ShipIcon className={className} />)
+		.with("GONDOLA", () => <GondolaIcon className={className} />)
+		.with("BUS", "UNKNOWN", () => <BusIcon className={className} />)
+		.otherwise(() => null);
 }

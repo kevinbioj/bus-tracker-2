@@ -1,4 +1,4 @@
-import type { VehicleJourneyPath } from "@bus-tracker/contracts";
+import type { VehicleJourneyLineType, VehicleJourneyPath } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
@@ -51,6 +51,7 @@ export type DisposeableVehicleJourney = {
 	vehicle?: {
 		id?: number;
 		number: string;
+		type?: VehicleJourneyLineType;
 		designation?: string;
 		airConditioning?: VehicleAirConditioningStatus;
 		usbPorts?: boolean;

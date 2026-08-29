@@ -164,6 +164,7 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 		? (
 				await database
 					.select({
+						type: vehiclesTable.type,
 						designation: vehiclesTable.designation,
 						airConditioning: vehiclesTable.airConditioning,
 						usbPorts: vehiclesTable.usbPorts,
@@ -185,6 +186,7 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 		vehicle: journey.vehicle
 			? {
 					...journey.vehicle,
+					type: vehicle?.type ?? undefined,
 					designation: vehicle?.designation ?? undefined,
 					airConditioning: vehicle?.airConditioning ?? undefined,
 					usbPorts: vehicle?.usbPorts ?? undefined,
