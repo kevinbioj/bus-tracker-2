@@ -163,6 +163,19 @@ const sources = [
 		getNetworkRef: () => "MISTRAL",
 	},
 	{
+		id: "transdev-trsi",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/transdev-trsi.zip",
+		realtimeResourceHrefs: ["https://www.data.gouv.fr/api/1/datasets/r/74db080b-3d7c-4f30-8811-b344e79f4092"],
+		hasRealVehicles: false,
+		getNetworkRef: () => "TRSI",
+		getVehicleRef: (_, journey) => journey?.trip.id.split("@")[0],
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+		mapTripUpdate: (tripUpdate) => {
+			tripUpdate.vehicle = undefined;
+			return tripUpdate;
+		},
+	},
+	{
 		id: "zou-proximite",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/",
 		realtimeResourceHrefs: ["https://proxy-data.zou.maregionsud.fr/GTFS-RT/GTFS-RT_trips_ZOU_proximite.pb"],
