@@ -174,7 +174,7 @@ const sources = [
 		id: "zou-express",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3743/resource/5153/download/",
 		realtimeResourceHrefs: ["https://proxy-data.zou.maregionsud.fr/GTFS-RT/GTFS-RT_trips_ZOU_express.pb"],
-		gtfsOptions: { computeShapeDistTraveled: "always" },
+		gtfsOptions: { computeShapeDistTraveled: "always", filterTrips: (trip) => trip.route.agency.id === "EXP" },
 		getNetworkRef: () => "ZOU",
 		mapLineRef: (lineRef) => lineRef.replace("ZOE:", ""),
 	},
