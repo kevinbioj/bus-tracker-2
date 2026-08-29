@@ -16,6 +16,13 @@ const sources = [
 		getNetworkRef: () => "BEAUNE",
 	},
 	{
+		id: "besancon",
+		staticResourceHref: "https://api.ginko.voyage/gtfs-ginko.zip",
+		realtimeResourceHrefs: [],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		getNetworkRef: () => "BESANCON",
+	},
+	{
 		id: "coeur-de-loire",
 		staticResourceHref: "https://pysae.com/api/v2/groups/coeur-de-loire/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/coeur-de-loire/gtfs-rt"],
