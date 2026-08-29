@@ -135,6 +135,15 @@ const sources = [
 		getNetworkRef: () => "TANGO",
 	},
 	{
+		id: "pays-ecrins",
+		staticResourceHref: "https://pysae.com/api/v4/groups/pays-des-ecrins/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v4/groups/pays-des-ecrins/gtfs-rt"],
+		excludeScheduled: true,
+		mode: "NO-TU",
+		getNetworkRef: () => "PAYS-ECRINS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "toulon",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rd-toulon/exports/gtfs-complet.zip",
