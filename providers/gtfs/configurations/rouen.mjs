@@ -1,6 +1,6 @@
 // const tcarSchedulableLineIds = ["06", "45", "46", "47", "48", "49", "50", "60", "89"];
 // biome-ignore format: keep it one-liner is good
-const tniOperatedLineIds = ['06', '13', '14', '27', '28', '33', '35', '36', '37', '38', '42', '44', '45', '46', '47', '48', '49', '50', '60', '89'];
+const tniOperatedLineIds = ['06', '13', '14', '27', '28', '33', '35', '36', '37', '38', '42', '44', '45', '46', '47', '48', '49', '50', '51', '60', '89'];
 const isTniVehicle = (id) => (id >= 421 && id <= 435) || (id >= 670 && id <= 685) || (id >= 734 && id <= 736);
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
