@@ -4,7 +4,11 @@ const sources = [
 		id: "tcl",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/tcl.zip",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/tcl/"],
-		excludeScheduled: (trip) => !["SUBWAY", "FUNICULAR", "FERRY"].includes(trip.route.type),
+		excludeScheduled: (trip) => {
+			if (["130", "139", "212", "213", "T36"].includes(trip.route.name)) return true;
+			if (trip.route.name.startsWith("JD")) return true;
+			return false;
+		},
 		mode: "NO-TU",
 		appendTripUpdateInformation: true,
 		getNetworkRef: () => "TCL",
@@ -24,7 +28,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transports-faure-28bi/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
-		mapLineRef: (lineRef) => `FAURE-28BI ${lineRef}`,
+		mapLineRef: (lineRef) => `28BI-${lineRef}`,
 		getNetworkRef: () => "TCL",
 		getOperatorRef: () => "CARS_FAURE",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
@@ -35,7 +39,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/cars-faure-tcl/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
-		mapLineRef: (lineRef) => `FAURE-TCL ${lineRef}`,
+		mapLineRef: (lineRef) => `FAUR-${lineRef}`,
 		getNetworkRef: () => "TCL",
 		getOperatorRef: () => "CARS_FAURE",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
