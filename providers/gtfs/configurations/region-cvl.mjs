@@ -39,7 +39,7 @@ const sources = [
 	{
 		id: "chateauroux",
 		staticResourceHref:
-			"https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20260105_zip",
+			"https://data.chateauroux-metropole.fr/api/v2/catalog/datasets/reseau-de-bus-urbain_horizon/alternative_exports/gtfs_20260901_zip",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/chateauroux/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/chateauroux/vehicle-positions",
