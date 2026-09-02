@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import clsx from "clsx";
 import { ChevronRight, CircleIcon, FilterIcon, FilterXIcon, HistoryIcon, TableIcon } from "lucide-react";
 import type { IControl } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
@@ -102,9 +103,26 @@ export function FilterModuleControl({
 										alt={filter.line.number}
 									/>
 								) : (
-									<span className="flex-1 max-w-64 min-w-0 text-base truncate" title={filter.line.number}>
-										{filter.line.number}
-									</span>
+									<div
+										className={clsx(
+											"flex justify-center rounded-sm",
+											filter.line.color !== null ? "min-w-6" : "min-w-0",
+										)}
+										style={{
+											backgroundColor: filter.line.color ?? undefined,
+											color: filter.line.textColor ?? undefined,
+										}}
+									>
+										<span
+											className={clsx(
+												"max-w-64 text-base leading-tight pt-px truncate",
+												filter.line.color !== null && "font-bold px-1",
+											)}
+											title={filter.line.number}
+										>
+											{filter.line.number}
+										</span>
+									</div>
 								)}
 							</>
 						)}
