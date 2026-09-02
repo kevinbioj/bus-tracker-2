@@ -181,6 +181,7 @@ const sources = [
 		excludeScheduled: (trip) => trip.route.type !== "SUBWAY",
 		mode: "NO-TU",
 		getNetworkRef: () => "STAR",
+		mapLineRef: (lineRef) => lineRef.split("-")[1],
 	},
 	{
 		id: "saint-brieuc",
