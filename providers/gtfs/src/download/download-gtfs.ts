@@ -4,6 +4,7 @@ import decompress from "@xhmikosr/decompress";
 import { USER_AGENT } from "../constants.js";
 import type { Source } from "../model/source.js";
 import { getAuthHeaders } from "../utils/auth.js";
+import { trimZipTrailingBytes } from "../utils/trim-zip-trailing-bytes.js";
 
 export async function downloadGtfs(source: Source, outputDirectory: string) {
 	const response = await fetch(source.options.staticResourceHref, {
@@ -22,7 +23,7 @@ export async function downloadGtfs(source: Source, outputDirectory: string) {
 	const buffer = Buffer.from(arrayBuffer);
 
 	try {
-		await decompress(buffer, outputDirectory);
+		await decompress(trimZipTrailingBytes(buffer), outputDirectory);
 	} catch (cause) {
 		throw new Error(`Failed to extract resource into '${outputDirectory}'.`, {
 			cause,
