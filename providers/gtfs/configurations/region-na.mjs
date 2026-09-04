@@ -71,10 +71,11 @@ const sources = [
 	},
 	{
 		id: "angouleme",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/angouleme.zip",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/021fd4a3-ba9a-4d78-aa65-71d4d289f389",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/mobius-angouleme?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
 		excludeScheduled: true,
 		getNetworkRef: () => "ANGOULEME",
 		getVehicleRef: (vehicle) => vehicle?.label,
