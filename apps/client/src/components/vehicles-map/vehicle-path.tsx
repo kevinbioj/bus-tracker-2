@@ -261,7 +261,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	);
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
-		if (pathDisplayMode === "disabled" || line === undefined) {
+		if (pathDisplayMode === "disabled") {
 			return { type: "FeatureCollection", features: [] };
 		}
 
