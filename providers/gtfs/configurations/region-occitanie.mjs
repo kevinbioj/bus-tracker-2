@@ -117,6 +117,7 @@ const sources = [
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		getNetworkRef: (journey) => {
 			if (journey === undefined) return null; // will be ignored
+			if (["213", "214"].includes(journey.trip.route.name)) return "LIO-12";
 			if (journey.trip.route.id === "NAV_GRAU") return "LIO-30";
 			if (journey.trip.route.id === "NAV2_P2V") return "LIO-65";
 			if (journey.trip.route.agency.name === "Herault Transport") return "HERAULT-TRANSPORT";

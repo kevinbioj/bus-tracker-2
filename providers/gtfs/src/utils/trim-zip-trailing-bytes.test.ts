@@ -44,14 +44,7 @@ function createZip(fileName: string, contents: string, comment = "") {
 	endOfCentralDirectory.writeUInt32LE(centralDirectoryOffset, 16);
 	endOfCentralDirectory.writeUInt16LE(comment.length, 20);
 
-	return Buffer.concat([
-		localHeader,
-		name,
-		data,
-		centralDirectory,
-		endOfCentralDirectory,
-		Buffer.from(comment),
-	]);
+	return Buffer.concat([localHeader, name, data, centralDirectory, endOfCentralDirectory, Buffer.from(comment)]);
 }
 
 const directories: string[] = [];
