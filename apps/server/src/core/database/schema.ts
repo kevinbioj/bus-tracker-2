@@ -193,6 +193,41 @@ export const lineActivitiesTable = pgTable(
 
 export type LineActivityEntity = InferSelectModel<typeof lineActivitiesTable>;
 
+/**
+ * Inventaire des sources de données consommées par les providers, publié par ceux-ci et affiché
+ * en attributions. Une source alimente un ou plusieurs réseaux : le rattachement se fait par
+ * référence de réseau plutôt que par clé étrangère, un provider pouvant tourner avant que le
+ * réseau correspondant n'existe en base.
+ */
+export const dataSourcesTable = pgTable(
+	"data_source",
+	{
+		id: serial("id").primaryKey(),
+		kind: varchar("kind", { length: 32 }).notNull(),
+		providerId: varchar("provider_id").notNull(),
+		sourceId: varchar("source_id").notNull(),
+		networkRefs: varchar("network_refs").array().notNull(),
+		/** `{ href, lastModified, importedAt }` du flux GTFS théorique. */
+		staticFeed: jsonb("static_feed").notNull(),
+		/** `[{ href, entityTypes }]` des flux GTFS-RT. */
+		realtimeFeeds: jsonb("realtime_feeds").notNull(),
+		authenticated: boolean("authenticated").notNull().default(false),
+		/**
+		 * Retire la source des attributions publiées. Renseigné à la main : les providers republient
+		 * leur inventaire en continu sans jamais toucher à ce drapeau.
+		 */
+		hidden: boolean("hidden").notNull().default(false),
+		firstSeenAt: timestamp("first_seen_at").notNull().default(sql`now()`),
+		lastSeenAt: timestamp("last_seen_at").notNull(),
+	},
+	(table) => [
+		uniqueIndex("data_source_provider_source_unique_index").on(table.providerId, table.sourceId),
+		index("data_source_network_refs_gin_index").using("gin", table.networkRefs),
+	],
+);
+
+export type DataSourceEntity = InferSelectModel<typeof dataSourcesTable>;
+
 export const announcementType = ["INFO", "OUTAGE"] as const;
 
 export const announcementsTable = pgTable("announcement", {

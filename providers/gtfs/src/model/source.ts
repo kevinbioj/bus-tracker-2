@@ -93,12 +93,22 @@ export const MAX_TERMINUS_GRACE_MS = 120_000;
  */
 export const DEFAULT_TRIP_UPDATE_TTL_MS = 10 * 60 * 1000;
 
+export type RealtimeEntityType = "TRIP_UPDATES" | "VEHICLE_POSITIONS";
+
 export class Source {
 	gtfs?: Gtfs;
 	linePaths = new Map<string, EncodedLinePath>();
 	realtimeFeedCache = new Map<string, { at: number; tripUpdates: TripUpdate[]; vehiclePositions: VehiclePosition[] }>();
 	/** Instant (epoch ms) du dernier cycle de calcul réussi. Undefined avant le premier. */
 	lastComputeAtMs?: number;
+	/**
+	 * Réseaux réellement alimentés par la source, observés au fil des courses publiées. Une source
+	 * peut en alimenter plusieurs ({@link SourceOptions.getNetworkRef} dépendant de la course), ce que
+	 * la seule configuration ne permet pas de déterminer.
+	 */
+	observedNetworkRefs = new Set<string>();
+	/** Types d'entités observés dans chaque flux temps réel, indexés par href. */
+	observedRealtimeEntityTypes = new Map<string, Set<RealtimeEntityType>>();
 
 	constructor(
 		readonly id: string,

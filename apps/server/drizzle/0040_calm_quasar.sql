@@ -1,0 +1,1 @@
+ALTER TABLE "data_source" ADD COLUMN "hidden" boolean DEFAULT false NOT NULL;

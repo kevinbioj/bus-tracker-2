@@ -4,10 +4,33 @@ import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 
 import { USER_AGENT } from "../constants.js";
 import type { GtfsRt, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
-import type { Source } from "../model/source.js";
+import type { RealtimeEntityType, Source } from "../model/source.js";
 import { getAuthHeaders } from "../utils/auth.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
+
+/**
+ * Mémorise ce qu'un flux publie réellement, pour l'exposer en attributions. Un producteur peut
+ * annoncer un flux « trip-updates » qui porte aussi des positions : seul le contenu lu fait foi.
+ * Les types observés sont cumulés, un cycle vide ne retire pas ce qui a déjà été vu.
+ */
+function recordObservedEntityTypes(
+	source: Source,
+	href: string,
+	tripUpdateCount: number,
+	vehiclePositionCount: number,
+) {
+	if (tripUpdateCount === 0 && vehiclePositionCount === 0) return;
+
+	let entityTypes = source.observedRealtimeEntityTypes.get(href);
+	if (entityTypes === undefined) {
+		entityTypes = new Set<RealtimeEntityType>();
+		source.observedRealtimeEntityTypes.set(href, entityTypes);
+	}
+
+	if (tripUpdateCount > 0) entityTypes.add("TRIP_UPDATES");
+	if (vehiclePositionCount > 0) entityTypes.add("VEHICLE_POSITIONS");
+}
 
 export async function downloadGtfsRt(source: Source) {
 	const realtimeResources = (source.options.realtimeResourceHrefs ?? []).map((resource) =>
@@ -82,6 +105,8 @@ export async function downloadGtfsRt(source: Source) {
 						feedVehiclePositions.push(vehiclePosition);
 					}
 				}
+
+				recordObservedEntityTypes(source, realtimeFeedHref, feedTripUpdates.length, feedVehiclePositions.length);
 
 				if (pollMs !== undefined) {
 					source.realtimeFeedCache.set(realtimeFeedHref, {

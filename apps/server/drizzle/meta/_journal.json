@@ -274,6 +274,20 @@
 			"when": 1786456892493,
 			"tag": "0038_add_network_country_code",
 			"breakpoints": true
+		},
+		{
+			"idx": 39,
+			"version": "7",
+			"when": 1788550094864,
+			"tag": "0039_puzzling_lord_tyger",
+			"breakpoints": true
+		},
+		{
+			"idx": 40,
+			"version": "7",
+			"when": 1788552012136,
+			"tag": "0040_calm_quasar",
+			"breakpoints": true
 		}
 	]
 }

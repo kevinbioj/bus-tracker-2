@@ -25,6 +25,8 @@ type BreadcrumbEntry = {
 type DataPageLayoutProps = {
 	children: ReactNode;
 	current?: ReactNode;
+	/** Action alignée à droite du fil d'Ariane, visible à toutes les tailles d'écran. */
+	action?: ReactNode;
 	/** Action affichée à côté du réseau lorsque celui-ci est lui-même la page courante. */
 	networkAction?: ReactNode;
 	currentClassName?: string;
@@ -36,6 +38,7 @@ type DataPageLayoutProps = {
 };
 
 export function DataPageLayout({
+	action,
 	children,
 	current,
 	networkAction,
@@ -50,60 +53,63 @@ export function DataPageLayout({
 			<title>{title}</title>
 			<main className="max-w-(--breakpoint-xl) p-3 w-full mx-auto">
 				<NetworkHeader network={network} />
-				<Breadcrumb>
-					<BreadcrumbList>
-						<BreadcrumbItem>
-							<BreadcrumbLink render={<Link to="/data">{m.data_breadcrumb()}</Link>} />
-						</BreadcrumbItem>
-						<BreadcrumbSeparator />
-						{current === undefined && (breadcrumbMiddle === undefined || breadcrumbMiddle.length === 0) ? (
+				<div className="flex items-center gap-2">
+					<Breadcrumb className="grow min-w-0">
+						<BreadcrumbList>
 							<BreadcrumbItem>
-								<BreadcrumbPage className={networkAction ? "flex items-center gap-1" : undefined}>
-									<NetworkBreadcrumbLabel network={network} />
-									{networkAction}
-								</BreadcrumbPage>
+								<BreadcrumbLink render={<Link to="/data">{m.data_breadcrumb()}</Link>} />
 							</BreadcrumbItem>
-						) : (
-							<>
+							<BreadcrumbSeparator />
+							{current === undefined && (breadcrumbMiddle === undefined || breadcrumbMiddle.length === 0) ? (
 								<BreadcrumbItem>
-									<BreadcrumbLink
-										render={
-											<Link
-												to="/data/networks/$networkId"
-												params={{ networkId: String(network.id) }}
-												search={networkSearch}
-											>
-												<NetworkBreadcrumbLabel network={network} />
-											</Link>
-										}
-									/>
+									<BreadcrumbPage className={networkAction ? "flex items-center gap-1" : undefined}>
+										<NetworkBreadcrumbLabel network={network} />
+										{networkAction}
+									</BreadcrumbPage>
 								</BreadcrumbItem>
-								{breadcrumbMiddle?.map((entry) => (
-									<>
-										<BreadcrumbSeparator key={`sep-${entry.to}`} />
-										<BreadcrumbItem key={entry.to}>
-											<BreadcrumbLink
-												render={
-													<Link to={entry.to} params={entry.params ?? {}} search={entry.search ?? {}}>
-														{entry.label}
-													</Link>
-												}
-											/>
-										</BreadcrumbItem>
-									</>
-								))}
-								{current !== undefined && (
-									<>
-										<BreadcrumbSeparator />
-										<BreadcrumbItem>
-											<BreadcrumbPage className={currentClassName}>{current}</BreadcrumbPage>
-										</BreadcrumbItem>
-									</>
-								)}
-							</>
-						)}
-					</BreadcrumbList>
-				</Breadcrumb>
+							) : (
+								<>
+									<BreadcrumbItem>
+										<BreadcrumbLink
+											render={
+												<Link
+													to="/data/networks/$networkId"
+													params={{ networkId: String(network.id) }}
+													search={networkSearch}
+												>
+													<NetworkBreadcrumbLabel network={network} />
+												</Link>
+											}
+										/>
+									</BreadcrumbItem>
+									{breadcrumbMiddle?.map((entry) => (
+										<>
+											<BreadcrumbSeparator key={`sep-${entry.to}`} />
+											<BreadcrumbItem key={entry.to}>
+												<BreadcrumbLink
+													render={
+														<Link to={entry.to} params={entry.params ?? {}} search={entry.search ?? {}}>
+															{entry.label}
+														</Link>
+													}
+												/>
+											</BreadcrumbItem>
+										</>
+									))}
+									{current !== undefined && (
+										<>
+											<BreadcrumbSeparator />
+											<BreadcrumbItem>
+												<BreadcrumbPage className={currentClassName}>{current}</BreadcrumbPage>
+											</BreadcrumbItem>
+										</>
+									)}
+								</>
+							)}
+						</BreadcrumbList>
+					</Breadcrumb>
+					{action !== undefined && <div className="shrink-0">{action}</div>}
+				</div>
 				{children}
 			</main>
 		</>

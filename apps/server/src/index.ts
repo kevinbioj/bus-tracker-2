@@ -1,8 +1,10 @@
 import { Worker } from "node:worker_threads";
+import { DATA_SOURCES_CHANNEL } from "@bus-tracker/contracts";
 import { serve } from "@hono/node-server";
 import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
+import { parseDataSourceManifests, upsertDataSources } from "./core/services/data-source-service.js";
 import {
 	startVehicleReportCleanupService,
 	sweepExpiredVehicleReports,
@@ -13,6 +15,7 @@ import { hono } from "./server.js";
 import type { DisposeableVehicleJourney } from "./types/disposeable-vehicle-journey.js";
 
 import "./controllers/announcements.js";
+import "./controllers/data-sources.js";
 import "./controllers/editors.js";
 import "./controllers/girouettes.js";
 import "./controllers/lines.js";
@@ -75,6 +78,28 @@ await redis.connect();
 redis.on("error", (error) => {
 	console.error("✘ An error occurred with Redis:", error);
 });
+
+// Les providers annoncent périodiquement les flux qu'ils consomment : on les persiste pour la
+// page d'attributions. Le volume est marginal, inutile de passer par le worker véhicules.
+const dataSourcesSubscriber = redis.duplicate();
+
+dataSourcesSubscriber.on("error", (error) => {
+	console.error("✘ An error occurred with Redis data sources subscriber:", error);
+});
+
+await dataSourcesSubscriber.connect();
+await dataSourcesSubscriber.subscribe(DATA_SOURCES_CHANNEL, (message) => {
+	try {
+		const manifests = parseDataSourceManifests(JSON.parse(message));
+		if (manifests.length === 0) return;
+		void upsertDataSources(manifests).catch((error) => {
+			console.error("✘ Failed to persist data sources:", error);
+		});
+	} catch (error) {
+		console.error("✘ Failed to handle a data sources message:", error);
+	}
+});
+console.log("► Subscribed to the data sources channel.");
 
 console.log("► Listening on port %d.\n", port);
 serve({

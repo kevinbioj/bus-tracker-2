@@ -11,6 +11,7 @@ import { loadConfiguration } from "./configuration/load-configuration.js";
 import { computeVehicleJourneys } from "./jobs/compute-current-journeys.js";
 import { computeNextJourneys } from "./jobs/compute-next-journeys.js";
 import { initializeResources } from "./jobs/initialize-resources.js";
+import { publishDataSourceManifests } from "./jobs/publish-data-sources.js";
 import { sweepJourneys } from "./jobs/sweep-journeys.js";
 import { updateResources } from "./jobs/update-resources.js";
 import { configurationPath } from "./options.js";
@@ -51,12 +52,14 @@ let lastSweepAt = Date.now();
 
 await initializeResources(configuration.sources);
 await publishLinePaths(configuration.sources);
+await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
 while (true) {
 	console.log("%s ► Entering loop cycle.", Temporal.Now.instant());
 
 	if (Date.now() - lastUpdateAt > 600_000) {
 		const updatedSources = await updateResources(configuration.sources);
 		await publishLinePaths(updatedSources);
+		await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
 		lastUpdateAt = Date.now();
 	}
 
@@ -89,6 +92,8 @@ while (true) {
 	}
 	const computeDuration = Date.now() - startedAt;
 
+	await publishDataSourceManifests(redis, configuration.id, configuration.sources);
+
 	// Wait at least 10s and at most 120s between each computation
 	const timeToWait = Math.min(120_000, Math.max(10_000, configuration.computeDelayMs - computeDuration));
 	console.log("%s ► Done loop cycle, waiting for %dms.", Temporal.Now.instant(), timeToWait);
@@ -110,6 +115,10 @@ async function computeCurrentJourneys() {
 				computeLimitFn(async () => {
 					if (source.gtfs === undefined) return 0;
 					const { journeys, paths } = await computeVehicleJourneys(source);
+
+					for (const journey of journeys) {
+						source.observedNetworkRefs.add(journey.networkRef);
+					}
 
 					for (let i = 0; i < journeys.length; i += 500) {
 						const chunk = journeys.slice(i, Math.min(i + 500, journeys.length));

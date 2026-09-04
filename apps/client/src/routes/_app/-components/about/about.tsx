@@ -35,6 +35,7 @@ export function About() {
 					<div className="space-y-2">
 						<p className="text-center">
 							<DialogClose nativeButton={false} render={<Link to="/help">{m.about_help()}</Link>} /> •{" "}
+							<DialogClose nativeButton={false} render={<Link to="/attributions">{m.about_attributions()}</Link>} /> •{" "}
 							<DialogClose nativeButton={false} render={<Link to="/legal">{m.about_legal()}</Link>} />
 						</p>
 
