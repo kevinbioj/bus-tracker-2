@@ -2,7 +2,8 @@
 const sources = [
 	{
 		id: "lemans",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/5339d96c-6d20-4a01-939a-40f7b56d6cc1",
+		staticResourceHref:
+			"https://eur.mecatran.com/utw/ws/gtfsfeed/static/lemans?apiKey=73334a124f3a1654141d6979113106450f291d15&type=gtfs_setram_urbsco",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/setram-lemans-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/setram-lemans-gtfs-rt-vehicle-position",
