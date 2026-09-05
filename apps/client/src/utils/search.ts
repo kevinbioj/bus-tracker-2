@@ -44,26 +44,39 @@ const SCORE_SUBSTRING = 350;
 const SCORE_FUZZY_BASE = 100;
 
 /**
- * Correspondance approximative : tous les caractères de la requête apparaissent dans l'ordre dans le
- * texte (« ctr » -> « centre »). Le score récompense les caractères consécutifs et les débuts de mot.
+ * Au-delà de ce facteur, les caractères trouvés sont trop dispersés pour être une faute de frappe :
+ * « naolib » se retrouve lettre à lettre dans « Syndicat Mixte des Mobilités de l'Aire Grenobloise »
+ * sans que l'usager y ait jamais pensé, alors que « grenoble » colle à « Grenobloise ».
+ */
+const MAX_FUZZY_SPAN_RATIO = 3;
+
+/**
+ * Correspondance approximative : tous les caractères de la requête apparaissent dans l'ordre et
+ * suffisamment groupés dans le texte (« ctr » -> « centre »). Le score récompense les caractères
+ * consécutifs et les débuts de mot.
  */
 function scoreFuzzy(text: string, query: string) {
 	if (query.length < 2) return 0;
 
 	let textIndex = 0;
 	let bonus = 0;
+	let firstMatchIndex = -1;
 	let previousMatchIndex = -2;
 
 	for (const character of query) {
 		const foundIndex = text.indexOf(character, textIndex);
 		if (foundIndex === -1) return 0;
 
+		if (firstMatchIndex === -1) firstMatchIndex = foundIndex;
 		if (foundIndex === previousMatchIndex + 1) bonus += 6;
 		if (foundIndex === 0 || !/[\p{L}\p{N}]/u.test(text[foundIndex - 1])) bonus += 4;
 
 		previousMatchIndex = foundIndex;
 		textIndex = foundIndex + 1;
 	}
+
+	// Une correspondance étalée sur toute une raison sociale relève du hasard, pas de la recherche.
+	if (previousMatchIndex - firstMatchIndex + 1 > query.length * MAX_FUZZY_SPAN_RATIO) return 0;
 
 	// Plus le texte est court par rapport à la requête, plus la correspondance est signifiante.
 	const density = Math.round((query.length / text.length) * 40);
@@ -93,6 +106,12 @@ export function scoreText(text: string, query: string) {
 export type SearchField<T> = {
 	pick: (item: T) => string | null | undefined;
 	weight: number;
+	/**
+	 * Autorise la correspondance approximative sur ce champ. À désactiver sur les libellés longs
+	 * (raisons sociales, intitulés administratifs), où une subséquence quelconque produit du bruit.
+	 * Par défaut, le réglage global de la recherche s'applique.
+	 */
+	allowFuzzy?: boolean;
 };
 
 export type SearchOptions = {
@@ -120,10 +139,12 @@ export function scoreItem<T>(
 ) {
 	if (terms.length === 0) return 1;
 
-	const texts = fields.flatMap(({ pick, weight }) => {
-		const value = pick(item);
+	const texts = fields.flatMap((field) => {
+		const value = field.pick(item);
 		if (!value) return [];
 
+		const { weight } = field;
+		const fuzzy = field.allowFuzzy ?? allowFuzzy;
 		const text = normalizeSearchText(value);
 		// Variante sans séparateurs : « GX 337 » doit aussi répondre à « gx337 », légèrement pénalisée
 		// pour rester derrière une correspondance sur le texte tel qu'il est écrit.
@@ -131,19 +152,19 @@ export function scoreItem<T>(
 
 		return compacted !== text && compacted.length > 0
 			? [
-					{ text, weight },
-					{ text: compacted, weight: weight * 0.9 },
+					{ text, weight, fuzzy },
+					{ text: compacted, weight: weight * 0.9, fuzzy },
 				]
-			: [{ text, weight }];
+			: [{ text, weight, fuzzy }];
 	});
 
 	let total = 0;
 
 	for (const term of terms) {
 		let best = 0;
-		for (const { text, weight } of texts) {
+		for (const { text, weight, fuzzy } of texts) {
 			const score = scoreText(text, term);
-			if (!allowFuzzy && score < SCORE_SUBSTRING) continue;
+			if (!fuzzy && score < SCORE_SUBSTRING) continue;
 			best = Math.max(best, score * weight);
 		}
 

@@ -40,13 +40,19 @@ function AttributionsPage() {
 		const visibleEntries = networkDataSources.filter((entry) => isCountryDisplayed(entry.network.countryCode));
 
 		// La recherche porte sur le réseau : c'est l'entrée naturelle d'une page d'attributions.
-		const matchingNetworks = new Set(
-			searchNetworks(
-				visibleEntries.map((entry) => entry.network),
-				debouncedSearchQuery,
-			).map((network) => network.id),
-		);
-		const matchingEntries = visibleEntries.filter((entry) => matchingNetworks.has(entry.network.id));
+		const entriesByNetworkId = new Map(visibleEntries.map((entry) => [entry.network.id, entry]));
+		const matchingEntries = searchNetworks(
+			visibleEntries.map((entry) => entry.network),
+			debouncedSearchQuery,
+		).flatMap((network) => entriesByNetworkId.get(network.id) ?? []);
+
+		// Comme sur la liste des réseaux, une recherche donne un bloc unique classé par pertinence :
+		// répartir les résultats par région reléguerait le meilleur d'entre eux au milieu de la page.
+		if (debouncedSearchQuery.length > 0) {
+			return matchingEntries.length === 0
+				? []
+				: [{ key: "search-results", title: m.networks_list_search_results(), entries: matchingEntries }];
+		}
 
 		const regionBlocks: AttributionsBlock[] = regions.flatMap((region) => {
 			const entries = matchingEntries.filter((entry) => entry.network.regionId === region.id);
@@ -83,7 +89,9 @@ function AttributionsPage() {
 				</div>
 
 				{blocks.length === 0 ? (
-					<p className="py-8 text-center text-muted-foreground">{m.attributions_empty()}</p>
+					<p className="py-8 text-center text-muted-foreground">
+						{debouncedSearchQuery.length > 0 ? m.networks_list_empty() : m.attributions_empty()}
+					</p>
 				) : (
 					blocks.map((block) => (
 						<section className="flex flex-col gap-2" key={block.key}>

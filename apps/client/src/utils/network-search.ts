@@ -1,11 +1,15 @@
 import type { Network } from "~/api/networks";
 import { type SearchField, searchItems } from "~/utils/search";
 
-/** Champs comparés : le nom du réseau prime, l'autorité organisatrice porte souvent le nom de la ville. */
+/**
+ * Champs comparés : le nom du réseau prime, l'autorité organisatrice porte souvent le nom de la ville.
+ * La référence est un code interne : l'usager la connaît ou pas, une correspondance approximative
+ * dessus ne fait que remonter des réseaux sans rapport avec sa recherche.
+ */
 const NETWORK_FIELDS: ReadonlyArray<SearchField<Network>> = [
 	{ pick: (network) => network.name, weight: 1 },
 	{ pick: (network) => network.authority, weight: 0.9 },
-	{ pick: (network) => network.ref, weight: 0.5 },
+	{ pick: (network) => network.ref, weight: 0.5, allowFuzzy: false },
 ];
 
 /** À pertinence égale, l'ordre alphabétique conserve une liste lisible. */
