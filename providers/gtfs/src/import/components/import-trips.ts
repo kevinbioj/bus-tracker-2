@@ -117,6 +117,9 @@ export async function importTrips(
 	// Pass 1: compter les stop_times par trip pour dimensionner les tableaux par stop_time.
 	let totalRows = 0;
 	await readCsv<StopTimeRecord>(stopTimesFile, (stopTimeRecord) => {
+		// Entrée GTFS-Flex (location_group_id ou location_id au lieu de stop_id, horaires
+		// remplacés par une fenêtre de réservation) : non exploitable en temps réel.
+		if (stopTimeRecord.stop_id.length === 0) return;
 		const tripId = mapTripId?.(stopTimeRecord.trip_id) ?? stopTimeRecord.trip_id;
 		const trip = trips.get(tripId);
 		if (trip === undefined) return;
@@ -144,6 +147,9 @@ export async function importTrips(
 
 	// Pass 2: remplissage.
 	await readCsv<StopTimeRecord>(stopTimesFile, (stopTimeRecord) => {
+		// Idem pass 1 : les entrées flex sont ignorées, les trips qui n'en contiennent
+		// que sont éliminés plus bas par le drop des trips à moins de deux arrêts.
+		if (stopTimeRecord.stop_id.length === 0) return;
 		const tripId = mapTripId?.(stopTimeRecord.trip_id) ?? stopTimeRecord.trip_id;
 		const trip = trips.get(tripId);
 		if (trip === undefined) {
