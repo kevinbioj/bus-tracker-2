@@ -5,7 +5,7 @@ import type {
 	SourceSpecification,
 	SymbolLayerSpecification,
 } from "maplibre-gl";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMap } from "~/adapters/maplibre-gl/map";
 
 import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
@@ -165,6 +165,9 @@ type VehicleMarkersProps = {
 
 export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineId }: VehicleMarkersProps) {
 	const map = useMap();
+	// Course dont la popup est ouverte : partagée avec les marqueurs pour que le point suive
+	// le même instantané que les informations affichées.
+	const [activeJourneyId, setActiveJourneyId] = useState<string | null>(null);
 	const vehiclesSource = useMapSource<GeoJSONSource>("vehicles", initialData);
 	const vehiclesLayer = useMapLayer(vehiclesLayerObject);
 	useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
@@ -241,12 +244,18 @@ export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineId }
 	return (
 		<>
 			<VehiclesMarkersData
+				activeJourneyId={activeJourneyId}
 				embeddedNetworkId={embeddedNetworkId}
 				filteredNetworkId={filteredNetworkId}
 				lineId={lineId}
 				source={vehiclesSource}
 			/>
-			<VehiclesMarkersPopupRoot embedMode={Boolean(embeddedNetworkId)} layer={vehiclesLayer} lineId={lineId} />
+			<VehiclesMarkersPopupRoot
+				embedMode={Boolean(embeddedNetworkId)}
+				layer={vehiclesLayer}
+				lineId={lineId}
+				onActiveJourneyChange={setActiveJourneyId}
+			/>
 		</>
 	);
 }
