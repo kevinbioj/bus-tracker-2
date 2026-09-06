@@ -167,9 +167,10 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/transdev-trsi.zip",
 		realtimeResourceHrefs: ["https://www.data.gouv.fr/api/1/datasets/r/74db080b-3d7c-4f30-8811-b344e79f4092"],
 		hasRealVehicles: false,
-		getNetworkRef: () => "TRSI",
+		getNetworkRef: () => "SNCF-15",
 		getVehicleRef: (_, journey) => journey?.trip.id.split("@")[0],
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+		mapLineRef: (lineRef) => `TRSI_${lineRef}`,
 		mapTripUpdate: (tripUpdate) => {
 			tripUpdate.vehicle = undefined;
 			return tripUpdate;
