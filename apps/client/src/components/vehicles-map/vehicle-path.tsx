@@ -176,7 +176,10 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 		pathDisplayMode === "journeys-and-lines" && lineId !== undefined && (journeyId === undefined || !journeyPathReady);
 
 	const { data: linePath } = useQuery(GetLinePathQuery(showLinePath ? lineId : undefined));
-	const { data: line } = useQuery(GetLineQuery(journey?.lineId ?? lineId));
+
+	const resolvedLineId = journey?.lineId ?? lineId;
+	const { data: line, isError: lineErrored } = useQuery(GetLineQuery(resolvedLineId));
+	const awaitingLineColors = resolvedLineId !== undefined && line === undefined && !lineErrored;
 
 	const stopsLabelLayer = useMemo<AddLayerObject>(
 		() => ({
@@ -261,7 +264,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	);
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
-		if (pathDisplayMode === "disabled") {
+		if (pathDisplayMode === "disabled" || awaitingLineColors) {
 			return { type: "FeatureCollection", features: [] };
 		}
 
@@ -389,7 +392,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 		}
 
 		return { type: "FeatureCollection", features };
-	}, [journey, journeyId, path, line, linePath, pathDisplayMode, showLinePath]);
+	}, [awaitingLineColors, journey, journeyId, path, line, linePath, pathDisplayMode, showLinePath]);
 
 	const source = useMapSource<GeoJSONSource>("vehicle-path", initialSource);
 	useMapLayer(pastPathStrokeLayer, "vehicles-arrows-outline");
