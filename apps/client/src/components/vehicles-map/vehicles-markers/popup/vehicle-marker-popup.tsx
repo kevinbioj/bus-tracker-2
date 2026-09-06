@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
 import { useEffect } from "react";
-import { useLocalStorage, useScreen } from "usehooks-ts";
+import { useLocalStorage, useWindowSize } from "usehooks-ts";
 
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetVehicleJourneyMarkersQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
@@ -17,30 +17,37 @@ type VehicleDetailsProps = {
 	journeyId: string;
 };
 
-export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDetailsProps>) {
+/**
+ * Rafraîchit le détail de la course dès que les marqueurs bougent. Isolé du rendu de la popup :
+ * les bornes de la carte et l'horodatage des marqueurs ne décident de rien à l'écran, les observer
+ * dans la popup la ferait rerendre à chaque déplacement de carte et à chaque rafraîchissement.
+ */
+function MarkersRefreshSync({ journeyId }: Readonly<{ journeyId: string }>) {
 	const bounds = useMapBounds();
-	const { width } = useScreen();
-
 	const { dataUpdatedAt: markersUpdatedAt } = useQuery(GetVehicleJourneyMarkersQuery(bounds));
-	const {
-		data: journey,
-		dataUpdatedAt: journeyUpdatedAt,
-		isError,
-		refetch,
-	} = useQuery(GetVehicleJourneyQuery(journeyId, false));
-	const popupWidth = journey?.girouette?.width ?? Math.min(width - 50, 384);
+	// Même cache que la popup : aucune requête supplémentaire n'est émise.
+	const { dataUpdatedAt: journeyUpdatedAt, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, false));
 
-	const [showDebugInfos] = useLocalStorage("show-debug-info", false);
-
-	// refetch popup data whenever markers move
 	useEffect(() => {
 		if (markersUpdatedAt > journeyUpdatedAt) {
 			refetch({ cancelRefetch: false });
 		}
 	}, [markersUpdatedAt, journeyUpdatedAt, refetch]);
 
+	return null;
+}
+
+export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDetailsProps>) {
+	const { width } = useWindowSize();
+
+	const { data: journey, isError } = useQuery(GetVehicleJourneyQuery(journeyId, false));
+	const popupWidth = journey?.girouette?.width ?? Math.min(width - 50, 384);
+
+	const [showDebugInfos] = useLocalStorage("show-debug-info", false);
+
 	return (
 		<div className="font-[Achemine] leading-tight mb-1.5 text-[13px]" style={{ width: popupWidth }}>
+			<MarkersRefreshSync journeyId={journeyId} />
 			{isError ? (
 				<p className="px-3 text-balance text-center">
 					<span className="font-bold text-lg">{m.marker_missing_title()}</span>

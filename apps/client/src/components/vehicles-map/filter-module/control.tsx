@@ -30,6 +30,36 @@ function NetworkBadge({ network }: Readonly<NetworkBadgeProps>) {
 	return <img className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0" src={network.logoHref} alt={network.name} />;
 }
 
+type FilterModuleVehiclesCountProps = {
+	filter: MapFilter;
+	fixedNetworkId?: number;
+};
+
+/**
+ * Compteur des véhicules affichés. Isolé du reste du contrôle car il est le seul à suivre les
+ * bornes de la carte : les observer plus haut ferait rerendre tout le module à chaque déplacement
+ * de carte et à chaque rafraîchissement des marqueurs.
+ */
+function FilterModuleVehiclesCount({ filter, fixedNetworkId }: Readonly<FilterModuleVehiclesCountProps>) {
+	const [bounds] = useDebounceValue(useMapBounds(), 250);
+	// Mêmes arguments que ceux de la couche de marqueurs : les deux partagent le cache de la query.
+	const { data, isPlaceholderData } = useQuery(
+		GetVehicleJourneyMarkersQuery(bounds, {
+			embeddedNetworkId: fixedNetworkId,
+			filteredNetworkId: filter.kind === "network" ? filter.network.id : undefined,
+			lineId: filter.kind === "line" ? filter.line.id : undefined,
+		}),
+	);
+
+	if (isPlaceholderData) return null;
+	return (
+		<span className="shrink-0 text-muted-foreground tabular-nums">
+			{data?.items.length ?? 0}
+			<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
+		</span>
+	);
+}
+
 type FilterModuleControlProps = {
 	filter?: MapFilter;
 	fixedNetworkId?: number;
@@ -46,16 +76,6 @@ export function FilterModuleControl({
 	const map = useMap();
 	const activatorRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
-
-	const [bounds] = useDebounceValue(useMapBounds(), 250);
-	// Mêmes arguments que ceux de la couche de marqueurs : les deux partagent le cache de la query.
-	const { data, isPlaceholderData } = useQuery(
-		GetVehicleJourneyMarkersQuery(bounds, {
-			embeddedNetworkId: fixedNetworkId,
-			filteredNetworkId: filter?.kind === "network" ? filter.network.id : undefined,
-			lineId: filter?.kind === "line" ? filter.line.id : undefined,
-		}),
-	);
 
 	useEffect(() => {
 		if (activatorRef.current === null) return;
@@ -127,12 +147,7 @@ export function FilterModuleControl({
 							</>
 						)}
 
-						{!isPlaceholderData && (
-							<span className="shrink-0 text-muted-foreground tabular-nums">
-								{data?.items.length ?? 0}
-								<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
-							</span>
-						)}
+						<FilterModuleVehiclesCount filter={filter} fixedNetworkId={fixedNetworkId} />
 
 						{withDataLink && (
 							<>

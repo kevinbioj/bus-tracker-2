@@ -14,6 +14,7 @@
 		"@inlang/plugin-m-function-matcher": "^2.2.11",
 		"@inlang/plugin-message-format": "^4.4.3",
 		"@posthog/cli": "^0.11.3",
+		"@rolldown/plugin-babel": "^0.2.3",
 		"@tailwindcss/postcss": "^4.3.3",
 		"@tailwindcss/vite": "^4.3.3",
 		"@tanstack/router-plugin": "^1.168.32",

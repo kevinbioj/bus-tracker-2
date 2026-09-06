@@ -1,7 +1,8 @@
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
+import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
-import react from "@vitejs/plugin-react";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
@@ -25,6 +26,10 @@ export default defineConfig({
 			autoCodeSplitting: true,
 		}),
 		react(),
+		// React Compiler. Depuis la v6, `@vitejs/plugin-react` transforme avec oxc et n'embarque
+		// plus Babel : le compilateur passe par ce plugin dédié. React 19 fournit son runtime,
+		// aucun paquet supplémentaire n'est nécessaire côté application.
+		babel({ presets: [reactCompilerPreset()] }),
 		tailwindcss(),
 		VitePWA({
 			manifest: {

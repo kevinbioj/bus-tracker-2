@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { type GeoJSONSource, LngLatBounds } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
-import { useDebounceValue, useLocalStorage, useWindowSize } from "usehooks-ts";
+import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
@@ -56,7 +56,6 @@ export function VehiclesMarkersData({
 	source,
 }: VehiclesMarkersDataProps) {
 	const map = useMap();
-	const { width: windowWidth } = useWindowSize();
 	const [previewVehicleNumber] = useLocalStorage("preview-vehicle-number", false);
 	const [displayedPositionTypes] = useDisplayedPositionTypes();
 	const [displayedCountryCodes] = useDisplayedCountryCodes();
@@ -85,21 +84,34 @@ export function VehiclesMarkersData({
 	// ancien. Une entrée n'est relâchée qu'une fois les marqueurs plus frais qu'elle — le point
 	// avance alors sans jamais revenir en arrière.
 	const journeyPositions = useRef(new Map<string, { position: DisposeableVehicleJourney["position"]; at: number }>());
+	// Instantané rendu aux consommateurs : renouvelé seulement quand une position change vraiment,
+	// sinon chaque rafraîchissement du détail rebâtirait les features et relancerait l'animation
+	// de tous les marqueurs — alors qu'aucun n'a bougé.
+	const positionOverridesSnapshot = useRef(journeyPositions.current);
 
 	const positionOverrides = useMemo(() => {
 		const overrides = journeyPositions.current;
+		let changed = false;
 
 		if (activeJourney !== undefined && journeyUpdatedAt > (overrides.get(activeJourney.id)?.at ?? 0)) {
+			// Le partage structurel de React Query préserve la référence d'une position inchangée :
+			// une réponse identique ne doit rien déplacer, seul l'horodatage avance.
+			changed = overrides.get(activeJourney.id)?.position !== activeJourney.position;
 			overrides.set(activeJourney.id, { position: activeJourney.position, at: journeyUpdatedAt });
 		}
 
 		for (const [journeyId, override] of overrides) {
 			if (journeyId !== activeJourneyId && override.at <= markersUpdatedAt) {
 				overrides.delete(journeyId);
+				changed = true;
 			}
 		}
 
-		return new Map(overrides);
+		if (changed) {
+			positionOverridesSnapshot.current = new Map(overrides);
+		}
+
+		return positionOverridesSnapshot.current;
 	}, [activeJourney, activeJourneyId, journeyUpdatedAt, markersUpdatedAt]);
 
 	// Clé du filtre actif, pour ne recadrer qu'une fois par filtre (ligne comme réseau).
@@ -111,8 +123,18 @@ export function VehiclesMarkersData({
 				: undefined;
 	const lastRefocusedFilter = useRef<string | undefined>(undefined);
 
+	// Les bornes de la carte et les préférences d'affichage ne font pas partie de la clé de la
+	// requête : c'est cet effet qui redemande les marqueurs quand elles changent. Le premier
+	// rendu est ignoré, `useQuery` vient d'émettre la requête initiale.
+	const hasFetchedOnce = useRef(false);
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to refetch if that setting changes
 	useEffect(() => {
+		if (!hasFetchedOnce.current) {
+			hasFetchedOnce.current = true;
+			return;
+		}
+
 		refetch();
 	}, [
 		bounds,
@@ -123,7 +145,6 @@ export function VehiclesMarkersData({
 		filteredNetworkId,
 	]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: only refocus when data is fresh and the filter changed
 	useEffect(() => {
 		if (refocusKey === undefined) {
 			lastRefocusedFilter.current = undefined;
@@ -150,6 +171,9 @@ export function VehiclesMarkersData({
 				boundsObj.extend(pos);
 			}
 
+			// Lu au moment du recadrage : s'abonner au redimensionnement ferait rerendre toute la
+			// couche de marqueurs pour une valeur qui ne sert qu'ici.
+			const windowWidth = window.innerWidth;
 			const padding = windowWidth < 640 ? 40 : windowWidth < 1024 ? 100 : 200;
 			map.fitBounds(boundsObj, { padding, maxZoom: 15 });
 			lastRefocusedFilter.current = refocusKey;

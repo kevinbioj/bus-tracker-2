@@ -16,13 +16,18 @@ const popupOptions: PopupOptions = {
 
 /**
  * Remonte la course active hors du rendu de la popup : la prévenir depuis la fonction de rendu
- * reviendrait à modifier l'état d'un composant parent pendant son rendu.
+ * reviendrait à modifier l'état d'un composant parent pendant son rendu. Le marqueur actif est
+ * consigné ici pour la même raison — écrire dans `localStorage` est un effet de bord, qui n'a
+ * pas sa place dans un rendu.
  */
 function ActiveJourneyReporter({
 	journeyId,
 	onChange,
 }: Readonly<{ journeyId: string | null; onChange: (journeyId: string | null) => void }>) {
 	useEffect(() => {
+		if (journeyId !== null) localStorage.setItem("active-feature", journeyId);
+		else localStorage.removeItem("active-feature");
+
 		onChange(journeyId);
 	}, [journeyId, onChange]);
 
@@ -45,11 +50,6 @@ export function VehiclesMarkersPopupRoot({
 	return (
 		<GeojsonPopup layer={layer} popupOptions={popupOptions}>
 			{({ activeFeature, openPopup }) => {
-				if (localStorage.getItem("active-feature") !== activeFeature?.id) {
-					if (activeFeature !== null) localStorage.setItem("active-feature", activeFeature.id);
-					else localStorage.removeItem("active-feature");
-				}
-
 				return (
 					<>
 						<ActiveJourneyReporter journeyId={activeFeature?.id ?? null} onChange={onActiveJourneyChange} />

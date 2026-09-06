@@ -29,11 +29,9 @@ export function CustomTooltip({ children, content, place, spacing = 5, ...toolti
 				.with("bottom", () => ({
 					top: `calc(100% + ${spacing}px)`,
 					left: "50%",
-					transform: "transformX(-50%)",
 				}))
 				.with("right", () => ({
 					left: `calc(100% + ${spacing}px)`,
-					transform: "transformY(-50%)",
 				}))
 				.exhaustive(),
 		[place, spacing],

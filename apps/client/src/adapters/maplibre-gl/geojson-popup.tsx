@@ -50,7 +50,6 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			}),
 	);
 	const [activeFeature, setActiveFeature] = useState<ActiveFeature | null>(null);
-	const activeFeatureRef = useRef<CircleMarkerFeature>(null);
 
 	const adjustPan = useCallback(() => {
 		// do not force if user is dragging the map
@@ -84,7 +83,6 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 	const openPopup = useCallback(
 		(feature: CircleMarkerFeature) => {
-			activeFeatureRef.current = feature;
 			popup.setLngLat(feature.geometry.coordinates);
 			if (popup._map === undefined) {
 				popup.setDOMContent(containerRef.current).addTo(map);
@@ -99,7 +97,6 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 	const closePopup = useCallback(() => {
 		popup.getElement()?.removeAttribute("data-open");
 		popup.remove();
-		activeFeatureRef.current = null;
 		setActiveFeature(null);
 	}, [popup]);
 
@@ -219,20 +216,21 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 		const onSourceData = (e: { sourceId: string; source: SourceSpecification; sourceDataType: "content" | string }) => {
 			if (e.sourceId !== "vehicles" || e.sourceDataType !== "content") return;
+			// Sans popup ouverte il n'y a rien à suivre : la source est réécrite à chaque frame
+			// d'animation, parcourir tous les marqueurs à chacune ne servirait à rien.
+			if (activeFeature === null) return;
 
 			const source = e.source as CircleMarkerSource;
-			const feature = source.data?.features?.find((feature) => feature.properties.id === activeFeature?.id);
+			const feature = source.data?.features?.find((feature) => feature.properties.id === activeFeature.id);
 			if (feature === undefined) {
-				if (activeFeature !== null) {
-					closePopup();
-				}
+				closePopup();
 				return;
 			}
 
 			popup.setLngLat(feature.geometry.coordinates);
 
 			// Properties update (if they changed)
-			if (activeFeature !== null && feature.properties !== activeFeature.properties) {
+			if (feature.properties !== activeFeature.properties) {
 				setActiveFeature((prev) => (prev ? { ...prev, properties: feature.properties } : null));
 			}
 		};

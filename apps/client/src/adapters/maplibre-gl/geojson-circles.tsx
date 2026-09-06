@@ -86,6 +86,27 @@ export function GeojsonCircles<T extends { id: string; bearing: number | null }>
 			}
 
 			// 3. We smoothly move other features
+			// Une mise à jour où rien ne s'est déplacé (le détail d'une course rafraîchi, un
+			// rafraîchissement qui rend les mêmes positions) n'a pas à être animée : une seule
+			// écriture suffit, au lieu d'une seconde de `setData` à chaque frame — et d'autant
+			// d'événements `sourcedata` pour tous ceux qui écoutent la source.
+			const hasMovement = temporaryCollection.features.some((feature) => {
+				const nextFeature = nextFeatures.get(feature.properties.id);
+				const previousLocation = previousLocations.get(feature.properties.id);
+				if (nextFeature === undefined || previousLocation === undefined) return false;
+
+				return (
+					nextFeature.geometry.coordinates[0] !== previousLocation.position[0] ||
+					nextFeature.geometry.coordinates[1] !== previousLocation.position[1] ||
+					nextFeature.properties.bearing !== previousLocation.bearing
+				);
+			});
+
+			if (!hasMovement) {
+				source.setData(temporaryCollection);
+				return;
+			}
+
 			const start = Date.now();
 			const end = Date.now() + 1000;
 
