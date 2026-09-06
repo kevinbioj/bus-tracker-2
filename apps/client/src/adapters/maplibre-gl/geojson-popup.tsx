@@ -39,6 +39,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 	const map = useMap();
 	const containerRef = useRef(document.createElement("div"));
 	const isMapDragged = useRef(false);
+	const pendingDragSelection = useRef<CircleMarkerFeature | null>(null);
 	const isCoarsePointer = useMediaQuery("(pointer: coarse)");
 	const hitPadding = isCoarsePointer ? COARSE_POINTER_HIT_PADDING : 0;
 
@@ -196,7 +197,31 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			}
 		};
 
+		const onMouseDown = (e: MapMouseEvent) => {
+			const features = map.queryRenderedFeatures(queryArea(e.point), {
+				layers: [layer.id],
+			});
+
+			pendingDragSelection.current = (pickClosest(features, e.point) as unknown as CircleMarkerFeature) ?? null;
+		};
+
+		const onMouseUp = () => {
+			pendingDragSelection.current = null;
+		};
+
+		const onDragStart = () => {
+			const feature = pendingDragSelection.current;
+			pendingDragSelection.current = null;
+			if (feature === null) return;
+			if (activeFeature?.type === "selected" && activeFeature.id === feature.properties.id) return;
+
+			setActiveFeature({ id: feature.properties.id, type: "selected", properties: feature.properties });
+			openPopup(feature);
+		};
+
 		const onClick = (e: MapMouseEvent) => {
+			pendingDragSelection.current = null;
+
 			const features = map.queryRenderedFeatures(queryArea(e.point), {
 				layers: [layer.id],
 			});
@@ -235,10 +260,16 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			}
 		};
 
+		map.on("mousedown", onMouseDown);
+		map.on("mouseup", onMouseUp);
+		map.on("dragstart", onDragStart);
 		map.on("mousemove", onMouseMove);
 		map.on("click", onClick);
 		map.on("sourcedata", onSourceData);
 		return () => {
+			map.off("mousedown", onMouseDown);
+			map.off("mouseup", onMouseUp);
+			map.off("dragstart", onDragStart);
 			map.off("mousemove", onMouseMove);
 			map.off("click", onClick);
 			map.off("sourcedata", onSourceData);
