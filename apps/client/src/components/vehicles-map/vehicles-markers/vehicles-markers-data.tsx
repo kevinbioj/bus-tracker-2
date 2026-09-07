@@ -78,11 +78,11 @@ export function VehiclesMarkersData({
 		GetVehicleJourneyQuery(activeJourneyId, false),
 	);
 
-	// Positions relevées sur le détail des courses dont une popup a été ouverte. Elles survivent
-	// à la fermeture de la popup : le détail se rafraîchit plus souvent que les marqueurs, donc
-	// rendre aussitôt la main à ces derniers ferait *reculer* le point vers un instantané plus
-	// ancien. Une entrée n'est relâchée qu'une fois les marqueurs plus frais qu'elle — le point
-	// avance alors sans jamais revenir en arrière.
+	// Positions relevées sur le détail des courses dont une popup a été ouverte. Une entrée ne
+	// vaut que tant qu'elle est *plus fraîche* que les marqueurs : au-delà, ces derniers décrivent
+	// déjà un instantané plus récent. Elles survivent donc à la fermeture de la popup — le détail
+	// se rafraîchit plus souvent que les marqueurs, rendre aussitôt la main à ces derniers ferait
+	// reculer le point — mais sont relâchées dès que les marqueurs les rattrapent.
 	const journeyPositions = useRef(new Map<string, { position: DisposeableVehicleJourney["position"]; at: number }>());
 	// Instantané rendu aux consommateurs : renouvelé seulement quand une position change vraiment,
 	// sinon chaque rafraîchissement du détail rebâtirait les features et relancerait l'animation
@@ -93,7 +93,15 @@ export function VehiclesMarkersData({
 		const overrides = journeyPositions.current;
 		let changed = false;
 
-		if (activeJourney !== undefined && journeyUpdatedAt > (overrides.get(activeJourney.id)?.at ?? 0)) {
+		// `journeyUpdatedAt > markersUpdatedAt` est la condition qui rend le détail utile. Sans
+		// elle, survoler une course déjà consultée réapplique la réponse encore en cache — React
+		// Query la rend avant de rafraîchir en arrière-plan — et fait reculer le point de quelques
+		// mètres, le temps que le refetch arrive et rejoue le déplacement.
+		if (
+			activeJourney !== undefined &&
+			journeyUpdatedAt > markersUpdatedAt &&
+			journeyUpdatedAt > (overrides.get(activeJourney.id)?.at ?? 0)
+		) {
 			// Le partage structurel de React Query préserve la référence d'une position inchangée :
 			// une réponse identique ne doit rien déplacer, seul l'horodatage avance.
 			changed = overrides.get(activeJourney.id)?.position !== activeJourney.position;
@@ -101,7 +109,7 @@ export function VehiclesMarkersData({
 		}
 
 		for (const [journeyId, override] of overrides) {
-			if (journeyId !== activeJourneyId && override.at <= markersUpdatedAt) {
+			if (override.at <= markersUpdatedAt) {
 				overrides.delete(journeyId);
 				changed = true;
 			}
@@ -112,7 +120,7 @@ export function VehiclesMarkersData({
 		}
 
 		return positionOverridesSnapshot.current;
-	}, [activeJourney, activeJourneyId, journeyUpdatedAt, markersUpdatedAt]);
+	}, [activeJourney, journeyUpdatedAt, markersUpdatedAt]);
 
 	// Clé du filtre actif, pour ne recadrer qu'une fois par filtre (ligne comme réseau).
 	const refocusKey =
