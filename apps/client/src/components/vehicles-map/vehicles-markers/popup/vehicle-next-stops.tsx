@@ -18,18 +18,57 @@ type NextStopRowProps = {
 	label: string;
 };
 
+type CallTimes = {
+	/** Heure d'arrivée effective (temps réel si connu), repliée sur le départ si inexploitable. */
+	arrival: string;
+	/** Heure de départ effective (temps réel si connu) — au terminus, c'est l'heure d'arrivée. */
+	departure: string;
+	/** Heure théorique de référence pour le calcul du retard, alignée sur l'heure affichée. */
+	aimed: string;
+	/** Heure temps réel de référence, si connue. */
+	expected?: string;
+};
+
+/**
+ * Choisit les heures à afficher pour un arrêt.
+ *
+ * Le contrat ne publie l'heure d'arrivée que lorsqu'elle diffère du départ. On l'utilise alors comme
+ * heure par défaut de l'arrêt, le départ ne servant qu'à afficher « arrivée → départ » pendant le
+ * stationnement.
+ */
+/** Heure locale de l'arrêt : l'offset est retiré pour ne pas afficher celle du visiteur. */
+const formatLocalTime = (time: string) => dayjs(time.slice(0, -6)).format("HH:mm");
+
+function getCallTimes(call: VehicleJourneyCall): CallTimes {
+	const departure = call.expectedTime ?? call.aimedTime;
+	const fallback = { arrival: departure, departure, aimed: call.aimedTime, expected: call.expectedTime };
+
+	// L'arrivée n'est exploitable qu'au même niveau que le départ (théorique ou temps réel) : opposer
+	// une arrivée théorique à un départ temps réel décalerait la bascule vers « à l'arrêt ».
+	if (call.aimedArrivalTime === undefined) return fallback;
+	if ((call.expectedArrivalTime !== undefined) !== (call.expectedTime !== undefined)) return fallback;
+
+	const arrival = call.expectedArrivalTime ?? call.aimedArrivalTime;
+	// Garde-fou sur des données incohérentes : une arrivée postérieure au départ est ignorée.
+	if (dayjs(arrival).isAfter(departure)) return fallback;
+
+	return { arrival, departure, aimed: call.aimedArrivalTime, expected: call.expectedArrivalTime };
+}
+
 // Le détail de la course est rafraîchi en boucle, mais le partage structurel de React Query garde
 // la référence d'un arrêt inchangé : mémoïser la ligne limite le rendu aux arrêts qui ont bougé.
 const NextStopRow = memo(function NextStopRow({ call, displayMode, label }: Readonly<NextStopRowProps>) {
-	const accentColor = match([call.callStatus, call.expectedTime])
+	const { aimed, expected } = getCallTimes(call);
+
+	const accentColor = match([call.callStatus, expected])
 		.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")
 		.with(["SCHEDULED", P.string], () => "text-green-700 dark:text-green-500")
 		.with(["UNSCHEDULED", P.string], () => "text-yellow-700 dark:text-yellow-500")
 		.otherwise(() => null);
 
 	const tooltipProps =
-		call.expectedTime !== undefined || call.callStatus === "SKIPPED"
-			? match([call.callStatus, dayjs(call.expectedTime ?? call.aimedTime).diff(call.aimedTime, "minutes")])
+		expected !== undefined || call.callStatus === "SKIPPED"
+			? match([call.callStatus, dayjs(expected ?? aimed).diff(aimed, "minutes")])
 					.with(
 						["SKIPPED", P.any],
 						() =>
@@ -74,13 +113,14 @@ const NextStopRow = memo(function NextStopRow({ call, displayMode, label }: Read
 	const hasExtra = (call.flags !== undefined && call.flags.length > 0) || call.platformName !== undefined;
 
 	const children = (
-		<div className={clsx("flex font-bold", accentColor)}>
-			{call.expectedTime !== undefined || call.callStatus === "SKIPPED" ? (
+		<div className={clsx("flex font-bold ml-2", accentColor)}>
+			{expected !== undefined || call.callStatus === "SKIPPED" ? (
 				<Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} />
 			) : null}
 			<span
 				className={clsx(
-					"select-none hover:cursor-default",
+					// `whitespace-nowrap` : à quai, le libellé s'allonge (deux heures, ou « À quai - … »).
+					"select-none whitespace-nowrap hover:cursor-default",
 					call.callStatus === "SKIPPED" && displayMode === "absolute" && "line-through",
 				)}
 			>
@@ -133,25 +173,41 @@ export const VehicleNextStops = memo(function VehicleNextStops({ calls }: Readon
 	const [nextCallsDisplayMode] = useNextCallsDisplayMode();
 
 	const times = useDebouncedMemo(
-		() =>
-			calls.map((call) => {
-				const time = call.expectedTime ?? call.aimedTime;
+		() => {
+			const now = dayjs();
+
+			return calls.map((call) => {
+				const { arrival, departure } = getCallTimes(call);
+				// Véhicule à quai : entre son arrivée et son départ, c'est le départ qui reste à venir,
+				// et lui seul intéresse l'utilisateur. Un arrêt supprimé n'étant pas desservi, il en est exclu.
+				const dwelling =
+					arrival !== departure && call.callStatus !== "SKIPPED" && !now.isBefore(arrival) && !now.isAfter(departure);
+
 				if (nextCallsDisplayMode === "absolute") {
-					return dayjs(time.slice(0, -6)).format("HH:mm");
+					return dwelling
+						? m.stop_call_dwelling_departure_at({ time: formatLocalTime(departure) })
+						: formatLocalTime(arrival);
 				}
 
 				if (call.callStatus === "SKIPPED") return m.stop_call_cancelled();
 
-				const minutes = dayjs(time).diff(dayjs(), "minutes");
-				if (minutes < 1) return m.stop_call_imminent();
-				if (minutes < 60) return m.stop_call_in_minutes({ count: minutes });
+				const minutes = dayjs(dwelling ? departure : arrival).diff(now, "minutes");
+				if (minutes < 1) return dwelling ? m.stop_call_dwelling_imminent() : m.stop_call_imminent();
 
-				return m.stop_call_in_hours({
-					hours: Math.floor(minutes / 60),
-					minutes: String(minutes % 60).padStart(2, "0"),
-				});
-			}),
-		10_000,
+				const countdown =
+					minutes < 60
+						? m.stop_call_in_minutes({ count: minutes })
+						: m.stop_call_in_hours({
+								hours: Math.floor(minutes / 60),
+								minutes: String(minutes % 60).padStart(2, "0"),
+							});
+
+				return dwelling ? m.stop_call_dwelling_departure({ time: countdown }) : countdown;
+			});
+		},
+		// Un stationnement dure souvent moins d'une minute : la bascule vers « arrivée → départ »
+		// doit suivre le rythme de rafraîchissement de la course elle-même.
+		5_000,
 		[calls, nextCallsDisplayMode],
 	);
 

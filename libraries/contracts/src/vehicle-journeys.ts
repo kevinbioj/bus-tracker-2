@@ -38,8 +38,12 @@ export const vehicleJourneyCallFlagsEnum = type("'NO_PICKUP'|'NO_DROP_OFF'");
 export type VehicleJourneyCallFlags = typeof vehicleJourneyCallFlagsEnum.infer;
 
 export const vehicleJourneyCallSchema = type({
+	// Heure de départ de l'arrêt — ou heure d'arrivée au terminus, qui n'a pas de départ.
 	aimedTime: "string.date.iso",
 	"expectedTime?": "string.date.iso",
+	// Heure d'arrivée, renseignée uniquement lorsqu'elle diffère du départ (temps de stationnement).
+	"aimedArrivalTime?": "string.date.iso",
+	"expectedArrivalTime?": "string.date.iso",
 	stopRef: "string",
 	stopName: "string",
 	stopOrder: "number>=0",

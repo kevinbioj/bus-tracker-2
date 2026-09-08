@@ -1,4 +1,4 @@
-import type { VehicleJourneyLineType, VehicleJourneyPath } from "@bus-tracker/contracts";
+import type { VehicleJourneyCallFlags, VehicleJourneyLineType, VehicleJourneyPath } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
@@ -24,8 +24,12 @@ export type DisposeableVehicleJourney = {
 	direction?: "OUTBOUND" | "INBOUND";
 	destination?: string;
 	calls?: Array<{
+		/** Heure de départ de l'arrêt — ou heure d'arrivée au terminus, qui n'a pas de départ. */
 		aimedTime: string;
 		expectedTime?: string;
+		/** Heure d'arrivée, renseignée uniquement lorsqu'elle diffère du départ (stationnement). */
+		aimedArrivalTime?: string;
+		expectedArrivalTime?: string;
 		stopRef: string;
 		stopName: string;
 		stopOrder: number;
@@ -34,6 +38,7 @@ export type DisposeableVehicleJourney = {
 		platformName?: string;
 		distanceTraveled?: number;
 		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
+		flags?: VehicleJourneyCallFlags[];
 	}>;
 	position: {
 		latitude: number;

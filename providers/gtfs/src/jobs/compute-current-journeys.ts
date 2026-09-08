@@ -95,6 +95,50 @@ function formatCallTime(epochMs: number, stopTimeZone: string | undefined, journ
 	return fastFormatISO(epochMs, getTimeZoneOffsetMs(stopTimeZone ?? journeyTimeZone, epochMs));
 }
 
+/**
+ * Projette un arrêt interne sur le contrat publié.
+ *
+ * `aimedTime`/`expectedTime` portent l'heure de *départ* — sauf au terminus, qui n'a pas de départ
+ * et expose donc son arrivée. Les heures d'arrivée ne sont publiées séparément que lorsqu'elles
+ * diffèrent du départ, c'est-à-dire quand le véhicule stationne à l'arrêt : le client peut alors
+ * afficher « arrivée → départ ».
+ */
+function serializeCall(
+	call: JourneyCall,
+	isLast: boolean,
+	source: Source,
+	networkRef: string,
+	timeZone: string,
+): NonNullable<VehicleJourney["calls"]>[number] {
+	const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
+	const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
+
+	// Au terminus l'arrivée *est* déjà l'heure publiée : la republier serait redondant.
+	const hasDwellTime =
+		!isLast &&
+		(call.aimedArrivalTime !== call.aimedDepartureTime || call.expectedArrivalTime !== call.expectedDepartureTime);
+
+	return {
+		aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
+		expectedTime:
+			expectedTimeMs !== undefined ? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone) : undefined,
+		aimedArrivalTime: hasDwellTime ? formatCallTime(call.aimedArrivalTime, call.stop.timeZone, timeZone) : undefined,
+		expectedArrivalTime:
+			hasDwellTime && call.expectedArrivalTime !== undefined
+				? formatCallTime(call.expectedArrivalTime, call.stop.timeZone, timeZone)
+				: undefined,
+		stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
+		stopName: call.stop.name,
+		stopOrder: call.sequence,
+		distanceTraveled: call.distanceTraveled,
+		latitude: call.stop.latitude,
+		longitude: call.stop.longitude,
+		platformName: call.platform,
+		callStatus: call.status,
+		flags: call.flags,
+	};
+}
+
 const getCalls = (
 	journey: Journey,
 	at: Temporal.Instant,
@@ -586,28 +630,9 @@ export async function computeVehicleJourneys(source: Source) {
 				direction: (journey?.trip.direction ?? vehiclePosition.trip?.directionId) === 0 ? "OUTBOUND" : "INBOUND",
 				calls:
 					journey !== undefined || calls !== undefined
-						? (calls?.map((call, index) => {
-								const isLast = index === calls.length - 1;
-								const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
-								const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
-
-								return {
-									aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
-									expectedTime:
-										expectedTimeMs !== undefined
-											? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone)
-											: undefined,
-									stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
-									stopName: call.stop.name,
-									stopOrder: call.sequence,
-									distanceTraveled: call.distanceTraveled,
-									latitude: call.stop.latitude,
-									longitude: call.stop.longitude,
-									platformName: call.platform,
-									callStatus: call.status,
-									flags: call.flags,
-								};
-							}) ?? [])
+						? (calls?.map((call, index) =>
+								serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
+							) ?? [])
 						: undefined,
 				destination: source.options.getDestination?.(journey, vehiclePosition.vehicle) ?? journey?.trip.headsign,
 				position: {
@@ -698,26 +723,9 @@ export async function computeVehicleJourneys(source: Source) {
 					destination:
 						source.options.getDestination?.(candidateJourney, vehicleDescriptor) ??
 						addedTripShapeMatch.candidate.trip.headsign,
-					calls: calls.map((call, index) => {
-						const isLast = index === calls.length - 1;
-						const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
-						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
-
-						return {
-							aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
-							expectedTime:
-								expectedTimeMs !== undefined ? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone) : undefined,
-							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
-							stopName: call.stop.name,
-							stopOrder: call.sequence,
-							distanceTraveled: call.distanceTraveled,
-							latitude: call.stop.latitude,
-							longitude: call.stop.longitude,
-							platformName: call.platform,
-							callStatus: call.status,
-							flags: call.flags,
-						};
-					}),
+					calls: calls.map((call, index) =>
+						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
+					),
 					position,
 					pathRef,
 					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,
@@ -776,25 +784,9 @@ export async function computeVehicleJourneys(source: Source) {
 						? { direction: tripUpdate.trip.directionId === 0 ? ("OUTBOUND" as const) : ("INBOUND" as const) }
 						: {}),
 					destination: source.options.getDestination?.(undefined, vehicleDescriptor),
-					calls: activeCalls.map((call, index) => {
-						const isLast = index === activeCalls.length - 1;
-						const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
-						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
-
-						return {
-							aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
-							expectedTime:
-								expectedTimeMs !== undefined ? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone) : undefined,
-							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
-							stopName: call.stop.name,
-							stopOrder: call.sequence,
-							latitude: call.stop.latitude,
-							longitude: call.stop.longitude,
-							platformName: call.platform,
-							callStatus: call.status,
-							flags: call.flags,
-						};
-					}),
+					calls: activeCalls.map((call, index) =>
+						serializeCall(call, index === activeCalls.length - 1, source, networkRef, timeZone),
+					),
 					position,
 					networkRef,
 					operatorRef,
@@ -894,26 +886,9 @@ export async function computeVehicleJourneys(source: Source) {
 					},
 					direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
 					destination: source.options.getDestination?.(journey, vehicleDescriptor) ?? journey.trip.headsign,
-					calls: calls.map((call, index) => {
-						const isLast = index === calls.length - 1;
-						const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
-						const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
-
-						return {
-							aimedTime: formatCallTime(aimedTimeMs, call.stop.timeZone, timeZone),
-							expectedTime:
-								expectedTimeMs !== undefined ? formatCallTime(expectedTimeMs, call.stop.timeZone, timeZone) : undefined,
-							stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
-							stopName: call.stop.name,
-							stopOrder: call.sequence,
-							distanceTraveled: call.distanceTraveled,
-							latitude: call.stop.latitude,
-							longitude: call.stop.longitude,
-							platformName: call.platform,
-							callStatus: call.status,
-							flags: call.flags,
-						};
-					}),
+					calls: calls.map((call, index) =>
+						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
+					),
 					position: journey.guessPosition(now),
 					pathRef,
 					journeyRef: `${networkRef}:ServiceJourney:${tripRef}`,

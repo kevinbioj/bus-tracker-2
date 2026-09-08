@@ -601,6 +601,86 @@ function flixbusLikeSource() {
 	return source;
 }
 
+/**
+ * Course dont l'arrêt B comporte un temps de stationnement : arrivée 8:10, départ 8:12.
+ * A (8:00) et le terminus C (8:20) repartent aussitôt arrivés.
+ */
+function dwellingSource(options?: Partial<SourceOptions>) {
+	const source = makeSource(options);
+	const agency = new Agency("agency", "Agency", "UTC");
+	const route = new Route("line:1", agency, "1", "RAIL");
+	const service = new Service("service", [true, true, true, true, true, true, true]);
+	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
+	const store = new StopTimeStore(
+		stops,
+		new Uint8Array([1, 2, 3]),
+		new Uint8Array([0, 0, 0]),
+		new Uint32Array([8 * 3600, 8 * 3600 + 10 * 60, 8 * 3600 + 20 * 60]),
+		new Uint32Array([8 * 3600, 8 * 3600 + 12 * 60, 8 * 3600 + 20 * 60]),
+		new Float32Array([0, 1000, 2000]),
+		new Uint32Array([0]),
+		new Uint32Array([3]),
+		new Uint32Array([8 * 3600]),
+		new Uint32Array([8 * 3600 + 20 * 60]),
+		new Uint32Array([8 * 3600 + 20 * 60]),
+	);
+	const trip = new Trip(0, "original", route, service, store, 0, "Terminus");
+	source.gtfs = {
+		routes: new Map([[route.id, route]]),
+		stops: new Map(stops.map((stop) => [stop.id, stop])),
+		trips: new Map([[trip.id, trip]]),
+		journeys: new Map([[`${DATE}-original`, trip.getScheduledJourney(DATE, true)]]),
+		stopTimeStore: store,
+		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
+		lastModified: null,
+		etag: null,
+	};
+	return source;
+}
+
+describe("computeVehicleJourneys (temps de stationnement)", () => {
+	beforeEach(() => {
+		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		Reflect.deleteProperty(console, "draft");
+	});
+
+	it("publie l'heure d'arrivée à part quand elle diffère du départ", async () => {
+		// 08:05 : la course a quitté A et roule vers B.
+		const { journeys } = await cycleAt(dwellingSource(), "08:05:00");
+
+		const [b, c] = journeys[0]!.calls!;
+		// B stationne : `aimedTime` reste le départ, l'arrivée est publiée en plus.
+		expect(b!.aimedTime).toBe("2026-05-18T08:12:00+00:00");
+		expect(b!.aimedArrivalTime).toBe("2026-05-18T08:10:00+00:00");
+		// Le terminus n'a pas de départ : son `aimedTime` porte déjà l'arrivée, inutile de la répéter.
+		expect(c!.aimedTime).toBe("2026-05-18T08:20:00+00:00");
+		expect(c!.aimedArrivalTime).toBeUndefined();
+	});
+
+	it("garde l'arrêt publié pendant tout le stationnement", async () => {
+		// 08:11 : le véhicule est à quai en B, entre son arrivée et son départ.
+		const { journeys } = await cycleAt(dwellingSource(), "08:11:00");
+
+		const calls = journeys[0]!.calls!;
+		expect(calls[0]!.stopName).toBe("B");
+		expect(calls[0]!.aimedArrivalTime).toBe("2026-05-18T08:10:00+00:00");
+	});
+
+	it("décale arrivée et départ du même retard temps réel", async () => {
+		const { journeys } = await cycleAt(dwellingSource(), "08:05:00", {
+			tripUpdates: [delayedTripUpdate(120)],
+		});
+
+		const [b] = journeys[0]!.calls!;
+		expect(b!.expectedArrivalTime).toBe("2026-05-18T08:12:00+00:00");
+		expect(b!.expectedTime).toBe("2026-05-18T08:14:00+00:00");
+	});
+});
+
 describe("computeVehicleJourneys (course multi-fuseaux)", () => {
 	beforeEach(() => {
 		(console as DraftConsole).draft = vi.fn(() => vi.fn());
