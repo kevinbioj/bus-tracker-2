@@ -1,14 +1,14 @@
 import { useId } from "react";
-import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import { useDisplayNextCalls } from "~/components/vehicles-map/display-next-calls";
 import * as m from "~/paraglide/messages";
 import { NextCallsDisplayModeSetting } from "~/routes/_app/-components/settings/next-calls-display-mode";
 
 export function DisplayNextCallsSetting() {
 	const id = useId();
-	const [displayNextCalls, setDisplayNextCalls] = useLocalStorage("display-next-calls", true);
+	const [displayNextCalls, setDisplayNextCalls] = useDisplayNextCalls();
 
 	return (
 		<div className="grid gap-1.5">

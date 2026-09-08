@@ -7,6 +7,7 @@ import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetVehicleJourneyMarkersQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { CopyToClipboard } from "~/components/copy-to-clipboard";
 import { Separator } from "~/components/ui/separator";
+import { useDisplayNextCalls } from "~/components/vehicles-map/display-next-calls";
 import { VehicleGirouette } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-girouette";
 import { VehicleInformation } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-information";
 import { VehicleNextStops } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-next-stops";
@@ -43,6 +44,7 @@ export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDet
 	const { data: journey, isError } = useQuery(GetVehicleJourneyQuery(journeyId, false));
 	const popupWidth = journey?.girouette?.width ?? Math.min(width - 50, 384);
 
+	const [displayNextCalls] = useDisplayNextCalls();
 	const [showDebugInfos] = useLocalStorage("show-debug-info", false);
 
 	return (
@@ -58,7 +60,9 @@ export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDet
 				<>
 					<VehicleGirouette journey={journey} width={popupWidth} />
 					<VehicleInformation disableLinks={embedMode} journey={journey} />
-					{journey.calls !== undefined && <VehicleNextStops calls={journey.calls} tooltipId={journey.id} />}
+					{displayNextCalls && journey.calls !== undefined && (
+						<VehicleNextStops calls={journey.calls} tooltipId={journey.id} />
+					)}
 					{showDebugInfos && (
 						<>
 							<Separator />
