@@ -253,7 +253,7 @@
 	"stop_call_cancelled": "Entfällt",
 	"stop_call_imminent": "Sofort",
 	"stop_call_in_minutes": "{count} Min.",
-	"stop_call_in_hours": "{hours} Std {minutes}",
+	"stop_call_in_hours": "{hours} Std {minutes} Min.",
 	"stop_call_dwelling_departure": "Am Bahnsteig - Abfahrt in {time}",
 	"stop_call_dwelling_departure_at": "Am Bahnsteig - Abfahrt um {time}",
 	"stop_call_dwelling_imminent": "Am Bahnsteig - Abfahrt sofort",
