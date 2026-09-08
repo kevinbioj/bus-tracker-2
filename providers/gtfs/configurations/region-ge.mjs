@@ -57,6 +57,16 @@ const sources = [
 		getNetworkRef: () => "STAN",
 	},
 	{
+		id: "nancy-sub",
+		staticResourceHref:
+			"https://transport.data.gouv.fr/resources/80431/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/fluo-sub-nancy-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		getNetworkRef: () => "NANCY-SUB",
+	},
+	{
 		id: "reims",
 		staticResourceHref:
 			"https://www.datagrandest.fr/metadata/fluo-grand-est/FR-200052264-T0031-0000/fluo-grand-est-rei-gtfs.zip",
