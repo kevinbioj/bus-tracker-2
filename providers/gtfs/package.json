@@ -11,7 +11,6 @@
 		"test:watch": "vitest --exclude dist"
 	},
 	"devDependencies": {
-		"@bus-tracker/contracts": "workspace:*",
 		"@types/decompress": "^4.2.7",
 		"@types/node": "^26.2.0",
 		"@types/papaparse": "^5.5.2",
@@ -20,6 +19,7 @@
 		"vitest": "^4.1.10"
 	},
 	"dependencies": {
+		"@bus-tracker/contracts": "workspace:*",
 		"@bus-tracker/monitoring": "workspace:*",
 		"@xhmikosr/decompress": "^11.1.4",
 		"croner": "^10.0.1",

@@ -280,6 +280,9 @@ importers:
 
   providers/gtfs:
     dependencies:
+      '@bus-tracker/contracts':
+        specifier: workspace:*
+        version: link:../../libraries/contracts
       '@bus-tracker/monitoring':
         specifier: workspace:*
         version: link:../../libraries/monitoring
@@ -314,9 +317,6 @@ importers:
         specifier: ^5.9.0
         version: 5.9.0
     devDependencies:
-      '@bus-tracker/contracts':
-        specifier: workspace:*
-        version: link:../../libraries/contracts
       '@types/decompress':
         specifier: ^4.2.7
         version: 4.2.7
