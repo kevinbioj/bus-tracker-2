@@ -18,7 +18,9 @@ const sources = [
 	{
 		id: "besancon",
 		staticResourceHref: "https://api.ginko.voyage/gtfs-ginko.zip",
-		realtimeResourceHrefs: [],
+		realtimeResourceHrefs: process.env.GINKO_API_KEY
+			? [`https://api.ginko.voyage/GTFSRT/tripUpdates.do?apiKey=${process.env.GINKO_API_KEY}`]
+			: [],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		getNetworkRef: () => "BESANCON",
 	},
