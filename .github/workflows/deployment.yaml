@@ -144,6 +144,12 @@ jobs:
 
       - name: Deploy stack to the server
         uses: kitconcept/docker-stack-deploy@1a7a5e778d08cf92bda2ebbd068fe0ca078d09c8
+        env:
+          deploy_ssh_host: ${{ secrets.DEPLOY_SSH_HOST }}
+          deploy_ssh_port: ${{ secrets.DEPLOY_SSH_PORT }}
+          deploy_ssh_user: ${{ secrets.DEPLOY_SSH_USER }}
+          deploy_ssh_private_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        if: ${{ env.deploy_ssh_host != '' && env.deploy_ssh_port != '' && env.deploy_ssh_user != '' && env.deploy_ssh_private_key != '' }}
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
