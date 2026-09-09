@@ -15,6 +15,7 @@ type NextStopsProps = { calls: VehicleJourneyCall[]; tooltipId?: string };
 type NextStopRowProps = {
 	call: VehicleJourneyCall;
 	displayMode: NextCallsDisplayMode;
+	dwelling: boolean;
 	label: string;
 };
 
@@ -55,10 +56,51 @@ function getCallTimes(call: VehicleJourneyCall): CallTimes {
 	return { arrival, departure, aimed: call.aimedArrivalTime, expected: call.expectedArrivalTime };
 }
 
+/**
+ * Véhicule à quai : entre son arrivée et son départ, c'est le départ qui reste à venir, et lui seul
+ * intéresse l'utilisateur. Un arrêt supprimé n'étant pas desservi, il en est exclu.
+ */
+function isDwelling(call: VehicleJourneyCall, now: dayjs.Dayjs) {
+	const { arrival, departure } = getCallTimes(call);
+	return arrival !== departure && call.callStatus !== "SKIPPED" && !now.isBefore(arrival) && !now.isAfter(departure);
+}
+
+function formatCallLabel(
+	call: VehicleJourneyCall,
+	displayMode: NextCallsDisplayMode,
+	dwelling: boolean,
+	now: dayjs.Dayjs,
+) {
+	const { arrival, departure } = getCallTimes(call);
+
+	if (displayMode === "absolute") {
+		return dwelling
+			? m.stop_call_dwelling_departure_at({ time: formatLocalTime(departure) })
+			: formatLocalTime(arrival);
+	}
+
+	if (call.callStatus === "SKIPPED") return m.stop_call_cancelled();
+
+	const minutes = dayjs(dwelling ? departure : arrival).diff(now, "minutes");
+	if (minutes < 1) return dwelling ? m.stop_call_dwelling_imminent() : m.stop_call_imminent();
+
+	const countdown =
+		minutes < 60
+			? m.stop_call_in_minutes({ count: minutes })
+			: m.stop_call_in_hours({
+					hours: Math.floor(minutes / 60),
+					minutes: String(minutes % 60).padStart(2, "0"),
+				});
+
+	return dwelling ? m.stop_call_dwelling_departure({ time: countdown }) : countdown;
+}
+
 // Le détail de la course est rafraîchi en boucle, mais le partage structurel de React Query garde
 // la référence d'un arrêt inchangé : mémoïser la ligne limite le rendu aux arrêts qui ont bougé.
-const NextStopRow = memo(function NextStopRow({ call, displayMode, label }: Readonly<NextStopRowProps>) {
-	const { aimed, expected } = getCallTimes(call);
+const NextStopRow = memo(function NextStopRow({ call, displayMode, dwelling, label }: Readonly<NextStopRowProps>) {
+	// L'infobulle qualifie l'heure affichée : à quai, c'est celle du départ. Déclarer une avance parce
+	// que le véhicule est arrivé avant son heure de départ (au terminus notamment) n'aurait aucun sens.
+	const { aimed, expected } = dwelling ? { aimed: call.aimedTime, expected: call.expectedTime } : getCallTimes(call);
 
 	const accentColor = match([call.callStatus, expected])
 		.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")
@@ -172,37 +214,13 @@ const NextStopRow = memo(function NextStopRow({ call, displayMode, label }: Read
 export const VehicleNextStops = memo(function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
 	const [nextCallsDisplayMode] = useNextCallsDisplayMode();
 
-	const times = useDebouncedMemo(
+	const rows = useDebouncedMemo(
 		() => {
 			const now = dayjs();
 
 			return calls.map((call) => {
-				const { arrival, departure } = getCallTimes(call);
-				// Véhicule à quai : entre son arrivée et son départ, c'est le départ qui reste à venir,
-				// et lui seul intéresse l'utilisateur. Un arrêt supprimé n'étant pas desservi, il en est exclu.
-				const dwelling =
-					arrival !== departure && call.callStatus !== "SKIPPED" && !now.isBefore(arrival) && !now.isAfter(departure);
-
-				if (nextCallsDisplayMode === "absolute") {
-					return dwelling
-						? m.stop_call_dwelling_departure_at({ time: formatLocalTime(departure) })
-						: formatLocalTime(arrival);
-				}
-
-				if (call.callStatus === "SKIPPED") return m.stop_call_cancelled();
-
-				const minutes = dayjs(dwelling ? departure : arrival).diff(now, "minutes");
-				if (minutes < 1) return dwelling ? m.stop_call_dwelling_imminent() : m.stop_call_imminent();
-
-				const countdown =
-					minutes < 60
-						? m.stop_call_in_minutes({ count: minutes })
-						: m.stop_call_in_hours({
-								hours: Math.floor(minutes / 60),
-								minutes: String(minutes % 60).padStart(2, "0"),
-							});
-
-				return dwelling ? m.stop_call_dwelling_departure({ time: countdown }) : countdown;
+				const dwelling = isDwelling(call, now);
+				return { dwelling, label: formatCallLabel(call, nextCallsDisplayMode, dwelling, now) };
 			});
 		},
 		// Un stationnement dure souvent moins d'une minute : la bascule vers « arrivée → départ »
@@ -216,7 +234,13 @@ export const VehicleNextStops = memo(function VehicleNextStops({ calls }: Readon
 		<div className="-my-0.5">
 			<div className="flex max-h-24 flex-col gap-1 overflow-y-auto overscroll-contain py-0.5 px-1.5">
 				{calls.map((call, index) => (
-					<NextStopRow call={call} displayMode={nextCallsDisplayMode} key={call.stopOrder} label={times[index] ?? ""} />
+					<NextStopRow
+						call={call}
+						displayMode={nextCallsDisplayMode}
+						dwelling={rows[index]?.dwelling ?? false}
+						key={call.stopOrder}
+						label={rows[index]?.label ?? ""}
+					/>
 				))}
 			</div>
 		</div>
