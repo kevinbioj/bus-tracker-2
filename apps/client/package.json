@@ -10,9 +10,9 @@
 	},
 	"devDependencies": {
 		"@bus-tracker/contracts": "workspace:*",
-		"@inlang/paraglide-js": "^2.24.1",
-		"@inlang/plugin-m-function-matcher": "^2.2.11",
-		"@inlang/plugin-message-format": "^4.4.3",
+		"@inlang/paraglide-js": "^2.25.1",
+		"@inlang/plugin-m-function-matcher": "^2.2.14",
+		"@inlang/plugin-message-format": "^4.4.4",
 		"@posthog/cli": "^0.11.3",
 		"@rolldown/plugin-babel": "^0.2.3",
 		"@tailwindcss/postcss": "^4.3.3",
