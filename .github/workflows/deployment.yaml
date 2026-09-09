@@ -42,6 +42,9 @@ jobs:
           echo "${{ secrets.CLIENT_ENV }}" > apps/client/.env
           echo "${{ secrets.SERVER_ENV }}" > apps/server/.env
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
 
@@ -79,7 +82,7 @@ jobs:
             posthog_cli_host=${{ secrets.POSTHOG_CLI_HOST }}
           context: .
           file: docker/Dockerfile-${{ matrix.component }}
-          # platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -100,6 +103,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
@@ -125,7 +131,7 @@ jobs:
           cache-to: type=gha,mode=max
           context: .
           file: providers/${{ matrix.component }}/Dockerfile
-          # platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
