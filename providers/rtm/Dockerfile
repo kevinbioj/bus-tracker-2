@@ -1,4 +1,4 @@
-# Build from the repository root: docker build -f providers/twisto/Dockerfile -t bus-tracker-twisto .
+# Build from the repository root: docker build -f providers/rtm/Dockerfile -t bus-tracker-rtm .
 
 FROM node:26.7.0-alpine AS base
 RUN npm install -g --force corepack@latest
@@ -16,12 +16,12 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm fetch
 COPY libraries/contracts/ ./libraries/contracts/
 COPY libraries/monitoring/ ./libraries/monitoring/
-COPY providers/twisto/ ./providers/twisto/
-RUN pnpm install --offline --filter "@bus-tracker/processor-twisto..."
+COPY providers/rtm/ ./providers/rtm/
+RUN pnpm install --offline --filter "@bus-tracker/processor-rtm..."
 
 # Build project artifacts
-RUN pnpm --filter "@bus-tracker/processor-twisto..." run build
-RUN pnpm deploy --legacy --filter=@bus-tracker/processor-twisto --prod twisto-deployment
+RUN pnpm --filter "@bus-tracker/processor-rtm..." run build
+RUN pnpm deploy --legacy --filter=@bus-tracker/processor-rtm --prod rtm-deployment
 
 #####################################
 # STAGE 2 - Run project artifacts   #
@@ -30,9 +30,9 @@ RUN pnpm deploy --legacy --filter=@bus-tracker/processor-twisto --prod twisto-de
 FROM base
 WORKDIR /bus-tracker
 
-COPY --from=build /bus-tracker/twisto-deployment/node_modules ./node_modules/
-COPY --from=build /bus-tracker/twisto-deployment/dist ./dist/
-COPY --from=build /bus-tracker/twisto-deployment/package.json ./package.json
+COPY --from=build /bus-tracker/rtm-deployment/node_modules ./node_modules/
+COPY --from=build /bus-tracker/rtm-deployment/dist ./dist/
+COPY --from=build /bus-tracker/rtm-deployment/package.json ./package.json
 
 ENV NODE_ENV=production
-CMD ["node", "--expose-gc", "--enable-source-maps", "dist/index.js"]
+ENTRYPOINT ["node", "--enable-source-maps", "dist/index.js"]
