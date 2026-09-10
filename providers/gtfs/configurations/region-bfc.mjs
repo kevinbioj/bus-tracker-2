@@ -23,6 +23,10 @@ const sources = [
 			: [],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		getNetworkRef: () => "BESANCON",
+		mapTripUpdate: (tripUpdate) => {
+			tripUpdate.vehicle = undefined;
+			return tripUpdate;
+		},
 	},
 	{
 		id: "coeur-de-loire",
