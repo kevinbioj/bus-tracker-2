@@ -22,6 +22,7 @@ export class StopTimeStore {
 		public tripFirstArrivalSecs: Uint32Array,
 		public tripLastArrivalSecs: Uint32Array,
 		public tripLastDepartureSecs: Uint32Array,
+		public stopHeadsigns?: (string | undefined)[],
 	) {}
 
 	get size(): number {
