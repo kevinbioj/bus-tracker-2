@@ -27,6 +27,7 @@ export type StopTimeCall = {
 	stop: Stop;
 	sequence: number;
 	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
+	headsign?: string;
 };
 
 export class Trip {
@@ -67,7 +68,7 @@ export class Trip {
 		// croissent même lorsqu'elle traverse des fuseaux. `stop_timezone` ne sert qu'à restituer
 		// l'instant obtenu en heure locale de l'arrêt, à la sérialisation.
 		const tz = this.route.agency.timeZone;
-		const { stops, sequence, flagsBitmask, arrivalSecs, departureSecs, distanceTraveled } = this.store;
+		const { stops, sequence, flagsBitmask, arrivalSecs, departureSecs, distanceTraveled, stopHeadsigns } = this.store;
 
 		const calls = new Array(count);
 		for (let i = 0; i < count; i++) {
@@ -92,6 +93,7 @@ export class Trip {
 				distanceTraveled: Number.isNaN(dist) ? undefined : dist,
 				status: "SCHEDULED" as const,
 				flags: bitmaskToFlags(flagsBitmask[idx]!),
+				headsign: stopHeadsigns?.[idx],
 			};
 		}
 		return calls;
