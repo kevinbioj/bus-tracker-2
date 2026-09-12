@@ -17,7 +17,7 @@ type TripRecord = CsvRecord<
 >;
 type StopTimeRecord = CsvRecord<
 	"trip_id" | "arrival_time" | "departure_time" | "stop_sequence" | "stop_id",
-	"shape_dist_traveled" | "pickup_type" | "drop_off_type"
+	"shape_dist_traveled" | "pickup_type" | "drop_off_type" | "stop_headsign"
 >;
 
 /** Convertit "HH:MM:SS" (HH peut dépasser 24) en secondes depuis minuit du jour 0. */
@@ -141,6 +141,7 @@ export async function importTrips(
 	const departureSecs = new Uint32Array(totalRows);
 	const distanceTraveled = new Float32Array(totalRows);
 	const stopRefs: Stop[] = new Array(totalRows);
+	const stopHeadsigns: (string | undefined)[] = new Array(totalRows);
 
 	// Curseur d'écriture par trip (relatif au trip, pas absolu).
 	const writeCursor = new Uint32Array(totalTrips);
@@ -177,6 +178,7 @@ export async function importTrips(
 				: parseTimeToSecs(stopTimeRecord.departure_time);
 
 		stopRefs[idx] = stop;
+		stopHeadsigns[idx] = stopTimeRecord.stop_headsign || undefined;
 		sequence[idx] = +stopTimeRecord.stop_sequence;
 		flagsBitmask[idx] = (stopTimeRecord.pickup_type === "1" ? 1 : 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
 		arrivalSecs[idx] = aSecs;
@@ -193,6 +195,7 @@ export async function importTrips(
 	}
 	const idxBuf = new Uint32Array(maxCount);
 	const tmpStops: Stop[] = new Array(maxCount);
+	const tmpHeadsigns: (string | undefined)[] = new Array(maxCount);
 	const tmpSeq = new Uint8Array(maxCount);
 	const tmpFlags = new Uint8Array(maxCount);
 	const tmpArr = new Uint32Array(maxCount);
@@ -219,6 +222,7 @@ export async function importTrips(
 		for (let i = 0; i < count; i++) {
 			const src = idxBuf[i]!;
 			tmpStops[i] = stopRefs[src]!;
+			tmpHeadsigns[i] = stopHeadsigns[src];
 			tmpSeq[i] = sequence[src]!;
 			tmpFlags[i] = flagsBitmask[src]!;
 			tmpArr[i] = arrivalSecs[src]!;
@@ -227,6 +231,7 @@ export async function importTrips(
 		}
 		for (let i = 0; i < count; i++) {
 			stopRefs[start + i] = tmpStops[i]!;
+			stopHeadsigns[start + i] = tmpHeadsigns[i];
 			sequence[start + i] = tmpSeq[i]!;
 			flagsBitmask[start + i] = tmpFlags[i]!;
 			arrivalSecs[start + i] = tmpArr[i]!;
@@ -302,6 +307,7 @@ export async function importTrips(
 	placeholderStore.arrivalSecs = arrivalSecs;
 	placeholderStore.departureSecs = departureSecs;
 	placeholderStore.distanceTraveled = distanceTraveled;
+	placeholderStore.stopHeadsigns = stopHeadsigns;
 
 	return { trips, stopTimeStore: placeholderStore };
 }

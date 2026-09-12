@@ -17,6 +17,7 @@ export type JourneyCall = {
 	distanceTraveled?: number;
 	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 	flags: VehicleJourneyCallFlags[];
+	headsign?: string;
 };
 
 export type JourneyPosition = {

@@ -351,6 +351,25 @@ const getScheduledTripShapeCandidates = (
 // 	return true;
 // };
 
+function getCurrentStopHeadsign(journey: Journey, at: Temporal.Instant): string | undefined {
+	let headsign: string | undefined;
+	const nowMs = at.epochMilliseconds;
+
+	for (const call of journey.calls) {
+		if (call.status === "SKIPPED") continue;
+
+		const departureTime = call.expectedDepartureTime ?? call.aimedDepartureTime;
+
+		if (departureTime > nowMs) break;
+
+		if (call.headsign) {
+			headsign = call.headsign;
+		}
+	}
+
+	return headsign;
+}
+
 export async function computeVehicleJourneys(source: Source) {
 	if (source.gtfs === undefined) return { journeys: [], paths: [] };
 
@@ -634,7 +653,10 @@ export async function computeVehicleJourneys(source: Source) {
 								serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
 							) ?? [])
 						: undefined,
-				destination: source.options.getDestination?.(journey, vehiclePosition.vehicle) ?? journey?.trip.headsign,
+				destination:
+					source.options.getDestination?.(journey, vehiclePosition.vehicle) ??
+					(journey !== undefined ? getCurrentStopHeadsign(journey, now) : undefined) ??
+					journey?.trip.headsign,
 				position: {
 					latitude: vehiclePosition.position.latitude,
 					longitude: vehiclePosition.position.longitude,
@@ -722,6 +744,7 @@ export async function computeVehicleJourneys(source: Source) {
 							: "INBOUND",
 					destination:
 						source.options.getDestination?.(candidateJourney, vehicleDescriptor) ??
+						getCurrentStopHeadsign(candidateJourney, now) ??
 						addedTripShapeMatch.candidate.trip.headsign,
 					calls: calls.map((call, index) =>
 						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
@@ -885,7 +908,10 @@ export async function computeVehicleJourneys(source: Source) {
 						textColor: journey.trip.route.textColor,
 					},
 					direction: journey.trip.direction === 0 ? "OUTBOUND" : "INBOUND",
-					destination: source.options.getDestination?.(journey, vehicleDescriptor) ?? journey.trip.headsign,
+					destination:
+						source.options.getDestination?.(journey, vehicleDescriptor) ??
+						getCurrentStopHeadsign(journey, now) ??
+						journey.trip.headsign,
 					calls: calls.map((call, index) =>
 						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
 					),
