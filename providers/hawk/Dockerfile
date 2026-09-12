@@ -1,6 +1,6 @@
 # Build from the repository root: docker build -f providers/hawk/Dockerfile -t bus-tracker-hawk .
 
-FROM node:26.7.0-alpine AS base
+FROM node:26.8.2-alpine AS base
 RUN npm install -g --force corepack@latest
 RUN corepack enable
 

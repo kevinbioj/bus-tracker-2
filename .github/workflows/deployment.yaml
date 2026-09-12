@@ -83,7 +83,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
 
       - name: Log in to the Container registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
@@ -182,7 +182,7 @@ jobs:
           merge-multiple: true
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e
 
       - name: Log in to the Container registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
@@ -221,7 +221,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Deploy stack to the server
-        uses: kitconcept/docker-stack-deploy@1a7a5e778d08cf92bda2ebbd068fe0ca078d09c8
+        uses: kitconcept/docker-stack-deploy@97ba9a7dd7782cf178b42aa6466a95b99216b313
         env:
           deploy_ssh_host: ${{ secrets.DEPLOY_SSH_HOST }}
           deploy_ssh_port: ${{ secrets.DEPLOY_SSH_PORT }}
