@@ -7,7 +7,7 @@ const isTniVehicle = (id) => (id >= 421 && id <= 435) || (id >= 670 && id <= 685
 const sources = [
 	{
 		id: "tcar",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-global.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tcar.zip",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
@@ -19,11 +19,11 @@ const sources = [
 				return trip.route.id.startsWith("TCAR");
 			},
 		},
-		getAheadTime: (journey) => (journey?.trip.route.id === "TCAR:99" ? 5 * 60 : undefined),
-		excludeScheduled: (trip) => {
-			if (/^TCAR:[23]\d\d$/.test(trip.route.id) || trip.route.id === "TCAR:99") return false;
-			return !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id);
-		},
+		getAheadTime: (journey) => (journey?.trip.route.id === "TCAR:99" ? 5 * 60 : 2 * 60),
+		// excludeScheduled: (trip) => {
+		// 	if (/^TCAR:[23]\d\d$/.test(trip.route.id) || trip.route.id === "TCAR:99") return false;
+		// 	return !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id);
+		// },
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
 			if (
