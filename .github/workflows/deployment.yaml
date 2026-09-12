@@ -56,7 +56,6 @@ jobs:
       - name: Copy environment files
         run: |
           echo "${{ secrets.CLIENT_ENV }}" > apps/client/.env
-          echo "${{ secrets.SERVER_ENV }}" > apps/server/.env
 
       - name: Prepare build variables
         run: |
