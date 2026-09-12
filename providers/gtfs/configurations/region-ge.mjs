@@ -1,6 +1,15 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "ardenne",
+		staticResourceHref:
+			"https://transport.data.gouv.fr/resources/80451/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/fluo-tac-ardenne-gtfs-rt?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		getNetworkRef: () => "ARDENNE",
+	},
+	{
 		id: "epinal",
 		staticResourceHref:
 			"https://transport.data.gouv.fr/resources/80461/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
@@ -88,6 +97,13 @@ const sources = [
 			if (vehicle?.label === "newVehicle") return;
 			return vehicle?.label ?? undefined;
 		},
+	},
+	{
+		id: "saint-dizier",
+		staticResourceHref:
+			"https://transport.data.gouv.fr/resources/80477/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "SAINT-DIZIER",
 	},
 	{
 		id: "solea",

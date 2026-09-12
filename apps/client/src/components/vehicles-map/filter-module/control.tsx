@@ -135,7 +135,7 @@ export function FilterModuleControl({
 									>
 										<span
 											className={clsx(
-												"max-w-64 text-base leading-tight pt-px truncate",
+												"max-w-64 text-base leading-tight truncate",
 												filter.line.color !== null && "font-bold px-1",
 											)}
 											title={filter.line.number}
