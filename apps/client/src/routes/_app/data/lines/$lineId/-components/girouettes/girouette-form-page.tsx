@@ -172,7 +172,14 @@ function girouetteDimensions(routeNumber: { text?: string; backgroundColor?: str
 }
 
 function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInput {
-	type PageLine = { font?: AllowedFont; flash?: boolean; scroll?: boolean; inverted?: boolean; spacing?: TextSpacing; text: string };
+	type PageLine = {
+		font?: AllowedFont;
+		flash?: boolean;
+		scroll?: boolean;
+		inverted?: boolean;
+		spacing?: TextSpacing;
+		text: string;
+	};
 
 	const data: GirouetteData = {
 		dimensions: girouetteDimensions({

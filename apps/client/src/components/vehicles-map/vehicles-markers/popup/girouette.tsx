@@ -462,6 +462,8 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 				return (
 					<ScrollingText
 						className="block w-full overflow-hidden whitespace-nowrap text-center"
+						// Remounting on page change restarts the scrolling animation from its beginning.
+						// biome-ignore lint/suspicious/noArrayIndexKey: safe here
 						key={`${pageIndex}-${lineIndex}`}
 						flash={line.flash}
 						onDurationChange={(duration) => handleDurationChange(lineIndex, duration)}
