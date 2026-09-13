@@ -265,12 +265,12 @@ function ScrollingText({
 	// with the scrolling animation rather than replacing it.
 	const flashStyle: CSSProperties | undefined = flash ? { ...style, animation: flashAnimation } : style;
 
-	// A text that doesn't scroll is left to the centering of its parent, which
-	// also keeps an overflowing one centered on the pane.
 	if (!scroll) {
 		return (
-			// biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected
-			<span className={className} dangerouslySetInnerHTML={html} style={flashStyle} />
+			<span className={cn("flex w-full justify-center", className)} style={flashStyle}>
+				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: HTML-escaped by processText, only <br> tags are injected */}
+				<span dangerouslySetInnerHTML={html} />
+			</span>
 		);
 	}
 
@@ -461,7 +461,7 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 				const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 				return (
 					<ScrollingText
-						className="block w-full overflow-hidden whitespace-nowrap text-center"
+						className="overflow-hidden whitespace-nowrap"
 						// Remounting on page change restarts the scrolling animation from its beginning.
 						// biome-ignore lint/suspicious/noArrayIndexKey: safe here
 						key={`${pageIndex}-${lineIndex}`}
