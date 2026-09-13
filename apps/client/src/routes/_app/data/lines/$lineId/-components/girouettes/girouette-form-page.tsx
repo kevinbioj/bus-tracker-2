@@ -61,6 +61,7 @@ const lineSchema = z.object({
 	fontVariant: z.string(),
 	flash: z.boolean(),
 	scroll: z.boolean(),
+	inverted: z.boolean(),
 	spacing: z.number().int().min(0).max(10).nullable(),
 });
 
@@ -92,6 +93,7 @@ const defaultLine = (fontVariant = DEFAULT_FONT_VARIANT): FormValues["pages"][nu
 	fontVariant,
 	flash: false,
 	scroll: false,
+	inverted: false,
 	spacing: null,
 });
 
@@ -150,6 +152,7 @@ const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => 
 								fontVariant: line.font ?? DEFAULT_FONT_VARIANT,
 								flash: line.flash ?? false,
 								scroll: line.scroll ?? false,
+								inverted: line.inverted ?? false,
 								spacing: line.spacing ?? null,
 							})),
 						};
@@ -169,7 +172,14 @@ function girouetteDimensions(routeNumber: { text?: string; backgroundColor?: str
 }
 
 function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInput {
-	type PageLine = { font?: AllowedFont; flash?: boolean; scroll?: boolean; spacing?: TextSpacing; text: string };
+	type PageLine = {
+		font?: AllowedFont;
+		flash?: boolean;
+		scroll?: boolean;
+		inverted?: boolean;
+		spacing?: TextSpacing;
+		text: string;
+	};
 
 	const data: GirouetteData = {
 		dimensions: girouetteDimensions({
@@ -194,6 +204,7 @@ function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInpu
 				font: line.fontVariant as AllowedFont,
 				flash: line.flash || undefined,
 				scroll: line.scroll || undefined,
+				inverted: line.inverted || undefined,
 				spacing: (line.spacing ?? undefined) as TextSpacing | undefined,
 			}));
 			return lines.length === 2 ? (lines as unknown as [PageLine, PageLine]) : lines[0];
@@ -364,6 +375,7 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 				font: (line?.fontVariant as AllowedFont) ?? DEFAULT_FONT_VARIANT,
 				flash: line?.flash || undefined,
 				scroll: line?.scroll || undefined,
+				inverted: line?.inverted || undefined,
 				spacing: line?.spacing ?? undefined,
 			}));
 			return lines.length === 2
@@ -896,6 +908,12 @@ function PageFields({
 										name={`pages.${pageIndex}.lines.${lineIndex}.flash`}
 										icon={<ZapIcon />}
 										label={m.line_girouettes_form_flash_label()}
+									/>
+									<ToggleField
+										form={form}
+										name={`pages.${pageIndex}.lines.${lineIndex}.inverted`}
+										icon={<ArrowLeftRightIcon />}
+										label="Inverser les couleurs"
 									/>
 								</div>
 								{/* Sits on the controls row rather than above it, so that the lines

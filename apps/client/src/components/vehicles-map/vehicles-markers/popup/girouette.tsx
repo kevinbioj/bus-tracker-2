@@ -119,6 +119,7 @@ type PageLine = {
 	font?: Font;
 	flash?: boolean;
 	scroll?: boolean;
+	inverted?: boolean;
 	spacing?: number;
 	text: string;
 };
@@ -460,7 +461,7 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 				const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 				return (
 					<ScrollingText
-						className="overflow-hidden whitespace-nowrap"
+						className="block w-full overflow-hidden whitespace-nowrap text-center"
 						// Remounting on page change restarts the scrolling animation from its beginning.
 						// biome-ignore lint/suspicious/noArrayIndexKey: safe here
 						key={`${pageIndex}-${lineIndex}`}
@@ -470,12 +471,14 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 						scroll={line.scroll}
 						text={line.text}
 						style={{
-							//- Font, placement & spacing
 							fontFamily: `"${fontFamily}"`,
 							fontSize: `${virtualHeight}px`,
 							letterSpacing: `${spacing}px`,
 							lineHeight: `${virtualHeight}px`,
 							paddingLeft: `${spacing}px`,
+
+							backgroundColor: line.inverted ? "#FFFFFF" : paneBgColor,
+							color: line.inverted ? "#000000" : ledColors[ledColor],
 						}}
 					/>
 				);
