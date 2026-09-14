@@ -94,6 +94,8 @@ export const vehicleJourneySchema = type({
 	"operatorRef?": "string",
 	"vehicleRef?": "string",
 	"hasRealVehicle?": "boolean",
+	// Code mission (Transilien notamment), affiché en lieu et place du numéro de véhicule.
+	"missionCode?": "string",
 	"serviceDate?": "string.date",
 	updatedAt: "string.date.iso",
 });

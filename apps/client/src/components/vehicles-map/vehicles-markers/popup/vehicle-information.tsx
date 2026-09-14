@@ -210,6 +210,11 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 		/>
 	) : undefined;
 
+	// En principe exclusif du numéro de véhicule ; s'ils coexistent, le code mission vient après.
+	const missionCodeChip = journey.missionCode ? (
+		<InformationChip className={clsx("font-mono", neutralChipClasses)} label={journey.missionCode} />
+	) : undefined;
+
 	const positionInformation = useMemo(() => {
 		if (journey.position.type === "GPS") return positionIconDetails.GPS;
 		return journey.calls?.some((call) => call.expectedTime !== undefined)
@@ -473,6 +478,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 							) : (
 								vehicleChip
 							))}
+						{missionCodeChip}
 					</>
 				}
 			/>

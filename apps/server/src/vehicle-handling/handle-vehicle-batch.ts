@@ -57,6 +57,7 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 				networkId: network.id,
 				operatorId: undefined,
 				vehicle: undefined,
+				missionCode: vehicleJourney.missionCode,
 				serviceDate: vehicleJourney.serviceDate,
 				updatedAt: vehicleJourney.updatedAt,
 			};

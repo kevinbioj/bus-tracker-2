@@ -130,9 +130,14 @@ const sources = [
 		getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
 		getNetworkRef: (journey) => journey?.trip.route.agency.id,
 		getVehicleRef: () => undefined,
+		getMissionCode: (journey) => {
+			if (journey !== undefined && ["IDFM:71", "IDFM:1046"].includes(journey.trip.route.agency.id)) {
+				return journey.trip.headsign;
+			}
+		},
 		getDestination: (journey) => {
-			if (journey !== undefined && ["IDFM:71", "IDFM:1046"].includes(journey?.trip.route.agency.id)) {
-				return journey?.trip.headsign;
+			if (journey !== undefined && ["IDFM:71", "IDFM:1046"].includes(journey.trip.route.agency.id)) {
+				return journey.calls.at(-1)?.stop.name;
 			}
 
 			return journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name;

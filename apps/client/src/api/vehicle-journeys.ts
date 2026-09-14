@@ -61,6 +61,7 @@ export type DisposeableVehicleJourney = {
 		airConditioning?: VehicleAirConditioningStatus;
 		usbPorts?: boolean;
 	};
+	missionCode?: string;
 	serviceDate?: string;
 	girouette?: GirouetteData;
 	updatedAt: string;

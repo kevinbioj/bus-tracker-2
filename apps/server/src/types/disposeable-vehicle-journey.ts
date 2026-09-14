@@ -29,6 +29,7 @@ export type DisposeableVehicleJourney = {
 	networkId: number;
 	operatorId?: number;
 	vehicle?: { id?: number; number: string };
+	missionCode?: string;
 	serviceDate?: string;
 	updatedAt: string;
 };

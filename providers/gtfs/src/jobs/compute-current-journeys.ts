@@ -657,6 +657,7 @@ export async function computeVehicleJourneys(source: Source) {
 					source.options.getDestination?.(journey, vehiclePosition.vehicle) ??
 					(journey !== undefined ? getCurrentStopHeadsign(journey, now) : undefined) ??
 					journey?.trip.headsign,
+				missionCode: source.options.getMissionCode?.(journey, vehiclePosition.vehicle) ?? undefined,
 				position: {
 					latitude: vehiclePosition.position.latitude,
 					longitude: vehiclePosition.position.longitude,
@@ -746,6 +747,7 @@ export async function computeVehicleJourneys(source: Source) {
 						source.options.getDestination?.(candidateJourney, vehicleDescriptor) ??
 						getCurrentStopHeadsign(candidateJourney, now) ??
 						addedTripShapeMatch.candidate.trip.headsign,
+					missionCode: source.options.getMissionCode?.(candidateJourney, vehicleDescriptor) ?? undefined,
 					calls: calls.map((call, index) =>
 						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
 					),
@@ -807,6 +809,7 @@ export async function computeVehicleJourneys(source: Source) {
 						? { direction: tripUpdate.trip.directionId === 0 ? ("OUTBOUND" as const) : ("INBOUND" as const) }
 						: {}),
 					destination: source.options.getDestination?.(undefined, vehicleDescriptor),
+					missionCode: source.options.getMissionCode?.(undefined, vehicleDescriptor) ?? undefined,
 					calls: activeCalls.map((call, index) =>
 						serializeCall(call, index === activeCalls.length - 1, source, networkRef, timeZone),
 					),
@@ -918,6 +921,7 @@ export async function computeVehicleJourneys(source: Source) {
 						source.options.getDestination?.(journey, vehicleDescriptor) ??
 						getCurrentStopHeadsign(journey, now) ??
 						journey.trip.headsign,
+					missionCode: source.options.getMissionCode?.(journey, vehicleDescriptor) ?? undefined,
 					calls: calls.map((call, index) =>
 						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
 					),
