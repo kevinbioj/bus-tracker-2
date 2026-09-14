@@ -99,6 +99,8 @@ export class Journey {
 	lastVehiclePositionAtMs: number | undefined;
 	/** Instant (epoch ms) du dernier cycle ayant appliqué un TripUpdate à cette course. */
 	lastTripUpdateAtMs: number | undefined;
+	/** Clé sous laquelle la course a été publiée pour la dernière fois depuis son horaire (théorique ou TripUpdate). */
+	lastPublishedKey: string | undefined;
 
 	constructor(
 		readonly id: string,

@@ -393,6 +393,26 @@ describe("computeVehicleJourneys (arrivée au terminus)", () => {
 		// théorique afficherait deux marqueurs pour le même bus.
 		expect((await cycleAt(source, "08:20:15")).journeys).toHaveLength(0);
 	});
+
+	it("ne republie pas sous une autre clé une course dont le véhicule est parti au terminus", async () => {
+		const source = scheduledSource();
+		// Le descripteur véhicule expire selon l'horloge système.
+		vi.spyOn(Date, "now").mockReturnValue(Temporal.Instant.from("2026-05-18T08:20:15Z").epochMilliseconds);
+		const tripUpdate = (time: string, withVehicle: boolean): TripUpdate => ({
+			timestamp: epochSeconds(`2026-05-18T${time}Z`),
+			trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18" },
+			vehicle: withVehicle ? { id: "vehicle:1" } : undefined,
+			stopTimeUpdate: [{ stopId: "C", stopSequence: 3, arrival: { delay: 0 } }],
+		});
+
+		const tracked = await cycleAt(source, "08:19:45", { tripUpdates: [tripUpdate("08:19:45", true)] });
+		expect(tracked.journeys.map((journey) => journey.id)).toEqual(["network::VehicleTracking:vehicle:1"]);
+
+		// Le TripUpdate reste dans le flux sans descripteur : le véhicule a pris sa course suivante.
+		expect(
+			(await cycleAt(source, "08:20:15", { tripUpdates: [tripUpdate("08:20:15", false)] })).journeys,
+		).toHaveLength(0);
+	});
 });
 
 describe("computeVehicleJourneys (expiration des TripUpdate disparus)", () => {
