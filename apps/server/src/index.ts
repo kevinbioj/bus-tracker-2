@@ -1,7 +1,7 @@
 import { Worker } from "node:worker_threads";
 import { DATA_SOURCES_CHANNEL } from "@bus-tracker/contracts";
+import { createRedisClient } from "@bus-tracker/redis";
 import { serve } from "@hono/node-server";
-import { createClient } from "redis";
 
 import { migrateDatabase } from "./core/database/migrate.js";
 import { parseDataSourceManifests, upsertDataSources } from "./core/services/data-source-service.js";
@@ -63,43 +63,36 @@ function startVehicleWorker() {
 
 startVehicleWorker();
 
+// La connexion à Redis est établie en arrière-plan : l'API reste disponible pendant une coupure.
 console.log("► Connecting to Redis.");
-export const redis = createClient({
-	socket: process.env.REDIS_SOCK
-		? {
-				path: process.env.REDIS_SOCK,
-				tls: process.env.REDIS_TLS === "true",
-			}
-		: undefined,
-	url: process.env.REDIS_SOCK ? undefined : process.env.REDIS_URL,
-});
-await redis.connect();
-
-redis.on("error", (error) => {
-	console.error("✘ An error occurred with Redis:", error);
+export const redis = createRedisClient({ name: "server" });
+redis.connect().catch((error) => {
+	console.error("✘ Failed to connect to Redis:", error);
 });
 
 // Les providers annoncent périodiquement les flux qu'ils consomment : on les persiste pour la
 // page d'attributions. Le volume est marginal, inutile de passer par le worker véhicules.
-const dataSourcesSubscriber = redis.duplicate();
-
-dataSourcesSubscriber.on("error", (error) => {
-	console.error("✘ An error occurred with Redis data sources subscriber:", error);
-});
-
-await dataSourcesSubscriber.connect();
-await dataSourcesSubscriber.subscribe(DATA_SOURCES_CHANNEL, (message) => {
-	try {
-		const manifests = parseDataSourceManifests(JSON.parse(message));
-		if (manifests.length === 0) return;
-		void upsertDataSources(manifests).catch((error) => {
-			console.error("✘ Failed to persist data sources:", error);
-		});
-	} catch (error) {
-		console.error("✘ Failed to handle a data sources message:", error);
-	}
-});
-console.log("► Subscribed to the data sources channel.");
+// Après une reconnexion, node-redis rétablit lui-même l'abonnement.
+const dataSourcesSubscriber = createRedisClient({ name: "data sources subscriber" });
+dataSourcesSubscriber
+	.connect()
+	.then(() =>
+		dataSourcesSubscriber.subscribe(DATA_SOURCES_CHANNEL, (message) => {
+			try {
+				const manifests = parseDataSourceManifests(JSON.parse(message));
+				if (manifests.length === 0) return;
+				void upsertDataSources(manifests).catch((error) => {
+					console.error("✘ Failed to persist data sources:", error);
+				});
+			} catch (error) {
+				console.error("✘ Failed to handle a data sources message:", error);
+			}
+		}),
+	)
+	.then(() => console.log("► Subscribed to the data sources channel."))
+	.catch((error) => {
+		console.error("✘ Failed to subscribe to the data sources channel:", error);
+	});
 
 console.log("► Listening on port %d.\n", port);
 serve({

@@ -1,6 +1,6 @@
 import { setTimeout } from "node:timers/promises";
 import { captureException, initMonitoring } from "@bus-tracker/monitoring";
-import { createClient } from "redis";
+import { createRedisClient } from "@bus-tracker/redis";
 
 import { fetchMonitoredLines } from "./jobs/fetch-monitored-lines.js";
 import { fetchMonitoredVehicles } from "./jobs/fetch-monitored-vehicles.js";
@@ -8,15 +8,7 @@ import { fetchMonitoredVehicles } from "./jobs/fetch-monitored-vehicles.js";
 initMonitoring("processor-twisto");
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
-const redis = createClient({
-	socket: process.env.REDIS_SOCK
-		? {
-				path: process.env.REDIS_SOCK,
-				tls: process.env.REDIS_TLS === "true",
-			}
-		: undefined,
-	url: process.env.REDIS_SOCK ? undefined : (process.env.REDIS_URL ?? "redis://127.0.0.1:6379"),
-});
+const redis = createRedisClient();
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
@@ -44,9 +36,20 @@ while (true) {
 		}
 	}
 
+	if (!redis.isReady) {
+		console.warn("%s ✘ Redis is unavailable, skipping cycle.", Temporal.Now.instant());
+		await setTimeout(60_000);
+		continue;
+	}
+
 	console.log("%s ► Fetching active vehicle journeys...", Temporal.Now.instant());
 	const vehicleJourneys = await fetchMonitoredVehicles(monitoredLines);
-	await redis.publish(channel, JSON.stringify(vehicleJourneys));
-	console.log("%s ✓ Sent %d vehicle journeys.", Temporal.Now.instant(), vehicleJourneys.length);
+	try {
+		await redis.publish(channel, JSON.stringify(vehicleJourneys));
+		console.log("%s ✓ Sent %d vehicle journeys.", Temporal.Now.instant(), vehicleJourneys.length);
+	} catch (cause) {
+		console.error("%s ✘ Failed to publish vehicle journeys", Temporal.Now.instant(), cause);
+		captureException(cause);
+	}
 	await setTimeout(60_000);
 }

@@ -1,7 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
-import { initMonitoring } from "@bus-tracker/monitoring";
-import { createClient } from "redis";
+import { captureException, initMonitoring } from "@bus-tracker/monitoring";
+import { createRedisClient } from "@bus-tracker/redis";
 
 if (process.argv.length < 3) {
 	console.error("Usage: flowly <flowly id> <network ref>");
@@ -9,11 +9,7 @@ if (process.argv.length < 3) {
 }
 
 console.log("► Connecting to Redis.");
-const redis = createClient({
-	url: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
-	username: process.env.REDIS_USERNAME,
-	password: process.env.REDIS_PASSWORD,
-});
+const redis = createRedisClient();
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
 console.log(`► Connected! Journeys will be published into '${channel}'.`);
@@ -24,6 +20,12 @@ const [, , flowlyId, networkRef] = process.argv;
 initMonitoring(`processor-flowly:${flowlyId}`);
 
 while (true) {
+	if (!redis.isReady) {
+		console.warn("✘ Redis is unavailable, skipping cycle.");
+		await setTimeout(30_000);
+		continue;
+	}
+
 	console.log("► Fetching vehicles from Flowly...");
 
 	const response = await fetch(`https://${flowlyId}.flowly.re/Portal/MapDevices.aspx`);
@@ -96,7 +98,12 @@ while (true) {
 		} satisfies VehicleJourney;
 	});
 
-	await redis.publish(channel, JSON.stringify(vehicleJourneys));
-	console.log(`✓ Published ${vehicleJourneys.length} vehicle journeys`);
+	try {
+		await redis.publish(channel, JSON.stringify(vehicleJourneys));
+		console.log(`✓ Published ${vehicleJourneys.length} vehicle journeys`);
+	} catch (e) {
+		console.error("✘ Failed to publish vehicle journeys:", e);
+		captureException(e);
+	}
 	await setTimeout(30_000);
 }

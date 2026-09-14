@@ -203,6 +203,8 @@ const getPathParams = z.object({
 hono.get("/paths/:ref", createParamValidator(getPathParams), async (c) => {
 	const { ref } = c.req.valid("param");
 
+	if (!redis.isReady) return c.json({ error: "Paths are temporarily unavailable." }, 503);
+
 	const rawPath = await redis.get(ref);
 	if (rawPath === null) {
 		c.status(404);

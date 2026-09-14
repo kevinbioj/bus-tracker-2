@@ -1,0 +1,26 @@
+{
+	"name": "@bus-tracker/redis",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./dist/src/index.d.ts",
+			"default": "./dist/src/index.js"
+		}
+	},
+	"private": true,
+	"scripts": {
+		"build": "tsc",
+		"dev": "tsc --watch"
+	},
+	"devDependencies": {
+		"@types/node": "^26.5.1",
+		"typescript": "^7.0.2"
+	},
+	"peerDependencies": {
+		"@types/node": "*"
+	},
+	"dependencies": {
+		"@bus-tracker/monitoring": "workspace:*",
+		"redis": "^6.2.1"
+	}
+}

@@ -350,6 +350,9 @@ importers:
       '@bus-tracker/contracts':
         specifier: workspace:*
         version: link:../../libraries/contracts
+      '@bus-tracker/redis':
+        specifier: workspace:*
+        version: link:../../libraries/redis
       '@hono/node-server':
         specifier: ^2.1.1
         version: 2.1.1(hono@4.13.7)
@@ -365,9 +368,6 @@ importers:
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
-      redis:
-        specifier: ^6.2.1
-        version: 6.2.1
       ts-pattern:
         specifier: ^5.9.0
         version: 5.9.0
@@ -414,14 +414,30 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
+  libraries/redis:
+    dependencies:
+      '@bus-tracker/monitoring':
+        specifier: workspace:*
+        version: link:../monitoring
+      redis:
+        specifier: ^6.2.1
+        version: 6.2.1
+    devDependencies:
+      '@types/node':
+        specifier: ^26.5.1
+        version: 26.5.1
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+
   providers/flowly:
     dependencies:
       '@bus-tracker/monitoring':
         specifier: workspace:*
         version: link:../../libraries/monitoring
-      redis:
-        specifier: ^6.2.1
-        version: 6.2.1
+      '@bus-tracker/redis':
+        specifier: workspace:*
+        version: link:../../libraries/redis
     devDependencies:
       '@bus-tracker/contracts':
         specifier: workspace:*
@@ -444,6 +460,9 @@ importers:
       '@bus-tracker/monitoring':
         specifier: workspace:*
         version: link:../../libraries/monitoring
+      '@bus-tracker/redis':
+        specifier: workspace:*
+        version: link:../../libraries/redis
       '@xhmikosr/decompress':
         specifier: ^11.1.4
         version: 11.1.4
@@ -499,12 +518,12 @@ importers:
       '@bus-tracker/monitoring':
         specifier: workspace:*
         version: link:../../libraries/monitoring
+      '@bus-tracker/redis':
+        specifier: workspace:*
+        version: link:../../libraries/redis
       dayjs:
         specifier: ^1.11.23
         version: 1.11.23
-      redis:
-        specifier: ^6.2.1
-        version: 6.2.1
     devDependencies:
       '@bus-tracker/contracts':
         specifier: workspace:*
@@ -524,9 +543,9 @@ importers:
       '@bus-tracker/monitoring':
         specifier: workspace:*
         version: link:../../libraries/monitoring
-      redis:
-        specifier: ^6.2.1
-        version: 6.2.1
+      '@bus-tracker/redis':
+        specifier: workspace:*
+        version: link:../../libraries/redis
     devDependencies:
       '@bus-tracker/contracts':
         specifier: workspace:*
@@ -546,9 +565,9 @@ importers:
       '@bus-tracker/monitoring':
         specifier: workspace:*
         version: link:../../libraries/monitoring
-      redis:
-        specifier: ^6.2.1
-        version: 6.2.1
+      '@bus-tracker/redis':
+        specifier: workspace:*
+        version: link:../../libraries/redis
       ts-pattern:
         specifier: ^5.9.0
         version: 5.9.0
@@ -571,6 +590,9 @@ importers:
       '@bus-tracker/monitoring':
         specifier: workspace:*
         version: link:../../libraries/monitoring
+      '@bus-tracker/redis':
+        specifier: workspace:*
+        version: link:../../libraries/redis
       croner:
         specifier: ^10.0.1
         version: 10.0.1
@@ -580,9 +602,6 @@ importers:
       ky:
         specifier: ^2.1.0
         version: 2.1.0
-      redis:
-        specifier: ^6.2.1
-        version: 6.2.1
     devDependencies:
       '@bus-tracker/contracts':
         specifier: workspace:*

@@ -16,6 +16,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm fetch
 COPY libraries/contracts/ ./libraries/contracts/
 COPY libraries/monitoring/ ./libraries/monitoring/
+COPY libraries/redis/ ./libraries/redis/
 COPY providers/flowly/ ./providers/flowly/
 RUN pnpm install --offline --filter "@bus-tracker/processor-flowly..."
 

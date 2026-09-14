@@ -2,10 +2,10 @@ import "dotenv";
 
 import { setTimeout } from "node:timers/promises";
 import { captureException, initMonitoring, shutdownMonitoring } from "@bus-tracker/monitoring";
+import { createRedisClient } from "@bus-tracker/redis";
 import { Cron } from "croner";
 import DraftLog from "draftlog";
 import pLimit from "p-limit";
-import { createClient } from "redis";
 
 import { loadConfiguration } from "./configuration/load-configuration.js";
 import { computeVehicleJourneys } from "./jobs/compute-current-journeys.js";
@@ -30,14 +30,12 @@ const configuration = await loadConfiguration(configurationPath);
 initMonitoring(`processor-gtfs:${configuration.id}`);
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
-const redis = createClient({
-	socket: process.env.REDIS_SOCK
-		? {
-				path: process.env.REDIS_SOCK,
-				tls: process.env.REDIS_TLS === "true",
-			}
-		: undefined,
-	url: process.env.REDIS_SOCK ? undefined : (process.env.REDIS_URL ?? "redis://127.0.0.1:6379"),
+// Après une coupure, Redis a pu perdre les tracés et l'inventaire : ils sont republiés au cycle suivant.
+let needsResync = false;
+const redis = createRedisClient({
+	onReconnect: () => {
+		needsResync = true;
+	},
 });
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 const linePathTtlSeconds = 172_800;
@@ -58,14 +56,32 @@ while (true) {
 
 	if (Date.now() - lastUpdateAt > 600_000) {
 		const updatedSources = await updateResources(configuration.sources);
-		await publishLinePaths(updatedSources);
-		await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
+		if (redis.isReady) {
+			await publishLinePaths(updatedSources);
+			await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
+		} else {
+			// Les tracés des sources mises à jour seront republiés au retour de Redis.
+			needsResync = true;
+		}
 		lastUpdateAt = Date.now();
 	}
 
 	if (Date.now() - lastSweepAt > 300_000) {
 		sweepJourneys(configuration.sources);
 		lastSweepAt = Date.now();
+	}
+
+	// Inutile de calculer des courses qui ne pourraient pas être publiées.
+	if (!redis.isReady) {
+		console.warn("%s ✘ Redis is unavailable, skipping computation.", Temporal.Now.instant());
+		await setTimeout(configuration.computeDelayMs);
+		continue;
+	}
+
+	if (needsResync) {
+		needsResync = false;
+		await publishLinePaths(configuration.sources);
+		await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
 	}
 
 	const startedAt = Date.now();
@@ -162,10 +178,16 @@ async function computeCurrentJourneys() {
 }
 
 async function publishLinePaths(sources: typeof configuration.sources) {
-	for (const source of sources) {
-		for (const [ref, path] of source.linePaths) {
-			await redis.set(ref, JSON.stringify(path), { EX: linePathTtlSeconds });
+	try {
+		for (const source of sources) {
+			for (const [ref, path] of source.linePaths) {
+				await redis.set(ref, JSON.stringify(path), { EX: linePathTtlSeconds });
+			}
 		}
+	} catch (e) {
+		console.error("Failed to publish line paths", e);
+		captureException(e);
+		needsResync = true;
 	}
 }
 

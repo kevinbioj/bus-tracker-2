@@ -21,6 +21,7 @@
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
 		"@bus-tracker/monitoring": "workspace:*",
+		"@bus-tracker/redis": "workspace:*",
 		"@xhmikosr/decompress": "^11.1.4",
 		"croner": "^10.0.1",
 		"dotenv": "^17.4.2",

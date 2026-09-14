@@ -3,6 +3,7 @@ packages:
   - apps/server
   - libraries/contracts
   - libraries/monitoring
+  - libraries/redis
   - providers/idelis
   - providers/flowly
   - providers/gtfs

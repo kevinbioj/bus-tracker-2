@@ -18,9 +18,9 @@
 	},
 	"dependencies": {
 		"@bus-tracker/monitoring": "workspace:*",
+		"@bus-tracker/redis": "workspace:*",
 		"croner": "^10.0.1",
 		"fast-xml-parser": "^5.11.1",
-		"ky": "^2.1.0",
-		"redis": "^6.2.1"
+		"ky": "^2.1.0"
 	}
 }

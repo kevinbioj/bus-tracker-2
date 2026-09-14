@@ -18,7 +18,7 @@
 	},
 	"dependencies": {
 		"@bus-tracker/monitoring": "workspace:*",
-		"redis": "^6.2.1",
+		"@bus-tracker/redis": "workspace:*",
 		"ts-pattern": "^5.9.0"
 	}
 }

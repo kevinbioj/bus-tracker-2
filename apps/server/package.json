@@ -19,12 +19,12 @@
 	},
 	"dependencies": {
 		"@bus-tracker/contracts": "workspace:*",
+		"@bus-tracker/redis": "workspace:*",
 		"@hono/node-server": "^2.1.1",
 		"arktype": "^2.2.3",
 		"drizzle-orm": "^0.45.2",
 		"hono": "^4.13.7",
 		"postgres": "^3.4.9",
-		"redis": "^6.2.1",
 		"ts-pattern": "^5.9.0",
 		"zod": "^4.6.4"
 	}

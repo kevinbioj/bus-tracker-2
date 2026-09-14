@@ -116,6 +116,8 @@ hono.get("/lines/:id/path", createParamValidator(getLineByIdParamSchema), async 
 	const refs = line.references ?? [];
 	if (refs.length === 0) return c.json({ error: `No path was found for line '${id}'.` }, 404);
 
+	if (!redis.isReady) return c.json({ error: "Paths are temporarily unavailable." }, 503);
+
 	const redisKeys = refs.map((ref) => `${ref}:LinePath`);
 	const rawPaths = await redis.mGet(redisKeys);
 	const encodedSegments = new Set<string>();

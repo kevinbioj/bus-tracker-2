@@ -1,11 +1,11 @@
 import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
-import { initMonitoring } from "@bus-tracker/monitoring";
+import { captureException, initMonitoring } from "@bus-tracker/monitoring";
+import { createRedisClient } from "@bus-tracker/redis";
 import dayjs from "dayjs";
 import customParseFormatPlugin from "dayjs/plugin/customParseFormat.js";
 import timezonePlugin from "dayjs/plugin/timezone.js";
 import utcPlugin from "dayjs/plugin/utc.js";
-import { createClient } from "redis";
 
 import type { Vehicle } from "./vehicle.js";
 
@@ -26,21 +26,19 @@ const lastLocRegex = /(?:{LastLoc}:|Dernière position:)\s*([\d]{2}\/[\d]{2}\/[\
 initMonitoring(`processor-hawk:${HAWK_ID}`);
 
 console.log("► Connecting to Redis.");
-const redis = createClient({
-	socket: process.env.REDIS_SOCK
-		? {
-				path: process.env.REDIS_SOCK,
-				tls: process.env.REDIS_TLS === "true",
-			}
-		: undefined,
-	url: process.env.REDIS_SOCK ? undefined : (process.env.REDIS_URL ?? "redis://127.0.0.1:6379"),
-});
+const redis = createRedisClient();
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
 console.log(`► Connected! Journeys will be published into '${channel}'.`);
 console.log();
 
 while (true) {
+	if (!redis.isReady) {
+		console.warn("✘ Redis is unavailable, skipping cycle.");
+		await setTimeout(30_000);
+		continue;
+	}
+
 	console.log(`► Fetching vehicles from Hawk <${HAWK_ID}>...`);
 	const response = await fetch(
 		`https://hawk.hanoverdisplays.com/${HAWK_ID}/api/vehicles/poi?info=${INFO_TOKEN}&isSAEIVMode=true&culture=fr-FR&hasOperator=false&hasTransporter=false&isUsingMetricSystem=true&hasCapacity=false&userId=1&driverInfo=1&ShowAssignedOnly=false&assignment_state_exists=false&vehicle_phone_number_exists=true`,
@@ -104,8 +102,13 @@ while (true) {
 		} satisfies VehicleJourney;
 	});
 
-	await redis.publish("journeys", JSON.stringify(vehicleJourneys));
-	console.log(`✓ Published ${vehicleJourneys.length} vehicle journeys`);
+	try {
+		await redis.publish("journeys", JSON.stringify(vehicleJourneys));
+		console.log(`✓ Published ${vehicleJourneys.length} vehicle journeys`);
+	} catch (e) {
+		console.error("✘ Failed to publish vehicle journeys:", e);
+		captureException(e);
+	}
 	console.log();
 	await setTimeout(30_000);
 }

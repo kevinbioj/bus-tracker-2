@@ -1,7 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
 import { initMonitoring } from "@bus-tracker/monitoring";
-import { createClient } from "redis";
+import { createRedisClient } from "@bus-tracker/redis";
 import { match, P } from "ts-pattern";
 
 import { REFRESH_INTERVAL } from "./config.js";
@@ -10,15 +10,7 @@ import { getLines, getVehicles, type Line } from "./data.js";
 initMonitoring("processor-rtm");
 
 console.log("► Connecting to Redis.");
-const redis = createClient({
-	socket: process.env.REDIS_SOCK
-		? {
-				path: process.env.REDIS_SOCK,
-				tls: process.env.REDIS_TLS === "true",
-			}
-		: undefined,
-	url: process.env.REDIS_SOCK ? undefined : (process.env.REDIS_URL ?? "redis://127.0.0.1:6379"),
-});
+const redis = createRedisClient();
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
 console.log(`► Connected! Journeys will be published into '${channel}'.`);
@@ -46,6 +38,13 @@ while (true) {
 			await setTimeout(waitingTime);
 		}
 
+		continue;
+	}
+
+	if (!redis.isReady) {
+		const waitingTime = Math.max(10_000, REFRESH_INTERVAL - (Date.now() - then));
+		console.warn(`✘ Redis is unavailable, skipping cycle! Waiting for ${waitingTime}ms.`);
+		await setTimeout(waitingTime);
 		continue;
 	}
 

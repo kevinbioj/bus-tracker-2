@@ -1,33 +1,14 @@
 import { parentPort } from "node:worker_threads";
 import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
+import { createRedisClient } from "@bus-tracker/redis";
 import { ArkErrors } from "arktype";
-import { createClient } from "redis";
 
 import { handleVehicleBatch } from "./handle-vehicle-batch.js";
 
-export const redis = createClient({
-	socket: process.env.REDIS_SOCK
-		? {
-				path: process.env.REDIS_SOCK,
-				tls: process.env.REDIS_TLS === "true",
-			}
-		: undefined,
-	url: process.env.REDIS_SOCK ? undefined : process.env.REDIS_URL,
-});
-
-const redisSubscriber = redis.duplicate();
-
-redis.on("error", (error) => {
-	console.error("✘ [Worker] An error occurred with Redis-client:", error);
-});
-
-redisSubscriber.on("error", (error) => {
-	console.error("✘ [Worker] An error occurred with Redis-subscriber:", error);
-});
+const redisSubscriber = createRedisClient({ name: "worker subscriber" });
 
 async function start() {
 	console.log("► [Worker] Connecting to Redis.");
-	await redis.connect();
 	await redisSubscriber.connect();
 
 	console.log("► [Worker] Subscribing to journeys channel.");

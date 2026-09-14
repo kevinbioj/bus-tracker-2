@@ -1,7 +1,7 @@
 import { setTimeout } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
 import { initMonitoring } from "@bus-tracker/monitoring";
-import { createClient } from "redis";
+import { createRedisClient } from "@bus-tracker/redis";
 
 import { fetchVehicles } from "./fetch-vehicles.js";
 import { lines } from "./lines.js";
@@ -9,15 +9,7 @@ import { lines } from "./lines.js";
 initMonitoring("processor-idelis");
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
-const redis = createClient({
-	socket: process.env.REDIS_SOCK
-		? {
-				path: process.env.REDIS_SOCK,
-				tls: process.env.REDIS_TLS === "true",
-			}
-		: undefined,
-	url: process.env.REDIS_SOCK ? undefined : (process.env.REDIS_URL ?? "redis://127.0.0.1:6379"),
-});
+const redis = createRedisClient();
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 await redis.connect();
 console.log(`► Connected! Journeys will be published into '${channel}'.`);
@@ -25,6 +17,12 @@ console.log();
 
 while (true) {
 	for (const line of lines) {
+		if (!redis.isReady) {
+			console.warn("✘ Redis is unavailable, skipping cycle.");
+			await setTimeout(30_000);
+			break;
+		}
+
 		const then = Date.now();
 		console.log(`► Fetching vehicles for line '${line.id}'...`);
 
