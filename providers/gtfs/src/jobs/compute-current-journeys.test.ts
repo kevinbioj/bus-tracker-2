@@ -409,9 +409,9 @@ describe("computeVehicleJourneys (arrivée au terminus)", () => {
 		expect(tracked.journeys.map((journey) => journey.id)).toEqual(["network::VehicleTracking:vehicle:1"]);
 
 		// Le TripUpdate reste dans le flux sans descripteur : le véhicule a pris sa course suivante.
-		expect(
-			(await cycleAt(source, "08:20:15", { tripUpdates: [tripUpdate("08:20:15", false)] })).journeys,
-		).toHaveLength(0);
+		expect((await cycleAt(source, "08:20:15", { tripUpdates: [tripUpdate("08:20:15", false)] })).journeys).toHaveLength(
+			0,
+		);
 	});
 });
 
