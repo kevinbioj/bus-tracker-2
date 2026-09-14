@@ -122,6 +122,7 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/izilo.zip",
 		realtimeResourceHrefs: ["https://feed-rdla-lorient.ratpdev.com/GTFS-RT"],
 		getNetworkRef: () => "IZILO",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
 	{
