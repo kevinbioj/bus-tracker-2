@@ -55,7 +55,7 @@ const sources = [
 	{
 		id: "idfm",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
-		realtimeResourceHrefs: ["http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm"],
+		realtimeResourceHrefs: [{ href: "http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm", pollMs: 60_000 }],
 		appendTripUpdateInformation: true,
 		gtfsOptions: {
 			filterTrips: (trip) => {
@@ -88,7 +88,7 @@ const sources = [
 				}
 
 				if (trip.route.agency.id === "IDFM:Operator_1044") {
-					return false;
+					trip.route.agency.id = "IDFM:Operator_100";
 				}
 
 				if (trip.route.agency.id === "IDFM:Operator_1039") {
@@ -130,6 +130,13 @@ const sources = [
 		getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
 		getNetworkRef: (journey) => journey?.trip.route.agency.id,
 		getVehicleRef: () => undefined,
+		getDestination: (journey) => {
+			if (journey !== undefined && ["IDFM:71", "IDFM:1046"].includes(journey?.trip.route.agency.id)) {
+				return journey?.trip.headsign;
+			}
+
+			return journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name;
+		},
 	},
 	{
 		id: "gpso",
