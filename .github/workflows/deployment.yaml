@@ -7,6 +7,7 @@ on:
       - apps/client/**/*
       - apps/server/**/*
       - providers/**/*
+      - '!providers/*/configurations/**'
       - docker/**/*
       - libraries/**/*
       - scripts/**/*
@@ -20,9 +21,97 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  changes:
+    # Determine which images the push actually affects: a change confined to one
+    # provider must not rebuild the other seven, nor redeploy the stack.
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    outputs:
+      components: ${{ steps.filter.outputs.components }}
+      deploy: ${{ steps.filter.outputs.deploy }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+
+      - name: Compute affected components
+        id: filter
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          all='client server flowly gtfs hawk idelis rtm twisto'
+          providers='flowly gtfs hawk idelis rtm twisto'
+          selected=''
+
+          add() {
+            for component in $1; do
+              case " ${selected} " in
+                *" ${component} "*) ;;
+                *) selected="${selected} ${component}" ;;
+              esac
+            done
+          }
+
+          # A force push (or a first push) leaves us without a usable base: rebuild everything.
+          if [ -z "${BEFORE}" ] || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            echo "No usable base commit, falling back to a full build."
+            add "${all}"
+          else
+            files="$(git diff --name-only "${BEFORE}" "${AFTER}")"
+            echo "Changed files:"
+            echo "${files}"
+
+            while IFS= read -r file; do
+              [ -n "${file}" ] || continue
+              case "${file}" in
+                apps/client/*)                                  add 'client' ;;
+                apps/server/*)                                  add 'server' ;;
+                docker/Dockerfile-client | docker/nginx.conf)    add 'client' ;;
+                docker/Dockerfile-server)                        add 'server' ;;
+                # The stack pins images by commit SHA, so a deployment needs both
+                # of them built for the current SHA even if only the stack changed.
+                docker/*)                                        add 'client server' ;;
+                scripts/*)                                       add 'client server' ;;
+                libraries/contracts/*)                           add "${all}" ;;
+                libraries/monitoring/* | libraries/redis/*)      add "server ${providers}" ;;
+                # Configurations are mounted at runtime, they never enter an image.
+                providers/*/configurations/*)                   ;;
+                providers/*)                                     add "$(echo "${file}" | cut -d/ -f2)" ;;
+                package.json | pnpm-lock.yaml | pnpm-workspace.yaml | .dockerignore | .github/workflows/deployment.yaml)
+                                                                 add "${all}" ;;
+              esac
+            done <<< "${files}"
+          fi
+
+          if [ -z "${selected# }" ]; then
+            components='[]'
+          else
+            components="$(printf '%s\n' ${selected} | jq -Rc . | jq -sc .)"
+          fi
+          echo "Components to build: ${components}"
+          echo "components=${components}" >> "$GITHUB_OUTPUT"
+
+          # Only client and server live in the stack: nothing else is worth a deployment.
+          case " ${selected} " in
+            *' client '* | *' server '*) deploy='true' ;;
+            *)                           deploy='false' ;;
+          esac
+          echo "Deploy the stack: ${deploy}"
+          echo "deploy=${deploy}" >> "$GITHUB_OUTPUT"
+
   build:
     # Every image is built on a runner of its own architecture.
     runs-on: ${{ matrix.runner }}
+    needs: ['changes']
+    if: needs.changes.outputs.components != '[]'
 
     permissions:
       contents: read
@@ -33,15 +122,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component:
-          - client
-          - server
-          - flowly
-          - gtfs
-          - hawk
-          - idelis
-          - rtm
-          - twisto
+        component: ${{ fromJSON(needs.changes.outputs.components) }}
         platform: ['linux/amd64', 'linux/arm64']
         include:
           - platform: linux/amd64
@@ -142,7 +223,7 @@ jobs:
     # Combine the per-platform images pushed above into one multi-arch manifest
     # list carrying the tags consumers actually pull.
     runs-on: ubuntu-latest
-    needs: ['build']
+    needs: ['changes', 'build']
 
     permissions:
       contents: read
@@ -151,15 +232,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component:
-          - client
-          - server
-          - flowly
-          - gtfs
-          - hawk
-          - idelis
-          - rtm
-          - twisto
+        component: ${{ fromJSON(needs.changes.outputs.components) }}
 
     steps:
       - name: Prepare image name
@@ -210,7 +283,8 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: ['merge']
+    needs: ['changes', 'merge']
+    if: needs.changes.outputs.deploy == 'true'
 
     permissions:
       contents: read
