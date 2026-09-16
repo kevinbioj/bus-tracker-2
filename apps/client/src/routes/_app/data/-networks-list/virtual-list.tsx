@@ -17,6 +17,7 @@ import {
 	toRegionFilter,
 } from "~/routes/_app/data/-networks-list/region-filter";
 import { useDisplayedRegions } from "~/routes/_app/data/-networks-list/use-displayed-regions";
+import { getRegionName } from "~/utils/region-name";
 import { searchNetworks } from "~/utils/network-search";
 
 type VirtualBlock = {
@@ -102,7 +103,7 @@ export function NetworksListVirtualList() {
 
 				return {
 					key: String(region.id),
-					title: region.name,
+					title: getRegionName(region.name),
 					networks,
 				};
 			}),
