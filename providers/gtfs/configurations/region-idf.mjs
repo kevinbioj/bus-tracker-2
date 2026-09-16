@@ -132,7 +132,11 @@ const sources = [
 		getNetworkRef: (journey) => journey?.trip.route.agency.id,
 		getVehicleRef: () => undefined,
 		getMissionCode: (journey) => {
-			if (journey !== undefined && ["IDFM:71", "IDFM:1046"].includes(journey.trip.route.agency.id)) {
+			if (
+				journey !== undefined &&
+				["IDFM:71", "IDFM:1046"].includes(journey.trip.route.agency.id) &&
+				journey.trip.route.type === "RAIL"
+			) {
 				return journey.trip.headsign;
 			}
 		},
