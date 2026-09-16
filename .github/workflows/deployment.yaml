@@ -91,6 +91,12 @@ jobs:
             done <<< "${files}"
           fi
 
+          # The stack pins both client and server on the pushed SHA, so deploying
+          # requires both images to exist for it: pull one in, pull the other too.
+          case " ${selected} " in
+            *' client '* | *' server '*) add 'client server' ;;
+          esac
+
           if [ -z "${selected# }" ]; then
             components='[]'
           else
