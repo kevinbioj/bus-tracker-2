@@ -86,8 +86,13 @@
 	"network_data_sources_title": "Sources de données",
 	"network_online_vehicle_count": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} véhicule en ligne",
 				"countPlural=other": "{count} véhicules en ligne"
@@ -100,8 +105,13 @@
 	"network_vehicle_operator_all": "Tous les opérateurs",
 	"network_vehicle_operator_count": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} opérateur",
 				"countPlural=other": "{count} opérateurs"
@@ -116,8 +126,13 @@
 	"network_vehicle_type_filter": "Type",
 	"network_vehicles_archived_count": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} véhicule archivé",
 				"countPlural=other": "{count} véhicules archivés"
@@ -132,7 +147,9 @@
 				"input totalCount",
 				"local totalCountPlural = totalCount: plural"
 			],
-			"selectors": ["totalCountPlural"],
+			"selectors": [
+				"totalCountPlural"
+			],
 			"match": {
 				"totalCountPlural=one": "{onlineCount}/{totalCount} véhicule en circulation",
 				"totalCountPlural=other": "{onlineCount}/{totalCount} véhicules en circulation"
@@ -224,8 +241,13 @@
 	"stop_call_realtime": "Horaire temps réel",
 	"stop_call_delay": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "Retard de {count} minute",
 				"countPlural=other": "Retard de {count} minutes"
@@ -234,8 +256,13 @@
 	],
 	"stop_call_early": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "Avance de {count} minute",
 				"countPlural=other": "Avance de {count} minutes"
@@ -293,8 +320,13 @@
 	"settings_displayed_countries_search_placeholder": "Rechercher un pays…",
 	"settings_displayed_countries_summary": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} pays sélectionné",
 				"countPlural=other": "{count} pays sélectionnés"
@@ -458,7 +490,37 @@
 	"line_girouettes_form_font_family_label": "Famille de police",
 	"line_girouettes_form_font_variant_label": "Police",
 	"line_girouettes_form_identification_title": "Identification",
+	"line_girouettes_form_invalid": "Le formulaire contient des erreurs : vérifiez les champs signalés.",
 	"line_girouettes_form_led_color_label": "Couleur LED",
+	"line_girouettes_form_mode_label": "Mode",
+	"line_girouettes_form_mode_text": "Texte",
+	"line_girouettes_form_mode_bitmap": "Dessin",
+	"line_girouettes_form_alt_text_label": "Texte alternatif",
+	"line_girouettes_form_alt_text_placeholder": "Ex : CENTRE VILLE",
+	"line_girouettes_form_alt_text_help": "Décrit le dessin : lu par les lecteurs d'écran et affiché à la place du dessin par les clients qui ne savent pas l'afficher.",
+	"line_girouettes_form_alt_text_required": "Le texte alternatif est obligatoire pour un panneau dessiné.",
+	"line_girouettes_form_bitmap_tool_line": "Ligne",
+	"line_girouettes_form_bitmap_tool_rectangle": "Rectangle",
+	"line_girouettes_form_bitmap_tool_filled_rectangle": "Rectangle plein",
+	"line_girouettes_form_bitmap_mode_select": "Sélection",
+	"line_girouettes_form_bitmap_mode_draw": "Édition",
+	"line_girouettes_form_bitmap_mode_erase": "Suppression",
+	"line_girouettes_form_bitmap_pattern_free": "Tracé libre",
+	"line_girouettes_form_bitmap_copy": "Copier",
+	"line_girouettes_form_bitmap_cut": "Couper",
+	"line_girouettes_form_bitmap_paste": "Coller",
+	"line_girouettes_form_bitmap_clear_title": "Tout effacer ?",
+	"line_girouettes_form_bitmap_clear_description": "Tous les pixels du dessin seront éteints. L'action reste annulable tant que la zone de dessin est ouverte.",
+	"line_girouettes_form_bitmap_undo": "Annuler la dernière action",
+	"line_girouettes_form_bitmap_redo": "Rétablir",
+	"line_girouettes_form_bitmap_clear": "Tout effacer",
+	"line_girouettes_form_bitmap_size": "{width} × {height} pixels",
+	"line_girouettes_form_bitmap_open": "Ouvrir la zone de dessin",
+	"line_girouettes_form_bitmap_done": "Terminé",
+	"line_girouettes_form_bitmap_rotate_hint": "Tournez votre appareil en paysage : une girouette est bien plus large que haute.",
+	"line_girouettes_form_bitmap_stamp_title": "Tampon de texte",
+	"line_girouettes_form_bitmap_stamp_placeholder": "Texte à insérer",
+	"line_girouettes_form_bitmap_stamp_prepare": "Préparer",
 	"line_girouettes_form_led_white": "Blanc",
 	"line_girouettes_form_led_yellow": "Jaune",
 	"line_girouettes_form_outline_color_label": "Couleur de contour",

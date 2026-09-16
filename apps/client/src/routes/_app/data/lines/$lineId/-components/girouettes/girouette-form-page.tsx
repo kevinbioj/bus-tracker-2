@@ -5,6 +5,7 @@ import {
 	ArrowDownIcon,
 	ArrowLeftRightIcon,
 	ArrowUpIcon,
+	BrushIcon,
 	ChevronsLeftRightIcon,
 	ChevronsRightLeftIcon,
 	FastForwardIcon,
@@ -12,13 +13,14 @@ import {
 	PaletteIcon,
 	PlusIcon,
 	TrashIcon,
+	TypeIcon,
 	XIcon,
 	ZapIcon,
 } from "lucide-react";
 import { useSnackbar } from "notistack";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { Controller, type FieldErrors, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useWindowSize } from "usehooks-ts";
 import { z } from "zod";
 
@@ -41,11 +43,18 @@ import {
 	type GirouetteData,
 	Girouette as GirouettePreview,
 	getAutoOutlineColor,
+	isBitmapPage,
 	type TextSpacing,
 } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
+import {
+	createBitmap,
+	type GirouetteBitmap,
+	resizeBitmap,
+} from "~/components/vehicles-map/vehicles-markers/popup/girouette-bitmap";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
 import { cn } from "~/utils/cn";
+import { BitmapEditorDialog } from "./bitmap-editor";
 import {
 	ALL_FONTS,
 	type AllowedFont,
@@ -65,26 +74,78 @@ const lineSchema = z.object({
 	spacing: z.number().int().min(0).max(10).nullable(),
 });
 
-const pageSchema = z.object({
-	lines: z.array(lineSchema).min(1).max(2),
+const bitmapSchema = z.object({
+	width: z.number().int().nonnegative(),
+	height: z.number().int().nonnegative(),
+	palette: z.array(z.string()),
+	rows: z.array(z.string()),
 });
 
-const formSchema = z.object({
-	directionId: z.string().nullable(),
-	destinations: z.array(z.string()),
-	routeNumber: z.object({
-		text: z.string(),
-		fontVariant: z.string(),
-		textColor: z.string(),
-		backgroundColor: z.string(),
-		outlineColor: z.string(),
-		flash: z.boolean(),
-		scroll: z.boolean(),
-		spacing: z.number().int().min(0).max(10).nullable(),
-		halfPattern: z.enum(["tl", "tr", "bl", "br"]).nullable(),
-	}),
-	pages: z.array(pageSchema).min(1).max(10),
+/**
+ * A pane is authored either as text — with a font, a spacing and the usual
+ * effects — or freely drawn pixel by pixel. Both are kept side by side in the
+ * form so that switching back and forth never loses what was entered.
+ */
+const paneModeSchema = z.enum(["text", "bitmap"]);
+
+const pageSchema = z.object({
+	mode: paneModeSchema,
+	lines: z.array(lineSchema).min(1).max(2),
+	bitmap: bitmapSchema.nullable(),
+	/** Blinking of a drawn page; the text lines carry their own. */
+	flash: z.boolean(),
+	/** Describes a drawn page, for assistive technologies and older clients. */
+	altText: z.string(),
 });
+
+const dimensionsSchema = z.object({
+	height: z.number().int().positive(),
+	rnWidth: z.number().int().nonnegative(),
+	destinationWidth: z.number().int().positive(),
+});
+
+const formSchema = z
+	.object({
+		directionId: z.string().nullable(),
+		/** Matrix of the girouette when it isn't one this form derives on its own. */
+		dimensions: dimensionsSchema.nullable(),
+		destinations: z.array(z.string()),
+		routeNumber: z.object({
+			mode: paneModeSchema,
+			bitmap: bitmapSchema.nullable(),
+			altText: z.string(),
+			text: z.string(),
+			fontVariant: z.string(),
+			textColor: z.string(),
+			backgroundColor: z.string(),
+			outlineColor: z.string(),
+			flash: z.boolean(),
+			scroll: z.boolean(),
+			spacing: z.number().int().min(0).max(10).nullable(),
+			halfPattern: z.enum(["tl", "tr", "bl", "br"]).nullable(),
+		}),
+		pages: z.array(pageSchema).min(1).max(10),
+	})
+	.superRefine((values, ctx) => {
+		// A drawing carries no text of its own: without that description it is mute to
+		// a screen reader, and blank on a client that can't display a drawn pane.
+		if (values.routeNumber.mode === "bitmap" && values.routeNumber.altText.trim() === "") {
+			ctx.addIssue({
+				code: "custom",
+				path: ["routeNumber", "altText"],
+				message: m.line_girouettes_form_alt_text_required(),
+			});
+		}
+		values.pages.forEach((page, index) => {
+			if (page.mode === "bitmap" && page.altText.trim() === "") {
+				ctx.addIssue({
+					code: "custom",
+					path: ["pages", index, "altText"],
+					message: m.line_girouettes_form_alt_text_required(),
+				});
+			}
+		});
+	});
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -98,8 +159,49 @@ const defaultLine = (fontVariant = DEFAULT_FONT_VARIANT): FormValues["pages"][nu
 });
 
 const defaultPage = (): FormValues["pages"][number] => ({
+	mode: "text",
 	lines: [defaultLine()],
+	bitmap: null,
+	flash: false,
+	altText: "",
 });
+
+/**
+ * Font the description of a drawn pane is written with. It is only ever rendered
+ * by a client that can't display the drawing, so it is fixed here rather than
+ * left to a choice that would have no visible effect while editing.
+ */
+const ALT_TEXT_FONT: AllowedFont = "1407SUPX";
+
+/** Matrix dimensions of a girouette pane, in pixels. */
+const PANE_HEIGHT = 17;
+const ROUTE_NUMBER_WIDTH = 32;
+const DESTINATION_WIDTH = 160;
+/** Width the destination pane takes over once the route number block collapses. */
+const FULL_WIDTH = 192;
+
+type Dimensions = { height: number; rnWidth: number; destinationWidth: number };
+
+const DEFAULT_DIMENSIONS: Dimensions = {
+	height: PANE_HEIGHT,
+	rnWidth: ROUTE_NUMBER_WIDTH,
+	destinationWidth: DESTINATION_WIDTH,
+};
+const COLLAPSED_DIMENSIONS: Dimensions = { height: PANE_HEIGHT, rnWidth: 0, destinationWidth: FULL_WIDTH };
+
+/**
+ * Whether the form derives those dimensions on its own. Any other matrix — a
+ * taller panel, a wider route number block — comes from somewhere else and is
+ * carried through untouched, instead of being flattened to the usual 17×192.
+ */
+function isDerivedDimensions(dimensions: Dimensions) {
+	return [DEFAULT_DIMENSIONS, COLLAPSED_DIMENSIONS].some(
+		(candidate) =>
+			candidate.height === dimensions.height &&
+			candidate.rnWidth === dimensions.rnWidth &&
+			candidate.destinationWidth === dimensions.destinationWidth,
+	);
+}
 
 /**
  * Builds the form values from an existing girouette. When duplicating, everything
@@ -110,8 +212,12 @@ const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => 
 	if (!girouette) {
 		return {
 			directionId: null,
+			dimensions: null,
 			destinations: [],
 			routeNumber: {
+				mode: "text",
+				bitmap: null,
+				altText: "",
 				text: "",
 				fontVariant: DEFAULT_FONT_VARIANT,
 				textColor: "",
@@ -130,9 +236,16 @@ const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => 
 
 	return {
 		directionId: duplicate || girouette.directionId === null ? null : String(girouette.directionId),
+		// Kept verbatim when the girouette doesn't use one of the two matrices this
+		// form knows how to derive, so that editing it doesn't resize the panel.
+		dimensions: d.dimensions != null && !isDerivedDimensions(d.dimensions) ? d.dimensions : null,
 		destinations: duplicate ? [] : girouette.destinations,
 		routeNumber: {
-			text: d.routeNumber?.text ?? "",
+			mode: d.routeNumber?.bitmap !== undefined ? "bitmap" : "text",
+			bitmap: d.routeNumber?.bitmap ?? null,
+			// A drawn pane stores its description where a text pane stores its text.
+			altText: d.routeNumber?.bitmap !== undefined ? (d.routeNumber.text ?? "") : "",
+			text: d.routeNumber?.bitmap !== undefined ? "" : (d.routeNumber?.text ?? ""),
 			fontVariant: d.routeNumber?.font ?? DEFAULT_FONT_VARIANT,
 			textColor: d.routeNumber?.textColor ?? "",
 			backgroundColor: d.routeNumber?.backgroundColor ?? "",
@@ -145,8 +258,21 @@ const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => 
 		pages:
 			(d.pages ?? []).length > 0
 				? (d.pages ?? []).map((page) => {
+						if (isBitmapPage(page)) {
+							return {
+								mode: "bitmap" as const,
+								lines: [defaultLine()],
+								bitmap: page.bitmap,
+								flash: page.flash ?? false,
+								altText: page.text ?? "",
+							};
+						}
 						const rawLines = Array.isArray(page) ? page : [page];
 						return {
+							mode: "text" as const,
+							bitmap: null,
+							flash: false,
+							altText: "",
 							lines: rawLines.map((line) => ({
 								text: line.text,
 								fontVariant: line.font ?? DEFAULT_FONT_VARIANT,
@@ -161,14 +287,35 @@ const defaultValues = (girouette?: Girouette, duplicate = false): FormValues => 
 	};
 };
 
+type RouteNumberShape = { mode?: "text" | "bitmap"; text?: string; backgroundColor?: string };
+
 /**
- * A route number with neither text nor background color displays nothing:
- * give its whole width to the destination block. Girouettes that don't
- * carry dimensions keep the renderer's default 32/160 split.
+ * A route number with neither text nor background color displays nothing: its
+ * whole width goes to the destination block. A drawn route number always keeps
+ * its block, as an empty drawing is a deliberate choice rather than a blank.
  */
-function girouetteDimensions(routeNumber: { text?: string; backgroundColor?: string }): GirouetteData["dimensions"] {
-	const isRouteNumberEmpty = (routeNumber.text ?? "").trim() === "" && !routeNumber.backgroundColor;
-	return isRouteNumberEmpty ? { height: 17, rnWidth: 0, destinationWidth: 192 } : undefined;
+/** Whether the route number block of that matrix has any room to be drawn on. */
+function isDrawableRouteNumber(custom?: Dimensions | null) {
+	return custom == null || custom.rnWidth > 0;
+}
+
+function paneDimensions(routeNumber: RouteNumberShape, custom?: Dimensions | null): Dimensions {
+	if (custom != null) return custom;
+	const isRouteNumberEmpty =
+		routeNumber.mode !== "bitmap" && (routeNumber.text ?? "").trim() === "" && !routeNumber.backgroundColor;
+	return isRouteNumberEmpty ? COLLAPSED_DIMENSIONS : DEFAULT_DIMENSIONS;
+}
+
+/** Girouettes that don't carry dimensions keep the renderer's default 32/160 split. */
+function girouetteDimensions(routeNumber: RouteNumberShape, custom?: Dimensions | null): GirouetteData["dimensions"] {
+	if (custom != null) return custom;
+	const dimensions = paneDimensions(routeNumber);
+	return dimensions.rnWidth === 0 ? dimensions : undefined;
+}
+
+/** Drawing of a pane, fitted to it and blank when the pane was never drawn on. */
+function paneBitmap(bitmap: GirouetteBitmap | null | undefined, width: number, height: number): GirouetteBitmap {
+	return bitmap == null ? createBitmap(width, height) : resizeBitmap(bitmap, width, height);
 }
 
 function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInput {
@@ -181,24 +328,52 @@ function formToGirouetteInput(values: FormValues, enabled = true): GirouetteInpu
 		text: string;
 	};
 
+	const routeNumberMode =
+		values.routeNumber.mode === "bitmap" && isDrawableRouteNumber(values.dimensions) ? "bitmap" : "text";
+	const routeNumberShape: RouteNumberShape = {
+		mode: routeNumberMode,
+		text: values.routeNumber.text,
+		backgroundColor: values.routeNumber.backgroundColor || undefined,
+	};
+	const dimensions = paneDimensions(routeNumberShape, values.dimensions);
+
 	const data: GirouetteData = {
-		dimensions: girouetteDimensions({
-			text: values.routeNumber.text,
-			backgroundColor: values.routeNumber.backgroundColor || undefined,
-		}),
+		dimensions: girouetteDimensions(routeNumberShape, values.dimensions),
 		ledColor: "WHITE",
-		routeNumber: {
-			text: values.routeNumber.text,
-			font: values.routeNumber.fontVariant as AllowedFont,
-			textColor: values.routeNumber.textColor || undefined,
-			backgroundColor: values.routeNumber.backgroundColor || undefined,
-			outlineColor: values.routeNumber.outlineColor || undefined,
-			flash: values.routeNumber.flash || undefined,
-			scroll: values.routeNumber.scroll || undefined,
-			spacing: (values.routeNumber.spacing ?? undefined) as TextSpacing | undefined,
-			halfPattern: values.routeNumber.halfPattern ?? undefined,
-		},
+		routeNumber:
+			routeNumberMode === "bitmap"
+				? {
+						// Carried for the clients that can't display a drawing: they read the
+						// pane as a text one, and scroll whatever doesn't fit.
+						text: values.routeNumber.altText,
+						font: ALT_TEXT_FONT,
+						scroll: true,
+						bitmap: paneBitmap(values.routeNumber.bitmap, dimensions.rnWidth, dimensions.height),
+						flash: values.routeNumber.flash || undefined,
+					}
+				: {
+						text: values.routeNumber.text,
+						font: values.routeNumber.fontVariant as AllowedFont,
+						textColor: values.routeNumber.textColor || undefined,
+						backgroundColor: values.routeNumber.backgroundColor || undefined,
+						outlineColor: values.routeNumber.outlineColor || undefined,
+						flash: values.routeNumber.flash || undefined,
+						scroll: values.routeNumber.scroll || undefined,
+						spacing: (values.routeNumber.spacing ?? undefined) as TextSpacing | undefined,
+						halfPattern: values.routeNumber.halfPattern ?? undefined,
+					},
 		pages: values.pages.map((page) => {
+			if (page.mode === "bitmap") {
+				return {
+					bitmap: paneBitmap(page.bitmap, dimensions.destinationWidth, dimensions.height),
+					flash: page.flash || undefined,
+					// Fallback for the clients that don't know how to display a drawing:
+					// they read the page as a text one, and a missing text crashes them.
+					text: page.altText,
+					font: ALT_TEXT_FONT,
+					scroll: true,
+				};
+			}
 			const lines: PageLine[] = page.lines.map((line) => ({
 				text: line.text,
 				font: line.fontVariant as AllowedFont,
@@ -349,27 +524,74 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 		else createMutation.mutate(input);
 	};
 
+	/**
+	 * A long form scrolls the offending field into view on its own, but nothing
+	 * else would tell why the save didn't happen: the reason is named out loud.
+	 */
+	const onInvalid = (errors: FieldErrors<FormValues>) => {
+		// Field arrays report their errors as a sparse array carrying a `root` entry,
+		// so the array branch is narrowed before being walked.
+		const pageErrors = Array.isArray(errors.pages) ? errors.pages : [];
+		const missesAltText =
+			errors.routeNumber?.altText !== undefined || pageErrors.some((page) => page?.altText !== undefined);
+		snackbar.enqueueSnackbar(
+			missesAltText ? m.line_girouettes_form_alt_text_required() : m.line_girouettes_form_invalid(),
+			{ variant: "error" },
+		);
+	};
+
 	const watchedValues = useWatch({ control: form.control });
+	const customDimensions = (watchedValues.dimensions as Dimensions | undefined) ?? null;
+	// A panel whose own matrix gives the route number block no width at all has
+	// nothing to draw on: the block stays text-only there.
+	const isRouteNumberDrawable = isDrawableRouteNumber(customDimensions);
+	const routeNumberMode = (isRouteNumberDrawable ? watchedValues.routeNumber?.mode : "text") ?? "text";
+
+	const previewShape: RouteNumberShape = {
+		mode: routeNumberMode,
+		text: watchedValues.routeNumber?.text,
+		backgroundColor: watchedValues.routeNumber?.backgroundColor || undefined,
+	};
+	const previewDimensions = paneDimensions(previewShape, customDimensions);
 	const previewData: GirouetteData = {
-		dimensions: girouetteDimensions({
-			text: watchedValues.routeNumber?.text,
-			backgroundColor: watchedValues.routeNumber?.backgroundColor || undefined,
-		}),
+		dimensions: girouetteDimensions(previewShape, customDimensions),
 		ledColor: "WHITE",
-		routeNumber: watchedValues.routeNumber
-			? {
-					text: watchedValues.routeNumber.text ?? "",
-					font: (watchedValues.routeNumber.fontVariant as AllowedFont) ?? DEFAULT_FONT_VARIANT,
-					textColor: watchedValues.routeNumber.textColor || undefined,
-					backgroundColor: watchedValues.routeNumber.backgroundColor || undefined,
-					outlineColor: watchedValues.routeNumber.outlineColor || undefined,
-					flash: watchedValues.routeNumber.flash || undefined,
-					scroll: watchedValues.routeNumber.scroll || undefined,
-					spacing: (watchedValues.routeNumber.spacing ?? undefined) as TextSpacing | undefined,
-					halfPattern: watchedValues.routeNumber.halfPattern ?? undefined,
-				}
-			: { text: "" },
+		routeNumber:
+			routeNumberMode === "bitmap"
+				? {
+						text: watchedValues.routeNumber?.altText ?? "",
+						bitmap: paneBitmap(
+							(watchedValues.routeNumber?.bitmap as GirouetteBitmap | null) ?? null,
+							previewDimensions.rnWidth,
+							previewDimensions.height,
+						),
+						flash: watchedValues.routeNumber?.flash || undefined,
+					}
+				: watchedValues.routeNumber
+					? {
+							text: watchedValues.routeNumber.text ?? "",
+							font: (watchedValues.routeNumber.fontVariant as AllowedFont) ?? DEFAULT_FONT_VARIANT,
+							textColor: watchedValues.routeNumber.textColor || undefined,
+							backgroundColor: watchedValues.routeNumber.backgroundColor || undefined,
+							outlineColor: watchedValues.routeNumber.outlineColor || undefined,
+							flash: watchedValues.routeNumber.flash || undefined,
+							scroll: watchedValues.routeNumber.scroll || undefined,
+							spacing: (watchedValues.routeNumber.spacing ?? undefined) as TextSpacing | undefined,
+							halfPattern: watchedValues.routeNumber.halfPattern ?? undefined,
+						}
+					: { text: "" },
 		pages: (watchedValues.pages ?? []).map((page) => {
+			if (page?.mode === "bitmap") {
+				return {
+					bitmap: paneBitmap(
+						page.bitmap as GirouetteBitmap | null,
+						previewDimensions.destinationWidth,
+						previewDimensions.height,
+					),
+					flash: page.flash || undefined,
+					text: page.altText ?? "",
+				};
+			}
 			const lines = (page?.lines ?? []).map((line) => ({
 				text: line?.text ?? "",
 				font: (line?.fontVariant as AllowedFont) ?? DEFAULT_FONT_VARIANT,
@@ -467,7 +689,7 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 				</div>
 			</div>
 
-			<form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
+			<form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
 				<div className="flex flex-col gap-4">
 					<FormSection title={m.line_girouettes_form_identification_title()}>
 						<div className="flex flex-col gap-3 sm:flex-row sm:items-start">
@@ -600,106 +822,159 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 
 					<FormSection title={m.line_girouettes_form_route_number_title()}>
 						<div className="flex flex-col gap-4">
-							<div className="flex flex-col sm:flex-row sm:items-start gap-3">
-								<div className="grid gap-2 flex-1 min-w-0">
-									<Label>{m.line_girouettes_form_route_number_text_label()}</Label>
-									<Input {...form.register("routeNumber.text")} />
+							{/* Same header bar as a destination page, so that both panes are
+							    switched between text and drawing the same way. */}
+							{isRouteNumberDrawable && (
+								<div className="-mx-3 -mt-2 flex h-8 items-center justify-end border-y bg-muted/40 px-3">
+									<PaneModeField compact form={form} name="routeNumber.mode" />
 								</div>
-								<FontVariantField
-									className="min-w-0 shrink grow-0 sm:basis-40"
-									form={form}
-									fieldName="routeNumber.fontVariant"
-									fonts={ALL_FONTS}
-								/>
-								<div className="grid shrink-0 gap-2">
-									<Label className="whitespace-nowrap">{m.line_girouettes_form_options_label()}</Label>
-									<div className="flex h-9 items-center gap-2">
-										<SpacingField form={form} name="routeNumber.spacing" />
-										<div className="flex items-center gap-1.5">
-											<ToggleField
-												form={form}
-												name="routeNumber.scroll"
-												icon={<FastForwardIcon />}
-												label={m.line_girouettes_form_scroll_label()}
+							)}
+
+							{routeNumberMode === "bitmap" && (
+								<div className="flex flex-col gap-3">
+									<Controller
+										control={form.control}
+										name="routeNumber.bitmap"
+										render={({ field }) => (
+											<BitmapEditorDialog
+												height={previewDimensions.height}
+												ledColor="WHITE"
+												onChange={field.onChange}
+												title={m.line_girouettes_form_route_number_title()}
+												value={paneBitmap(
+													field.value as GirouetteBitmap | null,
+													previewDimensions.rnWidth,
+													previewDimensions.height,
+												)}
+												width={previewDimensions.rnWidth}
 											/>
-											<ToggleField
-												form={form}
-												name="routeNumber.flash"
-												icon={<ZapIcon />}
-												label={m.line_girouettes_form_flash_label()}
-											/>
+										)}
+									/>
+									<AltTextField
+										error={form.formState.errors.routeNumber?.altText?.message}
+										form={form}
+										name="routeNumber.altText"
+									/>
+									<div className="flex items-center gap-2">
+										<Label className="whitespace-nowrap">{m.line_girouettes_form_options_label()}</Label>
+										<ToggleField
+											form={form}
+											name="routeNumber.flash"
+											icon={<ZapIcon />}
+											label={m.line_girouettes_form_flash_label()}
+										/>
+									</div>
+								</div>
+							)}
+
+							{routeNumberMode !== "bitmap" && (
+								<div className="flex flex-col sm:flex-row sm:items-start gap-3">
+									<div className="grid gap-2 flex-1 min-w-0">
+										<Label>{m.line_girouettes_form_route_number_text_label()}</Label>
+										<Input {...form.register("routeNumber.text")} />
+									</div>
+									<FontVariantField
+										className="min-w-0 shrink grow-0 sm:basis-40"
+										form={form}
+										fieldName="routeNumber.fontVariant"
+										fonts={ALL_FONTS}
+									/>
+									<div className="grid shrink-0 gap-2">
+										<Label className="whitespace-nowrap">{m.line_girouettes_form_options_label()}</Label>
+										<div className="flex h-9 items-center gap-2">
+											<SpacingField form={form} name="routeNumber.spacing" />
+											<div className="flex items-center gap-1.5">
+												<ToggleField
+													form={form}
+													name="routeNumber.scroll"
+													icon={<FastForwardIcon />}
+													label={m.line_girouettes_form_scroll_label()}
+												/>
+												<ToggleField
+													form={form}
+													name="routeNumber.flash"
+													icon={<ZapIcon />}
+													label={m.line_girouettes_form_flash_label()}
+												/>
+											</div>
 										</div>
 									</div>
 								</div>
-							</div>
+							)}
 
-							<div className="flex flex-col sm:flex-row sm:items-end gap-3">
-								<ColorPickerField
-									className="flex-1 min-w-0"
-									form={form}
-									name="routeNumber.backgroundColor"
-									label={m.line_girouettes_form_bg_color_label()}
-								/>
-								<ColorPickerField
-									className="flex-1 min-w-0"
-									form={form}
-									name="routeNumber.textColor"
-									label={m.line_girouettes_form_text_color_label()}
-								/>
-								<ColorPickerField
-									className="flex-1 min-w-0"
-									form={form}
-									name="routeNumber.outlineColor"
-									label={m.line_girouettes_form_outline_color_label()}
-								/>
-							</div>
-
-							<div className="flex flex-col sm:flex-row sm:items-end gap-3">
-								<div className="grid gap-2 sm:w-44 sm:shrink-0">
-									<Label>{m.line_girouettes_form_half_pattern_label()}</Label>
-									<Controller
-										control={form.control}
-										name="routeNumber.halfPattern"
-										render={({ field }) => {
-											const halfPatternItems = [
-												{ value: "none", label: m.line_girouettes_form_half_pattern_none() },
-												{ value: "tl", label: m.line_girouettes_form_half_pattern_tl() },
-												{ value: "tr", label: m.line_girouettes_form_half_pattern_tr() },
-												{ value: "bl", label: m.line_girouettes_form_half_pattern_bl() },
-												{ value: "br", label: m.line_girouettes_form_half_pattern_br() },
-											];
-											return (
-												<Select
-													value={field.value ?? "none"}
-													onValueChange={(v) => field.onChange(v === "none" ? null : v)}
-													items={halfPatternItems}
-												>
-													<SelectTrigger className="w-full">
-														<SelectValue />
-													</SelectTrigger>
-													<SelectContent>
-														{halfPatternItems.map((item) => (
-															<SelectItem key={item.value} value={item.value}>
-																{item.label}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-											);
-										}}
+							{/* A drawn block carries its own colors in its palette: a background,
+							    an outline and a split pattern would only fight with it. */}
+							{routeNumberMode !== "bitmap" && (
+								<div className="flex flex-col sm:flex-row sm:items-end gap-3">
+									<ColorPickerField
+										className="flex-1 min-w-0"
+										form={form}
+										name="routeNumber.backgroundColor"
+										label={m.line_girouettes_form_bg_color_label()}
+									/>
+									<ColorPickerField
+										className="flex-1 min-w-0"
+										form={form}
+										name="routeNumber.textColor"
+										label={m.line_girouettes_form_text_color_label()}
+									/>
+									<ColorPickerField
+										className="flex-1 min-w-0"
+										form={form}
+										name="routeNumber.outlineColor"
+										label={m.line_girouettes_form_outline_color_label()}
 									/>
 								</div>
-								<div className="flex flex-wrap items-center gap-2">
-									<Button type="button" variant="outline" size="sm" onClick={handleSwapRouteColors}>
-										<ArrowLeftRightIcon />
-										{m.line_girouettes_form_swap_colors()}
-									</Button>
-									<Button type="button" variant="outline" size="sm" onClick={handleApplyLineColors}>
-										<PaletteIcon />
-										{m.line_girouettes_form_use_line_colors()}
-									</Button>
+							)}
+
+							{routeNumberMode !== "bitmap" && (
+								<div className="flex flex-col sm:flex-row sm:items-end gap-3">
+									<div className="grid gap-2 sm:w-44 sm:shrink-0">
+										<Label>{m.line_girouettes_form_half_pattern_label()}</Label>
+										<Controller
+											control={form.control}
+											name="routeNumber.halfPattern"
+											render={({ field }) => {
+												const halfPatternItems = [
+													{ value: "none", label: m.line_girouettes_form_half_pattern_none() },
+													{ value: "tl", label: m.line_girouettes_form_half_pattern_tl() },
+													{ value: "tr", label: m.line_girouettes_form_half_pattern_tr() },
+													{ value: "bl", label: m.line_girouettes_form_half_pattern_bl() },
+													{ value: "br", label: m.line_girouettes_form_half_pattern_br() },
+												];
+												return (
+													<Select
+														value={field.value ?? "none"}
+														onValueChange={(v) => field.onChange(v === "none" ? null : v)}
+														items={halfPatternItems}
+													>
+														<SelectTrigger className="w-full">
+															<SelectValue />
+														</SelectTrigger>
+														<SelectContent>
+															{halfPatternItems.map((item) => (
+																<SelectItem key={item.value} value={item.value}>
+																	{item.label}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												);
+											}}
+										/>
+									</div>
+									<div className="flex flex-wrap items-center gap-2">
+										<Button type="button" variant="outline" size="sm" onClick={handleSwapRouteColors}>
+											<ArrowLeftRightIcon />
+											{m.line_girouettes_form_swap_colors()}
+										</Button>
+										<Button type="button" variant="outline" size="sm" onClick={handleApplyLineColors}>
+											<PaletteIcon />
+											{m.line_girouettes_form_use_line_colors()}
+										</Button>
+									</div>
 								</div>
-							</div>
+							)}
 						</div>
 					</FormSection>
 				</div>
@@ -710,6 +985,8 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 							<PageFields
 								key={field.id}
 								form={form}
+								paneHeight={previewDimensions.height}
+								paneWidth={previewDimensions.destinationWidth}
 								pageIndex={pageIndex}
 								isOnlyPage={pageFields.length === 1}
 								isFirstPage={pageIndex === 0}
@@ -769,6 +1046,9 @@ function FormSection({ children, title }: Readonly<FormSectionProps>) {
 
 type PageFieldsProps = {
 	form: ReturnType<typeof useForm<FormValues>>;
+	/** Matrix size of the destination pane, which a drawn page fills entirely. */
+	paneHeight: number;
+	paneWidth: number;
 	pageIndex: number;
 	isOnlyPage: boolean;
 	isFirstPage: boolean;
@@ -780,6 +1060,8 @@ type PageFieldsProps = {
 
 function PageFields({
 	form,
+	paneHeight,
+	paneWidth,
 	pageIndex,
 	isOnlyPage,
 	isFirstPage,
@@ -788,6 +1070,7 @@ function PageFields({
 	onMovePageDown,
 	onRemovePage,
 }: Readonly<PageFieldsProps>) {
+	const mode = useWatch({ control: form.control, name: `pages.${pageIndex}.mode` }) ?? "text";
 	const lines = useWatch({ control: form.control, name: `pages.${pageIndex}.lines` }) ?? [];
 	const line1Variant = (useWatch({
 		control: form.control,
@@ -834,6 +1117,7 @@ function PageFields({
 			<div className="-mx-3 flex h-8 items-center justify-between gap-2 border-y bg-muted/40 px-3">
 				<span className="text-sm font-medium">{m.line_girouettes_form_page_n({ n: pageIndex + 1 })}</span>
 				<div className="flex items-center gap-0.5">
+					<PaneModeField compact form={form} name={`pages.${pageIndex}.mode`} />
 					{!isOnlyPage && (
 						<>
 							<Button
@@ -870,73 +1154,107 @@ function PageFields({
 				</div>
 			</div>
 
-			{lines.map((_, lineIndex) => (
-				<div
-					// biome-ignore lint/suspicious/noArrayIndexKey: stable order
-					key={lineIndex}
-					className={cn("flex flex-col gap-1", lineIndex > 0 && "pt-1")}
-				>
-					<div className="flex flex-col sm:flex-row sm:items-start gap-3">
-						<div className="grid gap-2 flex-1 min-w-0">
-							<Label>
-								{lines.length > 1
-									? m.line_girouettes_form_line_n({ n: lineIndex + 1 })
-									: m.line_girouettes_form_page_text_label()}
-							</Label>
-							<Input {...form.register(`pages.${pageIndex}.lines.${lineIndex}.text`)} />
-						</div>
-						<FontVariantField
-							className="min-w-0 shrink grow-0 sm:basis-40"
+			{mode === "bitmap" && (
+				<div className="flex flex-col gap-3">
+					<Controller
+						control={form.control}
+						name={`pages.${pageIndex}.bitmap` as "routeNumber.bitmap"}
+						render={({ field }) => (
+							<BitmapEditorDialog
+								height={paneHeight}
+								ledColor="WHITE"
+								onChange={field.onChange}
+								title={m.line_girouettes_form_page_n({ n: pageIndex + 1 })}
+								value={paneBitmap(field.value as GirouetteBitmap | null, paneWidth, paneHeight)}
+								width={paneWidth}
+							/>
+						)}
+					/>
+					<AltTextField
+						error={form.formState.errors.pages?.[pageIndex]?.altText?.message}
+						form={form}
+						name={`pages.${pageIndex}.altText`}
+					/>
+					<div className="flex items-center gap-2">
+						<Label className="whitespace-nowrap">{m.line_girouettes_form_options_label()}</Label>
+						<ToggleField
 							form={form}
-							fieldName={`pages.${pageIndex}.lines.${lineIndex}.fontVariant`}
-							fonts={lineIndex === 0 ? line1Fonts : line2Fonts}
-							onAfterChange={lineIndex === 0 ? handleLine1FontChange : undefined}
+							name={`pages.${pageIndex}.flash`}
+							icon={<ZapIcon />}
+							label={m.line_girouettes_form_flash_label()}
 						/>
-						<div className="grid shrink-0 gap-2">
-							<Label className="whitespace-nowrap">{m.line_girouettes_form_options_label()}</Label>
-							<div className="flex h-9 items-center gap-2">
-								<SpacingField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.spacing`} />
-								<div className="flex items-center gap-1.5">
-									<ToggleField
-										form={form}
-										name={`pages.${pageIndex}.lines.${lineIndex}.scroll`}
-										icon={<FastForwardIcon />}
-										label={m.line_girouettes_form_scroll_label()}
-									/>
-									<ToggleField
-										form={form}
-										name={`pages.${pageIndex}.lines.${lineIndex}.flash`}
-										icon={<ZapIcon />}
-										label={m.line_girouettes_form_flash_label()}
-									/>
-									<ToggleField
-										form={form}
-										name={`pages.${pageIndex}.lines.${lineIndex}.inverted`}
-										icon={<ArrowLeftRightIcon />}
-										label="Inverser les couleurs"
-									/>
-								</div>
-								{/* Sits on the controls row rather than above it, so that the lines
+					</div>
+				</div>
+			)}
+
+			{mode !== "bitmap" &&
+				lines.map((_, lineIndex) => (
+					<div
+						// biome-ignore lint/suspicious/noArrayIndexKey: stable order
+						key={lineIndex}
+						className={cn("flex flex-col gap-1", lineIndex > 0 && "pt-1")}
+					>
+						<div className="flex flex-col sm:flex-row sm:items-start gap-3">
+							<div className="grid gap-2 flex-1 min-w-0">
+								<Label>
+									{lines.length > 1
+										? m.line_girouettes_form_line_n({ n: lineIndex + 1 })
+										: m.line_girouettes_form_page_text_label()}
+								</Label>
+								<Input {...form.register(`pages.${pageIndex}.lines.${lineIndex}.text`)} />
+							</div>
+							<FontVariantField
+								className="min-w-0 shrink grow-0 sm:basis-40"
+								form={form}
+								fieldName={`pages.${pageIndex}.lines.${lineIndex}.fontVariant`}
+								fonts={lineIndex === 0 ? line1Fonts : line2Fonts}
+								onAfterChange={lineIndex === 0 ? handleLine1FontChange : undefined}
+							/>
+							<div className="grid shrink-0 gap-2">
+								<Label className="whitespace-nowrap">{m.line_girouettes_form_options_label()}</Label>
+								<div className="flex h-9 items-center gap-2">
+									<SpacingField form={form} name={`pages.${pageIndex}.lines.${lineIndex}.spacing`} />
+									<div className="flex items-center gap-1.5">
+										<ToggleField
+											form={form}
+											name={`pages.${pageIndex}.lines.${lineIndex}.scroll`}
+											icon={<FastForwardIcon />}
+											label={m.line_girouettes_form_scroll_label()}
+										/>
+										<ToggleField
+											form={form}
+											name={`pages.${pageIndex}.lines.${lineIndex}.flash`}
+											icon={<ZapIcon />}
+											label={m.line_girouettes_form_flash_label()}
+										/>
+										<ToggleField
+											form={form}
+											name={`pages.${pageIndex}.lines.${lineIndex}.inverted`}
+											icon={<ArrowLeftRightIcon />}
+											label="Inverser les couleurs"
+										/>
+									</div>
+									{/* Sits on the controls row rather than above it, so that the lines
 								    don't need a header of their own just to carry it. */}
-								{hasTwoLines && (
-									<Button
-										type="button"
-										variant="outline"
-										size="icon-sm"
-										title={m.line_girouettes_form_line_remove()}
-										aria-label={m.line_girouettes_form_line_remove()}
-										onClick={() => handleRemoveLine(lineIndex)}
-									>
-										<TrashIcon className="text-destructive" />
-									</Button>
-								)}
+									{hasTwoLines && (
+										<Button
+											type="button"
+											variant="outline"
+											size="icon-sm"
+											title={m.line_girouettes_form_line_remove()}
+											aria-label={m.line_girouettes_form_line_remove()}
+											onClick={() => handleRemoveLine(lineIndex)}
+										>
+											<TrashIcon className="text-destructive" />
+										</Button>
+									)}
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			))}
+				))}
 
-			{!hasTwoLines && (
+			{mode !== "bitmap" && !hasTwoLines && (
 				<Button
 					className="w-full border-dashed text-muted-foreground"
 					type="button"
@@ -1107,6 +1425,85 @@ function SpacingField({ className, form, name }: Readonly<SpacingFieldProps>) {
 					</div>
 				);
 			}}
+		/>
+	);
+}
+
+// ---
+
+type AltTextFieldProps = {
+	error?: string;
+	form: ReturnType<typeof useForm<FormValues>>;
+	name: string;
+};
+
+/**
+ * Description of a drawn pane. It is what a screen reader announces, and what a
+ * client that can't display a drawing shows in its place, so it is required.
+ */
+function AltTextField({ error, form, name }: Readonly<AltTextFieldProps>) {
+	return (
+		<div className="grid gap-2">
+			<Label>{m.line_girouettes_form_alt_text_label()}</Label>
+			<Input
+				{...form.register(name as "routeNumber.altText")}
+				aria-invalid={error !== undefined}
+				placeholder={m.line_girouettes_form_alt_text_placeholder()}
+			/>
+			{error !== undefined ? (
+				<p className="text-xs text-destructive">{error}</p>
+			) : (
+				<p className="text-xs text-muted-foreground">{m.line_girouettes_form_alt_text_help()}</p>
+			)}
+		</div>
+	);
+}
+
+// ---
+
+type PaneModeFieldProps = {
+	/** Icon-only variant, for the header bar of a page. */
+	compact?: boolean;
+	form: ReturnType<typeof useForm<FormValues>>;
+	name: string;
+};
+
+/**
+ * Switches a pane between its text form and its freely drawn one. Both keep
+ * their own values, so hesitating between the two never loses anything.
+ */
+function PaneModeField({ compact = false, form, name }: Readonly<PaneModeFieldProps>) {
+	const modes = [
+		{ value: "text" as const, icon: <TypeIcon />, label: m.line_girouettes_form_mode_text() },
+		{ value: "bitmap" as const, icon: <BrushIcon />, label: m.line_girouettes_form_mode_bitmap() },
+	];
+
+	return (
+		<Controller
+			control={form.control}
+			name={name as "routeNumber.mode"}
+			render={({ field }) => (
+				<div className="flex items-center gap-2">
+					{!compact && <Label className="whitespace-nowrap">{m.line_girouettes_form_mode_label()}</Label>}
+					<div className="flex items-center gap-1">
+						{modes.map((mode) => (
+							<Button
+								key={mode.value}
+								type="button"
+								variant={field.value === mode.value ? "branding-default" : "outline"}
+								size={compact ? "icon-sm" : "sm"}
+								title={compact ? mode.label : undefined}
+								aria-label={compact ? mode.label : undefined}
+								aria-pressed={field.value === mode.value}
+								onClick={() => field.onChange(mode.value)}
+							>
+								{mode.icon}
+								{!compact && mode.label}
+							</Button>
+						))}
+					</div>
+				</div>
+			)}
 		/>
 	);
 }

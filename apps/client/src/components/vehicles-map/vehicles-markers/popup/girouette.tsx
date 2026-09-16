@@ -9,6 +9,13 @@ import {
 } from "react";
 import { match, P } from "ts-pattern";
 
+import {
+	BitmapCanvas,
+	type GirouetteBitmap,
+	type LedColor,
+	ledColors,
+	resizeBitmap,
+} from "~/components/vehicles-map/vehicles-markers/popup/girouette-bitmap";
 import { cn } from "~/utils/cn";
 
 const paneBgColor = "#1D1D1B";
@@ -84,12 +91,6 @@ const fontProperties = {
 type Font = keyof typeof fontProperties;
 export type TextSpacing = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
-const ledColors = {
-	YELLOW: "#FF8000",
-	WHITE: "#F2FBFF",
-} as const;
-type LedColor = keyof typeof ledColors;
-
 type GirouetteDimensions = {
 	height: number;
 	rnWidth: number;
@@ -103,6 +104,11 @@ const defaultDimensions: GirouetteDimensions = {
 
 export type RouteNumberData = {
 	text: string;
+	/**
+	 * Freely drawn pane, displayed instead of the text and its font when set:
+	 * only the background color of the block still applies around it.
+	 */
+	bitmap?: GirouetteBitmap;
 	//- Font & spacing
 	font?: Font;
 	flash?: boolean;
@@ -124,7 +130,26 @@ type PageLine = {
 	text: string;
 };
 
-type PagesData = PageLine | [PageLine, PageLine];
+/** Page drawn pixel by pixel rather than composed of text lines. */
+export type BitmapPage = {
+	bitmap: GirouetteBitmap;
+	flash?: boolean;
+	/**
+	 * Describes the drawing: read out by assistive technologies here, and displayed
+	 * as plain text by a client that predates drawn pages — which reads every page
+	 * as a text one and would throw on a page without a text.
+	 */
+	text?: string;
+	/** Only meaningful to those older clients, which render the fallback text. */
+	font?: Font;
+	scroll?: boolean;
+};
+
+type PagesData = PageLine | [PageLine, PageLine] | BitmapPage;
+
+export function isBitmapPage(page: PagesData): page is BitmapPage {
+	return !Array.isArray(page) && "bitmap" in page && page.bitmap !== undefined;
+}
 
 export type GirouetteData = {
 	dimensions?: GirouetteDimensions;
@@ -332,6 +357,44 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 	// padding and letter-spacing don't eat into the destination block.
 	if (routeNumber === undefined || dimensions.rnWidth === 0) return null;
 
+	const backgroundStyle: CSSProperties = halfPattern
+		? {
+				background: `linear-gradient(to ${match(halfPattern)
+					.with("tl", () => "top left")
+					.with("tr", () => "top right")
+					.with("bl", () => "bottom left")
+					.with("br", () => "bottom right")
+					.exhaustive()}, ${routeNumber.backgroundColor ?? paneBgColor} 50%, ${paneBgColor} 50%)`,
+			}
+		: { backgroundColor: routeNumber.backgroundColor ?? paneBgColor };
+
+	// A drawn block ignores everything the text carries but its background: the
+	// palette of the drawing holds the colors, and there is no font to apply.
+	if (routeNumber.bitmap !== undefined) {
+		const onePixel = width / (dimensions.rnWidth + dimensions.destinationWidth);
+		return (
+			<button
+				className="flex items-center justify-center overflow-hidden"
+				onClick={onClick}
+				type="button"
+				style={{
+					width: `${onePixel * dimensions.rnWidth}px`,
+					cursor: onClick ? "pointer" : "default",
+					...backgroundStyle,
+				}}
+			>
+				<BitmapCanvas
+					aria-label={routeNumber.text || undefined}
+					bitmap={resizeBitmap(routeNumber.bitmap, dimensions.rnWidth, dimensions.height)}
+					ledColor={ledColor}
+					pixelSize={onePixel}
+					role="img"
+					style={routeNumber.flash ? { animation: flashAnimation } : undefined}
+				/>
+			</button>
+		);
+	}
+
 	const fontFamily =
 		routeNumber.font !== undefined && routeNumber.font in fontProperties ? routeNumber.font : "1513B3E1";
 	const height = (dimensions.height * width) / (dimensions.rnWidth + dimensions.destinationWidth);
@@ -354,16 +417,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 				letterSpacing: `${spacing}px`,
 				lineHeight: `${virtualHeight}px`,
 				//- Colors
-				...(halfPattern
-					? {
-							background: `linear-gradient(to ${match(halfPattern)
-								.with("tl", () => "top left")
-								.with("tr", () => "top right")
-								.with("bl", () => "bottom left")
-								.with("br", () => "bottom right")
-								.exhaustive()}, ${routeNumber.backgroundColor ?? paneBgColor} 50%, ${paneBgColor} 50%)`,
-						}
-					: { backgroundColor: routeNumber.backgroundColor ?? paneBgColor }),
+				...backgroundStyle,
 				color: routeNumber.textColor ?? ledColors[ledColor],
 				//- Outline (if applicable)
 				...(routeNumber.outlineColor
@@ -422,7 +476,10 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 			? (((isControlled ? controlledPageIndex : currentPageIndex) % pages.length) + pages.length) % pages.length
 			: 0;
 	const activePage = pages[pageIndex];
-	const lines = activePage === undefined ? [] : Array.isArray(activePage) ? activePage : [activePage];
+	// A drawn page carries no line at all, so nothing scrolls and it simply stays
+	// displayed for the nominal duration of a static page.
+	const lines =
+		activePage === undefined || isBitmapPage(activePage) ? [] : Array.isArray(activePage) ? activePage : [activePage];
 
 	// A page is displayed at least until its slowest line has scrolled entirely once.
 	const pageDuration = Math.max(staticPageDuration, ...lines.map((_, lineIndex) => scrollDurations[lineIndex] ?? 0));
@@ -443,6 +500,24 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 
 	const height = (dimensions.height * width) / (dimensions.rnWidth + dimensions.destinationWidth);
 	const onePixel = width / (dimensions.rnWidth + dimensions.destinationWidth);
+
+	if (isBitmapPage(activePage)) {
+		return (
+			<div
+				className="flex items-center justify-center overflow-hidden"
+				style={{ width: `${onePixel * dimensions.destinationWidth}px` }}
+			>
+				<BitmapCanvas
+					aria-label={activePage.text}
+					bitmap={resizeBitmap(activePage.bitmap, dimensions.destinationWidth, dimensions.height)}
+					ledColor={ledColor}
+					pixelSize={onePixel}
+					role="img"
+					style={activePage.flash ? { animation: flashAnimation } : undefined}
+				/>
+			</div>
+		);
+	}
 
 	return (
 		<div
