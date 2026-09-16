@@ -13,6 +13,10 @@ import { GetJourneyPathsQuery, GetVehicleJourneyQuery } from "~/api/vehicle-jour
 import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 
+/** Jaune des dessertes supplémentaires, repris de la pop-up (`yellow-600`, lisible sur fond clair
+ * comme sur fond sombre — la carte, elle, ne suit pas le thème). */
+const EXTRA_STOP_COLOR = "#CA8A04";
+
 const CANCELLED_PATH_WIDTH = 5;
 const CANCELLED_PATH_YELLOW = "#FACC15";
 const CANCELLED_PATH_BLACK = "#18181B";
@@ -338,10 +342,13 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 				visibility: stopLabelsStyle === "disabled" ? "none" : "visible",
 			},
 			paint: {
-				"circle-color": ["get", "strokeColor"],
+				// Une desserte supplémentaire reste un arrêt desservi : elle garde le gabarit des autres et
+				// se signale par le seul jaune de la pop-up, sur un liseré blanc qui la détache des
+				// couleurs de la ligne. L'arrêt supprimé, lui, cède la place à son ✕.
+				"circle-color": ["case", ["get", "extra"], EXTRA_STOP_COLOR, ["get", "strokeColor"]],
 				"circle-radius": ["case", ["get", "skipped"], 0, 4],
 				"circle-stroke-width": ["case", ["get", "skipped"], 0, 1],
-				"circle-stroke-color": ["get", "color"],
+				"circle-stroke-color": ["case", ["get", "extra"], "#FFFFFF", ["get", "color"]],
 			},
 			filter: ["==", ["get", "type"], "stop"],
 		}),
@@ -500,6 +507,9 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 			for (const call of journey.calls) {
 				if (call.latitude !== undefined && call.longitude !== undefined) {
 					const skipped = call.callStatus === "SKIPPED";
+					// Une course absente du GTFS statique n'a pas de desserte supplémentaire : toute la course
+					// l'est. Marquer chacun de ses arrêts n'apprendrait rien, comme dans la pop-up.
+					const extra = !journey.isAdded && call.callStatus === "UNSCHEDULED";
 					features.push({
 						type: "Feature",
 						geometry: { type: "Point", coordinates: [call.longitude, call.latitude] },
@@ -509,6 +519,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 							color: pathColor,
 							strokeColor: pathStrokeColor,
 							skipped,
+							extra,
 						},
 					});
 				}
