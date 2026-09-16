@@ -86,13 +86,8 @@
 	"network_data_sources_title": "Sources de données",
 	"network_online_vehicle_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} véhicule en ligne",
 				"countPlural=other": "{count} véhicules en ligne"
@@ -105,13 +100,8 @@
 	"network_vehicle_operator_all": "Tous les opérateurs",
 	"network_vehicle_operator_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} opérateur",
 				"countPlural=other": "{count} opérateurs"
@@ -126,13 +116,8 @@
 	"network_vehicle_type_filter": "Type",
 	"network_vehicles_archived_count": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} véhicule archivé",
 				"countPlural=other": "{count} véhicules archivés"
@@ -147,9 +132,7 @@
 				"input totalCount",
 				"local totalCountPlural = totalCount: plural"
 			],
-			"selectors": [
-				"totalCountPlural"
-			],
+			"selectors": ["totalCountPlural"],
 			"match": {
 				"totalCountPlural=one": "{onlineCount}/{totalCount} véhicule en circulation",
 				"totalCountPlural=other": "{onlineCount}/{totalCount} véhicules en circulation"
@@ -241,13 +224,8 @@
 	"stop_call_realtime": "Horaire temps réel",
 	"stop_call_delay": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Retard de {count} minute",
 				"countPlural=other": "Retard de {count} minutes"
@@ -256,13 +234,8 @@
 	],
 	"stop_call_early": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "Avance de {count} minute",
 				"countPlural=other": "Avance de {count} minutes"
@@ -320,13 +293,8 @@
 	"settings_displayed_countries_search_placeholder": "Rechercher un pays…",
 	"settings_displayed_countries_summary": [
 		{
-			"declarations": [
-				"input count",
-				"local countPlural = count: plural"
-			],
-			"selectors": [
-				"countPlural"
-			],
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
 			"match": {
 				"countPlural=one": "{count} pays sélectionné",
 				"countPlural=other": "{count} pays sélectionnés"
