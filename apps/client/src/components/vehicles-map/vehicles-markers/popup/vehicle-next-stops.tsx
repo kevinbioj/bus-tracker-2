@@ -10,10 +10,16 @@ import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 import * as m from "~/paraglide/messages";
 
-type NextStopsProps = { calls: VehicleJourneyCall[]; tooltipId?: string };
+type NextStopsProps = {
+	calls: VehicleJourneyCall[];
+	/** Course absente du GTFS statique : ses arrêts n'ont pas d'horaire théorique de référence. */
+	addedJourney?: boolean;
+	tooltipId?: string;
+};
 
 type NextStopRowProps = {
 	call: VehicleJourneyCall;
+	addedJourney: boolean;
 	displayMode: NextCallsDisplayMode;
 	dwelling: boolean;
 	label: string;
@@ -97,19 +103,40 @@ function formatCallLabel(
 
 // Le détail de la course est rafraîchi en boucle, mais le partage structurel de React Query garde
 // la référence d'un arrêt inchangé : mémoïser la ligne limite le rendu aux arrêts qui ont bougé.
-const NextStopRow = memo(function NextStopRow({ call, displayMode, dwelling, label }: Readonly<NextStopRowProps>) {
+const NextStopRow = memo(function NextStopRow({
+	call,
+	addedJourney,
+	displayMode,
+	dwelling,
+	label,
+}: Readonly<NextStopRowProps>) {
 	// L'infobulle qualifie l'heure affichée : à quai, c'est celle du départ. Déclarer une avance parce
 	// que le véhicule est arrivé avant son heure de départ (au terminus notamment) n'aurait aucun sens.
 	const { aimed, expected } = dwelling ? { aimed: call.aimedTime, expected: call.expectedTime } : getCallTimes(call);
 
-	const accentColor = match([call.callStatus, expected])
-		.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")
-		.with(["SCHEDULED", P.string], () => "text-green-700 dark:text-green-500")
-		.with(["UNSCHEDULED", P.string], () => "text-yellow-700 dark:text-yellow-500")
-		.otherwise(() => null);
+	// Une course que le GTFS ne connaît pas n'a aucun horaire théorique : ses arrêts ne sont pas des
+	// dessertes supplémentaires — toute la course l'est — et leur heure, purement temps réel, ne peut
+	// être ni en avance ni en retard sur quoi que ce soit. Un arrêt sauté reste signalé comme tel.
+	const realtimeOnly = addedJourney && call.callStatus !== "SKIPPED";
 
-	const tooltipProps =
-		expected !== undefined || call.callStatus === "SKIPPED"
+	const accentColor = realtimeOnly
+		? "text-green-700 dark:text-green-500"
+		: match([call.callStatus, expected])
+				.with(["SKIPPED", P.any], () => "text-red-700 dark:text-red-500")
+				.with(["SCHEDULED", P.string], () => "text-green-700 dark:text-green-500")
+				.with(["UNSCHEDULED", P.any], () => "text-yellow-700 dark:text-yellow-500")
+				.otherwise(() => null);
+
+	// Un arrêt supprimé ou ajouté se qualifie de lui-même, heure temps réel ou pas : c'est le statut
+	// qui porte l'information, et le producteur n'est pas tenu d'accompagner l'un ou l'autre d'un horaire.
+	const hasStatusInfo = expected !== undefined || call.callStatus !== "SCHEDULED";
+
+	const tooltipProps = realtimeOnly
+		? ({
+				className: "bg-green-600 dark:bg-green-700 font-bold text-white",
+				content: m.stop_call_realtime(),
+			} as const)
+		: hasStatusInfo
 			? match([call.callStatus, dayjs(expected ?? aimed).diff(aimed, "minutes")])
 					.with(
 						["SKIPPED", P.any],
@@ -156,9 +183,7 @@ const NextStopRow = memo(function NextStopRow({ call, displayMode, dwelling, lab
 
 	const children = (
 		<div className={clsx("flex font-bold ml-2", accentColor)}>
-			{expected !== undefined || call.callStatus === "SKIPPED" ? (
-				<Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} />
-			) : null}
+			{hasStatusInfo ? <Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} /> : null}
 			<span
 				className={clsx(
 					// `whitespace-nowrap` : à quai, le libellé s'allonge (deux heures, ou « À quai - … »).
@@ -211,7 +236,10 @@ const NextStopRow = memo(function NextStopRow({ call, displayMode, dwelling, lab
 	);
 });
 
-export const VehicleNextStops = memo(function VehicleNextStops({ calls }: Readonly<NextStopsProps>) {
+export const VehicleNextStops = memo(function VehicleNextStops({
+	calls,
+	addedJourney = false,
+}: Readonly<NextStopsProps>) {
 	const [nextCallsDisplayMode] = useNextCallsDisplayMode();
 
 	const rows = useDebouncedMemo(
@@ -235,6 +263,7 @@ export const VehicleNextStops = memo(function VehicleNextStops({ calls }: Readon
 			<div className="flex max-h-24 flex-col gap-1 overflow-y-auto overscroll-contain py-0.5 px-1.5">
 				{calls.map((call, index) => (
 					<NextStopRow
+						addedJourney={addedJourney}
 						call={call}
 						displayMode={nextCallsDisplayMode}
 						dwelling={rows[index]?.dwelling ?? false}

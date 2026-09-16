@@ -9,6 +9,7 @@ import { Shape } from "./shape.js";
 import { Stop } from "./stop.js";
 import { StopTimeStore } from "./stop-time-store.js";
 import { Trip } from "./trip.js";
+import type { TripModificationPlan } from "./trip-modification.js";
 
 const DATE = Temporal.PlainDate.from("2026-06-01");
 
@@ -22,11 +23,15 @@ function at(time: string) {
  *
  * A (0 m, 8:00 → 8:00) ── B (1000 m, 8:10 → 8:12) ── C (2000 m, 8:20)
  */
-function makeShapedGtfs(options?: { withDistances?: boolean }) {
+function makeShapedGtfs(options?: { withDistances?: boolean; withShapeDistances?: boolean }) {
 	const agency = new Agency("agency", "Agency", "UTC");
 	const route = new Route("route", agency, "1", "BUS");
 	const service = new Service("service");
-	const shape = new Shape("shape", new Float64Array([0, 0, 0, 0, 0.01, 1000, 0, 0.02, 2000]));
+	// `shape_dist_traveled` est absent de nombreux shapes.txt : les distances valent alors NaN.
+	const shape =
+		options?.withShapeDistances === false
+			? new Shape("shape", new Float64Array([0, 0, Number.NaN, 0, 0.01, Number.NaN, 0, 0.02, Number.NaN]))
+			: new Shape("shape", new Float64Array([0, 0, 0, 0, 0.01, 1000, 0, 0.02, 2000]));
 	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
 	const store = new StopTimeStore(
 		stops,
@@ -48,6 +53,7 @@ function makeShapedGtfs(options?: { withDistances?: boolean }) {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-06-01T00:00:00Z"),
@@ -95,6 +101,7 @@ function makeGtfs() {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-06-01T00:00:00Z"),
@@ -325,5 +332,118 @@ describe("Journey#guessPosition (guard anti-recul)", () => {
 
 		// L'état a été libéré : la position suivante est publiée telle quelle, sans gel.
 		expect(journey.guessPosition(at("08:05:30")).distanceTraveled).toBeLessThan(500);
+	});
+});
+
+describe("Journey#cancelledPath", () => {
+	/** Retire l'arrêt B de la course, en empruntant — ou non — un tracé de remplacement. */
+	function detourPlan(detourShape?: Shape): TripModificationPlan {
+		return {
+			modificationsId: "detour:1",
+			tripId: "trip",
+			date: DATE,
+			shape: detourShape,
+			revision: "rev:1",
+			modifications: [
+				{
+					startStopSelector: { stopSequence: 2 },
+					endStopSelector: { stopSequence: 2 },
+					propagatedModificationDelayMs: 0,
+					replacementStops: [],
+				},
+			],
+		};
+	}
+
+	const detourShape = new Shape("shape:detour", new Float64Array([0, 0, 0, 0.01, 0.01, 1100, 0, 0.02, 2200]));
+
+	it("découpe le tracé théorique entre les arrêts encadrant la déviation", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.applyModifications(detourPlan(detourShape), at("08:00").epochMilliseconds);
+
+		// B est retiré : la portion abandonnée relie A (0 m) à C (2000 m), soit tout le tracé théorique.
+		expect(journey.cancelledPath?.segments).toEqual([
+			[
+				[0, 0],
+				[0, 0.01],
+				[0, 0.02],
+			],
+		]);
+	});
+
+	it("découpe le tracé théorique même lorsqu'il ne porte aucune distance curviligne", () => {
+		const { trip } = makeShapedGtfs({ withShapeDistances: false });
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.applyModifications(detourPlan(detourShape), at("08:00").epochMilliseconds);
+
+		expect(journey.cancelledPath?.segments).toEqual([
+			[
+				[0, 0],
+				[0, 0.01],
+				[0, 0.02],
+			],
+		]);
+	});
+
+	it("fait partir et finir la portion abandonnée sur le tracé de remplacement", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Tracé de remplacement décalé au nord : ses extrémités ne coïncident avec aucun point du
+		// tracé théorique, la soudure doit donc déplacer celles de la portion abandonnée.
+		const offsetShape = new Shape(
+			"shape:offset",
+			new Float64Array([0.0008, 0, 0, 0.0008, 0.01, 1100, 0.0008, 0.02, 2200]),
+		);
+		journey.applyModifications(detourPlan(offsetShape), at("08:00").epochMilliseconds);
+
+		const segment = journey.cancelledPath!.segments[0]!;
+
+		// Les deux bouts du ruban touchent le tracé suivi : plus de trou à la jonction.
+		expect(offsetShape.distanceToPosition(segment[0]![0], segment[0]![1])).toBeCloseTo(0, 5);
+		expect(offsetShape.distanceToPosition(segment.at(-1)![0], segment.at(-1)![1])).toBeCloseTo(0, 5);
+		// Les points du tracé théorique restent entre les deux.
+		expect(segment.slice(1, -1)).toEqual([
+			[0, 0],
+			[0, 0.01],
+			[0, 0.02],
+		]);
+	});
+
+	it("n'abandonne aucune portion là où le tracé de remplacement longe celui de la course", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Tracé de remplacement confondu avec le tracé théorique, à quelques mètres près.
+		const overlappingShape = new Shape(
+			"shape:overlapping",
+			new Float64Array([0, 0, 0, 0, 0.005, 550, 0, 0.01, 1100, 0, 0.02, 2200]),
+		);
+		journey.applyModifications(detourPlan(overlappingShape), at("08:00").epochMilliseconds);
+
+		expect(journey.cancelledPath).toBeUndefined();
+	});
+
+	it("n'abandonne aucune portion quand la déviation ne fournit pas son propre tracé", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.applyModifications(detourPlan(), at("08:00").epochMilliseconds);
+
+		expect(journey.cancelledPath).toBeUndefined();
+	});
+
+	it("oublie le tracé abandonné dès que la déviation est levée", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.applyModifications(detourPlan(detourShape), at("08:00").epochMilliseconds);
+		expect(journey.cancelledPath).toBeDefined();
+
+		journey.clearModifications();
+		expect(journey.cancelledPath).toBeUndefined();
 	});
 });

@@ -31,6 +31,7 @@
 	"attributions_no_realtime": "Aucun flux temps réel pour cette source.",
 	"attributions_entity_trip_updates": "Horaires temps réel",
 	"attributions_entity_vehicle_positions": "Positions véhicules",
+	"attributions_entity_trip_modifications": "Dessertes déviées",
 	"attributions_authenticated": "Accès authentifié",
 	"attributions_last_modified": "Mis à jour le {date}",
 	"attributions_see_all": "Voir toutes les attributions",
@@ -220,6 +221,7 @@
 	"marker_destination_unknown": "Destination inconnue",
 	"stop_call_skipped": "Arrêt non desservi",
 	"stop_call_extra": "Desserte supplémentaire",
+	"stop_call_realtime": "Horaire temps réel",
 	"stop_call_delay": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

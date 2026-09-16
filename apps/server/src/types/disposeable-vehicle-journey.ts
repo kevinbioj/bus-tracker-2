@@ -26,6 +26,10 @@ export type DisposeableVehicleJourney = {
 	};
 	occupancy?: "LOW" | "MEDIUM" | "HIGH" | "NO_PASSENGERS";
 	pathRef?: string;
+	/** Portions du tracé théorique que la course, déviée, n'emprunte plus. */
+	cancelledPathRef?: string;
+	/** Course absente du GTFS statique : ses arrêts n'ont pas d'horaire théorique de référence. */
+	isAdded?: boolean;
 	networkId: number;
 	operatorId?: number;
 	vehicle?: { id?: number; number: string };

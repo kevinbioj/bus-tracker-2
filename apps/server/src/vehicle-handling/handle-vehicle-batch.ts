@@ -53,6 +53,8 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 				calls: vehicleJourney.calls,
 				position: vehicleJourney.position,
 				pathRef: vehicleJourney.pathRef,
+				cancelledPathRef: vehicleJourney.cancelledPathRef,
+				isAdded: vehicleJourney.isAdded,
 				occupancy: vehicleJourney.occupancy,
 				networkId: network.id,
 				operatorId: undefined,

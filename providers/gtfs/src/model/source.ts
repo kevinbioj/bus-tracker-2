@@ -2,14 +2,14 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { EncodedLinePath, VehicleJourney } from "@bus-tracker/contracts";
-
 import { downloadGtfs } from "../download/download-gtfs.js";
+import type { RealtimeFeedContents } from "../download/download-gtfs-rt.js";
 import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";
 import { getStaleness } from "../utils/get-staleness.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 import type { Gtfs } from "./gtfs.js";
-import type { TripUpdate, VehicleDescriptor, VehiclePosition } from "./gtfs-rt.js";
+import type { TripModifications, TripUpdate, VehicleDescriptor, VehiclePosition } from "./gtfs-rt.js";
 import type { Journey } from "./journey.js";
 import { buildEncodedLinePaths } from "./line-path.js";
 import type { Trip } from "./trip.js";
@@ -58,6 +58,12 @@ export type SourceOptions = {
 	 */
 	maxVehiclePositionAgeMs?: number;
 	allowTripGuessing?: boolean;
+	/**
+	 * Apparie une course supplémentaire à un trip théorique de la même ligne pour lui emprunter son
+	 * tracé et ses distances curvilignes. Sert de repli aux courses `NEW` dépourvues de
+	 * `trip_properties.shape_id`, et conditionne à lui seul la publication des courses `ADDED` —
+	 * valeur dépréciée, dont le parcours n'est pas garanti complet.
+	 */
 	addedTripShapeMatching?: boolean;
 	disableRoutePaths?: boolean;
 	// --- Additional data acquirance
@@ -75,6 +81,11 @@ export type SourceOptions = {
 	mapStopRef?: (stopRef: string) => string;
 	mapTripRef?: (tripRef: string) => string;
 	mapTripUpdate?: (tripUpdate: TripUpdate, gtfs: Gtfs) => TripUpdate | undefined;
+	/**
+	 * Retouche une entité `TripModifications` avant son application, ou l'écarte en renvoyant
+	 * `undefined`. Pendant du hook {@link SourceOptions.mapTripUpdate} pour les dessertes déviées.
+	 */
+	mapTripModifications?: (tripModifications: TripModifications, gtfs: Gtfs) => TripModifications | undefined;
 	mapVehiclePosition?: (vehicle: VehiclePosition, gtfs: Gtfs) => VehiclePosition | undefined;
 	isValidJourney?: (vehicleJourney: VehicleJourney) => boolean;
 };
@@ -94,12 +105,12 @@ export const MAX_TERMINUS_GRACE_MS = 120_000;
  */
 export const DEFAULT_TRIP_UPDATE_TTL_MS = 10 * 60 * 1000;
 
-export type RealtimeEntityType = "TRIP_UPDATES" | "VEHICLE_POSITIONS";
+export type RealtimeEntityType = "TRIP_UPDATES" | "VEHICLE_POSITIONS" | "TRIP_MODIFICATIONS";
 
 export class Source {
 	gtfs?: Gtfs;
 	linePaths = new Map<string, EncodedLinePath>();
-	realtimeFeedCache = new Map<string, { at: number; tripUpdates: TripUpdate[]; vehiclePositions: VehiclePosition[] }>();
+	realtimeFeedCache = new Map<string, { at: number; contents: RealtimeFeedContents }>();
 	/** Instant (epoch ms) du dernier cycle de calcul réussi. Undefined avant le premier. */
 	lastComputeAtMs?: number;
 	/**
@@ -110,6 +121,12 @@ export class Source {
 	observedNetworkRefs = new Set<string>();
 	/** Types d'entités observés dans chaque flux temps réel, indexés par href. */
 	observedRealtimeEntityTypes = new Map<string, Set<RealtimeEntityType>>();
+	/**
+	 * Clés des courses portant une déviation, dans {@link Gtfs.journeys}. Elles ne sont qu'une poignée
+	 * parmi des dizaines de milliers : les suivre évite de balayer toutes les courses à chaque cycle
+	 * pour trouver celles dont la déviation a expiré.
+	 */
+	modifiedJourneyKeys = new Set<string>();
 
 	constructor(
 		readonly id: string,

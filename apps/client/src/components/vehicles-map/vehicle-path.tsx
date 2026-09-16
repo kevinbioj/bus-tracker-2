@@ -4,12 +4,112 @@ import type { AddLayerObject, GeoJSONSource, SourceSpecification } from "maplibr
 import { useEffect, useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
+import { useMap } from "~/adapters/maplibre-gl/map";
+import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
 import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { GetLinePathQuery, GetLineQuery } from "~/api/lines";
-import { GetPathQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import { GetJourneyPathsQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
+
+const CANCELLED_PATH_WIDTH = 5;
+const CANCELLED_PATH_YELLOW = "#FACC15";
+const CANCELLED_PATH_BLACK = "#18181B";
+const CANCELLED_PATH_PATTERN_ID = "cancelled-path-hatch";
+const CANCELLED_PATH_PATTERN_HEIGHT = 32;
+/** Tuile une fois et demie plus longue que haute : sur un ruban fin, le motif s'espace assez pour
+ * rester lisible — `line-pattern` cale la hauteur de l'image sur la largeur de la ligne et répète
+ * la longueur à ratio constant. */
+const CANCELLED_PATH_PATTERN_WIDTH = 48;
+
+/**
+ * Motif de balisage de chantier — bandes noires obliques sur fond jaune — répété le long du tracé
+ * par `line-pattern`.
+ *
+ * Les bandes ont une pente de 1 et sont dupliquées à une tuile d'écart de part et d'autre : elles
+ * se raccordent ainsi exactement à elles-mêmes lorsque le motif se répète en longueur.
+ */
+function createHatchPattern() {
+	const width = CANCELLED_PATH_PATTERN_WIDTH;
+	const height = CANCELLED_PATH_PATTERN_HEIGHT;
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext("2d")!;
+
+	ctx.fillStyle = CANCELLED_PATH_YELLOW;
+	ctx.fillRect(0, 0, width, height);
+
+	ctx.strokeStyle = CANCELLED_PATH_BLACK;
+	// Tracées à 45°, ces bandes couvrent √2 fois leur épaisseur : le jaune reste dominant, le ruban
+	// se lit comme un balisage et non comme une ligne noire.
+	ctx.lineWidth = width * 0.28;
+	for (const offset of [-width, 0, width]) {
+		ctx.beginPath();
+		ctx.moveTo(offset, 0);
+		ctx.lineTo(offset + height, height);
+		ctx.stroke();
+	}
+
+	return ctx.getImageData(0, 0, width, height);
+}
+
+/**
+ * Tracé abandonné par une course déviée : un ruban jaune et noir façon balisage de chantier, qu'on
+ * distingue au premier coup d'œil de l'itinéraire réellement suivi, lequel garde les couleurs de
+ * la ligne.
+ *
+ * Trois couches superposées : un liseré sombre qui détache le ruban du fond de carte, la bande
+ * jaune pleine, puis les hachures. La bande jaune n'est pas seulement un fond : elle garde le tracé
+ * lisible tant que le motif n'est pas chargé dans le style.
+ */
+const cancelledPathCasingLayer: AddLayerObject = {
+	id: "vehicle-path-cancelled-casing",
+	source: "vehicle-path",
+	type: "line",
+	layout: {
+		"line-cap": "round",
+		"line-join": "round",
+	},
+	paint: {
+		"line-color": CANCELLED_PATH_BLACK,
+		"line-width": CANCELLED_PATH_WIDTH + 2,
+		"line-opacity": 0.3,
+		"line-blur": 1,
+	},
+	filter: ["==", ["get", "type"], "cancelled"],
+};
+
+const cancelledPathLayer: AddLayerObject = {
+	id: "vehicle-path-cancelled",
+	source: "vehicle-path",
+	type: "line",
+	layout: {
+		"line-cap": "round",
+		"line-join": "round",
+	},
+	paint: {
+		"line-color": CANCELLED_PATH_YELLOW,
+		"line-width": CANCELLED_PATH_WIDTH,
+	},
+	filter: ["==", ["get", "type"], "cancelled"],
+};
+
+const cancelledPathHatchLayer: AddLayerObject = {
+	id: "vehicle-path-cancelled-hatch",
+	source: "vehicle-path",
+	type: "line",
+	layout: {
+		"line-cap": "butt",
+		"line-join": "round",
+	},
+	paint: {
+		"line-pattern": CANCELLED_PATH_PATTERN_ID,
+		"line-width": CANCELLED_PATH_WIDTH,
+	},
+	filter: ["==", ["get", "type"], "cancelled"],
+};
 
 const pastPathStrokeLayer: AddLayerObject = {
 	id: "vehicle-path-past-stroke",
@@ -164,12 +264,21 @@ type VehiclePathProps = {
 };
 
 export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
+	const map = useMap();
 	const [pathDisplayMode] = usePathDisplayMode();
 	const [stopLabelsStyle] = useLocalStorage<StopLabelsStyle>("stop-labels-style", "with-background");
 	const showJourneyPath = pathDisplayMode !== "disabled" && journeyId !== undefined;
 
 	const { data: journey } = useQuery(GetVehicleJourneyQuery(showJourneyPath ? journeyId : null, true));
-	const { data: path } = useQuery(GetPathQuery(showJourneyPath ? journey?.pathRef : undefined));
+
+	// La course détaillée peut encore être la précédente le temps d'un rendu : demander ses tracés
+	// afficherait ceux d'une autre course.
+	const pathsReady = showJourneyPath && journey?.id === journeyId;
+	const { data: paths } = useQuery(
+		GetJourneyPathsQuery(pathsReady ? journeyId : undefined, pathsReady ? journey.pathRef : undefined),
+	);
+	const path = paths?.path;
+	const cancelledPath = paths?.cancelled;
 
 	const journeyPathReady = journey?.id === journeyId && journey?.pathRef !== undefined && path !== undefined;
 	const showLinePath =
@@ -297,6 +406,21 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 			return { type: "FeatureCollection", features };
 		}
 
+		if (cancelledPath !== undefined) {
+			for (const segment of cancelledPath.segments) {
+				if (segment.length <= 1) continue;
+
+				features.push({
+					type: "Feature",
+					geometry: {
+						type: "LineString",
+						coordinates: segment.map(([latitude, longitude]) => [longitude, latitude]),
+					},
+					properties: { type: "cancelled" },
+				});
+			}
+		}
+
 		if (path !== undefined) {
 			const points = path.p;
 
@@ -392,9 +516,14 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 		}
 
 		return { type: "FeatureCollection", features };
-	}, [awaitingLineColors, journey, journeyId, path, line, linePath, pathDisplayMode, showLinePath]);
+	}, [awaitingLineColors, cancelledPath, journey, journeyId, path, line, linePath, pathDisplayMode, showLinePath]);
 
 	const source = useMapSource<GeoJSONSource>("vehicle-path", initialSource);
+	// Ajoutées avant les autres : chaque couche s'empile au-dessus de la précédente, le tracé
+	// abandonné doit rester sous l'itinéraire réellement suivi.
+	useMapLayer(cancelledPathCasingLayer, "vehicles-arrows-outline");
+	useMapLayer(cancelledPathLayer, "vehicles-arrows-outline");
+	useMapLayer(cancelledPathHatchLayer, "vehicles-arrows-outline");
 	useMapLayer(pastPathStrokeLayer, "vehicles-arrows-outline");
 	useMapLayer(pastPathLayer, "vehicles-arrows-outline");
 	useMapLayer(futurePathStrokeLayer, "vehicles-arrows-outline");
@@ -402,6 +531,36 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	useMapLayer(stopsLayer, "vehicles-arrows-outline");
 	useMapLayer(skippedStopMarkerLayer, "vehicles-arrows-outline");
 	useMapLayer(stopsLabelLayer, "vehicles-arrows-outline");
+
+	useEffect(() => {
+		let abort = false;
+
+		const addPatternWhenReady = () => {
+			if (abort) return;
+			if (!isStyleLoaded(map)) return;
+			if (map.getImage(CANCELLED_PATH_PATTERN_ID) !== undefined) return;
+
+			// Doublé pour rester net sur les écrans à forte densité comme sur la mise à l'échelle
+			// du motif à la largeur du tracé.
+			map.addImage(CANCELLED_PATH_PATTERN_ID, createHatchPattern(), { pixelRatio: 2 });
+		};
+
+		addPatternWhenReady();
+
+		map.on("load", addPatternWhenReady);
+		// le motif disparaît avec le style qui le porte : il est rechargé avec le nouveau
+		map.on("styledata", addPatternWhenReady);
+
+		return () => {
+			abort = true;
+			map.off("load", addPatternWhenReady);
+			map.off("styledata", addPatternWhenReady);
+
+			if (isStyleLoaded(map) && map.getImage(CANCELLED_PATH_PATTERN_ID) !== undefined) {
+				map.removeImage(CANCELLED_PATH_PATTERN_ID);
+			}
+		};
+	}, [map]);
 
 	useEffect(() => {
 		if (source) {

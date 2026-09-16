@@ -61,7 +61,7 @@ export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDet
 					<VehicleGirouette journey={journey} width={popupWidth} />
 					<VehicleInformation disableLinks={embedMode} journey={journey} />
 					{displayNextCalls && journey.calls !== undefined && (
-						<VehicleNextStops calls={journey.calls} tooltipId={journey.id} />
+						<VehicleNextStops addedJourney={journey.isAdded} calls={journey.calls} tooltipId={journey.id} />
 					)}
 					{showDebugInfos && (
 						<>

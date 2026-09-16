@@ -1,8 +1,9 @@
-import type { VehicleJourneyPosition } from "@bus-tracker/contracts";
+import type { VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-tracker/contracts";
 
 import type { Gtfs } from "../model/gtfs.js";
 import type { StopTimeUpdate, TripUpdate } from "../model/gtfs-rt.js";
 import { getBoundedArrivalMs, type JourneyCall } from "../model/journey.js";
+import { createRealtimeResources, type RealtimeResources, resolveStop } from "../model/realtime-lookup.js";
 import type { Shape } from "../model/shape.js";
 import type { Trip } from "../model/trip.js";
 
@@ -26,7 +27,24 @@ function getStopTimeMs(stopTimeUpdate: StopTimeUpdate) {
 	return typeof time === "number" ? time * 1000 : undefined;
 }
 
-export function createCallsFromTripUpdate(gtfs: Gtfs, tripUpdate?: TripUpdate): JourneyCall[] | undefined {
+/** Un arrêt qu'un producteur déclare non desservi n'accepte ni montée ni descente. */
+function getCallFlags(stopTimeUpdate: StopTimeUpdate): VehicleJourneyCallFlags[] {
+	const flags: VehicleJourneyCallFlags[] = [];
+	if (stopTimeUpdate.stopTimeProperties?.pickupType === "NONE") flags.push("NO_PICKUP");
+	if (stopTimeUpdate.stopTimeProperties?.dropOffType === "NONE") flags.push("NO_DROP_OFF");
+	return flags;
+}
+
+/**
+ * Reconstruit la desserte d'une course que le GTFS statique ne connaît pas, depuis les seuls
+ * `stop_time_update` du flux. La spec impose à ces courses de décrire leur parcours complet,
+ * horaires passés compris : ce que le flux annonce fait donc entièrement foi.
+ */
+export function createCallsFromTripUpdate(
+	gtfs: Gtfs,
+	tripUpdate?: TripUpdate,
+	resources: RealtimeResources = createRealtimeResources(),
+): JourneyCall[] | undefined {
 	if (tripUpdate?.stopTimeUpdate === undefined) return;
 
 	const calls = tripUpdate.stopTimeUpdate.flatMap((stopTimeUpdate, index) => {
@@ -34,11 +52,9 @@ export function createCallsFromTripUpdate(gtfs: Gtfs, tripUpdate?: TripUpdate): 
 		if (arrivalTimeMs === undefined) return [];
 
 		const departureTimeMs = (stopTimeUpdate.departure?.time ?? stopTimeUpdate.arrival?.time)! * 1000;
-		const stop = gtfs.stops.get(stopTimeUpdate.stopId);
+		const stop = resolveStop(gtfs, resources, stopTimeUpdate.stopId);
 		if (stop === undefined) return [];
-		const assignedStop = stopTimeUpdate.stopTimeProperties?.assignedStopId
-			? gtfs.stops.get(stopTimeUpdate.stopTimeProperties.assignedStopId)
-			: undefined;
+		const assignedStop = resolveStop(gtfs, resources, stopTimeUpdate.stopTimeProperties?.assignedStopId);
 
 		return {
 			aimedArrivalTime: arrivalTimeMs,
@@ -48,8 +64,9 @@ export function createCallsFromTripUpdate(gtfs: Gtfs, tripUpdate?: TripUpdate): 
 			sequence: stopTimeUpdate.stopSequence ?? index,
 			stop,
 			platform: assignedStop?.platformCode ?? stop.platformCode,
-			status: "UNSCHEDULED" as const,
-			flags: [],
+			status: stopTimeUpdate.scheduleRelationship === "SKIPPED" ? ("SKIPPED" as const) : ("UNSCHEDULED" as const),
+			flags: getCallFlags(stopTimeUpdate),
+			headsign: stopTimeUpdate.stopTimeProperties?.stopHeadsign,
 		};
 	});
 

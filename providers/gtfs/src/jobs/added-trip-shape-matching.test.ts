@@ -61,6 +61,7 @@ function makeGtfs() {
 		]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),

@@ -31,6 +31,7 @@
 	"attributions_no_realtime": "No real-time feed for this source.",
 	"attributions_entity_trip_updates": "Real-time schedules",
 	"attributions_entity_vehicle_positions": "Vehicle positions",
+	"attributions_entity_trip_modifications": "Trip modifications",
 	"attributions_authenticated": "Authenticated access",
 	"attributions_last_modified": "Updated on {date}",
 	"attributions_see_all": "See all attributions",
@@ -220,6 +221,7 @@
 	"marker_destination_unknown": "Unknown destination",
 	"stop_call_skipped": "Stop not served",
 	"stop_call_extra": "Additional stop",
+	"stop_call_realtime": "Real-time schedule",
 	"stop_call_delay": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

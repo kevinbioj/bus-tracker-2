@@ -3,24 +3,38 @@ import { captureException } from "@bus-tracker/monitoring";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 
 import { USER_AGENT } from "../constants.js";
-import type { GtfsRt, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
+import type { GtfsRt, IdentifiedTripModifications, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
+import {
+	createRealtimeResources,
+	createShapeFromRtShape,
+	createStopFromRtStop,
+	type RealtimeResources,
+} from "../model/realtime-lookup.js";
 import type { RealtimeEntityType, Source } from "../model/source.js";
 import { getAuthHeaders } from "../utils/auth.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
+
+/** Ce qu'un flux a livré au cours d'un cycle, tel que mis en cache pour les flux à polling. */
+export type RealtimeFeedContents = {
+	tripUpdates: TripUpdate[];
+	vehiclePositions: VehiclePosition[];
+	tripModifications: IdentifiedTripModifications[];
+	shapes: RealtimeResources["shapes"];
+	stops: RealtimeResources["stops"];
+};
 
 /**
  * Mémorise ce qu'un flux publie réellement, pour l'exposer en attributions. Un producteur peut
  * annoncer un flux « trip-updates » qui porte aussi des positions : seul le contenu lu fait foi.
  * Les types observés sont cumulés, un cycle vide ne retire pas ce qui a déjà été vu.
  */
-function recordObservedEntityTypes(
-	source: Source,
-	href: string,
-	tripUpdateCount: number,
-	vehiclePositionCount: number,
-) {
-	if (tripUpdateCount === 0 && vehiclePositionCount === 0) return;
+function recordObservedEntityTypes(source: Source, href: string, contents: RealtimeFeedContents) {
+	const tripUpdateCount = contents.tripUpdates.length;
+	const vehiclePositionCount = contents.vehiclePositions.length;
+	const tripModificationCount = contents.tripModifications.length;
+
+	if (tripUpdateCount === 0 && vehiclePositionCount === 0 && tripModificationCount === 0) return;
 
 	let entityTypes = source.observedRealtimeEntityTypes.get(href);
 	if (entityTypes === undefined) {
@@ -30,6 +44,12 @@ function recordObservedEntityTypes(
 
 	if (tripUpdateCount > 0) entityTypes.add("TRIP_UPDATES");
 	if (vehiclePositionCount > 0) entityTypes.add("VEHICLE_POSITIONS");
+	if (tripModificationCount > 0) entityTypes.add("TRIP_MODIFICATIONS");
+}
+
+function createFeedContents(): RealtimeFeedContents {
+	const { shapes, stops } = createRealtimeResources();
+	return { tripUpdates: [], vehiclePositions: [], tripModifications: [], shapes, stops };
 }
 
 export async function downloadGtfsRt(source: Source) {
@@ -39,8 +59,18 @@ export async function downloadGtfsRt(source: Source) {
 
 	const tripUpdates: TripUpdate[] = [];
 	const vehiclePositions: VehiclePosition[] = [];
+	const tripModifications: IdentifiedTripModifications[] = [];
+	const resources = createRealtimeResources();
 	/** Flux dont aucune donnée n'a pu être obtenue, cache de repli compris. */
 	let failedFeedCount = 0;
+
+	const collect = (contents: RealtimeFeedContents) => {
+		tripUpdates.push(...contents.tripUpdates);
+		vehiclePositions.push(...contents.vehiclePositions);
+		tripModifications.push(...contents.tripModifications);
+		for (const [id, shape] of contents.shapes) resources.shapes.set(id, shape);
+		for (const [id, stop] of contents.stops) resources.stops.set(id, stop);
+	};
 
 	await Promise.allSettled(
 		realtimeResources.map(async ({ href: realtimeFeedHref, pollMs }) => {
@@ -48,8 +78,7 @@ export async function downloadGtfsRt(source: Source) {
 
 			// Réutilise la donnée en cache tant qu'elle est plus fraîche que l'intervalle de polling.
 			if (pollMs !== undefined && cached !== undefined && Date.now() - cached.at < pollMs) {
-				tripUpdates.push(...cached.tripUpdates);
-				vehiclePositions.push(...cached.vehiclePositions);
+				collect(cached.contents);
 				return;
 			}
 
@@ -81,8 +110,7 @@ export async function downloadGtfsRt(source: Source) {
 				}) as GtfsRt;
 				const entities = gtfsRt.entity ?? [];
 
-				const feedTripUpdates: TripUpdate[] = [];
-				const feedVehiclePositions: VehiclePosition[] = [];
+				const contents = createFeedContents();
 
 				for (const entity of entities) {
 					if (entity.tripUpdate) {
@@ -92,7 +120,7 @@ export async function downloadGtfsRt(source: Source) {
 								: entity.tripUpdate;
 						if (tripUpdate === undefined) continue;
 						tripUpdate.timestamp ||= gtfsRt.header.timestamp;
-						feedTripUpdates.push(tripUpdate);
+						contents.tripUpdates.push(tripUpdate);
 					}
 
 					if (entity.vehicle) {
@@ -102,28 +130,43 @@ export async function downloadGtfsRt(source: Source) {
 								: entity.vehicle;
 						if (vehiclePosition === undefined) continue;
 						vehiclePosition.timestamp ||= gtfsRt.header.timestamp;
-						feedVehiclePositions.push(vehiclePosition);
+						contents.vehiclePositions.push(vehiclePosition);
+					}
+
+					if (entity.tripModifications) {
+						const mapped =
+							typeof source.options.mapTripModifications === "function"
+								? source.options.mapTripModifications(entity.tripModifications, source.gtfs!)
+								: entity.tripModifications;
+						if (mapped === undefined) continue;
+						// `modified_trip.modifications_id` désigne l'entité porteuse, pas la modification :
+						// son identifiant doit voyager avec elle pour que les TripUpdate s'y rattachent.
+						contents.tripModifications.push({ ...mapped, id: entity.id });
+					}
+
+					if (entity.shape) {
+						const shape = createShapeFromRtShape(entity.shape);
+						if (shape !== undefined) contents.shapes.set(shape.id, shape);
+					}
+
+					if (entity.stop) {
+						const stop = createStopFromRtStop(entity.stop);
+						if (stop !== undefined) contents.stops.set(stop.id, stop);
 					}
 				}
 
-				recordObservedEntityTypes(source, realtimeFeedHref, feedTripUpdates.length, feedVehiclePositions.length);
+				recordObservedEntityTypes(source, realtimeFeedHref, contents);
 
 				if (pollMs !== undefined) {
-					source.realtimeFeedCache.set(realtimeFeedHref, {
-						at: Date.now(),
-						tripUpdates: feedTripUpdates,
-						vehiclePositions: feedVehiclePositions,
-					});
+					source.realtimeFeedCache.set(realtimeFeedHref, { at: Date.now(), contents });
 				}
 
-				tripUpdates.push(...feedTripUpdates);
-				vehiclePositions.push(...feedVehiclePositions);
+				collect(contents);
 			} catch (cause) {
 				// Sur un flux à polling, en cas d'échec on préfère servir la dernière donnée connue
 				// plutôt que de perdre tous les véhicules du flux.
 				if (pollMs !== undefined && cached !== undefined) {
-					tripUpdates.push(...cached.tripUpdates);
-					vehiclePositions.push(...cached.vehiclePositions);
+					collect(cached.contents);
 				} else {
 					failedFeedCount += 1;
 				}
@@ -138,5 +181,5 @@ export async function downloadGtfsRt(source: Source) {
 		}),
 	);
 
-	return { tripUpdates, vehiclePositions, failedFeedCount };
+	return { tripUpdates, vehiclePositions, tripModifications, resources, failedFeedCount };
 }

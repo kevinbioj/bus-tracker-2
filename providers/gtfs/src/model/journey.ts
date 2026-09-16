@@ -1,10 +1,12 @@
-import type { VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-tracker/contracts";
+import type { LinePath, VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-tracker/contracts";
 
 import { groupBy } from "../utils/group-by.js";
 import type { Gtfs } from "./gtfs.js";
 import type { StopTimeUpdate, VehicleDescriptor } from "./gtfs-rt.js";
+import type { Shape } from "./shape.js";
 import type { Stop } from "./stop.js";
 import type { Trip } from "./trip.js";
+import { buildModifiedCalls, computeCancelledCallRanges, type TripModificationPlan } from "./trip-modification.js";
 
 export type JourneyCall = {
 	aimedArrivalTime: number;
@@ -16,6 +18,12 @@ export type JourneyCall = {
 	platform?: string;
 	distanceTraveled?: number;
 	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
+	/**
+	 * Origine de l'arrêt dans une course déviée : ajouté par la déviation, ou retiré par elle et
+	 * conservé pour mémoire. Détermine le statut de base auquel l'arrêt revient à chaque
+	 * application d'un TripUpdate, faute de quoi la déviation serait effacée par le temps réel.
+	 */
+	modification?: "ADDED" | "REMOVED";
 	flags: VehicleJourneyCallFlags[];
 	headsign?: string;
 };
@@ -29,6 +37,87 @@ export type JourneyPosition = {
 };
 
 const VEHICLE_DESCRIPTOR_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * Écart au-delà duquel un point du tracé théorique est tenu pour réellement abandonné. En deçà, le
+ * tracé de remplacement le longe : le signaler comme abandonné ferait doublon, deux tracés d'un
+ * même itinéraire ne coïncidant jamais au mètre près.
+ */
+const DETOUR_OVERLAP_TOLERANCE_M = 20;
+
+/** En deçà, le point de raccord serait confondu avec l'extrémité qu'il est censé souder. */
+const JOIN_MIN_DISTANCE_M = 0.5;
+
+/**
+ * Soude une portion abandonnée au tracé de remplacement, en faisant partir et finir la portion sur
+ * la projection de ses extrémités sur celui-ci.
+ *
+ * Sans cette soudure, le ruban s'arrêterait à l'écart de l'itinéraire suivi — jusqu'à la tolérance
+ * de recouvrement — et laisserait un trou à l'endroit même où le véhicule le quitte puis le
+ * retrouve, c'est-à-dire là où la déviation se lit.
+ */
+function joinToShape(points: [number, number][], detourShape: Shape): [number, number][] {
+	const [firstLatitude, firstLongitude] = points[0]!;
+	const [lastLatitude, lastLongitude] = points[points.length - 1]!;
+
+	// Une extrémité déjà posée sur le tracé de remplacement n'a rien à raccorder : la ressouder
+	// n'ajouterait qu'un point confondu avec elle.
+	const start = detourShape.projectPosition(firstLatitude, firstLongitude);
+	const end = detourShape.projectPosition(lastLatitude, lastLongitude);
+
+	return [
+		...(start !== undefined && start.distance > JOIN_MIN_DISTANCE_M
+			? [[start.latitude, start.longitude] as [number, number]]
+			: []),
+		...points,
+		...(end !== undefined && end.distance > JOIN_MIN_DISTANCE_M
+			? [[end.latitude, end.longitude] as [number, number]]
+			: []),
+	];
+}
+
+/**
+ * Ne retient d'un tracé que ce qui s'écarte effectivement du tracé de remplacement, en le scindant
+ * autant de fois qu'il le faut : une déviation ne quitte souvent l'itinéraire que sur une fraction
+ * de la portion qu'elle prive de desserte, et emprunte le reste à l'identique.
+ *
+ * Chaque portion retenue est étendue d'un point de part et d'autre, puis raccordée au tracé de
+ * remplacement par {@link joinToShape}.
+ */
+function splitAwayFromShape(points: [number, number][], detourShape: Shape) {
+	const segments: [number, number][][] = [];
+	let awaySince: number | undefined;
+
+	for (let index = 0; index < points.length; index++) {
+		const [latitude, longitude] = points[index]!;
+
+		if (detourShape.distanceToPosition(latitude, longitude) > DETOUR_OVERLAP_TOLERANCE_M) {
+			awaySince ??= index;
+			continue;
+		}
+
+		if (awaySince !== undefined) {
+			segments.push(points.slice(Math.max(0, awaySince - 1), index + 1));
+			awaySince = undefined;
+		}
+	}
+
+	if (awaySince !== undefined) {
+		segments.push(points.slice(Math.max(0, awaySince - 1)));
+	}
+
+	return segments.filter((segment) => segment.length > 1).map((segment) => joinToShape(segment, detourShape));
+}
+
+/**
+ * Statut auquel un arrêt revient en l'absence d'information temps réel le concernant. Un arrêt
+ * issu d'une déviation n'a pas d'existence théorique : le sien ne peut pas être « à l'horaire ».
+ */
+function getBaseCallStatus(call: JourneyCall): JourneyCall["status"] {
+	if (call.modification === "ADDED") return "UNSCHEDULED";
+	if (call.modification === "REMOVED") return "SKIPPED";
+	return "SCHEDULED";
+}
 
 /** Recul (exprimé en temps de rattrapage) au-delà duquel la donnée temps réel est jugée aberrante : le recul est accepté. */
 const POSITION_GUARD_MAX_LAG_MS = 5 * 60 * 1000;
@@ -92,6 +181,9 @@ export class Journey {
 	private _calls: JourneyCall[] | null = null;
 	private _hasRealtime = false;
 	private _positionGuard: PositionGuardState | undefined;
+	private _modificationPlan: TripModificationPlan | undefined;
+	/** Cache du tracé abandonné : `null` signifie « calculé, la déviation n'en abandonne aucun ». */
+	private _cancelledPath: LinePath | null | undefined;
 	/** Bornes théoriques, mémorisées pour restaurer l'état initial quand le temps réel expire. */
 	private readonly aimedFirstCallArrivalMs: number;
 	private readonly aimedLastCallDepartureMs: number;
@@ -99,6 +191,8 @@ export class Journey {
 	lastVehiclePositionAtMs: number | undefined;
 	/** Instant (epoch ms) du dernier cycle ayant appliqué un TripUpdate à cette course. */
 	lastTripUpdateAtMs: number | undefined;
+	/** Instant (epoch ms) du dernier cycle où une déviation a été vue dans le flux. */
+	lastModificationAtMs: number | undefined;
 	/** Clé sous laquelle la course a été publiée pour la dernière fois depuis son horaire (théorique ou TripUpdate). */
 	lastPublishedKey: string | undefined;
 
@@ -121,9 +215,103 @@ export class Journey {
 	 */
 	get calls(): JourneyCall[] {
 		if (this._calls === null) {
-			this._calls = this.trip.computeCallsForDate(this.date);
+			const scheduledCalls = this.trip.computeCallsForDate(this.date);
+			this._calls =
+				this._modificationPlan !== undefined
+					? (buildModifiedCalls(scheduledCalls, this._modificationPlan) ?? scheduledCalls)
+					: scheduledCalls;
 		}
 		return this._calls;
+	}
+
+	/** Tracé effectivement suivi : celui de la déviation en cours, à défaut celui de la course. */
+	get shape(): Shape | undefined {
+		return this._modificationPlan?.shape ?? this.trip.shape;
+	}
+
+	/**
+	 * Portions du tracé théorique que la déviation en cours fait abandonner à la course, afin de les
+	 * signaler comme telles sur la carte.
+	 *
+	 * Uniquement lorsque la déviation fournit son propre tracé : sans lui, le véhicule est réputé
+	 * suivre l'itinéraire d'origine, dont aucune portion n'est donc abandonnée.
+	 */
+	get cancelledPath(): LinePath | undefined {
+		if (this._cancelledPath === undefined) {
+			this._cancelledPath = this.computeCancelledPath() ?? null;
+		}
+		return this._cancelledPath ?? undefined;
+	}
+
+	private computeCancelledPath(): LinePath | undefined {
+		const plan = this._modificationPlan;
+		const tripShape = this.trip.shape;
+		if (plan === undefined || plan.shape === undefined || tripShape === undefined) return;
+
+		const scheduledCalls = this.trip.computeCallsForDate(this.date);
+		const ranges = computeCancelledCallRanges(scheduledCalls, plan);
+		if (ranges.length === 0) return;
+
+		const segments = ranges.flatMap(([fromIndex, toIndex]) => {
+			const segment = tripShape.sliceBetweenPositions(scheduledCalls[fromIndex]!.stop, scheduledCalls[toIndex]!.stop);
+			return splitAwayFromShape(segment, plan.shape!);
+		});
+
+		return segments.length > 0 ? { segments } : undefined;
+	}
+
+	/** Vrai si une déviation est appliquée à la course. */
+	hasModifications() {
+		return this._modificationPlan !== undefined;
+	}
+
+	/**
+	 * Applique une déviation à la course. Les arrêts ne sont recalculés que si son contenu a changé :
+	 * une déviation est republiée à chaque cycle, en recalculer les arrêts à chaque fois effacerait
+	 * le temps réel appliqué au cycle précédent.
+	 */
+	applyModifications(plan: TripModificationPlan, nowMs: number) {
+		if (this._modificationPlan?.revision !== plan.revision) {
+			this._modificationPlan = plan;
+			this._calls = null;
+			this._cancelledPath = undefined;
+			this.refreshBounds();
+		}
+		this.lastModificationAtMs = nowMs;
+	}
+
+	/**
+	 * Abandonne la déviation appliquée à la course et restaure sa desserte théorique. Un flux
+	 * GTFS-RT étant un instantané complet, une déviation qui en disparaît a été levée.
+	 *
+	 * @returns true si une déviation a été abandonnée.
+	 */
+	clearModifications() {
+		if (this._modificationPlan === undefined) return false;
+
+		this._modificationPlan = undefined;
+		this.lastModificationAtMs = undefined;
+		this._calls = null;
+		this._cancelledPath = undefined;
+		this._hasRealtime = false;
+		this.firstCallArrivalMs = this.aimedFirstCallArrivalMs;
+		this.lastCallDepartureMs = this.aimedLastCallDepartureMs;
+		return true;
+	}
+
+	/**
+	 * Recale les bornes de la course sur ses arrêts courants. Une déviation peut insérer un arrêt
+	 * avant le premier ou propager un retard jusqu'au terminus : les bornes, dont dépendent la
+	 * fenêtre de publication et le balayage, ne sont plus celles de l'horaire théorique.
+	 */
+	private refreshBounds() {
+		const calls = this.calls;
+		const firstCall = calls[0];
+		const lastCall = calls[calls.length - 1];
+		if (firstCall === undefined || lastCall === undefined) return;
+
+		this.firstCallArrivalMs = firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime;
+		this.lastCallDepartureMs = lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime;
 	}
 
 	/**
@@ -170,6 +358,14 @@ export class Journey {
 		this._hasRealtime = false;
 		// Les calls sont re-calculés à la demande depuis l'horaire théorique.
 		this._calls = null;
+
+		// Une déviation n'est pas une prédiction : elle ne périme pas avec le TripUpdate qui la
+		// traversait, et les bornes restent celles de la desserte déviée.
+		if (this._modificationPlan !== undefined) {
+			this.refreshBounds();
+			return;
+		}
+
 		this.firstCallArrivalMs = this.aimedFirstCallArrivalMs;
 		this.lastCallDepartureMs = this.aimedLastCallDepartureMs;
 	}
@@ -229,11 +425,8 @@ export class Journey {
 		// Between stops
 		const nextCall = calls[currentCallIndex + 1];
 
-		if (
-			this.trip.shape === undefined ||
-			currentCall.distanceTraveled === undefined ||
-			nextCall?.distanceTraveled === undefined
-		) {
+		const shape = this.shape;
+		if (shape === undefined || currentCall.distanceTraveled === undefined || nextCall?.distanceTraveled === undefined) {
 			return this.getJourneyPositionAt(currentCall);
 		}
 
@@ -242,7 +435,7 @@ export class Journey {
 		const distanceTraveled =
 			currentCall.distanceTraveled + (nextCall.distanceTraveled - currentCall.distanceTraveled) * ratio;
 
-		const point = this.trip.shape.interpolateAt(distanceTraveled);
+		const point = shape.interpolateAt(distanceTraveled);
 		if (point === undefined) {
 			return this.getJourneyPositionAt(currentCall);
 		}
@@ -320,28 +513,48 @@ export class Journey {
 		return this._hasRealtime;
 	}
 
-	updateJourney(gtfs: Gtfs, stopTimeUpdates: StopTimeUpdate[], appendTripUpdateInformation?: boolean) {
+	/**
+	 * @param matchByStopId Apparie les `stop_time_update` par identifiant d'arrêt plutôt que par
+	 * séquence. Nécessaire quand un producteur décrit une course déviée sans passer par
+	 * `modified_trip` : les séquences qu'il émet sont alors celles du GTFS statique, que la
+	 * renumérotation de la déviation a rendues caduques.
+	 */
+	updateJourney(
+		gtfs: Gtfs,
+		stopTimeUpdates: StopTimeUpdate[],
+		appendTripUpdateInformation?: boolean,
+		matchByStopId = false,
+	) {
 		let arrivalDelay: number | undefined;
 		let departureDelay: number | undefined;
 
 		const stopTimeUpdatesByStopSequence = groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopSequence);
-		const stopTimeUpdatesByStopId =
-			Object.keys(stopTimeUpdatesByStopSequence).length > 0
-				? undefined
-				: groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopId);
+		const useStopId = matchByStopId || Object.keys(stopTimeUpdatesByStopSequence).length === 0;
+		const stopTimeUpdatesByStopId = useStopId
+			? groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopId)
+			: undefined;
 
 		for (const call of this.calls) {
 			if (!appendTripUpdateInformation) {
-				call.expectedArrivalTime = undefined;
-				call.expectedDepartureTime = undefined;
+				// Un arrêt ajouté par une déviation n'a pas d'horaire théorique : l'heure qu'elle annonce
+				// est sa seule heure attendue, et doit survivre à l'application d'un TripUpdate.
+				const isAdded = call.modification === "ADDED";
+				call.expectedArrivalTime = isAdded ? call.aimedArrivalTime : undefined;
+				call.expectedDepartureTime = isAdded ? call.aimedDepartureTime : undefined;
 				call.platform = call.stop.platformCode;
-				call.status = "SCHEDULED";
+				call.status = getBaseCallStatus(call);
 			}
 
-			let timeUpdate = stopTimeUpdatesByStopSequence[call.sequence] ?? stopTimeUpdatesByStopId?.[call.stop.id];
+			// Un arrêt retiré par une déviation ne fait plus partie de la course : aucun stop_time_update
+			// ne le décrit, et son horaire n'a pas à entrer dans la propagation des retards.
+			if (call.modification === "REMOVED") continue;
+
+			let timeUpdate = useStopId
+				? stopTimeUpdatesByStopId![call.stop.id]
+				: stopTimeUpdatesByStopSequence[call.sequence];
 
 			// Prevent wrong time assignation on circular lines when all stop events aren't provided
-			if (typeof timeUpdate?.stopSequence === "number" && timeUpdate.stopSequence !== call.sequence) {
+			if (!useStopId && typeof timeUpdate?.stopSequence === "number" && timeUpdate.stopSequence !== call.sequence) {
 				timeUpdate = undefined;
 			}
 
@@ -355,7 +568,7 @@ export class Journey {
 			if (timeUpdate?.scheduleRelationship === "NO_DATA") {
 				arrivalDelay = undefined;
 				departureDelay = undefined;
-				call.status = "SCHEDULED";
+				call.status = getBaseCallStatus(call);
 				continue;
 			}
 
@@ -397,7 +610,7 @@ export class Journey {
 				call.expectedDepartureTime = call.aimedDepartureTime + departureDelay * 1000;
 			}
 
-			call.status = "SCHEDULED";
+			call.status = getBaseCallStatus(call);
 		}
 
 		// Mise à jour du flag RT basée sur l'état réel des calls.

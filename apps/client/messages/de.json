@@ -31,6 +31,7 @@
 	"attributions_no_realtime": "Für diese Quelle liegen keine Echtzeitdaten vor.",
 	"attributions_entity_trip_updates": "Echtzeit-Fahrpläne",
 	"attributions_entity_vehicle_positions": "Fahrzeugpositionen",
+	"attributions_entity_trip_modifications": "Umgeleitete Fahrten",
 	"attributions_authenticated": "Authentifizierter Zugriff",
 	"attributions_last_modified": "Aktualisiert am {date}",
 	"attributions_see_all": "Alle Quellenangaben ansehen",
@@ -229,6 +230,7 @@
 	"marker_destination_unknown": "Unbekanntes Ziel",
 	"stop_call_skipped": "Haltestelle entfällt",
 	"stop_call_extra": "Zusätzliche Bedienung",
+	"stop_call_realtime": "Echtzeit-Fahrplan",
 	"stop_call_delay": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

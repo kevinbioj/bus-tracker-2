@@ -1,4 +1,4 @@
-import type { VehicleJourneyCallFlags, VehicleJourneyLineType, VehicleJourneyPath } from "@bus-tracker/contracts";
+import type { VehicleJourneyCallFlags, VehicleJourneyLineType, VehicleJourneyPaths } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
@@ -50,6 +50,8 @@ export type DisposeableVehicleJourney = {
 	};
 	occupancy?: "LOW" | "MEDIUM" | "HIGH" | "NO_PASSENGERS";
 	pathRef?: string;
+	/** Course absente du GTFS statique : ses arrêts n'ont pas d'horaire théorique de référence. */
+	isAdded?: boolean;
 	networkId: number;
 	operator?: number;
 	line?: { number: string; color?: string; textColor?: string };
@@ -124,10 +126,19 @@ export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
 		queryFn: () => client.get(`/vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),
 	});
 
-export const GetPathQuery = (ref?: string) =>
+/**
+ * Tracés d'une course en un seul appel : celui qu'elle suit, et les portions que sa déviation lui
+ * fait abandonner.
+ *
+ * `pathRef` entre dans la clé du cache en guise de version : il change dès que la course emprunte un
+ * autre tracé — application ou levée d'une déviation — et les deux tracés sont alors rechargés.
+ */
+export const GetJourneyPathsQuery = (journeyId?: string, pathRef?: string) =>
 	queryOptions({
-		enabled: ref !== undefined,
+		enabled: journeyId !== undefined && pathRef !== undefined,
+		retry: false,
 		staleTime: 120_000,
-		queryKey: ["paths", ref],
-		queryFn: () => client.get(`/paths/${ref}`).then((response) => response.json<VehicleJourneyPath>()),
+		queryKey: ["vehicle-journeys", journeyId, "paths", pathRef],
+		queryFn: () =>
+			client.get(`/vehicle-journeys/${journeyId}/paths`).then((response) => response.json<VehicleJourneyPaths>()),
 	});

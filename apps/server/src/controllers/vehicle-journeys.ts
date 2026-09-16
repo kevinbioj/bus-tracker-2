@@ -1,3 +1,4 @@
+import type { VehicleJourneyPaths } from "@bus-tracker/contracts";
 import { eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
@@ -181,8 +182,12 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 		destination: journey.destination ?? journey.calls?.findLast((call) => call.callStatus !== "SKIPPED")?.stopName,
 	});
 
+	// La référence du tracé abandonné reste interne : les deux tracés de la course sont servis
+	// ensemble par `/vehicle-journeys/:id/paths`, le client n'a pas à la connaître.
+	const { cancelledPathRef, ...exposedJourney } = journey;
+
 	return c.json({
-		...journey,
+		...exposedJourney,
 		vehicle: journey.vehicle
 			? {
 					...journey.vehicle,
@@ -194,6 +199,36 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 			: undefined,
 		girouette: girouette?.data,
 	});
+});
+
+/**
+ * Tracés d'une course en un seul appel : celui qu'elle suit, et les portions que sa déviation lui
+ * fait abandonner. `/paths/:ref` reste servie pour les clients qui ne connaissent que le premier.
+ */
+hono.get("/vehicle-journeys/:id/paths", createParamValidator(getVehicleJourneyParams), async (c) => {
+	const { id } = c.req.valid("param");
+
+	const journey = journeyStore.get(id);
+	if (journey === undefined) return c.json({ error: `No journey was found with id "${id}".` }, 404);
+	if (journey.pathRef === undefined) return c.json({ error: `Journey "${id}" has no path.` }, 404);
+
+	if (!redis.isReady) return c.json({ error: "Paths are temporarily unavailable." }, 503);
+
+	const refs = journey.cancelledPathRef !== undefined ? [journey.pathRef, journey.cancelledPathRef] : [journey.pathRef];
+	const [rawPath, rawCancelledPath] = await redis.mGet(refs);
+
+	// Les tracés expirent d'eux-mêmes : une course encore suivie peut en avoir perdu le sien si son
+	// producteur a cessé de le republier.
+	if (rawPath === null || rawPath === undefined) {
+		return c.json({ error: `No path was found for journey "${id}".` }, 404);
+	}
+
+	const paths: VehicleJourneyPaths = { path: JSON.parse(rawPath) };
+	if (rawCancelledPath !== null && rawCancelledPath !== undefined) {
+		paths.cancelled = JSON.parse(rawCancelledPath);
+	}
+
+	return c.json(paths);
 });
 
 const getPathParams = z.object({

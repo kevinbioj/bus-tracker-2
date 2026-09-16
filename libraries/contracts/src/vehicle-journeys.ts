@@ -1,6 +1,8 @@
 import { type } from "arktype";
 import { z } from "zod";
 
+import type { LinePath } from "./line-paths.js";
+
 export const vehicleJourneyLineTypes = [
 	"TRAMWAY",
 	"SUBWAY",
@@ -79,6 +81,16 @@ export const vehicleJourneyPathSchema = type({
 
 export type VehicleJourneyPath = typeof vehicleJourneyPathSchema.infer;
 
+/**
+ * Tracés d'une course, servis ensemble : celui qu'elle suit, et les portions du tracé théorique que
+ * sa déviation lui fait abandonner — ces dernières n'ayant aucun sens sans le premier.
+ */
+export type VehicleJourneyPaths = {
+	path: VehicleJourneyPath;
+	/** Absent lorsque la course n'est pas déviée, ou que sa déviation n'abandonne aucune portion. */
+	cancelled?: LinePath;
+};
+
 export const vehicleJourneySchema = type({
 	id: "string",
 	"line?": vehicleJourneyLineSchema,
@@ -89,11 +101,18 @@ export const vehicleJourneySchema = type({
 	"occupancy?": vehicleJourneyOccupancyEnum,
 	"path?": vehicleJourneyPathSchema,
 	"pathRef?": "string",
+	// Portions du tracé théorique que la course, déviée, n'emprunte plus. Référence un `LinePath`.
+	// Détail de transport : le client obtient les deux tracés d'un coup par
+	// `/vehicle-journeys/:id/paths`, et cette référence ne lui est pas exposée.
+	"cancelledPathRef?": "string",
 	networkRef: "string",
 	"journeyRef?": "string",
 	"operatorRef?": "string",
 	"vehicleRef?": "string",
 	"hasRealVehicle?": "boolean",
+	// Course absente du GTFS statique, reconstituée depuis un TripUpdate : ses arrêts n'ont aucun
+	// horaire théorique auquel opposer le temps réel, ni avance ni retard à en déduire.
+	"isAdded?": "boolean",
 	// Code mission (Transilien notamment), affiché en lieu et place du numéro de véhicule.
 	"missionCode?": "string",
 	"serviceDate?": "string.date",

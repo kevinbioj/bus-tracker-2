@@ -33,7 +33,7 @@ export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptio
 	pruneStopTimeZones(stops, agencies);
 	const routes = await importRoutes(gtfsDirectory, options, agencies);
 	const { trips, stopTimeStore } = await importTrips(gtfsDirectory, options, routes, services, shapes, stops);
-	const gtfs = { routes, stops, trips, journeys: new Map(), stopTimeStore };
+	const gtfs = { routes, stops, trips, shapes, journeys: new Map(), stopTimeStore };
 	options.postLoad?.(gtfs);
 	return gtfs;
 }

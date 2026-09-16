@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
 import { Agency } from "../model/agency.js";
 import type { Gtfs } from "../model/gtfs.js";
-import type { TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
+import type { IdentifiedTripModifications, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
+import { createRealtimeResources, type RealtimeResources } from "../model/realtime-lookup.js";
 import { Route } from "../model/route.js";
 import { Service } from "../model/service.js";
 import { Shape } from "../model/shape.js";
@@ -54,6 +55,7 @@ function makeGtfs() {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
@@ -125,12 +127,20 @@ function scheduledSource(options?: Partial<SourceOptions>) {
 async function cycleAt(
 	source: Source,
 	time: string,
-	realtime?: { tripUpdates?: TripUpdate[]; vehiclePositions?: VehiclePosition[]; failedFeedCount?: number },
+	realtime?: {
+		tripUpdates?: TripUpdate[];
+		vehiclePositions?: VehiclePosition[];
+		tripModifications?: IdentifiedTripModifications[];
+		resources?: RealtimeResources;
+		failedFeedCount?: number;
+	},
 ) {
 	vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from(`2026-05-18T${time}Z`));
 	vi.mocked(downloadGtfsRt).mockResolvedValue({
 		tripUpdates: realtime?.tripUpdates ?? [],
 		vehiclePositions: realtime?.vehiclePositions ?? [],
+		tripModifications: realtime?.tripModifications ?? [],
+		resources: realtime?.resources ?? createRealtimeResources(),
 		failedFeedCount: realtime?.failedFeedCount ?? 0,
 	});
 	return computeVehicleJourneys(source);
@@ -194,6 +204,7 @@ function blockSource(options?: Partial<SourceOptions>) {
 			[t1.id, t1],
 			[t2.id, t2],
 		]),
+		shapes: new Map([[shape.id, shape]]),
 		journeys: new Map([
 			[`${DATE}-t1`, t1.getScheduledJourney(DATE, true)],
 			[`${DATE}-t2`, t2.getScheduledJourney(DATE, true)],
@@ -221,6 +232,8 @@ describe("computeVehicleJourneys", () => {
 		vi.mocked(downloadGtfsRt).mockResolvedValue({
 			tripUpdates: [unmatchedAddedTripUpdate()],
 			vehiclePositions: [],
+			tripModifications: [],
+			resources: createRealtimeResources(),
 			failedFeedCount: 0,
 		});
 		const source = new Source("test", {
@@ -249,8 +262,10 @@ describe("computeVehicleJourneys", () => {
 			},
 		});
 		expect(journeys[0]?.pathRef).toBeUndefined();
-		expect(journeys[0]?.journeyRef).toBeUndefined();
 		expect(journeys[0]?.direction).toBeUndefined();
+		// La course garde sa propre identité : `journeyRef` porte l'identifiant que le flux lui donne,
+		// il ne désigne pas la course théorique dont elle n'a pas trouvé le tracé.
+		expect(journeys[0]?.journeyRef).toBe("network:ServiceJourney:added");
 		expect(journeys[0]?.calls?.map((call) => call.stopName)).toEqual(["C"]);
 		expect(journeys[0]?.calls?.map((call) => call.platformName)).toEqual(["3"]);
 		expect(journeys[0]?.calls?.some((call) => call.distanceTraveled !== undefined)).toBe(false);
@@ -272,6 +287,8 @@ describe("computeVehicleJourneys", () => {
 					currentStopSequence: 2,
 				},
 			],
+			tripModifications: [],
+			resources: createRealtimeResources(),
 			failedFeedCount: 0,
 		});
 		const source = new Source("test", {
@@ -298,6 +315,8 @@ describe("computeVehicleJourneys", () => {
 		vi.mocked(downloadGtfsRt).mockResolvedValue({
 			tripUpdates: [delayedTripUpdate(2 * 60)],
 			vehiclePositions: [],
+			tripModifications: [],
+			resources: createRealtimeResources(),
 			failedFeedCount: 0,
 		});
 		const first = await computeVehicleJourneys(source);
@@ -306,6 +325,8 @@ describe("computeVehicleJourneys", () => {
 		vi.mocked(downloadGtfsRt).mockResolvedValue({
 			tripUpdates: [delayedTripUpdate(5 * 60)],
 			vehiclePositions: [],
+			tripModifications: [],
+			resources: createRealtimeResources(),
 			failedFeedCount: 0,
 		});
 		const second = await computeVehicleJourneys(source);
@@ -569,6 +590,7 @@ function crossBorderSource() {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		shapes: new Map(),
 		journeys: new Map([[`${DATE}-original`, trip.getScheduledJourney(DATE, true)]]),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
@@ -612,6 +634,7 @@ function flixbusLikeSource() {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
@@ -649,6 +672,7 @@ function dwellingSource(options?: Partial<SourceOptions>) {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		shapes: new Map(),
 		journeys: new Map([[`${DATE}-original`, trip.getScheduledJourney(DATE, true)]]),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
@@ -766,5 +790,352 @@ describe("Source#sweepJourneys", () => {
 		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:23:00Z"));
 		source.sweepJourneys();
 		expect(source.gtfs?.journeys.size).toBe(0);
+	});
+});
+
+/** Déviation remplaçant l'arrêt B par l'arrêt X, douze minutes après le départ de A. */
+function detour(overrides?: Partial<IdentifiedTripModifications>): IdentifiedTripModifications {
+	return {
+		id: "detour:1",
+		serviceDates: ["20260518"],
+		selectedTrips: [{ tripIds: ["original"] }],
+		modifications: [
+			{
+				startStopSelector: { stopSequence: 2 },
+				endStopSelector: { stopSequence: 2 },
+				replacementStops: [{ stopId: "X", travelTimeToStop: 12 * 60 }],
+			},
+		],
+		...overrides,
+	};
+}
+
+/** Tracé publié par le flux, passant par l'arrêt de déviation. */
+function detourResources() {
+	const resources = createRealtimeResources();
+	resources.shapes.set(
+		"shape:detour",
+		new Shape("shape:detour", new Float64Array([0, 0, 0, 0.01, 0.01, 1500, 0, 0.02, 3000])),
+	);
+	return resources;
+}
+
+function callsOf(result: Awaited<ReturnType<typeof computeVehicleJourneys>>) {
+	return result.journeys[0]?.calls?.map((call) => `${call.stopName}:${call.callStatus}`);
+}
+
+describe("computeVehicleJourneys (dessertes déviées)", () => {
+	beforeEach(() => {
+		(console as DraftConsole).draft = () => () => {};
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		Reflect.deleteProperty(console, "draft");
+	});
+
+	it("insère l'arrêt de déviation et conserve l'arrêt remplacé", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
+
+		expect(callsOf(result)).toEqual(["B:SKIPPED", "Replacement:UNSCHEDULED", "C:SCHEDULED"]);
+	});
+
+	it("renumérote les arrêts de la course déviée", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
+
+		// L'arrêt de déviation prend la place 3, que C occupait dans le GTFS statique.
+		expect(result.journeys[0]?.calls?.map((call) => [call.stopName, call.stopOrder])).toEqual([
+			["B", 2],
+			["Replacement", 3],
+			["C", 4],
+		]);
+	});
+
+	it("publie le tracé de remplacement plutôt que celui de la course", async () => {
+		const source = scheduledSource();
+
+		const { journeys, paths } = await cycleAt(source, "08:05:00", {
+			tripModifications: [detour({ selectedTrips: [{ tripIds: ["original"], shapeId: "shape:detour" }] })],
+			resources: detourResources(),
+		});
+
+		expect(journeys[0]?.pathRef).toBe("network:RoutePath:test:shape:detour");
+		expect(Object.keys(paths)).toEqual([
+			"network:RoutePath:test:shape:detour",
+			"network:CancelledPath:test:original:2026-05-18",
+		]);
+	});
+
+	it("publie la portion de tracé que la déviation fait abandonner", async () => {
+		const source = scheduledSource();
+
+		const { journeys, paths } = await cycleAt(source, "08:05:00", {
+			tripModifications: [detour({ selectedTrips: [{ tripIds: ["original"], shapeId: "shape:detour" }] })],
+			resources: detourResources(),
+		});
+
+		const cancelledPathRef = journeys[0]?.cancelledPathRef;
+		expect(cancelledPathRef).toBe("network:CancelledPath:test:original:2026-05-18");
+
+		// L'arrêt B est retiré : la portion abandonnée relie ses deux voisins, soit tout le tracé.
+		expect(paths[cancelledPathRef!]).toEqual({
+			segments: [
+				[
+					[0, 0],
+					[0, 0.01],
+					[0, 0.02],
+				],
+			],
+		});
+	});
+
+	it("ne publie aucun tracé abandonné quand la déviation n'apporte pas son propre tracé", async () => {
+		const source = scheduledSource();
+
+		const { journeys, paths } = await cycleAt(source, "08:05:00", {
+			tripModifications: [detour()],
+			resources: detourResources(),
+		});
+
+		expect(journeys[0]?.cancelledPathRef).toBeUndefined();
+		expect(Object.keys(paths)).toEqual(["network:RoutePath:test:shape:original"]);
+	});
+
+	it("rétablit la desserte théorique quand la déviation quitte le flux", async () => {
+		const source = scheduledSource({ tripUpdateTtlMs: 0 });
+
+		await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
+		const result = await cycleAt(source, "08:06:00");
+
+		expect(callsOf(result)).toEqual(["B:SCHEDULED", "C:SCHEDULED"]);
+	});
+
+	it("conserve la déviation tant que le délai de tolérance n'est pas écoulé", async () => {
+		const source = scheduledSource();
+
+		await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
+		const result = await cycleAt(source, "08:06:00");
+
+		expect(callsOf(result)).toEqual(["B:SKIPPED", "Replacement:UNSCHEDULED", "C:SCHEDULED"]);
+	});
+
+	it("ne rétablit rien lors d'un cycle où un flux n'a pas répondu", async () => {
+		const source = scheduledSource({ tripUpdateTtlMs: 0 });
+
+		await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
+		const result = await cycleAt(source, "08:06:00", { failedFeedCount: 1 });
+
+		expect(callsOf(result)).toEqual(["B:SKIPPED", "Replacement:UNSCHEDULED", "C:SCHEDULED"]);
+	});
+
+	it("applique un TripUpdate rattaché à la course déviée sur la numérotation déviée", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:05:00", {
+			tripModifications: [detour()],
+			tripUpdates: [
+				{
+					timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+					trip: { modifiedTrip: { modificationsId: "detour:1", affectedTripId: "original" } },
+					stopTimeUpdate: [{ stopId: "X", stopSequence: 3, arrival: { delay: 120 }, departure: { delay: 120 } }],
+				},
+			],
+		});
+
+		const replacementCall = result.journeys[0]?.calls?.find((call) => call.stopName === "Replacement");
+		expect(replacementCall?.callStatus).toBe("UNSCHEDULED");
+		expect(replacementCall?.expectedTime).toBe("2026-05-18T08:14:00+00:00");
+	});
+
+	it("apparie par arrêt un TripUpdate qui ignore la renumérotation de la déviation", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:05:00", {
+			tripModifications: [detour()],
+			tripUpdates: [
+				{
+					timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+					trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18" },
+					// Séquence 3 dans le GTFS statique, mais l'arrêt de déviation la porte désormais.
+					stopTimeUpdate: [{ stopId: "C", stopSequence: 3, arrival: { delay: 60 }, departure: { delay: 60 } }],
+				},
+			],
+		});
+
+		const calls = result.journeys[0]?.calls;
+		expect(calls?.find((call) => call.stopName === "C")?.expectedTime).toBe("2026-05-18T08:21:00+00:00");
+		expect(calls?.find((call) => call.stopName === "Replacement")?.expectedTime).toBe("2026-05-18T08:12:00+00:00");
+	});
+});
+
+/** Course supplémentaire A 8:00 → X 8:10 → C 8:20, étrangère au GTFS statique. */
+function newTripUpdate(overrides?: Partial<TripUpdate>): TripUpdate {
+	return {
+		timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+		trip: { tripId: "extra", routeId: "line:1", startDate: "2026-05-18", scheduleRelationship: "NEW" },
+		vehicle: { id: "vehicle:9" },
+		stopTimeUpdate: [
+			{ stopId: "A", stopSequence: 1, departure: { time: epochSeconds("2026-05-18T08:00:00Z") } },
+			{ stopId: "X", stopSequence: 2, arrival: { time: epochSeconds("2026-05-18T08:10:00Z") } },
+			{ stopId: "C", stopSequence: 3, arrival: { time: epochSeconds("2026-05-18T08:20:00Z") } },
+		],
+		...overrides,
+	};
+}
+
+/** Source dont aucune course théorique n'est pré-calculée : seules les courses du flux sont publiées. */
+function addedTripSource(options?: Partial<SourceOptions>) {
+	const source = makeSource(options);
+	source.gtfs = makeGtfs();
+	return source;
+}
+
+describe("computeVehicleJourneys (courses supplémentaires)", () => {
+	beforeEach(() => {
+		(console as DraftConsole).draft = () => () => {};
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		Reflect.deleteProperty(console, "draft");
+	});
+
+	it("publie une course NEW sans attendre d'appariement de tracé", async () => {
+		const source = addedTripSource();
+
+		const { journeys } = await cycleAt(source, "08:05:00", { tripUpdates: [newTripUpdate()] });
+
+		expect(journeys).toHaveLength(1);
+		expect(journeys[0]?.id).toBe("network::VehicleTracking:vehicle:9");
+		expect(journeys[0]?.pathRef).toBeUndefined();
+		expect(journeys[0]?.calls?.map((call) => `${call.stopName}:${call.callStatus}`)).toEqual([
+			"Replacement:UNSCHEDULED",
+			"C:UNSCHEDULED",
+		]);
+	});
+
+	it("suit le tracé que la course NEW déclare", async () => {
+		const source = addedTripSource();
+
+		const { journeys, paths } = await cycleAt(source, "08:05:00", {
+			tripUpdates: [newTripUpdate({ tripProperties: { shapeId: "shape:detour" } })],
+			resources: detourResources(),
+		});
+
+		expect(journeys[0]?.pathRef).toBe("network:RoutePath:test:shape:detour");
+		expect(Object.keys(paths)).toEqual(["network:RoutePath:test:shape:detour"]);
+		expect(journeys[0]?.position.atStop).toBe(false);
+		expect(journeys[0]?.position.distanceTraveled).toBeGreaterThan(0);
+	});
+
+	it("reprend le tracé d'une course théorique quand l'appariement est demandé", async () => {
+		const source = addedTripSource({ addedTripShapeMatching: true });
+
+		const { journeys } = await cycleAt(source, "08:05:00", {
+			tripUpdates: [
+				newTripUpdate({
+					stopTimeUpdate: [
+						{ stopId: "A", stopSequence: 1, departure: { time: epochSeconds("2026-05-18T08:00:00Z") } },
+						{ stopId: "B", stopSequence: 2, arrival: { time: epochSeconds("2026-05-18T08:10:00Z") } },
+						{ stopId: "C", stopSequence: 3, arrival: { time: epochSeconds("2026-05-18T08:20:00Z") } },
+					],
+				}),
+			],
+		});
+
+		expect(journeys[0]?.pathRef).toBe("network:RoutePath:test:shape:original");
+	});
+
+	it("n'affiche pas une course ADDED que la configuration n'a pas réclamée", async () => {
+		const source = addedTripSource();
+
+		const { journeys } = await cycleAt(source, "08:05:00", {
+			tripUpdates: [
+				newTripUpdate({
+					trip: { tripId: "extra", routeId: "line:1", startDate: "2026-05-18", scheduleRelationship: "ADDED" },
+				}),
+			],
+		});
+
+		expect(journeys).toEqual([]);
+	});
+
+	it("nomme la course d'après les propriétés que le flux lui donne", async () => {
+		const source = addedTripSource();
+
+		const { journeys } = await cycleAt(source, "08:05:00", {
+			tripUpdates: [newTripUpdate({ tripProperties: { tripId: "renfort:12", tripHeadsign: "Renfort" } })],
+		});
+
+		expect(journeys[0]?.destination).toBe("Renfort");
+		expect(journeys[0]?.journeyRef).toBe("network:ServiceJourney:renfort:12");
+		expect(journeys[0]?.serviceDate).toBe("2026-05-18");
+	});
+
+	it("reprend les propriétés d'arrêt du flux", async () => {
+		const source = addedTripSource();
+
+		const { journeys } = await cycleAt(source, "08:05:00", {
+			tripUpdates: [
+				newTripUpdate({
+					stopTimeUpdate: [
+						{ stopId: "A", stopSequence: 1, departure: { time: epochSeconds("2026-05-18T08:00:00Z") } },
+						{
+							stopId: "X",
+							stopSequence: 2,
+							arrival: { time: epochSeconds("2026-05-18T08:10:00Z") },
+							stopTimeProperties: { pickupType: "NONE", stopHeadsign: "Dépôt" },
+						},
+						{ stopId: "C", stopSequence: 3, arrival: { time: epochSeconds("2026-05-18T08:20:00Z") } },
+					],
+				}),
+			],
+		});
+
+		expect(journeys[0]?.calls?.[0]?.flags).toEqual(["NO_PICKUP"]);
+	});
+
+	it("écarte une course supplémentaire réduite à un seul arrêt", async () => {
+		const source = addedTripSource();
+
+		const { journeys } = await cycleAt(source, "08:05:00", {
+			tripUpdates: [
+				newTripUpdate({
+					stopTimeUpdate: [{ stopId: "A", stopSequence: 1, departure: { time: epochSeconds("2026-05-18T08:00:00Z") } }],
+				}),
+			],
+		});
+
+		expect(journeys).toEqual([]);
+	});
+
+	it("traite une course DELETED comme une course supprimée", async () => {
+		const source = scheduledSource();
+
+		const { journeys } = await cycleAt(source, "08:05:00", {
+			tripUpdates: [
+				{
+					timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+					trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18", scheduleRelationship: "DELETED" },
+				},
+			],
+		});
+
+		expect(journeys).toEqual([]);
+	});
+
+	it("ignore un TripUpdate dont le descripteur ne désigne aucune course", async () => {
+		const source = scheduledSource();
+
+		const { journeys } = await cycleAt(source, "08:05:00", {
+			tripUpdates: [{ timestamp: epochSeconds("2026-05-18T08:05:00Z"), trip: { routeId: "line:1" } }],
+		});
+
+		expect(journeys).toHaveLength(1);
+		expect(callsOf({ journeys, paths: {} })).toEqual(["B:SCHEDULED", "C:SCHEDULED"]);
 	});
 });

@@ -10,9 +10,9 @@ type DataSourceItemProps = {
 };
 
 function getEntityTypeLabel(entityType: DataSourceRealtimeEntityType) {
-	return entityType === "TRIP_UPDATES"
-		? m.attributions_entity_trip_updates()
-		: m.attributions_entity_vehicle_positions();
+	if (entityType === "TRIP_UPDATES") return m.attributions_entity_trip_updates();
+	if (entityType === "TRIP_MODIFICATIONS") return m.attributions_entity_trip_modifications();
+	return m.attributions_entity_vehicle_positions();
 }
 
 export function DataSourceItem({ dataSource }: Readonly<DataSourceItemProps>) {
