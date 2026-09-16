@@ -11,9 +11,9 @@ import {
 	toRegionFilter,
 } from "~/routes/_app/data/-networks-list/region-filter";
 import { useDisplayedRegions } from "~/routes/_app/data/-networks-list/use-displayed-regions";
-import { getRegionName } from "~/utils/region-name";
 import { useNetworksListSearchQuery } from "~/routes/_app/data/-networks-list/use-search-query";
 import { cn } from "~/utils/cn";
+import { getRegionName } from "~/utils/region-name";
 
 export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<"div">) {
 	const regions = useDisplayedRegions();
@@ -25,14 +25,14 @@ export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<
 			? parsedRegionFilter
 			: ALL_REGIONS_FILTER;
 	const selectedRegionLabel =
-			selectedRegionFilter === ALL_REGIONS_FILTER
-					? m.networks_list_region_all()
-					: selectedRegionFilter === OTHER_REGIONS_FILTER
-							? m.map_network_other()
-							: (() => {
-									const region = regions.find((region) => String(region.id) === selectedRegionFilter);
-									return region ? getRegionName(region.name) : undefined;
-							})();
+		selectedRegionFilter === ALL_REGIONS_FILTER
+			? m.networks_list_region_all()
+			: selectedRegionFilter === OTHER_REGIONS_FILTER
+				? m.map_network_other()
+				: (() => {
+						const region = regions.find((region) => String(region.id) === selectedRegionFilter);
+						return region ? getRegionName(region.name) : undefined;
+					})();
 
 	return (
 		<div className={cn("bg-background z-1", className)} {...props}>
