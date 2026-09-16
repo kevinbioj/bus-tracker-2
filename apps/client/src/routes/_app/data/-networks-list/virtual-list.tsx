@@ -17,8 +17,8 @@ import {
 	toRegionFilter,
 } from "~/routes/_app/data/-networks-list/region-filter";
 import { useDisplayedRegions } from "~/routes/_app/data/-networks-list/use-displayed-regions";
-import { getRegionName } from "~/utils/region-name";
 import { searchNetworks } from "~/utils/network-search";
+import { getRegionName } from "~/utils/region-name";
 
 type VirtualBlock = {
 	key: string;
