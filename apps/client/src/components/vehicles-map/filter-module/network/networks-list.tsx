@@ -5,6 +5,7 @@ import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
+import { getRegionName } from "~/utils/region-name";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "~/components/ui/sheet";
 import { useIsCountryDisplayed } from "~/components/vehicles-map/displayed-countries";
 import { NetworkInnerList } from "~/components/vehicles-map/filter-module/network/networks-inner-list";
@@ -96,7 +97,7 @@ export function FilterModuleNetworkList({
 					return [];
 				}
 
-				return { title: region.name, networks };
+				return { title: getRegionName(region.name), networks };
 			}),
 			...(orphanNetworks !== undefined ? [{ title: m.map_network_other(), networks: orphanNetworks }] : []),
 		];

@@ -7,6 +7,7 @@ import { useDebounceValue } from "usehooks-ts";
 
 import { GetDataSourcesQuery, type NetworkDataSources } from "~/api/data-sources";
 import { GetRegionsQuery } from "~/api/regions";
+import { getRegionName } from "~/utils/region-name";
 import { TitleSeparator } from "~/components/title-separator";
 import { Input } from "~/components/ui/input";
 import { Separator } from "~/components/ui/separator";
@@ -56,7 +57,9 @@ function AttributionsPage() {
 
 		const regionBlocks: AttributionsBlock[] = regions.flatMap((region) => {
 			const entries = matchingEntries.filter((entry) => entry.network.regionId === region.id);
-			return entries.length === 0 ? [] : [{ key: String(region.id), title: region.name, entries }];
+			return entries.length === 0
+					? []
+					: [{ key: String(region.id), title: getRegionName(region.name), entries }];
 		});
 
 		const otherEntries = matchingEntries.filter(
