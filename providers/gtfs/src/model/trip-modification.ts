@@ -175,10 +175,14 @@ export function buildModifiedCalls(scheduledCalls: JourneyCall[], plan: TripModi
 	if (!calls.some((call) => call.modification !== "REMOVED")) return;
 
 	const shape = plan.shape;
+	// La renumérotation n'a lieu que si la desserte a changé : une déviation qui ne fait qu'emprunter
+	// un autre tracé laisse les séquences du GTFS statique, seules références des `stop_time_update`.
+	const renumber = calls.some((call) => call.modification !== undefined);
+
 	for (let index = 0; index < calls.length; index++) {
 		const call = calls[index]!;
 		// Renumérotation de 1 à n, arrêts retirés compris : `stopOrder` reste unique côté client.
-		call.sequence = index + 1;
+		if (renumber) call.sequence = index + 1;
 
 		// Un tracé de remplacement a ses propres distances curvilignes : celles héritées de
 		// `shape_dist_traveled` ne s'y rapportent plus, tous les arrêts sont reprojetés.

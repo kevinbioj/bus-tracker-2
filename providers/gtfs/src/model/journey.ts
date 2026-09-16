@@ -49,6 +49,14 @@ const DETOUR_OVERLAP_TOLERANCE_M = 20;
 const JOIN_MIN_DISTANCE_M = 0.5;
 
 /**
+ * Part du tracé théorique au-delà de laquelle une déviation sans arrêt retiré est jugée
+ * incomparable : passé ce seuil, les deux tracés ne décrivent manifestement pas le même trajet
+ * (tracé de remplacement tronqué, par exemple) et mieux vaut ne rien signaler que de peindre la
+ * course entière en abandonnée. Les déviations réelles observées en restent très loin.
+ */
+const SHAPE_DIFF_MAX_AWAY_RATIO = 0.5;
+
+/**
  * Soude une portion abandonnée au tracé de remplacement, en faisant partir et finir la portion sur
  * la projection de ses extrémités sur celui-ci.
  *
@@ -87,12 +95,14 @@ function joinToShape(points: [number, number][], detourShape: Shape): [number, n
 function splitAwayFromShape(points: [number, number][], detourShape: Shape) {
 	const segments: [number, number][][] = [];
 	let awaySince: number | undefined;
+	let awayCount = 0;
 
 	for (let index = 0; index < points.length; index++) {
 		const [latitude, longitude] = points[index]!;
 
 		if (detourShape.distanceToPosition(latitude, longitude) > DETOUR_OVERLAP_TOLERANCE_M) {
 			awaySince ??= index;
+			awayCount += 1;
 			continue;
 		}
 
@@ -106,7 +116,11 @@ function splitAwayFromShape(points: [number, number][], detourShape: Shape) {
 		segments.push(points.slice(Math.max(0, awaySince - 1)));
 	}
 
-	return segments.filter((segment) => segment.length > 1).map((segment) => joinToShape(segment, detourShape));
+	return {
+		segments: segments.filter((segment) => segment.length > 1).map((segment) => joinToShape(segment, detourShape)),
+		/** Nombre de points écartés du tracé de remplacement, avant raccord et mise en portions. */
+		awayCount,
+	};
 }
 
 /**
@@ -172,6 +186,20 @@ function estimateTimeAtDistance(calls: JourneyCall[], distance: number) {
 		return departureMs + (arrivalMs - departureMs) * ((distance - from) / (to - from));
 	}
 	return undefined;
+}
+
+/**
+ * Portions abandonnées d'une déviation qui ne retire aucun arrêt : elle ne fait qu'emprunter un
+ * autre tracé, et il n'y a donc pas de desserte perdue pour les borner. C'est l'écart entre les
+ * deux tracés, sur toute la course, qui les délimite.
+ */
+function diffShapes(tripShape: Shape, detourShape: Shape) {
+	const points = tripShape.getPoints();
+	const { segments, awayCount } = splitAwayFromShape(points, detourShape);
+
+	if (awayCount > points.length * SHAPE_DIFF_MAX_AWAY_RATIO) return [];
+
+	return segments;
 }
 
 export class Journey {
@@ -250,12 +278,17 @@ export class Journey {
 
 		const scheduledCalls = this.trip.computeCallsForDate(this.date);
 		const ranges = computeCancelledCallRanges(scheduledCalls, plan);
-		if (ranges.length === 0) return;
 
-		const segments = ranges.flatMap(([fromIndex, toIndex]) => {
-			const segment = tripShape.sliceBetweenPositions(scheduledCalls[fromIndex]!.stop, scheduledCalls[toIndex]!.stop);
-			return splitAwayFromShape(segment, plan.shape!);
-		});
+		const segments =
+			ranges.length > 0
+				? ranges.flatMap(([fromIndex, toIndex]) => {
+						const segment = tripShape.sliceBetweenPositions(
+							scheduledCalls[fromIndex]!.stop,
+							scheduledCalls[toIndex]!.stop,
+						);
+						return splitAwayFromShape(segment, plan.shape!).segments;
+					})
+				: diffShapes(tripShape, plan.shape);
 
 		return segments.length > 0 ? { segments } : undefined;
 	}

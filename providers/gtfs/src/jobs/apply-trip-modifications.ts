@@ -18,7 +18,6 @@ export function indexTripModifications(
 
 	for (const entity of tripModifications) {
 		const modifications = entity.modifications ?? [];
-		if (modifications.length === 0) continue;
 
 		const dates: Temporal.PlainDate[] = [];
 		for (const serviceDate of entity.serviceDates ?? []) {
@@ -36,6 +35,11 @@ export function indexTripModifications(
 			if (tripIds.length === 0) continue;
 
 			const shape = resolveShape(gtfs, resources, selectedTrips.shapeId);
+
+			// Une déviation peut ne rien changer à la desserte et se contenter de faire emprunter un autre
+			// tracé : `modifications` est alors vide, et c'est `selected_trips.shape_id` qui porte tout.
+			// Sans l'un ni l'autre, l'entité ne décrit rien d'exploitable.
+			if (modifications.length === 0 && shape === undefined) continue;
 
 			const resolvedModifications = modifications.map<ResolvedModification>((modification) => ({
 				startStopSelector: modification.startStopSelector,

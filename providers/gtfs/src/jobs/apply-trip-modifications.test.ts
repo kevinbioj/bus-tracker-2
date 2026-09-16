@@ -172,6 +172,27 @@ describe("indexTripModifications", () => {
 		expect(plan.modifications[0]?.replacementStops.map(({ stop }) => stop.id)).toEqual(["X"]);
 	});
 
+	it("retient une déviation qui ne change que le tracé, sans modification de desserte", () => {
+		const resources = createRealtimeResources();
+		const shape = new Shape("shape:detour", new Float64Array([0, 0, 0, 0.01, 0.01, 1500, 0, 0.02, 3000]));
+		resources.shapes.set(shape.id, shape);
+
+		const plan = indexTripModifications(
+			makeGtfs(),
+			[makeEntity({ modifications: [], selectedTrips: [{ tripIds: ["original"], shapeId: "shape:detour" }] })],
+			resources,
+		).get("2026-05-18-original");
+
+		expect(plan?.shape).toBe(shape);
+		expect(plan?.modifications).toEqual([]);
+	});
+
+	it("écarte une déviation sans modification ni tracé de remplacement", () => {
+		expect(
+			indexTripModifications(makeGtfs(), [makeEntity({ modifications: [] })], createRealtimeResources()).size,
+		).toBe(0);
+	});
+
 	it("ignore les courses absentes du GTFS, les dates illisibles et les entités vides", () => {
 		const resources = createRealtimeResources();
 		const gtfs = makeGtfs();

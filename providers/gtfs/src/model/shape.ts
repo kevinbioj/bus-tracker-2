@@ -131,7 +131,12 @@ export class Shape {
 		const px = longitude * cosLat;
 		const py = latitude;
 
-		let closest = { latitude, longitude, distance: Number.POSITIVE_INFINITY };
+		// Le segment le plus proche est choisi sur les écarts planaires, qui suffisent à les classer à
+		// cette échelle ; la distance n'est mesurée qu'une fois, sur le vainqueur. Cette méthode est
+		// appelée pour chaque point d'un tracé entier : un haversine par segment coûterait cent fois plus.
+		let closestOffsetSquared = Number.POSITIVE_INFINITY;
+		let closestLatitude = latitude;
+		let closestLongitude = longitude;
 
 		for (let i = 0; i < this.length - 1; i++) {
 			const aLat = this.getPointLatitude(i);
@@ -148,16 +153,22 @@ export class Shape {
 			let t = segmentLengthSquared === 0 ? 0 : ((px - ax) * dx + (py - ay) * dy) / segmentLengthSquared;
 			t = Math.max(0, Math.min(1, t));
 
-			const projectedLatitude = aLat + t * (bLat - aLat);
-			const projectedLongitude = aLon + t * (bLon - aLon);
-			const distance = getDistance(latitude, longitude, projectedLatitude, projectedLongitude);
+			const offsetX = px - (ax + t * dx);
+			const offsetY = py - (ay + t * dy);
+			const offsetSquared = offsetX * offsetX + offsetY * offsetY;
 
-			if (distance < closest.distance) {
-				closest = { latitude: projectedLatitude, longitude: projectedLongitude, distance };
+			if (offsetSquared < closestOffsetSquared) {
+				closestOffsetSquared = offsetSquared;
+				closestLatitude = aLat + t * (bLat - aLat);
+				closestLongitude = aLon + t * (bLon - aLon);
 			}
 		}
 
-		return closest;
+		return {
+			latitude: closestLatitude,
+			longitude: closestLongitude,
+			distance: getDistance(latitude, longitude, closestLatitude, closestLongitude),
+		};
 	}
 
 	/** Distance en mètres entre la position donnée et le tracé. */
@@ -183,6 +194,15 @@ export class Shape {
 		const points: [number, number][] = [];
 		for (let i = fromIndex; i <= toIndex; i++) {
 			points.push(this.getPoint(i));
+		}
+		return points;
+	}
+
+	/** Les points du tracé, dans l'ordre, sans leurs distances curvilignes. */
+	getPoints(): [number, number][] {
+		const points: [number, number][] = new Array(this.length);
+		for (let i = 0; i < this.length; i++) {
+			points[i] = this.getPoint(i);
 		}
 		return points;
 	}

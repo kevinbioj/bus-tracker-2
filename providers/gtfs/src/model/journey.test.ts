@@ -427,6 +427,36 @@ describe("Journey#cancelledPath", () => {
 		expect(journey.cancelledPath).toBeUndefined();
 	});
 
+	it("déduit la portion abandonnée de l'écart des tracés quand la déviation ne retire aucun arrêt", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Déviation de tracé seul : toute la desserte est conservée, seul l'itinéraire change.
+		journey.applyModifications({ ...detourPlan(detourShape), modifications: [] }, at("08:00").epochMilliseconds);
+
+		expect(journey.calls.map((call) => call.stop.id)).toEqual(["A", "B", "C"]);
+		// Le point médian du tracé théorique est le seul que la déviation contourne.
+		expect(journey.cancelledPath?.segments).toEqual([
+			[
+				[0, 0],
+				[0, 0.01],
+				[0, 0.02],
+			],
+		]);
+	});
+
+	it("renonce au diff des tracés lorsqu'ils ne décrivent pas le même trajet", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Tracé de remplacement à des kilomètres du tracé théorique : tous ses points s'en écartent,
+		// signaler la course entière comme abandonnée n'aurait aucun sens.
+		const unrelatedShape = new Shape("shape:unrelated", new Float64Array([1, 1, 0, 1, 1.01, 1100]));
+		journey.applyModifications({ ...detourPlan(unrelatedShape), modifications: [] }, at("08:00").epochMilliseconds);
+
+		expect(journey.cancelledPath).toBeUndefined();
+	});
+
 	it("n'abandonne aucune portion quand la déviation ne fournit pas son propre tracé", () => {
 		const { trip } = makeShapedGtfs();
 		const journey = trip.getScheduledJourney(DATE, true);
