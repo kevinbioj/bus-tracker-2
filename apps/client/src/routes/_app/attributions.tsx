@@ -14,6 +14,7 @@ import { useIsCountryDisplayed } from "~/components/vehicles-map/displayed-count
 import * as m from "~/paraglide/messages";
 import { NetworkAttributionCard } from "~/routes/_app/-components/attributions/network-attribution-card";
 import { searchNetworks } from "~/utils/network-search";
+import { getRegionName } from "~/utils/region-name";
 
 export const Route = createFileRoute("/_app/attributions")({
 	component: AttributionsPage,
@@ -56,7 +57,7 @@ function AttributionsPage() {
 
 		const regionBlocks: AttributionsBlock[] = regions.flatMap((region) => {
 			const entries = matchingEntries.filter((entry) => entry.network.regionId === region.id);
-			return entries.length === 0 ? [] : [{ key: String(region.id), title: region.name, entries }];
+			return entries.length === 0 ? [] : [{ key: String(region.id), title: getRegionName(region.name), entries }];
 		});
 
 		const otherEntries = matchingEntries.filter(

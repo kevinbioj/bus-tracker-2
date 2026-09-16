@@ -11,6 +11,7 @@ import { NetworkInnerList } from "~/components/vehicles-map/filter-module/networ
 import { FilterModuleSearchBar } from "~/components/vehicles-map/filter-module/search-bar";
 import * as m from "~/paraglide/messages";
 import { searchNetworks } from "~/utils/network-search";
+import { getRegionName } from "~/utils/region-name";
 
 type FilterModuleNetworkListProps = {
 	open: boolean;
@@ -96,7 +97,7 @@ export function FilterModuleNetworkList({
 					return [];
 				}
 
-				return { title: region.name, networks };
+				return { title: getRegionName(region.name), networks };
 			}),
 			...(orphanNetworks !== undefined ? [{ title: m.map_network_other(), networks: orphanNetworks }] : []),
 		];

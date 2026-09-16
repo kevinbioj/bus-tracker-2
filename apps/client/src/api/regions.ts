@@ -4,7 +4,7 @@ import { client } from "~/api/client";
 
 export type Region = {
 	id: number;
-	name: string;
+	name: Record<string, string>;
 	sortOrder: number;
 };
 
