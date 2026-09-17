@@ -155,6 +155,7 @@ const sources = [
 		excludeScheduled: true,
 		getNetworkRef: () => "MISTRAL",
 		getVehicleRef: (vehicleDescriptor) => vehicleDescriptor?.label?.padStart(3, "0"),
+		getDestination: (journey) => journey?.trip.headsign,
 	},
 	{
 		id: "toulon-telepherique",
