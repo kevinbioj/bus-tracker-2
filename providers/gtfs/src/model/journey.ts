@@ -49,12 +49,22 @@ const DETOUR_OVERLAP_TOLERANCE_M = 20;
 const JOIN_MIN_DISTANCE_M = 0.5;
 
 /**
+ * En deçà, le tracé de remplacement n'est pas rogné sur la desserte : le bout qui dépasse relève de
+ * l'amorce ordinaire d'un tracé à son terminus, et le rogner ne ferait que multiplier les tracés
+ * publiés pour un résultat invisible.
+ */
+const DETOUR_TRIM_MIN_DISTANCE_M = 50;
+
+/**
  * Part du tracé théorique au-delà de laquelle une déviation sans arrêt retiré est jugée
  * incomparable : passé ce seuil, les deux tracés ne décrivent manifestement pas le même trajet
  * (tracé de remplacement tronqué, par exemple) et mieux vaut ne rien signaler que de peindre la
  * course entière en abandonnée. Les déviations réelles observées en restent très loin.
  */
 const SHAPE_DIFF_MAX_AWAY_RATIO = 0.5;
+
+/** Extrémités d'une portion abandonnée où la course retrouve l'itinéraire qu'elle suit. */
+type ShapeJoins = { joinStart?: boolean; joinEnd?: boolean };
 
 /**
  * Soude une portion abandonnée au tracé de remplacement, en faisant partir et finir la portion sur
@@ -63,15 +73,23 @@ const SHAPE_DIFF_MAX_AWAY_RATIO = 0.5;
  * Sans cette soudure, le ruban s'arrêterait à l'écart de l'itinéraire suivi — jusqu'à la tolérance
  * de recouvrement — et laisserait un trou à l'endroit même où le véhicule le quitte puis le
  * retrouve, c'est-à-dire là où la déviation se lit.
+ *
+ * Une extrémité que la course ne rejoint pas (`joinStart`/`joinEnd` à faux) n'est pas soudée : quand
+ * la déviation remplace l'itinéraire jusqu'au terminus, le véhicule ne revient jamais sur le tracé
+ * d'origine, et l'y raccorder tracerait un trait de retour qui n'existe pas.
  */
-function joinToShape(points: [number, number][], detourShape: Shape): [number, number][] {
+function joinToShape(
+	points: [number, number][],
+	detourShape: Shape,
+	{ joinStart = true, joinEnd = true }: ShapeJoins = {},
+): [number, number][] {
 	const [firstLatitude, firstLongitude] = points[0]!;
 	const [lastLatitude, lastLongitude] = points[points.length - 1]!;
 
 	// Une extrémité déjà posée sur le tracé de remplacement n'a rien à raccorder : la ressouder
 	// n'ajouterait qu'un point confondu avec elle.
-	const start = detourShape.projectPosition(firstLatitude, firstLongitude);
-	const end = detourShape.projectPosition(lastLatitude, lastLongitude);
+	const start = joinStart ? detourShape.projectPosition(firstLatitude, firstLongitude) : undefined;
+	const end = joinEnd ? detourShape.projectPosition(lastLatitude, lastLongitude) : undefined;
 
 	return [
 		...(start !== undefined && start.distance > JOIN_MIN_DISTANCE_M
@@ -92,8 +110,9 @@ function joinToShape(points: [number, number][], detourShape: Shape): [number, n
  * Chaque portion retenue est étendue d'un point de part et d'autre, puis raccordée au tracé de
  * remplacement par {@link joinToShape}.
  */
-function splitAwayFromShape(points: [number, number][], detourShape: Shape) {
-	const segments: [number, number][][] = [];
+function splitAwayFromShape(points: [number, number][], detourShape: Shape, joins: ShapeJoins = {}) {
+	const { joinStart = true, joinEnd = true } = joins;
+	const ranges: [number, number][] = [];
 	let awaySince: number | undefined;
 	let awayCount = 0;
 
@@ -107,20 +126,40 @@ function splitAwayFromShape(points: [number, number][], detourShape: Shape) {
 		}
 
 		if (awaySince !== undefined) {
-			segments.push(points.slice(Math.max(0, awaySince - 1), index + 1));
+			ranges.push([Math.max(0, awaySince - 1), index]);
 			awaySince = undefined;
 		}
 	}
 
 	if (awaySince !== undefined) {
-		segments.push(points.slice(Math.max(0, awaySince - 1)));
+		ranges.push([Math.max(0, awaySince - 1), points.length - 1]);
 	}
 
 	return {
-		segments: segments.filter((segment) => segment.length > 1).map((segment) => joinToShape(segment, detourShape)),
+		segments: ranges
+			.filter(([from, to]) => to > from)
+			// Seules les extrémités de la portion entière peuvent ne rien rejoindre : une portion
+			// intérieure est bornée par des points qui, eux, longent le tracé de remplacement.
+			.map(([from, to]) =>
+				joinToShape(points.slice(from, to + 1), detourShape, {
+					joinStart: from > 0 || joinStart,
+					joinEnd: to < points.length - 1 || joinEnd,
+				}),
+			),
 		/** Nombre de points écartés du tracé de remplacement, avant raccord et mise en portions. */
 		awayCount,
 	};
+}
+
+/**
+ * Vrai si l'arrêt porte une heure issue du temps réel. Un arrêt ajouté par une déviation tient ses
+ * heures de la déviation elle-même, jamais d'une prédiction de passage : les compter ferait passer
+ * pour suivie une course qui n'a qu'un itinéraire modifié, et la ferait disparaître des sources
+ * dont le mode écarte les courses théoriques dès qu'elles ont du temps réel (`NO-TU`).
+ */
+function callHasRealtime(call: JourneyCall) {
+	if (call.modification === "ADDED") return false;
+	return call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined;
 }
 
 /**
@@ -210,6 +249,10 @@ export class Journey {
 	private _hasRealtime = false;
 	private _positionGuard: PositionGuardState | undefined;
 	private _modificationPlan: TripModificationPlan | undefined;
+	/** Faux lorsqu'un sélecteur de la déviation n'a rien désigné : les arrêts sont restés théoriques. */
+	private _modificationsApplied = false;
+	/** Cache du tracé suivi, rogné sur la desserte de la course déviée. */
+	private _detourShape: Shape | undefined;
 	/** Cache du tracé abandonné : `null` signifie « calculé, la déviation n'en abandonne aucun ». */
 	private _cancelledPath: LinePath | null | undefined;
 	/** Bornes théoriques, mémorisées pour restaurer l'état initial quand le temps réel expire. */
@@ -244,17 +287,54 @@ export class Journey {
 	get calls(): JourneyCall[] {
 		if (this._calls === null) {
 			const scheduledCalls = this.trip.computeCallsForDate(this.date);
-			this._calls =
-				this._modificationPlan !== undefined
-					? (buildModifiedCalls(scheduledCalls, this._modificationPlan) ?? scheduledCalls)
-					: scheduledCalls;
+			const modifiedCalls =
+				this._modificationPlan !== undefined ? buildModifiedCalls(scheduledCalls, this._modificationPlan) : undefined;
+			this._modificationsApplied = modifiedCalls !== undefined;
+			this._calls = modifiedCalls ?? scheduledCalls;
 		}
 		return this._calls;
 	}
 
 	/** Tracé effectivement suivi : celui de la déviation en cours, à défaut celui de la course. */
 	get shape(): Shape | undefined {
-		return this._modificationPlan?.shape ?? this.trip.shape;
+		const detourShape = this._modificationPlan?.shape;
+		if (detourShape === undefined) return this.trip.shape;
+
+		this._detourShape ??= this.trimToServedCalls(detourShape);
+		return this._detourShape;
+	}
+
+	/**
+	 * Rogne le tracé de remplacement sur la desserte effective de la course.
+	 *
+	 * Un producteur publie couramment un tracé qui couvre l'itinéraire d'origine de bout en bout, la
+	 * portion que la déviation prive de desserte comprise : la course s'y prolongerait au-delà de son
+	 * terminus, reliée à lui par le trait droit que le tracé emprunte pour l'y rejoindre. Couper au
+	 * premier et au dernier arrêt desservis supprime ce trait, et rend du même coup la portion
+	 * abandonnée à {@link cancelledPath}, qui la signale en ruban.
+	 */
+	private trimToServedCalls(detourShape: Shape) {
+		const calls = this.calls;
+		// Sélecteurs introuvables : les arrêts sont ceux de l'horaire théorique, et leurs distances se
+		// rapportent au tracé de la course, pas à celui de la déviation.
+		if (!this._modificationsApplied) return detourShape;
+
+		const firstCall = calls.find((call) => call.modification !== "REMOVED");
+		const lastCall = calls.findLast((call) => call.modification !== "REMOVED");
+		const fromDistance = firstCall?.distanceTraveled;
+		const toDistance = lastCall?.distanceTraveled;
+		if (fromDistance === undefined || toDistance === undefined) return detourShape;
+
+		const totalDistance = detourShape.getPointDistanceTraveled(detourShape.length - 1) ?? 0;
+		const trimStart = fromDistance > DETOUR_TRIM_MIN_DISTANCE_M;
+		const trimEnd = totalDistance - toDistance > DETOUR_TRIM_MIN_DISTANCE_M;
+		if (!trimStart && !trimEnd) return detourShape;
+
+		const from = trimStart ? fromDistance : 0;
+		const to = trimEnd ? toDistance : totalDistance;
+		// Deux courses d'une même déviation peuvent ne pas être rognées pareil : le tracé publié est
+		// mis en cache sous son identifiant, qui doit donc dire où il commence et où il finit.
+		return detourShape.sliceBetweenDistances(from, to, `${detourShape.id}@${Math.round(from)}-${Math.round(to)}`);
 	}
 
 	/**
@@ -276,19 +356,26 @@ export class Journey {
 		const tripShape = this.trip.shape;
 		if (plan === undefined || plan.shape === undefined || tripShape === undefined) return;
 
+		// Le tracé suivi, et non celui que publie la déviation : ce qu'il a fallu en rogner faute de
+		// desserte est précisément ce que la course abandonne.
+		const detourShape = this.shape!;
+
 		const scheduledCalls = this.trip.computeCallsForDate(this.date);
 		const ranges = computeCancelledCallRanges(scheduledCalls, plan);
 
 		const segments =
 			ranges.length > 0
-				? ranges.flatMap(([fromIndex, toIndex]) => {
+				? ranges.flatMap(({ fromIndex, toIndex, joinsAtStart, joinsAtEnd }) => {
 						const segment = tripShape.sliceBetweenPositions(
 							scheduledCalls[fromIndex]!.stop,
 							scheduledCalls[toIndex]!.stop,
 						);
-						return splitAwayFromShape(segment, plan.shape!).segments;
+						return splitAwayFromShape(segment, detourShape, {
+							joinStart: joinsAtStart,
+							joinEnd: joinsAtEnd,
+						}).segments;
 					})
-				: diffShapes(tripShape, plan.shape);
+				: diffShapes(tripShape, detourShape);
 
 		return segments.length > 0 ? { segments } : undefined;
 	}
@@ -307,6 +394,7 @@ export class Journey {
 		if (this._modificationPlan?.revision !== plan.revision) {
 			this._modificationPlan = plan;
 			this._calls = null;
+			this._detourShape = undefined;
 			this._cancelledPath = undefined;
 			this.refreshBounds();
 		}
@@ -323,8 +411,10 @@ export class Journey {
 		if (this._modificationPlan === undefined) return false;
 
 		this._modificationPlan = undefined;
+		this._modificationsApplied = false;
 		this.lastModificationAtMs = undefined;
 		this._calls = null;
+		this._detourShape = undefined;
 		this._cancelledPath = undefined;
 		this._hasRealtime = false;
 		this.firstCallArrivalMs = this.aimedFirstCallArrivalMs;
@@ -539,9 +629,7 @@ export class Journey {
 	hasRealtime() {
 		// Si les calls sont en mémoire, vérification précise. Sinon, on utilise le flag.
 		if (this._calls !== null) {
-			return this._calls.some(
-				(call) => call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined,
-			);
+			return this._calls.some(callHasRealtime);
 		}
 		return this._hasRealtime;
 	}
@@ -647,9 +735,7 @@ export class Journey {
 		}
 
 		// Mise à jour du flag RT basée sur l'état réel des calls.
-		this._hasRealtime = this._calls!.some(
-			(call) => call.expectedArrivalTime !== undefined || call.expectedDepartureTime !== undefined,
-		);
+		this._hasRealtime = this._calls!.some(callHasRealtime);
 
 		// Mettre à jour les bornes avec les heures temps réel.
 		// Utilisé par le sweep et le fast-rejection de getCalls.

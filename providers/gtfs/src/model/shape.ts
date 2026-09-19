@@ -198,6 +198,32 @@ export class Shape {
 		return points;
 	}
 
+	/**
+	 * Portion du tracé comprise entre deux distances curvilignes, sous la forme d'un nouveau tracé.
+	 *
+	 * Les distances des points sont reprises telles quelles, sans être ramenées à zéro : elles
+	 * restent comparables à celles des arrêts et des positions calculées sur le tracé d'origine.
+	 *
+	 * @returns le tracé lui-même lorsque la portion le couvre déjà entièrement, ou qu'elle se
+	 * réduirait à moins de deux points.
+	 */
+	sliceBetweenDistances(fromDistance: number, toDistance: number, id = this.id): Shape {
+		let fromIndex = 0;
+		while (fromIndex < this.length - 1 && (this.getPointDistanceTraveled(fromIndex) ?? 0) < fromDistance) {
+			fromIndex += 1;
+		}
+
+		let toIndex = this.length - 1;
+		while (toIndex > fromIndex && (this.getPointDistanceTraveled(toIndex) ?? 0) > toDistance) {
+			toIndex -= 1;
+		}
+
+		if (fromIndex === 0 && toIndex === this.length - 1) return this;
+		if (toIndex - fromIndex < 1) return this;
+
+		return new Shape(id, this.points.slice(fromIndex * 3, (toIndex + 1) * 3), this.recalculatedDistances);
+	}
+
 	/** Les points du tracé, dans l'ordre, sans leurs distances curvilignes. */
 	getPoints(): [number, number][] {
 		const points: [number, number][] = new Array(this.length);

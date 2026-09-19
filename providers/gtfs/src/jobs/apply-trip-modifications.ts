@@ -15,6 +15,8 @@ export function indexTripModifications(
 	resources: RealtimeResources,
 ) {
 	const plans = new Map<string, TripModificationPlan>();
+	/** Courses dont deux entités publient des tracés concurrents : aucun ne vaut pour l'ensemble. */
+	const conflictingShapeKeys = new Set<string>();
 
 	for (const entity of tripModifications) {
 		const modifications = entity.modifications ?? [];
@@ -59,12 +61,38 @@ export function indexTripModifications(
 				if (!gtfs.trips.has(tripId)) continue;
 
 				for (const date of dates) {
-					plans.set(getJourneyKey(date, tripId), {
-						modificationsId: entity.id,
+					const journeyKey = getJourneyKey(date, tripId);
+					const existing = plans.get(journeyKey);
+
+					// La spec l'interdit — « a trip MUST NOT be assigned to more than one TripModifications
+					// object » —, mais des producteurs publient une entité par déviation. Elles décrivent
+					// alors ensemble la desserte de la course : n'en retenir qu'une, comme le faisait
+					// l'affectation directe, revenait à ignorer silencieusement toutes les autres.
+					if (existing !== undefined) {
+						existing.modificationsIds.push(entity.id);
+						existing.modifications.push(...resolvedModifications);
+						existing.revision = `${existing.revision}&${revision}`;
+
+						// Chaque entité publie le tracé de la course telle qu'elle seule la dévie : celui-ci
+						// emprunte l'itinéraire d'origine là où une autre entité l'abandonne. Deux tracés
+						// concurrents ne décrivent donc ni l'un ni l'autre la desserte fusionnée, et y
+						// reprojeter les arrêts donnerait des distances aberrantes. La course s'en tient
+						// alors à son tracé théorique, comme pour une déviation qui n'en publie aucun.
+						if (shape !== undefined && existing.shape !== undefined && existing.shape.id !== shape.id) {
+							conflictingShapeKeys.add(journeyKey);
+						}
+						if (!conflictingShapeKeys.has(journeyKey)) existing.shape ??= shape;
+						else existing.shape = undefined;
+						continue;
+					}
+
+					plans.set(journeyKey, {
+						modificationsIds: [entity.id],
 						tripId,
 						date,
 						shape,
-						modifications: resolvedModifications,
+						// Copiées : les modifications d'une autre entité viendront s'y ajouter.
+						modifications: [...resolvedModifications],
 						revision,
 					});
 				}

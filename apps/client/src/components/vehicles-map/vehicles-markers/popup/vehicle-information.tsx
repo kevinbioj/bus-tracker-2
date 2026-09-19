@@ -1,3 +1,4 @@
+import { getVehicleJourneyPositionType } from "@bus-tracker/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
@@ -215,12 +216,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 		<InformationChip className={clsx("font-mono", neutralChipClasses)} label={journey.missionCode} />
 	) : undefined;
 
-	const positionInformation = useMemo(() => {
-		if (journey.position.type === "GPS") return positionIconDetails.GPS;
-		return journey.calls?.some((call) => call.expectedTime !== undefined)
-			? positionIconDetails.ESTIMATED
-			: positionIconDetails.SCHEDULED;
-	}, [journey]);
+	const positionInformation = useMemo(() => positionIconDetails[getVehicleJourneyPositionType(journey)], [journey]);
 
 	const occupancyInformation = useMemo(() => {
 		if (journey.occupancy === undefined) return;

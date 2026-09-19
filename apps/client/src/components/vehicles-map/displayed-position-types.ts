@@ -1,6 +1,7 @@
+import { vehicleJourneyPositionTypes } from "@bus-tracker/contracts";
 import { useLocalStorage } from "usehooks-ts";
 
-export const positionTypes = ["GPS", "ESTIMATED", "SCHEDULED"] as const;
+export const positionTypes = vehicleJourneyPositionTypes;
 
 export type PositionType = (typeof positionTypes)[number];
 

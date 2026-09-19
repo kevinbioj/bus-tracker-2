@@ -133,6 +133,38 @@ describe("Journey", () => {
 
 		expect(journey.calls.map((call) => call.platform)).toEqual(["1", "2"]);
 	});
+
+	it("ne tient pas pour suivie une course dont une déviation n'a fait qu'ajouter des arrêts", () => {
+		const { gtfs, trip } = makeGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.applyModifications(
+			{
+				modificationsIds: ["detour:1"],
+				tripId: "trip",
+				date: DATE,
+				revision: "rev:1",
+				modifications: [
+					{
+						startStopSelector: { stopSequence: 2 },
+						propagatedModificationDelayMs: 0,
+						replacementStops: [{ stop: gtfs.stops.get("X")!, travelTimeToStopMs: 5 * 60 * 1000 }],
+					},
+				],
+			},
+			at("08:00").epochMilliseconds,
+		);
+
+		expect(journey.calls.map((call) => call.stop.id)).toEqual(["A", "X", "B"]);
+		// L'heure de l'arrêt ajouté vient de la déviation, pas d'une prédiction : sans quoi les sources
+		// en mode `NO-TU` cesseraient de publier la course au seul motif qu'elle est déviée.
+		expect(journey.hasRealtime()).toBe(false);
+
+		// La déviation renumérote les arrêts : B porte désormais la séquence 3.
+		journey.updateJourney(gtfs, [delayFrom("B", 3, 120)]);
+
+		expect(journey.hasRealtime()).toBe(true);
+	});
 });
 
 describe("Journey#guessPosition (guard anti-recul)", () => {
@@ -335,11 +367,79 @@ describe("Journey#guessPosition (guard anti-recul)", () => {
 	});
 });
 
+describe("Journey#shape", () => {
+	/**
+	 * Tracé de remplacement tel qu'en publient les producteurs : la déviation (A → X), puis le retour
+	 * en ligne droite sur l'itinéraire d'origine, qu'il suit jusqu'au terminus (B → C) alors que la
+	 * course n'y dessert plus rien.
+	 */
+	const detourShape = new Shape(
+		"shape:detour",
+		new Float64Array([0, 0, 0, 0.01, 0.005, 1300, 0, 0.01, 2700, 0, 0.02, 3700]),
+	);
+
+	/** Retire B et C — donc jusqu'au terminus — au profit d'un arrêt de déviation. */
+	const plan: TripModificationPlan = {
+		modificationsIds: ["detour:1"],
+		tripId: "trip",
+		date: DATE,
+		shape: detourShape,
+		revision: "rev:1",
+		modifications: [
+			{
+				startStopSelector: { stopSequence: 2 },
+				endStopSelector: { stopSequence: 3 },
+				propagatedModificationDelayMs: 0,
+				replacementStops: [{ stop: new Stop("X", "Déviation", 0.01, 0.005), travelTimeToStopMs: 5 * 60 * 1000 }],
+			},
+		],
+	};
+
+	it("rogne le tracé de remplacement au dernier arrêt desservi", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.applyModifications(plan, at("08:00").epochMilliseconds);
+
+		// Le retour vers l'ancien terminus est abandonné : le tracé s'arrête à l'arrêt de déviation,
+		// sans le trait droit qui le reliait à l'itinéraire d'origine.
+		expect(journey.shape?.getPoints()).toEqual([
+			[0, 0],
+			[0.01, 0.005],
+		]);
+		// Les distances restent celles du tracé publié, auxquelles se rapportent arrêts et positions.
+		expect(journey.shape?.id).toBe("shape:detour@0-1300");
+	});
+
+	it("signale en tracé abandonné la portion que le rognage a ôtée", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.applyModifications(plan, at("08:00").epochMilliseconds);
+
+		const segment = journey.cancelledPath!.segments[0]!;
+
+		// Le ruban court jusqu'à l'ancien terminus, sans être ressoudé à un itinéraire que la course
+		// ne retrouve jamais.
+		expect(segment.at(-1)).toEqual([0, 0.02]);
+	});
+
+	it("laisse le tracé intact quand la course le dessert de bout en bout", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Déviation de tracé seul : tous les arrêts sont desservis, il n'y a rien à rogner.
+		journey.applyModifications({ ...plan, modifications: [] }, at("08:00").epochMilliseconds);
+
+		expect(journey.shape).toBe(detourShape);
+	});
+});
+
 describe("Journey#cancelledPath", () => {
 	/** Retire l'arrêt B de la course, en empruntant — ou non — un tracé de remplacement. */
 	function detourPlan(detourShape?: Shape): TripModificationPlan {
 		return {
-			modificationsId: "detour:1",
+			modificationsIds: ["detour:1"],
 			tripId: "trip",
 			date: DATE,
 			shape: detourShape,
@@ -411,6 +511,39 @@ describe("Journey#cancelledPath", () => {
 			[0, 0.01],
 			[0, 0.02],
 		]);
+	});
+
+	it("ne soude pas l'extrémité que la course ne rejoint jamais", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Tracé de remplacement décalé au nord, et déviation qui retire B et C : elle remplace
+		// l'itinéraire jusqu'au terminus, la course ne revient donc jamais sur le tracé d'origine.
+		const offsetShape = new Shape(
+			"shape:offset",
+			new Float64Array([0.0008, 0, 0, 0.0008, 0.01, 1100, 0.0008, 0.02, 2200]),
+		);
+		journey.applyModifications(
+			{
+				...detourPlan(offsetShape),
+				modifications: [
+					{
+						startStopSelector: { stopSequence: 2 },
+						endStopSelector: { stopSequence: 3 },
+						propagatedModificationDelayMs: 0,
+						replacementStops: [],
+					},
+				],
+			},
+			at("08:00").epochMilliseconds,
+		);
+
+		const segment = journey.cancelledPath!.segments[0]!;
+
+		// Le départ de la portion abandonnée est soudé au tracé suivi, là où le véhicule le quitte...
+		expect(offsetShape.distanceToPosition(segment[0]![0], segment[0]![1])).toBeCloseTo(0, 5);
+		// ...mais son arrivée s'arrête au terminus d'origine, sans trait de retour vers la déviation.
+		expect(segment.at(-1)).toEqual([0, 0.02]);
 	});
 
 	it("n'abandonne aucune portion là où le tracé de remplacement longe celui de la course", () => {

@@ -70,9 +70,66 @@ describe("indexTripModifications", () => {
 
 		expect([...plans.keys()]).toEqual(["2026-05-18-original"]);
 		expect(plans.get("2026-05-18-original")).toMatchObject({
-			modificationsId: "detour:1",
+			modificationsIds: ["detour:1"],
 			tripId: "original",
 		});
+	});
+
+	it("fusionne les déviations de plusieurs entités portant sur la même course", () => {
+		const second = makeEntity({
+			id: "detour:2",
+			modifications: [
+				{
+					startStopSelector: { stopSequence: 1 },
+					endStopSelector: { stopSequence: 1 },
+					replacementStops: [{ stopId: "X", travelTimeToStop: 60 }],
+				},
+			],
+		});
+
+		const plan = indexTripModifications(makeGtfs(), [makeEntity(), second], createRealtimeResources()).get(
+			"2026-05-18-original",
+		)!;
+
+		expect(plan.modificationsIds).toEqual(["detour:1", "detour:2"]);
+		expect(plan.modifications.map((modification) => modification.startStopSelector)).toEqual([
+			{ stopSequence: 2 },
+			{ stopSequence: 1 },
+		]);
+	});
+
+	it("abandonne le tracé quand deux entités en publient de concurrents pour la même course", () => {
+		const gtfs = makeGtfs();
+		const resources = createRealtimeResources();
+		const detour = new Shape("shape:detour", new Float64Array([0, 0, 0, 0.01, 0.01, 1500, 0, 0.02, 3000]));
+		resources.shapes.set(detour.id, detour);
+
+		const plan = indexTripModifications(
+			gtfs,
+			[
+				makeEntity({ selectedTrips: [{ tripIds: ["original"], shapeId: "shape:static" }] }),
+				makeEntity({ id: "detour:2", selectedTrips: [{ tripIds: ["original"], shapeId: "shape:detour" }] }),
+			],
+			resources,
+		).get("2026-05-18-original")!;
+
+		expect(plan.shape).toBeUndefined();
+		expect(plan.modificationsIds).toEqual(["detour:1", "detour:2"]);
+	});
+
+	it("conserve le tracé lorsqu'une seule des entités fusionnées en publie un", () => {
+		const gtfs = makeGtfs();
+
+		const plan = indexTripModifications(
+			gtfs,
+			[
+				makeEntity({ selectedTrips: [{ tripIds: ["original"], shapeId: "shape:static" }] }),
+				makeEntity({ id: "detour:2" }),
+			],
+			createRealtimeResources(),
+		).get("2026-05-18-original")!;
+
+		expect(plan.shape).toBe(gtfs.shapes.get("shape:static"));
 	});
 
 	it("résout les arrêts et convertit les durées en millisecondes", () => {

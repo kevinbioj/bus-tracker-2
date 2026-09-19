@@ -120,3 +120,29 @@ export const vehicleJourneySchema = type({
 });
 
 export type VehicleJourney = typeof vehicleJourneySchema.infer;
+
+export const vehicleJourneyPositionTypes = ["GPS", "ESTIMATED", "SCHEDULED"] as const;
+
+export type VehicleJourneyPositionType = (typeof vehicleJourneyPositionTypes)[number];
+
+/**
+ * Nature de la position publiée, telle qu'elle est présentée à l'usager et filtrée par l'API :
+ * relevée par le véhicule, déduite d'un horaire temps réel, ou déduite du seul horaire théorique.
+ *
+ * Un arrêt ajouté par une déviation (`UNSCHEDULED`) tient ses heures de la déviation elle-même,
+ * jamais d'une prédiction de passage : une course théorique déviée reste théorique. Seule une course
+ * supplémentaire échappe à la règle — dépourvue d'horaire théorique, toutes ses heures sont du
+ * temps réel, et tous ses arrêts sont `UNSCHEDULED`.
+ */
+export function getVehicleJourneyPositionType(journey: {
+	calls?: { expectedTime?: string; callStatus: VehicleJourneyCallStatus }[];
+	position: { type: "GPS" | "COMPUTED" };
+	isAdded?: boolean;
+}): VehicleJourneyPositionType {
+	if (journey.position.type === "GPS") return "GPS";
+	if (journey.isAdded === true) return "ESTIMATED";
+
+	return journey.calls?.some((call) => call.callStatus !== "UNSCHEDULED" && call.expectedTime !== undefined)
+		? "ESTIMATED"
+		: "SCHEDULED";
+}

@@ -39,7 +39,7 @@ function scheduledCalls(): JourneyCall[] {
 
 function makePlan(modifications: Partial<ResolvedModification>[], shape?: Shape): TripModificationPlan {
 	return {
-		modificationsId: "detour:1",
+		modificationsIds: ["detour:1"],
 		tripId: "original",
 		date: DATE,
 		shape,
@@ -197,6 +197,89 @@ describe("buildModifiedCalls", () => {
 		]);
 	});
 
+	it("applique deux modifications qui se suivent sans arrêt desservi entre elles", () => {
+		const calls = buildModifiedCalls(
+			scheduledCalls(),
+			makePlan([
+				{
+					startStopSelector: { stopSequence: 2 },
+					endStopSelector: { stopSequence: 2 },
+					replacementStops: [{ stop: STOPS.X, travelTimeToStopMs: 8 * 60_000 }],
+				},
+				{
+					startStopSelector: { stopSequence: 3 },
+					endStopSelector: { stopSequence: 3 },
+					replacementStops: [{ stop: STOPS.Y, travelTimeToStopMs: 10 * 60_000 }],
+				},
+			]),
+		);
+
+		expect(summarize(calls)?.map(({ stop, status }) => `${stop}:${status}`)).toEqual([
+			"A:SCHEDULED",
+			"B:SKIPPED",
+			"X:UNSCHEDULED",
+			"C:SKIPPED",
+			"Y:UNSCHEDULED",
+			"D:SCHEDULED",
+		]);
+	});
+
+	it("date les arrêts de deux modifications qui se suivent sur le dernier arrêt d'origine desservi", () => {
+		const calls = buildModifiedCalls(
+			scheduledCalls(),
+			makePlan([
+				{
+					startStopSelector: { stopSequence: 2 },
+					endStopSelector: { stopSequence: 2 },
+					replacementStops: [{ stop: STOPS.X, travelTimeToStopMs: 8 * 60_000 }],
+				},
+				{
+					startStopSelector: { stopSequence: 3 },
+					endStopSelector: { stopSequence: 3 },
+					replacementStops: [{ stop: STOPS.Y, travelTimeToStopMs: 15 * 60_000 }],
+				},
+			]),
+		);
+
+		// A (8:00) est l'arrêt de référence des deux modifications : B, qui précède la seconde, n'est
+		// plus desservi, et X n'appartient pas à la course d'origine.
+		expect(summarize(calls)?.map(({ stop, minutes }) => `${stop}:${minutes}`)).toEqual([
+			"A:0",
+			"B:10",
+			"X:8",
+			"C:20",
+			"Y:15",
+			"D:30",
+		]);
+	});
+
+	it("ordonne les modifications le long de la course avant de les appliquer", () => {
+		const calls = buildModifiedCalls(
+			scheduledCalls(),
+			makePlan([
+				{
+					startStopSelector: { stopSequence: 3 },
+					endStopSelector: { stopSequence: 3 },
+					replacementStops: [{ stop: STOPS.Y, travelTimeToStopMs: 10 * 60_000 }],
+				},
+				{
+					startStopSelector: { stopSequence: 2 },
+					endStopSelector: { stopSequence: 2 },
+					replacementStops: [{ stop: STOPS.X, travelTimeToStopMs: 8 * 60_000 }],
+				},
+			]),
+		);
+
+		expect(summarize(calls)?.map(({ stop, status }) => `${stop}:${status}`)).toEqual([
+			"A:SCHEDULED",
+			"B:SKIPPED",
+			"X:UNSCHEDULED",
+			"C:SKIPPED",
+			"Y:UNSCHEDULED",
+			"D:SCHEDULED",
+		]);
+	});
+
 	it("accepte des sélecteurs exprimés par identifiant d'arrêt", () => {
 		const calls = buildModifiedCalls(
 			scheduledCalls(),
@@ -273,7 +356,7 @@ describe("computeCancelledCallRanges", () => {
 		);
 
 		// B et C sont retirés : le véhicule quitte l'itinéraire à A (indice 0) et le retrouve à D (3).
-		expect(ranges).toEqual([[0, 3]]);
+		expect(ranges).toEqual([{ fromIndex: 0, toIndex: 3, joinsAtStart: true, joinsAtEnd: true }]);
 	});
 
 	it("prend l'arrêt retiré pour borne quand la déviation atteint une extrémité de la course", () => {
@@ -282,14 +365,14 @@ describe("computeCancelledCallRanges", () => {
 				scheduledCalls(),
 				makePlan([{ startStopSelector: { stopSequence: 1 }, endStopSelector: { stopSequence: 2 } }]),
 			),
-		).toEqual([[0, 2]]);
+		).toEqual([{ fromIndex: 0, toIndex: 2, joinsAtStart: false, joinsAtEnd: true }]);
 
 		expect(
 			computeCancelledCallRanges(
 				scheduledCalls(),
 				makePlan([{ startStopSelector: { stopSequence: 3 }, endStopSelector: { stopSequence: 4 } }]),
 			),
-		).toEqual([[1, 3]]);
+		).toEqual([{ fromIndex: 1, toIndex: 3, joinsAtStart: true, joinsAtEnd: false }]);
 	});
 
 	it("retourne une plage par modification", () => {
@@ -302,8 +385,36 @@ describe("computeCancelledCallRanges", () => {
 		);
 
 		expect(ranges).toEqual([
-			[0, 2],
-			[2, 3],
+			{ fromIndex: 0, toIndex: 2, joinsAtStart: true, joinsAtEnd: true },
+			{ fromIndex: 2, toIndex: 3, joinsAtStart: true, joinsAtEnd: false },
+		]);
+	});
+
+	it("n'abandonne qu'une portion pour deux modifications qui se suivent", () => {
+		const ranges = computeCancelledCallRanges(
+			scheduledCalls(),
+			makePlan([
+				{ startStopSelector: { stopSequence: 2 }, endStopSelector: { stopSequence: 2 } },
+				{ startStopSelector: { stopSequence: 3 }, endStopSelector: { stopSequence: 3 } },
+			]),
+		);
+
+		// B et C sont retirés d'affilée : le véhicule ne retrouve son itinéraire qu'en D.
+		expect(ranges).toEqual([{ fromIndex: 0, toIndex: 3, joinsAtStart: true, joinsAtEnd: true }]);
+	});
+
+	it("ordonne les plages abandonnées le long de la course", () => {
+		const ranges = computeCancelledCallRanges(
+			scheduledCalls(),
+			makePlan([
+				{ startStopSelector: { stopSequence: 4 }, endStopSelector: { stopSequence: 4 } },
+				{ startStopSelector: { stopSequence: 2 }, endStopSelector: { stopSequence: 2 } },
+			]),
+		);
+
+		expect(ranges).toEqual([
+			{ fromIndex: 0, toIndex: 2, joinsAtStart: true, joinsAtEnd: true },
+			{ fromIndex: 2, toIndex: 3, joinsAtStart: true, joinsAtEnd: false },
 		]);
 	});
 
