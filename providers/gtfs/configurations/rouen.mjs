@@ -67,8 +67,14 @@ const sources = [
 		id: "tae",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tae.zip",
 		realtimeResourceHrefs: [
-			"https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
-			"https://api.mrn.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
+			{
+				href: "https://api.mrn.cityway.fr/dataflow/horaire-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
+				pollMs: 20_000,
+			},
+			{
+				href: "https://api.mrn.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
+				pollMs: 20_000,
+			},
 		],
 		mode: "NO-TU",
 		excludeScheduled: (trip) => trip.route.name !== "I",
@@ -82,8 +88,8 @@ const sources = [
 		id: "tni",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tni.zip",
 		realtimeResourceHrefs: [
-			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
-			"https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
+			{ href: "https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates", pollMs: 20_000 },
+			{ href: "https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions", pollMs: 20_000 },
 		],
 		mode: "NO-TU",
 		mapTripUpdate: (tripUpdate) => {
@@ -118,19 +124,12 @@ const sources = [
 		getOperatorRef: () => "TNI",
 		mapLineRef: (lineRef) => lineRef.replace("TNI:", ""),
 	},
-	{
-		id: "jumieges",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/jumieges_2026.zip",
-		realtimeResourceHrefs: [],
-		getAheadTime: () => 60 * 10,
-		getNetworkRef: () => "ASTUCE",
-	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	id: "rouen",
-	computeDelayMs: 20_000,
+	computeDelayMs: 10_000,
 	sources,
 };
 
