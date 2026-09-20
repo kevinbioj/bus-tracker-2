@@ -50,6 +50,15 @@ const sources = [
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 	},
 	{
+		id: "coeur-var",
+		staticResourceHref: "https://api.pysae.com/api/v4/groups/lr-coeurduvar/gtfs/pub",
+		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/lr-coeurduvar/gtfs-rt"],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		mode: "NO-TU",
+		getNetworkRef: () => "COEUR-VAR",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "digne-les-bains",
 		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/0d9ebca0-d18e-44ad-ab95-d89e8a72d781",
 		realtimeResourceHrefs: [],
