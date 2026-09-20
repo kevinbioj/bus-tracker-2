@@ -970,6 +970,47 @@ describe("computeVehicleJourneys (dessertes déviées)", () => {
 		expect(calls?.find((call) => call.stopName === "C")?.expectedTime).toBe("2026-05-18T08:21:00+00:00");
 		expect(calls?.find((call) => call.stopName === "Replacement")?.expectedTime).toBe("2026-05-18T08:12:00+00:00");
 	});
+
+	it("apparie par arrêt une position qui ignore la renumérotation de la déviation", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:05:00", {
+			tripModifications: [detour()],
+			vehiclePositions: [
+				{
+					timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+					trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18" },
+					vehicle: { id: "vehicle:1" },
+					position: { latitude: 0, longitude: 0.015 },
+					// Séquence 3 dans le GTFS statique, mais l'arrêt de déviation la porte désormais :
+					// s'y fier ferait réapparaître un arrêt déjà desservi en tête de la desserte.
+					currentStopSequence: 3,
+					stopId: "C",
+				},
+			],
+		});
+
+		expect(callsOf(result)).toEqual(["C:SCHEDULED"]);
+	});
+
+	it("suit la numérotation déviée d'une position rattachée à la course modifiée", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:05:00", {
+			tripModifications: [detour()],
+			vehiclePositions: [
+				{
+					timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+					trip: { modifiedTrip: { modificationsId: "detour:1", affectedTripId: "original" } },
+					vehicle: { id: "vehicle:1" },
+					position: { latitude: 0.01, longitude: 0.01 },
+					currentStopSequence: 3,
+				},
+			],
+		});
+
+		expect(callsOf(result)).toEqual(["Replacement:UNSCHEDULED", "C:SCHEDULED"]);
+	});
 });
 
 /** Course supplémentaire A 8:00 → X 8:10 → C 8:20, étrangère au GTFS statique. */

@@ -3,7 +3,7 @@ import { match, P } from "ts-pattern";
 import { createPlainDate, createPlainTime, createZonedDateTime } from "../cache/temporal-cache.js";
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
 import { type Gtfs, getJourneyKey } from "../model/gtfs.js";
-import type { TripDescriptor, TripUpdate } from "../model/gtfs-rt.js";
+import type { TripDescriptor, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
 import { type RealtimeResources, resolveShape } from "../model/realtime-lookup.js";
 import type { Shape } from "../model/shape.js";
@@ -203,6 +203,30 @@ const getCalls = (
 	}
 
 	return journey.calls.slice(monitoredCallIndex);
+};
+
+/**
+ * Arrêts restant à desservir d'après la position remontée par le flux.
+ *
+ * Un producteur qui décrit une course déviée sans passer par `modified_trip` numérote encore ses
+ * arrêts comme le GTFS statique : la séquence qu'il remonte ne désigne plus le même arrêt une fois
+ * la course renumérotée, et la desserte publiée reculerait d'autant d'arrêts que la déviation en a
+ * inséré avant la position du véhicule. Seul l'identifiant d'arrêt reste fiable dans ce cas.
+ *
+ * Une position qui ne désigne aucun arrêt de la course retombe sur la déduction par les horaires,
+ * plutôt que de tronquer la desserte au mauvais endroit.
+ */
+const getCallsFromVehiclePosition = (journey: Journey, vehiclePosition: VehiclePosition, at: Temporal.Instant) => {
+	const useStopId = journey.hasModifications() && vehiclePosition.trip?.modifiedTrip === undefined;
+
+	const index =
+		!useStopId && vehiclePosition.currentStopSequence !== undefined
+			? journey.calls.findIndex((call) => call.sequence >= vehiclePosition.currentStopSequence!)
+			: vehiclePosition.stopId !== undefined
+				? journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId)
+				: -1;
+
+	return index !== -1 ? journey.calls.slice(index) : getCalls(journey, at, () => Number.POSITIVE_INFINITY);
 };
 
 /**
@@ -737,16 +761,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 			const calls =
 				journey !== undefined
-					? vehiclePosition.currentStopSequence !== undefined
-						? journey.calls.slice(
-								journey.calls.findIndex((call) => call.sequence >= vehiclePosition.currentStopSequence!),
-							)
-						: vehiclePosition.stopId !== undefined
-							? (() => {
-									const idx = journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId);
-									return idx !== -1 ? journey.calls.slice(idx) : getCalls(journey, now, () => Number.POSITIVE_INFINITY);
-								})()
-							: getCalls(journey, now, () => Number.POSITIVE_INFINITY)
+					? getCallsFromVehiclePosition(journey, vehiclePosition, now)
 					: vehiclePosition.trip?.tripId !== undefined
 						? createCallsFromTripUpdate(
 								source.gtfs,
