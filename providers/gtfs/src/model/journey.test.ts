@@ -492,11 +492,11 @@ describe("Journey#cancelledPath", () => {
 		const { trip } = makeShapedGtfs();
 		const journey = trip.getScheduledJourney(DATE, true);
 
-		// Tracé de remplacement décalé au nord : ses extrémités ne coïncident avec aucun point du
-		// tracé théorique, la soudure doit donc déplacer celles de la portion abandonnée.
+		// Tracé de remplacement décalé au nord d'une quinzaine de mètres : assez pour que le tracé
+		// théorique lui échappe, assez peu pour que la soudure reste un simple comblement de trou.
 		const offsetShape = new Shape(
 			"shape:offset",
-			new Float64Array([0.0008, 0, 0, 0.0008, 0.01, 1100, 0.0008, 0.02, 2200]),
+			new Float64Array([0.00015, 0, 0, 0.00015, 0.01, 1100, 0.00015, 0.02, 2200]),
 		);
 		journey.applyModifications(detourPlan(offsetShape), at("08:00").epochMilliseconds);
 
@@ -521,7 +521,7 @@ describe("Journey#cancelledPath", () => {
 		// l'itinéraire jusqu'au terminus, la course ne revient donc jamais sur le tracé d'origine.
 		const offsetShape = new Shape(
 			"shape:offset",
-			new Float64Array([0.0008, 0, 0, 0.0008, 0.01, 1100, 0.0008, 0.02, 2200]),
+			new Float64Array([0.00015, 0, 0, 0.00015, 0.01, 1100, 0.00015, 0.02, 2200]),
 		);
 		journey.applyModifications(
 			{
@@ -543,6 +543,44 @@ describe("Journey#cancelledPath", () => {
 		// Le départ de la portion abandonnée est soudé au tracé suivi, là où le véhicule le quitte...
 		expect(offsetShape.distanceToPosition(segment[0]![0], segment[0]![1])).toBeCloseTo(0, 5);
 		// ...mais son arrivée s'arrête au terminus d'origine, sans trait de retour vers la déviation.
+		expect(segment.at(-1)).toEqual([0, 0.02]);
+	});
+
+	it("ne soude pas une extrémité trop éloignée du tracé de remplacement", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Tracé de remplacement à une centaine de mètres au nord : là où la course le quitte, les deux
+		// tracés sont déjà séparés pour de bon. Les raccorder dessinerait un virage que rien ne porte.
+		const farShape = new Shape("shape:far", new Float64Array([0.001, 0, 0, 0.001, 0.01, 1100, 0.001, 0.02, 2200]));
+		journey.applyModifications(detourPlan(farShape), at("08:00").epochMilliseconds);
+
+		// La portion abandonnée s'en tient aux points du tracé théorique, sans trait vers la déviation.
+		expect(journey.cancelledPath?.segments).toEqual([
+			[
+				[0, 0],
+				[0, 0.01],
+				[0, 0.02],
+			],
+		]);
+	});
+
+	it("mène la portion abandonnée jusqu'au carrefour quand la déviation passe par la rue voisine", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Cas d'Isneauville sur la ligne 20 : la déviation emprunte la rue parallèle, à une vingtaine
+		// de mètres au nord, et ne rejoint l'itinéraire qu'au carrefour, au bout du tracé.
+		const parallelStreetShape = new Shape(
+			"shape:parallel",
+			new Float64Array([0.0002, 0, 0, 0.0002, 0.01, 1100, 0, 0.02, 2200]),
+		);
+		journey.applyModifications(detourPlan(parallelStreetShape), at("08:00").epochMilliseconds);
+
+		// La portion abandonnée va jusqu'au carrefour, sans bifurquer vers la rue voisine en chemin :
+		// aucun de ses points ne quitte le tracé théorique, qui est rectiligne.
+		const segment = journey.cancelledPath!.segments[0]!;
+		expect(segment.every(([latitude]) => latitude === 0)).toBe(true);
 		expect(segment.at(-1)).toEqual([0, 0.02]);
 	});
 

@@ -42,11 +42,26 @@ const VEHICLE_DESCRIPTOR_TTL_MS = 5 * 60 * 1000;
  * Écart au-delà duquel un point du tracé théorique est tenu pour réellement abandonné. En deçà, le
  * tracé de remplacement le longe : le signaler comme abandonné ferait doublon, deux tracés d'un
  * même itinéraire ne coïncidant jamais au mètre près.
+ *
+ * Le seuil reste sous l'écartement de deux rues voisines : une déviation qui emprunte la rue
+ * parallèle passe couramment à vingt mètres de l'itinéraire d'origine, et une tolérance de cet
+ * ordre y noierait la divergence. La portion abandonnée s'arrêterait alors avant le carrefour où
+ * les deux se rejoignent, pour être soudée de flanc à la rue voisine : un virage que le véhicule ne
+ * prend pas, là où il continue tout droit.
  */
-const DETOUR_OVERLAP_TOLERANCE_M = 20;
+const DETOUR_OVERLAP_TOLERANCE_M = 10;
 
 /** En deçà, le point de raccord serait confondu avec l'extrémité qu'il est censé souder. */
 const JOIN_MIN_DISTANCE_M = 0.5;
+
+/**
+ * Au-delà, l'extrémité de la portion abandonnée n'est pas soudée au tracé suivi. La soudure ne
+ * comble que le trou laissé par la tolérance de recouvrement, de l'ordre de quelques dizaines de
+ * mètres ; par-delà, les deux tracés se séparent pour de bon et le trait de raccord inventerait un
+ * mouvement inexistant — typiquement un virage qu'aucune rue ne porte, alors que le véhicule
+ * continuait tout droit.
+ */
+const JOIN_MAX_DISTANCE_M = 2 * DETOUR_OVERLAP_TOLERANCE_M;
 
 /**
  * En deçà, le tracé de remplacement n'est pas rogné sur la desserte : le bout qui dépasse relève de
@@ -76,29 +91,29 @@ type ShapeJoins = { joinStart?: boolean; joinEnd?: boolean };
  *
  * Une extrémité que la course ne rejoint pas (`joinStart`/`joinEnd` à faux) n'est pas soudée : quand
  * la déviation remplace l'itinéraire jusqu'au terminus, le véhicule ne revient jamais sur le tracé
- * d'origine, et l'y raccorder tracerait un trait de retour qui n'existe pas.
+ * d'origine, et l'y raccorder tracerait un trait de retour qui n'existe pas. Une extrémité trop
+ * éloignée du tracé suivi ne l'est pas davantage : voir {@link JOIN_MAX_DISTANCE_M}.
  */
 function joinToShape(
 	points: [number, number][],
 	detourShape: Shape,
 	{ joinStart = true, joinEnd = true }: ShapeJoins = {},
 ): [number, number][] {
-	const [firstLatitude, firstLongitude] = points[0]!;
-	const [lastLatitude, lastLongitude] = points[points.length - 1]!;
-
 	// Une extrémité déjà posée sur le tracé de remplacement n'a rien à raccorder : la ressouder
-	// n'ajouterait qu'un point confondu avec elle.
-	const start = joinStart ? detourShape.projectPosition(firstLatitude, firstLongitude) : undefined;
-	const end = joinEnd ? detourShape.projectPosition(lastLatitude, lastLongitude) : undefined;
+	// n'ajouterait qu'un point confondu avec elle. Une extrémité qui s'en éloigne trop non plus : le
+	// trait de soudure y deviendrait un segment à part entière, tracé hors de toute voirie.
+	const weld = (point: [number, number] | undefined): [number, number][] => {
+		if (point === undefined) return [];
+		const projection = detourShape.projectPosition(point[0], point[1]);
+		if (projection === undefined) return [];
+		if (projection.distance <= JOIN_MIN_DISTANCE_M || projection.distance > JOIN_MAX_DISTANCE_M) return [];
+		return [[projection.latitude, projection.longitude]];
+	};
 
 	return [
-		...(start !== undefined && start.distance > JOIN_MIN_DISTANCE_M
-			? [[start.latitude, start.longitude] as [number, number]]
-			: []),
+		...weld(joinStart ? points[0] : undefined),
 		...points,
-		...(end !== undefined && end.distance > JOIN_MIN_DISTANCE_M
-			? [[end.latitude, end.longitude] as [number, number]]
-			: []),
+		...weld(joinEnd ? points[points.length - 1] : undefined),
 	];
 }
 
