@@ -29,7 +29,11 @@ export function VehiclesMap(props: VehiclesMapProps) {
 
 	const { data: line } = useQuery(GetLineQuery(lineId ?? undefined));
 	// Une ligne filtrée impose son réseau ; sinon le réseau filtré vient directement de l'URL.
-	const { data: filteredNetwork } = useQuery(GetNetworkQuery(line?.networkId ?? networkId ?? undefined, true));
+	const filteredNetworkId = line?.networkId ?? networkId ?? undefined;
+	const { data: networkData } = useQuery(GetNetworkQuery(filteredNetworkId, true));
+	// La requête garde les données précédentes en attendant les suivantes, y compris une fois désactivée :
+	// sans ce garde-fou, le réseau quitté survivrait au filtre et restreindrait encore les arrêts.
+	const filteredNetwork = networkData?.id === filteredNetworkId ? networkData : undefined;
 	const filteredLine = filteredNetwork?.lines.find((line) => line.id === lineId);
 	const filteredNetworkOnly = lineId === null && networkId !== null ? filteredNetwork : undefined;
 

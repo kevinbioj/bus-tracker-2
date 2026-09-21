@@ -57,7 +57,7 @@ const saclayZenbusIdToVehicleLabel = new Map();
 const sources = [
 	{
 		id: "idfm",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/idfm.zip",
+		staticResourceHref: "http://gtfsidfm.clarifygdps.com/gtfs",
 		realtimeResourceHrefs: [{ href: "http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm", pollMs: 60_000 }],
 		appendTripUpdateInformation: true,
 		gtfsOptions: {
