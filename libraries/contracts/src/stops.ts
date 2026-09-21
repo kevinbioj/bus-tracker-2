@@ -76,8 +76,20 @@ export const stopAreaManifestSchema = type({
 	 */
 	latitude: "number",
 	longitude: "number",
+	/**
+	 * Réseau principal de la station — celui qui la dessert le plus — qui préfixe sa référence et
+	 * celles de ses quais dans `stopPoints`.
+	 */
 	networkRef: "string",
-	/** Quais regroupés, sous la forme exacte des `stopRef` des dessertes. */
+	/**
+	 * Tous les réseaux qui desservent la station : une même source peut en alimenter plusieurs (une
+	 * gare desservie par TER, Intercités et TGV). Absent : le seul `networkRef`.
+	 */
+	"networkRefs?": "string[]",
+	/**
+	 * Quais regroupés, sous la forme exacte des `stopRef` des dessertes : un quai figure une fois par
+	 * réseau qui le dessert, la référence d'un arrêt portant le réseau de la course.
+	 */
 	stopRefs: "string[]",
 	/**
 	 * Les mêmes quais, positionnés : affichés à la place de la station aux zooms les plus forts.
@@ -97,6 +109,8 @@ export type StopAreaManifest = typeof stopAreaManifestSchema.infer;
 export const stopDeparturesRequestSchema = type({
 	requestId: "string",
 	stopAreaRef: "string",
+	/** Source détentrice de la station, au sein du provider auquel la demande est adressée. */
+	"sourceId?": "string",
 	/** Restreint le tableau à un quai de la station, avant la limite du nombre de passages. */
 	"stopRef?": "string",
 });
@@ -116,6 +130,8 @@ export const stopDepartureSchema = type({
 	aimedTime: "string.date.iso",
 	"expectedTime?": "string.date.iso",
 	callStatus: vehicleJourneyCallStatusEnum,
+	/** Vrai lorsque la station est le terminus de départ de la course : le passage y est un départ. */
+	"origin?": "boolean",
 	/**
 	 * Identifiant sous lequel la course serait publiée si elle circulait : permet au client de
 	 * rejoindre le véhicule sur la carte lorsqu'il y est effectivement suivi.

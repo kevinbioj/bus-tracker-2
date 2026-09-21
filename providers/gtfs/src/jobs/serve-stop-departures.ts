@@ -10,7 +10,6 @@ import { createRedisClient } from "@bus-tracker/redis";
 import type { Source } from "../model/source.js";
 
 import { computeStopDepartures } from "./compute-stop-departures.js";
-import { resolveNetworkRefs } from "./publish-data-sources.js";
 
 /** Seule la publication est requise : évite d'exposer la variance des types du client Redis. */
 type RedisPublisher = { publish: (channel: string, message: string) => Promise<unknown> };
@@ -19,21 +18,23 @@ const STOP_AREA_INFIX = ":StopArea:";
 
 /**
  * Retrouve la source qui détient une station et l'identifiant de celle-ci. La référence publiée est
- * de la forme `${networkRef}:StopArea:${areaId}`, et le réseau d'une source ne change pas : il suffit
- * de retrouver celle dont le réseau préfixe la référence, puis de vérifier qu'elle connaît la station.
+ * de la forme `${networkRef}:StopArea:${areaId}` ; son réseau ne désigne pas la source — une source
+ * peut en alimenter plusieurs — c'est la demande qui la nomme. À défaut, la première source qui
+ * connaît la station répond.
  */
-function locateStopArea(sources: Source[], stopAreaRef: string) {
+function locateStopArea(sources: Source[], stopAreaRef: string, sourceId?: string) {
 	const infixIndex = stopAreaRef.indexOf(STOP_AREA_INFIX);
 	if (infixIndex === -1) return;
 
-	const networkRef = stopAreaRef.slice(0, infixIndex);
 	const areaId = stopAreaRef.slice(infixIndex + STOP_AREA_INFIX.length);
+	const knows = (source: Source) => source.gtfs?.stopAreas.has(areaId) === true || source.realtimeStopAreas.has(areaId);
 
-	for (const source of sources) {
-		if (!resolveNetworkRefs(source).includes(networkRef)) continue;
-		if (source.gtfs?.stopAreas.has(areaId) !== true && !source.realtimeStopAreas.has(areaId)) continue;
-		return { source, networkRef, areaId };
-	}
+	const source =
+		sourceId !== undefined
+			? sources.find((candidate) => candidate.id === sourceId && knows(candidate))
+			: sources.find(knows);
+
+	return source !== undefined ? { source, areaId } : undefined;
 }
 
 /**
@@ -49,13 +50,14 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 		if (
 			typeof request.requestId !== "string" ||
 			typeof request.stopAreaRef !== "string" ||
-			(request.stopRef !== undefined && typeof request.stopRef !== "string")
+			(request.stopRef !== undefined && typeof request.stopRef !== "string") ||
+			(request.sourceId !== undefined && typeof request.sourceId !== "string")
 		) {
 			console.warn("⚠ Rejected a malformed stop departures request:", message);
 			return;
 		}
 
-		const located = locateStopArea(sources, request.stopAreaRef);
+		const located = locateStopArea(sources, request.stopAreaRef, request.sourceId);
 		// Une station inconnue n'est pas une erreur : la demande est diffusée au provider qui l'a
 		// annoncée, mais sa ressource GTFS a pu changer depuis.
 		if (located === undefined) return;
@@ -63,7 +65,7 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 		const reply: StopDeparturesReply = {
 			requestId: request.requestId,
 			stopAreaRef: request.stopAreaRef,
-			departures: computeStopDepartures(located.source, located.networkRef, located.areaId, Temporal.Now.instant(), {
+			departures: computeStopDepartures(located.source, located.areaId, Temporal.Now.instant(), {
 				stopRef: request.stopRef,
 			}),
 			passedCallDetection: located.source.options.passedCallDetection ?? "SCHEDULE",

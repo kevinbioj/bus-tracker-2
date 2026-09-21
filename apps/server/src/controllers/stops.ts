@@ -1,5 +1,5 @@
 import type { StopDeparture, StopPoint } from "@bus-tracker/contracts";
-import { and, arrayOverlaps, eq } from "drizzle-orm";
+import { arrayOverlaps } from "drizzle-orm";
 import * as z from "zod";
 
 import { database } from "../core/database/database.js";
@@ -136,7 +136,7 @@ function mergeTrackedJourneys(
 	const passed = new Set<ResolvedDeparture>();
 
 	for (const journey of journeyStore.values()) {
-		if (journey.networkId !== stopArea.networkId) continue;
+		if (!stopArea.networkIds.includes(journey.networkId)) continue;
 
 		// Pour un véhicule suivi en GPS, le processeur ne publie que les dessertes à partir de son
 		// arrêt courant (séquence, à défaut identifiant d'arrêt) : la liste publiée *est* sa
@@ -223,7 +223,7 @@ const lineIdsByRef = new Map<string, number | null>();
 /** Oubli périodique des correspondances, pour suivre une ligne recréée ou fusionnée par un éditeur. */
 setInterval(() => lineIdsByRef.clear(), 30 * 60_000).unref();
 
-async function resolveLineIds(departures: ResolvedDeparture[], networkId: number) {
+async function resolveLineIds(departures: ResolvedDeparture[]) {
 	const unknownRefs = [
 		...new Set(departures.flatMap((departure) => (departure.lineRef !== undefined ? [departure.lineRef] : []))),
 	].filter((ref) => !lineIdsByRef.has(ref));
@@ -232,7 +232,9 @@ async function resolveLineIds(departures: ResolvedDeparture[], networkId: number
 		const lines = await database
 			.select({ id: linesTable.id, references: linesTable.references })
 			.from(linesTable)
-			.where(and(eq(linesTable.networkId, networkId), arrayOverlaps(linesTable.references, unknownRefs)));
+			// Les références de ligne portent leur réseau en préfixe : elles suffisent à la désigner, quel
+			// que soit celui des réseaux de la station qui la dessert.
+			.where(arrayOverlaps(linesTable.references, unknownRefs));
 
 		for (const ref of unknownRefs) {
 			// Une référence sans ligne est retenue aussi : la ligne naîtra de la première course publiée,
@@ -300,10 +302,15 @@ hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams)
 	const departures = mergeTrackedJourneys(
 		stopArea,
 		new Set(stopPointRef !== undefined ? [stopPointRef] : stopArea.stopRefs),
-		await requestStopDepartures(stopArea.providerId, stopArea.ref, stopPointRef),
+		await requestStopDepartures({
+			providerId: stopArea.providerId,
+			sourceId: stopArea.sourceId,
+			stopAreaRef: stopArea.ref,
+			stopRef: stopPointRef,
+		}),
 		nowMs,
 	);
-	await resolveLineIds(departures, stopArea.networkId);
+	await resolveLineIds(departures);
 
 	departures.sort((a, b) => Date.parse(a.expectedTime ?? a.aimedTime) - Date.parse(b.expectedTime ?? b.aimedTime));
 
@@ -315,6 +322,8 @@ hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams)
 			latitude: stopArea.latitude,
 			longitude: stopArea.longitude,
 			networkId: stopArea.networkId,
+			// Tous les réseaux de la station : le client en tire numéros et couleurs des lignes.
+			networkIds: stopArea.networkIds,
 			stopPoints: stopArea.stopPoints ?? [],
 		},
 		// Quai sur lequel le tableau est restreint, s'il l'est.

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import configuration, {
 	createSiriLiteJourneyMap,
 	enrichSncfJourneyWithSiriLitePlatforms,
+	enrichSncfStopDepartureWithSiriLitePlatform,
 	GTFS_RT_TRIP_UPDATES_URL,
 	getSiriLiteEstimatedVehicleJourneys,
 	getSiriLiteTrainNumbers,
@@ -129,5 +130,43 @@ describe("SNCF SIRI Lite helpers", () => {
 		enrichSncfJourneyWithSiriLitePlatforms(vehicleJourney, siriLiteJourney);
 
 		expect(vehicleJourney.calls[0].platformName).toBe("A");
+	});
+
+	it("reports the departure platform on stop departures, by train number", () => {
+		const journeysByTrainNumber = createSiriLiteJourneyMap(siriLitePayload);
+		const journey = { trip: { headsign: "890004" } };
+		const departureAt = (stopRef) => ({ stopRef, stopName: "Arrêt", aimedTime: "2026-05-18T08:00:00+02:00" });
+
+		// La voie de départ prime : c'est un tableau des départs.
+		expect(
+			enrichSncfStopDepartureWithSiriLitePlatform(
+				departureAt("SNCF-1:StopPoint:87721159"),
+				journey,
+				journeysByTrainNumber,
+			).platformName,
+		).toBe("D");
+		expect(
+			enrichSncfStopDepartureWithSiriLitePlatform(
+				departureAt("SNCF-1:StopPoint:87721175"),
+				journey,
+				journeysByTrainNumber,
+			).platformName,
+		).toBe("A");
+	});
+
+	it("leaves stop departures untouched without a matching train", () => {
+		const departure = {
+			stopRef: "SNCF-1:StopPoint:87721159",
+			stopName: "Arrêt",
+			aimedTime: "2026-05-18T08:00:00+02:00",
+		};
+
+		expect(
+			enrichSncfStopDepartureWithSiriLitePlatform(
+				departure,
+				{ trip: { headsign: "999999" } },
+				createSiriLiteJourneyMap(siriLitePayload),
+			),
+		).toBe(departure);
 	});
 });

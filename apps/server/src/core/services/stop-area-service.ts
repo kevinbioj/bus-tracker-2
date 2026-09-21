@@ -5,8 +5,11 @@ import { redis } from "../../index.js";
 import { database } from "../database/database.js";
 import { networksTable } from "../database/schema.js";
 
-/** Station telle que servie par l'API : sa fiche Redis, rattachée au réseau connu de la base. */
-export type StopArea = StopAreaManifest & { networkId: number };
+/**
+ * Station telle que servie par l'API : sa fiche Redis, rattachée aux réseaux connus de la base —
+ * `networkId` pour le principal, `networkIds` pour tous ceux qui la desservent.
+ */
+export type StopArea = StopAreaManifest & { networkId: number; networkIds: number[] };
 
 export type StopAreaBounds = {
 	swLat: number;
@@ -42,12 +45,20 @@ async function resolveNetworkIds(networkRefs: string[]) {
 	return networkIdsByRef;
 }
 
-/** Réseau des fiches : celles dont le réseau n'existe pas (encore) en base sont écartées. */
+const networkRefsOf = (manifest: StopAreaManifest) => manifest.networkRefs ?? [manifest.networkRef];
+
+/**
+ * Réseaux des fiches. Seuls comptent ceux qui existent en base — un réseau naît de sa première course
+ * publiée — et une station dont aucun réseau n'y figure encore est écartée.
+ */
 async function attachNetworks(manifests: StopAreaManifest[]): Promise<StopArea[]> {
-	const networkIds = await resolveNetworkIds(manifests.map(({ networkRef }) => networkRef));
+	const knownNetworkIds = await resolveNetworkIds(manifests.flatMap(networkRefsOf));
 	return manifests.flatMap((manifest) => {
-		const networkId = networkIds.get(manifest.networkRef);
-		return networkId !== null && networkId !== undefined ? [{ ...manifest, networkId }] : [];
+		const networkIds = networkRefsOf(manifest).flatMap((ref) => knownNetworkIds.get(ref) ?? []);
+		if (networkIds.length === 0) return [];
+
+		const networkId = knownNetworkIds.get(manifest.networkRef) ?? networkIds[0]!;
+		return [{ ...manifest, networkId, networkIds }];
 	});
 }
 
@@ -103,7 +114,9 @@ export async function findStopAreasWithin(
 
 	const stopAreas = await attachNetworks(await readStopAreas(refs));
 	return (
-		networkIds !== undefined ? stopAreas.filter(({ networkId }) => networkIds.includes(networkId)) : stopAreas
+		networkIds !== undefined
+			? stopAreas.filter((stopArea) => stopArea.networkIds.some((networkId) => networkIds.includes(networkId)))
+			: stopAreas
 	).slice(0, limit);
 }
 

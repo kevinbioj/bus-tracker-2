@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { EncodedLinePath, PassedCallDetection, VehicleJourney } from "@bus-tracker/contracts";
+import type { EncodedLinePath, PassedCallDetection, StopDeparture, VehicleJourney } from "@bus-tracker/contracts";
 import { downloadGtfs } from "../download/download-gtfs.js";
 import type { RealtimeFeedContents } from "../download/download-gtfs-rt.js";
 import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";
@@ -97,6 +97,13 @@ export type SourceOptions = {
 	mapTripModifications?: (tripModifications: TripModifications, gtfs: Gtfs) => TripModifications | undefined;
 	mapVehiclePosition?: (vehicle: VehiclePosition, gtfs: Gtfs) => VehiclePosition | undefined;
 	isValidJourney?: (vehicleJourney: VehicleJourney) => boolean;
+	/**
+	 * Retouche un passage du tableau des prochains passages d'un arrêt, avant qu'il ne soit rendu :
+	 * pendant de {@link SourceOptions.isValidJourney} pour les passages, qui ne sont pas des courses
+	 * publiées. Sert à y reporter ce qu'une configuration ajoute aux courses hors du GTFS — les voies
+	 * SNCF, par exemple, tirées d'un flux SIRI Lite.
+	 */
+	mapStopDeparture?: (departure: StopDeparture, journey: Journey) => StopDeparture;
 };
 
 /**

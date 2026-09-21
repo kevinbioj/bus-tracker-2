@@ -73,11 +73,18 @@ export async function startStopDeparturesService(redis: ReturnType<typeof create
  * qu'une erreur lorsque Redis est indisponible ou que personne ne répond : l'appelant complète de
  * toute façon avec les courses qu'il suit lui-même.
  */
-export async function requestStopDepartures(
-	providerId: string,
-	stopAreaRef: string,
-	stopRef?: string,
-): Promise<StopDeparturesResult> {
+export async function requestStopDepartures({
+	providerId,
+	sourceId,
+	stopAreaRef,
+	stopRef,
+}: {
+	providerId: string;
+	sourceId: string;
+	stopAreaRef: string;
+	/** Restreint le tableau à un quai de la station. */
+	stopRef?: string;
+}): Promise<StopDeparturesResult> {
 	if (publisher === undefined || !publisher.isReady) return EMPTY_RESULT;
 
 	const requestId = randomUUID();
@@ -96,7 +103,7 @@ export async function requestStopDepartures(
 	try {
 		await publisher.publish(
 			stopDeparturesRequestChannel(providerId),
-			JSON.stringify({ requestId, stopAreaRef, stopRef }),
+			JSON.stringify({ requestId, stopAreaRef, sourceId, stopRef }),
 		);
 	} catch (error) {
 		console.error("✘ Failed to publish a stop departures request:", error);

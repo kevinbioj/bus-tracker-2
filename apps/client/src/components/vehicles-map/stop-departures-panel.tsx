@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { clsx } from "clsx";
 import dayjs from "dayjs";
 import { LocateIcon, Rss, XIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
@@ -20,13 +20,14 @@ import * as m from "~/paraglide/messages";
 function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDisplayMode, now: dayjs.Dayjs) {
 	const time = departure.expectedTime ?? departure.aimedTime;
 
-	// À quai, c'est le départ qui reste à venir : mêmes libellés que les prochains arrêts d'une course.
-	if (departure.atStop) {
+	// Au terminus de départ, le véhicule attend souvent déjà son heure : le passage est annoncé comme
+	// un départ. Partout ailleurs, l'heure seule suffit.
+	if (departure.origin === true && departure.callStatus !== "SKIPPED") {
 		const minutes = dayjs(time).diff(now, "minutes");
-		if (minutes < 1) return m.stop_call_dwelling_imminent();
+		if (minutes < 1) return m.stop_departures_departure_imminent();
 		return displayMode === "absolute"
-			? m.stop_call_dwelling_departure_at({ time: formatLocalTime(time) })
-			: m.stop_call_dwelling_departure({ time: formatCountdown(minutes) });
+			? m.stop_departures_departure_at({ time: formatLocalTime(time) })
+			: m.stop_departures_departure_in({ time: formatCountdown(minutes) });
 	}
 
 	// Heure dépassée mais véhicule pas encore passé (source jugeant le passage sur la progression du
@@ -43,23 +44,34 @@ function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDi
 
 /**
  * Pictogramme de la ligne lorsque le réseau en fournit un, pastille à ses couleurs sinon — comme
- * dans le module de filtre de la carte.
+ * dans le module de filtre de la carte. Il occupe la première colonne du tableau, large comme le plus
+ * large d'entre eux : chacun y est centré plutôt que calé à gauche.
  */
 function LinePictogram({ line }: Readonly<{ line?: Line }>) {
 	if (line?.cartridgeHref) {
-		return <img alt={line.number} className="h-6 max-w-20 object-contain shrink-0" src={line.cartridgeHref} />;
+		return (
+			<img
+				alt={line.number}
+				className="h-6 max-w-20 justify-self-center object-contain shrink-0"
+				src={line.cartridgeHref}
+			/>
+		);
 	}
 
+	// Le numéro de girouette est la forme courte du numéro, faite pour l'affichage. Un bloc et non un
+	// conteneur flex : l'ellipse ne s'applique pas au texte d'un conteneur flex, qui serait coupé net
+	// au lieu d'être tronqué proprement. Large comme son texte (`w-fit`) : sans quoi, élément de grille,
+	// il s'étirerait sur toute la colonne.
 	return (
 		<span
-			className="flex justify-center shrink-0 min-w-7 max-w-20 rounded-sm px-1 text-base font-bold leading-6 truncate"
+			className="block w-full shrink-0 min-w-7 max-w-20 justify-self-center truncate rounded-sm px-1 text-center text-base font-bold leading-6"
 			style={{
 				backgroundColor: line?.color ?? "#18181B",
 				color: line?.textColor ?? "#FFFFFF",
 			}}
 			title={line?.number}
 		>
-			{line?.number ?? "?"}
+			{line?.girouetteNumber ?? line?.number ?? "?"}
 		</span>
 	);
 }
@@ -85,7 +97,6 @@ function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRo
 	// n'a rien à corriger.
 	const showAimedTime =
 		!skipped &&
-		!departure.atStop &&
 		departure.expectedTime !== undefined &&
 		formatLocalTime(departure.expectedTime) !== formatLocalTime(departure.aimedTime);
 
@@ -96,20 +107,28 @@ function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRo
 			? "text-green-700 dark:text-green-500"
 			: "text-foreground";
 
-	// Chaque ligne reprend les colonnes du tableau (`subgrid`) : pictogramme, destination, quai, heure
-	// et localisation s'alignent d'une ligne à l'autre quel que soit leur contenu. Les cinq cellules
+	// Chaque ligne reprend les colonnes du tableau (`subgrid`) : pictogramme, destination et quai, heure
+	// et localisation s'alignent d'une ligne à l'autre quel que soit leur contenu. Les quatre cellules
 	// sont donc toujours rendues, vides au besoin, pour ne pas glisser d'une colonne. La hauteur est
 	// fixe : une ligne ne grandit pas quand l'heure théorique s'affiche sous l'heure prévue.
 	return (
 		<li className="col-span-full grid h-9 grid-cols-subgrid items-center px-1">
 			<LinePictogram line={line} />
-			<p className="min-w-0 truncate text-sm leading-tight" title={departure.destination}>
-				{departure.destination ?? departure.stopName}
-			</p>
-			<div>
+			{/*
+			 * Le quai suit immédiatement la destination. Une destination longue passe sur deux lignes avant
+			 * d'être tronquée — « Hôpital Européen Georges Pompidou » se lit en entier — ce que la hauteur
+			 * fixe de la ligne permet sans rien décaler.
+			 */}
+			<div className="flex min-w-0 items-center gap-1">
+				{/* Enveloppe : la troncature sur deux lignes est capricieuse posée sur un élément flex lui-même. */}
+				<div className="min-w-0">
+					<p className="line-clamp-2 break-words text-sm leading-tight" title={departure.destination}>
+						{departure.destination ?? departure.stopName}
+					</p>
+				</div>
 				{departure.platformName !== undefined && (
 					<span
-						className="block rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4 text-center text-xs font-bold text-background"
+						className="shrink-0 rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4 text-center text-xs font-bold text-background"
 						title={departure.stopName}
 					>
 						{departure.platformName}
@@ -159,10 +178,14 @@ export function StopDeparturesPanel() {
 	const [displayMode] = useNextCallsDisplayMode();
 
 	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef));
-	// Les lignes du réseau, pour leur numéro, leurs couleurs et leur pictogramme : une requête au plus
-	// toutes les 5 min, souvent déjà en cache — le module de filtre fait la même.
-	const { data: network } = useQuery(GetNetworkQuery(data?.stop.networkId, true));
-	const linesById = useMemo(() => new Map(network?.lines.map((line) => [line.id, line])), [network]);
+	// Les lignes des réseaux de la station, pour leur numéro, leurs couleurs et leur pictogramme : une
+	// requête au plus toutes les 5 min par réseau, souvent déjà en cache — le module de filtre fait la
+	// même. Une gare peut en réunir plusieurs (TER, Intercités, TGV…).
+	const linesById = useQueries({
+		queries: (data?.stop.networkIds ?? []).map((networkId) => GetNetworkQuery(networkId, true)),
+		combine: (networks) =>
+			new Map(networks.flatMap(({ data: network }) => network?.lines.map((line) => [line.id, line] as const) ?? [])),
+	});
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -233,15 +256,18 @@ export function StopDeparturesPanel() {
 			<div className="flex items-center gap-1 border-b px-1 py-0.5">
 				<div className="flex-1 min-w-0">
 					<p className="text-[10px] font-thin uppercase tracking-wide leading-tight">{m.stop_departures_title()}</p>
-					<p className="truncate text-base font-bold leading-tight" title={data?.stop.name}>
-						{data?.stop.name ?? m.stop_departures_loading()}
-					</p>
+					{/* Le quai suit immédiatement le nom : le nom seul se tronque s'il manque de place. */}
+					<div className="flex min-w-0 items-center gap-1">
+						<p className="truncate text-base font-bold leading-tight" title={data?.stop.name}>
+							{data?.stop.name ?? m.stop_departures_loading()}
+						</p>
+						{stopPoint?.platformCode !== undefined && (
+							<span className="shrink-0 rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4 text-center text-xs font-bold text-background">
+								{stopPoint.platformCode}
+							</span>
+						)}
+					</div>
 				</div>
-				{stopPoint?.platformCode !== undefined && (
-					<span className="shrink-0 rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4 text-center text-xs font-bold text-background">
-						{stopPoint.platformCode}
-					</span>
-				)}
 				<Button
 					className="size-6 shrink-0"
 					size="icon"
@@ -262,7 +288,7 @@ export function StopDeparturesPanel() {
 				) : departures.length === 0 ? (
 					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_empty()}</p>
 				) : (
-					<ul className="grid max-h-64 grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] gap-x-1 divide-y overflow-y-auto overscroll-contain">
+					<ul className="grid max-h-64 grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-x-1 divide-y overflow-y-auto overscroll-contain">
 						{departures.map((departure, index) => (
 							<DepartureRow
 								departure={departure}

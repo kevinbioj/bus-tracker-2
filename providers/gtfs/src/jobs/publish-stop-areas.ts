@@ -12,10 +12,8 @@ import { captureException } from "@bus-tracker/monitoring";
 import type { createRedisClient } from "@bus-tracker/redis";
 
 import type { Source } from "../model/source.js";
-import type { StopArea } from "../model/stop-area.js";
 import { padSourceId } from "../utils/pad-source-id.js";
-
-import { resolveNetworkRefs } from "./publish-data-sources.js";
+import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
 
 /** Taille des transactions d'écriture, pour ne pas bloquer Redis sur un réseau de plusieurs milliers de stations. */
 const CHUNK_SIZE = 500;
@@ -30,58 +28,73 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 	const gtfs = source.gtfs;
 	if (gtfs === undefined) return [];
 
-	const networkRefs = resolveNetworkRefs(source);
-	// Une source qui alimente plusieurs réseaux ne permet pas de rattacher une station à l'un d'eux :
-	// le réseau dépend de la course, pas de l'arrêt.
-	if (networkRefs.length !== 1) return [];
-	const networkRef = networkRefs[0]!;
-
 	const { mapLineRef, mapStopRef } = source.options;
-	const lineRefOf = (routeId: string) => `${networkRef}:Line:${mapLineRef?.(routeId) ?? routeId}`;
+	const networkOf = createTripNetworkResolver(source);
+	const stopRefOf = (networkRef: string, stopId: string) => `${networkRef}:StopPoint:${mapStopRef?.(stopId) ?? stopId}`;
 
-	// Lignes des arrêts créés par le flux temps réel : seules les courses déviées les desservent.
-	const realtimeLineRefs = new Map<string, Set<string>>();
+	// Réseaux et lignes de chaque station, relevés sur les courses qui la desservent : une source peut
+	// alimenter plusieurs réseaux, et c'est la course, pas l'arrêt, qui en décide.
+	const services = new Map<string, { courseCountByNetwork: Map<string, number>; lineRefs: Set<string> }>();
+	const record = (areaId: string, networkRef: string, routeId: string) => {
+		let service = services.get(areaId);
+		if (service === undefined) {
+			service = { courseCountByNetwork: new Map(), lineRefs: new Set() };
+			services.set(areaId, service);
+		}
+		service.courseCountByNetwork.set(networkRef, (service.courseCountByNetwork.get(networkRef) ?? 0) + 1);
+		service.lineRefs.add(`${networkRef}:Line:${mapLineRef?.(routeId) ?? routeId}`);
+	};
+
+	for (const stopArea of gtfs.stopAreas.values()) {
+		for (const [, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
+			const trip = gtfs.tripsByIdx[tripIdx];
+			if (trip !== undefined) record(stopArea.id, networkOf(trip), trip.route.id);
+		}
+	}
+
+	// Arrêts créés par le flux temps réel : seules les courses déviées les desservent.
 	for (const journeyKey of source.modifiedJourneyKeys) {
 		const journey = gtfs.journeys.get(journeyKey);
 		if (journey === undefined) continue;
 		for (const call of journey.calls) {
-			if (!source.realtimeStopAreas.has(call.stop.id)) continue;
-			const lineRefs = realtimeLineRefs.get(call.stop.id) ?? new Set<string>();
-			lineRefs.add(lineRefOf(journey.trip.route.id));
-			realtimeLineRefs.set(call.stop.id, lineRefs);
+			if (source.realtimeStopAreas.has(call.stop.id)) {
+				record(call.stop.id, networkOf(journey.trip, journey), journey.trip.route.id);
+			}
 		}
 	}
 
-	const lineRefsOf = (stopArea: StopArea) => {
-		const realtime = realtimeLineRefs.get(stopArea.id);
-		if (realtime !== undefined) return realtime;
+	return [...gtfs.stopAreas.values(), ...source.realtimeStopAreas.values()].flatMap((stopArea) => {
+		const service = services.get(stopArea.id);
+		if (service === undefined) return [];
 
-		const lineRefs = new Set<string>();
-		for (const [, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
-			const route = gtfs.tripsByIdx[tripIdx]?.route;
-			if (route !== undefined) lineRefs.add(lineRefOf(route.id));
-		}
-		return lineRefs;
-	};
+		// Le réseau qui dessert le plus la station devient son réseau principal.
+		const networkRefs = [...service.courseCountByNetwork]
+			.sort(([a, countA], [b, countB]) => countB - countA || a.localeCompare(b))
+			.map(([networkRef]) => networkRef);
+		const networkRef = networkRefs[0]!;
 
-	return [...gtfs.stopAreas.values(), ...source.realtimeStopAreas.values()].map((stopArea) => ({
-		ref: `${networkRef}:StopArea:${stopArea.id}`,
-		name: stopArea.name,
-		latitude: stopArea.latitude,
-		longitude: stopArea.longitude,
-		networkRef,
-		stopRefs: stopArea.stops.map((stop) => `${networkRef}:StopPoint:${mapStopRef?.(stop.id) ?? stop.id}`),
-		stopPoints: stopArea.stops.map((stop) => ({
-			ref: `${networkRef}:StopPoint:${mapStopRef?.(stop.id) ?? stop.id}`,
-			latitude: stop.latitude,
-			longitude: stop.longitude,
-			...(stop.platformCode !== undefined ? { platformCode: stop.platformCode } : {}),
-		})),
-		providerId,
-		sourceId: source.id,
-		lineRefs: [...lineRefsOf(stopArea)].sort(),
-		updatedAt,
-	}));
+		return [
+			{
+				ref: `${networkRef}:StopArea:${stopArea.id}`,
+				name: stopArea.name,
+				latitude: stopArea.latitude,
+				longitude: stopArea.longitude,
+				networkRef,
+				networkRefs,
+				stopRefs: networkRefs.flatMap((network) => stopArea.stops.map((stop) => stopRefOf(network, stop.id))),
+				stopPoints: stopArea.stops.map((stop) => ({
+					ref: stopRefOf(networkRef, stop.id),
+					latitude: stop.latitude,
+					longitude: stop.longitude,
+					...(stop.platformCode !== undefined ? { platformCode: stop.platformCode } : {}),
+				})),
+				providerId,
+				sourceId: source.id,
+				lineRefs: [...service.lineRefs].sort(),
+				updatedAt,
+			},
+		];
+	});
 }
 
 /**

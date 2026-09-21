@@ -69,29 +69,61 @@ function getTrainNumberFromVehicleJourney(vehicleJourney) {
 	return vehicleJourney.vehicleRef?.match(/:Vehicle:(.+)$/)?.[1];
 }
 
+/**
+ * Voies d'une course SIRI Lite, par arrêt normalisé. `preferDeparture` fait primer la voie de départ
+ * sur celle d'arrivée lorsqu'elles diffèrent : c'est elle qui compte sur un tableau des départs.
+ */
+export function getSiriLitePlatformsByStopRef(siriLiteJourney, { preferDeparture = false } = {}) {
+	const platformsByStopRef = new Map();
+
+	for (const call of getSiriLiteCalls(siriLiteJourney)) {
+		const platformName = preferDeparture
+			? (call.DeparturePlatformName ?? call.ArrivalPlatformName)
+			: (call.ArrivalPlatformName ?? call.DeparturePlatformName);
+		if (call.StopPointRef === undefined || platformName === undefined) continue;
+
+		const stopRef = normalizeSncfStopRef(call.StopPointRef);
+		if (stopRef === undefined || platformsByStopRef.has(stopRef)) continue;
+
+		platformsByStopRef.set(stopRef, String(platformName));
+	}
+
+	return platformsByStopRef;
+}
+
 export function enrichSncfJourneyWithSiriLitePlatforms(vehicleJourney, siriLiteJourney) {
 	if (vehicleJourney.calls === undefined) return;
 
-	const siriLiteCallsByStopRef = new Map();
-	for (const call of getSiriLiteCalls(siriLiteJourney)) {
-		if (
-			call.StopPointRef === undefined ||
-			(call.ArrivalPlatformName === undefined && call.DeparturePlatformName === undefined)
-		)
-			continue;
-
-		const stopRef = normalizeSncfStopRef(call.StopPointRef);
-		if (stopRef === undefined || siriLiteCallsByStopRef.has(stopRef)) continue;
-
-		siriLiteCallsByStopRef.set(stopRef, String(call.ArrivalPlatformName ?? call.DeparturePlatformName));
-	}
+	const platformsByStopRef = getSiriLitePlatformsByStopRef(siriLiteJourney);
 
 	for (const call of vehicleJourney.calls) {
-		const platformName = siriLiteCallsByStopRef.get(normalizeSncfStopRef(call.stopRef));
+		const platformName = platformsByStopRef.get(normalizeSncfStopRef(call.stopRef));
 		if (platformName !== undefined && platformName.length > 0) {
 			call.platformName = platformName;
 		}
 	}
+}
+
+/**
+ * Pendant de {@link enrichSncfJourneyWithSiriLitePlatformsByTrainNumber} pour le tableau des prochains
+ * passages : le GTFS SNCF ne porte aucune voie, le flux SIRI Lite les donne par numéro de train — le
+ * `trip_headsign`, comme pour `getVehicleRef`.
+ */
+export function enrichSncfStopDepartureWithSiriLitePlatform(
+	departure,
+	journey,
+	journeysByTrainNumber = siriLiteJourneysByTrainNumber,
+) {
+	const trainNumber = journey.trip.headsign;
+	if (trainNumber === undefined) return departure;
+
+	const siriLiteJourney = journeysByTrainNumber.get(trainNumber);
+	if (siriLiteJourney === undefined) return departure;
+
+	const platformName = getSiriLitePlatformsByStopRef(siriLiteJourney, { preferDeparture: true }).get(
+		normalizeSncfStopRef(departure.stopRef),
+	);
+	return platformName !== undefined && platformName.length > 0 ? { ...departure, platformName } : departure;
 }
 
 export function enrichSncfJourneyWithSiriLitePlatformsByTrainNumber(vehicleJourney) {
@@ -195,6 +227,7 @@ const sources = [
 			return stopRef.split("-")[1];
 		},
 		isValidJourney: enrichSncfJourneyWithSiriLitePlatformsByTrainNumber,
+		mapStopDeparture: enrichSncfStopDepartureWithSiriLitePlatform,
 	},
 ];
 

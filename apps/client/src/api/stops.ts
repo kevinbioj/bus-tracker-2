@@ -34,6 +34,8 @@ export type StopDeparture = {
 	aimedTime: string;
 	expectedTime?: string;
 	callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
+	/** La station est le terminus de départ de la course : le passage y est annoncé comme un départ. */
+	origin?: boolean;
 	/** Course effectivement suivie par l'application : elle peut être rejointe sur la carte. */
 	tracked: boolean;
 	/** Le véhicule stationne en ce moment à l'arrêt. */
@@ -48,6 +50,8 @@ export type StopDepartures = {
 		latitude: number;
 		longitude: number;
 		networkId: number;
+		/** Tous les réseaux qui desservent la station. */
+		networkIds: number[];
 		stopPoints: StopPoint[];
 	};
 	/** Quai sur lequel le tableau est restreint, lorsque c'est un quai qui a été demandé. */

@@ -2,10 +2,11 @@ import type { StopDeparture } from "@bus-tracker/contracts";
 
 import { createZonedDateTimeFromSecs } from "../cache/temporal-cache.js";
 import { getJourneyKey } from "../model/gtfs.js";
-import type { JourneyCall } from "../model/journey.js";
+import type { Journey, JourneyCall } from "../model/journey.js";
 import type { Source } from "../model/source.js";
 import type { Trip } from "../model/trip.js";
 import { formatCallTime } from "../utils/format-call-time.js";
+import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
 
 /** Portée par défaut du tableau de passages : au-delà, l'horaire théorique n'intéresse plus. */
 const DEFAULT_HORIZON_MS = 2 * 60 * 60 * 1000;
@@ -64,7 +65,6 @@ export type ComputeStopDeparturesOptions = {
  */
 export function computeStopDepartures(
 	source: Source,
-	networkRef: string,
 	areaId: string,
 	at: Temporal.Instant,
 	{ limit = DEFAULT_LIMIT, horizonMs = DEFAULT_HORIZON_MS, stopRef: onlyStopRef }: ComputeStopDeparturesOptions = {},
@@ -93,9 +93,22 @@ export function computeStopDepartures(
 	const departures: (Omit<StopDeparture, "destination"> & {
 		sortKey: number;
 		resolveDestination: () => string | undefined;
+		/** Course du passage, fabriquée à la demande pour les courses sans état. */
+		resolveJourney: () => Journey;
 	})[] = [];
 
-	const stopRefOf = (stopId: string) => `${networkRef}:StopPoint:${source.options.mapStopRef?.(stopId) ?? stopId}`;
+	const { mapLineRef, mapStopRef, mapTripRef } = source.options;
+	// Le réseau est celui de chaque course : une station peut être desservie par plusieurs.
+	const networkOf = createTripNetworkResolver(source);
+	const stopRefOf = (networkRef: string, stopId: string) => `${networkRef}:StopPoint:${mapStopRef?.(stopId) ?? stopId}`;
+
+	// Quai demandé, quel que soit le réseau qui préfixe sa référence : la même borne porte une
+	// référence par réseau qui la dessert.
+	const onlyStopId =
+		onlyStopRef !== undefined
+			? stopArea.stops.find((stop) => onlyStopRef.endsWith(`:StopPoint:${mapStopRef?.(stop.id) ?? stop.id}`))?.id
+			: undefined;
+	if (onlyStopRef !== undefined && onlyStopId === undefined) return [];
 
 	/** Dessertes déjà rendues par l'index, pour ne pas les redoubler depuis les courses déviées. */
 	const emittedCalls = new Set<string>();
@@ -115,8 +128,7 @@ export function computeStopDepartures(
 			if (!trip.service.runsOn(date)) continue;
 
 			const stop = stops[stopTimeIdx]!;
-			const stopRef = stopRefOf(stop.id);
-			if (onlyStopRef !== undefined && stopRef !== onlyStopRef) continue;
+			if (onlyStopId !== undefined && stop.id !== onlyStopId) continue;
 
 			const timeZone = trip.route.agency.timeZone;
 			const aimedMs = createZonedDateTimeFromSecs(date, departureSecs[stopTimeIdx]!, timeZone).epochMilliseconds;
@@ -134,9 +146,19 @@ export function computeStopDepartures(
 			// Une déviation peut avoir retiré la desserte : la course ne passe plus là.
 			if (journey?.hasModifications() && call === undefined) continue;
 
+			const networkRef = networkOf(trip, journey);
+			const stopRef = stopRefOf(networkRef, stop.id);
+
 			const expectedMs = call?.expectedDepartureTime;
 			const effectiveMs = expectedMs ?? aimedMs;
 			if (effectiveMs < nowMs || effectiveMs > untilMs) continue;
+
+			// Terminus de départ : la première desserte assurée de la course, qu'une déviation peut avoir
+			// déplacée. Sans arrêts matérialisés, c'est le premier stop_time de la course.
+			const origin =
+				call !== undefined
+					? call === journey!.calls.find((candidate) => candidate.status !== "SKIPPED")
+					: stopTimeIdx === trip.stopTimeStart;
 
 			emittedCalls.add(`${journeyKey}|${stop.id}`);
 			departures.push({
@@ -144,7 +166,7 @@ export function computeStopDepartures(
 				stopRef,
 				stopName: stop.name,
 				platformName: call?.platform ?? stop.platformCode,
-				lineRef: `${networkRef}:Line:${source.options.mapLineRef?.(trip.route.id) ?? trip.route.id}`,
+				lineRef: `${networkRef}:Line:${mapLineRef?.(trip.route.id) ?? trip.route.id}`,
 				// Résolue après tri et troncature : `getDestination` peut matérialiser les arrêts de la
 				// course, inutile de le faire pour des passages qui ne seront pas rendus.
 				resolveDestination: () =>
@@ -152,13 +174,15 @@ export function computeStopDepartures(
 						journey ?? trip.getScheduledJourney(date, true),
 						journey?.vehicleDescriptor,
 					) ?? resolveDestination(trip, stopTimeIdx, call),
+				resolveJourney: () => journey ?? trip.getScheduledJourney(date, true),
 				aimedTime: formatCallTime(aimedMs, stop.timeZone, timeZone),
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, stop.timeZone, timeZone) : undefined,
 				callStatus: call?.status ?? "SCHEDULED",
+				origin,
 				// Les identifiants publiés remplacent leurs barres obliques côté serveur : la valeur
 				// rendue ici doit pouvoir être comparée telle quelle à celles du store des courses.
 				journeyId: journey?.lastPublishedKey?.replaceAll("/", "_"),
-				journeyRef: `${networkRef}:ServiceJourney:${source.options.mapTripRef?.(trip.id) ?? trip.id}`,
+				journeyRef: `${networkRef}:ServiceJourney:${mapTripRef?.(trip.id) ?? trip.id}`,
 				serviceDate: date.toString(),
 			});
 		}
@@ -173,6 +197,7 @@ export function computeStopDepartures(
 
 		const { calls, trip, date } = journey;
 		const timeZone = trip.route.agency.timeZone;
+		const originCall = calls.find((candidate) => candidate.status !== "SKIPPED");
 
 		for (const [index, call] of calls.entries()) {
 			if (!areaStopIds.has(call.stop.id)) continue;
@@ -180,8 +205,10 @@ export function computeStopDepartures(
 			if (index === calls.length - 1 || call.flags.includes("NO_PICKUP")) continue;
 			if (emittedCalls.has(`${journeyKey}|${call.stop.id}`)) continue;
 
-			const stopRef = stopRefOf(call.stop.id);
-			if (onlyStopRef !== undefined && stopRef !== onlyStopRef) continue;
+			if (onlyStopId !== undefined && call.stop.id !== onlyStopId) continue;
+
+			const networkRef = networkOf(trip, journey);
+			const stopRef = stopRefOf(networkRef, call.stop.id);
 
 			const effectiveMs = call.expectedDepartureTime ?? call.aimedDepartureTime;
 			if (effectiveMs < nowMs || effectiveMs > untilMs) continue;
@@ -191,20 +218,22 @@ export function computeStopDepartures(
 				stopRef,
 				stopName: call.stop.name,
 				platformName: call.platform ?? call.stop.platformCode,
-				lineRef: `${networkRef}:Line:${source.options.mapLineRef?.(trip.route.id) ?? trip.route.id}`,
+				lineRef: `${networkRef}:Line:${mapLineRef?.(trip.route.id) ?? trip.route.id}`,
 				resolveDestination: () =>
 					source.options.getDestination?.(journey, journey.vehicleDescriptor) ??
 					call.headsign ??
 					trip.headsign ??
 					calls.findLast((candidate) => candidate.status !== "SKIPPED")?.stop.name,
+				resolveJourney: () => journey,
 				aimedTime: formatCallTime(call.aimedDepartureTime, call.stop.timeZone, timeZone),
 				expectedTime:
 					call.expectedDepartureTime !== undefined
 						? formatCallTime(call.expectedDepartureTime, call.stop.timeZone, timeZone)
 						: undefined,
 				callStatus: call.status,
+				origin: call === originCall,
 				journeyId: journey.lastPublishedKey?.replaceAll("/", "_"),
-				journeyRef: `${networkRef}:ServiceJourney:${source.options.mapTripRef?.(trip.id) ?? trip.id}`,
+				journeyRef: `${networkRef}:ServiceJourney:${mapTripRef?.(trip.id) ?? trip.id}`,
 				serviceDate: date.toString(),
 			});
 		}
@@ -212,7 +241,8 @@ export function computeStopDepartures(
 
 	departures.sort((a, b) => a.sortKey - b.sortKey);
 
-	return departures
-		.slice(0, limit)
-		.map(({ sortKey, resolveDestination, ...departure }) => ({ ...departure, destination: resolveDestination() }));
+	return departures.slice(0, limit).map(({ sortKey, resolveDestination, resolveJourney, ...rest }) => {
+		const departure = { ...rest, destination: resolveDestination() };
+		return source.options.mapStopDeparture?.(departure, resolveJourney()) ?? departure;
+	});
 }
