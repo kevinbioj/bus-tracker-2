@@ -153,6 +153,13 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "serre-poncon",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/00729dab-d14a-4412-90f3-1985738bd1e4",
+		realtimeResourceHrefs: [],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		getNetworkRef: () => "SERRE-PONCON",
+	},
+	{
 		id: "toulon",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rd-toulon/exports/gtfs-complet.zip",
