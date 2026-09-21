@@ -25,7 +25,7 @@ describe("importStops", () => {
 			].join("\n"),
 		);
 
-		const stops = await importStops(directory, {});
+		const { stops } = await importStops(directory, {});
 
 		expect(stops.get("lisbon")!.timeZone).toBe("Europe/Lisbon");
 		expect(stops.get("madrid-quay")!.timeZone).toBe("Europe/Madrid");
@@ -43,8 +43,26 @@ describe("importStops", () => {
 			].join("\n"),
 		);
 
-		const stops = await importStops(directory, { mapStopId: (stopId) => `X-${stopId}` });
+		const { stops } = await importStops(directory, { mapStopId: (stopId) => `X-${stopId}` });
 
 		expect(stops.get("X-quay")!.timeZone).toBe("Europe/Madrid");
+	});
+
+	it("collecte les stations parentes et le rattachement de leurs quais", async () => {
+		const directory = await writeStopsFile(
+			[
+				"stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station",
+				"gare,Gare Centrale,49.44,1.09,1,",
+				"gare-a,Gare Centrale Quai A,49.441,1.091,0,gare",
+				"gare-b,Gare Centrale Quai B,49.442,1.092,0,gare",
+				"mairie,Mairie,49.45,1.10,0,",
+			].join("\n"),
+		);
+
+		const { stops, stations } = await importStops(directory, {});
+
+		expect(stations.get("gare")).toEqual({ id: "gare", name: "Gare Centrale", latitude: 49.44, longitude: 1.09 });
+		expect(stops.get("gare-a")!.parentStationId).toBe("gare");
+		expect(stops.get("mairie")!.parentStationId).toBeUndefined();
 	});
 });

@@ -15,5 +15,22 @@ export class Stop {
 		 * réécrire l'instant obtenu en heure locale de l'arrêt.
 		 */
 		public timeZone?: string,
+		/**
+		 * Identifiant *brut* de la station parente déclarée par `parent_station`, avant application
+		 * de `mapStopId` — c'est sous cette forme que `stops.txt` la référence. Sert au regroupement
+		 * des quais en stations ({@link ../import/components/group-stop-areas.js}).
+		 */
+		readonly parentStationId?: string,
 	) {}
 }
+
+/**
+ * Station déclarée par `stops.txt` (`location_type = 1`). Elle n'est pas un arrêt desservi — aucune
+ * desserte ne la référence — mais elle nomme et positionne le regroupement de ses quais.
+ */
+export type StationRecord = {
+	id: string;
+	name: string;
+	latitude: number;
+	longitude: number;
+};

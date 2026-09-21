@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { indexStopAreas } from "../import/import-gtfs.js";
 import { Agency } from "../model/agency.js";
 import type { Gtfs } from "../model/gtfs.js";
 import type { IdentifiedTripModifications } from "../model/gtfs-rt.js";
@@ -41,6 +42,7 @@ function makeGtfs(): Gtfs {
 		shapes: new Map([[staticShape.id, staticShape]]),
 		journeys: new Map(),
 		stopTimeStore: store,
+		...indexStopAreas(store, [trip]),
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
 		lastModified: null,
 		etag: null,

@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import { Stop } from "../../model/stop.js";
+import { type StationRecord, Stop } from "../../model/stop.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
@@ -12,6 +12,8 @@ type StopRecord = CsvRecord<
 
 export async function importStops(gtfsDirectory: string, { importAllStops, mapStopId }: ImportGtfsOptions) {
 	const stops = new Map<string, Stop>();
+	/** Indexées par identifiant *brut*, comme `parent_station` les référence. */
+	const stations = new Map<string, StationRecord>();
 
 	// Les chaînes de fuseau sont internées : des milliers d'arrêts d'un même pays partagent
 	// ainsi une seule instance au lieu d'une copie par ligne CSV.
@@ -33,9 +35,18 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 		const timeZone = stopRecord.stop_timezone ? internTimeZone(stopRecord.stop_timezone) : undefined;
 
 		// Les stations (location_type = 1) sont enregistrées même lorsqu'elles sont écartées
-		// du résultat, car leurs enfants peuvent hériter de leur fuseau.
+		// du résultat, car leurs enfants peuvent hériter de leur fuseau et de leur identité.
 		if (timeZone !== undefined) {
 			stationTimeZones.set(stopRecord.stop_id, timeZone);
+		}
+
+		if (stopRecord.location_type === "1") {
+			stations.set(stopRecord.stop_id, {
+				id: stopRecord.stop_id,
+				name: stopRecord.stop_name,
+				latitude: +stopRecord.stop_lat,
+				longitude: +stopRecord.stop_lon,
+			});
 		}
 
 		if (
@@ -54,6 +65,7 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 			+stopRecord.stop_lon,
 			stopRecord.platform_code || undefined,
 			timeZone,
+			stopRecord.parent_station || undefined,
 		);
 
 		if (timeZone === undefined && stopRecord.parent_station) {
@@ -67,5 +79,5 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 		stop.timeZone = stationTimeZones.get(parentId);
 	}
 
-	return stops;
+	return { stops, stations };
 }

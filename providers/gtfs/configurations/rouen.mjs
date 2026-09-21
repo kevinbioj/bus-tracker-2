@@ -13,6 +13,7 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
 		],
 		mode: "NO-TU",
+		passedCallDetection: "VEHICLE",
 		gtfsOptions: {
 			filterTrips: (trip) => {
 				if (trip.route.id === "TCAR:99") trip.block = "CALYPSO";

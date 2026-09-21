@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { indexStopAreas } from "../import/import-gtfs.js";
 import { Agency } from "./agency.js";
 import type { Gtfs } from "./gtfs.js";
 import type { StopTimeUpdate } from "./gtfs-rt.js";
@@ -56,6 +57,7 @@ function makeShapedGtfs(options?: { withDistances?: boolean; withShapeDistances?
 		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
+		...indexStopAreas(store, [trip]),
 		importedAt: Temporal.Instant.from("2026-06-01T00:00:00Z"),
 		lastModified: null,
 		etag: null,
@@ -104,6 +106,7 @@ function makeGtfs() {
 		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
+		...indexStopAreas(store, [trip]),
 		importedAt: Temporal.Instant.from("2026-06-01T00:00:00Z"),
 		lastModified: null,
 		etag: null,

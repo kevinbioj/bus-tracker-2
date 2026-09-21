@@ -6,6 +6,7 @@ import { memo } from "react";
 import { match, P } from "ts-pattern";
 
 import { CustomTooltip } from "~/components/custom-tooltip";
+import { formatCountdown, formatLocalTime } from "~/components/vehicles-map/call-time-format";
 import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components/vehicles-map/next-calls-display-mode";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 import * as m from "~/paraglide/messages";
@@ -43,9 +44,6 @@ type CallTimes = {
  * heure par défaut de l'arrêt, le départ ne servant qu'à afficher « arrivée → départ » pendant le
  * stationnement.
  */
-/** Heure locale de l'arrêt : l'offset est retiré pour ne pas afficher celle du visiteur. */
-const formatLocalTime = (time: string) => dayjs(time.slice(0, -6)).format("HH:mm");
-
 function getCallTimes(call: VehicleJourneyCall): CallTimes {
 	const departure = call.expectedTime ?? call.aimedTime;
 	const fallback = { arrival: departure, departure, aimed: call.aimedTime, expected: call.expectedTime };
@@ -90,13 +88,7 @@ function formatCallLabel(
 	const minutes = dayjs(dwelling ? departure : arrival).diff(now, "minutes");
 	if (minutes < 1) return dwelling ? m.stop_call_dwelling_imminent() : m.stop_call_imminent();
 
-	const countdown =
-		minutes < 60
-			? m.stop_call_in_minutes({ count: minutes })
-			: m.stop_call_in_hours({
-					hours: Math.floor(minutes / 60),
-					minutes: String(minutes % 60).padStart(2, "0"),
-				});
+	const countdown = formatCountdown(minutes);
 
 	return dwelling ? m.stop_call_dwelling_departure({ time: countdown }) : countdown;
 }

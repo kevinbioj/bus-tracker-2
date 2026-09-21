@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { EncodedLinePath, VehicleJourney } from "@bus-tracker/contracts";
+import type { EncodedLinePath, PassedCallDetection, VehicleJourney } from "@bus-tracker/contracts";
 import { downloadGtfs } from "../download/download-gtfs.js";
 import type { RealtimeFeedContents } from "../download/download-gtfs-rt.js";
 import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";
@@ -12,6 +12,7 @@ import type { Gtfs } from "./gtfs.js";
 import type { TripModifications, TripUpdate, VehicleDescriptor, VehiclePosition } from "./gtfs-rt.js";
 import type { Journey } from "./journey.js";
 import { buildEncodedLinePaths } from "./line-path.js";
+import type { StopArea } from "./stop-area.js";
 import type { Trip } from "./trip.js";
 
 export type SourceAuth =
@@ -66,6 +67,14 @@ export type SourceOptions = {
 	 */
 	addedTripShapeMatching?: boolean;
 	disableRoutePaths?: boolean;
+	/**
+	 * Manière de juger, sur le tableau des prochains passages d'un arrêt, qu'un véhicule suivi l'a
+	 * quitté. `SCHEDULE` (défaut) : dès que son heure de départ est dépassée. `VEHICLE` : seulement
+	 * lorsque la séquence ou l'arrêt courant de sa position l'a dépassé — un véhicule en retard sur
+	 * un temps réel optimiste reste alors annoncé « imminent » ou « à quai » jusqu'à son passage
+	 * effectif. Ne vaut que pour les véhicules suivis en GPS : les autres restent jugés à l'heure.
+	 */
+	passedCallDetection?: PassedCallDetection;
 	// --- Additional data acquirance
 	mode?: "ALL" | "VP-ONLY" | "VP+TU" | "NO-TU";
 	excludeScheduled?: ((trip: Trip) => boolean) | boolean;
@@ -127,6 +136,12 @@ export class Source {
 	 * pour trouver celles dont la déviation a expiré.
 	 */
 	modifiedJourneyKeys = new Set<string>();
+	/**
+	 * Arrêts créés à la volée par le flux temps réel et desservis par une course déviée, chacun
+	 * érigé en station : ils n'existent dans aucun fichier du GTFS statique, mais un voyageur doit
+	 * pouvoir les trouver sur la carte et y consulter ses passages. Recalculés à chaque cycle.
+	 */
+	realtimeStopAreas = new Map<string, StopArea>();
 
 	constructor(
 		readonly id: string,

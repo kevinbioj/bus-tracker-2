@@ -1,10 +1,11 @@
 import { Worker } from "node:worker_threads";
-import { DATA_SOURCES_CHANNEL } from "@bus-tracker/contracts";
+import { DATA_SOURCES_CHANNEL, STOP_AREAS_INVALIDATION_CHANNEL } from "@bus-tracker/contracts";
 import { createRedisClient } from "@bus-tracker/redis";
 import { serve } from "@hono/node-server";
 
 import { migrateDatabase } from "./core/database/migrate.js";
 import { parseDataSourceManifests, upsertDataSources } from "./core/services/data-source-service.js";
+import { startStopDeparturesService } from "./core/services/stop-departures-service.js";
 import {
 	startVehicleReportCleanupService,
 	sweepExpiredVehicleReports,
@@ -22,6 +23,7 @@ import "./controllers/lines.js";
 import "./controllers/networks.js";
 import "./controllers/ping.js";
 import "./controllers/regions.js";
+import { invalidateStopAreaCaches } from "./controllers/stops.js";
 import "./controllers/vehicle-journeys.js";
 import "./controllers/vehicles.js";
 
@@ -89,10 +91,16 @@ dataSourcesSubscriber
 			}
 		}),
 	)
-	.then(() => console.log("► Subscribed to the data sources channel."))
+	// Même connexion : un abonné Redis peut écouter plusieurs canaux.
+	.then(() => dataSourcesSubscriber.subscribe(STOP_AREAS_INVALIDATION_CHANNEL, () => invalidateStopAreaCaches()))
+	.then(() => console.log("► Subscribed to the data sources and stop areas invalidation channels."))
 	.catch((error) => {
 		console.error("✘ Failed to subscribe to the data sources channel:", error);
 	});
+
+startStopDeparturesService(redis).catch((error) => {
+	console.error("✘ Failed to start the stop departures service:", error);
+});
 
 console.log("► Listening on port %d.\n", port);
 serve({

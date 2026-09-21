@@ -12,6 +12,8 @@ import { computeVehicleJourneys } from "./jobs/compute-current-journeys.js";
 import { computeNextJourneys } from "./jobs/compute-next-journeys.js";
 import { initializeResources } from "./jobs/initialize-resources.js";
 import { publishDataSourceManifests } from "./jobs/publish-data-sources.js";
+import { publishStopAreas } from "./jobs/publish-stop-areas.js";
+import { serveStopDepartures } from "./jobs/serve-stop-departures.js";
 import { sweepJourneys } from "./jobs/sweep-journeys.js";
 import { updateResources } from "./jobs/update-resources.js";
 import { configurationPath } from "./options.js";
@@ -47,10 +49,20 @@ new Cron("0 0 0 * * *", () => computeNextJourneys(configuration.sources));
 
 let lastUpdateAt = Date.now();
 let lastSweepAt = Date.now();
+let lastStopAreasPublishAt = Date.now();
+/** Arrêts temps réel figurant dans le dernier inventaire publié de chaque source. */
+const publishedRealtimeStopAreas = new Map<string, string>();
 
 await initializeResources(configuration.sources);
 await publishLinePaths(configuration.sources);
 await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
+await publishStopAreas(redis, configuration.id, configuration.sources);
+await serveStopDepartures(redis, configuration.id, configuration.sources).catch((error) => {
+	// Les prochains passages sont un service d'appoint : leur indisponibilité ne doit pas empêcher
+	// la publication des courses.
+	console.error("✘ Failed to serve stop departures requests:", error);
+	captureException(error);
+});
 while (true) {
 	console.log("%s ► Entering loop cycle.", Temporal.Now.instant());
 
@@ -59,6 +71,8 @@ while (true) {
 		if (redis.isReady) {
 			await publishLinePaths(updatedSources);
 			await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
+			// Seules les sources mises à jour : les autres restent rafraîchies à leur rythme.
+			await publishStopAreas(redis, configuration.id, updatedSources);
 		} else {
 			// Les tracés des sources mises à jour seront republiés au retour de Redis.
 			needsResync = true;
@@ -78,10 +92,18 @@ while (true) {
 		continue;
 	}
 
+	// Republiées périodiquement même sans nouvelle ressource : c'est ce qui maintient les fiches en vie.
+	if (Date.now() - lastStopAreasPublishAt > 3_600_000) {
+		await publishStopAreas(redis, configuration.id, configuration.sources);
+		lastStopAreasPublishAt = Date.now();
+	}
+
 	if (needsResync) {
 		needsResync = false;
 		await publishLinePaths(configuration.sources);
 		await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
+		await publishStopAreas(redis, configuration.id, configuration.sources);
+		lastStopAreasPublishAt = Date.now();
 	}
 
 	const startedAt = Date.now();
@@ -134,6 +156,14 @@ async function computeCurrentJourneys() {
 
 					for (const journey of journeys) {
 						source.observedNetworkRefs.add(journey.networkRef);
+					}
+
+					// Les arrêts créés par le flux temps réel vont et viennent avec les déviations : l'inventaire
+					// est republié dès que leur ensemble change, sans attendre le rafraîchissement horaire.
+					const realtimeStopAreasFingerprint = [...source.realtimeStopAreas.keys()].sort().join("|");
+					if (realtimeStopAreasFingerprint !== (publishedRealtimeStopAreas.get(source.id) ?? "")) {
+						await publishStopAreas(redis, configuration.id, [source]);
+						publishedRealtimeStopAreas.set(source.id, realtimeStopAreasFingerprint);
 					}
 
 					for (let i = 0; i < journeys.length; i += 500) {

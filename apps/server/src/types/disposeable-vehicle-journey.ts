@@ -14,6 +14,7 @@ export type DisposeableVehicleJourney = {
 		platformName?: string;
 		distanceTraveled?: number;
 		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
+		flags?: ("NO_PICKUP" | "NO_DROP_OFF")[];
 	}>;
 	position: {
 		latitude: number;
@@ -31,6 +32,8 @@ export type DisposeableVehicleJourney = {
 	/** Course absente du GTFS statique : ses arrêts n'ont pas d'horaire théorique de référence. */
 	isAdded?: boolean;
 	networkId: number;
+	/** Course théorique dont la publication est issue, lorsqu'elle en a une. */
+	journeyRef?: string;
 	operatorId?: number;
 	vehicle?: { id?: number; number: string };
 	missionCode?: string;

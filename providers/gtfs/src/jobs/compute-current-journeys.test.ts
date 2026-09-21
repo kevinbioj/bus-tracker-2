@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
+import { indexStopAreas } from "../import/import-gtfs.js";
 import { Agency } from "../model/agency.js";
 import type { Gtfs } from "../model/gtfs.js";
 import type { IdentifiedTripModifications, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
@@ -55,6 +56,7 @@ function makeGtfs() {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		...indexStopAreas(store, [trip]),
 		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
@@ -205,6 +207,7 @@ function blockSource(options?: Partial<SourceOptions>) {
 			[t2.id, t2],
 		]),
 		shapes: new Map([[shape.id, shape]]),
+		...indexStopAreas(store, [t1, t2]),
 		journeys: new Map([
 			[`${DATE}-t1`, t1.getScheduledJourney(DATE, true)],
 			[`${DATE}-t2`, t2.getScheduledJourney(DATE, true)],
@@ -591,6 +594,7 @@ function crossBorderSource() {
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
 		shapes: new Map(),
+		...indexStopAreas(store, [trip]),
 		journeys: new Map([[`${DATE}-original`, trip.getScheduledJourney(DATE, true)]]),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
@@ -634,6 +638,7 @@ function flixbusLikeSource() {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
+		...indexStopAreas(store, [trip]),
 		shapes: new Map(trip.shape !== undefined ? [[trip.shape.id, trip.shape]] : []),
 		journeys: new Map(),
 		stopTimeStore: store,
@@ -673,6 +678,7 @@ function dwellingSource(options?: Partial<SourceOptions>) {
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
 		shapes: new Map(),
+		...indexStopAreas(store, [trip]),
 		journeys: new Map([[`${DATE}-original`, trip.getScheduledJourney(DATE, true)]]),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),

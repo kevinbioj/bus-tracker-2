@@ -16,7 +16,7 @@ let lastPublishedPayload: string | undefined;
  * source dès le démarrage. Une configuration dépendant de la course renvoie `undefined` ou lève,
  * auquel cas la source attend sa première publication de véhicule pour apparaître.
  */
-function resolveNetworkRefs(source: Source) {
+export function resolveNetworkRefs(source: Source) {
 	const networkRefs = new Set(source.observedNetworkRefs);
 
 	if (networkRefs.size === 0) {

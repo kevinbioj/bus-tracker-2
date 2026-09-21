@@ -1,5 +1,9 @@
+import type { Gtfs } from "../model/gtfs.js";
+import type { StationRecord } from "../model/stop.js";
+import { buildStopIndex, filterServedStopAreas } from "../model/stop-index.js";
+import type { StopTimeStore } from "../model/stop-time-store.js";
 import type { Trip } from "../model/trip.js";
-
+import { groupStopAreas } from "./components/group-stop-areas.js";
 import { importAgencies } from "./components/import-agencies.js";
 import { importRoutes } from "./components/import-routes.js";
 import { importServices } from "./components/import-services.js";
@@ -23,8 +27,32 @@ export type ImportGtfsOptions = {
 	postLoad?: (resource: Awaited<ReturnType<typeof importGtfs>>) => unknown;
 };
 
+/**
+ * Regroupe les arrêts desservis en stations et en construit l'index inverse. Le regroupement ne
+ * porte que sur les arrêts effectivement desservis : `stops.txt` conserve souvent des arrêts
+ * qu'aucune course ne dessert plus.
+ */
+export function indexStopAreas(
+	stopTimeStore: StopTimeStore,
+	trips: Iterable<Trip>,
+	stations: Map<string, StationRecord> = new Map(),
+): Pick<Gtfs, "stopAreas" | "stopIndex" | "tripsByIdx"> {
+	// Matérialisé : l'itérable est parcouru deux fois, et `trips.values()` ne l'est qu'une.
+	const tripList = Array.from(trips);
+
+	const { stopAreas, stopAreaByStopId } = groupStopAreas(new Set(stopTimeStore.stops), stations);
+	const stopIndex = buildStopIndex(stopTimeStore, tripList, stopAreaByStopId);
+
+	const tripsByIdx: (Trip | undefined)[] = [];
+	for (const trip of tripList) {
+		tripsByIdx[trip.idx] = trip;
+	}
+
+	return { stopAreas: filterServedStopAreas(stopAreas, stopIndex), stopIndex, tripsByIdx };
+}
+
 export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptions = {}) {
-	const [agencies, services, shapes, stops] = await Promise.all([
+	const [agencies, services, shapes, { stops, stations }] = await Promise.all([
 		importAgencies(gtfsDirectory),
 		importServices(gtfsDirectory),
 		importShapes(gtfsDirectory, options),
@@ -33,7 +61,15 @@ export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptio
 	pruneStopTimeZones(stops, agencies);
 	const routes = await importRoutes(gtfsDirectory, options, agencies);
 	const { trips, stopTimeStore } = await importTrips(gtfsDirectory, options, routes, services, shapes, stops);
-	const gtfs = { routes, stops, trips, shapes, journeys: new Map(), stopTimeStore };
+	const gtfs = {
+		routes,
+		stops,
+		trips,
+		shapes,
+		journeys: new Map(),
+		stopTimeStore,
+		...indexStopAreas(stopTimeStore, trips.values(), stations),
+	};
 	options.postLoad?.(gtfs);
 	return gtfs;
 }
