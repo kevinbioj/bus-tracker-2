@@ -1,10 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { LoaderCircleIcon } from "lucide-react";
-import { useEffect } from "react";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 
-import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
-import { GetVehicleJourneyMarkersQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { CopyToClipboard } from "~/components/copy-to-clipboard";
 import { Separator } from "~/components/ui/separator";
 import { useDisplayNextCalls } from "~/components/vehicles-map/display-next-calls";
@@ -18,26 +16,6 @@ type VehicleDetailsProps = {
 	journeyId: string;
 };
 
-/**
- * Rafraîchit le détail de la course dès que les marqueurs bougent. Isolé du rendu de la popup :
- * les bornes de la carte et l'horodatage des marqueurs ne décident de rien à l'écran, les observer
- * dans la popup la ferait rerendre à chaque déplacement de carte et à chaque rafraîchissement.
- */
-function MarkersRefreshSync({ journeyId }: Readonly<{ journeyId: string }>) {
-	const bounds = useMapBounds();
-	const { dataUpdatedAt: markersUpdatedAt } = useQuery(GetVehicleJourneyMarkersQuery(bounds));
-	// Même cache que la popup : aucune requête supplémentaire n'est émise.
-	const { dataUpdatedAt: journeyUpdatedAt, refetch } = useQuery(GetVehicleJourneyQuery(journeyId, false));
-
-	useEffect(() => {
-		if (markersUpdatedAt > journeyUpdatedAt) {
-			refetch({ cancelRefetch: false });
-		}
-	}, [markersUpdatedAt, journeyUpdatedAt, refetch]);
-
-	return null;
-}
-
 export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDetailsProps>) {
 	const { width } = useWindowSize();
 
@@ -49,7 +27,6 @@ export function VehicleMarkerPopup({ embedMode, journeyId }: Readonly<VehicleDet
 
 	return (
 		<div className="font-[Achemine] leading-tight mb-1.5 text-[13px]" style={{ width: popupWidth }}>
-			<MarkersRefreshSync journeyId={journeyId} />
 			{isError ? (
 				<p className="px-3 text-balance text-center">
 					<span className="font-bold text-lg">{m.marker_missing_title()}</span>

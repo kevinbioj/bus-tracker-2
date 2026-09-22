@@ -64,6 +64,27 @@ export const GetNetworksQuery = queryOptions({
 			.sort((a, b) => a.name.localeCompare(b.name)),
 });
 
+/**
+ * Défini une fois pour toutes : React Query ne rejoue un `select` que lorsque sa référence change.
+ * Recréé à chaque appel, il repasserait sur toutes les lignes du réseau à chaque rendu de chacun de
+ * ses consommateurs.
+ */
+function selectNetwork<N extends Network | NetworkWithDetails>(network: N) {
+	return {
+		...network,
+		color: network.color ? `#${network.color}` : null,
+		textColor: network.textColor ? `#${network.textColor}` : null,
+		lines:
+			"lines" in network
+				? network.lines.map((line) => ({
+						...line,
+						color: line.color ? `#${line.color}` : null,
+						textColor: line.textColor ? `#${line.textColor}` : null,
+					}))
+				: undefined,
+	};
+}
+
 export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetails?: T, continuousRefetch?: boolean) =>
 	queryOptions({
 		enabled: networkId !== undefined,
@@ -75,17 +96,5 @@ export const GetNetworkQuery = <T extends boolean>(networkId?: number, withDetai
 				.then((response) => response.json<T extends true ? NetworkWithDetails : Network>()),
 		staleTime: 300_000,
 		refetchInterval: continuousRefetch ? 10_000 : undefined,
-		select: (network) => ({
-			...network,
-			color: network.color ? `#${network.color}` : null,
-			textColor: network.textColor ? `#${network.textColor}` : null,
-			lines:
-				"lines" in network
-					? network.lines.map((line) => ({
-							...line,
-							color: line.color ? `#${line.color}` : null,
-							textColor: line.textColor ? `#${line.textColor}` : null,
-						}))
-					: undefined,
-		}),
+		select: selectNetwork,
 	});

@@ -74,9 +74,20 @@ export function VehiclesMarkersData({
 	// au même instant, donc tant que la popup est ouverte on fait suivre le marqueur de cette
 	// course sur ce détail plutôt que sur la requête des marqueurs : tout décrit alors le même
 	// instantané. C'est le même cache que la popup, aucune requête supplémentaire n'est émise.
-	const { data: activeJourney, dataUpdatedAt: journeyUpdatedAt } = useQuery(
-		GetVehicleJourneyQuery(activeJourneyId, false),
-	);
+	const {
+		data: activeJourney,
+		dataUpdatedAt: journeyUpdatedAt,
+		refetch: refetchActiveJourney,
+	} = useQuery(GetVehicleJourneyQuery(activeJourneyId, false));
+
+	// Et, en retour, le détail est redemandé dès que les marqueurs sont plus récents que lui : la
+	// popup ne décrit jamais un instantané plus ancien que le point qu'elle désigne. Suivi ici, avec
+	// la requête des marqueurs réellement affichée — filtre compris — plutôt que dans la popup.
+	useEffect(() => {
+		if (activeJourneyId !== null && markersUpdatedAt > journeyUpdatedAt) {
+			refetchActiveJourney({ cancelRefetch: false });
+		}
+	}, [activeJourneyId, markersUpdatedAt, journeyUpdatedAt, refetchActiveJourney]);
 
 	// Positions relevées sur le détail des courses dont une popup a été ouverte. Une entrée ne
 	// vaut que tant qu'elle est *plus fraîche* que les marqueurs : au-delà, ces derniers décrivent
@@ -198,14 +209,14 @@ export function VehiclesMarkersData({
 				const coordinates: [number, number] = [position.longitude, position.latitude];
 				return {
 					type: "Feature",
-					id: -1,
 					geometry: {
 						type: "Point",
 						coordinates: position.type === "COMPUTED" ? noise(coordinates, item.id) : coordinates,
 					},
+					// Seulement ce que lisent les couches et la popup : ces propriétés repartent au worker à
+					// chaque image de l'animation des marqueurs.
 					properties: {
-						...item,
-						position,
+						id: item.id,
 						bearing: position.bearing ?? null,
 						color: item.color ?? "#FFFFFF",
 						fillColor: item.fillColor ?? "#000000",

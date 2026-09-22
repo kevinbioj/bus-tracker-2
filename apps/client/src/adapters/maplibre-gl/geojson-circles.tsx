@@ -1,5 +1,5 @@
 import type { GeoJSONSource } from "maplibre-gl";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export type CircleMarkerSource = {
 	type: "geojson";
@@ -20,6 +20,32 @@ export type CircleMarkerFeature<T = { id: string; bearing: number | null }> = {
 	properties: T;
 };
 
+/** Durée du glissement d'un marqueur vers sa nouvelle position. */
+const ANIMATION_DURATION_MS = 1000;
+
+/**
+ * Au-delà de ce nombre de marqueurs en mouvement, ils sautent directement à leur nouvelle position :
+ * même à 30 images par seconde, l'animation coûterait trop cher.
+ */
+const ANIMATION_MAX_MOVEMENTS = 1000;
+
+/**
+ * Au-delà de ce nombre de marqueurs en mouvement, l'animation est ramenée à 30 images par seconde :
+ * chaque image renvoie toute la collection au worker, qui la redécoupe et replace flèches et libellés.
+ */
+const THROTTLE_THRESHOLD = 100;
+const THROTTLED_FRAME_INTERVAL_MS = 1000 / 30;
+/** Tolérance sur l'intervalle entre deux images, pour ne pas en sauter une à la moindre gigue. */
+const FRAME_INTERVAL_TOLERANCE_MS = 4;
+
+type Movement<T> = {
+	feature: CircleMarkerFeature<T>;
+	from: [number, number];
+	to: [number, number];
+	fromBearing: number | null;
+	toBearing: number | null;
+};
+
 type MapCircleMarkersProps<T extends { id: string; bearing: number | null }> = {
 	features: CircleMarkerFeature<T>[];
 	source: GeoJSONSource;
@@ -29,127 +55,91 @@ export function GeojsonCircles<T extends { id: string; bearing: number | null }>
 	features,
 	source,
 }: MapCircleMarkersProps<T>) {
+	// Collection telle que la source l'affiche, tenue ici plutôt que relue et clonée à chaque mise à
+	// jour. Elle ne vaut que pour la source qui l'a reçue : une source recréée (contexte WebGL perdu)
+	// repart vide.
+	const displayed = useRef<{ source: GeoJSONSource; collection: CircleMarkerFeatureCollection<T> } | null>(null);
+
 	useEffect(() => {
-		let abort = false;
+		const previousFeatures = displayed.current?.source === source ? displayed.current.collection.features : [];
+		const previousById = new Map(previousFeatures.map((feature) => [feature.properties.id, feature]));
 
-		async function updateMarkers() {
-			if (abort) return;
+		const movements: Movement<T>[] = [];
+		const nextFeatures = features.map((nextFeature): CircleMarkerFeature<T> => {
+			const previous = previousById.get(nextFeature.properties.id);
+			// Copie : l'animation modifie les marqueurs en place, pas les objets reçus en props.
+			const feature: CircleMarkerFeature<T> = {
+				type: "Feature",
+				geometry: { type: "Point", coordinates: nextFeature.geometry.coordinates },
+				properties: { ...nextFeature.properties },
+			};
+			if (previous === undefined) return feature;
 
-			const previousCollection = ((await source.getData()) ?? {
-				type: "FeatureCollection",
-				features: [],
-			}) as CircleMarkerFeatureCollection<T>;
+			// Le marqueur repart de l'endroit où il est affiché, y compris au milieu d'une animation
+			// interrompue par cette mise à jour.
+			const from = previous.geometry.coordinates;
+			const to = nextFeature.geometry.coordinates;
+			const fromBearing = previous.properties.bearing;
+			// Un cap qui apparaît est pris tel quel, un cap qui disparaît est retiré aussitôt : seul un
+			// cap connu des deux côtés tourne progressivement.
+			const toBearing = nextFeature.properties.bearing;
 
-			const previousLocations = previousCollection.features.reduce(
-				(positions, feature) =>
-					positions.set(feature.properties.id, {
-						position: feature.geometry.coordinates,
-						bearing: feature.properties.bearing,
-					}),
-				new Map<string, { position: GeoJSON.Position; bearing: number | null }>(),
-			);
-
-			const nextFeatures = features.reduce(
-				(featureMap, feature) => featureMap.set(feature.properties.id, feature),
-				new Map<string, CircleMarkerFeature<T>>(),
-			);
-
-			const temporaryCollection = structuredClone(previousCollection);
-
-			// 1. We remove features that no longer exist, and update properties for those that do
-			for (let i = 0; i < temporaryCollection.features.length; i += 1) {
-				const feature = temporaryCollection.features[i];
-				const nextFeature = nextFeatures.get(feature.properties.id);
-				if (nextFeature !== undefined) {
-					// We update the properties of the feature
-					const bearing = feature.properties.bearing;
-					feature.properties = { ...nextFeature.properties, bearing };
-
-					if (feature.properties.bearing === null) {
-						feature.properties.bearing = nextFeature.properties.bearing;
-					} else if (nextFeature.properties.bearing === null) {
-						feature.properties.bearing = null;
-					}
-					continue;
-				}
-
-				temporaryCollection.features.splice(i, 1);
-				i -= 1;
+			if (from[0] !== to[0] || from[1] !== to[1] || (fromBearing !== null && toBearing !== fromBearing)) {
+				feature.geometry.coordinates = from;
+				if (fromBearing !== null && toBearing !== null) feature.properties.bearing = fromBearing;
+				movements.push({ feature, from, to, fromBearing, toBearing });
 			}
+			return feature;
+		});
 
-			// 2. We set features that weren't there before
-			for (const feature of nextFeatures.values()) {
-				if (previousLocations.has(feature.properties.id)) {
-					continue;
+		const collection: CircleMarkerFeatureCollection<T> = { type: "FeatureCollection", features: nextFeatures };
+		displayed.current = { source, collection };
+
+		const applyProgress = (t: number) => {
+			const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+			for (const { feature, from, to, fromBearing, toBearing } of movements) {
+				feature.geometry.coordinates = [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t];
+				if (fromBearing !== null && toBearing !== null) {
+					const bearingDelta = ((toBearing - fromBearing + 540) % 360) - 180;
+					feature.properties.bearing = (fromBearing + bearingDelta * ease + 360) % 360;
 				}
-				temporaryCollection.features.push(feature);
 			}
+		};
 
-			// 3. We smoothly move other features
-			// Une mise à jour où rien ne s'est déplacé (le détail d'une course rafraîchi, un
-			// rafraîchissement qui rend les mêmes positions) n'a pas à être animée : une seule
-			// écriture suffit, au lieu d'une seconde de `setData` à chaque frame — et d'autant
-			// d'événements `sourcedata` pour tous ceux qui écoutent la source.
-			const hasMovement = temporaryCollection.features.some((feature) => {
-				const nextFeature = nextFeatures.get(feature.properties.id);
-				const previousLocation = previousLocations.get(feature.properties.id);
-				if (nextFeature === undefined || previousLocation === undefined) return false;
+		// Rien ne bouge, ou trop de marqueurs pour les animer : une seule écriture, directement aux
+		// positions finales — plutôt qu'une seconde de `setData` à chaque image, et d'autant
+		// d'événements `sourcedata` pour tous ceux qui écoutent la source.
+		if (movements.length === 0 || movements.length > ANIMATION_MAX_MOVEMENTS) {
+			applyProgress(1);
+			source.setData(collection);
+			return;
+		}
 
-				return (
-					nextFeature.geometry.coordinates[0] !== previousLocation.position[0] ||
-					nextFeature.geometry.coordinates[1] !== previousLocation.position[1] ||
-					nextFeature.properties.bearing !== previousLocation.bearing
-				);
-			});
+		const frameInterval = movements.length > THROTTLE_THRESHOLD ? THROTTLED_FRAME_INTERVAL_MS : 0;
+		const start = performance.now();
+		let lastFrame = start;
+		let frameRequest: number | null = null;
 
-			if (!hasMovement) {
-				source.setData(temporaryCollection);
+		const step = (now: number) => {
+			const t = Math.min(1, (now - start) / ANIMATION_DURATION_MS);
+			// La dernière image n'est jamais sautée : le marqueur finit exactement à sa position.
+			if (t < 1 && now - lastFrame < frameInterval - FRAME_INTERVAL_TOLERANCE_MS) {
+				frameRequest = requestAnimationFrame(step);
 				return;
 			}
 
-			const start = Date.now();
-			const end = Date.now() + 1000;
+			lastFrame = now;
+			applyProgress(t);
+			source.setData(collection);
+			frameRequest = t < 1 ? requestAnimationFrame(step) : null;
+		};
 
-			function moveFeatures(now = start) {
-				if (abort || source === null || now > end) return;
+		// Première écriture immédiate : marqueurs ajoutés et retirés apparaissent sans attendre.
+		source.setData(collection);
+		frameRequest = requestAnimationFrame(step);
 
-				const percentage = Math.min(1, (now - start) / (end - start));
-
-				for (const feature of temporaryCollection.features) {
-					const nextFeature = nextFeatures.get(feature.properties.id);
-					if (nextFeature === undefined) continue;
-
-					const previousLocation = previousLocations.get(feature.properties.id);
-					if (previousLocation === undefined) continue;
-
-					const nextPosition = nextFeature.geometry.coordinates;
-					const nextBearing = nextFeature.properties.bearing;
-
-					// update coordinates
-					feature.geometry.coordinates = [
-						previousLocation.position[0] + (nextPosition[0] - previousLocation.position[0]) * percentage,
-						previousLocation.position[1] + (nextPosition[1] - previousLocation.position[1]) * percentage,
-					];
-
-					// update bearing
-					if (typeof nextBearing === "number" && typeof previousLocation.bearing === "number") {
-						const bearingDelta = ((nextBearing - previousLocation.bearing + 540) % 360) - 180;
-						const t = Math.min(Math.max((now - start) / (end - start), 0), 1);
-						const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-						feature.properties.bearing = (previousLocation.bearing + bearingDelta * ease + 360) % 360;
-					}
-				}
-
-				source.setData(temporaryCollection);
-				requestAnimationFrame(() => moveFeatures(Date.now()));
-			}
-
-			moveFeatures();
-		}
-
-		updateMarkers();
 		return () => {
-			abort = true;
+			if (frameRequest !== null) cancelAnimationFrame(frameRequest);
 		};
 	}, [features, source]);
 

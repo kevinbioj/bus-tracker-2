@@ -5,7 +5,13 @@ import { useDebounceValue } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
-import { GetStopDeparturesQuery, GetStopMarkersQuery, type StopMarker, type StopPoint } from "~/api/stops";
+import {
+	GetStopDeparturesQuery,
+	GetStopMarkersQuery,
+	type StopDepartures,
+	type StopMarker,
+	type StopPoint,
+} from "~/api/stops";
 import {
 	STOP_POINTS_LOAD_ZOOM,
 	STOPS_MIN_ZOOM,
@@ -81,6 +87,8 @@ function featuresOf(area: Area, withStopPoints: boolean, selection: Selection): 
 	];
 }
 
+const selectStop = (departures: StopDepartures) => departures.stop;
+
 type StopsMarkersDataProps = {
 	networkId?: number;
 	selectedStopPointRef: string | null;
@@ -111,7 +119,10 @@ export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef,
 	// Même requête que le tableau des passages, donc même cache : elle ne coûte rien de plus, et donne
 	// la position de la station sélectionnée même lorsqu'elle sort de l'emprise ou du zoom affichés.
 	// Elle donne aussi la station d'un quai sélectionné, que l'URL ne porte pas.
-	const { data: selectedStop } = useQuery(GetStopDeparturesQuery(selectedRef));
+	// Seule la station compte ici, et non les passages : ceux-ci changent à chaque rafraîchissement
+	// (toutes les 5 s), elle non — le partage structurel de React Query en garde la référence, et la
+	// source des arrêts n'est pas réécrite pour rien.
+	const { data: selectedStop } = useQuery({ ...GetStopDeparturesQuery(selectedRef), select: selectStop });
 
 	// Les bornes ne font pas partie de la clé de la requête : c'est cet effet qui redemande les
 	// arrêts quand la carte bouge. Le premier rendu est ignoré, `useQuery` vient d'émettre la requête.
@@ -131,16 +142,17 @@ export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef,
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
 		// Tant que le tableau n'est pas chargé, seule une station sélectionnée est connue de l'URL.
-		const selectedStopRef = selectedStop?.stop.ref ?? (selectedStopPointRef === null ? selectedRef : null);
+		const selectedStopRef = selectedStop?.ref ?? (selectedStopPointRef === null ? selectedRef : null);
 		const selection = { stopRef: selectedStopRef, stopPointRef: selectedStopPointRef };
 		const withStopPoints = level === "points";
 
 		const areas: Area[] = level === "none" ? [] : (data?.items ?? []);
 
 		// L'arrêt sélectionné reste affiché à tout zoom, y compris hors de l'emprise chargée.
-		const stop = selectedStop?.stop;
 		const selectedArea =
-			stop !== undefined && selectedRef !== null && !areas.some((area) => area.ref === stop.ref) ? [stop] : [];
+			selectedStop !== undefined && selectedRef !== null && !areas.some((area) => area.ref === selectedStop.ref)
+				? [selectedStop]
+				: [];
 
 		return {
 			type: "FeatureCollection",

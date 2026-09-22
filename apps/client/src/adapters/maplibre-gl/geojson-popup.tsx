@@ -8,7 +8,7 @@ import {
 	type SourceSpecification,
 	type StyleLayer,
 } from "maplibre-gl";
-import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMediaQuery } from "usehooks-ts";
 
@@ -23,7 +23,6 @@ const COARSE_POINTER_HIT_PADDING = 8;
 type ActiveFeature = {
 	id: string;
 	type: "hover" | "selected";
-	properties: CircleMarkerFeature["properties"];
 };
 
 type MapCircleMarkersPopup = {
@@ -51,6 +50,12 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			}),
 	);
 	const [activeFeature, setActiveFeature] = useState<ActiveFeature | null>(null);
+	// Lue par les écouteurs de la carte, qui restent ainsi abonnés une fois pour toutes au lieu d'être
+	// retirés puis remis à chaque changement de marqueur actif.
+	const activeFeatureRef = useRef(activeFeature);
+	useLayoutEffect(() => {
+		activeFeatureRef.current = activeFeature;
+	}, [activeFeature]);
 
 	const adjustPan = useCallback(() => {
 		// do not force if user is dragging the map
@@ -103,14 +108,14 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 	useEffect(() => {
 		const onOpen = () => {
-			if (activeFeature?.type === "selected") adjustPan();
+			if (activeFeatureRef.current?.type === "selected") adjustPan();
 		};
 
 		popup.on("open", onOpen);
 		return () => {
 			popup.off("open", onOpen);
 		};
-	}, [activeFeature, adjustPan, popup]);
+	}, [adjustPan, popup]);
 
 	useEffect(() => {
 		const onDragStart = () => {
@@ -177,6 +182,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 		};
 
 		const onMouseMove = (e: MapMouseEvent) => {
+			const activeFeature = activeFeatureRef.current;
 			if (activeFeature?.type === "selected") return;
 
 			const features = map.queryRenderedFeatures(queryArea(e.point), {
@@ -192,7 +198,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			}
 
 			if (activeFeature === null || feature.properties.id !== activeFeature.id) {
-				setActiveFeature({ id: feature.properties.id, type: "hover", properties: feature.properties });
+				setActiveFeature({ id: feature.properties.id, type: "hover" });
 				openPopup(feature);
 			}
 		};
@@ -213,9 +219,10 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			const feature = pendingDragSelection.current;
 			pendingDragSelection.current = null;
 			if (feature === null) return;
+			const activeFeature = activeFeatureRef.current;
 			if (activeFeature?.type === "selected" && activeFeature.id === feature.properties.id) return;
 
-			setActiveFeature({ id: feature.properties.id, type: "selected", properties: feature.properties });
+			setActiveFeature({ id: feature.properties.id, type: "selected" });
 			openPopup(feature);
 		};
 
@@ -228,13 +235,13 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 			const feature = pickClosest(features, e.point) as unknown as CircleMarkerFeature;
 			if (feature === undefined) {
-				if (activeFeature !== null) {
+				if (activeFeatureRef.current !== null) {
 					closePopup();
 				}
 				return;
 			}
 
-			setActiveFeature({ id: feature.properties.id, type: "selected", properties: feature.properties });
+			setActiveFeature({ id: feature.properties.id, type: "selected" });
 			openPopup(feature);
 			adjustPan();
 		};
@@ -243,6 +250,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			if (e.sourceId !== "vehicles" || e.sourceDataType !== "content") return;
 			// Sans popup ouverte il n'y a rien à suivre : la source est réécrite à chaque frame
 			// d'animation, parcourir tous les marqueurs à chacune ne servirait à rien.
+			const activeFeature = activeFeatureRef.current;
 			if (activeFeature === null) return;
 
 			const source = e.source as CircleMarkerSource;
@@ -253,11 +261,6 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			}
 
 			popup.setLngLat(feature.geometry.coordinates);
-
-			// Properties update (if they changed)
-			if (feature.properties !== activeFeature.properties) {
-				setActiveFeature((prev) => (prev ? { ...prev, properties: feature.properties } : null));
-			}
 		};
 
 		map.on("mousedown", onMouseDown);
@@ -274,13 +277,13 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			map.off("click", onClick);
 			map.off("sourcedata", onSourceData);
 		};
-	}, [activeFeature, adjustPan, closePopup, hitPadding, layer, map, openPopup, popup]);
+	}, [adjustPan, closePopup, hitPadding, layer, map, openPopup, popup]);
 
 	return createPortal(
 		children({
 			activeFeature,
 			openPopup: (feature, type) => {
-				setActiveFeature({ id: feature.properties.id, type, properties: feature.properties });
+				setActiveFeature({ id: feature.properties.id, type });
 				openPopup(feature);
 			},
 		}),
