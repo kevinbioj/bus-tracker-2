@@ -91,7 +91,7 @@ const isLocatable = (departure: StopDeparture) => departure.tracked && departure
 
 function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRowProps>) {
 	const skipped = departure.callStatus === "SKIPPED";
-	const realtime = departure.expectedTime !== undefined || departure.atStop;
+	const realtime = departure.expectedTime !== undefined;
 
 	// L'heure théorique n'est rappelée que lorsqu'elle diffère de celle affichée : un passage à l'heure
 	// n'a rien à corriger.
