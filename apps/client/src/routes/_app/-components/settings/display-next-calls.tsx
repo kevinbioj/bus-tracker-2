@@ -13,7 +13,7 @@ export function DisplayNextCallsSetting() {
 	return (
 		<div className="grid gap-1.5">
 			<div className="flex items-center justify-between gap-4">
-				<div className="grid gap-0.5">
+				<div className="grid gap-px">
 					<Label htmlFor={id} className="text-base cursor-pointer">
 						{m.settings_display_next_calls_label()}
 					</Label>

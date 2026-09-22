@@ -73,7 +73,7 @@ export function DisplayedCountriesSetting() {
 
 	return (
 		<div>
-			<Label className="block mb-1 text-base" htmlFor={id}>
+			<Label className="block mb-px text-base" htmlFor={id}>
 				{m.settings_displayed_countries_label()}
 			</Label>
 			<p className="mb-2 text-sm text-muted-foreground">{m.settings_displayed_countries_description()}</p>

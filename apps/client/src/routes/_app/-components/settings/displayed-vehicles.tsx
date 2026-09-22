@@ -48,7 +48,7 @@ export function DisplayedVehiclesSetting() {
 
 	return (
 		<fieldset>
-			<legend className="text-base font-medium">{m.settings_displayed_vehicles_label()}</legend>
+			<legend className="mb-px text-base leading-none font-medium">{m.settings_displayed_vehicles_label()}</legend>
 			<p className="mb-2 text-sm text-muted-foreground">{m.settings_displayed_vehicles_description()}</p>
 			{/* Stacked below `sm`: three columns leave too little room for the labels on a phone. */}
 			<div className="grid grid-cols-1 sm:grid-cols-3 gap-2">

@@ -12,7 +12,7 @@ export function BypassMinZoomSetting() {
 
 	return (
 		<div className="flex items-center justify-between gap-4">
-			<div className="grid gap-0.5">
+			<div className="grid gap-px">
 				<Label htmlFor={id} className="text-base cursor-pointer">
 					{m.settings_bypass_min_zoom_label()}
 				</Label>

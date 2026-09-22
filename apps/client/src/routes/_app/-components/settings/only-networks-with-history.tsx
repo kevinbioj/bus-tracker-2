@@ -12,7 +12,7 @@ export function OnlyNetworksWithHistorySetting() {
 
 	return (
 		<div>
-			<div className="grid gap-0.5 mb-1">
+			<div className="grid gap-px mb-1">
 				<Label className="text-base" htmlFor={id}>
 					{m.settings_only_networks_with_history_label()}
 				</Label>

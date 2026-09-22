@@ -12,6 +12,7 @@ import { FilterModuleControl } from "~/components/vehicles-map/filter-module/con
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import { LineVehiclesPanel } from "~/components/vehicles-map/line-vehicles-panel";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
+import { useShowStops } from "~/components/vehicles-map/show-stops";
 import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-panel";
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { StopsMarkers } from "~/components/vehicles-map/stops-markers/stops-markers-layer";
@@ -24,6 +25,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
 	const { selectedRef: selectedStopRef } = useStopSelection();
+	const [showStops] = useShowStops();
 	const [networkId, setNetworkId] = useQueryState("network-id", parseAsInteger);
 	const [showIdentifiedVehiclesPanel] = useLocalStorage("show-identified-vehicles-panel", false);
 
@@ -101,8 +103,8 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		<MapComponent containerProps={props} mapOptions={mapOptions} ref={onMap}>
 			<PositionSave />
 			<VehiclesMarkers filteredNetworkId={filteredNetworkOnly?.id} lineId={filteredLine?.id} />
-			<StopsMarkers networkId={filteredNetwork?.id} />
-			{selectedStopRef !== null && <StopDeparturesPanel />}
+			{showStops && <StopsMarkers networkId={filteredNetwork?.id} />}
+			{showStops && selectedStopRef !== null && <StopDeparturesPanel />}
 			{showIdentifiedVehiclesPanel && filteredLine !== undefined && (
 				<LineVehiclesPanel lineId={filteredLine.id} timezone={filteredNetwork?.timezone} />
 			)}

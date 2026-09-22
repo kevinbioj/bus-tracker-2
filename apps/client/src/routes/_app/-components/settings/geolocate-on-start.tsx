@@ -11,7 +11,7 @@ export function GeolocateOnStartSetting() {
 
 	return (
 		<div className="flex items-center justify-between gap-4">
-			<div className="grid gap-0.5">
+			<div className="grid gap-px">
 				<Label htmlFor={id} className="text-base cursor-pointer">
 					{m.settings_geolocate_on_start_label()}
 				</Label>

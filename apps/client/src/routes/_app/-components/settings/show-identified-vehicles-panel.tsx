@@ -11,7 +11,7 @@ export function ShowIdentifiedVehiclesPanelSetting() {
 
 	return (
 		<div className="flex items-center justify-between gap-4">
-			<div className="grid gap-0.5">
+			<div className="grid gap-px">
 				<Label className="text-base cursor-pointer" htmlFor={id}>
 					{m.settings_show_identified_vehicles_panel_label()}
 				</Label>
