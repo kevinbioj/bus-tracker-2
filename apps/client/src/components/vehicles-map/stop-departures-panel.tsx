@@ -44,27 +44,21 @@ function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDi
 
 /**
  * Pictogramme de la ligne lorsque le réseau en fournit un, pastille à ses couleurs sinon — comme
- * dans le module de filtre de la carte. Il occupe la première colonne du tableau, large comme le plus
- * large d'entre eux : un pictogramme fourni y est calé à gauche, une pastille centrée.
+ * dans le module de filtre de la carte. Il ouvre la ligne du tableau, large comme son contenu.
  */
 function LinePictogram({ line }: Readonly<{ line?: Line }>) {
 	if (line?.cartridgeHref) {
 		return (
-			<img
-				alt={line.number}
-				className="h-6 max-w-20 justify-self-start object-contain object-left shrink-0"
-				src={line.cartridgeHref}
-			/>
+			<img alt={line.number} className="h-6 max-w-20 object-contain object-left shrink-0" src={line.cartridgeHref} />
 		);
 	}
 
 	// Le numéro de girouette est la forme courte du numéro, faite pour l'affichage. Un bloc et non un
 	// conteneur flex : l'ellipse ne s'applique pas au texte d'un conteneur flex, qui serait coupé net
-	// au lieu d'être tronqué proprement. Large comme son texte (`w-fit`) : sans quoi, élément de grille,
-	// il s'étirerait sur toute la colonne.
+	// au lieu d'être tronqué proprement.
 	return (
 		<span
-			className="block w-full shrink-0 min-w-7 max-w-20 justify-self-center truncate rounded-sm px-1 text-center text-base font-bold leading-6"
+			className="block shrink-0 min-w-7 max-w-20 truncate rounded-sm px-1 text-center text-base font-bold leading-6"
 			style={{
 				backgroundColor: line?.color ?? "#18181B",
 				color: line?.textColor ?? "#FFFFFF",
@@ -107,35 +101,34 @@ function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRo
 			? "text-green-700 dark:text-green-500"
 			: "text-foreground";
 
-	// Chaque ligne reprend les colonnes du tableau (`subgrid`) : pictogramme, destination et quai, heure
-	// et localisation s'alignent d'une ligne à l'autre quel que soit leur contenu. Les quatre cellules
-	// sont donc toujours rendues, vides au besoin, pour ne pas glisser d'une colonne. La hauteur est
-	// fixe : une ligne ne grandit pas quand l'heure théorique s'affiche sous l'heure prévue.
+	// Pictogramme, destination et quai se suivent ; l'heure est rejetée à l'autre bout de la ligne. La
+	// case de localisation, qui la suit, est tenue même sur un passage qui n'est pas joignable : les
+	// heures s'alignent ainsi d'une ligne à l'autre. La hauteur est fixe : une ligne ne grandit pas
+	// quand l'heure théorique s'affiche sous l'heure prévue.
 	return (
-		<li className="col-span-full grid h-9 grid-cols-subgrid items-center px-1">
+		<li className="flex h-9 items-center gap-1">
 			<LinePictogram line={line} />
 			{/*
 			 * Le quai suit immédiatement la destination. Une destination longue passe sur deux lignes avant
 			 * d'être tronquée — « Hôpital Européen Georges Pompidou » se lit en entier — ce que la hauteur
-			 * fixe de la ligne permet sans rien décaler.
+			 * fixe de la ligne permet sans rien décaler. Le quai est placé dans le fil du texte, et non à côté
+			 * de lui : une boîte passée sur deux lignes prend toute la largeur disponible, et le quai se
+			 * retrouverait rejeté au bord droit au lieu de suivre le dernier mot.
 			 */}
-			<div className="flex min-w-0 items-center gap-1">
-				{/* Enveloppe : la troncature sur deux lignes est capricieuse posée sur un élément flex lui-même. */}
-				<div className="min-w-0">
-					<p className="line-clamp-2 break-words text-sm leading-tight" title={departure.destination}>
-						{departure.destination ?? departure.stopName}
-					</p>
-				</div>
-				{departure.platformName !== undefined && (
-					<span
-						className="shrink-0 rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4 text-center text-xs font-bold text-background"
-						title={departure.stopName}
-					>
-						{departure.platformName}
-					</span>
-				)}
+			<div className="min-w-0 flex-1">
+				<p className="line-clamp-2 break-words text-sm leading-tight" title={departure.destination}>
+					{departure.destination ?? departure.stopName}
+					{departure.platformName !== undefined && (
+						<span
+							className="ml-1 inline-block rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4.5 text-center align-[1px] text-[13px] font-bold leading-4 text-background"
+							title={departure.stopName}
+						>
+							{departure.platformName}
+						</span>
+					)}
+				</p>
 			</div>
-			<div className="flex flex-col items-end leading-tight">
+			<div className="flex shrink-0 flex-col items-end leading-tight">
 				<span className={clsx("flex items-start text-sm font-bold tabular-nums whitespace-nowrap", accentColor)}>
 					{realtime && !skipped ? (
 						<Rss aria-label={m.stop_call_realtime()} className="-rotate-90 mr-[0.5px]" size={8} />
@@ -148,7 +141,7 @@ function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRo
 					</span>
 				)}
 			</div>
-			<div>
+			<div className="size-6 shrink-0">
 				{isLocatable(departure) && (
 					<Button
 						className="size-6"
@@ -318,17 +311,22 @@ export function StopDeparturesPanel() {
 				) : rows.length === 0 ? (
 					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_empty()}</p>
 				) : (
-					<ul className="grid max-h-[25dvh] grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-x-1 divide-y overflow-y-auto overscroll-contain">
-						{rows.map(({ departure, line, label, key }) => (
-							<DepartureRow
-								departure={departure}
-								key={key}
-								line={line}
-								label={label}
-								onLocate={(journeyId) => void setMarkerId(journeyId)}
-							/>
-						))}
-					</ul>
+					// La zone défilante ne porte pas la marge intérieure : posée sur la liste qu'elle contient,
+					// elle reste entre le contenu et la barre de défilement, contre laquelle l'heure viendrait
+					// sinon se coller.
+					<div className="max-h-[25dvh] overflow-y-auto overscroll-contain">
+						<ul className="divide-y px-2">
+							{rows.map(({ departure, line, label, key }) => (
+								<DepartureRow
+									departure={departure}
+									key={key}
+									line={line}
+									label={label}
+									onLocate={(journeyId) => void setMarkerId(journeyId)}
+								/>
+							))}
+						</ul>
+					</div>
 				)}
 			</div>
 		</div>,
