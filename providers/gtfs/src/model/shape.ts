@@ -5,11 +5,19 @@ import { getDistance } from "../utils/get-distance.js";
 
 const pathCache = new WeakMap<Shape, VehicleJourneyPath>();
 
+/**
+ * Écart, en mètres au-delà du passage le plus proche, en deçà duquel un autre passage du tracé est
+ * considéré comme desservant lui aussi l'arrêt.
+ */
+const STOP_PASS_TOLERANCE_M = 10;
+
 export class Shape {
 	constructor(
 		readonly id: string,
 		private readonly points: Float64Array,
 		readonly recalculatedDistances = false,
+		/** Coordonnées arrondies à la source, comme celles d'une polyligne encodée (1e-5). */
+		readonly approximateCoordinates = false,
 	) {}
 
 	get length() {
@@ -53,6 +61,100 @@ export class Shape {
 
 	findClosestPointDistance(lat: number, lon: number) {
 		return this.getPointDistanceTraveled(this.findClosestPointIndex(lat, lon)) || 0;
+	}
+
+	/**
+	 * Distances curvilignes d'arrêts desservis dans l'ordre donné, projetés sur le tracé.
+	 *
+	 * Chaque arrêt est cherché sur les segments du tracé à partir de la projection du précédent : un
+	 * tracé qui repasse près d'un arrêt ne le fait pas revenir en arrière. Quand il passe plusieurs
+	 * fois près du même arrêt, le premier arrêt retient le premier passage et le dernier arrêt le
+	 * dernier — un terminus en boucle, desservi au retour d'un demi-tour, est passé une première fois
+	 * à l'aller ; les autres, le passage le plus proche.
+	 *
+	 * Sans distances curvilignes exploitables, chaque arrêt est ramené au sommet le plus proche.
+	 */
+	projectStopsInOrder(stops: { latitude: number; longitude: number }[]): number[] {
+		if (this.length < 2) return stops.map(() => this.getPointDistanceTraveled(0) || 0);
+
+		for (let i = 0; i < this.length; i++) {
+			if (Number.isNaN(this.getPointDistanceTraveled(i) ?? Number.NaN)) {
+				return stops.map((stop) => this.findClosestPointDistance(stop.latitude, stop.longitude));
+			}
+		}
+
+		const offsets = new Float64Array(this.length - 1);
+		const alongs = new Float64Array(this.length - 1);
+		const distances: number[] = [];
+		let minDistance = Number.NEGATIVE_INFINITY;
+
+		for (let k = 0; k < stops.length; k++) {
+			const { latitude, longitude } = stops[k]!;
+			const metersPerDegreeLatitude = 111_320;
+			const metersPerDegreeLongitude = metersPerDegreeLatitude * Math.cos((latitude * Math.PI) / 180);
+
+			let bestOffset = Number.POSITIVE_INFINITY;
+			let bestSegment = -1;
+
+			for (let j = 0; j < this.length - 1; j++) {
+				const aDistance = this.getPointDistanceTraveled(j)!;
+				const bDistance = this.getPointDistanceTraveled(j + 1)!;
+				offsets[j] = Number.POSITIVE_INFINITY;
+				if (bDistance < minDistance) continue;
+
+				const ax = (this.getPointLongitude(j) - longitude) * metersPerDegreeLongitude;
+				const ay = (this.getPointLatitude(j) - latitude) * metersPerDegreeLatitude;
+				const dx = (this.getPointLongitude(j + 1) - this.getPointLongitude(j)) * metersPerDegreeLongitude;
+				const dy = (this.getPointLatitude(j + 1) - this.getPointLatitude(j)) * metersPerDegreeLatitude;
+				const lengthSquared = dx * dx + dy * dy;
+
+				let t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / lengthSquared));
+				// Le segment qui porte la projection de l'arrêt précédent n'est parcouru qu'au-delà d'elle.
+				if (aDistance < minDistance && bDistance > aDistance) {
+					t = Math.max(t, (minDistance - aDistance) / (bDistance - aDistance));
+				}
+
+				offsets[j] = Math.hypot(ax + t * dx, ay + t * dy);
+				alongs[j] = aDistance + t * (bDistance - aDistance);
+
+				if (offsets[j]! < bestOffset) {
+					bestOffset = offsets[j]!;
+					bestSegment = j;
+				}
+			}
+
+			// Tracé épuisé par les arrêts précédents : l'arrêt est rendu à la fin du tracé.
+			if (bestSegment === -1) {
+				distances.push(Math.max(minDistance, this.getPointDistanceTraveled(this.length - 1)!));
+				continue;
+			}
+
+			let chosenSegment = bestSegment;
+			const isFirst = k === 0;
+			const isLast = k === stops.length - 1;
+			if (isFirst !== isLast) {
+				// Passages du tracé près de l'arrêt : suites de segments à peine plus éloignés que le plus proche.
+				const threshold = bestOffset + STOP_PASS_TOLERANCE_M;
+				const passes: { from: number; to: number }[] = [];
+				for (let j = 0; j < this.length - 1; j++) {
+					if (offsets[j]! > threshold) continue;
+					const lastPass = passes.at(-1);
+					if (lastPass !== undefined && lastPass.to === j - 1) lastPass.to = j;
+					else passes.push({ from: j, to: j });
+				}
+
+				const pass = isFirst ? passes[0]! : passes.at(-1)!;
+				chosenSegment = pass.from;
+				for (let j = pass.from; j <= pass.to; j++) {
+					if (offsets[j]! < offsets[chosenSegment]!) chosenSegment = j;
+				}
+			}
+
+			minDistance = alongs[chosenSegment]!;
+			distances.push(minDistance);
+		}
+
+		return distances;
 	}
 
 	findPointIndex(distanceTraveled: number) {
@@ -221,7 +323,12 @@ export class Shape {
 		if (fromIndex === 0 && toIndex === this.length - 1) return this;
 		if (toIndex - fromIndex < 1) return this;
 
-		return new Shape(id, this.points.slice(fromIndex * 3, (toIndex + 1) * 3), this.recalculatedDistances);
+		return new Shape(
+			id,
+			this.points.slice(fromIndex * 3, (toIndex + 1) * 3),
+			this.recalculatedDistances,
+			this.approximateCoordinates,
+		);
 	}
 
 	/** Les points du tracé, dans l'ordre, sans leurs distances curvilignes. */

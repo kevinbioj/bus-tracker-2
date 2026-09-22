@@ -73,3 +73,49 @@ describe("Shape#distanceToPosition", () => {
 		expect(shape.distanceToPosition(0, 0.02)).toBeCloseTo(0, 5);
 	});
 });
+
+describe("Shape#projectStopsInOrder", () => {
+	/** Tracé à l'équateur, un sommet tous les 0,0001° (~11 m) : [longitude, distance]. */
+	const createLineShape = (longitudes: number[]) => {
+		const points = new Float64Array(longitudes.length * 3);
+		let distance = 0;
+		for (let i = 0; i < longitudes.length; i++) {
+			if (i > 0) distance += Math.abs(longitudes[i]! - longitudes[i - 1]!) * 111_320;
+			points[i * 3] = i > 0 && longitudes[i] === longitudes[i - 1] ? 0.0001 : 0;
+			points[i * 3 + 1] = longitudes[i]!;
+			points[i * 3 + 2] = distance;
+		}
+		return new Shape("line", points);
+	};
+
+	it("projette le terminus d'une boucle sur le retour du demi-tour, pas sur l'aller", () => {
+		// Aller jusqu'à 0.0005 en passant devant le terminus (0.0003), demi-tour, retour jusqu'à lui.
+		const shape = createLineShape([0, 0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0004, 0.0003]);
+		const [first, terminus] = shape.projectStopsInOrder([
+			{ latitude: 0, longitude: 0 },
+			{ latitude: 0, longitude: 0.0003 },
+		]);
+
+		expect(first).toBe(0);
+		expect(terminus).toBeCloseTo(0.0007 * 111_320, 3);
+	});
+
+	it("ne fait pas reculer un arrêt en deçà du précédent", () => {
+		const shape = createLineShape([0, 0.0001, 0.0002, 0.0003, 0.0002, 0.0001]);
+		const distances = shape.projectStopsInOrder([
+			{ latitude: 0, longitude: 0 },
+			{ latitude: 0, longitude: 0.0003 },
+			{ latitude: 0, longitude: 0.0002 },
+			{ latitude: 0, longitude: 0.0001 },
+		]);
+
+		expect(distances.map((distance) => Math.round(distance))).toEqual([0, 33, 45, 56]);
+	});
+
+	it("projette sur les segments, entre deux sommets", () => {
+		const shape = createLineShape([0, 0.001]);
+		const [distance] = shape.projectStopsInOrder([{ latitude: 0.00001, longitude: 0.00025 }]);
+
+		expect(distance).toBeCloseTo(0.00025 * 111_320, 3);
+	});
+});

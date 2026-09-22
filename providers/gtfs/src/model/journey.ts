@@ -3,6 +3,7 @@ import type { LinePath, VehicleJourneyCallFlags, VehicleJourneyPosition } from "
 import { groupBy } from "../utils/group-by.js";
 import type { Gtfs } from "./gtfs.js";
 import type { StopTimeUpdate, VehicleDescriptor } from "./gtfs-rt.js";
+import { restoreShapePrecision } from "./restore-shape-precision.js";
 import type { Shape } from "./shape.js";
 import type { Stop } from "./stop.js";
 import type { Trip } from "./trip.js";
@@ -407,7 +408,13 @@ export class Journey {
 	 */
 	applyModifications(plan: TripModificationPlan, nowMs: number) {
 		if (this._modificationPlan?.revision !== plan.revision) {
-			this._modificationPlan = plan;
+			// Le tracé d'une déviation publié par le flux temps réel est une polyligne arrondie à 1e-5 :
+			// là où il suit celui de la course, il en reprend les sommets à pleine précision. Remplacé
+			// avant que les arrêts y soient reprojetés, pour que leurs distances s'y rapportent.
+			this._modificationPlan =
+				plan.shape?.approximateCoordinates && this.trip.shape !== undefined
+					? { ...plan, shape: restoreShapePrecision(plan.shape, this.trip.shape) }
+					: plan;
 			this._calls = null;
 			this._detourShape = undefined;
 			this._cancelledPath = undefined;

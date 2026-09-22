@@ -26,6 +26,13 @@ const CANCELLED_PATH_PATTERN_HEIGHT = 32;
  * rester lisible — `line-pattern` cale la hauteur de l'image sur la largeur de la ligne et répète
  * la longueur à ratio constant. */
 const CANCELLED_PATH_PATTERN_WIDTH = 48;
+/** Opacité du ruban une fois la déviation franchie par le véhicule : il ne le concerne plus. */
+const CANCELLED_PATH_PASSED_OPACITY = 0.35;
+/**
+ * Écart au-delà duquel l'extrémité d'une portion abandonnée n'est pas tenue pour raccordée au tracé
+ * suivi. Le processeur soude ces extrémités au tracé jusqu'à 20 m ; au-delà, elles restent libres.
+ */
+const CANCELLED_PATH_JOIN_MAX_OFFSET_M = 25;
 
 /**
  * Motif de balisage de chantier — bandes noires obliques sur fond jaune — répété le long du tracé
@@ -79,7 +86,7 @@ const cancelledPathCasingLayer: AddLayerObject = {
 	paint: {
 		"line-color": CANCELLED_PATH_BLACK,
 		"line-width": CANCELLED_PATH_WIDTH + 2,
-		"line-opacity": 0.3,
+		"line-opacity": ["case", ["get", "passed"], 0.3 * CANCELLED_PATH_PASSED_OPACITY, 0.3],
 		"line-blur": 1,
 	},
 	filter: ["==", ["get", "type"], "cancelled"],
@@ -96,6 +103,7 @@ const cancelledPathLayer: AddLayerObject = {
 	paint: {
 		"line-color": CANCELLED_PATH_YELLOW,
 		"line-width": CANCELLED_PATH_WIDTH,
+		"line-opacity": ["case", ["get", "passed"], CANCELLED_PATH_PASSED_OPACITY, 1],
 	},
 	filter: ["==", ["get", "type"], "cancelled"],
 };
@@ -111,6 +119,7 @@ const cancelledPathHatchLayer: AddLayerObject = {
 	paint: {
 		"line-pattern": CANCELLED_PATH_PATTERN_ID,
 		"line-width": CANCELLED_PATH_WIDTH,
+		"line-opacity": ["case", ["get", "passed"], CANCELLED_PATH_PASSED_OPACITY, 1],
 	},
 	filter: ["==", ["get", "type"], "cancelled"],
 };
@@ -200,6 +209,41 @@ function splitPathAtNearestPoint(
 	latitude: number,
 	longitude: number,
 ): { pastPoints: number[][]; futurePoints: number[][] } {
+	const { segment: bestSegment, t: bestT } = findNearestPointOnPath(points, latitude, longitude);
+
+	// Point de jonction interpolé sur le segment le plus proche.
+	const [segStartLat, segStartLon] = points[bestSegment]!;
+	const [segEndLat, segEndLon] = points[bestSegment + 1]!;
+	const junctionLat = segStartLat + bestT * (segEndLat - segStartLat);
+	const junctionLon = segStartLon + bestT * (segEndLon - segStartLon);
+	const junction = [junctionLon, junctionLat];
+
+	const pastPoints: number[][] = [];
+	for (let index = 0; index <= bestSegment; index += 1) {
+		const [lat, lon] = points[index]!;
+		pastPoints.push([lon, lat]);
+	}
+	pastPoints.push(junction);
+
+	const futurePoints: number[][] = [junction];
+	for (let index = bestSegment + 1; index < points.length; index += 1) {
+		const [lat, lon] = points[index]!;
+		futurePoints.push([lon, lat]);
+	}
+
+	return { pastPoints, futurePoints };
+}
+
+/**
+ * Point du tracé le plus proche d'une position : le segment qui le porte, sa position sur ce
+ * segment (de 0 à 1), et son écart à la position en mètres. Le tracé doit compter au moins deux
+ * points.
+ */
+function findNearestPointOnPath(
+	points: VehicleJourneyPath["p"],
+	latitude: number,
+	longitude: number,
+): { segment: number; t: number; offsetMeters: number } {
 	// Projection équirectangulaire locale : on corrige la longitude par cos(lat)
 	// pour que les distances soient à peu près isotropes autour du véhicule.
 	const cosLat = Math.cos((latitude * Math.PI) / 180);
@@ -239,27 +283,38 @@ function splitPathAtNearestPoint(
 		}
 	}
 
-	// Point de jonction interpolé sur le segment le plus proche.
-	const [segStartLat, segStartLon] = points[bestSegment]!;
-	const [segEndLat, segEndLon] = points[bestSegment + 1]!;
-	const junctionLat = segStartLat + bestT * (segEndLat - segStartLat);
-	const junctionLon = segStartLon + bestT * (segEndLon - segStartLon);
-	const junction = [junctionLon, junctionLat];
+	// Les écarts sont exprimés en degrés de latitude : ~111 km chacun.
+	return { segment: bestSegment, t: bestT, offsetMeters: Math.sqrt(bestDistanceSquared) * 111_320 };
+}
 
-	const pastPoints: number[][] = [];
-	for (let index = 0; index <= bestSegment; index += 1) {
-		const [lat, lon] = points[index]!;
-		pastPoints.push([lon, lat]);
+/**
+ * Avancement le long du tracé, exprimé en indice de point fractionnaire (`segment + t`) : une
+ * mesure commune à la position du véhicule et aux points de raccordement d'une déviation.
+ *
+ * Une position calculée est repérée par sa distance curviligne, qui ne confond pas les passages
+ * d'un tracé repassant au même endroit ; une position GPS, par le point du tracé le plus proche.
+ */
+function getPathProgress(
+	points: VehicleJourneyPath["p"],
+	position: { latitude: number; longitude: number; distanceTraveled?: number },
+) {
+	if (position.distanceTraveled !== undefined) {
+		for (let index = 0; index < points.length - 1; index += 1) {
+			const fromDistance = points[index]![2];
+			const toDistance = points[index + 1]![2];
+			if (fromDistance === undefined || toDistance === undefined) break;
+			if (toDistance < position.distanceTraveled) continue;
+
+			const t =
+				toDistance === fromDistance
+					? 0
+					: Math.max(0, (position.distanceTraveled - fromDistance) / (toDistance - fromDistance));
+			return index + Math.min(1, t);
+		}
 	}
-	pastPoints.push(junction);
 
-	const futurePoints: number[][] = [junction];
-	for (let index = bestSegment + 1; index < points.length; index += 1) {
-		const [lat, lon] = points[index]!;
-		futurePoints.push([lon, lat]);
-	}
-
-	return { pastPoints, futurePoints };
+	const { segment, t } = findNearestPointOnPath(points, position.latitude, position.longitude);
+	return segment + t;
 }
 
 type VehiclePathProps = {
@@ -414,8 +469,28 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 		}
 
 		if (cancelledPath !== undefined) {
+			const pathPoints = path?.p;
+			const vehicleProgress =
+				pathPoints !== undefined && pathPoints.length > 1 ? getPathProgress(pathPoints, journey.position) : undefined;
+
 			for (const segment of cancelledPath.segments) {
 				if (segment.length <= 1) continue;
+
+				// La déviation est franchie quand le véhicule a retrouvé l'itinéraire d'origine : il a dépassé,
+				// sur le tracé qu'il suit, les deux extrémités de la portion abandonnée — là où il le quitte
+				// et là où il le rejoint. Tant qu'il roule sur la déviation, le ruban reste pleinement visible.
+				let passed = false;
+				if (pathPoints !== undefined && vehicleProgress !== undefined) {
+					const ends = [segment[0]!, segment[segment.length - 1]!].map(([latitude, longitude]) =>
+						findNearestPointOnPath(pathPoints, latitude, longitude),
+					);
+					// Une extrémité à l'écart du tracé suivi n'est pas un raccordement : la déviation ne
+					// rejoint jamais l'itinéraire d'origine (jusqu'au terminus, par exemple), et le véhicule
+					// ne la franchit donc pas.
+					if (ends.every(({ offsetMeters }) => offsetMeters <= CANCELLED_PATH_JOIN_MAX_OFFSET_M)) {
+						passed = vehicleProgress > Math.max(...ends.map(({ segment, t }) => segment + t));
+					}
+				}
 
 				features.push({
 					type: "Feature",
@@ -423,7 +498,7 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 						type: "LineString",
 						coordinates: segment.map(([latitude, longitude]) => [longitude, latitude]),
 					},
-					properties: { type: "cancelled" },
+					properties: { type: "cancelled", passed },
 				});
 			}
 		}

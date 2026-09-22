@@ -345,8 +345,9 @@ function collectAddedTrip(
 
 	const declaredShape = resolveShape(gtfs, resources, tripUpdate.tripProperties?.shapeId);
 	if (declaredShape !== undefined) {
-		for (const call of calls) {
-			call.distanceTraveled = declaredShape.findClosestPointDistance(call.stop.latitude, call.stop.longitude);
+		const distances = declaredShape.projectStopsInOrder(calls.map((call) => call.stop));
+		for (let index = 0; index < calls.length; index++) {
+			calls[index]!.distanceTraveled = distances[index];
 		}
 		addedTrips.push({ tripUpdate, calls, startDate, shape: declaredShape });
 		return;

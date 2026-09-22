@@ -80,5 +80,5 @@ export function createShapeFromPolyline(id: string, encodedPolyline: string): Sh
 		typedPoints[i * 3 + 2] = distance;
 	}
 
-	return new Shape(id, typedPoints, true);
+	return new Shape(id, typedPoints, true, true);
 }

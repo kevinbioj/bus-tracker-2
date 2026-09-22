@@ -246,14 +246,18 @@ export function buildModifiedCalls(scheduledCalls: JourneyCall[], plan: TripModi
 	const renumber = calls.some((call) => call.modification !== undefined);
 
 	for (let index = 0; index < calls.length; index++) {
-		const call = calls[index]!;
 		// Renumérotation de 1 à n, arrêts retirés compris : `stopOrder` reste unique côté client.
-		if (renumber) call.sequence = index + 1;
+		if (renumber) calls[index]!.sequence = index + 1;
+	}
 
-		// Un tracé de remplacement a ses propres distances curvilignes : celles héritées de
-		// `shape_dist_traveled` ne s'y rapportent plus, tous les arrêts sont reprojetés.
-		if (shape !== undefined && call.modification !== "REMOVED") {
-			call.distanceTraveled = shape.findClosestPointDistance(call.stop.latitude, call.stop.longitude);
+	// Un tracé de remplacement a ses propres distances curvilignes : celles héritées de
+	// `shape_dist_traveled` ne s'y rapportent plus, tous les arrêts sont reprojetés — dans l'ordre de
+	// desserte, qui seul départage les passages d'un tracé repassant près d'un même arrêt.
+	if (shape !== undefined) {
+		const servedCalls = calls.filter((call) => call.modification !== "REMOVED");
+		const distances = shape.projectStopsInOrder(servedCalls.map((call) => call.stop));
+		for (let index = 0; index < servedCalls.length; index++) {
+			servedCalls[index]!.distanceTraveled = distances[index];
 		}
 	}
 
