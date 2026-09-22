@@ -1,13 +1,13 @@
 import { useId } from "react";
-import { useLocalStorage } from "usehooks-ts";
 
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
+import { useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
 import * as m from "~/paraglide/messages";
 
 export function GeolocateOnStartSetting() {
 	const id = useId();
-	const [geolocateOnStart, setGeolocateOnStart] = useLocalStorage("geolocate-on-start", false);
+	const [geolocateOnStart, setGeolocateOnStart] = useGeolocateOnStart();
 
 	return (
 		<div className="flex items-center justify-between gap-4">

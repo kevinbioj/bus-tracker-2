@@ -7,6 +7,7 @@ import { DisplayNextCallsSetting } from "~/routes/_app/-components/settings/disp
 import { DisplayedCountriesSetting } from "~/routes/_app/-components/settings/displayed-countries";
 import { DisplayedVehiclesSetting } from "~/routes/_app/-components/settings/displayed-vehicles";
 import { EditorTokenInput } from "~/routes/_app/-components/settings/editor-token-input";
+import { GeolocateOnStartSetting } from "~/routes/_app/-components/settings/geolocate-on-start";
 import { OnlyNetworksWithHistorySetting } from "~/routes/_app/-components/settings/only-networks-with-history";
 import { PreviewVehicleNumberSetting } from "~/routes/_app/-components/settings/preview-vehicle-number";
 import { ShowDebugInfoSetting } from "~/routes/_app/-components/settings/show-debug-info";
@@ -57,6 +58,7 @@ export function Settings() {
 								<StopLabelsStyleSetting />
 								<ShowVehiclePathsSetting />
 								<PreviewVehicleNumberSetting />
+								<GeolocateOnStartSetting />
 							</div>
 						</section>
 						<Separator className="my-3" />

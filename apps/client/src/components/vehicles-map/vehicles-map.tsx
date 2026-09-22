@@ -10,6 +10,7 @@ import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
+import { triggerGeolocateWhenReady, useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
 import { LineVehiclesPanel } from "~/components/vehicles-map/line-vehicles-panel";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { useShowStops } from "~/components/vehicles-map/show-stops";
@@ -28,6 +29,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	const [showStops] = useShowStops();
 	const [networkId, setNetworkId] = useQueryState("network-id", parseAsInteger);
 	const [showIdentifiedVehiclesPanel] = useLocalStorage("show-identified-vehicles-panel", false);
+	const [geolocateOnStart] = useGeolocateOnStart();
 
 	const { data: line } = useQuery(GetLineQuery(lineId ?? undefined));
 	// Une ligne filtrée impose son réseau ; sinon le réseau filtré vient directement de l'URL.
@@ -65,6 +67,10 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		}
 	});
 
+	// Figé au montage : `onMap` est dans les dépendances de l'effet qui crée la carte, donc toute
+	// nouvelle identité la recréerait.
+	const [shouldGeolocateOnStart] = useState(() => geolocateOnStart);
+
 	const mapOptions = useMemo(
 		() => ({
 			center: initialLocation.position,
@@ -75,20 +81,27 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		[initialLocation],
 	);
 
-	const onMap = useCallback((map: MaplibreGl) => {
-		setTimeout(() => {
-			const navigationControl = new NavigationControl();
-			map.addControl(navigationControl, "top-left");
+	const onMap = useCallback(
+		(map: MaplibreGl) => {
+			setTimeout(() => {
+				const navigationControl = new NavigationControl();
+				map.addControl(navigationControl, "top-left");
 
-			const fullscreenControl = new FullscreenControl();
-			map.addControl(fullscreenControl, "top-right");
+				const fullscreenControl = new FullscreenControl();
+				map.addControl(fullscreenControl, "top-right");
 
-			const geolocateControl = new GeolocateControl({
-				trackUserLocation: true,
-			});
-			map.addControl(geolocateControl, "top-right");
-		}, 100);
-	}, []);
+				const geolocateControl = new GeolocateControl({
+					trackUserLocation: true,
+				});
+				map.addControl(geolocateControl, "top-right");
+
+				if (shouldGeolocateOnStart) {
+					triggerGeolocateWhenReady(map, geolocateControl);
+				}
+			}, 100);
+		},
+		[shouldGeolocateOnStart],
+	);
 
 	// Les deux filtres sont mutuellement exclusifs : en poser un efface toujours l'autre.
 	const onFilterChange = useCallback(
