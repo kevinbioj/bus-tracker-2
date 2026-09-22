@@ -29,7 +29,8 @@
  * Le panneau des prochains passages descend tout en bas de la carte, par-dessus l'attribution :
  * celle-ci sort du flux et le panneau, qui la précède, prend sa place et la recouvre.
  */
-.maplibregl-ctrl-bottom-right:has(> .stop-departures-control) > .maplibregl-ctrl-attrib {
+.maplibregl-ctrl-bottom-right:has(> .stop-departures-control)
+> .maplibregl-ctrl-attrib {
 	position: absolute;
 	right: 0;
 	bottom: 0;

@@ -266,9 +266,19 @@ export function StopDeparturesPanel() {
 
 	// Seuls s'affichent les passages dont la ligne est connue : sans elle, le pictogramme ne serait
 	// qu'un « ? ». Les libellés restent calculés sur la liste entière, dont ils suivent les indices.
+	// Deux passages peuvent partager ligne, heure et quai sans être rattachés à une course suivie : un
+	// rang d'occurrence départage leur clé. Des clés en double laisseraient React garder à l'écran des
+	// lignes d'un tableau précédent.
+	const keyOccurrences = new Map<string, number>();
 	const rows = departures.flatMap((departure, index) => {
 		const line = departure.lineId !== undefined ? linesById.get(departure.lineId) : undefined;
-		return line !== undefined ? [{ departure, line, label: labels[index] ?? "" }] : [];
+		if (line === undefined) return [];
+
+		const baseKey = `${departure.journeyId ?? departure.lineId}-${departure.aimedTime}-${departure.stopRef}`;
+		const occurrence = keyOccurrences.get(baseKey) ?? 0;
+		keyOccurrences.set(baseKey, occurrence + 1);
+
+		return [{ departure, line, label: labels[index] ?? "", key: `${baseKey}-${occurrence}` }];
 	});
 
 	return createPortal(
@@ -309,10 +319,10 @@ export function StopDeparturesPanel() {
 					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_empty()}</p>
 				) : (
 					<ul className="grid max-h-[25dvh] grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-x-1 divide-y overflow-y-auto overscroll-contain">
-						{rows.map(({ departure, line, label }) => (
+						{rows.map(({ departure, line, label, key }) => (
 							<DepartureRow
 								departure={departure}
-								key={`${departure.journeyId ?? departure.lineId}-${departure.aimedTime}-${departure.stopRef}`}
+								key={key}
 								line={line}
 								label={label}
 								onLocate={(journeyId) => void setMarkerId(journeyId)}
