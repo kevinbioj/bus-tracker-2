@@ -154,10 +154,24 @@ export type StopDeparture = typeof stopDepartureSchema.infer;
 export const passedCallDetectionEnum = type("'SCHEDULE'|'VEHICLE'");
 export type PassedCallDetection = typeof passedCallDetectionEnum.infer;
 
+/** Course dont un passage a été écarté par la configuration de la source. */
+export const excludedStopDepartureJourneySchema = type({
+	"journeyId?": "string",
+	"journeyRef?": "string",
+	"serviceDate?": "string.date",
+});
+
+export type ExcludedStopDepartureJourney = typeof excludedStopDepartureJourneySchema.infer;
+
 export const stopDeparturesReplySchema = type({
 	requestId: "string",
 	stopAreaRef: "string",
 	departures: stopDepartureSchema.array(),
+	/**
+	 * Courses dont le passage a été écarté : le serveur ne doit pas les réintroduire depuis les courses
+	 * qu'il suit. Absent : aucune.
+	 */
+	"excludedJourneys?": excludedStopDepartureJourneySchema.array(),
 	/** Absent : `SCHEDULE`. */
 	"passedCallDetection?": passedCallDetectionEnum,
 });

@@ -104,6 +104,13 @@ export type SourceOptions = {
 	 * SNCF, par exemple, tirées d'un flux SIRI Lite.
 	 */
 	mapStopDeparture?: (departure: StopDeparture, journey: Journey) => StopDeparture;
+	/**
+	 * Décide si un passage figure au tableau des prochains passages d'un arrêt : `false` l'écarte. Il
+	 * reçoit le passage tel que {@link SourceOptions.mapStopDeparture} l'a retouché. Appliqué avant la
+	 * limite du nombre de passages, pour que le tableau reste plein ; le serveur ne réintroduit pas
+	 * la course écartée depuis celles qu'il suit.
+	 */
+	filterStopDeparture?: (departure: StopDeparture, journey: Journey) => boolean;
 };
 
 /**

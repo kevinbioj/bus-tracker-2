@@ -62,12 +62,18 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 		// annoncée, mais sa ressource GTFS a pu changer depuis.
 		if (located === undefined) return;
 
+		const { departures, excludedJourneys } = computeStopDepartures(
+			located.source,
+			located.areaId,
+			Temporal.Now.instant(),
+			{ stopRef: request.stopRef },
+		);
+
 		const reply: StopDeparturesReply = {
 			requestId: request.requestId,
 			stopAreaRef: request.stopAreaRef,
-			departures: computeStopDepartures(located.source, located.areaId, Temporal.Now.instant(), {
-				stopRef: request.stopRef,
-			}),
+			departures,
+			excludedJourneys: excludedJourneys.length > 0 ? excludedJourneys : undefined,
 			passedCallDetection: located.source.options.passedCallDetection ?? "SCHEDULE",
 		};
 

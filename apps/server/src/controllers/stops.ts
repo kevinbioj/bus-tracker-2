@@ -120,7 +120,7 @@ function journeyKeyOf(departure: { journeyRef?: string; serviceDate?: string }) 
 function mergeTrackedJourneys(
 	stopArea: StopArea,
 	stopRefs: Set<string>,
-	{ departures, passedCallDetection }: StopDeparturesResult,
+	{ departures, excludedJourneys, passedCallDetection }: StopDeparturesResult,
 	nowMs: number,
 ) {
 	const untilMs = nowMs + DEPARTURES_HORIZON_MS;
@@ -137,18 +137,34 @@ function mergeTrackedJourneys(
 		}),
 	);
 
+	// Courses que la configuration de la source a écartées du tableau : elles ne doivent pas y revenir
+	// par le suivi.
+	const excludedJourneyIds = new Set(
+		excludedJourneys.flatMap(({ journeyId }) => (journeyId !== undefined ? [journeyId] : [])),
+	);
+	const excludedJourneyKeys = new Set(
+		excludedJourneys.flatMap((excluded) => {
+			const key = journeyKeyOf(excluded);
+			return key !== undefined ? [key] : [];
+		}),
+	);
+
 	// Passages que le véhicule associé a déjà dépassés, d'après sa progression plutôt que l'heure.
 	const passed = new Set<ResolvedDeparture>();
 
 	for (const journey of journeyStore.values()) {
 		if (!stopArea.networkIds.includes(journey.networkId)) continue;
 
+		const journeyKey = journeyKeyOf(journey);
+		if (excludedJourneyIds.has(journey.id) || (journeyKey !== undefined && excludedJourneyKeys.has(journeyKey))) {
+			continue;
+		}
+
 		// Pour un véhicule suivi en GPS, le processeur ne publie que les dessertes à partir de son
 		// arrêt courant (séquence, à défaut identifiant d'arrêt) : la liste publiée *est* sa
 		// progression. Une desserte qui y figure n'est pas encore passée, quelle que soit l'heure.
 		const followsVehicle = passedCallDetection === "VEHICLE" && journey.position.type === "GPS";
 
-		const journeyKey = journeyKeyOf(journey);
 		const known = byJourneyId.get(journey.id) ?? (journeyKey !== undefined ? byJourneyKey.get(journeyKey) : undefined);
 
 		// Les dessertes publiées commencent à l'arrêt en cours : le véhicule stationne à la station

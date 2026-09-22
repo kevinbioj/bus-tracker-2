@@ -83,7 +83,7 @@ describe("computeStopDepartures", () => {
 	it("réunit les passages des quais d'une même station, triés et sans le terminus", () => {
 		const source = makeSource();
 
-		const departures = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
 
 		expect(departures.map((departure) => departure.aimedTime)).toEqual([
 			"2026-05-18T08:00:00+00:00",
@@ -103,12 +103,12 @@ describe("computeStopDepartures", () => {
 	it("écarte les courses dont le service ne circule pas ce jour-là", () => {
 		const source = makeSource();
 
-		const departures = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
 
 		expect(departures.some((departure) => departure.journeyRef?.endsWith("dimanche"))).toBe(false);
 
 		const sunday = Temporal.Instant.from("2026-05-24T07:30:00Z");
-		const sundayDepartures = computeStopDepartures(source, "mairie-a", sunday);
+		const { departures: sundayDepartures } = computeStopDepartures(source, "mairie-a", sunday);
 
 		expect(sundayDepartures.map((departure) => departure.aimedTime)).toEqual([
 			"2026-05-24T08:00:00+00:00",
@@ -125,7 +125,7 @@ describe("computeStopDepartures", () => {
 		journey.updateJourney(gtfs, [{ stopId: "mairie-a", stopSequence: 1, departure: { delay: 300 } }]);
 		gtfs.journeys.set(getJourneyKey(date, "aller"), journey);
 
-		const departures = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
 
 		expect(departures[0]!.aimedTime).toBe("2026-05-18T08:00:00+00:00");
 		expect(departures[0]!.expectedTime).toBe("2026-05-18T08:05:00+00:00");
@@ -140,7 +140,7 @@ describe("computeStopDepartures", () => {
 		journey.lastPublishedKey = "network::ServiceJourney:aller/1:2026-05-18";
 		gtfs.journeys.set(getJourneyKey(date, "aller"), journey);
 
-		const departures = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
 
 		expect(departures[0]!.journeyId).toBe("network::ServiceJourney:aller_1:2026-05-18");
 	});
@@ -148,7 +148,7 @@ describe("computeStopDepartures", () => {
 	it("ne renvoie rien au-delà de la portée demandée", () => {
 		const source = makeSource();
 
-		const departures = computeStopDepartures(source, "mairie-a", MONDAY_MORNING, {
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING, {
 			horizonMs: 15 * 60 * 1000,
 		});
 
@@ -161,7 +161,7 @@ describe("computeStopDepartures", () => {
 			mapLineRef: (lineRef) => `L-${lineRef}`,
 		});
 
-		const departures = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
 
 		expect(departures[0]!.stopRef).toBe("network:StopPoint:S-mairie-a");
 		expect(departures[0]!.lineRef).toBe("network:Line:L-line:1");
@@ -178,7 +178,7 @@ describe("computeStopDepartures", () => {
 		journey.setVehicleDescriptor({ id: "412", label: "Hôtel de Ville" }, Date.now());
 		gtfs.journeys.set(getJourneyKey(date, "aller"), journey);
 
-		const departures = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
 
 		// Course suivie : le libellé du véhicule l'emporte.
 		expect(departures[0]!.destination).toBe("Hôtel de Ville");
@@ -187,7 +187,7 @@ describe("computeStopDepartures", () => {
 	});
 
 	it("restreint le tableau au quai demandé", () => {
-		const departures = computeStopDepartures(makeSource(), "mairie-a", MONDAY_MORNING, {
+		const { departures } = computeStopDepartures(makeSource(), "mairie-a", MONDAY_MORNING, {
 			stopRef: "network:StopPoint:mairie-b",
 		});
 
@@ -195,8 +195,22 @@ describe("computeStopDepartures", () => {
 		expect(departures[0]!.aimedTime).toBe("2026-05-18T08:30:00+00:00");
 	});
 
+	it("écarte les passages refusés par filterStopDeparture, avant la limite, et en signale la course", () => {
+		const source = makeSource({
+			filterStopDeparture: (departure, journey) =>
+				departure.stopRef !== "network:StopPoint:mairie-a" && journey.trip.id === "retour",
+		});
+
+		const { departures, excludedJourneys } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING, { limit: 1 });
+
+		expect(departures.map((departure) => departure.journeyRef)).toEqual(["network:ServiceJourney:retour"]);
+		expect(excludedJourneys).toEqual([
+			{ journeyId: undefined, journeyRef: "network:ServiceJourney:aller", serviceDate: "2026-05-18" },
+		]);
+	});
+
 	it("renvoie une liste vide pour une station inconnue", () => {
-		expect(computeStopDepartures(makeSource(), "inexistante", MONDAY_MORNING)).toEqual([]);
+		expect(computeStopDepartures(makeSource(), "inexistante", MONDAY_MORNING).departures).toEqual([]);
 	});
 
 	it("présente les dessertes d'un arrêt créé à la volée par une déviation", () => {
@@ -268,12 +282,12 @@ describe("computeStopDepartures", () => {
 		source.modifiedJourneyKeys.add(journeyKey);
 		source.realtimeStopAreas.set("RT", new StopArea("RT", replacement.name, 0.001, 0.01, [replacement]));
 
-		const departures = computeStopDepartures(source, "RT", MONDAY_MORNING);
+		const { departures } = computeStopDepartures(source, "RT", MONDAY_MORNING);
 
 		expect(departures).toHaveLength(1);
 		expect(departures[0]).toMatchObject({ stopRef: "network:StopPoint:RT", callStatus: "UNSCHEDULED", origin: false });
 		// L'arrêt remplacé reste annoncé, comme supprimé : le voyageur qui l'attend doit le savoir.
-		expect(computeStopDepartures(source, "B", MONDAY_MORNING)).toMatchObject([
+		expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toMatchObject([
 			{ stopRef: "network:StopPoint:B", callStatus: "SKIPPED" },
 		]);
 	});
@@ -284,7 +298,7 @@ describe("computeStopDepartures", () => {
 			getNetworkRef: (journey) => (journey?.trip.id === "retour" ? "network-b" : "network-a"),
 		});
 
-		const departures = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
 
 		expect(departures.map(({ stopRef, lineRef }) => [stopRef, lineRef])).toEqual([
 			["network-a:StopPoint:mairie-a", "network-a:Line:line:1"],
@@ -292,7 +306,7 @@ describe("computeStopDepartures", () => {
 		]);
 
 		// Un quai se désigne sous la référence de n'importe lequel de ses réseaux.
-		const platform = computeStopDepartures(source, "mairie-a", MONDAY_MORNING, {
+		const { departures: platform } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING, {
 			stopRef: "network-a:StopPoint:mairie-b",
 		});
 		expect(platform.map(({ stopRef }) => stopRef)).toEqual(["network-b:StopPoint:mairie-b"]);

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
+	type ExcludedStopDepartureJourney,
 	type PassedCallDetection,
 	STOP_DEPARTURES_REPLY_CHANNEL,
 	type StopDeparture,
@@ -19,11 +20,13 @@ const REPLY_TIMEOUT_MS = 2_000;
 
 export type StopDeparturesResult = {
 	departures: StopDeparture[];
+	/** Courses dont le passage a été écarté par la configuration de la source. */
+	excludedJourneys: ExcludedStopDepartureJourney[];
 	passedCallDetection: PassedCallDetection;
 };
 
 /** Réponse de repli : rien du processeur, et le jugement le plus prudent, à l'heure. */
-const EMPTY_RESULT: StopDeparturesResult = { departures: [], passedCallDetection: "SCHEDULE" };
+const EMPTY_RESULT: StopDeparturesResult = { departures: [], excludedJourneys: [], passedCallDetection: "SCHEDULE" };
 
 type PendingRequest = {
 	resolve: (result: StopDeparturesResult) => void;
@@ -40,7 +43,11 @@ function settle(reply: StopDeparturesReply) {
 
 	pendingRequests.delete(reply.requestId);
 	clearTimeout(pending.timeout);
-	pending.resolve({ departures: reply.departures, passedCallDetection: reply.passedCallDetection ?? "SCHEDULE" });
+	pending.resolve({
+		departures: reply.departures,
+		excludedJourneys: reply.excludedJourneys ?? [],
+		passedCallDetection: reply.passedCallDetection ?? "SCHEDULE",
+	});
 }
 
 /**

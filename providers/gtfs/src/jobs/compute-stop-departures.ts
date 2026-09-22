@@ -1,4 +1,4 @@
-import type { StopDeparture } from "@bus-tracker/contracts";
+import type { ExcludedStopDepartureJourney, StopDeparture } from "@bus-tracker/contracts";
 
 import { createZonedDateTimeFromSecs } from "../cache/temporal-cache.js";
 import { getJourneyKey } from "../model/gtfs.js";
@@ -68,13 +68,13 @@ export function computeStopDepartures(
 	areaId: string,
 	at: Temporal.Instant,
 	{ limit = DEFAULT_LIMIT, horizonMs = DEFAULT_HORIZON_MS, stopRef: onlyStopRef }: ComputeStopDeparturesOptions = {},
-): StopDeparture[] {
+): { departures: StopDeparture[]; excludedJourneys: ExcludedStopDepartureJourney[] } {
 	const gtfs = source.gtfs;
-	if (gtfs === undefined) return [];
+	if (gtfs === undefined) return { departures: [], excludedJourneys: [] };
 
 	// Station du GTFS statique, ou arrêt créé à la volée par le flux temps réel.
 	const stopArea = gtfs.stopAreas.get(areaId) ?? source.realtimeStopAreas.get(areaId);
-	if (stopArea === undefined) return [];
+	if (stopArea === undefined) return { departures: [], excludedJourneys: [] };
 
 	const entries = Array.from(gtfs.stopIndex.entriesOf(areaId));
 
@@ -108,7 +108,7 @@ export function computeStopDepartures(
 		onlyStopRef !== undefined
 			? stopArea.stops.find((stop) => onlyStopRef.endsWith(`:StopPoint:${mapStopRef?.(stop.id) ?? stop.id}`))?.id
 			: undefined;
-	if (onlyStopRef !== undefined && onlyStopId === undefined) return [];
+	if (onlyStopRef !== undefined && onlyStopId === undefined) return { departures: [], excludedJourneys: [] };
 
 	/** Dessertes déjà rendues par l'index, pour ne pas les redoubler depuis les courses déviées. */
 	const emittedCalls = new Set<string>();
@@ -241,8 +241,30 @@ export function computeStopDepartures(
 
 	departures.sort((a, b) => a.sortKey - b.sortKey);
 
-	return departures.slice(0, limit).map(({ sortKey, resolveDestination, resolveJourney, ...rest }) => {
-		const departure = { ...rest, destination: resolveDestination() };
-		return source.options.mapStopDeparture?.(departure, resolveJourney()) ?? departure;
-	});
+	const { filterStopDeparture, mapStopDeparture } = source.options;
+	const kept: StopDeparture[] = [];
+	const excludedJourneys: ExcludedStopDepartureJourney[] = [];
+
+	// Les passages sont résolus un à un jusqu'à la limite : ceux que le filtre écarte laissent leur
+	// place aux suivants, sans matérialiser la destination ni la course des passages qui ne seront pas
+	// rendus.
+	for (const { sortKey, resolveDestination, resolveJourney, ...rest } of departures) {
+		if (kept.length >= limit) break;
+
+		let departure: StopDeparture = { ...rest, destination: resolveDestination() };
+		if (mapStopDeparture !== undefined || filterStopDeparture !== undefined) {
+			const journey = resolveJourney();
+			departure = mapStopDeparture?.(departure, journey) ?? departure;
+
+			if (filterStopDeparture?.(departure, journey) === false) {
+				const { journeyId, journeyRef, serviceDate } = departure;
+				excludedJourneys.push({ journeyId, journeyRef, serviceDate });
+				continue;
+			}
+		}
+
+		kept.push(departure);
+	}
+
+	return { departures: kept, excludedJourneys };
 }
