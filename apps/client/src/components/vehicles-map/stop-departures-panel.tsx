@@ -200,7 +200,9 @@ export function StopDeparturesPanel() {
 
 	useEffect(() => {
 		const container = containerRef.current;
-		container.className = "maplibregl-ctrl maplibregl-ctrl-group font-sans";
+		// La classe `stop-departures-control` permet de descendre le panneau par-dessus
+		// l'attribution (cf. `maplibregl.css`).
+		container.className = "maplibregl-ctrl maplibregl-ctrl-group font-sans stop-departures-control";
 
 		const control = {
 			onAdd: () => container,
@@ -298,7 +300,7 @@ export function StopDeparturesPanel() {
 				</Button>
 			</div>
 			{/* Hauteur minimale : le panneau ne saute pas entre chargement, tableau vide et tableau rempli. */}
-			<div className="flex min-h-40 flex-col">
+			<div className="flex min-h-[min(10rem,25dvh)] flex-col">
 				{isError ? (
 					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_error()}</p>
 				) : isPending || areLinesPending ? (
@@ -306,7 +308,7 @@ export function StopDeparturesPanel() {
 				) : rows.length === 0 ? (
 					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_empty()}</p>
 				) : (
-					<ul className="grid max-h-64 grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-x-1 divide-y overflow-y-auto overscroll-contain">
+					<ul className="grid max-h-[25dvh] grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-x-1 divide-y overflow-y-auto overscroll-contain">
 						{rows.map(({ departure, line, label }) => (
 							<DepartureRow
 								departure={departure}

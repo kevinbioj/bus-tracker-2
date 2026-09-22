@@ -7,6 +7,9 @@ import { useMap } from "~/adapters/maplibre-gl/map";
 import { client } from "~/api/client";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 
+/** Décalage vertical du véhicule accroché sous le centre de la carte, en part de sa hauteur. */
+const JUMP_TO_VERTICAL_OFFSET_RATIO = 0.2 / 3;
+
 type JumpToProps = {
 	openPopup: (feature: CircleMarkerFeature, type: "hover" | "selected") => void;
 };
@@ -29,8 +32,14 @@ export function JumpTo({ openPopup }: JumpToProps) {
 					.then((response) => response.json<DisposeableVehicleJourney>());
 				if (abort) return;
 
-				map.setCenter({ lng: journey.position.longitude, lat: journey.position.latitude });
-				map.setZoom(13);
+				// Le véhicule est placé sous le centre de la carte : sa popup, qui s'ouvre au-dessus de lui,
+				// ne vient pas buter contre les contrôles du haut de la carte (sur mobile notamment).
+				map.easeTo({
+					center: { lng: journey.position.longitude, lat: journey.position.latitude },
+					zoom: 13,
+					offset: [0, map.getContainer().clientHeight * JUMP_TO_VERTICAL_OFFSET_RATIO],
+					duration: 0,
+				});
 
 				let done = false;
 				const onSourceData = (e: { source: SourceSpecification; sourceDataType: "content" | string }) => {
