@@ -30,6 +30,8 @@ export type StopDeparture = {
 	 * pictogramme viennent de `GetNetworkQuery`, gardé en cache.
 	 */
 	lineId?: number;
+	/** Réseau de la ligne, qui n'est pas toujours parmi ceux de la station. */
+	lineNetworkId?: number;
 	destination?: string;
 	aimedTime: string;
 	expectedTime?: string;

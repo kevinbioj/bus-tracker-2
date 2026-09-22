@@ -45,14 +45,14 @@ function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDi
 /**
  * Pictogramme de la ligne lorsque le réseau en fournit un, pastille à ses couleurs sinon — comme
  * dans le module de filtre de la carte. Il occupe la première colonne du tableau, large comme le plus
- * large d'entre eux : chacun y est centré plutôt que calé à gauche.
+ * large d'entre eux : un pictogramme fourni y est calé à gauche, une pastille centrée.
  */
 function LinePictogram({ line }: Readonly<{ line?: Line }>) {
 	if (line?.cartridgeHref) {
 		return (
 			<img
 				alt={line.number}
-				className="h-6 max-w-20 justify-self-center object-contain shrink-0"
+				className="h-6 max-w-20 justify-self-start object-contain object-left shrink-0"
 				src={line.cartridgeHref}
 			/>
 		);
@@ -180,11 +180,22 @@ export function StopDeparturesPanel() {
 	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef));
 	// Les lignes des réseaux de la station, pour leur numéro, leurs couleurs et leur pictogramme : une
 	// requête au plus toutes les 5 min par réseau, souvent déjà en cache — le module de filtre fait la
-	// même. Une gare peut en réunir plusieurs (TER, Intercités, TGV…).
-	const linesById = useQueries({
-		queries: (data?.stop.networkIds ?? []).map((networkId) => GetNetworkQuery(networkId, true)),
-		combine: (networks) =>
-			new Map(networks.flatMap(({ data: network }) => network?.lines.map((line) => [line.id, line] as const) ?? [])),
+	// même. Une gare peut en réunir plusieurs (TER, Intercités, TGV…), et une ligne peut relever d'un
+	// réseau que la station ne déclare pas : ceux des passages s'y ajoutent.
+	const networkIds = [
+		...new Set([
+			...(data?.stop.networkIds ?? []),
+			...(data?.departures.flatMap(({ lineNetworkId }) => (lineNetworkId !== undefined ? [lineNetworkId] : [])) ?? []),
+		]),
+	].toSorted((a, b) => a - b);
+	const { linesById, isPending: areLinesPending } = useQueries({
+		queries: networkIds.map((networkId) => GetNetworkQuery(networkId, true)),
+		combine: (networks) => ({
+			linesById: new Map(
+				networks.flatMap(({ data: network }) => network?.lines.map((line) => [line.id, line] as const) ?? []),
+			),
+			isPending: networks.some(({ isPending }) => isPending),
+		}),
 	});
 
 	useEffect(() => {
@@ -251,6 +262,13 @@ export function StopDeparturesPanel() {
 		[departures, displayMode],
 	);
 
+	// Seuls s'affichent les passages dont la ligne est connue : sans elle, le pictogramme ne serait
+	// qu'un « ? ». Les libellés restent calculés sur la liste entière, dont ils suivent les indices.
+	const rows = departures.flatMap((departure, index) => {
+		const line = departure.lineId !== undefined ? linesById.get(departure.lineId) : undefined;
+		return line !== undefined ? [{ departure, line, label: labels[index] ?? "" }] : [];
+	});
+
 	return createPortal(
 		<div className="bg-background/95 backdrop-blur-sm rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
 			<div className="flex items-center gap-1 border-b px-1 py-0.5">
@@ -283,18 +301,18 @@ export function StopDeparturesPanel() {
 			<div className="flex min-h-40 flex-col">
 				{isError ? (
 					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_error()}</p>
-				) : isPending ? (
+				) : isPending || areLinesPending ? (
 					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_loading()}</p>
-				) : departures.length === 0 ? (
+				) : rows.length === 0 ? (
 					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_empty()}</p>
 				) : (
 					<ul className="grid max-h-64 grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-x-1 divide-y overflow-y-auto overscroll-contain">
-						{departures.map((departure, index) => (
+						{rows.map(({ departure, line, label }) => (
 							<DepartureRow
 								departure={departure}
 								key={`${departure.journeyId ?? departure.lineId}-${departure.aimedTime}-${departure.stopRef}`}
-								line={departure.lineId !== undefined ? linesById.get(departure.lineId) : undefined}
-								label={labels[index] ?? ""}
+								line={line}
+								label={label}
 								onLocate={(journeyId) => void setMarkerId(journeyId)}
 							/>
 						))}

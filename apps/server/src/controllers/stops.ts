@@ -90,6 +90,11 @@ type ResolvedDeparture = Omit<StopDeparture, "lineRef"> & {
 	 * pictogramme sont connus du client par `/networks/:id`, qu'il garde en cache.
 	 */
 	lineId?: number;
+	/**
+	 * Réseau de la ligne : il n'est pas forcément parmi ceux de la station, et le client doit savoir
+	 * quel réseau demander pour la retrouver.
+	 */
+	lineNetworkId?: number;
 	/** Vrai lorsque la course est effectivement suivie par l'application à cet instant. */
 	tracked: boolean;
 	/** Vrai lorsque le véhicule stationne en ce moment à l'arrêt. */
@@ -172,6 +177,11 @@ function mergeTrackedJourneys(
 				known.tracked = true;
 				known.atStop = atStop;
 				known.journeyId = journey.id;
+				// La course suivie connaît sa ligne, même quand la référence du processeur n'a rien donné.
+				if (journey.lineId !== undefined) {
+					known.lineId = journey.lineId;
+					known.lineNetworkId = journey.networkId;
+				}
 				// Le store tient l'état le plus récent de la course : ses heures priment sur celles que
 				// le processeur a calculées pour répondre.
 				known.expectedTime = call.expectedTime ?? known.expectedTime;
@@ -189,6 +199,7 @@ function mergeTrackedJourneys(
 				stopName: call.stopName,
 				platformName: call.platformName,
 				lineId: journey.lineId,
+				lineNetworkId: journey.lineId !== undefined ? journey.networkId : undefined,
 				destination: journey.destination,
 				aimedTime: call.aimedTime,
 				expectedTime: call.expectedTime,
@@ -214,38 +225,57 @@ function mergeTrackedJourneys(
 }
 
 /**
- * Identifiant de ligne par référence. Une référence ne change pas de ligne : la table est gardée en
- * mémoire et seules les références encore inconnues sont cherchées en base, une requête au plus par
+ * Ligne par référence. Une référence ne change pas de ligne : la table est gardée en mémoire et
+ * seules les références encore inconnues sont cherchées en base, une requête au plus par
  * rafraîchissement du tableau.
  */
-const lineIdsByRef = new Map<string, number | null>();
+const linesByRef = new Map<string, { id: number; networkId: number }>();
+
+/**
+ * Références restées sans ligne, et l'instant où les chercher de nouveau. La ligne naît de la
+ * première course publiée : l'attendre une demi-heure laisserait le passage sans pictogramme bien
+ * après qu'elle existe. Une minute épargne tout de même la base à chaque rafraîchissement.
+ */
+const unknownLineRefsUntil = new Map<string, number>();
 
 /** Oubli périodique des correspondances, pour suivre une ligne recréée ou fusionnée par un éditeur. */
-setInterval(() => lineIdsByRef.clear(), 30 * 60_000).unref();
+setInterval(() => {
+	linesByRef.clear();
+	unknownLineRefsUntil.clear();
+}, 30 * 60_000).unref();
+
+const UNKNOWN_LINE_RETRY_MS = 60_000;
 
 async function resolveLineIds(departures: ResolvedDeparture[]) {
+	const nowMs = Date.now();
 	const unknownRefs = [
 		...new Set(departures.flatMap((departure) => (departure.lineRef !== undefined ? [departure.lineRef] : []))),
-	].filter((ref) => !lineIdsByRef.has(ref));
+	].filter((ref) => !linesByRef.has(ref) && (unknownLineRefsUntil.get(ref) ?? 0) <= nowMs);
 
 	if (unknownRefs.length > 0) {
 		const lines = await database
-			.select({ id: linesTable.id, references: linesTable.references })
+			.select({ id: linesTable.id, networkId: linesTable.networkId, references: linesTable.references })
 			.from(linesTable)
 			// Les références de ligne portent leur réseau en préfixe : elles suffisent à la désigner, quel
 			// que soit celui des réseaux de la station qui la dessert.
 			.where(arrayOverlaps(linesTable.references, unknownRefs));
 
 		for (const ref of unknownRefs) {
-			// Une référence sans ligne est retenue aussi : la ligne naîtra de la première course publiée,
-			// et l'oubli périodique la fera alors retrouver.
-			lineIdsByRef.set(ref, lines.find((line) => line.references?.includes(ref))?.id ?? null);
+			const line = lines.find(({ references }) => references?.includes(ref));
+			if (line !== undefined) {
+				linesByRef.set(ref, { id: line.id, networkId: line.networkId });
+				unknownLineRefsUntil.delete(ref);
+			} else {
+				unknownLineRefsUntil.set(ref, nowMs + UNKNOWN_LINE_RETRY_MS);
+			}
 		}
 	}
 
 	for (const departure of departures) {
 		if (departure.lineId !== undefined || departure.lineRef === undefined) continue;
-		departure.lineId = lineIdsByRef.get(departure.lineRef) ?? undefined;
+		const line = linesByRef.get(departure.lineRef);
+		departure.lineId = line?.id;
+		departure.lineNetworkId = line?.networkId;
 	}
 }
 
@@ -329,7 +359,10 @@ hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams)
 		// Quai sur lequel le tableau est restreint, s'il l'est.
 		stopPointRef,
 		// Les références internes n'ont servi qu'au rapprochement : le client n'en a pas l'usage.
+		// Un passage dont la ligne reste inconnue n'aurait qu'un « ? » à montrer : il est écarté, avant la
+		// limite pour que le tableau reste plein.
 		departures: departures
+			.filter(({ lineId }) => lineId !== undefined)
 			.slice(0, DEPARTURES_LIMIT)
 			.map(({ lineRef, journeyRef, serviceDate, ...departure }) => departure),
 		at: Temporal.Now.instant(),

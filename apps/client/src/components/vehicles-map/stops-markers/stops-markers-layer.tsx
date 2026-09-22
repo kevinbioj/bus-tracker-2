@@ -31,13 +31,14 @@ import { StopsMarkersData } from "~/components/vehicles-map/stops-markers/stops-
  * Zoom à partir duquel les arrêts apparaissent. Plus bas, une ville entière tient à l'écran et ses
  * milliers d'arrêts noieraient les véhicules sans rien apprendre.
  */
-export const STOPS_MIN_ZOOM = 15;
+export const STOPS_MIN_ZOOM = 14;
 
 /**
  * Zoom autour duquel les stations cèdent la place à leurs quais, chacun à sa position : à cette
- * échelle, les deux côtés de la rue se distinguent, et c'est le quai qu'on cherche.
+ * échelle, les deux côtés de la rue se distinguent, et c'est le quai qu'on cherche. Pas plus tard :
+ * sur un petit écran, il fallait zoomer presque à fond pour les atteindre.
  */
-export const STOP_POINTS_ZOOM = 17.5;
+export const STOP_POINTS_ZOOM = 16.5;
 
 /** Demi-largeur du fondu enchaîné entre stations et quais, de part et d'autre du seuil. */
 const STOP_POINTS_FADE = 0.25;
@@ -49,7 +50,7 @@ const STOP_POINTS_FADE = 0.25;
 export const STOP_POINTS_LOAD_ZOOM = STOP_POINTS_ZOOM - STOP_POINTS_FADE - 0.25;
 
 /** Zoom à partir duquel les arrêts se nomment : plus tôt, les libellés se marchent dessus. */
-const STOPS_LABEL_MIN_ZOOM = 16;
+const STOPS_LABEL_MIN_ZOOM = 15;
 
 /** Au doigt, la plaque est plus petite que la cible : la zone de clic est élargie, comme pour les véhicules. */
 const COARSE_POINTER_HIT_PADDING = 8;
