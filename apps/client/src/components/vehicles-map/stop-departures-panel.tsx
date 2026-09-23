@@ -143,9 +143,7 @@ function DepartureRow({ departure, line, label, touch = false, onLocate }: Reado
 			</div>
 			<div className="flex shrink-0 flex-col items-end leading-tight">
 				<span className={clsx("flex items-start text-sm font-bold tabular-nums whitespace-nowrap", accentColor)}>
-					{realtime && !skipped ? (
-						<Rss aria-label={m.stop_call_realtime()} className="-rotate-90 mr-[0.5px]" size={8} />
-					) : null}
+					{realtime ? <Rss aria-label={m.stop_call_realtime()} className="-rotate-90 mr-[0.5px]" size={8} /> : null}
 					<span className={clsx(skipped && "line-through")}>{label}</span>
 				</span>
 				{showAimedTime && (

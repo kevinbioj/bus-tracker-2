@@ -171,9 +171,9 @@ const NextStopRow = memo(function NextStopRow({
 					)
 			: null;
 
-	// Un arrêt ajouté se qualifie par sa couleur : l'icône ne dit que si son heure vient du temps réel,
-	// ce qui n'est le cas que si son arrêt de référence en a un.
-	const showRealtimeIcon = realtimeOnly || expected !== undefined || call.callStatus === "SKIPPED";
+	// Un arrêt ajouté ou supprimé se qualifie par sa couleur : l'icône ne dit que si l'arrêt porte une
+	// heure temps réel.
+	const showRealtimeIcon = call.expectedTime !== undefined;
 
 	const hasExtra = (call.flags !== undefined && call.flags.length > 0) || call.platformName !== undefined;
 
