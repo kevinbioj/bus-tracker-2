@@ -264,6 +264,7 @@
 	"stop_departures_empty": "Keine Abfahrt in den nächsten zwei Stunden.",
 	"stop_departures_error": "Die nächsten Abfahrten dieser Haltestelle sind nicht verfügbar.",
 	"stop_departures_locate": "Fahrzeug auf der Karte anzeigen",
+	"stop_departures_approaching": "Fährt ein",
 	"stop_departures_close": "Schließen",
 	"stop_departures_departure_at": "Abfahrt um {time}",
 	"stop_departures_departure_in": "Abfahrt in {time}",

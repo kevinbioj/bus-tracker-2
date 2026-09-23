@@ -255,6 +255,7 @@
 	"stop_departures_empty": "Aucun passage dans les deux prochaines heures.",
 	"stop_departures_error": "Les prochains passages de cet arrêt sont indisponibles.",
 	"stop_departures_locate": "Localiser le véhicule sur la carte",
+	"stop_departures_approaching": "À l'approche",
 	"stop_departures_close": "Fermer",
 	"stop_departures_departure_at": "Départ à {time}",
 	"stop_departures_departure_in": "Départ dans {time}",

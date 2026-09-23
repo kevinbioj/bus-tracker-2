@@ -20,28 +20,34 @@ import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-s
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 import * as m from "~/paraglide/messages";
 
+/** En heure absolue, un départ de terminus n'est annoncé comme tel qu'à l'approche de son heure. */
+const DEPARTURE_ANNOUNCE_MINUTES = 10;
+
 function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDisplayMode, now: dayjs.Dayjs) {
 	const time = departure.expectedTime ?? departure.aimedTime;
+	const minutes = dayjs(time).diff(now, "minutes");
 
 	// Au terminus de départ, le véhicule attend souvent déjà son heure : le passage est annoncé comme
-	// un départ. Partout ailleurs, l'heure seule suffit.
-	if (departure.origin === true && departure.callStatus !== "SKIPPED") {
-		const minutes = dayjs(time).diff(now, "minutes");
-		if (minutes < 1) return m.stop_departures_departure_imminent();
-		return displayMode === "absolute"
+	// un départ.
+	const departing = departure.origin === true && departure.callStatus !== "SKIPPED";
+
+	// En heure absolue, l'heure est toujours affichée telle quelle, même dépassée ou supprimée.
+	if (displayMode === "absolute") {
+		return departing && minutes < DEPARTURE_ANNOUNCE_MINUTES
 			? m.stop_departures_departure_at({ time: formatLocalTime(time) })
-			: m.stop_departures_departure_in({ time: formatCountdown(minutes) });
+			: formatLocalTime(time);
 	}
 
-	// Heure dépassée mais véhicule pas encore passé (source jugeant le passage sur la progression du
-	// véhicule) : il arrive, afficher une heure déjà écoulée ne dirait rien d'utile.
-	if (departure.callStatus !== "SKIPPED" && dayjs(time).isBefore(now)) return m.stop_call_imminent();
+	if (departing) {
+		if (minutes < 1) return m.stop_departures_departure_imminent();
+		return m.stop_departures_departure_in({ time: formatCountdown(minutes) });
+	}
 
-	if (displayMode === "absolute") return formatLocalTime(time);
 	if (departure.callStatus === "SKIPPED") return m.stop_call_cancelled();
 
-	const minutes = dayjs(time).diff(now, "minutes");
-	if (minutes < 1) return m.stop_call_imminent();
+	// Moins d'une minute, ou heure dépassée alors que le véhicule n'est pas encore passé (source jugeant
+	// le passage sur sa progression) : il arrive.
+	if (minutes < 1) return m.stop_departures_approaching();
 	return formatCountdown(minutes);
 }
 
