@@ -11,6 +11,12 @@ const pathCache = new WeakMap<Shape, VehicleJourneyPath>();
  */
 const STOP_PASS_TOLERANCE_M = 10;
 
+/**
+ * Écart maximal, en mètres, entre un arrêt et le point du tracé désigné par sa distance curviligne.
+ * Au-delà, cette distance se rapporte à un autre tracé que celui-ci et l'arrêt est projeté à la place.
+ */
+const STOP_LOCATION_TOLERANCE_M = 50;
+
 export class Shape {
 	constructor(
 		readonly id: string,
@@ -202,16 +208,58 @@ export class Shape {
 		const pointRatio =
 			nextDistance === currentDistance ? 0 : (distanceTraveled - currentDistance) / (nextDistance - currentDistance);
 
+		// Au dernier point, aucun segment ne suit : le cap est celui du segment qui y mène.
+		const bearingFromIndex = nextPointIndex === pointIndex ? Math.max(0, pointIndex - 1) : pointIndex;
+
 		return {
 			latitude: currentLatitude + (nextLatitude - currentLatitude) * pointRatio,
 			longitude: currentLongitude + (nextLongitude - currentLongitude) * pointRatio,
-			bearing: getDirection(currentLongitude, currentLatitude, nextLongitude, nextLatitude),
+			bearing: getDirection(
+				this.getPointLongitude(bearingFromIndex),
+				this.getPointLatitude(bearingFromIndex),
+				nextLongitude,
+				nextLatitude,
+			),
+		};
+	}
+
+	/**
+	 * Point du tracé où stationne un véhicule à l'arrêt : celui de la distance curviligne de l'arrêt,
+	 * à défaut la projection de l'arrêt sur le tracé.
+	 *
+	 * La distance curviligne est préférée parce qu'elle respecte l'ordre de desserte : là où le tracé
+	 * repasse près de l'arrêt (boucle, terminus en raquette), la projection pourrait retenir l'autre
+	 * passage. Elle n'est écartée que lorsqu'elle désigne un point éloigné de l'arrêt — distances
+	 * relatives à un autre tracé, comme celles d'une déviation dont les arrêts n'ont pu être appariés.
+	 *
+	 * Retourne undefined pour un tracé vide.
+	 */
+	locateStop(stop: { latitude: number; longitude: number }, distanceTraveled: number | undefined) {
+		if (distanceTraveled !== undefined) {
+			const point = this.interpolateAt(distanceTraveled);
+			if (
+				point !== undefined &&
+				getDistance(stop.latitude, stop.longitude, point.latitude, point.longitude) <= STOP_LOCATION_TOLERANCE_M
+			) {
+				return { ...point, distanceTraveled };
+			}
+		}
+
+		const projection = this.projectPosition(stop.latitude, stop.longitude);
+		if (projection === undefined) return;
+
+		return {
+			latitude: projection.latitude,
+			longitude: projection.longitude,
+			bearing: projection.bearing,
+			distanceTraveled: projection.distanceTraveled,
 		};
 	}
 
 	/**
 	 * Projette une position sur le tracé : le point du tracé le plus proche d'elle, cherché sur les
-	 * segments et non parmi les seuls sommets, et sa distance en mètres.
+	 * segments et non parmi les seuls sommets, et sa distance en mètres. Le cap et la distance
+	 * curviligne sont ceux du tracé en ce point.
 	 *
 	 * Retourne undefined pour un tracé vide.
 	 */
@@ -224,6 +272,8 @@ export class Shape {
 				latitude: pointLatitude,
 				longitude: pointLongitude,
 				distance: getDistance(latitude, longitude, pointLatitude, pointLongitude),
+				bearing: undefined,
+				distanceTraveled: this.getPointDistanceTraveled(0),
 			};
 		}
 
@@ -239,6 +289,8 @@ export class Shape {
 		let closestOffsetSquared = Number.POSITIVE_INFINITY;
 		let closestLatitude = latitude;
 		let closestLongitude = longitude;
+		let closestSegmentIndex = 0;
+		let closestRatio = 0;
 
 		for (let i = 0; i < this.length - 1; i++) {
 			const aLat = this.getPointLatitude(i);
@@ -263,13 +315,29 @@ export class Shape {
 				closestOffsetSquared = offsetSquared;
 				closestLatitude = aLat + t * (bLat - aLat);
 				closestLongitude = aLon + t * (bLon - aLon);
+				closestSegmentIndex = i;
+				closestRatio = t;
 			}
 		}
+
+		const fromDistance = this.getPointDistanceTraveled(closestSegmentIndex);
+		const toDistance = this.getPointDistanceTraveled(closestSegmentIndex + 1);
 
 		return {
 			latitude: closestLatitude,
 			longitude: closestLongitude,
 			distance: getDistance(latitude, longitude, closestLatitude, closestLongitude),
+			bearing: getDirection(
+				this.getPointLongitude(closestSegmentIndex),
+				this.getPointLatitude(closestSegmentIndex),
+				this.getPointLongitude(closestSegmentIndex + 1),
+				this.getPointLatitude(closestSegmentIndex + 1),
+			),
+			// Absente lorsque le tracé n'a pas de distances curvilignes exploitables.
+			distanceTraveled:
+				fromDistance !== undefined && toDistance !== undefined && !Number.isNaN(fromDistance + toDistance)
+					? fromDistance + closestRatio * (toDistance - fromDistance)
+					: undefined,
 		};
 	}
 

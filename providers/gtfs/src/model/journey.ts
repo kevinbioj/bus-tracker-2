@@ -776,13 +776,19 @@ export class Journey {
 	private getJourneyPositionAt(call: JourneyCall): VehicleJourneyPosition {
 		const recordedAtMs = call.expectedArrivalTime ?? call.aimedArrivalTime;
 
+		// Le véhicule stationne sur son tracé, au droit de l'arrêt, plutôt que sur l'arrêt lui-même.
+		const point = this.shape?.locateStop(call.stop, call.distanceTraveled);
+		if (point?.bearing !== undefined) {
+			this.bearing = point.bearing;
+		}
+
 		return {
-			latitude: call.stop.latitude,
-			longitude: call.stop.longitude,
+			latitude: point?.latitude ?? call.stop.latitude,
+			longitude: point?.longitude ?? call.stop.longitude,
 			bearing: this.bearing,
 			atStop: true,
 			type: "COMPUTED",
-			distanceTraveled: call.distanceTraveled,
+			distanceTraveled: point?.distanceTraveled ?? call.distanceTraveled,
 			recordedAt: Temporal.Instant.fromEpochMilliseconds(recordedAtMs)
 				.toZonedDateTimeISO(call.stop.timeZone ?? this.trip.route.agency.timeZone)
 				.toString({ timeZoneName: "never" }),

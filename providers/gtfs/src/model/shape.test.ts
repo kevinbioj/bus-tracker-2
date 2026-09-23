@@ -119,3 +119,47 @@ describe("Shape#projectStopsInOrder", () => {
 		expect(distance).toBeCloseTo(0.00025 * 111_320, 3);
 	});
 });
+
+/** Tracé rectiligne vers l'est le long de l'équateur, avec distances curvilignes (1 000 m / 0,01°). */
+const distancedShape = new Shape("shape:distanced", new Float64Array([0, 0, 0, 0, 0.01, 1000, 0, 0.02, 2000]));
+
+describe("Shape#interpolateAt", () => {
+	it("donne au dernier point le cap du segment qui y mène", () => {
+		expect(distancedShape.interpolateAt(2000)?.bearing).toBeCloseTo(90, 5);
+	});
+});
+
+describe("Shape#locateStop", () => {
+	it("place un arrêt à côté du tracé sur le tracé, à sa distance curviligne", () => {
+		// Arrêt ~22 m au nord du tracé, sur le trottoir.
+		const point = distancedShape.locateStop({ latitude: 0.0002, longitude: 0.005 }, 500);
+
+		expect(point?.latitude).toBeCloseTo(0, 6);
+		expect(point?.longitude).toBeCloseTo(0.005, 6);
+		expect(point?.bearing).toBeCloseTo(90, 5);
+		expect(point?.distanceTraveled).toBe(500);
+	});
+
+	it("projette l'arrêt quand sa distance curviligne désigne un point éloigné de lui", () => {
+		// Distance relative à un autre tracé : elle désigne un point à plus d'un kilomètre de l'arrêt.
+		const point = distancedShape.locateStop({ latitude: 0.0002, longitude: 0.015 }, 200);
+
+		expect(point?.latitude).toBeCloseTo(0, 6);
+		expect(point?.longitude).toBeCloseTo(0.015, 6);
+		expect(point?.distanceTraveled).toBeCloseTo(1500, 5);
+	});
+
+	it("projette l'arrêt faute de distance curviligne", () => {
+		const point = distancedShape.locateStop({ latitude: -0.0002, longitude: 0.012 }, undefined);
+
+		expect(point?.longitude).toBeCloseTo(0.012, 6);
+		expect(point?.distanceTraveled).toBeCloseTo(1200, 5);
+	});
+
+	it("ne donne aucune distance curviligne sur un tracé qui n'en porte pas", () => {
+		const point = shape.locateStop({ latitude: 0.0002, longitude: 0.015 }, undefined);
+
+		expect(point?.longitude).toBeCloseTo(0.015, 6);
+		expect(point?.distanceTraveled).toBeUndefined();
+	});
+});

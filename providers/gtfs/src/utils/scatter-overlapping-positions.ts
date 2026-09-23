@@ -1,6 +1,6 @@
 import type { VehicleJourney } from "@bus-tracker/contracts";
 
-import { getDistance } from "./get-distance.js";
+import { groupByProximity } from "./group-by-proximity.js";
 
 /**
  * Distance (m) en deçà de laquelle deux positions GPS sont considérées superposées. Volontairement
@@ -58,81 +58,13 @@ export function scatterOverlappingPositions(vehicleJourneys: Iterable<VehicleJou
 	}
 	if (candidates.length < 2) return 0;
 
-	// Indexation par cellule de la taille du seuil : deux points superposés tombent forcément dans la
-	// même cellule ou dans une cellule voisine, ce qui borne les comparaisons au voisinage immédiat.
-	const cellSizeDegrees = OVERLAP_THRESHOLD_METERS / METERS_PER_DEGREE_LATITUDE;
-	const cells = new Map<string, number[]>();
-	const getCellKey = (latitude: number, longitude: number) =>
-		`${Math.floor(latitude / cellSizeDegrees)}:${Math.floor(longitude / cellSizeDegrees)}`;
-
-	candidates.forEach((candidate, index) => {
-		const key = getCellKey(candidate.position.latitude, candidate.position.longitude);
-		const cell = cells.get(key);
-		if (cell === undefined) {
-			cells.set(key, [index]);
-		} else {
-			cell.push(index);
-		}
-	});
-
-	// Union-find sur les composantes connexes : trois véhicules superposés deux à deux forment une
-	// seule grappe, même si les paires ne sont pas toutes dans la même cellule.
-	const parents = candidates.map((_, index) => index);
-	const find = (index: number): number => {
-		let root = index;
-		while (parents[root] !== root) root = parents[root]!;
-		let current = index;
-		while (parents[current] !== root) {
-			const next = parents[current]!;
-			parents[current] = root;
-			current = next;
-		}
-		return root;
-	};
-	const union = (a: number, b: number) => {
-		const rootA = find(a);
-		const rootB = find(b);
-		if (rootA !== rootB) parents[Math.max(rootA, rootB)] = Math.min(rootA, rootB);
-	};
-
-	candidates.forEach((candidate, index) => {
-		const { latitude, longitude } = candidate.position;
-		const cellLatitude = Math.floor(latitude / cellSizeDegrees);
-		const cellLongitude = Math.floor(longitude / cellSizeDegrees);
-
-		for (let dLat = -1; dLat <= 1; dLat++) {
-			for (let dLon = -1; dLon <= 1; dLon++) {
-				const cell = cells.get(`${cellLatitude + dLat}:${cellLongitude + dLon}`);
-				if (cell === undefined) continue;
-
-				for (const otherIndex of cell) {
-					if (otherIndex <= index) continue;
-					const other = candidates[otherIndex]!;
-					if (
-						getDistance(latitude, longitude, other.position.latitude, other.position.longitude) >
-						OVERLAP_THRESHOLD_METERS
-					)
-						continue;
-					union(index, otherIndex);
-				}
-			}
-		}
-	});
-
-	const clusters = new Map<number, PositionedJourney[]>();
-	candidates.forEach((candidate, index) => {
-		const root = find(index);
-		const cluster = clusters.get(root);
-		if (cluster === undefined) {
-			clusters.set(root, [candidate]);
-		} else {
-			cluster.push(candidate);
-		}
-	});
+	// Composantes connexes : trois véhicules superposés deux à deux forment une seule grappe, même si
+	// les paires ne sont pas toutes à moins du seuil.
+	const clusters = groupByProximity(candidates, (candidate) => candidate.position, OVERLAP_THRESHOLD_METERS);
 
 	let scatteredCount = 0;
 
-	for (const cluster of clusters.values()) {
+	for (const cluster of clusters) {
 		if (cluster.length < 2) continue;
 
 		// Le tri par identifiant fixe l'ordre d'attribution des secteurs indépendamment de l'ordre

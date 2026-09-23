@@ -407,19 +407,21 @@ describe("Journey#guessPosition (guard anti-recul)", () => {
 		const { gtfs, trip } = makeShapedGtfs({ withDistances: false });
 		const journey = trip.getScheduledJourney(DATE, true);
 
+		// À l'arrêt, la position est projetée sur le tracé et en prend la distance curviligne...
 		expect(journey.guessPosition(at("08:15:00"))).toMatchObject({
 			atStop: true,
 			longitude: 0.01,
-			distanceTraveled: undefined,
+			distanceTraveled: 1000,
 		});
 
 		journey.updateJourney(gtfs, [delayFrom("B", 2, 6 * 60)]);
 
-		// Sans distance, deux positions ne sont pas comparables : le comportement reste celui d'avant.
+		// ...mais sans distance aux arrêts, le rattrapage n'est pas estimable : le comportement reste
+		// celui d'avant.
 		expect(journey.guessPosition(at("08:15:30"))).toMatchObject({
 			atStop: true,
 			longitude: 0,
-			distanceTraveled: undefined,
+			distanceTraveled: 0,
 		});
 	});
 

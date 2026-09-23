@@ -13,6 +13,7 @@ import { fastFormatISO, formatCallTime, getTimeZoneOffsetMs } from "../utils/for
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { scatterOverlappingPositions } from "../utils/scatter-overlapping-positions.js";
+import { stackStoppedPositions } from "../utils/stack-stopped-positions.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 import {
 	createCallsFromTripUpdate,
@@ -469,6 +470,8 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		updateLog("%s 2/2 ► Computing active journeys.", sourceId);
 		const activeJourneys = new Map<string, VehicleJourney>();
 		const paths = new Map<string, VehicleJourneyPath | LinePath>();
+		// Tracé sur lequel chaque position calculée a été placée, pour la mise en file des véhicules à l'arrêt.
+		const positionShapes = new WeakMap<VehicleJourney, Shape>();
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
 		const canceledJourneyIds = new Set<string>();
@@ -883,6 +886,8 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					updatedAt: Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000).toString(),
 				};
 
+				if (shape !== undefined) positionShapes.set(vehicleJourney, shape);
+
 				if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
 					activeJourneys.set(key, vehicleJourney);
 				}
@@ -1000,6 +1005,8 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					updatedAt: nowStr,
 				};
 
+				if (journey.shape !== undefined) positionShapes.set(vehicleJourney, journey.shape);
+
 				if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
 					if (hasEnded) {
 						endedJourneys.push({ key, block: journey.trip.block, vehicleJourney });
@@ -1027,13 +1034,19 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			journey.releaseUnmodifiedCalls(nowMs);
 		}
 
+		// Plusieurs courses calculées peuvent stationner au même arrêt : on les met en file sur leur
+		// tracé pour qu'elles restent toutes visibles et sélectionnables sur la carte.
+		const stackedCount = stackStoppedPositions(activeJourneys.values(), (vehicleJourney) =>
+			positionShapes.get(vehicleJourney),
+		);
+
 		// Certains SAE recalent plusieurs véhicules sur un point identique du tracé : on les écarte
 		// juste avant publication pour qu'ils restent tous visibles et sélectionnables sur la carte.
 		const scatteredCount = scatterOverlappingPositions(activeJourneys.values());
 
 		const computeTime = watch.step();
 		updateLog(
-			"%s     ✓ Computed %d journeys and %d paths in %dms (%dms download - %dms compute)%s.",
+			"%s     ✓ Computed %d journeys and %d paths in %dms (%dms download - %dms compute)%s%s.",
 			sourceId,
 			activeJourneys.size,
 			paths.size,
@@ -1041,6 +1054,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			downloadTime,
 			computeTime,
 			scatteredCount > 0 ? ` - ${scatteredCount} overlapping positions scattered` : "",
+			stackedCount > 0 ? ` - ${stackedCount} stopped positions queued` : "",
 		);
 
 		// Écrit en toute fin de bloc `try` : la fenêtre de grâce se mesure depuis le dernier cycle

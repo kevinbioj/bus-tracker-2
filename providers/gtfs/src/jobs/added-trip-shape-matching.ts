@@ -228,13 +228,22 @@ export function findAddedTripShapeMatchWithFallback(
 	);
 }
 
-function getPositionAtCall(call: JourneyCall, at: Temporal.Instant, timeZone: string): VehicleJourneyPosition {
+function getPositionAtCall(
+	call: JourneyCall,
+	shape: Shape,
+	at: Temporal.Instant,
+	timeZone: string,
+): VehicleJourneyPosition {
+	// Le véhicule stationne sur son tracé, au droit de l'arrêt, plutôt que sur l'arrêt lui-même.
+	const point = shape.locateStop(call.stop, call.distanceTraveled);
+
 	return {
-		latitude: call.stop.latitude,
-		longitude: call.stop.longitude,
+		latitude: point?.latitude ?? call.stop.latitude,
+		longitude: point?.longitude ?? call.stop.longitude,
+		bearing: point?.bearing,
 		atStop: true,
 		type: "COMPUTED",
-		distanceTraveled: call.distanceTraveled,
+		distanceTraveled: point?.distanceTraveled ?? call.distanceTraveled,
 		recordedAt: at.toZonedDateTimeISO(call.stop.timeZone ?? timeZone).toString({ timeZoneName: "never" }),
 	};
 }
@@ -259,11 +268,11 @@ export function guessPositionFromCalls(
 	const lastCall = activeCalls[activeCalls.length - 1]!;
 
 	if (atMs <= (firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime)) {
-		return getPositionAtCall(firstCall, at, timeZone);
+		return getPositionAtCall(firstCall, shape, at, timeZone);
 	}
 
 	if (atMs >= (lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime)) {
-		return getPositionAtCall(lastCall, at, timeZone);
+		return getPositionAtCall(lastCall, shape, at, timeZone);
 	}
 
 	const currentCallIndex = activeCalls.findLastIndex(
@@ -272,11 +281,11 @@ export function guessPositionFromCalls(
 	const currentCall = activeCalls[currentCallIndex]!;
 	const departureMs = currentCall.expectedDepartureTime ?? currentCall.aimedDepartureTime;
 
-	if (atMs <= departureMs) return getPositionAtCall(currentCall, at, timeZone);
+	if (atMs <= departureMs) return getPositionAtCall(currentCall, shape, at, timeZone);
 
 	const nextCall = activeCalls[currentCallIndex + 1];
 	if (currentCall.distanceTraveled === undefined || nextCall?.distanceTraveled === undefined) {
-		return getPositionAtCall(currentCall, at, timeZone);
+		return getPositionAtCall(currentCall, shape, at, timeZone);
 	}
 
 	const arrivalMs = getBoundedArrivalMs(activeCalls, currentCallIndex + 1);
@@ -285,7 +294,7 @@ export function guessPositionFromCalls(
 	const distanceTraveled =
 		currentCall.distanceTraveled + (nextCall.distanceTraveled - currentCall.distanceTraveled) * ratio;
 	const point = shape.interpolateAt(distanceTraveled);
-	if (point === undefined) return getPositionAtCall(currentCall, at, timeZone);
+	if (point === undefined) return getPositionAtCall(currentCall, shape, at, timeZone);
 
 	return {
 		latitude: point.latitude,
