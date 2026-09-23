@@ -79,6 +79,48 @@ function makeSource(options?: Partial<SourceOptions>) {
 /** Lundi 18 mai 2026, 7h30 UTC. */
 const MONDAY_MORNING = Temporal.Instant.from("2026-05-18T07:30:00Z");
 
+/** Course `original` A 8:00 → B 8:10 → C 8:20, seule de sa source. */
+function makeLinearSource() {
+	const agency = new Agency("agency", "Agency", "UTC");
+	const route = new Route("line:1", agency, "1", "BUS");
+	const service = new Service("service", [true, true, true, true, true, true, true]);
+	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
+	const store = new StopTimeStore(
+		stops,
+		new Uint8Array([1, 2, 3]),
+		new Uint8Array([0, 0, 0]),
+		new Uint32Array([8 * HOUR, 8 * HOUR + 600, 8 * HOUR + 1200]),
+		new Uint32Array([8 * HOUR, 8 * HOUR + 600, 8 * HOUR + 1200]),
+		new Float32Array([0, 1000, 2000]),
+		new Uint32Array([0]),
+		new Uint32Array([3]),
+		new Uint32Array([8 * HOUR]),
+		new Uint32Array([8 * HOUR + 1200]),
+		new Uint32Array([8 * HOUR + 1200]),
+	);
+	const trip = new Trip(0, "original", route, service, store, 0, "C");
+
+	const source = new Source("test", {
+		staticResourceHref: "https://example.com/gtfs.zip",
+		getNetworkRef: () => "network",
+	});
+	const gtfs: Gtfs = {
+		routes: new Map([[route.id, route]]),
+		stops: new Map(stops.map((stop) => [stop.id, stop])),
+		trips: new Map([[trip.id, trip]]),
+		...indexStopAreas(store, [trip]),
+		shapes: new Map(),
+		journeys: new Map(),
+		stopTimeStore: store,
+		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
+		lastModified: null,
+		etag: null,
+	};
+	source.gtfs = gtfs;
+
+	return { source, gtfs, trip };
+}
+
 describe("computeStopDepartures", () => {
 	it("réunit les passages des quais d'une même station, triés et sans le terminus", () => {
 		const source = makeSource();
@@ -214,42 +256,7 @@ describe("computeStopDepartures", () => {
 	});
 
 	it("présente les dessertes d'un arrêt créé à la volée par une déviation", () => {
-		const agency = new Agency("agency", "Agency", "UTC");
-		const route = new Route("line:1", agency, "1", "BUS");
-		const service = new Service("service", [true, true, true, true, true, true, true]);
-		const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
-		const store = new StopTimeStore(
-			stops,
-			new Uint8Array([1, 2, 3]),
-			new Uint8Array([0, 0, 0]),
-			new Uint32Array([8 * HOUR, 8 * HOUR + 600, 8 * HOUR + 1200]),
-			new Uint32Array([8 * HOUR, 8 * HOUR + 600, 8 * HOUR + 1200]),
-			new Float32Array([0, 1000, 2000]),
-			new Uint32Array([0]),
-			new Uint32Array([3]),
-			new Uint32Array([8 * HOUR]),
-			new Uint32Array([8 * HOUR + 1200]),
-			new Uint32Array([8 * HOUR + 1200]),
-		);
-		const trip = new Trip(0, "original", route, service, store, 0, "C");
-
-		const source = new Source("test", {
-			staticResourceHref: "https://example.com/gtfs.zip",
-			getNetworkRef: () => "network",
-		});
-		const gtfs: Gtfs = {
-			routes: new Map([[route.id, route]]),
-			stops: new Map(stops.map((stop) => [stop.id, stop])),
-			trips: new Map([[trip.id, trip]]),
-			...indexStopAreas(store, [trip]),
-			shapes: new Map(),
-			journeys: new Map(),
-			stopTimeStore: store,
-			importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-			lastModified: null,
-			etag: null,
-		};
-		source.gtfs = gtfs;
+		const { source, gtfs, trip } = makeLinearSource();
 
 		// B est remplacé par un arrêt que seul le flux temps réel déclare.
 		const resources = createRealtimeResources();
@@ -290,6 +297,47 @@ describe("computeStopDepartures", () => {
 		expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toMatchObject([
 			{ stopRef: "network:StopPoint:B", callStatus: "SKIPPED" },
 		]);
+	});
+
+	it("n'annonce pas la course à son terminus effectif, avancé par le temps réel", () => {
+		const { source, gtfs, trip } = makeLinearSource();
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const journey = trip.getScheduledJourney(date, true);
+		// C n'est plus desservi : la course s'achève à B.
+		journey.updateJourney(gtfs, [
+			{ stopId: "B", stopSequence: 2, departure: { delay: 60 } },
+			{ stopId: "C", stopSequence: 3, scheduleRelationship: "SKIPPED" },
+		]);
+		gtfs.journeys.set(getJourneyKey(date, "original"), journey);
+
+		expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toEqual([]);
+		expect(computeStopDepartures(source, "A", MONDAY_MORNING).departures).toHaveLength(1);
+	});
+
+	it("n'annonce pas la course à son terminus effectif, avancé par une déviation", () => {
+		const { source, gtfs, trip } = makeLinearSource();
+		const plan = indexTripModifications(
+			gtfs,
+			[
+				{
+					id: "detour:1",
+					serviceDates: ["20260518"],
+					selectedTrips: [{ tripIds: ["original"] }],
+					modifications: [{ startStopSelector: { stopSequence: 3 }, endStopSelector: { stopSequence: 3 } }],
+				},
+			],
+			createRealtimeResources(),
+		).get("2026-05-18-original")!;
+
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const journeyKey = getJourneyKey(date, "original");
+		const journey = trip.getScheduledJourney(date, true);
+		journey.applyModifications(plan, MONDAY_MORNING.epochMilliseconds);
+		gtfs.journeys.set(journeyKey, journey);
+		source.modifiedJourneyKeys.add(journeyKey);
+
+		expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toEqual([]);
+		expect(computeStopDepartures(source, "C", MONDAY_MORNING).departures).toEqual([]);
 	});
 
 	it("préfixe chaque passage du réseau de sa course lorsque la source en alimente plusieurs", () => {

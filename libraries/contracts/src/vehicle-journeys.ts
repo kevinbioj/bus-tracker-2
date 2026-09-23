@@ -129,10 +129,10 @@ export type VehicleJourneyPositionType = (typeof vehicleJourneyPositionTypes)[nu
  * Nature de la position publiée, telle qu'elle est présentée à l'usager et filtrée par l'API :
  * relevée par le véhicule, déduite d'un horaire temps réel, ou déduite du seul horaire théorique.
  *
- * Un arrêt ajouté par une déviation (`UNSCHEDULED`) tient ses heures de la déviation elle-même,
- * jamais d'une prédiction de passage : une course théorique déviée reste théorique. Seule une course
- * supplémentaire échappe à la règle — dépourvue d'horaire théorique, toutes ses heures sont du
- * temps réel, et tous ses arrêts sont `UNSCHEDULED`.
+ * Un arrêt ajouté par une déviation (`UNSCHEDULED`) n'a d'heure attendue que celle qu'il reprend de
+ * son arrêt de référence : il n'est pas une prédiction à lui seul, et une course théorique déviée
+ * reste théorique. Seule une course supplémentaire échappe à la règle — dépourvue d'horaire
+ * théorique, toutes ses heures sont du temps réel, et tous ses arrêts sont `UNSCHEDULED`.
  */
 export function getVehicleJourneyPositionType(journey: {
 	calls?: { expectedTime?: string; callStatus: VehicleJourneyCallStatus }[];

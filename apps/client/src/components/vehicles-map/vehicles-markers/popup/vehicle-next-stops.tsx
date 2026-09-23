@@ -171,11 +171,15 @@ const NextStopRow = memo(function NextStopRow({
 					)
 			: null;
 
+	// Un arrêt ajouté se qualifie par sa couleur : l'icône ne dit que si son heure vient du temps réel,
+	// ce qui n'est le cas que si son arrêt de référence en a un.
+	const showRealtimeIcon = realtimeOnly || expected !== undefined || call.callStatus === "SKIPPED";
+
 	const hasExtra = (call.flags !== undefined && call.flags.length > 0) || call.platformName !== undefined;
 
 	const children = (
 		<div className={clsx("flex font-bold ml-2", accentColor)}>
-			{hasStatusInfo ? <Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} /> : null}
+			{showRealtimeIcon ? <Rss className={clsx("-rotate-90 mr-[0.5px]", accentColor)} size={8} /> : null}
 			<span
 				className={clsx(
 					// `whitespace-nowrap` : à quai, le libellé s'allonge (deux heures, ou « À quai - … »).

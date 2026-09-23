@@ -45,6 +45,11 @@ function findCallForStop(calls: JourneyCall[], stopId: string, sequence: number)
 	);
 }
 
+/** Dernière desserte assurée de la course : son terminus effectif, où elle s'achève. */
+function findTerminusCall(calls: JourneyCall[]) {
+	return calls.findLast((call) => call.status !== "SKIPPED");
+}
+
 function resolveDestination(trip: Trip, stopTimeIdx: number, call?: JourneyCall) {
 	const { stopHeadsigns, stops, tripStart, tripCount } = trip.store;
 	const lastStop = stops[tripStart[trip.idx]! + tripCount[trip.idx]! - 1];
@@ -146,6 +151,10 @@ export function computeStopDepartures(
 			// Une déviation peut avoir retiré la desserte : la course ne passe plus là.
 			if (journey?.hasModifications() && call === undefined) continue;
 
+			// L'index écarte le terminus théorique, pas celui qu'avancent une déviation ou le temps réel en
+			// retirant les derniers arrêts : la course s'y achève désormais, elle n'en part pas.
+			if (call !== undefined && call === findTerminusCall(journey!.calls)) continue;
+
 			const networkRef = networkOf(trip, journey);
 			const stopRef = stopRefOf(networkRef, stop.id);
 
@@ -198,11 +207,13 @@ export function computeStopDepartures(
 		const { calls, trip, date } = journey;
 		const timeZone = trip.route.agency.timeZone;
 		const originCall = calls.find((candidate) => candidate.status !== "SKIPPED");
+		const terminusCall = findTerminusCall(calls);
 
 		for (const [index, call] of calls.entries()) {
 			if (!areaStopIds.has(call.stop.id)) continue;
-			// Ni le terminus, ni un arrêt interdit à la montée, ni une desserte déjà rendue par l'index.
-			if (index === calls.length - 1 || call.flags.includes("NO_PICKUP")) continue;
+			// Ni le terminus, théorique ou effectif, ni un arrêt interdit à la montée, ni une desserte déjà
+			// rendue par l'index.
+			if (index === calls.length - 1 || call === terminusCall || call.flags.includes("NO_PICKUP")) continue;
 			if (emittedCalls.has(`${journeyKey}|${call.stop.id}`)) continue;
 
 			if (onlyStopId !== undefined && call.stop.id !== onlyStopId) continue;

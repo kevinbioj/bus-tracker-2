@@ -168,10 +168,11 @@ function splitAwayFromShape(points: [number, number][], detourShape: Shape, join
 }
 
 /**
- * Vrai si l'arrêt porte une heure issue du temps réel. Un arrêt ajouté par une déviation tient ses
- * heures de la déviation elle-même, jamais d'une prédiction de passage : les compter ferait passer
- * pour suivie une course qui n'a qu'un itinéraire modifié, et la ferait disparaître des sources
- * dont le mode écarte les courses théoriques dès qu'elles ont du temps réel (`NO-TU`).
+ * Vrai si l'arrêt porte une heure issue du temps réel. Un arrêt ajouté par une déviation n'est pas
+ * compté : son heure attendue ne fait que reprendre le retard de l'arrêt de référence, déjà compté
+ * lui-même. Seul, il ferait passer pour suivie une course qui n'a qu'un itinéraire modifié, et la
+ * ferait disparaître des sources dont le mode écarte les courses théoriques dès qu'elles ont du
+ * temps réel (`NO-TU`).
  */
 function callHasRealtime(call: JourneyCall) {
 	if (call.modification === "ADDED") return false;
@@ -679,11 +680,12 @@ export class Journey {
 
 		for (const call of this.calls) {
 			if (!appendTripUpdateInformation) {
-				// Un arrêt ajouté par une déviation n'a pas d'horaire théorique : l'heure qu'elle annonce
-				// est sa seule heure attendue, et doit survivre à l'application d'un TripUpdate.
-				const isAdded = call.modification === "ADDED";
-				call.expectedArrivalTime = isAdded ? call.aimedArrivalTime : undefined;
-				call.expectedDepartureTime = isAdded ? call.aimedDepartureTime : undefined;
+				// Arrêts ajoutés compris : l'heure annoncée par la déviation n'est qu'un horaire. Ils ne
+				// reçoivent une heure attendue que par la propagation du retard de l'arrêt qui les précède
+				// — leur arrêt de référence —, ou d'un `stop_time_update` qui les vise directement. En tête
+				// de course, rien ne les précède : ils restent théoriques.
+				call.expectedArrivalTime = undefined;
+				call.expectedDepartureTime = undefined;
 				call.platform = call.stop.platformCode;
 				call.status = getBaseCallStatus(call);
 			}

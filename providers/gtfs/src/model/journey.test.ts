@@ -168,6 +168,72 @@ describe("Journey", () => {
 
 		expect(journey.hasRealtime()).toBe(true);
 	});
+
+	describe("heures attendues d'un arrêt ajouté", () => {
+		/** Course A 8:00 → B 8:10, un arrêt X inséré avant l'arrêt de séquence `beforeSequence`. */
+		function makeDetouredJourney(beforeSequence: number, travelTimeToStopMs: number) {
+			const { gtfs, trip } = makeGtfs();
+			const journey = trip.getScheduledJourney(DATE, true);
+			journey.applyModifications(
+				{
+					modificationsIds: ["detour:1"],
+					tripId: "trip",
+					date: DATE,
+					revision: "rev:1",
+					modifications: [
+						{
+							startStopSelector: { stopSequence: beforeSequence },
+							propagatedModificationDelayMs: 0,
+							replacementStops: [{ stop: gtfs.stops.get("X")!, travelTimeToStopMs }],
+						},
+					],
+				},
+				at("08:00").epochMilliseconds,
+			);
+			const callAt = (stopId: string) => journey.calls.find((call) => call.stop.id === stopId)!;
+			return { gtfs, journey, callAt };
+		}
+
+		it("n'en a aucune tant qu'aucun TripUpdate ne s'applique", () => {
+			const { callAt } = makeDetouredJourney(2, 5 * 60 * 1000);
+
+			expect(callAt("X").aimedDepartureTime).toBe(at("08:05").epochMilliseconds);
+			expect(callAt("X").expectedArrivalTime).toBeUndefined();
+			expect(callAt("X").expectedDepartureTime).toBeUndefined();
+		});
+
+		it("n'en a aucune quand son arrêt de référence n'a pas de temps réel", () => {
+			const { gtfs, journey, callAt } = makeDetouredJourney(2, 5 * 60 * 1000);
+
+			journey.updateJourney(gtfs, [delayFrom("B", 3, 120)]);
+
+			expect(callAt("B").expectedArrivalTime).toBe(at("08:12").epochMilliseconds);
+			expect(callAt("X").expectedArrivalTime).toBeUndefined();
+			expect(callAt("X").expectedDepartureTime).toBeUndefined();
+		});
+
+		it("reprend le retard de son arrêt de référence", () => {
+			const { gtfs, journey, callAt } = makeDetouredJourney(2, 5 * 60 * 1000);
+
+			journey.updateJourney(gtfs, [delayFrom("A", 1, 120)]);
+
+			expect(callAt("X").status).toBe("UNSCHEDULED");
+			expect(callAt("X").expectedArrivalTime).toBe(at("08:07").epochMilliseconds);
+			expect(callAt("X").expectedDepartureTime).toBe(at("08:07").epochMilliseconds);
+		});
+
+		it("n'en a aucune en tête de course, faute d'arrêt de référence qui le précède", () => {
+			const { gtfs, journey, callAt } = makeDetouredJourney(1, 0);
+
+			expect(journey.calls.map((call) => call.stop.id)).toEqual(["X", "A", "B"]);
+
+			journey.updateJourney(gtfs, [delayFrom("A", 2, 120)]);
+
+			expect(callAt("A").expectedArrivalTime).toBe(at("08:02").epochMilliseconds);
+			expect(callAt("X").expectedArrivalTime).toBeUndefined();
+			expect(callAt("X").expectedDepartureTime).toBeUndefined();
+		});
+	});
 });
 
 describe("Journey#guessPosition (guard anti-recul)", () => {

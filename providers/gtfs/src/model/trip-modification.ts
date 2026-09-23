@@ -214,12 +214,12 @@ export function buildModifiedCalls(scheduledCalls: JourneyCall[], plan: TripModi
 		}
 
 		for (const { stop, travelTimeToStopMs } of modification.replacementStops) {
+			// Aucune heure attendue : celle de la déviation n'est qu'un horaire. Le temps réel de l'arrêt de
+			// référence ne s'y reporte qu'à l'application d'un TripUpdate.
 			const timeMs = referenceCall.aimedArrivalTime + travelTimeToStopMs;
 			calls.push({
 				aimedArrivalTime: timeMs,
-				expectedArrivalTime: timeMs,
 				aimedDepartureTime: timeMs,
-				expectedDepartureTime: timeMs,
 				stop,
 				sequence: 0,
 				platform: stop.platformCode,

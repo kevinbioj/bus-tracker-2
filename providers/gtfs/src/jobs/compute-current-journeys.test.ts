@@ -974,7 +974,8 @@ describe("computeVehicleJourneys (dessertes déviées)", () => {
 
 		const calls = result.journeys[0]?.calls;
 		expect(calls?.find((call) => call.stopName === "C")?.expectedTime).toBe("2026-05-18T08:21:00+00:00");
-		expect(calls?.find((call) => call.stopName === "Replacement")?.expectedTime).toBe("2026-05-18T08:12:00+00:00");
+		// L'arrêt de référence de la déviation (A) n'a pas de temps réel : l'arrêt ajouté non plus.
+		expect(calls?.find((call) => call.stopName === "Replacement")?.expectedTime).toBeUndefined();
 	});
 
 	it("apparie par arrêt une position qui ignore la renumérotation de la déviation", async () => {

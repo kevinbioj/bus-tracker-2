@@ -87,6 +87,7 @@ const isLocatable = (departure: StopDeparture) => departure.tracked && departure
 
 function DepartureRow({ departure, line, label, touch = false, onLocate }: Readonly<DepartureRowProps>) {
 	const skipped = departure.callStatus === "SKIPPED";
+	const extra = departure.callStatus === "UNSCHEDULED";
 	const realtime = departure.expectedTime !== undefined;
 
 	// L'heure théorique n'est rappelée que lorsqu'elle diffère de celle affichée : un passage à l'heure
@@ -96,12 +97,16 @@ function DepartureRow({ departure, line, label, touch = false, onLocate }: Reado
 		departure.expectedTime !== undefined &&
 		formatLocalTime(departure.expectedTime) !== formatLocalTime(departure.aimedTime);
 
-	// Vert : l'heure vient du temps réel. Noir : elle n'est que théorique. Rouge : le passage est supprimé.
+	// Rouge : le passage est supprimé. Orange : desserte ajoutée par une déviation, comme dans la
+	// pop-up du véhicule — l'icône dit seule si son heure vient du temps réel. Vert : l'heure vient du
+	// temps réel. Noir : elle n'est que théorique.
 	const accentColor = skipped
 		? "text-red-700 dark:text-red-500"
-		: realtime
-			? "text-green-700 dark:text-green-500"
-			: "text-foreground";
+		: extra
+			? "text-yellow-700 dark:text-yellow-500"
+			: realtime
+				? "text-green-700 dark:text-green-500"
+				: "text-foreground";
 
 	// Pictogramme, destination et quai se suivent ; l'heure est rejetée à l'autre bout de la ligne. La
 	// case de localisation, qui la suit, est tenue même sur un passage qui n'est pas joignable : les

@@ -171,13 +171,15 @@ function mergeTrackedJourneys(
 		// lorsqu'il est à l'arrêt et que la première desserte encore assurée en fait partie.
 		const currentCall = journey.calls?.find((call) => call.callStatus !== "SKIPPED");
 		const lastCall = journey.calls?.at(-1);
+		// Terminus effectif : une déviation ou le temps réel peuvent avoir retiré les derniers arrêts.
+		const terminusCall = journey.calls?.findLast((call) => call.callStatus !== "SKIPPED");
 
 		let matched = false;
 		for (const call of journey.calls ?? []) {
 			if (!stopRefs.has(call.stopRef)) continue;
-			// Comme dans l'index du processeur : ni le terminus, où la course s'achève, ni un arrêt
-			// interdit à la montée ne sont des départs.
-			if (call === lastCall || call.flags?.includes("NO_PICKUP")) continue;
+			// Comme dans le processeur : ni le terminus, théorique ou effectif, où la course s'achève, ni
+			// un arrêt interdit à la montée ne sont des départs.
+			if (call === lastCall || call === terminusCall || call.flags?.includes("NO_PICKUP")) continue;
 
 			const atStop = journey.position.atStop && call === currentCall;
 
