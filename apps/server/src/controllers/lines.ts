@@ -1,4 +1,4 @@
-import { decodeLinePath, type EncodedLinePath } from "@bus-tracker/contracts";
+import { decodeLinePath, type EncodedLinePath, type LinePath } from "@bus-tracker/contracts";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 import { database } from "../core/database/database.js";
@@ -120,22 +120,34 @@ hono.get("/lines/:id/path", createParamValidator(getLineByIdParamSchema), async 
 
 	const redisKeys = refs.map((ref) => `${ref}:LinePath`);
 	const rawPaths = await redis.mGet(redisKeys);
-	const encodedSegments = new Set<string>();
+	// Chaque version d'encodage a sa propre précision : les segments ne sont dédoublonnés qu'entre
+	// tracés de même version.
+	const encodedSegments = new Map<EncodedLinePath["v"], Set<string>>();
 
 	for (const rawPath of rawPaths) {
 		if (rawPath === null) continue;
 
 		const encodedPath = JSON.parse(rawPath) as EncodedLinePath;
-		if (encodedPath.v !== 1 || !Array.isArray(encodedPath.segments)) continue;
+		if ((encodedPath.v !== 1 && encodedPath.v !== 2) || !Array.isArray(encodedPath.segments)) continue;
+
+		let segments = encodedSegments.get(encodedPath.v);
+		if (segments === undefined) {
+			segments = new Set();
+			encodedSegments.set(encodedPath.v, segments);
+		}
 
 		for (const segment of encodedPath.segments) {
-			encodedSegments.add(segment);
+			segments.add(segment);
 		}
 	}
 
 	if (encodedSegments.size === 0) return c.json({ error: `No path was found for line '${id}'.` }, 404);
 
-	return c.json(decodeLinePath({ v: 1, segments: Array.from(encodedSegments) }));
+	return c.json({
+		segments: Array.from(encodedSegments).flatMap(
+			([v, segments]) => decodeLinePath({ v, segments: Array.from(segments) }).segments,
+		),
+	} satisfies LinePath);
 });
 
 hono.get(

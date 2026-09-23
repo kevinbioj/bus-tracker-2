@@ -3,11 +3,14 @@ export type LinePath = {
 };
 
 export type EncodedLinePath = {
-	v: 1;
+	v: 1 | 2;
 	segments: string[];
 };
 
-const PRECISION = 100000;
+/** Précision des coordonnées selon la version d'encodage : la v1 arrondissait au mètre près, ce qui
+ * crénelait les tracés ; la v2 garde celle des tracés de course (1e-6). */
+const PRECISION_BY_VERSION = { 1: 100000, 2: 1000000 } as const;
+const PRECISION = PRECISION_BY_VERSION[2];
 
 function encodeSigned(value: number) {
 	let current = value < 0 ? ~(value << 1) : value << 1;
@@ -27,7 +30,7 @@ function decodeSigned(value: number) {
 
 export function encodeLinePath(linePath: LinePath): EncodedLinePath {
 	return {
-		v: 1,
+		v: 2,
 		segments: linePath.segments.map((segment) => {
 			let previousLat = 0;
 			let previousLon = 0;
@@ -50,6 +53,8 @@ export function encodeLinePath(linePath: LinePath): EncodedLinePath {
 }
 
 export function decodeLinePath(encodedLinePath: EncodedLinePath): LinePath {
+	const precision = PRECISION_BY_VERSION[encodedLinePath.v];
+
 	return {
 		segments: encodedLinePath.segments.flatMap((segment) => {
 			const points: [number, number][] = [];
@@ -80,7 +85,7 @@ export function decodeLinePath(encodedLinePath: EncodedLinePath): LinePath {
 				} while (byte >= 0x20);
 
 				previousLon += decodeSigned(result);
-				points.push([previousLat / PRECISION, previousLon / PRECISION]);
+				points.push([previousLat / precision, previousLon / precision]);
 			}
 
 			return points.length >= 2 ? [points] : [];

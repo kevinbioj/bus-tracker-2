@@ -1,4 +1,6 @@
+import { decodeLinePath, encodeLinePath } from "@bus-tracker/contracts";
 import { describe, expect, it } from "vitest";
+
 import { buildMergedLinePathFromShapes } from "./line-path.js";
 import { Shape } from "./shape.js";
 
@@ -79,5 +81,17 @@ describe("buildMergedLinePathFromShapes", () => {
 				[49.00002, 1.00002],
 			],
 		]);
+	});
+
+	it("keeps sub-meter precision through encoding", () => {
+		const points: [number, number][] = [
+			[49.123456, 1.123456],
+			[49.123457, 1.123458],
+			[49.123461, 1.123452],
+		];
+
+		const result = decodeLinePath(encodeLinePath(buildMergedLinePathFromShapes([shape("source", points)])));
+
+		expect(result.segments).toEqual([points]);
 	});
 });
