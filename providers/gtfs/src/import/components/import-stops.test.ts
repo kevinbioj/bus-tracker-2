@@ -61,8 +61,25 @@ describe("importStops", () => {
 
 		const { stops, stations } = await importStops(directory, {});
 
-		expect(stations.get("gare")).toEqual({ id: "gare", name: "Gare Centrale", latitude: 49.44, longitude: 1.09 });
+		expect(stations.get("gare")).toMatchObject({ id: "gare", name: "Gare Centrale", latitude: 49.44, longitude: 1.09 });
+		expect(stations.get("gare")!.platforms!.map(({ id }) => id)).toEqual(["gare-a", "gare-b"]);
 		expect(stops.get("gare-a")!.parentStationId).toBe("gare");
 		expect(stops.get("mairie")!.parentStationId).toBeUndefined();
+	});
+
+	it("ne compte pas les entrées parmi les quais d'une station, même avec importAllStops", async () => {
+		const directory = await writeStopsFile(
+			[
+				"stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station",
+				"gare-a,Gare Centrale Quai A,49.441,1.091,,gare",
+				"gare-entree,Gare Centrale Entrée,49.443,1.093,2,gare",
+				"gare,Gare Centrale,49.44,1.09,1,",
+			].join("\n"),
+		);
+
+		const { stops, stations } = await importStops(directory, { importAllStops: true });
+
+		expect(stops.has("gare-entree")).toBe(true);
+		expect(stations.get("gare")!.platforms!.map(({ id }) => id)).toEqual(["gare-a"]);
 	});
 });

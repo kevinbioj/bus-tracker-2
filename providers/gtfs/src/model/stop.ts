@@ -33,4 +33,9 @@ export type StationRecord = {
 	name: string;
 	latitude: number;
 	longitude: number;
+	/**
+	 * Quais déclarés de la station (`location_type` 0), desservis ou non : un quai qu'aucune course
+	 * théorique ne dessert peut encore être désigné par le temps réel (`assigned_stop_id`).
+	 */
+	platforms?: Stop[];
 };

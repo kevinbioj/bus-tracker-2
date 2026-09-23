@@ -237,6 +237,79 @@ describe("computeStopDepartures", () => {
 		expect(departures[0]!.aimedTime).toBe("2026-05-18T08:30:00+00:00");
 	});
 
+	it("présente au tableau du quai désigné par le temps réel la course qui dessert la zone d'arrêt", () => {
+		// La course dessert une zone d'arrêt sans voie ; la voie 2, qu'aucune course ne dessert, n'est
+		// rattachée à la gare que par sa `parent_station`.
+		const agency = new Agency("agency", "Agency", "UTC");
+		const route = new Route("line:1", agency, "1", "RAIL");
+		const service = new Service("service", [true, true, true, true, true, true, true]);
+		const zone = new Stop("zone", "Gare", 0, 0, undefined, undefined, "gare");
+		const voie2 = new Stop("voie-2", "Gare", 0, 0.0001, "2", undefined, "gare");
+		const terminus = new Stop("terminus", "Terminus", 0, 0.02);
+		const store = new StopTimeStore(
+			[zone, terminus],
+			new Uint8Array([1, 2]),
+			new Uint8Array([0, 0]),
+			new Uint32Array([8 * HOUR, 8 * HOUR + 600]),
+			new Uint32Array([8 * HOUR, 8 * HOUR + 600]),
+			new Float32Array([0, 1000]),
+			new Uint32Array([0]),
+			new Uint32Array([2]),
+			new Uint32Array([8 * HOUR]),
+			new Uint32Array([8 * HOUR + 600]),
+			new Uint32Array([8 * HOUR + 600]),
+		);
+		const trip = new Trip(0, "train", route, service, store, 0, "Terminus");
+		const stations = new Map([
+			["gare", { id: "gare", name: "Gare", latitude: 0, longitude: 0, platforms: [zone, voie2] }],
+		]);
+
+		const source = new Source("test", {
+			staticResourceHref: "https://example.com/gtfs.zip",
+			getNetworkRef: () => "network",
+		});
+		const gtfs: Gtfs = {
+			routes: new Map([[route.id, route]]),
+			stops: new Map([zone, voie2, terminus].map((stop) => [stop.id, stop])),
+			trips: new Map([[trip.id, trip]]),
+			...indexStopAreas(store, [trip], stations),
+			shapes: new Map(),
+			journeys: new Map(),
+			stopTimeStore: store,
+			importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
+			lastModified: null,
+			etag: null,
+		};
+		source.gtfs = gtfs;
+
+		expect(gtfs.stopAreas.get("gare")!.stops.map(({ id }) => id)).toEqual(["voie-2", "zone"]);
+
+		const onVoie2 = () =>
+			computeStopDepartures(source, "gare", MONDAY_MORNING, { stopRef: "network:StopPoint:voie-2" }).departures;
+		const onZone = () =>
+			computeStopDepartures(source, "gare", MONDAY_MORNING, { stopRef: "network:StopPoint:zone" }).departures;
+
+		// Sans voie désignée, la course reste au tableau de la zone d'arrêt.
+		expect(onVoie2()).toEqual([]);
+		expect(onZone()).toHaveLength(1);
+
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const journey = trip.getScheduledJourney(date, true);
+		// Le tableau ne consulte que les courses portant des heures temps réel, que le flux fournit
+		// toujours avec la voie.
+		journey.updateJourney(gtfs, [
+			{ stopId: "zone", stopSequence: 1, departure: { delay: 60 }, stopTimeProperties: { assignedStopId: "voie-2" } },
+		]);
+		gtfs.journeys.set(getJourneyKey(date, "train"), journey);
+
+		expect(onVoie2()).toMatchObject([{ stopRef: "network:StopPoint:voie-2", platformName: "2" }]);
+		expect(onZone()).toEqual([]);
+		// Le tableau de la gare la présente une seule fois, sur sa voie.
+		expect(computeStopDepartures(source, "gare", MONDAY_MORNING).departures).toMatchObject([
+			{ stopRef: "network:StopPoint:voie-2", platformName: "2" },
+		]);
+	});
+
 	it("écarte les passages refusés par filterStopDeparture, avant la limite, et en signale la course", () => {
 		const source = makeSource({
 			filterStopDeparture: (departure, journey) =>

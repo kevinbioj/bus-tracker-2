@@ -71,6 +71,11 @@ export type GroupedStopAreas = {
  * Regroupe en stations les arrêts effectivement desservis. Un arrêt dont la `parent_station` est
  * déclarée rejoint celle-ci ; les autres sont rapprochés par nom puis par proximité. Un arrêt qui ne
  * trouve aucun voisin forme sa propre station : la carte reste exhaustive.
+ *
+ * Une station déclarée et desservie reçoit aussi ceux de ses quais qu'aucune course ne dessert : des
+ * producteurs (IDFM pour ses trains) font desservir une zone d'arrêt sans voie, et ne désignent le
+ * quai qu'en temps réel. Les arrêts orphelins non desservis, eux, restent écartés — `stops.txt`
+ * conserve souvent des arrêts qu'aucune course ne dessert plus.
  */
 export function groupStopAreas(servedStops: Iterable<Stop>, stations: Map<string, StationRecord>): GroupedStopAreas {
 	const byStation = new Map<string, Stop[]>();
@@ -105,16 +110,25 @@ export function groupStopAreas(servedStops: Iterable<Stop>, stations: Map<string
 	const stopAreas = new Map<string, StopArea>();
 	const stopAreaByStopId = new Map<string, string>();
 
-	const register = (id: string, name: string, stops: Stop[]) => {
-		const { latitude, longitude } = centroidOf(stops);
+	const register = (id: string, name: string, stops: Stop[], positionedBy = stops) => {
+		const { latitude, longitude } = centroidOf(positionedBy);
 		stopAreas.set(id, new StopArea(id, name, latitude, longitude, stops));
 		for (const stop of stops) {
 			stopAreaByStopId.set(stop.id, id);
 		}
 	};
 
-	for (const [stationId, stops] of byStation) {
-		register(stationId, stations.get(stationId)!.name, stops);
+	for (const [stationId, servedMembers] of byStation) {
+		const station = stations.get(stationId)!;
+		const servedIds = new Set(servedMembers.map(({ id }) => id));
+		const unservedPlatforms = (station.platforms ?? []).filter(({ id }) => !servedIds.has(id));
+		// Les quais non desservis ne comptent pas dans la position de la station : ils ne sont là que
+		// pour recevoir le temps réel, et une station se place là où ses courses s'arrêtent.
+		const stops =
+			unservedPlatforms.length > 0
+				? [...servedMembers, ...unservedPlatforms].sort((a, b) => a.id.localeCompare(b.id))
+				: servedMembers;
+		register(stationId, station.name, stops, servedMembers);
 	}
 
 	for (const stops of orphansByName.values()) {

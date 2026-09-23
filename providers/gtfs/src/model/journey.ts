@@ -15,6 +15,12 @@ export type JourneyCall = {
 	aimedDepartureTime: number;
 	expectedDepartureTime?: number;
 	stop: Stop;
+	/**
+	 * Quai désigné par le temps réel (`assigned_stop_id`) en lieu et place de `stop`. `stop` reste
+	 * l'arrêt théorique, qui sert à apparier la desserte ; ce quai-ci est celui où l'on voit passer
+	 * la course, et dont `platform` reprend le code.
+	 */
+	assignedStop?: Stop;
 	sequence: number;
 	platform?: string;
 	distanceTraveled?: number;
@@ -686,6 +692,7 @@ export class Journey {
 				// de course, rien ne les précède : ils restent théoriques.
 				call.expectedArrivalTime = undefined;
 				call.expectedDepartureTime = undefined;
+				call.assignedStop = undefined;
 				call.platform = call.stop.platformCode;
 				call.status = getBaseCallStatus(call);
 			}
@@ -706,6 +713,7 @@ export class Journey {
 			if (timeUpdate?.stopTimeProperties?.assignedStopId) {
 				const stop = gtfs.stops.get(timeUpdate.stopTimeProperties.assignedStopId);
 				if (stop !== undefined) {
+					call.assignedStop = stop;
 					call.platform = stop.platformCode;
 				}
 			}

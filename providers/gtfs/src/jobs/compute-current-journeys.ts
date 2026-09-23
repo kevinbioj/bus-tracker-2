@@ -44,6 +44,7 @@ function serializeCall(
 	networkRef: string,
 	timeZone: string,
 ): NonNullable<VehicleJourney["calls"]>[number] {
+	const stopId = (call.assignedStop ?? call.stop).id;
 	const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
 	const expectedTimeMs = isLast ? call.expectedArrivalTime : call.expectedDepartureTime;
 
@@ -61,7 +62,8 @@ function serializeCall(
 			hasDwellTime && call.expectedArrivalTime !== undefined
 				? formatCallTime(call.expectedArrivalTime, call.stop.timeZone, timeZone)
 				: undefined,
-		stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(call.stop.id) ?? call.stop.id}`,
+		// Le quai désigné par le temps réel : c'est à son tableau que la course doit apparaître.
+		stopRef: `${networkRef}:StopPoint:${source.options.mapStopRef?.(stopId) ?? stopId}`,
 		stopName: call.stop.name,
 		stopOrder: call.sequence,
 		distanceTraveled: call.distanceTraveled,
@@ -155,7 +157,10 @@ const getCallsFromVehiclePosition = (journey: Journey, vehiclePosition: VehicleP
 		!useStopId && vehiclePosition.currentStopSequence !== undefined
 			? journey.calls.findIndex((call) => call.sequence >= vehiclePosition.currentStopSequence!)
 			: vehiclePosition.stopId !== undefined
-				? journey.calls.findIndex((call) => call.stop.id === vehiclePosition.stopId)
+				? journey.calls.findIndex(
+						// La position peut désigner le quai que le temps réel a substitué à l'arrêt théorique.
+						(call) => call.stop.id === vehiclePosition.stopId || call.assignedStop?.id === vehiclePosition.stopId,
+					)
 				: -1;
 
 	return index !== -1 ? journey.calls.slice(index) : getCalls(journey, at, () => Number.POSITIVE_INFINITY);

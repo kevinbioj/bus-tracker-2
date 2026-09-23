@@ -30,6 +30,9 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 	const stationTimeZones = new Map<string, string>();
 	// La station parente peut apparaître après ses enfants : l'héritage est résolu après la passe.
 	const pendingInheritance: { stop: Stop; parentId: string }[] = [];
+	// Quais de chaque station, indexés par identifiant *brut* : la station peut, elle aussi,
+	// apparaître après eux.
+	const platformsByStation = new Map<string, Stop[]>();
 
 	await readCsv<StopRecord>(join(gtfsDirectory, "stops.txt"), (stopRecord) => {
 		const timeZone = stopRecord.stop_timezone ? internTimeZone(stopRecord.stop_timezone) : undefined;
@@ -49,12 +52,10 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 			});
 		}
 
-		if (
-			!importAllStops &&
-			stopRecord.location_type !== undefined &&
-			stopRecord.location_type !== "" &&
-			stopRecord.location_type !== "0"
-		) {
+		const isPlatform =
+			stopRecord.location_type === undefined || stopRecord.location_type === "" || stopRecord.location_type === "0";
+
+		if (!importAllStops && !isPlatform) {
 			return;
 		}
 
@@ -72,11 +73,25 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 			pendingInheritance.push({ stop, parentId: stopRecord.parent_station });
 		}
 
+		if (isPlatform && stopRecord.parent_station) {
+			const platforms = platformsByStation.get(stopRecord.parent_station);
+			if (platforms !== undefined) {
+				platforms.push(stop);
+			} else {
+				platformsByStation.set(stopRecord.parent_station, [stop]);
+			}
+		}
+
 		stops.set(stop.id, stop);
 	});
 
 	for (const { stop, parentId } of pendingInheritance) {
 		stop.timeZone = stationTimeZones.get(parentId);
+	}
+
+	for (const [stationId, platforms] of platformsByStation) {
+		const station = stations.get(stationId);
+		if (station !== undefined) station.platforms = platforms;
 	}
 
 	return { stops, stations };

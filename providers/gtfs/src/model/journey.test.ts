@@ -131,10 +131,12 @@ describe("Journey", () => {
 		]);
 
 		expect(journey.calls.map((call) => call.platform)).toEqual(["3", "2"]);
+		expect(journey.calls.map((call) => call.assignedStop?.id)).toEqual(["X", undefined]);
 
 		journey.updateJourney(gtfs, []);
 
 		expect(journey.calls.map((call) => call.platform)).toEqual(["1", "2"]);
+		expect(journey.calls.map((call) => call.assignedStop)).toEqual([undefined, undefined]);
 	});
 
 	it("ne tient pas pour suivie une course dont une déviation n'a fait qu'ajouter des arrêts", () => {

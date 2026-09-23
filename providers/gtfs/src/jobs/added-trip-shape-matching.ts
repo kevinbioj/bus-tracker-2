@@ -63,6 +63,7 @@ export function createCallsFromTripUpdate(
 			expectedDepartureTime: departureTimeMs,
 			sequence: stopTimeUpdate.stopSequence ?? index,
 			stop,
+			assignedStop,
 			platform: assignedStop?.platformCode ?? stop.platformCode,
 			status: stopTimeUpdate.scheduleRelationship === "SKIPPED" ? ("SKIPPED" as const) : ("UNSCHEDULED" as const),
 			flags: getCallFlags(stopTimeUpdate),

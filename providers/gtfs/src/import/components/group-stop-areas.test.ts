@@ -39,6 +39,24 @@ describe("groupStopAreas", () => {
 		expect(stopAreaByStopId.get("quai-b")).toBe("gare");
 	});
 
+	it("rattache à une station desservie ses quais qu'aucune course ne dessert, sans en déplacer la position", () => {
+		const zone = stop("zone", "Gare", 49.44, 1.09, "gare");
+		const voie1 = stop("voie-1", "Gare", 49.45, 1.09, "gare");
+		const autreQuai = stop("autre-quai", "Autre gare", 49.46, 1.09, "autre-gare");
+		const stations = new Map([
+			["gare", { ...station("gare", "Gare", 49.44, 1.09), platforms: [voie1, zone] }],
+			["autre-gare", { ...station("autre-gare", "Autre gare", 49.46, 1.09), platforms: [autreQuai] }],
+		]);
+
+		const { stopAreas, stopAreaByStopId } = groupStopAreas([zone], stations);
+
+		expect(stopAreas.get("gare")!.stops.map(({ id }) => id)).toEqual(["voie-1", "zone"]);
+		expect(stopAreas.get("gare")!.latitude).toBe(49.44);
+		expect(stopAreaByStopId.get("voie-1")).toBe("gare");
+		// Une station dont aucun quai n'est desservi reste écartée.
+		expect(stopAreas.has("autre-gare")).toBe(false);
+	});
+
 	it("rapproche les homonymes proches dépourvus de station parente", () => {
 		// Deux arrêts face à face sur un même boulevard : ~30 m les séparent.
 		const stops = [stop("aller", "Théâtre des Arts", 49.4401, 1.09), stop("retour", "THEATRE DES ARTS", 49.4404, 1.09)];
