@@ -162,6 +162,7 @@
 	"map_network_search_results": "Search results",
 	"map_network_search_empty": "No network matches this search.",
 	"map_vehicles_online": "Online vehicles ({count})",
+	"map_vehicles_online_empty": "No identifiable vehicle is running on this line.",
 	"map_vehicle_locate": "Locate on the map",
 	"map_vehicle_history": "View history",
 	"map_vehicle_since": "since",

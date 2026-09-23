@@ -3,14 +3,17 @@ import { clsx } from "clsx";
 import dayjs from "dayjs";
 import { LocateIcon, Rss, XIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useMediaQuery } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery, type Line } from "~/api/networks";
 import { GetStopDeparturesQuery, type StopDeparture } from "~/api/stops";
 import { Button } from "~/components/ui/button";
+import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "~/components/ui/drawer";
 import { formatCountdown, formatLocalTime } from "~/components/vehicles-map/call-time-format";
+import { registerMapBottomOverlay } from "~/components/vehicles-map/map-bottom-overlay";
 import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components/vehicles-map/next-calls-display-mode";
 import { SELECTED_STOP_ICON_SCALE, STOP_PLATE_CENTER_OFFSET } from "~/components/vehicles-map/stops-markers/stop-icon";
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
@@ -74,16 +77,15 @@ type DepartureRowProps = {
 	departure: StopDeparture;
 	line?: Line;
 	label: string;
+	/** Ligne plus haute et bouton plus large, pour le doigt plutôt que le pointeur. */
+	touch?: boolean;
 	onLocate: (journeyId: string) => void;
 };
-
-/** Marge que MapLibre ménage autour de ses contrôles, de part et d'autre du panneau. */
-const PANEL_MARGIN_PX = 10;
 
 /** Seul un véhicule effectivement suivi peut être rejoint sur la carte. */
 const isLocatable = (departure: StopDeparture) => departure.tracked && departure.journeyId !== undefined;
 
-function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRowProps>) {
+function DepartureRow({ departure, line, label, touch = false, onLocate }: Readonly<DepartureRowProps>) {
 	const skipped = departure.callStatus === "SKIPPED";
 	const realtime = departure.expectedTime !== undefined;
 
@@ -106,7 +108,7 @@ function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRo
 	// heures s'alignent ainsi d'une ligne à l'autre. La hauteur est fixe : une ligne ne grandit pas
 	// quand l'heure théorique s'affiche sous l'heure prévue.
 	return (
-		<li className="flex h-9 items-center gap-1">
+		<li className={clsx("flex items-center gap-1", touch ? "h-10" : "h-9")}>
 			<LinePictogram line={line} />
 			{/*
 			 * Le quai suit immédiatement la destination. Une destination longue passe sur deux lignes avant
@@ -141,17 +143,17 @@ function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRo
 					</span>
 				)}
 			</div>
-			<div className="size-6 shrink-0">
+			<div className={clsx("shrink-0", touch ? "size-8" : "size-6")}>
 				{isLocatable(departure) && (
 					<Button
-						className="size-6"
+						className={touch ? "size-8" : "size-6"}
 						size="icon"
 						title={m.stop_departures_locate()}
 						type="button"
 						variant="ghost"
 						onClick={() => onLocate(departure.journeyId!)}
 					>
-						<LocateIcon className="size-4 m-auto" />
+						<LocateIcon className={clsx("m-auto", touch ? "size-5" : "size-4")} />
 					</Button>
 				)}
 			</div>
@@ -160,14 +162,11 @@ function DepartureRow({ departure, line, label, onLocate }: Readonly<DepartureRo
 }
 
 /**
- * Prochains passages de l'arrêt sélectionné, en surimpression de la carte — au même endroit et dans
- * le même habillage que le panneau des véhicules en ligne.
+ * Prochains passages de l'arrêt sélectionné, lignes du réseau comprises, prêts à afficher — communs
+ * au panneau et au drawer.
  */
-export function StopDeparturesPanel() {
-	const map = useMap();
-	const containerRef = useRef(document.createElement("div"));
-	const { selectedRef, clearSelection } = useStopSelection();
-	const [, setMarkerId] = useQueryState("marker-id");
+function useStopDepartures() {
+	const { selectedRef } = useStopSelection();
 	const [displayMode] = useNextCallsDisplayMode();
 
 	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef));
@@ -190,57 +189,6 @@ export function StopDeparturesPanel() {
 			isPending: networks.some(({ isPending }) => isPending),
 		}),
 	});
-
-	useEffect(() => {
-		const container = containerRef.current;
-		// La classe `stop-departures-control` permet de descendre le panneau par-dessus
-		// l'attribution (cf. `maplibregl.css`).
-		container.className = "maplibregl-ctrl maplibregl-ctrl-group font-sans stop-departures-control";
-
-		const control = {
-			onAdd: () => container,
-			onRemove: () => void 0,
-		};
-
-		map.addControl(control, "bottom-right");
-		const parent = container.parentElement;
-		if (parent) {
-			parent.style.zIndex = "10";
-			// MapLibre empile les contrôles du bas en insérant chaque nouveau au-dessus des précédents :
-			// le panneau est replacé juste au-dessus de l'attribution, qui garde le coin, et sous ceux
-			// qui viendraient après lui.
-			const attribution = parent.querySelector(":scope > .maplibregl-ctrl-attrib");
-			parent.insertBefore(container, attribution);
-		}
-		return () => {
-			map.removeControl(control);
-		};
-	}, [map]);
-
-	// Sur un écran étroit, le panneau occupe toute la largeur du bas de la carte et peut masquer l'arrêt
-	// qu'il décrit : la carte est alors recentrée pour placer celui-ci au milieu de la partie restée
-	// visible, au-dessus du panneau. Une seule fois par sélection, pour ne pas contrarier l'utilisateur
-	// qui déplace ensuite la carte.
-	const centeredRef = useRef<string | null>(null);
-	useEffect(() => {
-		if (data === undefined || selectedRef === null || centeredRef.current === selectedRef) return;
-		centeredRef.current = selectedRef;
-
-		const panelRect = containerRef.current.getBoundingClientRect();
-		const mapRect = map.getContainer().getBoundingClientRect();
-		// Le panneau est plafonné à la largeur de la carte moins ses marges : l'atteindre, c'est la couvrir.
-		if (panelRect.width + 2 * PANEL_MARGIN_PX < mapRect.width - 1) return;
-
-		const point = data.stop.stopPoints.find(({ ref }) => ref === data.stopPointRef) ?? data.stop;
-		// Hauteur de carte masquée par le panneau, depuis son bord supérieur jusqu'au bas de la carte.
-		const hiddenHeight = Math.max(0, mapRect.bottom - panelRect.top);
-
-		map.easeTo({
-			center: [point.longitude, point.latitude],
-			// La plaque, et non la pointe de sa hampe, au milieu de la partie visible.
-			offset: [0, -hiddenHeight / 2 + STOP_PLATE_CENTER_OFFSET * SELECTED_STOP_ICON_SCALE],
-		});
-	}, [data, map, selectedRef]);
 
 	// Quai choisi sur la carte au zoom le plus fort : le serveur a déjà restreint le tableau à ce quai.
 	const stopPoint = data?.stop.stopPoints.find((point) => point.ref === data.stopPointRef);
@@ -274,22 +222,124 @@ export function StopDeparturesPanel() {
 		return [{ departure, line, label: labels[index] ?? "", key: `${baseKey}-${occurrence}` }];
 	});
 
+	return {
+		selectedRef,
+		stopName: data?.stop.name,
+		stopPoint,
+		// Point à montrer sur la carte : le quai choisi, la station sinon.
+		location: data === undefined ? undefined : (stopPoint ?? data.stop),
+		rows,
+		isError,
+		isLoading: isPending || areLinesPending,
+	};
+}
+
+type StopDeparturesState = ReturnType<typeof useStopDepartures>;
+
+/** Nom de l'arrêt, suivi du quai s'il y en a un de choisi. */
+function StopName({
+	stopName,
+	stopPoint,
+	className,
+}: Readonly<Pick<StopDeparturesState, "stopName" | "stopPoint"> & { className?: string }>) {
+	// Le quai suit immédiatement le nom : le nom seul se tronque s'il manque de place.
+	return (
+		<span className="flex min-w-0 items-center gap-1">
+			<span className={clsx("truncate font-bold leading-tight", className)} title={stopName}>
+				{stopName ?? m.stop_departures_loading()}
+			</span>
+			{stopPoint?.platformCode !== undefined && (
+				<span className="shrink-0 rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4 text-center text-xs font-bold text-background">
+					{stopPoint.platformCode}
+				</span>
+			)}
+		</span>
+	);
+}
+
+type StopDeparturesListProps = Pick<StopDeparturesState, "rows" | "isError" | "isLoading"> & {
+	touch?: boolean;
+	/** Classes de la zone défilante. */
+	scrollClassName: string;
+	onLocate: (journeyId: string) => void;
+};
+
+function StopDeparturesList({
+	rows,
+	isError,
+	isLoading,
+	touch,
+	scrollClassName,
+	onLocate,
+}: Readonly<StopDeparturesListProps>) {
+	const message = isError
+		? m.stop_departures_error()
+		: isLoading
+			? m.stop_departures_loading()
+			: rows.length === 0
+				? m.stop_departures_empty()
+				: undefined;
+
+	if (message !== undefined) {
+		return <p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{message}</p>;
+	}
+
+	// La zone défilante ne porte pas la marge intérieure : posée sur la liste qu'elle contient, elle
+	// reste entre le contenu et la barre de défilement, contre laquelle l'heure viendrait sinon se coller.
+	return (
+		<div className={clsx("overflow-y-auto overscroll-contain", scrollClassName)}>
+			<ul className={clsx("divide-y", touch ? "px-3" : "px-2")}>
+				{rows.map(({ departure, line, label, key }) => (
+					<DepartureRow departure={departure} key={key} line={line} label={label} touch={touch} onLocate={onLocate} />
+				))}
+			</ul>
+		</div>
+	);
+}
+
+/**
+ * Sur grand écran : panneau en surimpression de la carte — au même endroit et dans le même habillage
+ * que le panneau des véhicules en ligne.
+ */
+function StopDeparturesControl() {
+	const map = useMap();
+	const containerRef = useRef(document.createElement("div"));
+	const { clearSelection } = useStopSelection();
+	const [, setMarkerId] = useQueryState("marker-id");
+	const { stopName, stopPoint, rows, isError, isLoading } = useStopDepartures();
+
+	useEffect(() => {
+		const container = containerRef.current;
+		// La classe `stop-departures-control` permet de descendre le panneau par-dessus
+		// l'attribution (cf. `maplibregl.css`).
+		container.className = "maplibregl-ctrl maplibregl-ctrl-group font-sans stop-departures-control";
+
+		const control = {
+			onAdd: () => container,
+			onRemove: () => void 0,
+		};
+
+		map.addControl(control, "bottom-right");
+		const parent = container.parentElement;
+		if (parent) {
+			parent.style.zIndex = "10";
+			// MapLibre empile les contrôles du bas en insérant chaque nouveau au-dessus des précédents :
+			// le panneau est replacé juste au-dessus de l'attribution, qui garde le coin, et sous ceux
+			// qui viendraient après lui.
+			const attribution = parent.querySelector(":scope > .maplibregl-ctrl-attrib");
+			parent.insertBefore(container, attribution);
+		}
+		return () => {
+			map.removeControl(control);
+		};
+	}, [map]);
+
 	return createPortal(
 		<div className="bg-background/95 backdrop-blur-sm rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
 			<div className="flex items-center gap-1 border-b px-1 py-0.5">
 				<div className="flex-1 min-w-0">
 					<p className="text-[10px] font-thin uppercase tracking-wide leading-tight">{m.stop_departures_title()}</p>
-					{/* Le quai suit immédiatement le nom : le nom seul se tronque s'il manque de place. */}
-					<div className="flex min-w-0 items-center gap-1">
-						<p className="truncate text-base font-bold leading-tight" title={data?.stop.name}>
-							{data?.stop.name ?? m.stop_departures_loading()}
-						</p>
-						{stopPoint?.platformCode !== undefined && (
-							<span className="shrink-0 rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4 text-center text-xs font-bold text-background">
-								{stopPoint.platformCode}
-							</span>
-						)}
-					</div>
+					<StopName className="text-base" stopName={stopName} stopPoint={stopPoint} />
 				</div>
 				<Button
 					className="size-6 shrink-0"
@@ -304,32 +354,116 @@ export function StopDeparturesPanel() {
 			</div>
 			{/* Hauteur minimale : le panneau ne saute pas entre chargement, tableau vide et tableau rempli. */}
 			<div className="flex min-h-[min(10rem,25dvh)] flex-col">
-				{isError ? (
-					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_error()}</p>
-				) : isPending || areLinesPending ? (
-					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_loading()}</p>
-				) : rows.length === 0 ? (
-					<p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{m.stop_departures_empty()}</p>
-				) : (
-					// La zone défilante ne porte pas la marge intérieure : posée sur la liste qu'elle contient,
-					// elle reste entre le contenu et la barre de défilement, contre laquelle l'heure viendrait
-					// sinon se coller.
-					<div className="max-h-[25dvh] overflow-y-auto overscroll-contain">
-						<ul className="divide-y px-2">
-							{rows.map(({ departure, line, label, key }) => (
-								<DepartureRow
-									departure={departure}
-									key={key}
-									line={line}
-									label={label}
-									onLocate={(journeyId) => void setMarkerId(journeyId)}
-								/>
-							))}
-						</ul>
-					</div>
-				)}
+				<StopDeparturesList
+					isError={isError}
+					isLoading={isLoading}
+					rows={rows}
+					scrollClassName="max-h-[25dvh]"
+					onLocate={(journeyId) => void setMarkerId(journeyId)}
+				/>
 			</div>
 		</div>,
 		containerRef.current,
 	);
+}
+
+/**
+ * Sur petit écran : drawer en bas de l'écran. Il n'est pas modal : la carte reste utilisable derrière
+ * lui, et la toucher ne le ferme pas — on y localise un véhicule ou choisit un autre arrêt. Le fermer,
+ * d'un geste ou de la croix, désélectionne l'arrêt, comme la croix du panneau — une fois l'animation
+ * de sortie terminée seulement : désélectionner l'arrêt démonte le drawer, qui disparaîtrait sinon
+ * d'un coup.
+ */
+function StopDeparturesDrawer() {
+	const map = useMap();
+	const [open, setOpen] = useState(true);
+	const { clearSelection } = useStopSelection();
+	const [, setMarkerId] = useQueryState("marker-id");
+	const { selectedRef, stopName, stopPoint, location, rows, isError, isLoading } = useStopDepartures();
+
+	// Le drawer masque le bas de la carte, et peut-être l'arrêt qu'il décrit : la carte est recentrée
+	// pour placer celui-ci au milieu de la partie restée visible. Une seule fois par sélection, pour ne
+	// pas contrarier l'utilisateur qui déplace ensuite la carte, et une fois le tableau chargé, le
+	// drawer ayant alors trouvé sa hauteur.
+	const popupRef = useRef<HTMLDivElement | null>(null);
+	const centeredRef = useRef<string | null>(null);
+	useEffect(() => {
+		const popup = popupRef.current;
+		if (isLoading || location === undefined || popup === null || centeredRef.current === selectedRef) return;
+		centeredRef.current = selectedRef;
+
+		// Le drawer peut être encore en train de monter : sa position est déduite de sa hauteur, et non
+		// de celle, provisoire, qu'il occupe à l'écran.
+		const popupTop = window.innerHeight - popup.offsetHeight;
+		const mapRect = map.getContainer().getBoundingClientRect();
+		const hiddenHeight = Math.min(mapRect.height, Math.max(0, mapRect.bottom - popupTop));
+
+		map.easeTo({
+			center: [location.longitude, location.latitude],
+			// La plaque, et non la pointe de sa hampe, au milieu de la partie visible.
+			offset: [0, -hiddenHeight / 2 + STOP_PLATE_CENTER_OFFSET * SELECTED_STOP_ICON_SCALE],
+		});
+	}, [isLoading, location, map, selectedRef]);
+
+	return (
+		<Drawer
+			disablePointerDismissal
+			modal={false}
+			open={open}
+			onOpenChange={setOpen}
+			onOpenChangeComplete={(open) => {
+				if (!open) clearSelection();
+			}}
+		>
+			<DrawerContent
+				className="max-h-[45dvh]"
+				// Le drawer masque le bas de la carte : localiser un véhicule le place au-dessus de lui.
+				ref={(element) => {
+					popupRef.current = element;
+					const unregister = registerMapBottomOverlay(element);
+					return () => {
+						popupRef.current = null;
+						unregister?.();
+					};
+				}}
+				showOverlay={false}
+			>
+				<div className="flex items-start gap-2 border-b px-3 pt-1 pb-2">
+					<div className="min-w-0 flex-1">
+						<p className="text-xs uppercase tracking-wide text-muted-foreground">{m.stop_departures_title()}</p>
+						<DrawerTitle className="text-lg">
+							<StopName stopName={stopName} stopPoint={stopPoint} />
+						</DrawerTitle>
+					</div>
+					<DrawerClose
+						render={
+							<Button className="size-9 shrink-0" size="icon" title={m.stop_departures_close()} variant="ghost">
+								<XIcon className="size-5 m-auto" />
+							</Button>
+						}
+					/>
+				</div>
+				{/* Hauteur minimale : le drawer ne saute pas entre chargement, tableau vide et tableau rempli. */}
+				<div className="flex min-h-[min(10rem,25dvh)] flex-1 flex-col">
+					<StopDeparturesList
+						isError={isError}
+						isLoading={isLoading}
+						rows={rows}
+						scrollClassName="min-h-0 flex-1 pb-2"
+						touch
+						onLocate={(journeyId) => void setMarkerId(journeyId)}
+					/>
+				</div>
+			</DrawerContent>
+		</Drawer>
+	);
+}
+
+/** Prochains passages de l'arrêt sélectionné : panneau sur grand écran, drawer sur petit. */
+export function StopDeparturesPanel() {
+	const isDesktop = useMediaQuery("(min-width: 640px)");
+	if (isDesktop) return <StopDeparturesControl />;
+	// Non modal, le drawer pose des gardes de focus à l'endroit où il est rendu, et non dans son portail :
+	// dans le conteneur de la carte, dont MapLibre réordonne les enfants, React ne s'y retrouverait plus.
+	return createPortal(<StopDeparturesDrawer />, document.body);
 }

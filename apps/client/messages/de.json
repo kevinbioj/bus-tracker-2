@@ -171,6 +171,7 @@
 	"map_network_search_results": "Suchergebnisse",
 	"map_network_search_empty": "Kein Verkehrsnetz entspricht dieser Suche.",
 	"map_vehicles_online": "Fahrzeuge online ({count})",
+	"map_vehicles_online_empty": "Auf dieser Linie ist kein identifizierbares Fahrzeug unterwegs.",
 	"map_vehicle_locate": "Fahrzeugposition anzeigen",
 	"map_vehicle_history": "Fahrzeugverlauf anzeigen",
 	"map_vehicle_since": "seit",

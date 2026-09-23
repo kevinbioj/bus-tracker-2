@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { FullscreenControl, GeolocateControl, type Map as MaplibreGl, NavigationControl } from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { type ComponentPropsWithoutRef, useCallback, useMemo, useState } from "react";
+import { type ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
@@ -25,8 +25,11 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	const locationHash = useLocation({ select: (state) => state.hash });
 
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
-	const { selectedRef: selectedStopRef } = useStopSelection();
-	const [showStops] = useShowStops();
+	const { selectedRef: selectedStopRef, clearSelection: clearStopSelection } = useStopSelection();
+	const [showStopsSetting] = useShowStops();
+	// Sur une ligne filtrée, la carte ne montre que ses véhicules et son tracé : pas d'arrêts. Le filtre
+	// est lu dans l'URL, pour que les arrêts ne s'affichent pas le temps de charger la ligne.
+	const showStops = showStopsSetting && lineId === null;
 	const [networkId, setNetworkId] = useQueryState("network-id", parseAsInteger);
 	const [showIdentifiedVehiclesPanel] = useLocalStorage("show-identified-vehicles-panel", false);
 	const [geolocateOnStart] = useGeolocateOnStart();
@@ -111,6 +114,12 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		},
 		[setLineId, setNetworkId],
 	);
+
+	// Le filtre par ligne masque les arrêts : l'arrêt sélectionné est oublié, qu'on arrive sur la ligne
+	// depuis le filtre ou par un lien, et son tableau ne ressurgit pas une fois le filtre retiré.
+	useEffect(() => {
+		if (lineId !== null && selectedStopRef !== null) clearStopSelection();
+	}, [clearStopSelection, lineId, selectedStopRef]);
 
 	return (
 		<MapComponent containerProps={props} mapOptions={mapOptions} ref={onMap}>

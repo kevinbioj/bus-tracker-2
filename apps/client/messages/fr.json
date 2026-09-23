@@ -162,6 +162,7 @@
 	"map_network_search_results": "Résultats de recherche",
 	"map_network_search_empty": "Aucun réseau ne correspond à cette recherche.",
 	"map_vehicles_online": "Véhicules en ligne ({count})",
+	"map_vehicles_online_empty": "Aucun véhicule identifiable ne circule sur la ligne.",
 	"map_vehicle_locate": "Localiser sur la carte",
 	"map_vehicle_history": "Voir l'historique",
 	"map_vehicle_since": "depuis",

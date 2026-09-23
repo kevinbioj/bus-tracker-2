@@ -6,9 +6,17 @@ import type { CircleMarkerFeature, CircleMarkerSource } from "~/adapters/maplibr
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { client } from "~/api/client";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
+import { getMapBottomOverlayHeight } from "~/components/vehicles-map/map-bottom-overlay";
 
 /** Décalage vertical du véhicule accroché sous le centre de la carte, en part de sa hauteur. */
 const JUMP_TO_VERTICAL_OFFSET_RATIO = 0.2 / 3;
+
+/**
+ * Position du véhicule quand un drawer masque le bas de la carte, en part de la hauteur restée visible
+ * depuis son bord supérieur : plus bas qu'au centre, la partie visible étant courte, pour laisser la
+ * place à la popup au-dessus de lui.
+ */
+const JUMP_TO_ABOVE_OVERLAY_POSITION_RATIO = 0.75;
 
 type JumpToProps = {
 	openPopup: (feature: CircleMarkerFeature, type: "hover" | "selected") => void;
@@ -33,11 +41,20 @@ export function JumpTo({ openPopup }: JumpToProps) {
 				if (abort) return;
 
 				// Le véhicule est placé sous le centre de la carte : sa popup, qui s'ouvre au-dessus de lui,
-				// ne vient pas buter contre les contrôles du haut de la carte (sur mobile notamment).
+				// ne vient pas buter contre les contrôles du haut de la carte (sur mobile notamment). Un drawer
+				// ouvert en bas de l'écran en masque une partie : le véhicule est alors placé dans ce qu'il en
+				// reste.
+				const container = map.getContainer();
+				const hiddenHeight = getMapBottomOverlayHeight(container);
+				const visibleHeight = container.clientHeight - hiddenHeight;
+				const verticalOffset =
+					hiddenHeight > 0
+						? visibleHeight * JUMP_TO_ABOVE_OVERLAY_POSITION_RATIO - container.clientHeight / 2
+						: container.clientHeight * JUMP_TO_VERTICAL_OFFSET_RATIO;
 				map.easeTo({
 					center: { lng: journey.position.longitude, lat: journey.position.latitude },
 					zoom: 13,
-					offset: [0, map.getContainer().clientHeight * JUMP_TO_VERTICAL_OFFSET_RATIO],
+					offset: [0, verticalOffset],
 					duration: 0,
 				});
 
