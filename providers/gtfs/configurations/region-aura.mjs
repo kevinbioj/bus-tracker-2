@@ -284,6 +284,25 @@ const sources = [
 		getDestination: (journey) => journey?.trip?.headsign?.replace(`LIGNE ${journey?.trip?.route.name} - `, ""),
 	},
 	{
+		id: "roanne",
+		staticResourceHref:
+			"https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=STAR&dataFormat=GTFS&dataProfil=OPENDATA",
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/roanne/"],
+		mode: "NO-TU",
+		mapLineRef: (lineRef) => {
+			const unsirized = lineRef.split(":")[2];
+			const indexOfX = unsirized.indexOf("x");
+			if (indexOfX === -1) {
+				return unsirized;
+			}
+			return unsirized.slice(0, indexOfX);
+		},
+		getNetworkRef: () => "ROANNE",
+		getDestination: (journey, vehicle) =>
+			vehicle?.label ?? journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+		getVehicleRef: (vehicle) => vehicle?.id,
+	},
+	{
 		id: "st-die-des-vosges",
 		staticResourceHref: "https://pysae.com/api/v2/groups/saint-die-des-vosges/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/saint-die-des-vosges/gtfs-rt"],
