@@ -80,6 +80,20 @@ const sources = [
 		getNetworkRef: () => "GRANDOLE",
 	},
 	{
+		id: "macon",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/0a01b036-796f-43a3-9c64-a2f6024427b0",
+		realtimeResourceHrefs: [
+			"https://trema.plateforme-2cloud.com/api/gtfsrt/2.0/vehiclepositions/TREMA-6248-9014-6845/bin",
+			"https://trema.plateforme-2cloud.com/api/gtfsrt/2.0/tripupdates/TREMA-6248-9014-6845/bin",
+		],
+		allowTripGuessing: true,
+		mode: "NO-TU",
+		mapLineRef: (lineRef) => lineRef.split("-")[0],
+		getNetworkRef: () => "MACON",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "montbeliard",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/b45aa8d8-4bd4-4528-99c7-acfc980fdb09",
 		realtimeResourceHrefs: [],
