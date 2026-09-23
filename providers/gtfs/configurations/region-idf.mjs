@@ -61,6 +61,7 @@ const sources = [
 		realtimeResourceHrefs: [{ href: "http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm", pollMs: 60_000 }],
 		appendTripUpdateInformation: true,
 		gtfsOptions: {
+			computeShapeDistTraveled: "always",
 			filterTrips: (trip) => {
 				if (trip.route.agency.id === "IDFM:Operator_1041") {
 					trip.route.agency.id = "IDFM:1086";
