@@ -75,7 +75,7 @@
 }
 
 :root {
-	--branding: hsl(330 100% 27.5%);
+	--branding: #8B1A4B;
 	--branding-foreground: hsl(0 0% 98%);
 	--branding-accent: hsl(0 0% 100%);
 	--branding-accent-foreground: hsl(0 0% 3.9%);

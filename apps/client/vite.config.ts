@@ -36,19 +36,19 @@ export default defineConfig({
 				name: "Bus Tracker",
 				short_name: "Bus Tracker",
 				description: "Localisez vos trains, bus, tramways, métros et bateaux dans toute la France grâce à Bus Tracker",
-				background_color: "#8A0045",
-				theme_color: "#8A0045",
+				background_color: "#8B1A4B",
+				theme_color: "#8B1A4B",
 				display: "fullscreen",
 				start_url: "/",
 				icons: [
 					{
-						src: "/web-app-manifest-192x192.png",
+						src: "/web-app-manifest-192x192.png?v=2",
 						sizes: "192x192",
 						type: "image/png",
 						purpose: "any maskable",
 					},
 					{
-						src: "/web-app-manifest-512x512.png",
+						src: "/web-app-manifest-512x512.png?v=2",
 						sizes: "512x512",
 						type: "image/png",
 						purpose: "any maskable",
@@ -60,6 +60,9 @@ export default defineConfig({
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2,woff}"],
 				cleanupOutdatedCaches: true,
+				// Le paramètre `v` des icônes sert à contourner le cache HTTP des navigateurs : on l'ignore
+				// pour que ces URLs correspondent toujours au precache, déjà révisionné par Workbox.
+				ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
 				maximumFileSizeToCacheInBytes: 16_777_216,
 				navigateFallbackDenylist: [/^\/api/],
 				runtimeCaching: [
@@ -102,8 +105,7 @@ export default defineConfig({
 		proxy: {
 			"/api": {
 				changeOrigin: true,
-				target: "http://localhost:8080",
-				rewrite: (path) => path.replace(/^\/api/, ""),
+				target: "https://bus-tracker.fr",
 			},
 		},
 	},

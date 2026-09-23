@@ -2,7 +2,7 @@
 const PLATE_COLOR = "#1E2A4A";
 
 /** Repli de la couleur de marque, si la feuille de style n'est pas encore appliquée. */
-const BRANDING_FALLBACK = "hsl(330 100% 27.5%)";
+const BRANDING_FALLBACK = "#8B1A4B";
 
 /**
  * Couleur de marque de l'application, reprise pour l'arrêt sélectionné : c'est elle qui signale

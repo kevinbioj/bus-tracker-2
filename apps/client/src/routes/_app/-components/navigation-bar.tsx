@@ -25,7 +25,7 @@ export function NavigationBar() {
 		<header className="bg-branding text-branding-foreground sticky top-0 z-10">
 			<div className="h-14 px-3 py-1 flex gap-3 lg:gap-6 items-center">
 				<div className="h-full flex gap-2 items-center">
-					<img className="h-full" src="/logo.svg" alt="" />
+					<img className="h-full" src="/logo-header.svg?v=2" alt="" />
 					<span className="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
 						Bus Tracker
 					</span>

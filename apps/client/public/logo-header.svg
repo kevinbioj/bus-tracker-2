@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Bus Tracker</title>
+  <rect width="512" height="512" fill="#8B1A4B"/>
+  <path d="M44 404 H108 L404 108 H468" fill="none" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="44" cy="404" r="22" fill="#FFFFFF"/>
+  <circle cx="468" cy="108" r="22" fill="#FFFFFF"/>
+  <circle cx="256" cy="256" r="168" fill="#FFFFFF"/>
+  <circle cx="256" cy="256" r="146" fill="#E8D1DB"/>
+  <g transform="translate(256 256) scale(0.69) translate(-126 -152)">
+    <path d="M4 70 H-16 V116 M248 70 H268 V116" fill="none" stroke="#8B1A4B" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="24" y="252" width="40" height="52" rx="12" fill="#8B1A4B"/>
+    <rect x="188" y="252" width="40" height="52" rx="12" fill="#8B1A4B"/>
+    <rect x="0" y="0" width="252" height="280" rx="40" fill="#8B1A4B"/>
+    <rect x="44" y="24" width="164" height="20" rx="10" fill="#E8D1DB"/>
+    <rect x="24" y="64" width="204" height="116" rx="20" fill="#E8D1DB"/>
+    <circle cx="54" cy="226" r="18" fill="#E8D1DB"/>
+    <circle cx="198" cy="226" r="18" fill="#E8D1DB"/>
+  </g>
+</svg>

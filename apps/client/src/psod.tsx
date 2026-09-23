@@ -41,7 +41,7 @@ export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 	return (
 		<div className="bg-branding text-branding-foreground h-dvh">
 			<header className="h-16 p-3 flex justify-center items-center gap-3">
-				<img className="h-full" src="/logo.svg" alt="" />
+				<img className="h-full" src="/logo-header.svg?v=2" alt="" />
 				<span className="text-center font-bold text-3xl select-none hover:cursor-default">Bus Tracker</span>
 			</header>
 			<main className="px-3 mt-10 text-base">
