@@ -452,13 +452,17 @@ function StopDeparturesDrawer() {
 						}
 					/>
 				</div>
-				{/* Hauteur minimale : le drawer ne saute pas entre chargement, tableau vide et tableau rempli. */}
+				{/*
+				 * Hauteur minimale : le drawer ne saute pas entre chargement, tableau vide et tableau rempli.
+				 * Le bas de la liste s'efface au lieu d'être coupé net au bord du drawer ; la marge du bas,
+				 * aussi haute que le fondu, laisse la dernière ligne entière une fois la liste défilée.
+				 */}
 				<div className="flex min-h-[min(10rem,25dvh)] flex-1 flex-col">
 					<StopDeparturesList
 						isError={isError}
 						isLoading={isLoading}
 						rows={rows}
-						scrollClassName="min-h-0 flex-1 pb-2"
+						scrollClassName="min-h-0 flex-1 pb-6 mask-b-from-[calc(100%-1.5rem)]"
 						touch
 						onLocate={(journeyId) => void setMarkerId(journeyId)}
 					/>
