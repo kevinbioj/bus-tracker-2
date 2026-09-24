@@ -36,7 +36,7 @@ export const timestamp = customType<{
 
 export const regionsTable = pgTable("region", {
 	id: serial("id").primaryKey(),
-	name: varchar("name").notNull(),
+	name: jsonb("name").$type<Record<string, string>>().notNull(),
 	sortOrder: integer("sort_order").notNull().unique(),
 });
 

@@ -13,6 +13,7 @@ import {
 import { useDisplayedRegions } from "~/routes/_app/data/-networks-list/use-displayed-regions";
 import { useNetworksListSearchQuery } from "~/routes/_app/data/-networks-list/use-search-query";
 import { cn } from "~/utils/cn";
+import { getRegionName } from "~/utils/region-name";
 
 export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<"div">) {
 	const regions = useDisplayedRegions();
@@ -28,7 +29,10 @@ export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<
 			? m.networks_list_region_all()
 			: selectedRegionFilter === OTHER_REGIONS_FILTER
 				? m.map_network_other()
-				: regions.find((region) => String(region.id) === selectedRegionFilter)?.name;
+				: (() => {
+						const region = regions.find((region) => String(region.id) === selectedRegionFilter);
+						return region ? getRegionName(region.name) : undefined;
+					})();
 
 	return (
 		<div className={cn("bg-background z-1", className)} {...props}>
@@ -65,7 +69,7 @@ export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<
 								</SelectItem>
 								{regions.map((region) => (
 									<SelectItem key={region.id} value={String(region.id)}>
-										{region.name}
+										{getRegionName(region.name)}
 									</SelectItem>
 								))}
 								<SelectItem value={OTHER_REGIONS_FILTER}>{m.map_network_other()}</SelectItem>
