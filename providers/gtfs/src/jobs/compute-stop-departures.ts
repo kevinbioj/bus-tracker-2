@@ -141,7 +141,10 @@ export function computeStopDepartures(
 			// l'horaire théorique : les matérialiser tous rendrait le calcul bien plus coûteux que la
 			// réponse ne le mérite.
 			const journeyKey = getJourneyKey(date, trip.id);
-			const journey = gtfs.journeys.get(journeyKey);
+			// Course supprimée : annoncée à son horaire théorique, sans le temps réel ni la déviation
+			// qu'elle a pu porter avant sa suppression.
+			const canceled = source.canceledJourneyKeys.has(journeyKey);
+			const journey = canceled ? undefined : gtfs.journeys.get(journeyKey);
 			const call =
 				journey !== undefined && (journey.hasRealtime() || journey.hasModifications())
 					? findCallForStop(journey.calls, stop.id, sequence[stopTimeIdx]!)
@@ -189,7 +192,7 @@ export function computeStopDepartures(
 				resolveJourney: () => journey ?? trip.getScheduledJourney(date, true),
 				aimedTime: formatCallTime(aimedMs, stop.timeZone, timeZone),
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, stop.timeZone, timeZone) : undefined,
-				callStatus: call?.status ?? "SCHEDULED",
+				callStatus: canceled ? "SKIPPED" : (call?.status ?? "SCHEDULED"),
 				origin,
 				// Les identifiants publiés remplacent leurs barres obliques côté serveur : la valeur
 				// rendue ici doit pouvoir être comparée telle quelle à celles du store des courses.
@@ -204,6 +207,7 @@ export function computeStopDepartures(
 	// des courses déviées — y compris celles des arrêts créés à la volée par le flux temps réel.
 	const areaStopIds = new Set(stopArea.stops.map(({ id }) => id));
 	for (const journeyKey of source.modifiedJourneyKeys) {
+		if (source.canceledJourneyKeys.has(journeyKey)) continue;
 		const journey = gtfs.journeys.get(journeyKey);
 		if (journey === undefined) continue;
 

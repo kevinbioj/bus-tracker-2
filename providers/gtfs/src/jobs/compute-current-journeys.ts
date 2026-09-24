@@ -480,6 +480,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		const handledJourneyIds = new Set<string>();
 		const handledBlockIds = new Set<string>();
 		const canceledJourneyIds = new Set<string>();
+		const canceledJourneyKeys = new Set<string>();
 		const canceledTripCandidates: TripShapeMatchCandidate[] = [];
 		const addedTrips: AddedTripPublication[] = [];
 		const tripUpdateTtlMs = source.options.tripUpdateTtlMs ?? DEFAULT_TRIP_UPDATE_TTL_MS;
@@ -539,6 +540,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 				if (isCanceledTrip(tripUpdate.trip)) {
 					canceledJourneyIds.add(`${trip.id}:${startDate}`);
+					canceledJourneyKeys.add(getJourneyKey(startDate, trip.id));
 					if (source.options.addedTripShapeMatching === true && trip.shape !== undefined) {
 						canceledTripCandidates.push({
 							date: startDate,
@@ -591,6 +593,11 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			// 	return aStart - bStart;
 			// });
 		}
+
+		// Un cycle où un flux n'a pas répondu ne prouve pas qu'une suppression a été levée : les
+		// précédentes sont conservées jusqu'au prochain cycle complet.
+		source.canceledJourneyKeys =
+			failedFeedCount === 0 ? canceledJourneyKeys : new Set([...source.canceledJourneyKeys, ...canceledJourneyKeys]);
 
 		// Un flux GTFS-RT est un instantané complet : une course qui en a disparu n'a plus
 		// d'information temps réel. Sans cette expiration, ses arrêts supprimés le resteraient

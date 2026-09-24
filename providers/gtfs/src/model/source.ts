@@ -151,6 +151,12 @@ export class Source {
 	 */
 	modifiedJourneyKeys = new Set<string>();
 	/**
+	 * Clés des courses supprimées par le flux temps réel, dans le format de {@link Gtfs.journeys}. Le
+	 * tableau des passages, calculé à la demande entre deux cycles, doit les annoncer supprimées plutôt
+	 * que les présenter à leur horaire théorique. Recalculées à chaque cycle.
+	 */
+	canceledJourneyKeys = new Set<string>();
+	/**
 	 * Arrêts créés à la volée par le flux temps réel et desservis par une course déviée, chacun
 	 * érigé en station : ils n'existent dans aucun fichier du GTFS statique, mais un voyageur doit
 	 * pouvoir les trouver sur la carte et y consulter ses passages. Recalculés à chaque cycle.
