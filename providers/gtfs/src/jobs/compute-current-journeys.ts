@@ -701,19 +701,20 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			const tripRef =
 				journey !== undefined ? (source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id) : undefined;
 
+			// Course inconnue du GTFS statique : sa desserte n'est connue que de son TripUpdate.
+			const unknownTripUpdate =
+				journey === undefined && vehiclePosition.trip?.tripId !== undefined
+					? tripUpdates.find(
+							(tripUpdate) =>
+								tripUpdate.trip.tripId === vehiclePosition.trip!.tripId && !isCanceledTrip(tripUpdate.trip),
+						)
+					: undefined;
+			const unknownTripCalls = createCallsFromTripUpdate(source.gtfs, unknownTripUpdate, resources);
+
 			const calls =
 				journey !== undefined
 					? getCallsFromVehiclePosition(journey, vehiclePosition, now)
-					: vehiclePosition.trip?.tripId !== undefined
-						? createCallsFromTripUpdate(
-								source.gtfs,
-								tripUpdates.find(
-									(tripUpdate) =>
-										tripUpdate.trip.tripId === vehiclePosition.trip!.tripId && !isCanceledTrip(tripUpdate.trip),
-								),
-								resources,
-							)?.filter(({ aimedDepartureTime }) => now.epochMilliseconds < aimedDepartureTime)
-						: undefined;
+					: unknownTripCalls?.filter(({ aimedDepartureTime }) => now.epochMilliseconds < aimedDepartureTime);
 
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 
@@ -763,7 +764,11 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 				destination:
 					source.options.getDestination?.(journey, vehiclePosition.vehicle) ??
 					(journey !== undefined ? getCurrentStopHeadsign(journey, now) : undefined) ??
-					journey?.trip.headsign,
+					journey?.trip.headsign ??
+					// Sans course théorique, le terminus annoncé par le flux est la seule girouette connue.
+					unknownTripUpdate?.tripProperties?.tripHeadsign ??
+					(unknownTripCalls !== undefined ? getCurrentCallHeadsign(unknownTripCalls, now) : undefined) ??
+					unknownTripCalls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 				missionCode: source.options.getMissionCode?.(journey, vehiclePosition.vehicle) ?? undefined,
 				position: {
 					latitude: vehiclePosition.position.latitude,
