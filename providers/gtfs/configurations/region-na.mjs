@@ -39,19 +39,12 @@ const sources = [
 	},
 	{
 		id: "agen",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/c1415ff3-7457-4b51-aead-aacbf03a474e",
-		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-urbain"],
-		maxVehiclePositionAgeMs: 10 * 60_000,
+		staticResourceHref: "https://api.pysae.com/api/v4/groups/agen/gtfs/pub",
+		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/agen/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
-		mapVehiclePosition: (vehicle) =>
-			Temporal.Now.instant()
-				.since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000))
-				.total("minutes") < 60
-				? vehicle
-				: undefined,
 		getNetworkRef: () => "TEMPOBUS",
-		getVehicleRef: () => undefined,
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
 		id: "agen-scolaire",
