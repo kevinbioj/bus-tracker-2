@@ -379,19 +379,25 @@ const sources = [
 	//- Slambus
 	{
 		id: "slambus",
-		staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=SLAM&dataFormat=GTFS",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/private/saintlo.zip",
+		staticAuth: {
+			type: "basic",
+			username: process.env.GTFS_PRIVATE_AUTH_USERNAME,
+			password: process.env.GTFS_PRIVATE_AUTH_PASSWORD,
+		},
+		// staticResourceHref: "https://api.atm.cityway.fr/dataflow/offre-tc/download?provider=SLAM&dataFormat=GTFS",
 		realtimeResourceHrefs: [
 			`https://saintloagglo.plateforme-2cloud.com/api/gtfsrt/2.0/vehiclepositions/${process.env.SLAMBUS_API_KEY}/bin`,
 			`https://saintloagglo.plateforme-2cloud.com/api/gtfsrt/2.0/tripupdates/${process.env.SLAMBUS_API_KEY}/bin`,
 		],
 		mode: "NO-TU",
-		gtfsOptions: {
-			mapRouteId: (routeId) => routeId.slice(nthIndexOf(routeId, ":", 2) + 1, nthIndexOf(routeId, ":", 3)),
-			mapTripId: (tripId) =>
-				tripId.slice(nthIndexOf(tripId, ":", 2) + 1, nthIndexOf(tripId, ":", 3)).replaceAll("x", "-"),
-			mapStopId: (stopId) =>
-				stopId.slice(nthIndexOf(stopId, ":", 3) + 1, nthIndexOf(stopId, ":", 4)).replaceAll("x", "-"),
-		},
+		// gtfsOptions: {
+		// 	mapRouteId: (routeId) => routeId.slice(nthIndexOf(routeId, ":", 2) + 1, nthIndexOf(routeId, ":", 3)),
+		// 	mapTripId: (tripId) =>
+		// 		tripId.slice(nthIndexOf(tripId, ":", 2) + 1, nthIndexOf(tripId, ":", 3)).replaceAll("x", "-"),
+		// 	mapStopId: (stopId) =>
+		// 		stopId.slice(nthIndexOf(stopId, ":", 3) + 1, nthIndexOf(stopId, ":", 4)).replaceAll("x", "-"),
+		// },
 		getNetworkRef: () => "SLAMBUS",
 		getVehicleRef: (vehicle) => vehicle?.label?.padStart(2, "0"),
 	},
