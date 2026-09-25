@@ -9,6 +9,7 @@ const sources = [
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "TAM",
+		mapLineRef: (lineRef) => lineRef.replace(/^S_/, ""),
 	},
 ];
 
