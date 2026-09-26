@@ -53,6 +53,7 @@ export function InformationChip({
 
 	if (render !== undefined) {
 		return cloneElement(render, {
+			"data-slot": "information-chip",
 			...props,
 			...render.props,
 			children: content,
@@ -82,6 +83,7 @@ export function InformationChip({
 	return (
 		<button
 			className={cn(chipClasses, size === "md" && mediumChipClasses, interactiveChipClasses, className)}
+			data-slot="information-chip"
 			onClick={onClick}
 			type="button"
 			{...props}

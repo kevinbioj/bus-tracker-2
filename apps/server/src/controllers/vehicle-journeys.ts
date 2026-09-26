@@ -5,6 +5,7 @@ import * as z from "zod";
 import { database } from "../core/database/database.js";
 import { linesTable, vehiclesTable } from "../core/database/schema.js";
 import { findGirouette } from "../core/services/girouette-service.js";
+import { findJourneyAlerts } from "../core/services/service-alert-service.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import { redis } from "../index.js";
 import { hono } from "../server.js";
@@ -193,6 +194,15 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 			: undefined,
 		girouette: girouette?.data,
 	});
+});
+
+hono.get("/vehicle-journeys/:id/alerts", createParamValidator(getVehicleJourneyParams), async (c) => {
+	const { id } = c.req.valid("param");
+
+	const journey = journeyStore.get(id);
+	if (journey === undefined) return c.json({ error: `No journey was found with id "${id}".` }, 404);
+
+	return c.json({ items: await findJourneyAlerts(journey), at: Temporal.Now.instant() });
 });
 
 /**

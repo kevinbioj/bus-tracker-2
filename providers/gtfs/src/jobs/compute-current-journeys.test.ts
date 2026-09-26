@@ -142,6 +142,7 @@ async function cycleAt(
 		tripUpdates: realtime?.tripUpdates ?? [],
 		vehiclePositions: realtime?.vehiclePositions ?? [],
 		tripModifications: realtime?.tripModifications ?? [],
+		alerts: [],
 		resources: realtime?.resources ?? createRealtimeResources(),
 		failedFeedCount: realtime?.failedFeedCount ?? 0,
 	});
@@ -236,6 +237,7 @@ describe("computeVehicleJourneys", () => {
 			tripUpdates: [unmatchedAddedTripUpdate()],
 			vehiclePositions: [],
 			tripModifications: [],
+			alerts: [],
 			resources: createRealtimeResources(),
 			failedFeedCount: 0,
 		});
@@ -291,6 +293,7 @@ describe("computeVehicleJourneys", () => {
 				},
 			],
 			tripModifications: [],
+			alerts: [],
 			resources: createRealtimeResources(),
 			failedFeedCount: 0,
 		});
@@ -319,6 +322,7 @@ describe("computeVehicleJourneys", () => {
 			tripUpdates: [delayedTripUpdate(2 * 60)],
 			vehiclePositions: [],
 			tripModifications: [],
+			alerts: [],
 			resources: createRealtimeResources(),
 			failedFeedCount: 0,
 		});
@@ -329,6 +333,7 @@ describe("computeVehicleJourneys", () => {
 			tripUpdates: [delayedTripUpdate(5 * 60)],
 			vehiclePositions: [],
 			tripModifications: [],
+			alerts: [],
 			resources: createRealtimeResources(),
 			failedFeedCount: 0,
 		});

@@ -40,13 +40,19 @@ export function DialogContent({
 	className,
 	children,
 	showCloseButton = true,
+	forceOverlay = false,
 	...props
 }: DialogPrimitive.Popup.Props & {
 	showCloseButton?: boolean;
+	/**
+	 * Rend le fond même lorsque la fenêtre est imbriquée — ouverte depuis un drawer, qui est lui-même
+	 * un dialog pour Base UI : celui-ci ne le rend sinon que pour la fenêtre de premier niveau.
+	 */
+	forceOverlay?: boolean;
 }) {
 	return (
 		<DialogPortal>
-			<DialogOverlay />
+			<DialogOverlay forceRender={forceOverlay} />
 			<DialogPrimitive.Popup
 				data-slot="dialog-content"
 				className={cn(

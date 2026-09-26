@@ -3,6 +3,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 import { database } from "../core/database/database.js";
 import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
+import { findLineAlerts } from "../core/services/service-alert-service.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import { redis } from "../index.js";
 import { hono } from "../server.js";
@@ -40,6 +41,18 @@ hono.get("/lines/:id", createParamValidator(getLineByIdParamSchema), async (c) =
 		activeMonths: activeMonths.map(({ month }) => month).toSorted((a, b) => a.localeCompare(b)),
 		latestServiceDate: latestActivity?.serviceDate ?? null,
 	});
+});
+
+hono.get("/lines/:id/alerts", createParamValidator(getLineByIdParamSchema), async (c) => {
+	const { id } = c.req.valid("param");
+
+	const [line] = await database
+		.select({ networkId: linesTable.networkId, references: linesTable.references })
+		.from(linesTable)
+		.where(eq(linesTable.id, id));
+	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
+
+	return c.json({ items: await findLineAlerts(line), at: Temporal.Now.instant() });
 });
 
 hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSchema), async (c) => {

@@ -6,7 +6,9 @@ export const DATA_SOURCES_CHANNEL = "data-sources";
 export const dataSourceKindEnum = type("'GTFS'");
 export type DataSourceKind = typeof dataSourceKindEnum.infer;
 
-export const dataSourceRealtimeEntityTypeEnum = type("'TRIP_UPDATES'|'VEHICLE_POSITIONS'|'TRIP_MODIFICATIONS'");
+export const dataSourceRealtimeEntityTypeEnum = type(
+	"'TRIP_UPDATES'|'VEHICLE_POSITIONS'|'TRIP_MODIFICATIONS'|'SERVICE_ALERTS'",
+);
 export type DataSourceRealtimeEntityType = typeof dataSourceRealtimeEntityTypeEnum.infer;
 
 export const dataSourceStaticFeedSchema = type({

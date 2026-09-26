@@ -10,6 +10,7 @@ export type GtfsRtEntity = {
 	shape?: RtShape;
 	stop?: RtStop;
 	tripModifications?: TripModifications;
+	alert?: Alert;
 };
 
 export type TripUpdate = {
@@ -186,3 +187,66 @@ export type TripModifications = {
 
 /** Une entité `TripModifications` et l'identifiant de l'entité qui la porte (cible de `modificationsId`). */
 export type IdentifiedTripModifications = TripModifications & { id: string };
+
+// --- Info trafic.
+
+export type TimeRange = {
+	/** Secondes epoch. Absent : depuis toujours. */
+	start?: number;
+	/** Secondes epoch. Absent : jusqu'à nouvel ordre. */
+	end?: number;
+};
+
+/** Ce que vise une alerte. Les champs présents se combinent (spec) : route + arrêt désigne cet arrêt sur cette route. */
+export type EntitySelector = {
+	agencyId?: string;
+	routeId?: string;
+	routeType?: number;
+	directionId?: number;
+	trip?: TripDescriptor;
+	stopId?: string;
+};
+
+export type AlertCause =
+	| "UNKNOWN_CAUSE"
+	| "OTHER_CAUSE"
+	| "TECHNICAL_PROBLEM"
+	| "STRIKE"
+	| "DEMONSTRATION"
+	| "ACCIDENT"
+	| "HOLIDAY"
+	| "WEATHER"
+	| "MAINTENANCE"
+	| "CONSTRUCTION"
+	| "POLICE_ACTIVITY"
+	| "MEDICAL_EMERGENCY"
+	| "SPECIAL_EVENT";
+
+export type AlertEffect =
+	| "NO_SERVICE"
+	| "REDUCED_SERVICE"
+	| "SIGNIFICANT_DELAYS"
+	| "DETOUR"
+	| "ADDITIONAL_SERVICE"
+	| "MODIFIED_SERVICE"
+	| "OTHER_EFFECT"
+	| "UNKNOWN_EFFECT"
+	| "STOP_MOVED"
+	| "NO_EFFECT"
+	| "ACCESSIBILITY_ISSUE";
+
+export type AlertSeverityLevel = "UNKNOWN_SEVERITY" | "INFO" | "WARNING" | "SEVERE";
+
+export type Alert = {
+	activePeriod?: TimeRange[];
+	informedEntity?: EntitySelector[];
+	cause?: AlertCause;
+	effect?: AlertEffect;
+	severityLevel?: AlertSeverityLevel;
+	url?: TranslatedString;
+	headerText?: TranslatedString;
+	descriptionText?: TranslatedString;
+};
+
+/** Une entité `Alert` et l'identifiant de l'entité qui la porte. */
+export type IdentifiedAlert = Alert & { id: string };

@@ -46,6 +46,7 @@
 		"core-js": "^3.50.0",
 		"date-fns": "^4.4.0",
 		"dayjs": "^1.11.23",
+		"dompurify": "^3.4.16",
 		"ky": "^2.1.0",
 		"leaflet": "^1.9.4",
 		"lucide-react": "^1.45.0",

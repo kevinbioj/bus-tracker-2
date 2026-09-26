@@ -9,7 +9,9 @@ import { useMediaQuery } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery, type Line } from "~/api/networks";
+import { GetStopAlertsQuery } from "~/api/service-alerts";
 import { GetStopDeparturesQuery, type StopDeparture } from "~/api/stops";
+import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
 import { Button } from "~/components/ui/button";
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "~/components/ui/drawer";
 import { formatCountdown, formatLocalTime } from "~/components/vehicles-map/call-time-format";
@@ -179,6 +181,7 @@ function useStopDepartures() {
 	const [displayMode] = useNextCallsDisplayMode();
 
 	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef));
+	const { data: alerts } = useQuery(GetStopAlertsQuery(selectedRef));
 	// Les lignes des réseaux de la station, pour leur numéro, leurs couleurs et leur pictogramme : une
 	// requête au plus toutes les 5 min par réseau, souvent déjà en cache — le module de filtre fait la
 	// même. Une gare peut en réunir plusieurs (TER, Intercités, TGV…), et une ligne peut relever d'un
@@ -238,6 +241,7 @@ function useStopDepartures() {
 		// Point à montrer sur la carte : le quai choisi, la station sinon.
 		location: data === undefined ? undefined : (stopPoint ?? data.stop),
 		rows,
+		alerts: alerts ?? [],
 		isError,
 		isLoading: isPending || areLinesPending,
 	};
@@ -315,7 +319,7 @@ function StopDeparturesControl() {
 	const containerRef = useRef(document.createElement("div"));
 	const { clearSelection } = useStopSelection();
 	const [, setMarkerId] = useQueryState("marker-id");
-	const { stopName, stopPoint, rows, isError, isLoading } = useStopDepartures();
+	const { stopName, stopPoint, rows, alerts, isError, isLoading } = useStopDepartures();
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -350,6 +354,7 @@ function StopDeparturesControl() {
 					<p className="text-[10px] font-thin uppercase tracking-wide leading-tight">{m.stop_departures_title()}</p>
 					<StopName className="text-base" stopName={stopName} stopPoint={stopPoint} />
 				</div>
+				<ServiceAlertsButton alerts={alerts} scope="stop" />
 				<Button
 					className="size-6 shrink-0"
 					size="icon"
@@ -388,7 +393,7 @@ function StopDeparturesDrawer() {
 	const [open, setOpen] = useState(true);
 	const { clearSelection } = useStopSelection();
 	const [, setMarkerId] = useQueryState("marker-id");
-	const { selectedRef, stopName, stopPoint, location, rows, isError, isLoading } = useStopDepartures();
+	const { selectedRef, stopName, stopPoint, location, rows, alerts, isError, isLoading } = useStopDepartures();
 
 	// Le drawer masque le bas de la carte, et peut-être l'arrêt qu'il décrit : la carte est recentrée
 	// pour placer celui-ci au milieu de la partie restée visible. Une seule fois par sélection, pour ne
@@ -444,6 +449,7 @@ function StopDeparturesDrawer() {
 							<StopName stopName={stopName} stopPoint={stopPoint} />
 						</DrawerTitle>
 					</div>
+					<ServiceAlertsButton alerts={alerts} className="mt-1.5" scope="stop" />
 					<DrawerClose
 						render={
 							<Button className="size-9 shrink-0" size="icon" title={m.stop_departures_close()} variant="ghost">

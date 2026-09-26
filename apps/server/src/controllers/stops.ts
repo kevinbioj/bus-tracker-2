@@ -1,9 +1,8 @@
 import type { StopDeparture, StopPoint } from "@bus-tracker/contracts";
-import { arrayOverlaps } from "drizzle-orm";
 import * as z from "zod";
 
-import { database } from "../core/database/database.js";
-import { linesTable } from "../core/database/schema.js";
+import { resolveLineRefs } from "../core/services/line-ref-service.js";
+import { findStopAlerts } from "../core/services/service-alert-service.js";
 import {
 	findStopArea,
 	findStopAreaOfStopPoint,
@@ -242,56 +241,16 @@ function mergeTrackedJourneys(
 	return passed.size > 0 ? merged.filter((departure) => !passed.has(departure)) : merged;
 }
 
-/**
- * Ligne par référence. Une référence ne change pas de ligne : la table est gardée en mémoire et
- * seules les références encore inconnues sont cherchées en base, une requête au plus par
- * rafraîchissement du tableau.
- */
-const linesByRef = new Map<string, { id: number; networkId: number }>();
-
-/**
- * Références restées sans ligne, et l'instant où les chercher de nouveau. La ligne naît de la
- * première course publiée : l'attendre une demi-heure laisserait le passage sans pictogramme bien
- * après qu'elle existe. Une minute épargne tout de même la base à chaque rafraîchissement.
- */
-const unknownLineRefsUntil = new Map<string, number>();
-
-/** Oubli périodique des correspondances, pour suivre une ligne recréée ou fusionnée par un éditeur. */
-setInterval(() => {
-	linesByRef.clear();
-	unknownLineRefsUntil.clear();
-}, 30 * 60_000).unref();
-
-const UNKNOWN_LINE_RETRY_MS = 60_000;
-
 async function resolveLineIds(departures: ResolvedDeparture[]) {
-	const nowMs = Date.now();
-	const unknownRefs = [
-		...new Set(departures.flatMap((departure) => (departure.lineRef !== undefined ? [departure.lineRef] : []))),
-	].filter((ref) => !linesByRef.has(ref) && (unknownLineRefsUntil.get(ref) ?? 0) <= nowMs);
-
-	if (unknownRefs.length > 0) {
-		const lines = await database
-			.select({ id: linesTable.id, networkId: linesTable.networkId, references: linesTable.references })
-			.from(linesTable)
-			// Les références de ligne portent leur réseau en préfixe : elles suffisent à la désigner, quel
-			// que soit celui des réseaux de la station qui la dessert.
-			.where(arrayOverlaps(linesTable.references, unknownRefs));
-
-		for (const ref of unknownRefs) {
-			const line = lines.find(({ references }) => references?.includes(ref));
-			if (line !== undefined) {
-				linesByRef.set(ref, { id: line.id, networkId: line.networkId });
-				unknownLineRefsUntil.delete(ref);
-			} else {
-				unknownLineRefsUntil.set(ref, nowMs + UNKNOWN_LINE_RETRY_MS);
-			}
-		}
-	}
+	const lines = await resolveLineRefs(
+		departures.flatMap((departure) =>
+			departure.lineId === undefined && departure.lineRef !== undefined ? [departure.lineRef] : [],
+		),
+	);
 
 	for (const departure of departures) {
 		if (departure.lineId !== undefined || departure.lineRef === undefined) continue;
-		const line = linesByRef.get(departure.lineRef);
+		const line = lines.get(departure.lineRef);
 		departure.lineId = line?.id;
 		departure.lineNetworkId = line?.networkId;
 	}
@@ -328,12 +287,8 @@ export function invalidateStopAreaCaches() {
  */
 const isStopPointRef = (ref: string) => ref.includes(":StopPoint:");
 
-hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams), async (c) => {
-	const { ref } = c.req.valid("param");
-
-	const cached = departuresCache.get(ref);
-	if (cached !== undefined) return c.json(cached);
-
+/** Station désignée par `ref`, et le quai sur lequel se restreindre si `ref` en désigne un. */
+async function resolveStopArea(ref: string) {
 	const stopPointRef = isStopPointRef(ref) ? ref : undefined;
 
 	let stopArea = stopAreasCache.get(ref);
@@ -342,6 +297,16 @@ hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams)
 		stopAreasCache.set(ref, stopArea);
 	}
 
+	return { stopArea, stopPointRef };
+}
+
+hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams), async (c) => {
+	const { ref } = c.req.valid("param");
+
+	const cached = departuresCache.get(ref);
+	if (cached !== undefined) return c.json(cached);
+
+	const { stopArea, stopPointRef } = await resolveStopArea(ref);
 	if (stopArea === null) {
 		return c.json({ error: `No stop area was found for ref "${ref}".` }, 404);
 	}
@@ -388,4 +353,20 @@ hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams)
 
 	departuresCache.set(ref, payload);
 	return c.json(payload);
+});
+
+hono.get("/stops/:ref/alerts", createParamValidator(getStopDeparturesParams), async (c) => {
+	const { ref } = c.req.valid("param");
+
+	const { stopArea, stopPointRef } = await resolveStopArea(ref);
+	if (stopArea === null) {
+		return c.json({ error: `No stop area was found for ref "${ref}".` }, 404);
+	}
+
+	// Un quai choisi ne perd pas l'info trafic de sa station : celle-ci le vise aussi.
+	const items = await findStopAlerts(
+		stopArea,
+		new Set(stopPointRef !== undefined ? [stopPointRef] : stopArea.stopRefs),
+	);
+	return c.json({ items, at: Temporal.Now.instant() });
 });

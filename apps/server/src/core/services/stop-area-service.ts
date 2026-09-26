@@ -30,7 +30,7 @@ const networkIdsByRef = new Map<string, number | null>();
 /** Oubli périodique, pour retrouver un réseau créé après la première publication de ses stations. */
 setInterval(() => networkIdsByRef.clear(), 30 * 60_000).unref();
 
-async function resolveNetworkIds(networkRefs: string[]) {
+export async function resolveNetworkIds(networkRefs: string[]) {
 	const unknownRefs = [...new Set(networkRefs)].filter((ref) => !networkIdsByRef.has(ref));
 	if (unknownRefs.length > 0) {
 		const networks = await database

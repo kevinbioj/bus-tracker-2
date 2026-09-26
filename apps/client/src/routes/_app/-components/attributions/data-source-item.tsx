@@ -12,6 +12,7 @@ type DataSourceItemProps = {
 function getEntityTypeLabel(entityType: DataSourceRealtimeEntityType) {
 	if (entityType === "TRIP_UPDATES") return m.attributions_entity_trip_updates();
 	if (entityType === "TRIP_MODIFICATIONS") return m.attributions_entity_trip_modifications();
+	if (entityType === "SERVICE_ALERTS") return m.attributions_entity_service_alerts();
 	return m.attributions_entity_vehicle_positions();
 }
 

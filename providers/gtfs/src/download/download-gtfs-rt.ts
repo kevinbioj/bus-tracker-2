@@ -3,7 +3,13 @@ import { captureException } from "@bus-tracker/monitoring";
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 
 import { USER_AGENT } from "../constants.js";
-import type { GtfsRt, IdentifiedTripModifications, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
+import type {
+	GtfsRt,
+	IdentifiedAlert,
+	IdentifiedTripModifications,
+	TripUpdate,
+	VehiclePosition,
+} from "../model/gtfs-rt.js";
 import {
 	createRealtimeResources,
 	createShapeFromRtShape,
@@ -20,6 +26,7 @@ export type RealtimeFeedContents = {
 	tripUpdates: TripUpdate[];
 	vehiclePositions: VehiclePosition[];
 	tripModifications: IdentifiedTripModifications[];
+	alerts: IdentifiedAlert[];
 	shapes: RealtimeResources["shapes"];
 	stops: RealtimeResources["stops"];
 };
@@ -33,8 +40,9 @@ function recordObservedEntityTypes(source: Source, href: string, contents: Realt
 	const tripUpdateCount = contents.tripUpdates.length;
 	const vehiclePositionCount = contents.vehiclePositions.length;
 	const tripModificationCount = contents.tripModifications.length;
+	const alertCount = contents.alerts.length;
 
-	if (tripUpdateCount === 0 && vehiclePositionCount === 0 && tripModificationCount === 0) return;
+	if (tripUpdateCount === 0 && vehiclePositionCount === 0 && tripModificationCount === 0 && alertCount === 0) return;
 
 	let entityTypes = source.observedRealtimeEntityTypes.get(href);
 	if (entityTypes === undefined) {
@@ -45,11 +53,12 @@ function recordObservedEntityTypes(source: Source, href: string, contents: Realt
 	if (tripUpdateCount > 0) entityTypes.add("TRIP_UPDATES");
 	if (vehiclePositionCount > 0) entityTypes.add("VEHICLE_POSITIONS");
 	if (tripModificationCount > 0) entityTypes.add("TRIP_MODIFICATIONS");
+	if (alertCount > 0) entityTypes.add("SERVICE_ALERTS");
 }
 
 function createFeedContents(): RealtimeFeedContents {
 	const { shapes, stops } = createRealtimeResources();
-	return { tripUpdates: [], vehiclePositions: [], tripModifications: [], shapes, stops };
+	return { tripUpdates: [], vehiclePositions: [], tripModifications: [], alerts: [], shapes, stops };
 }
 
 export async function downloadGtfsRt(source: Source) {
@@ -60,6 +69,7 @@ export async function downloadGtfsRt(source: Source) {
 	const tripUpdates: TripUpdate[] = [];
 	const vehiclePositions: VehiclePosition[] = [];
 	const tripModifications: IdentifiedTripModifications[] = [];
+	const alerts: IdentifiedAlert[] = [];
 	const resources = createRealtimeResources();
 	/** Flux dont aucune donnée n'a pu être obtenue, cache de repli compris. */
 	let failedFeedCount = 0;
@@ -68,6 +78,7 @@ export async function downloadGtfsRt(source: Source) {
 		tripUpdates.push(...contents.tripUpdates);
 		vehiclePositions.push(...contents.vehiclePositions);
 		tripModifications.push(...contents.tripModifications);
+		alerts.push(...contents.alerts);
 		for (const [id, shape] of contents.shapes) resources.shapes.set(id, shape);
 		for (const [id, stop] of contents.stops) resources.stops.set(id, stop);
 	};
@@ -144,6 +155,15 @@ export async function downloadGtfsRt(source: Source) {
 						contents.tripModifications.push({ ...mapped, id: entity.id });
 					}
 
+					if (entity.alert) {
+						const alert =
+							typeof source.options.mapAlert === "function"
+								? source.options.mapAlert(entity.alert, source.gtfs!)
+								: entity.alert;
+						if (alert === undefined) continue;
+						contents.alerts.push({ ...alert, id: entity.id });
+					}
+
 					if (entity.shape) {
 						const shape = createShapeFromRtShape(entity.shape);
 						if (shape !== undefined) contents.shapes.set(shape.id, shape);
@@ -181,5 +201,5 @@ export async function downloadGtfsRt(source: Source) {
 		}),
 	);
 
-	return { tripUpdates, vehiclePositions, tripModifications, resources, failedFeedCount };
+	return { tripUpdates, vehiclePositions, tripModifications, alerts, resources, failedFeedCount };
 }

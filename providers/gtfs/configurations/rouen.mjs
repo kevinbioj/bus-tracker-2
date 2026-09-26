@@ -11,6 +11,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
+			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/service-alerts", pollMs: 60_000 },
 		],
 		mode: "NO-TU",
 		passedCallDetection: "VEHICLE",

@@ -40,3 +40,13 @@
 	position: relative;
 	z-index: 1;
 }
+
+/*
+ * Posée dans un contrôle (prochains passages, filtre), une puce d'information n'est pas un bouton de
+ * carte. Les styles de MapLibre, hors couche, l'emportent sinon sur les utilitaires Tailwind, rangés
+ * dans une couche : fond transparent, 29 px de côté, `display: block`. On lui rend ces utilitaires.
+ * Même spécificité que le survol de MapLibre, déclaré plus tôt : celle-ci l'emporte.
+ */
+.maplibregl-ctrl button[data-slot="information-chip"]:not(:disabled) {
+	all: revert-layer;
+}

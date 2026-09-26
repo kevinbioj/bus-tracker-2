@@ -3,7 +3,11 @@ import { queryOptions } from "@tanstack/react-query";
 import { client } from "~/api/client";
 import type { Network } from "~/api/networks";
 
-export type DataSourceRealtimeEntityType = "TRIP_UPDATES" | "VEHICLE_POSITIONS" | "TRIP_MODIFICATIONS";
+export type DataSourceRealtimeEntityType =
+	| "TRIP_UPDATES"
+	| "VEHICLE_POSITIONS"
+	| "TRIP_MODIFICATIONS"
+	| "SERVICE_ALERTS";
 
 export type DataSourceStaticFeed = {
 	href: string;

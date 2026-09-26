@@ -8,6 +8,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { DebugCoordinates } from "~/components/vehicles-map/debug-coordinates";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import { triggerGeolocateWhenReady, useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
@@ -124,6 +125,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	return (
 		<MapComponent containerProps={props} mapOptions={mapOptions} ref={onMap}>
 			<PositionSave />
+			<DebugCoordinates />
 			<VehiclesMarkers filteredNetworkId={filteredNetworkOnly?.id} lineId={filteredLine?.id} />
 			{showStops && <StopsMarkers networkId={filteredNetwork?.id} />}
 			{showStops && selectedStopRef !== null && <StopDeparturesPanel />}

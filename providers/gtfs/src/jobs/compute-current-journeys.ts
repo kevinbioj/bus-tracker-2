@@ -468,9 +468,15 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 	try {
 		updateLog("%s 1/2 ► Downloading real-time data from feeds.", sourceId);
-		const { tripUpdates, vehiclePositions, tripModifications, resources, failedFeedCount } =
+		const { tripUpdates, vehiclePositions, tripModifications, alerts, resources, failedFeedCount } =
 			await downloadGtfsRt(source);
 		const downloadTime = watch.step();
+
+		// Sous la même réserve d'un cycle complet que les déviations : un flux en échec ne vide pas
+		// l'info trafic déjà connue.
+		if (failedFeedCount === 0 || alerts.length > 0) {
+			source.serviceAlerts = alerts;
+		}
 
 		updateLog("%s 2/2 ► Computing active journeys.", sourceId);
 		const activeJourneys = new Map<string, VehicleJourney>();

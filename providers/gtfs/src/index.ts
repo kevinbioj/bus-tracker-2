@@ -12,6 +12,7 @@ import { computeVehicleJourneys } from "./jobs/compute-current-journeys.js";
 import { computeNextJourneys } from "./jobs/compute-next-journeys.js";
 import { initializeResources } from "./jobs/initialize-resources.js";
 import { publishDataSourceManifests } from "./jobs/publish-data-sources.js";
+import { publishServiceAlerts } from "./jobs/publish-service-alerts.js";
 import { publishStopAreas } from "./jobs/publish-stop-areas.js";
 import { serveStopDepartures } from "./jobs/serve-stop-departures.js";
 import { sweepJourneys } from "./jobs/sweep-journeys.js";
@@ -131,6 +132,7 @@ while (true) {
 	const computeDuration = Date.now() - startedAt;
 
 	await publishDataSourceManifests(redis, configuration.id, configuration.sources);
+	await publishServiceAlerts(redis, configuration.id, configuration.sources);
 
 	// Wait at least 10s and at most 120s between each computation
 	const timeToWait = Math.min(120_000, Math.max(10_000, configuration.computeDelayMs - computeDuration));

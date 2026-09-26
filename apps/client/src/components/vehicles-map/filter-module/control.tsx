@@ -8,8 +8,10 @@ import { useDebounceValue } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
-import type { Network } from "~/api/networks";
+import type { Line, Network } from "~/api/networks";
+import { GetLineAlertsQuery } from "~/api/service-alerts";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
+import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
 import { FilterModuleManager } from "~/components/vehicles-map/filter-module/manager";
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import * as m from "~/paraglide/messages";
@@ -58,6 +60,15 @@ function FilterModuleVehiclesCount({ filter, fixedNetworkId }: Readonly<FilterMo
 			<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
 		</span>
 	);
+}
+
+/**
+ * Info trafic de la ligne filtrée, à côté du compteur de véhicules. Indépendante du panneau des
+ * véhicules en ligne, qu'un réglage peut masquer.
+ */
+function FilterModuleLineAlerts({ line }: Readonly<{ line: Line }>) {
+	const { data: alerts = [] } = useQuery(GetLineAlertsQuery(line.id));
+	return <ServiceAlertsButton alerts={alerts} scope="line" />;
 }
 
 type FilterModuleControlProps = {
@@ -148,6 +159,8 @@ export function FilterModuleControl({
 						)}
 
 						<FilterModuleVehiclesCount filter={filter} fixedNetworkId={fixedNetworkId} />
+
+						{filter.kind === "line" && <FilterModuleLineAlerts line={filter.line} />}
 
 						{withDataLink && (
 							<>

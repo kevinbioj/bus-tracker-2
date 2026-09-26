@@ -3,35 +3,13 @@ import { captureException } from "@bus-tracker/monitoring";
 
 import type { Source } from "../model/source.js";
 import { redactHref } from "../utils/redact-href.js";
+import { resolveSourceNetworkRefs } from "../utils/source-network-refs.js";
 
 /** Seule la publication est requise : évite d'exposer la variance des types du client Redis. */
 type RedisPublisher = { publish: (channel: string, message: string) => Promise<unknown> };
 
 /** Dernière charge utile publiée, pour n'émettre que sur changement effectif. */
 let lastPublishedPayload: string | undefined;
-
-/**
- * Réseaux connus de la source. Les refs observées priment ; à défaut, une configuration dont
- * {@link Source.options.getNetworkRef} est constante répond sans course et permet d'annoncer la
- * source dès le démarrage. Une configuration dépendant de la course renvoie `undefined` ou lève,
- * auquel cas la source attend sa première publication de véhicule pour apparaître.
- */
-function resolveNetworkRefs(source: Source) {
-	const networkRefs = new Set(source.observedNetworkRefs);
-
-	if (networkRefs.size === 0) {
-		try {
-			const networkRef = source.options.getNetworkRef();
-			if (typeof networkRef === "string" && networkRef.length > 0) {
-				networkRefs.add(networkRef);
-			}
-		} catch {
-			// Configuration dépendant de la course : rien à déduire hors contexte.
-		}
-	}
-
-	return [...networkRefs].sort();
-}
 
 function buildRealtimeFeeds(source: Source): { feed: DataSourceRealtimeFeed; redacted: boolean }[] {
 	return (source.options.realtimeResourceHrefs ?? []).map((resource) => {
@@ -63,7 +41,7 @@ export function buildDataSourceManifest(providerId: string, source: Source): Dat
 		kind: "GTFS",
 		providerId,
 		sourceId: source.id,
-		networkRefs: resolveNetworkRefs(source),
+		networkRefs: resolveSourceNetworkRefs(source),
 		staticFeed: {
 			href: staticFeed.href,
 			lastModified: source.gtfs?.lastModified ?? null,

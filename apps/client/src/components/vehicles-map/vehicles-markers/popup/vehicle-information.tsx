@@ -11,9 +11,11 @@ import { match } from "ts-pattern";
 import { useLocalStorage } from "usehooks-ts";
 
 import { GetNetworkQuery } from "~/api/networks";
+import { GetVehicleJourneyAlertsQuery } from "~/api/service-alerts";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { CreateVehicleReportMutation, GetLastVehicleReportQuery } from "~/api/vehicles";
 import { CustomTooltip } from "~/components/custom-tooltip";
+import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -238,6 +240,8 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 
 	const closeDialog = () => setOpenedDialog(null);
 
+	const { data: serviceAlerts = [] } = useQuery(GetVehicleJourneyAlertsQuery(journey.id));
+
 	const onAirConditioningReport = async (value: "PRESENT" | "OUT_OF_SERVICE") => {
 		if (!canReportAirConditioning || journey.vehicle?.id === undefined) return;
 
@@ -415,6 +419,13 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 							/>
 						</CustomTooltip>
 					),
+				}
+			: undefined,
+		// Juste avant le type de position, qui ferme presque la rangée : parmi les dernières repliées faute de place.
+		serviceAlerts.length > 0
+			? {
+					key: "service-alerts",
+					element: <ServiceAlertsButton alerts={serviceAlerts} scope="journey" size="sm" />,
 				}
 			: undefined,
 		{

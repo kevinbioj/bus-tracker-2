@@ -9,7 +9,14 @@ import { getStaleness } from "../utils/get-staleness.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 import type { Gtfs } from "./gtfs.js";
-import type { TripModifications, TripUpdate, VehicleDescriptor, VehiclePosition } from "./gtfs-rt.js";
+import type {
+	Alert,
+	IdentifiedAlert,
+	TripModifications,
+	TripUpdate,
+	VehicleDescriptor,
+	VehiclePosition,
+} from "./gtfs-rt.js";
 import type { Journey } from "./journey.js";
 import { buildEncodedLinePaths } from "./line-path.js";
 import type { StopArea } from "./stop-area.js";
@@ -96,6 +103,11 @@ export type SourceOptions = {
 	 */
 	mapTripModifications?: (tripModifications: TripModifications, gtfs: Gtfs) => TripModifications | undefined;
 	mapVehiclePosition?: (vehicle: VehiclePosition, gtfs: Gtfs) => VehiclePosition | undefined;
+	/**
+	 * Retouche une alerte d'info trafic avant sa publication, ou l'écarte en renvoyant `undefined`.
+	 * Sert à aligner ses identifiants (routes, arrêts, courses) sur ceux du GTFS de la source.
+	 */
+	mapAlert?: (alert: Alert, gtfs: Gtfs) => Alert | undefined;
 	isValidJourney?: (vehicleJourney: VehicleJourney) => boolean;
 	/**
 	 * Retouche un passage du tableau des prochains passages d'un arrêt, avant qu'il ne soit rendu :
@@ -128,7 +140,7 @@ export const MAX_TERMINUS_GRACE_MS = 120_000;
  */
 export const DEFAULT_TRIP_UPDATE_TTL_MS = 10 * 60 * 1000;
 
-export type RealtimeEntityType = "TRIP_UPDATES" | "VEHICLE_POSITIONS" | "TRIP_MODIFICATIONS";
+export type RealtimeEntityType = "TRIP_UPDATES" | "VEHICLE_POSITIONS" | "TRIP_MODIFICATIONS" | "SERVICE_ALERTS";
 
 export class Source {
 	gtfs?: Gtfs;
@@ -162,6 +174,11 @@ export class Source {
 	 * pouvoir les trouver sur la carte et y consulter ses passages. Recalculés à chaque cycle.
 	 */
 	realtimeStopAreas = new Map<string, StopArea>();
+	/**
+	 * Alertes d'info trafic lues au dernier cycle, telles que le flux les publie : leurs identifiants
+	 * ne sont résolus en références publiées qu'au moment de les publier.
+	 */
+	serviceAlerts: IdentifiedAlert[] = [];
 
 	constructor(
 		readonly id: string,
