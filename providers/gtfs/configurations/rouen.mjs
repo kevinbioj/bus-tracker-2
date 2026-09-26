@@ -69,14 +69,12 @@ const sources = [
 		id: "tae",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tae.zip",
 		realtimeResourceHrefs: [
-			{
-				href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?tcar=0&tae=1",
-				pollMs: 20_000,
-			},
+			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?tcar=0&tae=1", pollMs: 20_000 },
 			{
 				href: "https://api.mrn.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
 				pollMs: 20_000,
 			},
+			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/service-alerts?tcar=0&tae=1", pollMs: 60_000 },
 		],
 		mode: "NO-TU",
 		excludeScheduled: (trip) => trip.route.name !== "I",
@@ -92,6 +90,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?tcar=0&tni=1", pollMs: 20_000 },
 			{ href: "https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions", pollMs: 20_000 },
+			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/service-alerts?tcar=0&tni=1", pollMs: 60_000 },
 		],
 		mode: "NO-TU",
 		mapTripUpdate: (tripUpdate) => {
