@@ -71,6 +71,10 @@ function createArrowOutlineIcon(color = "#000000") {
 const initialData: SourceSpecification = {
 	type: "geojson",
 	data: { type: "FeatureCollection", features: [] },
+	// Des points n'ont rien à gagner à un découpage plus fin : au-delà, les tuiles du zoom 14 sont
+	// agrandies. Chaque mise à jour de la source — une par image de l'animation — a ainsi bien moins de
+	// tuiles à reconstruire aux zooms forts.
+	maxzoom: 14,
 };
 
 const vehiclesLayerObject: AddLayerObject = {

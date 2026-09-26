@@ -248,7 +248,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 
 		const onSourceData = (e: { sourceId: string; source: SourceSpecification; sourceDataType: "content" | string }) => {
 			if (e.sourceId !== "vehicles" || e.sourceDataType !== "content") return;
-			// Sans popup ouverte il n'y a rien à suivre : la source est réécrite à chaque frame
+			// Sans popup ouverte il n'y a rien à suivre : la source est mise à jour à chaque frame
 			// d'animation, parcourir tous les marqueurs à chacune ne servirait à rien.
 			const activeFeature = activeFeatureRef.current;
 			if (activeFeature === null) return;

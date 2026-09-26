@@ -137,7 +137,7 @@ function LineVehiclesControl({ lineId, timezone }: Readonly<LineVehiclesPanelPro
 	}, [map]);
 
 	return createPortal(
-		<div className="bg-background/95 backdrop-blur-sm rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
+		<div className="bg-background/95 rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
 			<div className="px-2 py-2 border-b text-xs font-semibold text-muted-foreground uppercase tracking-wide">
 				{m.map_vehicles_online({ count: vehicles.length })}
 			</div>

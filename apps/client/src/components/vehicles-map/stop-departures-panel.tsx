@@ -348,7 +348,7 @@ function StopDeparturesControl() {
 	}, [map]);
 
 	return createPortal(
-		<div className="bg-background/95 backdrop-blur-sm rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
+		<div className="bg-background/95 rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
 			<div className="flex items-center gap-1 border-b px-1 py-0.5">
 				<div className="flex-1 min-w-0">
 					<p className="text-[10px] font-thin uppercase tracking-wide leading-tight">{m.stop_departures_title()}</p>

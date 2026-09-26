@@ -31,7 +31,7 @@
 	"attributions_no_realtime": "Für diese Quelle liegen keine Echtzeitdaten vor.",
 	"attributions_entity_trip_updates": "Echtzeit-Fahrpläne",
 	"attributions_entity_vehicle_positions": "Fahrzeugpositionen",
-	"attributions_entity_trip_modifications": "Umgeleitete Fahrten",
+	"attributions_entity_trip_modifications": "Fahrtänderungen",
 	"attributions_entity_service_alerts": "Verkehrsinfo",
 	"attributions_authenticated": "Authentifizierter Zugriff",
 	"attributions_last_modified": "Aktualisiert am {date}",

@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "@tanstack/react-router";
 import { FullscreenControl, GeolocateControl, type Map as MaplibreGl, NavigationControl } from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { type ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
@@ -23,8 +22,6 @@ import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehi
 type VehiclesMapProps = ComponentPropsWithoutRef<"div">;
 
 export function VehiclesMap(props: VehiclesMapProps) {
-	const locationHash = useLocation({ select: (state) => state.hash });
-
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
 	const { selectedRef: selectedStopRef, clearSelection: clearStopSelection } = useStopSelection();
 	const [showStopsSetting] = useShowStops();
@@ -52,7 +49,9 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	}, [filteredLine, filteredNetwork, filteredNetworkOnly]);
 
 	const [initialLocation] = useState(() => {
-		// location in url has priority over local storage location
+		// location in url has priority over local storage location. Read once rather than subscribed
+		// to: `PositionSave` rewrites the hash after every move, which would re-render the whole map.
+		const locationHash = window.location.hash.slice(1);
 		if (locationHash) {
 			const [lng, lat, zoom] = locationHash.split(",").map(Number);
 			if (!Number.isNaN(lng) && !Number.isNaN(lat) && !Number.isNaN(zoom)) {

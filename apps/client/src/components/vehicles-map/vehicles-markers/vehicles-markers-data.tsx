@@ -213,8 +213,8 @@ export function VehiclesMarkersData({
 						type: "Point",
 						coordinates: position.type === "COMPUTED" ? noise(coordinates, item.id) : coordinates,
 					},
-					// Seulement ce que lisent les couches et la popup : ces propriétés repartent au worker à
-					// chaque image de l'animation des marqueurs.
+					// Seulement ce que lisent les couches et la popup : la source en garde une copie, et le
+					// worker les reprend dans chaque tuile qu'il reconstruit.
 					properties: {
 						id: item.id,
 						bearing: position.bearing ?? null,

@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { useMapDiagnostics } from "~/adapters/maplibre-gl/use-map-diagnostics";
+import { isLowEndDevice } from "~/utils/device-capabilities";
 
 setWorkerUrl(maplibreWorkerUrl);
 
@@ -22,6 +23,10 @@ type MapComponentProps = PropsWithChildren & {
 };
 
 const MapContext = createContext<MaplibreMap | null>(null);
+
+// maplibre renders at the screen density by default: a 3x phone fills 9 times the pixels of a 1x
+// screen, for a sharpness the eye no longer tells apart past 2x. Low-end devices stop at 1.5x.
+const MAX_PIXEL_RATIO = isLowEndDevice ? 1.5 : 2;
 
 // Matched by `isWebGLError()` in the error screen to show the dedicated hardware acceleration message.
 const WEBGL_INITIALIZATION_ERROR = "Failed to initialize WebGL: the browser provided no WebGL2 context.";
@@ -36,6 +41,7 @@ export function MapComponent({ children, containerProps, mapOptions, ref }: MapC
 		if (container === null) return;
 
 		const instance = new MaplibreMap({
+			pixelRatio: Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO),
 			...mapOptions,
 			container,
 		});
