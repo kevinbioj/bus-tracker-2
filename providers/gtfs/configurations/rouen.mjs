@@ -82,6 +82,7 @@ const sources = [
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TAE",
 		getVehicleRef: (vehicle) => vehicle?.id.replace(/TAE:?/, ""),
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapLineRef: (lineRef) => lineRef.replace("TAE:", ""),
 	},
 	{
@@ -123,6 +124,7 @@ const sources = [
 		},
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: () => "TNI",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapLineRef: (lineRef) => lineRef.replace("TNI:", ""),
 	},
 ];
