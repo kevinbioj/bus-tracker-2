@@ -186,6 +186,47 @@ function callHasRealtime(call: JourneyCall) {
 }
 
 /**
+ * Décalage constant entre les `stop_sequence` d'un TripUpdate et celles du GTFS statique. Certains
+ * producteurs numérotent à partir de 1 une course que le statique numérote à partir de 0 (IDFM,
+ * pour une partie des courses RATP notamment) : apparié par séquence, chaque horaire temps réel
+ * glisse alors sur l'arrêt suivant, et le premier arrêt reste sans temps réel jusqu'au départ.
+ *
+ * Le décalage est déduit du premier `stop_time_update` portant séquence et arrêt, puis n'est
+ * retenu que si tous les autres le confirment ; à défaut, les séquences sont prises telles quelles.
+ */
+function getStopSequenceOffset(calls: JourneyCall[], stopTimeUpdates: StopTimeUpdate[]) {
+	const isIdentified = (stopTimeUpdate: StopTimeUpdate) =>
+		typeof stopTimeUpdate.stopSequence === "number" && stopTimeUpdate.stopId !== undefined;
+	const reference = stopTimeUpdates.find(isIdentified);
+	if (reference === undefined) return 0;
+
+	// Cas courant, séquences concordantes : tranché sans rien allouer.
+	for (const call of calls) {
+		if (call.sequence === reference.stopSequence) {
+			if (call.stop.id === reference.stopId) return 0;
+			break;
+		}
+	}
+
+	// Arrêt de référence le plus proche de la séquence annoncée : une ligne circulaire le dessert plusieurs fois.
+	let offset: number | undefined;
+	for (const call of calls) {
+		if (call.stop.id !== reference.stopId) continue;
+		const candidate = call.sequence - reference.stopSequence!;
+		if (offset === undefined || Math.abs(candidate) < Math.abs(offset)) offset = candidate;
+	}
+	if (offset === undefined) return 0;
+
+	const callsBySequence = new Map(calls.map((call) => [call.sequence, call]));
+	const isConsistent = stopTimeUpdates.every(
+		(stopTimeUpdate) =>
+			!isIdentified(stopTimeUpdate) ||
+			callsBySequence.get(stopTimeUpdate.stopSequence! + offset)?.stop.id === stopTimeUpdate.stopId,
+	);
+	return isConsistent ? offset : 0;
+}
+
+/**
  * Statut auquel un arrêt revient en l'absence d'information temps réel le concernant. Un arrêt
  * issu d'une déviation n'a pas d'existence théorique : le sien ne peut pas être « à l'horaire ».
  */
@@ -683,6 +724,7 @@ export class Journey {
 		const stopTimeUpdatesByStopId = useStopId
 			? groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopId)
 			: undefined;
+		const sequenceOffset = useStopId ? 0 : getStopSequenceOffset(this.calls, stopTimeUpdates);
 
 		for (const call of this.calls) {
 			if (!appendTripUpdateInformation) {
@@ -703,10 +745,14 @@ export class Journey {
 
 			let timeUpdate = useStopId
 				? stopTimeUpdatesByStopId![call.stop.id]
-				: stopTimeUpdatesByStopSequence[call.sequence];
+				: stopTimeUpdatesByStopSequence[call.sequence - sequenceOffset];
 
 			// Prevent wrong time assignation on circular lines when all stop events aren't provided
-			if (!useStopId && typeof timeUpdate?.stopSequence === "number" && timeUpdate.stopSequence !== call.sequence) {
+			if (
+				!useStopId &&
+				typeof timeUpdate?.stopSequence === "number" &&
+				timeUpdate.stopSequence + sequenceOffset !== call.sequence
+			) {
 				timeUpdate = undefined;
 			}
 

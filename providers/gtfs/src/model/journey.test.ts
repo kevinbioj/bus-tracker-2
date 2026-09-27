@@ -238,6 +238,44 @@ describe("Journey", () => {
 	});
 });
 
+describe("Journey#updateJourney (séquences décalées)", () => {
+	const departureAt = (stopId: string, stopSequence: number, time: string): StopTimeUpdate => {
+		const seconds = at(time).epochMilliseconds / 1000;
+		return { stopId, stopSequence, arrival: { time: seconds }, departure: { time: seconds } };
+	};
+
+	it("rattache chaque horaire à son arrêt quand le producteur numérote à partir d'un autre rang", () => {
+		const { gtfs, trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		// Séquences statiques 1, 2, 3 ; le producteur annonce 2, 3, 4.
+		journey.updateJourney(gtfs, [
+			departureAt("A", 2, "08:01:00"),
+			departureAt("B", 3, "08:13:00"),
+			departureAt("C", 4, "08:21:00"),
+		]);
+
+		expect(journey.calls.map((call) => call.expectedDepartureTime)).toEqual([
+			at("08:01:00").epochMilliseconds,
+			at("08:13:00").epochMilliseconds,
+			at("08:21:00").epochMilliseconds,
+		]);
+	});
+
+	it("s'en tient aux séquences quand les arrêts ne confirment pas un décalage constant", () => {
+		const { gtfs, trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.updateJourney(gtfs, [departureAt("A", 2, "08:01:00"), departureAt("C", 3, "08:21:00")]);
+
+		expect(journey.calls.map((call) => call.expectedDepartureTime)).toEqual([
+			undefined,
+			at("08:01:00").epochMilliseconds,
+			at("08:21:00").epochMilliseconds,
+		]);
+	});
+});
+
 describe("Journey#guessPosition (guard anti-recul)", () => {
 	it("laisse la position progresser normalement sans temps réel", () => {
 		const { trip } = makeShapedGtfs();
