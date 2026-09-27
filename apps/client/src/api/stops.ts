@@ -1,3 +1,4 @@
+import type { StopAreaMode } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
@@ -9,6 +10,8 @@ export type StopPoint = {
 	latitude: number;
 	longitude: number;
 	platformCode?: string;
+	/** Mode le plus lourd qui dessert le quai. Absent : celui de sa station. */
+	mode?: StopAreaMode;
 };
 
 export type StopMarker = {
@@ -17,6 +20,8 @@ export type StopMarker = {
 	latitude: number;
 	longitude: number;
 	lineRefs: string[];
+	/** Mode le plus lourd qui dessert la station : il en donne le pictogramme. */
+	mode: StopAreaMode;
 	/** Présents seulement lorsqu'ils ont été demandés, aux zooms les plus forts. */
 	stopPoints?: StopPoint[];
 };
@@ -51,6 +56,7 @@ export type StopDepartures = {
 		name: string;
 		latitude: number;
 		longitude: number;
+		mode: StopAreaMode;
 		networkId: number;
 		/** Tous les réseaux qui desservent la station. */
 		networkIds: number[];

@@ -50,6 +50,15 @@ export const stopDeparturesRequestChannel = (providerId: string) => `stop-depart
 /** Canal de réponse, commun : chaque réponse porte l'identifiant de la demande à laquelle elle répond. */
 export const STOP_DEPARTURES_REPLY_CHANNEL = "stop-departures:reply";
 
+/**
+ * Modes retenus pour représenter une station sur la carte, du plus lourd au plus léger : une station
+ * prend le plus lourd des modes qui la desservent. Tout autre mode compte comme un bus.
+ */
+export const stopAreaModes = ["RAIL", "SUBWAY", "TRAMWAY", "BUS", "FUNICULAR"] as const;
+
+export const stopAreaModeEnum = type("'RAIL'|'SUBWAY'|'TRAMWAY'|'BUS'|'FUNICULAR'");
+export type StopAreaMode = typeof stopAreaModeEnum.infer;
+
 /** Quai d'une station : un arrêt physique, avec sa position propre. */
 export const stopPointSchema = type({
 	/** Sous la forme exacte des `stopRef` des dessertes. */
@@ -57,6 +66,8 @@ export const stopPointSchema = type({
 	latitude: "number",
 	longitude: "number",
 	"platformCode?": "string",
+	/** Mode le plus lourd qui dessert le quai. Absent : celui de sa station. */
+	"mode?": stopAreaModeEnum,
 });
 
 export type StopPoint = typeof stopPointSchema.infer;
@@ -101,6 +112,8 @@ export const stopAreaManifestSchema = type({
 	sourceId: "string",
 	/** Lignes desservant la station, sous la forme `${networkRef}:Line:${lineRef}`. */
 	lineRefs: "string[]",
+	/** Mode le plus lourd qui dessert la station ({@link stopAreaModes}). Absent : un bus. */
+	"mode?": stopAreaModeEnum,
 	updatedAt: "string.date.iso",
 });
 

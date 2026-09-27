@@ -20,6 +20,14 @@ const sources = [
 				if (trip.route.id === "TCAR:99") trip.block = "CALYPSO";
 				return trip.route.id.startsWith("TCAR");
 			},
+			postLoad: (resource) => {
+				for (const routeId of ["TCAR:91", "TCAR:92", "TCAR:93", "TCAR:94", "TCAR:95"]) {
+					const route = resource.routes.get(routeId);
+					if (route !== undefined) {
+						route.type = "TRAMWAY";
+					}
+				}
+			},
 		},
 		getAheadTime: (journey) => (journey?.trip.route.id === "TCAR:99" ? 5 * 60 : 2 * 60),
 		// excludeScheduled: (trip) => {

@@ -3,7 +3,9 @@ import {
 	STOP_AREAS_GEO_KEY,
 	STOP_AREAS_INVALIDATION_CHANNEL,
 	type StopAreaManifest,
+	type StopAreaMode,
 	stopAreaKey,
+	stopAreaModes,
 	stopAreasSourceKey,
 	stopPointAreaKey,
 	stopPointsSourceKey,
@@ -11,6 +13,7 @@ import {
 import { captureException } from "@bus-tracker/monitoring";
 import type { createRedisClient } from "@bus-tracker/redis";
 
+import type { Route, RouteType } from "../model/route.js";
 import type { Source } from "../model/source.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
@@ -19,6 +22,14 @@ import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
 const CHUNK_SIZE = 500;
 
 type RedisClient = ReturnType<typeof createRedisClient>;
+
+/** Mode d'une station pour un type de route : hors des modes retenus, un bus. */
+const modeOf = (routeType: RouteType): StopAreaMode =>
+	(stopAreaModes as readonly string[]).includes(routeType) ? (routeType as StopAreaMode) : "BUS";
+
+/** Le plus lourd de deux modes, dans l'ordre de {@link stopAreaModes}. */
+const heaviestMode = (a: StopAreaMode, b: StopAreaMode) =>
+	stopAreaModes.indexOf(a) <= stopAreaModes.indexOf(b) ? a : b;
 
 /** `GEOADD` refuse les latitudes au-delà de ±85,05° ; un arrêt en (0, 0) trahit des coordonnées absentes. */
 const isIndexable = ({ latitude, longitude }: StopAreaManifest) =>
@@ -34,21 +45,32 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 
 	// Réseaux et lignes de chaque station, relevés sur les courses qui la desservent : une source peut
 	// alimenter plusieurs réseaux, et c'est la course, pas l'arrêt, qui en décide.
-	const services = new Map<string, { courseCountByNetwork: Map<string, number>; lineRefs: Set<string> }>();
-	const record = (areaId: string, networkRef: string, routeId: string) => {
+	const services = new Map<
+		string,
+		{ courseCountByNetwork: Map<string, number>; lineRefs: Set<string>; mode: StopAreaMode }
+	>();
+	// Mode de chaque quai, relevé à part : dans une gare, l'arrêt de bus du parvis reste un arrêt de bus.
+	const stopModes = new Map<string, StopAreaMode>();
+	const record = (areaId: string, stopId: string, networkRef: string, route: Route) => {
+		const mode = modeOf(route.type);
 		let service = services.get(areaId);
 		if (service === undefined) {
-			service = { courseCountByNetwork: new Map(), lineRefs: new Set() };
+			service = { courseCountByNetwork: new Map(), lineRefs: new Set(), mode };
 			services.set(areaId, service);
 		}
 		service.courseCountByNetwork.set(networkRef, (service.courseCountByNetwork.get(networkRef) ?? 0) + 1);
-		service.lineRefs.add(`${networkRef}:Line:${mapLineRef?.(routeId) ?? routeId}`);
+		service.lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
+		service.mode = heaviestMode(service.mode, mode);
+
+		const stopMode = stopModes.get(stopId);
+		stopModes.set(stopId, stopMode !== undefined ? heaviestMode(stopMode, mode) : mode);
 	};
 
+	const { stops } = gtfs.stopTimeStore;
 	for (const stopArea of gtfs.stopAreas.values()) {
-		for (const [, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
+		for (const [stopTimeIdx, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
 			const trip = gtfs.tripsByIdx[tripIdx];
-			if (trip !== undefined) record(stopArea.id, networkOf(trip), trip.route.id);
+			if (trip !== undefined) record(stopArea.id, stops[stopTimeIdx]!.id, networkOf(trip), trip.route);
 		}
 	}
 
@@ -58,7 +80,7 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		if (journey === undefined) continue;
 		for (const call of journey.calls) {
 			if (source.realtimeStopAreas.has(call.stop.id)) {
-				record(call.stop.id, networkOf(journey.trip, journey), journey.trip.route.id);
+				record(call.stop.id, call.stop.id, networkOf(journey.trip, journey), journey.trip.route);
 			}
 		}
 	}
@@ -87,10 +109,13 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 					latitude: stop.latitude,
 					longitude: stop.longitude,
 					...(stop.platformCode !== undefined ? { platformCode: stop.platformCode } : {}),
+					// Un quai où aucun départ n'a été relevé (terminus seulement) reprend le mode de sa station.
+					mode: stopModes.get(stop.id) ?? service.mode,
 				})),
 				providerId,
 				sourceId: source.id,
 				lineRefs: [...service.lineRefs].sort(),
+				mode: service.mode,
 				updatedAt,
 			},
 		];

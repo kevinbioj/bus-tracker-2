@@ -1,3 +1,4 @@
+import { stopAreaModes } from "@bus-tracker/contracts";
 import type {
 	AddLayerObject,
 	ExpressionSpecification,
@@ -55,8 +56,12 @@ const STOPS_LABEL_MIN_ZOOM = 15;
 /** Au doigt, la plaque est plus petite que la cible : la zone de clic est élargie, comme pour les véhicules. */
 const COARSE_POINTER_HIT_PADDING = 8;
 
-const STOP_ICON_ID = "stop-icon";
-const SELECTED_STOP_ICON_ID = "stop-icon-selected";
+/** Une image par mode et par état : le mode de chaque arrêt choisit la sienne. */
+const STOP_ICON_PREFIX = "stop-icon-";
+const SELECTED_STOP_ICON_PREFIX = "stop-icon-selected-";
+
+const stopIconImage: ExpressionSpecification = ["concat", STOP_ICON_PREFIX, ["get", "mode"]];
+const selectedStopIconImage: ExpressionSpecification = ["concat", SELECTED_STOP_ICON_PREFIX, ["get", "mode"]];
 
 const LABEL_TEXT_SIZE = 12;
 
@@ -133,7 +138,7 @@ const areasLayerObject: AddLayerObject = {
 	filter: ["all", ["==", ["get", "kind"], "area"], ["!", ["get", "selected"]]],
 	layout: {
 		...labelLayout,
-		"icon-image": STOP_ICON_ID,
+		"icon-image": stopIconImage,
 		// Seuil entier : il tombe sur un zoom de tuile, le libellé apparaît donc sans retard.
 		"text-field": ["step", ["zoom"], "", STOPS_LABEL_MIN_ZOOM, ["get", "label"]],
 	},
@@ -153,7 +158,7 @@ const pointsLayerObject: AddLayerObject = {
 	filter: ["all", ["==", ["get", "kind"], "point"], ["!", ["get", "selected"]]],
 	layout: {
 		...labelLayout,
-		"icon-image": STOP_ICON_ID,
+		"icon-image": stopIconImage,
 		"text-field": ["get", "label"],
 	},
 	paint: {
@@ -175,7 +180,7 @@ const selectedAreasLayerObject: AddLayerObject = {
 	filter: ["all", ["==", ["get", "kind"], "area"], ["get", "selected"]],
 	layout: {
 		...labelLayout,
-		"icon-image": SELECTED_STOP_ICON_ID,
+		"icon-image": selectedStopIconImage,
 		"icon-size": SELECTED_STOP_ICON_SCALE,
 		"text-field": ["get", "label"],
 	},
@@ -194,7 +199,7 @@ const selectedPointsLayerObject: AddLayerObject = {
 	filter: ["all", ["==", ["get", "kind"], "point"], ["get", "selected"]],
 	layout: {
 		...labelLayout,
-		"icon-image": SELECTED_STOP_ICON_ID,
+		"icon-image": selectedStopIconImage,
 		"icon-size": SELECTED_STOP_ICON_SCALE,
 		"text-field": ["get", "label"],
 	},
@@ -237,12 +242,15 @@ export function StopsMarkers({ networkId }: StopsMarkersProps) {
 			if (abort) return;
 			if (!isStyleLoaded(map)) return;
 
-			for (const [imageId, selected] of [
-				[STOP_ICON_ID, false],
-				[SELECTED_STOP_ICON_ID, true],
-			] as const) {
-				if (map.getImage(imageId) === undefined) {
-					map.addImage(imageId, createStopIcon(selected), { pixelRatio: STOP_ICON_PIXEL_RATIO });
+			for (const mode of stopAreaModes) {
+				for (const [prefix, selected] of [
+					[STOP_ICON_PREFIX, false],
+					[SELECTED_STOP_ICON_PREFIX, true],
+				] as const) {
+					const imageId = `${prefix}${mode}`;
+					if (map.getImage(imageId) === undefined) {
+						map.addImage(imageId, createStopIcon(mode, selected), { pixelRatio: STOP_ICON_PIXEL_RATIO });
+					}
 				}
 			}
 		};

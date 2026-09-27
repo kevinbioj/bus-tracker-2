@@ -1,4 +1,4 @@
-import type { StopDeparture, StopPoint } from "@bus-tracker/contracts";
+import type { StopAreaMode, StopDeparture, StopPoint } from "@bus-tracker/contracts";
 import * as z from "zod";
 
 import { resolveLineRefs } from "../core/services/line-ref-service.js";
@@ -29,6 +29,7 @@ type StopMarker = {
 	latitude: number;
 	longitude: number;
 	lineRefs: string[];
+	mode: StopAreaMode;
 	stopPoints?: StopPoint[];
 };
 
@@ -67,12 +68,14 @@ hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) 
 			{ limit: MARKERS_LIMIT, networkIds: networkId },
 		);
 
-		items = stopAreas.map(({ ref, name, latitude, longitude, lineRefs, stopPoints }) => ({
+		items = stopAreas.map(({ ref, name, latitude, longitude, lineRefs, mode, stopPoints }) => ({
 			ref,
 			name,
 			latitude,
 			longitude,
 			lineRefs,
+			// Fiche publiée avant l'apparition du mode : un bus, le temps qu'elle soit republiée.
+			mode: mode ?? "BUS",
 			...(withStopPoints ? { stopPoints: stopPoints ?? [] } : {}),
 		}));
 		markersCache.set(cacheKey, items);
@@ -334,6 +337,7 @@ hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams)
 			name: stopArea.name,
 			latitude: stopArea.latitude,
 			longitude: stopArea.longitude,
+			mode: stopArea.mode ?? "BUS",
 			networkId: stopArea.networkId,
 			// Tous les réseaux de la station : le client en tire numéros et couleurs des lignes.
 			networkIds: stopArea.networkIds,

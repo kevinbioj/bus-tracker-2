@@ -1,3 +1,4 @@
+import type { StopAreaMode } from "@bus-tracker/contracts";
 import { useQuery } from "@tanstack/react-query";
 import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,7 +28,7 @@ type Level = "none" | "areas" | "points";
 const levelAt = (zoom: number): Level =>
 	zoom >= STOP_POINTS_LOAD_ZOOM ? "points" : zoom >= STOPS_MIN_ZOOM ? "areas" : "none";
 
-type Area = Pick<StopMarker, "ref" | "name" | "latitude" | "longitude" | "stopPoints">;
+type Area = Pick<StopMarker, "ref" | "name" | "latitude" | "longitude" | "mode" | "stopPoints">;
 
 type Selection = { stopRef: string | null; stopPointRef: string | null };
 
@@ -40,6 +41,8 @@ type StopFeature = GeoJSON.Feature<
 		/** Quai, lorsque le marqueur en représente un. */
 		stopPointRef?: string;
 		label: string;
+		/** Pictogramme de la plaque : le mode le plus lourd de la station, ou du quai. */
+		mode: StopAreaMode;
 		selected: boolean;
 	}
 >;
@@ -55,7 +58,7 @@ function featuresOf(area: Area, withStopPoints: boolean, selection: Selection): 
 	const areaFeature: StopFeature = {
 		type: "Feature",
 		geometry: { type: "Point", coordinates: [area.longitude, area.latitude] },
-		properties: { kind: "area", ref: area.ref, label: area.name, selected: areaSelected },
+		properties: { kind: "area", ref: area.ref, label: area.name, mode: area.mode, selected: areaSelected },
 	};
 
 	if (!withStopPoints) return [areaFeature];
@@ -77,6 +80,7 @@ function featuresOf(area: Area, withStopPoints: boolean, selection: Selection): 
 					ref: area.ref,
 					stopPointRef: point?.ref,
 					label: point?.platformCode !== undefined ? `${area.name} (${point.platformCode})` : area.name,
+					mode: point?.mode ?? area.mode,
 					// Sans quai désigné, tous les quais de la station sélectionnée le sont.
 					selected:
 						areaSelected &&
