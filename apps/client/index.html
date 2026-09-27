@@ -26,6 +26,10 @@
     <link rel="shortcut icon" href="/favicon.ico?v=2" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2" />
 
+    <!-- Carte : domaines du TileJSON, des sprites, des tuiles et des glyphes -->
+    <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
+    <link rel="preconnect" href="https://tiles.bus-tracker.fr" crossorigin />
+
     <!-- PWA -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="apple-mobile-web-app-title" content="Bus Tracker" />
@@ -79,6 +83,29 @@
     <script>
       if (location.pathname.startsWith('/embed')) {
         document.getElementById('header').classList.add("embed-hidden");
+      }
+
+      // Pages avec carte : ce que maplibre demande en cascade (style, puis TileJSON et sprite, puis
+      // glyphes une fois les tuiles lues) part dès le HTML. À garder aligné sur liberty-fr.json.
+      if (location.pathname === '/' || location.pathname.startsWith('/embed/')) {
+        const sprite = 'https://tiles.openfreemap.org/sprites/ofm_f384/ofm' + (devicePixelRatio > 1 ? '@2x' : '');
+        const glyphs = ['Noto Sans Regular', 'Noto Sans Italic', 'Noto Sans Bold'].map(
+          (font) => 'https://tiles.bus-tracker.fr/fonts/' + encodeURIComponent(font) + '/0-255.pbf'
+        );
+        for (const href of [
+          '/map-styles/liberty-fr.json',
+          'https://tiles.openfreemap.org/planet',
+          sprite + '.json',
+          sprite + '.png',
+          ...glyphs,
+        ]) {
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'fetch';
+          link.crossOrigin = 'anonymous';
+          link.href = href;
+          document.head.appendChild(link);
+        }
       }
     </script>
     <script type="module" src="/src/main.tsx"></script>

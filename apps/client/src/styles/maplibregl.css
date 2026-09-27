@@ -50,3 +50,9 @@
 .maplibregl-ctrl button[data-slot="information-chip"]:not(:disabled) {
 	all: revert-layer;
 }
+
+/* Couleur du fond du style liberty-fr : la carte reste transparente tant que son style n'est pas chargé,
+   ce qui laissait voir le fond de page (violet sur la carte) au démarrage. */
+.maplibregl-map {
+	background-color: #f8f4f0;
+}

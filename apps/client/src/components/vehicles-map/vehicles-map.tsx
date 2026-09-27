@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FullscreenControl, GeolocateControl, type Map as MaplibreGl, NavigationControl } from "maplibre-gl";
 import { parseAsInteger, useQueryState } from "nuqs";
 import { type ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
@@ -7,6 +7,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { DebugCoordinates } from "~/components/vehicles-map/debug-coordinates";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
@@ -73,6 +74,10 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	// Figé au montage : `onMap` est dans les dépendances de l'effet qui crée la carte, donc toute
 	// nouvelle identité la recréerait.
 	const [shouldGeolocateOnStart] = useState(() => geolocateOnStart);
+	// Sans filtre, la couche de marqueurs démarre sur la requête non filtrée : elle peut partir dès la
+	// création de la carte. Avec un filtre, la clé n'est connue qu'une fois la ligne ou le réseau chargé.
+	const [shouldPrefetchMarkers] = useState(() => lineId === null && networkId === null);
+	const queryClient = useQueryClient();
 
 	const mapOptions = useMemo(
 		() => ({
@@ -86,6 +91,12 @@ export function VehiclesMap(props: VehiclesMapProps) {
 
 	const onMap = useCallback(
 		(map: MaplibreGl) => {
+			// Les marqueurs attendraient sinon que le style soit chargé, la couche ne se montant qu'alors :
+			// la requête part en même temps que le style, et la couche la retrouve en cache.
+			if (shouldPrefetchMarkers) {
+				void queryClient.prefetchQuery(GetVehicleJourneyMarkersQuery(map.getBounds()));
+			}
+
 			setTimeout(() => {
 				const navigationControl = new NavigationControl();
 				map.addControl(navigationControl, "top-left");
@@ -103,7 +114,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 				}
 			}, 100);
 		},
-		[shouldGeolocateOnStart],
+		[queryClient, shouldGeolocateOnStart, shouldPrefetchMarkers],
 	);
 
 	// Les deux filtres sont mutuellement exclusifs : en poser un efface toujours l'autre.

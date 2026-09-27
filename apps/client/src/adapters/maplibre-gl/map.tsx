@@ -1,4 +1,4 @@
-import { Map as MaplibreMap, type MapOptions, setWorkerUrl } from "maplibre-gl";
+import { Map as MaplibreMap, type MapOptions, setWorkerCount, setWorkerUrl } from "maplibre-gl";
 import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import {
 	type ComponentPropsWithoutRef,
@@ -15,6 +15,9 @@ import { useMapDiagnostics } from "~/adapters/maplibre-gl/use-map-diagnostics";
 import { isLowEndDevice } from "~/utils/device-capabilities";
 
 setWorkerUrl(maplibreWorkerUrl);
+// Hors Safari, maplibre n'utilise qu'un worker : les tuiles du premier affichage y sont traitées l'une
+// après l'autre, et la carte reste vide d'autant. Doit être fixé avant la création de la première carte.
+setWorkerCount(3);
 
 type MapComponentProps = PropsWithChildren & {
 	containerProps?: ComponentPropsWithoutRef<"div">;
@@ -42,6 +45,9 @@ export function MapComponent({ children, containerProps, mapOptions, ref }: MapC
 
 		const instance = new MaplibreMap({
 			pixelRatio: Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO),
+			// Nos styles sont servis par l'application : les valider à chaque chargement retarde, sur le
+			// thread principal, les requêtes qu'ils déclenchent (TileJSON, sprite, tuiles).
+			validateStyle: false,
 			...mapOptions,
 			container,
 		});
