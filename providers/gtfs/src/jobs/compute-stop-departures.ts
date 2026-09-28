@@ -146,8 +146,11 @@ export function computeStopDepartures(
 			// qu'elle a pu porter avant sa suppression.
 			const canceled = source.canceledJourneyKeys.has(journeyKey);
 			const journey = canceled ? undefined : gtfs.journeys.get(journeyKey);
+			// Un TripUpdate peut ne porter que des suppressions d'arrêts, sans aucun horaire : la course n'a
+			// alors pas de temps réel, mais ses arrêts ont bien quelque chose à dire.
 			const call =
-				journey !== undefined && (journey.hasRealtime() || journey.hasModifications())
+				journey !== undefined &&
+				(journey.hasRealtime() || journey.hasModifications() || journey.lastTripUpdateAtMs !== undefined)
 					? findCallForStop(journey.calls, stop.id, sequence[stopTimeIdx]!)
 					: undefined;
 

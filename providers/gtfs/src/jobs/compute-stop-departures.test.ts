@@ -196,6 +196,26 @@ describe("computeStopDepartures", () => {
 		expect(departures[1]!.canceled).toBeUndefined();
 	});
 
+	it("annonce supprimé un arrêt retiré par un TripUpdate qui ne porte aucun horaire", () => {
+		const source = makeSource();
+		const gtfs = source.gtfs!;
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const journey = gtfs.trips.get("aller")!.getScheduledJourney(date, true);
+		journey.updateJourney(gtfs, [{ stopId: "mairie-a", stopSequence: 1, scheduleRelationship: "SKIPPED" }]);
+		journey.lastTripUpdateAtMs = MONDAY_MORNING.epochMilliseconds;
+		gtfs.journeys.set(getJourneyKey(date, "aller"), journey);
+
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING);
+
+		expect(departures[0]).toMatchObject({
+			aimedTime: "2026-05-18T08:00:00+00:00",
+			expectedTime: undefined,
+			callStatus: "SKIPPED",
+			realtime: undefined,
+		});
+		expect(departures[0]!.canceled).toBeUndefined();
+	});
+
 	it("remonte l'identifiant de publication d'une course déjà suivie", () => {
 		const source = makeSource();
 		const gtfs = source.gtfs!;
