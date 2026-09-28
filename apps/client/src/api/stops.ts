@@ -42,6 +42,8 @@ export type StopDeparture = {
 	destination?: string;
 	/** Code mission de la course, comme dans la pop-up du véhicule. */
 	missionCode?: string;
+	/** Numéro de la course, là où la source n'a pas de véhicule réel : le numéro de train à la SNCF. */
+	journeyNumber?: string;
 	/** Accessibilité de la course en fauteuil roulant. Absent : inconnue. */
 	wheelchairAccessible?: boolean;
 	aimedTime: string;

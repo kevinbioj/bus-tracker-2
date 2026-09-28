@@ -269,7 +269,7 @@ export function computeStopDepartures(
 
 	departures.sort((a, b) => a.sortKey - b.sortKey);
 
-	const { filterStopDeparture, getMissionCode, mapStopDeparture } = source.options;
+	const { filterStopDeparture, getMissionCode, getVehicleRef, hasRealVehicles, mapStopDeparture } = source.options;
 	const kept: StopDeparture[] = [];
 	const excludedJourneys: ExcludedStopDepartureJourney[] = [];
 
@@ -290,6 +290,11 @@ export function computeStopDepartures(
 			...rest,
 			destination: resolveDestination(),
 			missionCode: getMissionCode?.(journeyOf(), journeyOf().vehicleDescriptor) ?? undefined,
+			// Sans véhicule réel, le numéro de véhicule publié est celui de la course : le numéro de train.
+			journeyNumber:
+				hasRealVehicles === false
+					? (getVehicleRef?.(journeyOf().vehicleDescriptor, journeyOf()) ?? undefined)
+					: undefined,
 		};
 		if (mapStopDeparture !== undefined || filterStopDeparture !== undefined) {
 			departure = mapStopDeparture?.(departure, journeyOf()) ?? departure;

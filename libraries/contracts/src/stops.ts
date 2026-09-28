@@ -144,6 +144,11 @@ export const stopDepartureSchema = type({
 	"destination?": "string",
 	/** Code mission de la course, comme celui publié avec le véhicule. */
 	"missionCode?": "string",
+	/**
+	 * Numéro de la course (numéro de train à la SNCF), pour les sources dont le numéro de véhicule
+	 * désigne en réalité la course (`hasRealVehicles: false`).
+	 */
+	"journeyNumber?": "string",
 	/** Accessibilité de la course en fauteuil roulant. Absent : inconnue. */
 	"wheelchairAccessible?": "boolean",
 	aimedTime: "string.date.iso",

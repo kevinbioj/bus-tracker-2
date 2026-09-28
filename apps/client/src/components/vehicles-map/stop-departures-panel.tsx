@@ -96,6 +96,10 @@ type DepartureRowProps = {
 	onLocate: (journeyId: string) => void;
 };
 
+/** Encadré du code mission et du numéro de train, comme dans la pop-up du véhicule. */
+const journeyChipClasses =
+	"rounded-sm bg-neutral-200 px-1 font-semibold text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100";
+
 /** Seul un véhicule effectivement suivi peut être rejoint sur la carte. */
 const isLocatable = (departure: StopDeparture) => departure.tracked && departure.journeyId !== undefined;
 
@@ -142,12 +146,18 @@ function DepartureRow({
 			 * Le code mission surmonte la destination. Celle-ci, seule, passe sur deux lignes avant d'être
 			 * tronquée — « Hôpital Européen Georges Pompidou » se lit en entier — ce que la hauteur fixe de
 			 * la ligne permet sans rien décaler ; sous un code mission, elle n'a plus la place que d'une.
-			 * C'est elle qui rétrécit : le pictogramme d'accessibilité qui la suit reste entier.
+			 * C'est elle qui rétrécit : le pictogramme d'accessibilité et le numéro de train qui la suivent
+			 * restent entiers.
 			 */}
 			<div className="flex min-w-0 flex-1 flex-col justify-center">
 				{departure.missionCode !== undefined && (
-					// Encadré comme dans la pop-up du véhicule, en plus petit : la ligne est de hauteur fixe.
-					<span className="mb-0.5 max-w-full self-start truncate rounded-sm bg-neutral-200 px-1 pt-px font-mono text-[10px] font-semibold leading-3.5 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100">
+					// En petit : il partage la hauteur fixe de la ligne avec la destination.
+					<span
+						className={clsx(
+							"mb-0.5 max-w-full self-start truncate pt-px font-mono text-[10px] leading-3.5",
+							journeyChipClasses,
+						)}
+					>
 						{departure.missionCode}
 					</span>
 				)}
@@ -177,6 +187,11 @@ function DepartureRow({
 								</button>
 							}
 						/>
+					)}
+					{departure.journeyNumber !== undefined && (
+						<span className={clsx("shrink-0 text-xs leading-4.5 tabular-nums", journeyChipClasses)}>
+							{departure.journeyNumber}
+						</span>
 					)}
 				</div>
 			</div>

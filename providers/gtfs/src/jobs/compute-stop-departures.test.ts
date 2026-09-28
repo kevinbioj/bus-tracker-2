@@ -271,6 +271,25 @@ describe("computeStopDepartures", () => {
 		expect(departures[1]!.destination).toBe("Direction retour");
 	});
 
+	it("présente le numéro de la course lorsque la source n'a pas de véhicule réel", () => {
+		const getVehicleRef: SourceOptions["getVehicleRef"] = (_, journey) => `N-${journey?.trip.id}`;
+
+		const { departures } = computeStopDepartures(
+			makeSource({ getVehicleRef, hasRealVehicles: false }),
+			"mairie-a",
+			MONDAY_MORNING,
+		);
+		expect(departures.map((departure) => departure.journeyNumber)).toEqual(["N-aller", "N-retour"]);
+
+		// Le numéro de véhicule d'une source à véhicules réels ne dit rien de la course.
+		const { departures: withVehicles } = computeStopDepartures(
+			makeSource({ getVehicleRef }),
+			"mairie-a",
+			MONDAY_MORNING,
+		);
+		expect(withVehicles.every((departure) => departure.journeyNumber === undefined)).toBe(true);
+	});
+
 	it("restreint le tableau au quai demandé", () => {
 		const { departures } = computeStopDepartures(makeSource(), "mairie-a", MONDAY_MORNING, {
 			stopRef: "network:StopPoint:mairie-b",
