@@ -12,8 +12,12 @@ export type ResolvedReplacementStop = {
 
 export type ResolvedModification = {
 	startStopSelector?: StopSelector;
-	/** Inclusif. Absent : la modification n'insère que des arrêts, sans en retirer aucun. */
+	/**
+	 * Inclusif. Absent : la modification n'insère que des arrêts, sans en retirer aucun — ou, sans
+	 * arrêt de remplacement non plus, ne change que le tracé à partir de l'arrêt de début.
+	 */
 	endStopSelector?: StopSelector;
+	/** S'applique après le dernier arrêt inséré ; après l'arrêt de début si seul le tracé change. */
 	propagatedModificationDelayMs: number;
 	replacementStops: ResolvedReplacementStop[];
 };
@@ -119,8 +123,9 @@ export function computeCancelledCallRanges(scheduledCalls: JourneyCall[], plan: 
 		if (startIndex === undefined) return [];
 
 		if (modification.endStopSelector === undefined) {
-			// La modification n'insère que des arrêts : l'itinéraire d'origine reste entièrement desservi.
-			cursor = startIndex;
+			// La modification n'insère que des arrêts, ou ne change que le tracé : l'itinéraire d'origine
+			// reste entièrement desservi. Le curseur suit celui de {@link buildModifiedCalls}.
+			cursor = modification.replacementStops.length === 0 ? startIndex + 1 : startIndex;
 			continue;
 		}
 
@@ -209,6 +214,11 @@ export function buildModifiedCalls(scheduledCalls: JourneyCall[], plan: TripModi
 				calls.push({ ...shiftCall(scheduledCalls[index]!, delayMs), status: "SKIPPED", modification: "REMOVED" });
 			}
 			cursor = endIndex + 1;
+		} else if (modification.replacementStops.length === 0) {
+			// La modification ne change que le tracé : le détour part de l'arrêt de début, qui garde son
+			// horaire — « the delay propagation begins at the subsequent stop after start_stop_selector ».
+			calls.push(shiftCall(scheduledCalls[startIndex]!, delayMs));
+			cursor = startIndex + 1;
 		} else {
 			cursor = startIndex;
 		}

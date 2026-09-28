@@ -120,6 +120,44 @@ describe("buildModifiedCalls", () => {
 		]);
 	});
 
+	it("propage le retard après l'arrêt de début quand la modification ne change que le tracé", () => {
+		const calls = buildModifiedCalls(
+			scheduledCalls(),
+			makePlan([{ startStopSelector: { stopSequence: 2 }, propagatedModificationDelayMs: 45 * 60_000 }]),
+		);
+
+		// Le détour part de B, qui garde son horaire : seuls les arrêts suivants sont retardés.
+		expect(summarize(calls)).toEqual([
+			{ stop: "A", status: "SCHEDULED", sequence: 1, minutes: 0 },
+			{ stop: "B", status: "SCHEDULED", sequence: 2, minutes: 10 },
+			{ stop: "C", status: "SCHEDULED", sequence: 3, minutes: 65 },
+			{ stop: "D", status: "SCHEDULED", sequence: 4, minutes: 75 },
+		]);
+	});
+
+	it("enchaîne une modification du seul tracé avec une modification de la desserte", () => {
+		const calls = buildModifiedCalls(
+			scheduledCalls(),
+			makePlan([
+				{ startStopSelector: { stopSequence: 2 }, propagatedModificationDelayMs: 5 * 60_000 },
+				{
+					startStopSelector: { stopSequence: 3 },
+					endStopSelector: { stopSequence: 3 },
+					replacementStops: [{ stop: STOPS.X, travelTimeToStopMs: 8 * 60_000 }],
+				},
+			]),
+		);
+
+		// X part de B, dernier arrêt d'origine desservi, que la première modification n'a pas décalé.
+		expect(summarize(calls)).toEqual([
+			{ stop: "A", status: "SCHEDULED", sequence: 1, minutes: 0 },
+			{ stop: "B", status: "SCHEDULED", sequence: 2, minutes: 10 },
+			{ stop: "C", status: "SKIPPED", sequence: 3, minutes: 25 },
+			{ stop: "X", status: "UNSCHEDULED", sequence: 4, minutes: 18 },
+			{ stop: "D", status: "SCHEDULED", sequence: 5, minutes: 35 },
+		]);
+	});
+
 	it("retire une plage d'arrêts sans remplacement", () => {
 		const calls = buildModifiedCalls(
 			scheduledCalls(),
@@ -420,8 +458,34 @@ describe("computeCancelledCallRanges", () => {
 
 	it("n'abandonne aucune portion lorsque la déviation n'insère que des arrêts", () => {
 		expect(
+			computeCancelledCallRanges(
+				scheduledCalls(),
+				makePlan([
+					{
+						startStopSelector: { stopSequence: 2 },
+						replacementStops: [{ stop: STOPS.X, travelTimeToStopMs: 5 * 60_000 }],
+					},
+				]),
+			),
+		).toEqual([]);
+	});
+
+	it("n'abandonne aucune portion lorsque la déviation ne change que le tracé", () => {
+		expect(
 			computeCancelledCallRanges(scheduledCalls(), makePlan([{ startStopSelector: { stopSequence: 2 } }])),
 		).toEqual([]);
+	});
+
+	it("borne la portion abandonnée après une modification du seul tracé", () => {
+		const ranges = computeCancelledCallRanges(
+			scheduledCalls(),
+			makePlan([
+				{ startStopSelector: { stopSequence: 2 } },
+				{ startStopSelector: { stopSequence: 3 }, endStopSelector: { stopSequence: 3 } },
+			]),
+		);
+
+		expect(ranges).toEqual([{ fromIndex: 1, toIndex: 3, joinsAtStart: true, joinsAtEnd: true }]);
 	});
 
 	it("n'abandonne aucune portion lorsqu'un sélecteur ne désigne aucun arrêt", () => {

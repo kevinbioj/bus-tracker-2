@@ -168,7 +168,7 @@ export type ReplacementStop = {
 
 export type Modification = {
 	startStopSelector?: StopSelector;
-	/** Inclusif. Absent : la modification insère des arrêts sans en retirer aucun. */
+	/** Inclusif. Absent : la modification insère des arrêts sans en retirer aucun, ou ne change que le tracé. */
 	endStopSelector?: StopSelector;
 	/** Secondes de retard ajoutées à tous les arrêts suivant la modification, cumulatives. */
 	propagatedModificationDelay?: number;
