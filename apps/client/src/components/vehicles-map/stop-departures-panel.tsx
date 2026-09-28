@@ -12,14 +12,17 @@ import { GetNetworkQuery, type Line } from "~/api/networks";
 import { GetStopAlertsQuery } from "~/api/service-alerts";
 import { GetStopDeparturesQuery, type StopDeparture } from "~/api/stops";
 import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
+import { TapTooltip } from "~/components/tap-tooltip";
 import { Button } from "~/components/ui/button";
 import { Drawer, DrawerClose, DrawerContent, DrawerTitle } from "~/components/ui/drawer";
+import { useShowWheelchairAccessibility } from "~/components/vehicles-map/accessibility-display";
 import { formatCountdown, formatLocalTime } from "~/components/vehicles-map/call-time-format";
 import { registerMapBottomOverlay } from "~/components/vehicles-map/map-bottom-overlay";
 import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components/vehicles-map/next-calls-display-mode";
 import { SELECTED_STOP_ICON_SCALE, STOP_PLATE_CENTER_OFFSET } from "~/components/vehicles-map/stops-markers/stop-icon";
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
+import { getWheelchairStatus, WheelchairIcon, wheelchairIconDetails } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
 
 /** En heure absolue, un départ de terminus n'est annoncé comme tel qu'à l'approche de son heure. */
@@ -179,6 +182,7 @@ function DepartureRow({ departure, line, label, touch = false, onLocate }: Reado
 function useStopDepartures() {
 	const { selectedRef } = useStopSelection();
 	const [displayMode] = useNextCallsDisplayMode();
+	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
 
 	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef));
 	const { data: alerts } = useQuery(GetStopAlertsQuery(selectedRef));
@@ -204,6 +208,14 @@ function useStopDepartures() {
 
 	// Quai choisi sur la carte au zoom le plus fort : le serveur a déjà restreint le tableau à ce quai.
 	const stopPoint = data?.stop.stopPoints.find((point) => point.ref === data.stopPointRef);
+	// Accessibilité du quai choisi, sinon de la station lorsque tous ses quais s'accordent : une station
+	// dont les quais diffèrent, ou dont l'un est inconnu, est présentée comme inconnue.
+	const wheelchairBoardings = stopPoint !== undefined ? [stopPoint] : (data?.stop.stopPoints ?? []);
+	const wheelchairStatus = getWheelchairStatus(
+		wheelchairBoardings.every((point) => point.wheelchairBoarding === wheelchairBoardings[0]?.wheelchairBoarding)
+			? wheelchairBoardings[0]?.wheelchairBoarding
+			: undefined,
+	);
 	const departures = data?.departures ?? [];
 
 	// Les libellés relatifs vieillissent seuls entre deux rafraîchissements : on les recalcule au
@@ -238,6 +250,8 @@ function useStopDepartures() {
 		selectedRef,
 		stopName: data?.stop.name,
 		stopPoint,
+		// Tant que le tableau n'est pas chargé, l'accessibilité n'est pas inconnue : elle n'est pas encore là.
+		wheelchairStatus: showWheelchairAccessibility && data !== undefined ? wheelchairStatus : undefined,
 		// Point à montrer sur la carte : le quai choisi, la station sinon.
 		location: data === undefined ? undefined : (stopPoint ?? data.stop),
 		rows,
@@ -249,12 +263,13 @@ function useStopDepartures() {
 
 type StopDeparturesState = ReturnType<typeof useStopDepartures>;
 
-/** Nom de l'arrêt, suivi du quai s'il y en a un de choisi. */
+/** Nom de l'arrêt, suivi du quai s'il y en a un de choisi et de son accessibilité. */
 function StopName({
 	stopName,
 	stopPoint,
+	wheelchairStatus,
 	className,
-}: Readonly<Pick<StopDeparturesState, "stopName" | "stopPoint"> & { className?: string }>) {
+}: Readonly<Pick<StopDeparturesState, "stopName" | "stopPoint" | "wheelchairStatus"> & { className?: string }>) {
 	// Le quai suit immédiatement le nom : le nom seul se tronque s'il manque de place.
 	return (
 		<span className="flex min-w-0 items-center gap-1">
@@ -265,6 +280,26 @@ function StopName({
 				<span className="shrink-0 rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4 text-center text-xs font-bold text-background">
 					{stopPoint.platformCode}
 				</span>
+			)}
+			{wheelchairStatus !== undefined && (
+				// Info-bulle portée hors du panneau : celui-ci rogne ce qui déborde de ses bords.
+				<TapTooltip
+					content={wheelchairIconDetails[wheelchairStatus].label()}
+					render={
+						<button
+							aria-label={wheelchairIconDetails[wheelchairStatus].label()}
+							// Rend à la pastille ses utilitaires face aux styles des boutons de MapLibre (`maplibregl.css`).
+							data-slot="wheelchair-badge"
+							className={clsx(
+								"inline-flex size-5 shrink-0 cursor-default rounded-xs p-px",
+								wheelchairIconDetails[wheelchairStatus].chipClasses,
+							)}
+							type="button"
+						>
+							<WheelchairIcon className="size-full" status={wheelchairStatus} tone="on-color" />
+						</button>
+					}
+				/>
 			)}
 		</span>
 	);
@@ -319,7 +354,7 @@ function StopDeparturesControl() {
 	const containerRef = useRef(document.createElement("div"));
 	const { clearSelection } = useStopSelection();
 	const [, setMarkerId] = useQueryState("marker-id");
-	const { stopName, stopPoint, rows, alerts, isError, isLoading } = useStopDepartures();
+	const { stopName, stopPoint, wheelchairStatus, rows, alerts, isError, isLoading } = useStopDepartures();
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -352,7 +387,12 @@ function StopDeparturesControl() {
 			<div className="flex items-center gap-1 border-b px-1 py-0.5">
 				<div className="flex-1 min-w-0">
 					<p className="text-[10px] font-thin uppercase tracking-wide leading-tight">{m.stop_departures_title()}</p>
-					<StopName className="text-base" stopName={stopName} stopPoint={stopPoint} />
+					<StopName
+						className="text-base"
+						stopName={stopName}
+						stopPoint={stopPoint}
+						wheelchairStatus={wheelchairStatus}
+					/>
 				</div>
 				<ServiceAlertsButton alerts={alerts} scope="stop" />
 				<Button
@@ -393,7 +433,8 @@ function StopDeparturesDrawer() {
 	const [open, setOpen] = useState(true);
 	const { clearSelection } = useStopSelection();
 	const [, setMarkerId] = useQueryState("marker-id");
-	const { selectedRef, stopName, stopPoint, location, rows, alerts, isError, isLoading } = useStopDepartures();
+	const { selectedRef, stopName, stopPoint, wheelchairStatus, location, rows, alerts, isError, isLoading } =
+		useStopDepartures();
 
 	// Le drawer masque le bas de la carte, et peut-être l'arrêt qu'il décrit : la carte est recentrée
 	// pour placer celui-ci au milieu de la partie restée visible. Une seule fois par sélection, pour ne
@@ -446,7 +487,7 @@ function StopDeparturesDrawer() {
 					<div className="min-w-0 flex-1">
 						<p className="text-xs uppercase tracking-wide text-muted-foreground">{m.stop_departures_title()}</p>
 						<DrawerTitle className="text-lg">
-							<StopName stopName={stopName} stopPoint={stopPoint} />
+							<StopName stopName={stopName} stopPoint={stopPoint} wheelchairStatus={wheelchairStatus} />
 						</DrawerTitle>
 					</div>
 					<ServiceAlertsButton alerts={alerts} className="mt-1.5" scope="stop" />

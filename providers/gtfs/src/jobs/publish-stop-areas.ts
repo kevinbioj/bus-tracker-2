@@ -111,6 +111,7 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 					...(stop.platformCode !== undefined ? { platformCode: stop.platformCode } : {}),
 					// Un quai où aucun départ n'a été relevé (terminus seulement) reprend le mode de sa station.
 					mode: stopModes.get(stop.id) ?? service.mode,
+					...(stop.wheelchairBoarding !== undefined ? { wheelchairBoarding: stop.wheelchairBoarding } : {}),
 				})),
 				providerId,
 				sourceId: source.id,

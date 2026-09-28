@@ -37,6 +37,10 @@ export type DisposeableVehicleJourney = {
 	operatorId?: number;
 	vehicle?: { id?: number; number: string };
 	missionCode?: string;
+	/** Accessibilité de la course en fauteuil roulant. Absent : inconnue. */
+	wheelchairAccessible?: boolean;
+	/** Acceptation des vélos à bord. Absent : inconnue. */
+	bikesAllowed?: boolean;
 	serviceDate?: string;
 	updatedAt: string;
 };

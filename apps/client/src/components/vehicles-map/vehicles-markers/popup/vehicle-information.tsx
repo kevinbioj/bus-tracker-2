@@ -16,6 +16,7 @@ import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { CreateVehicleReportMutation, GetLastVehicleReportQuery } from "~/api/vehicles";
 import { CustomTooltip } from "~/components/custom-tooltip";
 import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
+import { TapTooltip } from "~/components/tap-tooltip";
 import { Button } from "~/components/ui/button";
 import {
 	Dialog,
@@ -27,15 +28,18 @@ import {
 	DialogTitle,
 } from "~/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
+import { useShowBikesAllowed, useShowWheelchairAccessibility } from "~/components/vehicles-map/accessibility-display";
 import { InformationChip } from "~/components/vehicles-map/vehicles-markers/popup/information-chip";
 import { InformationChipsRow } from "~/components/vehicles-map/vehicles-markers/popup/information-chips-row";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 import { AirConditioningIcon, airConditioningIconDetails } from "~/icons/air-conditioning";
+import { BikesAllowedIcon, bikesAllowedIconDetails, getBikesAllowedStatus } from "~/icons/bikes-allowed";
 import { HighCrowdIcon } from "~/icons/crowd/high";
 import { LowCrowdIcon } from "~/icons/crowd/low";
 import { MediumCrowdIcon } from "~/icons/crowd/medium";
 import { NoPassengersIcon } from "~/icons/crowd/no-passengers";
 import { MeansOfTransportIcon } from "~/icons/means-of-transport";
+import { getWheelchairStatus, WheelchairIcon, wheelchairIconDetails } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
 
 const positionIconDetails = {
@@ -134,6 +138,8 @@ type VehicleInformationProps = {
 
 export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleInformationProps>) {
 	const [displayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
+	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
+	const [showBikesAllowed] = useShowBikesAllowed();
 	const [openedDialog, setOpenedDialog] = useState<InformationDialog | null>(null);
 	const queryClient = useQueryClient();
 	const snackbar = useSnackbar();
@@ -224,6 +230,12 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 		if (journey.occupancy === undefined) return;
 		return occupancyIconDetails[journey.occupancy];
 	}, [journey]);
+
+	const wheelchairStatus = getWheelchairStatus(journey.wheelchairAccessible);
+	const wheelchairInformation = wheelchairIconDetails[wheelchairStatus];
+
+	const bikesAllowedStatus = getBikesAllowedStatus(journey.bikesAllowed);
+	const bikesAllowedInformation = bikesAllowedIconDetails[bikesAllowedStatus];
 
 	const airConditioningStatus = journey.vehicle?.airConditioning;
 	const airConditioningInformation = airConditioningStatus
@@ -418,6 +430,42 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 								icon={<occupancyInformation.IconElement className="size-full fill-current" />}
 							/>
 						</CustomTooltip>
+					),
+				}
+			: undefined,
+		showWheelchairAccessibility
+			? {
+					key: "wheelchair",
+					element: (
+						<TapTooltip
+							content={wheelchairInformation.label()}
+							render={
+								<InformationChip
+									aria-label={wheelchairInformation.label()}
+									// Le tap ne fait qu'ouvrir l'info-bulle : pas de main, qui promettrait une action.
+									className={clsx("cursor-default", wheelchairInformation.chipClasses)}
+									// Déborde un peu l'emplacement d'icône de la puce : à sa taille, le pictogramme serait illisible.
+									icon={<WheelchairIcon className="size-4 shrink-0" status={wheelchairStatus} tone="on-color" />}
+								/>
+							}
+						/>
+					),
+				}
+			: undefined,
+		showBikesAllowed
+			? {
+					key: "bikes-allowed",
+					element: (
+						<TapTooltip
+							content={bikesAllowedInformation.label()}
+							render={
+								<InformationChip
+									aria-label={bikesAllowedInformation.label()}
+									className={clsx("cursor-default", bikesAllowedInformation.chipClasses)}
+									icon={<BikesAllowedIcon className="size-4 shrink-0" status={bikesAllowedStatus} tone="on-color" />}
+								/>
+							}
+						/>
 					),
 				}
 			: undefined,

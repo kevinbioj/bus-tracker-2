@@ -3,7 +3,7 @@ import { match, P } from "ts-pattern";
 import { createPlainDate, createPlainTime, createZonedDateTime } from "../cache/temporal-cache.js";
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
 import { type Gtfs, getJourneyKey } from "../model/gtfs.js";
-import type { TripDescriptor, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
+import type { TripDescriptor, TripUpdate, VehicleDescriptor, VehiclePosition } from "../model/gtfs-rt.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
 import { type RealtimeResources, resolveShape } from "../model/realtime-lookup.js";
 import type { Shape } from "../model/shape.js";
@@ -417,6 +417,18 @@ function getCurrentStopHeadsign(journey: Journey, at: Temporal.Instant): string 
 }
 
 /**
+ * Accessibilité de la course en fauteuil roulant : celle annoncée par le véhicule prime sur celle du
+ * GTFS statique (spec), sauf `NO_VALUE`, qui laisse la seconde s'appliquer.
+ */
+function getWheelchairAccessible(journey: Journey | undefined, vehicleDescriptor: VehicleDescriptor | undefined) {
+	return match(vehicleDescriptor?.wheelchairAccessible)
+		.with("WHEELCHAIR_ACCESSIBLE", () => true)
+		.with("WHEELCHAIR_INACCESSIBLE", () => false)
+		.with("UNKNOWN", () => undefined)
+		.otherwise(() => journey?.trip.wheelchairAccessible);
+}
+
+/**
  * Enregistre, si la course est déviée, les portions de tracé qu'elle n'emprunte plus, et retourne
  * la référence sous laquelle le client les récupérera.
  *
@@ -783,6 +795,8 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					(unknownTripCalls !== undefined ? getCurrentCallHeadsign(unknownTripCalls, now) : undefined) ??
 					unknownTripCalls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 				missionCode: source.options.getMissionCode?.(journey, vehiclePosition.vehicle) ?? undefined,
+				wheelchairAccessible: getWheelchairAccessible(journey, vehiclePosition.vehicle),
+				bikesAllowed: journey?.trip.bikesAllowed,
 				position: {
 					latitude: vehiclePosition.position.latitude,
 					longitude: vehiclePosition.position.longitude,
@@ -895,6 +909,8 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 						(candidateJourney !== undefined ? getCurrentStopHeadsign(candidateJourney, now) : undefined) ??
 						candidate?.trip.headsign,
 					missionCode: source.options.getMissionCode?.(candidateJourney, vehicleDescriptor) ?? undefined,
+					// La course candidate n'est qu'un rapprochement de tracé : seul le véhicule renseigne ici.
+					wheelchairAccessible: getWheelchairAccessible(undefined, vehicleDescriptor),
 					calls: calls.map((call, index) =>
 						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
 					),
@@ -1014,6 +1030,8 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 						getCurrentStopHeadsign(journey, now) ??
 						journey.trip.headsign,
 					missionCode: source.options.getMissionCode?.(journey, vehicleDescriptor) ?? undefined,
+					wheelchairAccessible: getWheelchairAccessible(journey, vehicleDescriptor),
+					bikesAllowed: journey.trip.bikesAllowed,
 					calls: calls.map((call, index) =>
 						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
 					),

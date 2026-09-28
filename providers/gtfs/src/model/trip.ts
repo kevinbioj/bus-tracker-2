@@ -42,6 +42,10 @@ export class Trip {
 		readonly headsign?: string,
 		readonly block?: string,
 		readonly shape?: Shape,
+		/** Accessibilité en fauteuil roulant (`wheelchair_accessible`) : `undefined` lorsqu'elle est inconnue. */
+		readonly wheelchairAccessible?: boolean,
+		/** Acceptation des vélos à bord (`bikes_allowed`) : `undefined` lorsqu'elle est inconnue. */
+		readonly bikesAllowed?: boolean,
 	) {}
 
 	get stopTimeStart() {

@@ -64,6 +64,10 @@ export type DisposeableVehicleJourney = {
 		usbPorts?: boolean;
 	};
 	missionCode?: string;
+	/** Accessibilité de la course en fauteuil roulant. Absent : inconnue. */
+	wheelchairAccessible?: boolean;
+	/** Acceptation des vélos à bord. Absent : inconnue. */
+	bikesAllowed?: boolean;
 	serviceDate?: string;
 	girouette?: GirouetteData;
 	updatedAt: string;

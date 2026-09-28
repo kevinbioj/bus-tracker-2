@@ -122,6 +122,7 @@ export type VehicleDescriptor = {
 	id: string;
 	label?: string;
 	licensePlate?: string;
+	wheelchairAccessible?: "NO_VALUE" | "UNKNOWN" | "WHEELCHAIR_ACCESSIBLE" | "WHEELCHAIR_INACCESSIBLE";
 };
 
 export type VehicleStopStatus = "INCOMING_AT" | "STOPPED_AT" | "IN_TRANSIT_TO";

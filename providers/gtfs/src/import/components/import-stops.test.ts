@@ -48,6 +48,27 @@ describe("importStops", () => {
 		expect(stops.get("X-quay")!.timeZone).toBe("Europe/Madrid");
 	});
 
+	it("lit wheelchair_boarding et l'hérite de la station parente lorsqu'il est inconnu", async () => {
+		const directory = await writeStopsFile(
+			[
+				"stop_id,stop_name,stop_lat,stop_lon,location_type,parent_station,wheelchair_boarding",
+				"quai-herite,Gare Quai A,49.44,1.09,0,gare,0",
+				"quai-refuse,Gare Quai B,49.44,1.09,0,gare,2",
+				"gare,Gare,49.44,1.09,1,,1",
+				"mairie,Mairie,49.45,1.10,0,,",
+				"eglise,Église,49.46,1.11,0,,1",
+			].join("\n"),
+		);
+
+		const { stops } = await importStops(directory, {});
+
+		expect(stops.get("quai-herite")!.wheelchairBoarding).toBe(true);
+		// Une valeur propre au quai prime sur celle de sa station.
+		expect(stops.get("quai-refuse")!.wheelchairBoarding).toBe(false);
+		expect(stops.get("mairie")!.wheelchairBoarding).toBeUndefined();
+		expect(stops.get("eglise")!.wheelchairBoarding).toBe(true);
+	});
+
 	it("collecte les stations parentes et le rattachement de leurs quais", async () => {
 		const directory = await writeStopsFile(
 			[

@@ -10,10 +10,12 @@ import { EditorTokenInput } from "~/routes/_app/-components/settings/editor-toke
 import { GeolocateOnStartSetting } from "~/routes/_app/-components/settings/geolocate-on-start";
 import { OnlyNetworksWithHistorySetting } from "~/routes/_app/-components/settings/only-networks-with-history";
 import { PreviewVehicleNumberSetting } from "~/routes/_app/-components/settings/preview-vehicle-number";
+import { ShowBikesAllowedSetting } from "~/routes/_app/-components/settings/show-bikes-allowed";
 import { ShowDebugInfoSetting } from "~/routes/_app/-components/settings/show-debug-info";
 import { ShowIdentifiedVehiclesPanelSetting } from "~/routes/_app/-components/settings/show-identified-vehicles-panel";
 import { ShowStopsSetting } from "~/routes/_app/-components/settings/show-stops";
 import { ShowVehiclePathsSetting } from "~/routes/_app/-components/settings/show-vehicle-paths";
+import { ShowWheelchairAccessibilitySetting } from "~/routes/_app/-components/settings/show-wheelchair-accessibility";
 import { StopLabelsStyleSetting } from "~/routes/_app/-components/settings/stop-labels-style";
 import { DisplayAbsoluteTimeSetting } from "~/routes/_app/-components/settings/use-absolute-time";
 import { LanguageSetting } from "./language-setting";
@@ -69,6 +71,16 @@ export function Settings() {
 							<div className="flex flex-col gap-4">
 								<DisplayNextCallsSetting />
 								<DisplayAbsoluteTimeSetting />
+							</div>
+						</section>
+						<Separator className="my-3" />
+						<section>
+							<h3 className="mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+								{m.settings_accessibility_section()}
+							</h3>
+							<div className="flex flex-col gap-4">
+								<ShowWheelchairAccessibilitySetting />
+								<ShowBikesAllowedSetting />
 							</div>
 						</section>
 						<Separator className="my-3" />

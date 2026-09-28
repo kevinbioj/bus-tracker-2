@@ -13,12 +13,19 @@ import type { ImportGtfsOptions } from "../import-gtfs.js";
 
 type TripRecord = CsvRecord<
 	"trip_id" | "route_id" | "service_id",
-	"direction_id" | "trip_headsign" | "block_id" | "shape_id"
+	"direction_id" | "trip_headsign" | "block_id" | "shape_id" | "wheelchair_accessible" | "bikes_allowed"
 >;
 type StopTimeRecord = CsvRecord<
 	"trip_id" | "arrival_time" | "departure_time" | "stop_sequence" | "stop_id",
 	"shape_dist_traveled" | "pickup_type" | "drop_off_type" | "stop_headsign"
 >;
+
+/** `wheelchair_accessible`, `bikes_allowed` : 1 oui, 2 non, vide ou 0 inconnu. */
+function parseTripAvailability(value: string | undefined) {
+	if (value === "1") return true;
+	if (value === "2") return false;
+	return undefined;
+}
 
 /** Convertit "HH:MM:SS" (HH peut dépasser 24) en secondes depuis minuit du jour 0. */
 function parseTimeToSecs(time: string): number {
@@ -93,6 +100,8 @@ export async function importTrips(
 				? tripRecord.block_id
 				: undefined,
 			tripRecord.shape_id !== undefined ? shapes.get(tripRecord.shape_id) : undefined,
+			parseTripAvailability(tripRecord.wheelchair_accessible),
+			parseTripAvailability(tripRecord.bikes_allowed),
 		);
 
 		if (filterTrips === undefined || filterTrips(trip)) {

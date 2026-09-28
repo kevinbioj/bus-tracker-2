@@ -12,6 +12,8 @@ export type StopPoint = {
 	platformCode?: string;
 	/** Mode le plus lourd qui dessert le quai. Absent : celui de sa station. */
 	mode?: StopAreaMode;
+	/** Accès au quai en fauteuil roulant. Absent : inconnu. */
+	wheelchairBoarding?: boolean;
 };
 
 export type StopMarker = {

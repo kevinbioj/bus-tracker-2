@@ -21,6 +21,11 @@ export class Stop {
 		 * des quais en stations ({@link ../import/components/group-stop-areas.js}).
 		 */
 		readonly parentStationId?: string,
+		/**
+		 * Accès au quai en fauteuil roulant (`wheelchair_boarding`) : `undefined` lorsqu'il est
+		 * inconnu. Mutable car un quai sans valeur hérite, après la passe, de celle de sa station.
+		 */
+		public wheelchairBoarding?: boolean,
 	) {}
 }
 

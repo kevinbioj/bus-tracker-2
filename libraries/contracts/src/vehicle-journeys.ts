@@ -115,6 +115,10 @@ export const vehicleJourneySchema = type({
 	"isAdded?": "boolean",
 	// Code mission (Transilien notamment), affiché en lieu et place du numéro de véhicule.
 	"missionCode?": "string",
+	// Accessibilité de la course en fauteuil roulant (`wheelchair_accessible`). Absent : inconnue.
+	"wheelchairAccessible?": "boolean",
+	// Acceptation des vélos à bord (`bikes_allowed`). Absent : inconnue.
+	"bikesAllowed?": "boolean",
 	"serviceDate?": "string.date",
 	updatedAt: "string.date.iso",
 });

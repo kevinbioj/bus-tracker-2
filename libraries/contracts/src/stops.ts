@@ -68,6 +68,8 @@ export const stopPointSchema = type({
 	"platformCode?": "string",
 	/** Mode le plus lourd qui dessert le quai. Absent : celui de sa station. */
 	"mode?": stopAreaModeEnum,
+	/** Accès au quai en fauteuil roulant (`wheelchair_boarding`). Absent : inconnu. */
+	"wheelchairBoarding?": "boolean",
 });
 
 export type StopPoint = typeof stopPointSchema.infer;

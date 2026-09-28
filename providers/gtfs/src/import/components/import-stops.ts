@@ -7,8 +7,15 @@ import type { ImportGtfsOptions } from "../import-gtfs.js";
 
 type StopRecord = CsvRecord<
 	"stop_id" | "stop_name" | "stop_lat" | "stop_lon",
-	"location_type" | "platform_code" | "stop_timezone" | "parent_station"
+	"location_type" | "platform_code" | "stop_timezone" | "parent_station" | "wheelchair_boarding"
 >;
+
+/** `wheelchair_boarding` : 1 accessible, 2 non accessible, vide ou 0 inconnu (hérité pour un quai). */
+function parseWheelchairBoarding(value: string | undefined) {
+	if (value === "1") return true;
+	if (value === "2") return false;
+	return undefined;
+}
 
 export async function importStops(gtfsDirectory: string, { importAllStops, mapStopId }: ImportGtfsOptions) {
 	const stops = new Map<string, Stop>();
@@ -28,6 +35,7 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 	// Indexées par identifiant *brut* : `parent_station` référence les identifiants d'origine,
 	// avant application de `mapStopId`.
 	const stationTimeZones = new Map<string, string>();
+	const stationWheelchairBoardings = new Map<string, boolean>();
 	// La station parente peut apparaître après ses enfants : l'héritage est résolu après la passe.
 	const pendingInheritance: { stop: Stop; parentId: string }[] = [];
 	// Quais de chaque station, indexés par identifiant *brut* : la station peut, elle aussi,
@@ -41,6 +49,11 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 		// du résultat, car leurs enfants peuvent hériter de leur fuseau et de leur identité.
 		if (timeZone !== undefined) {
 			stationTimeZones.set(stopRecord.stop_id, timeZone);
+		}
+
+		const wheelchairBoarding = parseWheelchairBoarding(stopRecord.wheelchair_boarding);
+		if (stopRecord.location_type === "1" && wheelchairBoarding !== undefined) {
+			stationWheelchairBoardings.set(stopRecord.stop_id, wheelchairBoarding);
 		}
 
 		if (stopRecord.location_type === "1") {
@@ -67,9 +80,10 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 			stopRecord.platform_code || undefined,
 			timeZone,
 			stopRecord.parent_station || undefined,
+			wheelchairBoarding,
 		);
 
-		if (timeZone === undefined && stopRecord.parent_station) {
+		if ((timeZone === undefined || wheelchairBoarding === undefined) && stopRecord.parent_station) {
 			pendingInheritance.push({ stop, parentId: stopRecord.parent_station });
 		}
 
@@ -86,7 +100,8 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 	});
 
 	for (const { stop, parentId } of pendingInheritance) {
-		stop.timeZone = stationTimeZones.get(parentId);
+		stop.timeZone ??= stationTimeZones.get(parentId);
+		stop.wheelchairBoarding ??= stationWheelchairBoardings.get(parentId);
 	}
 
 	for (const [stationId, platforms] of platformsByStation) {
