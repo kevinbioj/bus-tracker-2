@@ -3,13 +3,14 @@ import { match, P } from "ts-pattern";
 import { createPlainDate, createPlainTime, createZonedDateTime } from "../cache/temporal-cache.js";
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
 import { type Gtfs, getJourneyKey } from "../model/gtfs.js";
-import type { TripDescriptor, TripUpdate, VehicleDescriptor, VehiclePosition } from "../model/gtfs-rt.js";
+import type { TripDescriptor, TripUpdate, VehiclePosition } from "../model/gtfs-rt.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
 import { type RealtimeResources, resolveShape } from "../model/realtime-lookup.js";
 import type { Shape } from "../model/shape.js";
 import { DEFAULT_TRIP_UPDATE_TTL_MS, type Source, type SourceOptions } from "../model/source.js";
 import { StopArea } from "../model/stop-area.js";
 import { fastFormatISO, formatCallTime, getTimeZoneOffsetMs } from "../utils/format-call-time.js";
+import { getWheelchairAccessible } from "../utils/get-wheelchair-accessible.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { scatterOverlappingPositions } from "../utils/scatter-overlapping-positions.js";
@@ -417,25 +418,6 @@ function getCurrentStopHeadsign(journey: Journey, at: Temporal.Instant): string 
 }
 
 /**
- * Accessibilité de la course en fauteuil roulant : celle annoncée par un descripteur de véhicule
- * prime sur celle du GTFS statique (spec), sauf `NO_VALUE`, qui passe la main au suivant. Les
- * descripteurs sont donnés par priorité décroissante (VehiclePosition, puis TripUpdate).
- */
-function getWheelchairAccessible(
-	journey: Journey | undefined,
-	...vehicleDescriptors: (VehicleDescriptor | undefined)[]
-) {
-	const override = vehicleDescriptors.find(
-		(descriptor) => descriptor?.wheelchairAccessible !== undefined && descriptor.wheelchairAccessible !== "NO_VALUE",
-	);
-	return match(override?.wheelchairAccessible)
-		.with("WHEELCHAIR_ACCESSIBLE", () => true)
-		.with("WHEELCHAIR_INACCESSIBLE", () => false)
-		.with("UNKNOWN", () => undefined)
-		.otherwise(() => journey?.trip.wheelchairAccessible);
-}
-
-/**
  * Enregistre, si la course est déviée, les portions de tracé qu'elle n'emprunte plus, et retourne
  * la référence sous laquelle le client les récupérera.
  *
@@ -802,7 +784,11 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					(unknownTripCalls !== undefined ? getCurrentCallHeadsign(unknownTripCalls, now) : undefined) ??
 					unknownTripCalls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 				missionCode: source.options.getMissionCode?.(journey, vehiclePosition.vehicle) ?? undefined,
-				wheelchairAccessible: getWheelchairAccessible(journey, vehiclePosition.vehicle, journey?.vehicleDescriptor),
+				wheelchairAccessible: getWheelchairAccessible(
+					journey?.trip,
+					vehiclePosition.vehicle,
+					journey?.vehicleDescriptor,
+				),
 				bikesAllowed: journey?.trip.bikesAllowed,
 				position: {
 					latitude: vehiclePosition.position.latitude,
@@ -1037,7 +1023,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 						getCurrentStopHeadsign(journey, now) ??
 						journey.trip.headsign,
 					missionCode: source.options.getMissionCode?.(journey, vehicleDescriptor) ?? undefined,
-					wheelchairAccessible: getWheelchairAccessible(journey, vehicleDescriptor),
+					wheelchairAccessible: getWheelchairAccessible(journey.trip, vehicleDescriptor),
 					bikesAllowed: journey.trip.bikesAllowed,
 					calls: calls.map((call, index) =>
 						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),

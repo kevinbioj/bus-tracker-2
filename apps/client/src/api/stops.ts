@@ -40,6 +40,10 @@ export type StopDeparture = {
 	/** Réseau de la ligne, qui n'est pas toujours parmi ceux de la station. */
 	lineNetworkId?: number;
 	destination?: string;
+	/** Code mission de la course, comme dans la pop-up du véhicule. */
+	missionCode?: string;
+	/** Accessibilité de la course en fauteuil roulant. Absent : inconnue. */
+	wheelchairAccessible?: boolean;
 	aimedTime: string;
 	expectedTime?: string;
 	callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";

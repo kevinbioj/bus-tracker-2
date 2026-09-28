@@ -22,7 +22,7 @@ import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components
 import { SELECTED_STOP_ICON_SCALE, STOP_PLATE_CENTER_OFFSET } from "~/components/vehicles-map/stops-markers/stop-icon";
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
-import { getWheelchairStatus, WheelchairIcon, wheelchairIconDetails } from "~/icons/wheelchair";
+import { getWheelchairStatus, WheelchairIcon, type WheelchairStatus, wheelchairIconDetails } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
 
 /** En heure absolue, un départ de terminus n'est annoncé comme tel qu'à l'approche de son heure. */
@@ -88,6 +88,8 @@ type DepartureRowProps = {
 	departure: StopDeparture;
 	line?: Line;
 	label: string;
+	/** Accessibilité du véhicule, montrée seulement lorsque l'arrêt est lui-même accessible. */
+	wheelchairStatus?: WheelchairStatus;
 	/** Ligne plus haute et bouton plus large, pour le doigt plutôt que le pointeur. */
 	touch?: boolean;
 	onLocate: (journeyId: string) => void;
@@ -96,7 +98,14 @@ type DepartureRowProps = {
 /** Seul un véhicule effectivement suivi peut être rejoint sur la carte. */
 const isLocatable = (departure: StopDeparture) => departure.tracked && departure.journeyId !== undefined;
 
-function DepartureRow({ departure, line, label, touch = false, onLocate }: Readonly<DepartureRowProps>) {
+function DepartureRow({
+	departure,
+	line,
+	label,
+	wheelchairStatus,
+	touch = false,
+	onLocate,
+}: Readonly<DepartureRowProps>) {
 	const skipped = departure.callStatus === "SKIPPED";
 	const extra = departure.callStatus === "UNSCHEDULED";
 	const realtime = departure.expectedTime !== undefined;
@@ -119,43 +128,75 @@ function DepartureRow({ departure, line, label, touch = false, onLocate }: Reado
 				? "text-green-700 dark:text-green-500"
 				: "text-foreground";
 
-	// Pictogramme, destination et quai se suivent ; l'heure est rejetée à l'autre bout de la ligne. La
-	// case de localisation, qui la suit, est tenue même sur un passage qui n'est pas joignable : les
-	// heures s'alignent ainsi d'une ligne à l'autre. La hauteur est fixe : une ligne ne grandit pas
+	// Pictogramme puis destination ; le quai, collé à l'heure, est rejeté avec elle à l'autre bout de la
+	// ligne. La case de localisation, qui la suit, est tenue même sur un passage qui n'est pas joignable :
+	// les heures s'alignent ainsi d'une ligne à l'autre. La hauteur est fixe : une ligne ne grandit pas
 	// quand l'heure théorique s'affiche sous l'heure prévue.
 	return (
-		<li className={clsx("flex items-center gap-1", touch ? "h-10" : "h-9")}>
+		<li className={clsx("flex items-center gap-1", touch ? "h-11" : "h-10")}>
 			<LinePictogram line={line} />
 			{/*
-			 * Le quai suit immédiatement la destination. Une destination longue passe sur deux lignes avant
-			 * d'être tronquée — « Hôpital Européen Georges Pompidou » se lit en entier — ce que la hauteur
-			 * fixe de la ligne permet sans rien décaler. Le quai est placé dans le fil du texte, et non à côté
-			 * de lui : une boîte passée sur deux lignes prend toute la largeur disponible, et le quai se
-			 * retrouverait rejeté au bord droit au lieu de suivre le dernier mot.
+			 * Le code mission surmonte la destination. Celle-ci, seule, passe sur deux lignes avant d'être
+			 * tronquée — « Hôpital Européen Georges Pompidou » se lit en entier — ce que la hauteur fixe de
+			 * la ligne permet sans rien décaler ; sous un code mission, elle n'a plus la place que d'une.
+			 * C'est elle qui rétrécit : le pictogramme d'accessibilité qui la suit reste entier.
 			 */}
-			<div className="min-w-0 flex-1">
-				<p className="line-clamp-2 break-words text-sm leading-tight" title={departure.destination}>
-					{departure.destination ?? departure.stopName}
-					{departure.platformName !== undefined && (
-						<span
-							className="ml-1 inline-block rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4.5 text-center align-[1px] text-[13px] font-bold leading-4 text-background"
-							title={departure.stopName}
-						>
-							{departure.platformName}
-						</span>
-					)}
-				</p>
-			</div>
-			<div className="flex shrink-0 flex-col items-end leading-tight">
-				<span className={clsx("flex items-start text-sm font-bold tabular-nums whitespace-nowrap", accentColor)}>
-					{realtime ? <Rss aria-label={m.stop_call_realtime()} className="-rotate-90 mr-[0.5px]" size={8} /> : null}
-					<span className={clsx(skipped && "line-through")}>{label}</span>
-				</span>
-				{showAimedTime && (
-					<span className="text-[10px] text-muted-foreground line-through tabular-nums">
-						{formatLocalTime(departure.aimedTime)}
+			<div className="flex min-w-0 flex-1 flex-col justify-center">
+				{departure.missionCode !== undefined && (
+					// Encadré comme dans la pop-up du véhicule, en plus petit : la ligne est de hauteur fixe.
+					<span className="mb-0.5 max-w-full self-start truncate rounded-sm bg-neutral-200 px-1 pt-px font-mono text-[10px] font-semibold leading-3.5 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100">
+						{departure.missionCode}
 					</span>
 				)}
+				<div className="flex min-w-0 items-center gap-1">
+					<p
+						className={clsx(
+							"min-w-0 break-words text-sm leading-tight",
+							departure.missionCode !== undefined ? "line-clamp-1" : "line-clamp-2",
+						)}
+						title={departure.destination}
+					>
+						{departure.destination ?? departure.stopName}
+					</p>
+					{wheelchairStatus !== undefined && (
+						// Info-bulle portée hors du panneau : celui-ci rogne ce qui déborde de ses bords.
+						<TapTooltip
+							content={wheelchairIconDetails[wheelchairStatus].label()}
+							render={
+								<button
+									aria-label={wheelchairIconDetails[wheelchairStatus].label()}
+									// Rend au bouton ses utilitaires face aux styles des boutons de MapLibre (`maplibregl.css`).
+									data-slot="wheelchair-badge"
+									className="inline-flex size-4 shrink-0 cursor-default"
+									type="button"
+								>
+									<WheelchairIcon className="size-full" status={wheelchairStatus} />
+								</button>
+							}
+						/>
+					)}
+				</div>
+			</div>
+			<div className="flex shrink-0 items-center gap-1">
+				{departure.platformName !== undefined && (
+					<span
+						className="rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4.5 text-center text-[13px] font-bold leading-4 text-background"
+						title={departure.stopName}
+					>
+						{departure.platformName}
+					</span>
+				)}
+				<div className="flex flex-col items-end leading-tight">
+					<span className={clsx("flex items-start text-sm font-bold tabular-nums whitespace-nowrap", accentColor)}>
+						{realtime ? <Rss aria-label={m.stop_call_realtime()} className="-rotate-90 mr-[0.5px]" size={8} /> : null}
+						<span className={clsx(skipped && "line-through")}>{label}</span>
+					</span>
+					{showAimedTime && (
+						<span className="text-[10px] text-muted-foreground line-through tabular-nums">
+							{formatLocalTime(departure.aimedTime)}
+						</span>
+					)}
+				</div>
 			</div>
 			<div className={clsx("shrink-0", touch ? "size-8" : "size-6")}>
 				{isLocatable(departure) && (
@@ -216,6 +257,7 @@ function useStopDepartures() {
 			? wheelchairBoardings[0]?.wheelchairBoarding
 			: undefined,
 	);
+	const stopPointsByRef = new Map(data?.stop.stopPoints.map((point) => [point.ref, point]));
 	const departures = data?.departures ?? [];
 
 	// Les libellés relatifs vieillissent seuls entre deux rafraîchissements : on les recalcule au
@@ -243,7 +285,22 @@ function useStopDepartures() {
 		const occurrence = keyOccurrences.get(baseKey) ?? 0;
 		keyOccurrences.set(baseKey, occurrence + 1);
 
-		return [{ departure, line, label: labels[index] ?? "", key: `${baseKey}-${occurrence}` }];
+		// L'accessibilité du véhicule n'importe que si l'on peut monter depuis le quai : celui du passage,
+		// la station à défaut lorsque ce quai n'est pas connu.
+		const stopAccessible =
+			stopPointsByRef.get(departure.stopRef)?.wheelchairBoarding ?? wheelchairStatus === "accessible";
+		const vehicleWheelchairStatus =
+			showWheelchairAccessibility && stopAccessible ? getWheelchairStatus(departure.wheelchairAccessible) : undefined;
+
+		return [
+			{
+				departure,
+				line,
+				label: labels[index] ?? "",
+				wheelchairStatus: vehicleWheelchairStatus,
+				key: `${baseKey}-${occurrence}`,
+			},
+		];
 	});
 
 	return {
@@ -337,8 +394,16 @@ function StopDeparturesList({
 	return (
 		<div className={clsx("overflow-y-auto overscroll-contain", scrollClassName)}>
 			<ul className={clsx("divide-y", touch ? "px-3" : "px-2")}>
-				{rows.map(({ departure, line, label, key }) => (
-					<DepartureRow departure={departure} key={key} line={line} label={label} touch={touch} onLocate={onLocate} />
+				{rows.map(({ departure, line, label, wheelchairStatus, key }) => (
+					<DepartureRow
+						departure={departure}
+						key={key}
+						line={line}
+						label={label}
+						touch={touch}
+						wheelchairStatus={wheelchairStatus}
+						onLocate={onLocate}
+					/>
 				))}
 			</ul>
 		</div>

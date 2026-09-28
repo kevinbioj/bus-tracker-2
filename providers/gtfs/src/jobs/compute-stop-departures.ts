@@ -6,6 +6,7 @@ import type { Journey, JourneyCall } from "../model/journey.js";
 import type { Source } from "../model/source.js";
 import type { Trip } from "../model/trip.js";
 import { formatCallTime } from "../utils/format-call-time.js";
+import { getWheelchairAccessible } from "../utils/get-wheelchair-accessible.js";
 import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
 
 /** Portée par défaut du tableau de passages : au-delà, l'horaire théorique n'intéresse plus. */
@@ -190,6 +191,7 @@ export function computeStopDepartures(
 						journey?.vehicleDescriptor,
 					) ?? resolveDestination(trip, stopTimeIdx, call),
 				resolveJourney: () => journey ?? trip.getScheduledJourney(date, true),
+				wheelchairAccessible: getWheelchairAccessible(trip, journey?.vehicleDescriptor),
 				aimedTime: formatCallTime(aimedMs, stop.timeZone, timeZone),
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, stop.timeZone, timeZone) : undefined,
 				callStatus: canceled ? "SKIPPED" : (call?.status ?? "SCHEDULED"),
@@ -244,6 +246,7 @@ export function computeStopDepartures(
 					trip.headsign ??
 					calls.findLast((candidate) => candidate.status !== "SKIPPED")?.stop.name,
 				resolveJourney: () => journey,
+				wheelchairAccessible: getWheelchairAccessible(trip, journey.vehicleDescriptor),
 				aimedTime: formatCallTime(call.aimedDepartureTime, call.stop.timeZone, timeZone),
 				expectedTime:
 					call.expectedDepartureTime !== undefined
@@ -260,7 +263,7 @@ export function computeStopDepartures(
 
 	departures.sort((a, b) => a.sortKey - b.sortKey);
 
-	const { filterStopDeparture, mapStopDeparture } = source.options;
+	const { filterStopDeparture, getMissionCode, mapStopDeparture } = source.options;
 	const kept: StopDeparture[] = [];
 	const excludedJourneys: ExcludedStopDepartureJourney[] = [];
 
@@ -270,12 +273,22 @@ export function computeStopDepartures(
 	for (const { sortKey, resolveDestination, resolveJourney, ...rest } of departures) {
 		if (kept.length >= limit) break;
 
-		let departure: StopDeparture = { ...rest, destination: resolveDestination() };
-		if (mapStopDeparture !== undefined || filterStopDeparture !== undefined) {
-			const journey = resolveJourney();
-			departure = mapStopDeparture?.(departure, journey) ?? departure;
+		// La course n'est fabriquée qu'une fois, et seulement si la configuration en a l'usage.
+		let journey: Journey | undefined;
+		const journeyOf = () => {
+			journey ??= resolveJourney();
+			return journey;
+		};
 
-			if (filterStopDeparture?.(departure, journey) === false) {
+		let departure: StopDeparture = {
+			...rest,
+			destination: resolveDestination(),
+			missionCode: getMissionCode?.(journeyOf(), journeyOf().vehicleDescriptor) ?? undefined,
+		};
+		if (mapStopDeparture !== undefined || filterStopDeparture !== undefined) {
+			departure = mapStopDeparture?.(departure, journeyOf()) ?? departure;
+
+			if (filterStopDeparture?.(departure, journeyOf()) === false) {
 				const { journeyId, journeyRef, serviceDate } = departure;
 				excludedJourneys.push({ journeyId, journeyRef, serviceDate });
 				continue;

@@ -142,6 +142,10 @@ export const stopDepartureSchema = type({
 	"platformName?": "string",
 	lineRef: "string",
 	"destination?": "string",
+	/** Code mission de la course, comme celui publié avec le véhicule. */
+	"missionCode?": "string",
+	/** Accessibilité de la course en fauteuil roulant. Absent : inconnue. */
+	"wheelchairAccessible?": "boolean",
 	aimedTime: "string.date.iso",
 	"expectedTime?": "string.date.iso",
 	callStatus: vehicleJourneyCallStatusEnum,

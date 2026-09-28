@@ -209,6 +209,10 @@ function mergeTrackedJourneys(
 				known.platformName = call.platformName ?? known.platformName;
 				// Calculée avec le véhicule effectivement affecté, elle est la plus juste des deux.
 				known.destination = journey.destination ?? known.destination;
+				// Code mission et accessibilité peuvent dépendre du véhicule affecté : ceux de la course
+				// suivie priment, ceux du processeur à défaut.
+				known.missionCode = journey.missionCode ?? known.missionCode;
+				known.wheelchairAccessible = journey.wheelchairAccessible ?? known.wheelchairAccessible;
 				break;
 			}
 
@@ -221,6 +225,8 @@ function mergeTrackedJourneys(
 				lineId: journey.lineId,
 				lineNetworkId: journey.lineId !== undefined ? journey.networkId : undefined,
 				destination: journey.destination,
+				missionCode: journey.missionCode,
+				wheelchairAccessible: journey.wheelchairAccessible,
 				aimedTime: call.aimedTime,
 				expectedTime: call.expectedTime,
 				callStatus: call.callStatus,
