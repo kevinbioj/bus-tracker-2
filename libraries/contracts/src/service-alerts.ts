@@ -21,6 +21,16 @@ export const translatedTextSchema = type({
 
 export type TranslatedText = typeof translatedTextSchema.infer;
 
+/** Image traduite, telle que la publie GTFS-RT : une image par langue, la langue pouvant manquer. */
+export const translatedImageSchema = type({
+	url: "string",
+	/** Type MIME, `image/png` par exemple. */
+	"mediaType?": "string",
+	"language?": "string",
+}).array();
+
+export type TranslatedImage = typeof translatedImageSchema.infer;
+
 export const serviceAlertCauses = [
 	"UNKNOWN_CAUSE",
 	"OTHER_CAUSE",
@@ -103,6 +113,9 @@ export const serviceAlertSchema = type({
 	/** Peut contenir du HTML : à assainir avant tout rendu. */
 	"description?": translatedTextSchema,
 	"url?": translatedTextSchema,
+	"image?": translatedImageSchema,
+	/** Texte alternatif de l'image. */
+	"imageAlternativeText?": translatedTextSchema,
 	informedEntities: serviceAlertInformedEntitySchema.array(),
 });
 

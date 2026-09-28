@@ -1,10 +1,11 @@
 import type { ServiceAlertEffect } from "@bus-tracker/contracts";
 import dayjs from "dayjs";
 import { ExternalLinkIcon } from "lucide-react";
+import { useRef } from "react";
 
 import type { ServiceAlert } from "~/api/service-alerts";
 import { ServiceAlertDescription } from "~/components/service-alerts/service-alert-description";
-import { pickTranslation } from "~/components/service-alerts/translated-text";
+import { pickImage, pickTranslation } from "~/components/service-alerts/translated-text";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "~/components/ui/accordion";
 import { Button } from "~/components/ui/button";
 import {
@@ -57,19 +58,45 @@ function formatActivePeriod(alert: ServiceAlert) {
 	if (period.end !== undefined) return m.service_alerts_until({ date: format(period.end) });
 }
 
+/** Délai pendant lequel une alerte tout juste dépliée est ramenée à l'écran, image chargée comprise. */
+const REVEAL_WINDOW_MS = 3_000;
+
 function ServiceAlertItem({ alert }: Readonly<{ alert: ServiceAlert }>) {
+	const itemRef = useRef<HTMLDivElement>(null);
+	const revealUntilRef = useRef(0);
+
+	// Une alerte dépliée en bas de liste déborderait : on la fait défiler jusqu'à la montrer entière, ou
+	// au moins depuis son titre si elle est plus haute que la fenêtre. L'image, chargée après coup,
+	// l'allonge encore : son chargement relance le défilement tant que l'ouverture est récente.
+	const reveal = () => {
+		if (Date.now() > revealUntilRef.current) return;
+		const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		itemRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
+	};
+
 	const effect = effectDetails[alert.effect ?? "UNKNOWN_EFFECT"];
 	const header = pickTranslation(alert.header);
 	const description = pickTranslation(alert.description);
 	const url = pickTranslation(alert.url);
+	const image = pickImage(alert.image);
+	const imageAlternativeText = pickTranslation(alert.imageAlternativeText);
 	const period = formatActivePeriod(alert);
 
 	const hasDescription = description !== undefined && description !== header;
+	const hasImage = image !== undefined && /^https?:\/\//.test(image);
 	const hasUrl = url !== undefined && /^https?:\/\//.test(url);
 
 	// Seul le titre est montré d'emblée : le détail, souvent long, ne se déplie qu'à la demande.
 	return (
-		<AccordionItem value={alert.id}>
+		<AccordionItem
+			// Laisse dépasser le haut de l'alerte suivante, pour qu'on puisse la déplier sans défiler.
+			className="scroll-mb-12"
+			onOpenChange={(open) => {
+				revealUntilRef.current = open ? Date.now() + REVEAL_WINDOW_MS : 0;
+			}}
+			ref={itemRef}
+			value={alert.id}
+		>
 			<AccordionTrigger className="gap-2 hover:no-underline">
 				<span className="min-w-0 flex-1 space-y-1">
 					<span className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -81,8 +108,18 @@ function ServiceAlertItem({ alert }: Readonly<{ alert: ServiceAlert }>) {
 					<span className="block font-bold leading-snug text-foreground">{header ?? effect.label()}</span>
 				</span>
 			</AccordionTrigger>
-			<AccordionContent className="space-y-2">
+			<AccordionContent className="space-y-2" onAnimationEnd={reveal}>
 				{hasDescription && <ServiceAlertDescription className="text-sm text-foreground" html={description} />}
+				{hasImage && (
+					<img
+						alt={imageAlternativeText ?? ""}
+						className="h-auto max-w-full rounded-sm"
+						decoding="async"
+						onLoad={reveal}
+						referrerPolicy="no-referrer"
+						src={image}
+					/>
+				)}
 				{hasUrl && (
 					<a
 						className="inline-flex items-center gap-1 text-sm font-medium text-foreground underline underline-offset-2"

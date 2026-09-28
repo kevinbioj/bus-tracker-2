@@ -119,6 +119,45 @@ describe("buildServiceAlerts", () => {
 		});
 	});
 
+	it("garde les images, et leur texte alternatif, mais pas ce qui n'en est pas", () => {
+		const [alert] = buildServiceAlerts(
+			makeSource(),
+			[
+				makeAlert({
+					informedEntity: [{ agencyId: "TCAR", routeId: "TCAR:15" }],
+					image: {
+						localizedImage: [
+							{ url: "https://example.com/15.png", mediaType: "image/png", language: "fr" },
+							{ url: "https://example.com/15.pdf", mediaType: "application/pdf" },
+							{ url: "" },
+						],
+					},
+					imageAlternativeText: text("Plan de la déviation"),
+				}),
+			],
+			NOW,
+		);
+
+		expect(alert?.image).toEqual([{ url: "https://example.com/15.png", mediaType: "image/png", language: "fr" }]);
+		expect(alert?.imageAlternativeText).toEqual([{ text: "Plan de la déviation", language: "fr" }]);
+	});
+
+	it("ne publie pas de texte alternatif sans image", () => {
+		const [alert] = buildServiceAlerts(
+			makeSource(),
+			[
+				makeAlert({
+					informedEntity: [{ agencyId: "TCAR", routeId: "TCAR:15" }],
+					imageAlternativeText: text("Plan de la déviation"),
+				}),
+			],
+			NOW,
+		);
+
+		expect(alert).not.toHaveProperty("image");
+		expect(alert).not.toHaveProperty("imageAlternativeText");
+	});
+
 	it("désigne un quai par sa référence de quai", () => {
 		const [alert] = buildServiceAlerts(
 			makeSource(),

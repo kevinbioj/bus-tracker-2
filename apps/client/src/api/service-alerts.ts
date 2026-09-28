@@ -1,4 +1,4 @@
-import type { ServiceAlertCause, ServiceAlertEffect, TranslatedText } from "@bus-tracker/contracts";
+import type { ServiceAlertCause, ServiceAlertEffect, TranslatedImage, TranslatedText } from "@bus-tracker/contracts";
 import { queryOptions } from "@tanstack/react-query";
 
 import { client } from "./client";
@@ -13,6 +13,8 @@ export type ServiceAlert = {
 	/** HTML venu du producteur : à assainir avant tout rendu. */
 	description?: TranslatedText;
 	url?: TranslatedText;
+	image?: TranslatedImage;
+	imageAlternativeText?: TranslatedText;
 };
 
 type ServiceAlerts = { items: ServiceAlert[] };

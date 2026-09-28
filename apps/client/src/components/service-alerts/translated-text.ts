@@ -1,20 +1,28 @@
-import type { TranslatedText } from "@bus-tracker/contracts";
+import type { TranslatedImage, TranslatedText } from "@bus-tracker/contracts";
 
 import { getLocale } from "~/paraglide/runtime";
 
 /**
- * Traduction dans la langue de l'interface, à défaut celle qui ne déclare aucune langue — le texte
+ * Traduction dans la langue de l'interface, à défaut celle qui ne déclare aucune langue — la valeur
  * par défaut au sens de GTFS-RT — et à défaut la première venue.
  */
-export function pickTranslation(value?: TranslatedText) {
-	if (value === undefined || value.length === 0) return undefined;
+function pickLocalized<T extends { language?: string }>(values?: T[]) {
+	if (values === undefined || values.length === 0) return undefined;
 
 	const locale = getLocale();
 	const matches = (language?: string) => language?.toLowerCase().split(/[-_]/)[0] === locale;
 
 	return (
-		value.find(({ language }) => matches(language)) ??
-		value.find(({ language }) => language === undefined) ??
-		value[0]
-	)?.text;
+		values.find(({ language }) => matches(language)) ??
+		values.find(({ language }) => language === undefined) ??
+		values[0]
+	);
+}
+
+export function pickTranslation(value?: TranslatedText) {
+	return pickLocalized(value)?.text;
+}
+
+export function pickImage(value?: TranslatedImage) {
+	return pickLocalized(value)?.url;
 }

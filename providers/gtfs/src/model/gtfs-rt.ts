@@ -132,6 +132,10 @@ export type TranslatedString = {
 	translation?: { text: string; language?: string }[];
 };
 
+export type TranslatedImage = {
+	localizedImage?: { url: string; mediaType?: string; language?: string }[];
+};
+
 /** Tracé publié par le flux temps réel, en remplacement ou en complément de `shapes.txt`. */
 export type RtShape = {
 	shapeId: string;
@@ -246,6 +250,8 @@ export type Alert = {
 	url?: TranslatedString;
 	headerText?: TranslatedString;
 	descriptionText?: TranslatedString;
+	image?: TranslatedImage;
+	imageAlternativeText?: TranslatedString;
 };
 
 /** Une entité `Alert` et l'identifiant de l'entité qui la porte. */

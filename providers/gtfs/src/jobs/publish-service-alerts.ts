@@ -10,11 +10,17 @@ import {
 	serviceAlertEffects,
 	serviceAlertSeverities,
 	serviceAlertsSnapshotField,
+	type TranslatedImage,
 	type TranslatedText,
 } from "@bus-tracker/contracts";
 import { captureException } from "@bus-tracker/monitoring";
 
-import type { EntitySelector, IdentifiedAlert, TranslatedString } from "../model/gtfs-rt.js";
+import type {
+	EntitySelector,
+	TranslatedImage as GtfsRtTranslatedImage,
+	IdentifiedAlert,
+	TranslatedString,
+} from "../model/gtfs-rt.js";
 import type { Source } from "../model/source.js";
 import type { Trip } from "../model/trip.js";
 import { padSourceId } from "../utils/pad-source-id.js";
@@ -35,6 +41,22 @@ const toTranslatedText = (value?: TranslatedString): TranslatedText | undefined 
 		typeof text === "string" && text.trim().length > 0 ? [language ? { text, language } : { text }] : [],
 	);
 	return translations.length > 0 ? translations : undefined;
+};
+
+/** Seules les images au sens propre sont gardées : la spec n'interdit pas d'y mettre autre chose. */
+const toTranslatedImage = (value?: GtfsRtTranslatedImage): TranslatedImage | undefined => {
+	const images = (value?.localizedImage ?? []).flatMap(({ url, mediaType, language }) => {
+		if (typeof url !== "string" || url.trim().length === 0) return [];
+		if (typeof mediaType === "string" && mediaType.length > 0 && !mediaType.startsWith("image/")) return [];
+		return [
+			{
+				url,
+				...(typeof mediaType === "string" && mediaType.length > 0 ? { mediaType } : {}),
+				...(language ? { language } : {}),
+			},
+		];
+	});
+	return images.length > 0 ? images : undefined;
 };
 
 const toIsoString = (epochSeconds?: number) =>
@@ -167,6 +189,8 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 		if (header === undefined && description === undefined) return [];
 
 		const url = toTranslatedText(alert.url);
+		const image = toTranslatedImage(alert.image);
+		const imageAlternativeText = image !== undefined ? toTranslatedText(alert.imageAlternativeText) : undefined;
 		const cause = knownValue<ServiceAlertCause>(serviceAlertCauses, alert.cause);
 		const effect =
 			alert.effect !== undefined
@@ -184,6 +208,8 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 				header: header ?? [],
 				...(description !== undefined ? { description } : {}),
 				...(url !== undefined ? { url } : {}),
+				...(image !== undefined ? { image } : {}),
+				...(imageAlternativeText !== undefined ? { imageAlternativeText } : {}),
 				informedEntities,
 			},
 		];
