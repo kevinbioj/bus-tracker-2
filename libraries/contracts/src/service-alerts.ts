@@ -109,6 +109,10 @@ export const serviceAlertSchema = type({
 	"severity?": serviceAlertSeverityEnum,
 	/** Périodes d'activité. Vide : l'alerte est active tant qu'elle est publiée. */
 	activePeriods: serviceAlertActivePeriodSchema.array(),
+	/** Périodes pendant lesquelles l'alerte est à montrer, quand le producteur les distingue. */
+	"communicationPeriods?": serviceAlertActivePeriodSchema.array(),
+	/** Périodes pendant lesquelles le service est effectivement perturbé, quand le producteur les distingue. */
+	"impactPeriods?": serviceAlertActivePeriodSchema.array(),
 	header: translatedTextSchema,
 	/** Peut contenir du HTML : à assainir avant tout rendu. */
 	"description?": translatedTextSchema,

@@ -40,17 +40,35 @@ const effectDetails: Record<ServiceAlertEffect, { label: () => string; classes: 
 	UNKNOWN_EFFECT: { label: m.service_alert_effect_other, classes: neutralClasses },
 };
 
-/** La période en cours, ou la première : c'est elle qui intéresse le voyageur. */
-function formatActivePeriod(alert: ServiceAlert) {
+/**
+ * Ce qui intéresse le voyageur, c'est quand la perturbation a lieu : la période d'impact, à défaut
+ * celle de communication, à défaut celle d'activité. De celles-ci, la période en cours, sinon la
+ * prochaine — une alerte encore diffusée peut porter des périodes d'impact échues —, sinon la première.
+ */
+function formatPeriod(alert: ServiceAlert) {
+	const periods = [alert.impactPeriods, alert.communicationPeriods, alert.activePeriods].find(
+		(candidate) => candidate !== undefined && candidate.length > 0,
+	);
+	if (periods === undefined) return;
+
 	const now = Date.now();
+	const upcoming = periods
+		.filter(({ start }) => start !== undefined && now < Date.parse(start))
+		.sort((a, b) => Date.parse(a.start!) - Date.parse(b.start!));
 	const period =
-		alert.activePeriods.find(
+		periods.find(
 			({ start, end }) =>
 				(start === undefined || Date.parse(start) <= now) && (end === undefined || now < Date.parse(end)),
-		) ?? alert.activePeriods[0];
+		) ??
+		upcoming[0] ??
+		periods[0];
 	if (period === undefined) return;
 
-	const format = (date: string) => dayjs(date).format("L LT");
+	const format = (date: string) => {
+		const value = dayjs(date);
+		const onDayBoundary = value.isSame(value.startOf("day"), "minute") || value.isSame(value.endOf("day"), "minute");
+		return value.format(onDayBoundary ? "L" : "L LT");
+	};
 	if (period.start !== undefined && period.end !== undefined) {
 		return m.service_alerts_between({ start: format(period.start), end: format(period.end) });
 	}
@@ -80,7 +98,7 @@ function ServiceAlertItem({ alert }: Readonly<{ alert: ServiceAlert }>) {
 	const url = pickTranslation(alert.url);
 	const image = pickImage(alert.image);
 	const imageAlternativeText = pickTranslation(alert.imageAlternativeText);
-	const period = formatActivePeriod(alert);
+	const period = formatPeriod(alert);
 
 	const hasDescription = description !== undefined && description !== header;
 	const hasImage = image !== undefined && /^https?:\/\//.test(image);

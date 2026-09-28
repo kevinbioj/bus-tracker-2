@@ -119,6 +119,31 @@ describe("buildServiceAlerts", () => {
 		});
 	});
 
+	it("publie les périodes de communication et d'impact, seulement si le flux en porte", () => {
+		const iso = (epochSeconds: number) => Temporal.Instant.fromEpochMilliseconds(epochSeconds * 1000).toString();
+		const [withPeriods, withoutPeriods] = buildServiceAlerts(
+			makeSource(),
+			[
+				makeAlert({
+					id: "SA:1",
+					informedEntity: [{ agencyId: "TCAR", routeId: "TCAR:15" }],
+					communicationPeriod: [{ start: NOW_SECS - 2 * HOUR, end: NOW_SECS + 4 * HOUR }],
+					impactPeriod: [{ start: NOW_SECS + HOUR, end: NOW_SECS + 3 * HOUR }, {}],
+				}),
+				makeAlert({ id: "SA:2", informedEntity: [{ agencyId: "TCAR", routeId: "TCAR:15" }] }),
+			],
+			NOW,
+		);
+
+		expect(withPeriods).toMatchObject({
+			activePeriods: [],
+			communicationPeriods: [{ start: iso(NOW_SECS - 2 * HOUR), end: iso(NOW_SECS + 4 * HOUR) }],
+			impactPeriods: [{ start: iso(NOW_SECS + HOUR), end: iso(NOW_SECS + 3 * HOUR) }],
+		});
+		expect(withoutPeriods).not.toHaveProperty("communicationPeriods");
+		expect(withoutPeriods).not.toHaveProperty("impactPeriods");
+	});
+
 	it("garde les images, et leur texte alternatif, mais pas ce qui n'en est pas", () => {
 		const [alert] = buildServiceAlerts(
 			makeSource(),

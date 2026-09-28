@@ -9,6 +9,10 @@ export type ServiceAlert = {
 	effect?: ServiceAlertEffect;
 	/** Vide : l'alerte vaut tant qu'elle est publiée. */
 	activePeriods: { start?: string; end?: string }[];
+	/** Périodes pendant lesquelles l'alerte est à montrer, quand le producteur les distingue. */
+	communicationPeriods?: { start?: string; end?: string }[];
+	/** Périodes pendant lesquelles le service est effectivement perturbé, quand le producteur les distingue. */
+	impactPeriods?: { start?: string; end?: string }[];
 	header: TranslatedText;
 	/** HTML venu du producteur : à assainir avant tout rendu. */
 	description?: TranslatedText;

@@ -244,6 +244,10 @@ export type AlertSeverityLevel = "UNKNOWN_SEVERITY" | "INFO" | "WARNING" | "SEVE
 
 export type Alert = {
 	activePeriod?: TimeRange[];
+	/** Périodes pendant lesquelles l'alerte est à montrer (expérimental). */
+	communicationPeriod?: TimeRange[];
+	/** Périodes pendant lesquelles le service est effectivement perturbé (expérimental). */
+	impactPeriod?: TimeRange[];
 	informedEntity?: EntitySelector[];
 	cause?: AlertCause;
 	effect?: AlertEffect;

@@ -1,6 +1,7 @@
 import {
 	SERVICE_ALERTS_KEY,
 	type ServiceAlert,
+	type ServiceAlertActivePeriod,
 	type ServiceAlertCause,
 	type ServiceAlertEffect,
 	type ServiceAlertInformedEntity,
@@ -19,6 +20,7 @@ import type {
 	EntitySelector,
 	TranslatedImage as GtfsRtTranslatedImage,
 	IdentifiedAlert,
+	TimeRange,
 	TranslatedString,
 } from "../model/gtfs-rt.js";
 import type { Source } from "../model/source.js";
@@ -63,6 +65,19 @@ const toIsoString = (epochSeconds?: number) =>
 	typeof epochSeconds === "number" && epochSeconds > 0
 		? Temporal.Instant.fromEpochMilliseconds(epochSeconds * 1000).toString()
 		: undefined;
+
+/** Les bornes absentes sont omises, une période sans aucune borne écartée. */
+const toPeriods = (timeRanges?: TimeRange[]): ServiceAlertActivePeriod[] =>
+	(timeRanges ?? []).flatMap(({ start, end }) => {
+		const period = { start: toIsoString(start), end: toIsoString(end) };
+		if (period.start === undefined && period.end === undefined) return [];
+		return [
+			{
+				...(period.start !== undefined ? { start: period.start } : {}),
+				...(period.end !== undefined ? { end: period.end } : {}),
+			},
+		];
+	});
 
 /** `YYYYMMDD` (GTFS-RT) vers `YYYY-MM-DD`. */
 const toServiceDate = (startDate?: string) =>
@@ -164,16 +179,9 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 	};
 
 	return alerts.flatMap((alert) => {
-		const activePeriods = (alert.activePeriod ?? []).flatMap(({ start, end }) => {
-			const period = { start: toIsoString(start), end: toIsoString(end) };
-			if (period.start === undefined && period.end === undefined) return [];
-			return [
-				{
-					...(period.start !== undefined ? { start: period.start } : {}),
-					...(period.end !== undefined ? { end: period.end } : {}),
-				},
-			];
-		});
+		const activePeriods = toPeriods(alert.activePeriod);
+		const communicationPeriods = toPeriods(alert.communicationPeriod);
+		const impactPeriods = toPeriods(alert.impactPeriod);
 
 		// Toutes les périodes sont échues : l'alerte ne sera plus jamais active.
 		if (activePeriods.length > 0 && activePeriods.every(({ end }) => end !== undefined && Date.parse(end) <= nowMs)) {
@@ -205,6 +213,8 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 				...(effect !== undefined ? { effect } : {}),
 				...(severity !== undefined ? { severity } : {}),
 				activePeriods,
+				...(communicationPeriods.length > 0 ? { communicationPeriods } : {}),
+				...(impactPeriods.length > 0 ? { impactPeriods } : {}),
 				header: header ?? [],
 				...(description !== undefined ? { description } : {}),
 				...(url !== undefined ? { url } : {}),
