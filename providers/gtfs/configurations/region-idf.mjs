@@ -49,6 +49,7 @@ const gpsoZenbusIdToVehicleLabel = new Map([
 	["4842729700851712", "TUVIM6"],
 	["4831213215809536", "RESERVE1"],
 	["4802336712032256", "ELEC6"],
+	["4841829722750976", "ELEC7"],
 ]);
 
 const saclayZenbusIdToVehicleLabel = new Map();
