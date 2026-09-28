@@ -89,7 +89,7 @@ type DepartureRowProps = {
 	departure: StopDeparture;
 	line?: Line;
 	label: string;
-	/** Accessibilité du véhicule, montrée seulement lorsque l'arrêt est lui-même accessible. */
+	/** Accessibilité du véhicule, montrée seulement lorsque l'arrêt n'est pas connu comme inaccessible. */
 	wheelchairStatus?: WheelchairStatus;
 	/** Ligne plus haute et bouton plus large, pour le doigt plutôt que le pointeur. */
 	touch?: boolean;
@@ -310,11 +310,17 @@ function useStopDepartures() {
 		keyOccurrences.set(baseKey, occurrence + 1);
 
 		// L'accessibilité du véhicule n'importe que si l'on peut monter depuis le quai : celui du passage,
-		// la station à défaut lorsque ce quai n'est pas connu.
-		const stopAccessible =
-			stopPointsByRef.get(departure.stopRef)?.wheelchairBoarding ?? wheelchairStatus === "accessible";
+		// la station à défaut lorsque ce quai n'est pas connu. Un quai d'accessibilité inconnue n'écarte
+		// pas le véhicule : on dit alors s'il est accessible ou non, sans afficher un second inconnu.
+		const stopBoarding = stopPointsByRef.get(departure.stopRef)?.wheelchairBoarding;
+		const stopWheelchairStatus = stopBoarding === undefined ? wheelchairStatus : getWheelchairStatus(stopBoarding);
+		const tripWheelchairStatus = getWheelchairStatus(departure.wheelchairAccessible);
 		const vehicleWheelchairStatus =
-			showWheelchairAccessibility && stopAccessible ? getWheelchairStatus(departure.wheelchairAccessible) : undefined;
+			showWheelchairAccessibility &&
+			(stopWheelchairStatus === "accessible" ||
+				(stopWheelchairStatus === "unknown" && tripWheelchairStatus !== "unknown"))
+				? tripWheelchairStatus
+				: undefined;
 
 		return [
 			{
