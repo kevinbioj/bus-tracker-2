@@ -3,45 +3,42 @@
 const tniOperatedLineIds = ['06', '13', '14', '27', '28', '33', '35', '36', '37', '38', '42', '44', '45', '46', '47', '48', '49', '50', '51', '60', '89'];
 const isTniVehicle = (id) => (id >= 421 && id <= 435) || (id >= 670 && id <= 685) || (id >= 734 && id <= 736);
 
+const stripAgencyPrefix = (id) => id.replace(/^(TCAR|TAE|TNI):/, "");
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
-		id: "tcar",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tcar.zip",
-		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/tcar/vehicle-positions",
-			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/service-alerts", pollMs: 60_000 },
-		],
+		id: "astuce",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-global.zip",
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/tcar/?tae=1&tni=1"],
 		mode: "NO-TU",
 		passedCallDetection: "VEHICLE",
 		gtfsOptions: {
 			filterTrips: (trip) => {
 				if (trip.route.id === "TCAR:99") trip.block = "CALYPSO";
-				return trip.route.id.startsWith("TCAR");
+				return true;
 			},
 		},
-		getAheadTime: (journey) => (journey?.trip.route.id === "TCAR:99" ? 5 * 60 : 2 * 60),
-		// excludeScheduled: (trip) => {
-		// 	if (/^TCAR:[23]\d\d$/.test(trip.route.id) || trip.route.id === "TCAR:99") return false;
-		// 	return !tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(trip.route.id);
-		// },
+		getAheadTime: (journey) => {
+			if (journey?.trip.route.id === "TCAR:99") return 5 * 60;
+			return 60;
+		},
 		getNetworkRef: () => "ASTUCE",
 		getOperatorRef: (journey, vehicle) => {
-			if (
-				journey !== undefined &&
-				tniOperatedLineIds.flatMap((id) => [id, `TCAR:${id}`]).includes(journey.trip.route.id)
-			) {
+			const agencyId = journey?.trip.route.agency.id ?? vehicle?.id.split(":")[0];
+			if (agencyId === "TAE" || agencyId === "TNI") return agencyId;
+
+			if (journey !== undefined && tniOperatedLineIds.includes(stripAgencyPrefix(journey.trip.route.id))) {
 				return "TNI";
 			}
 
-			if (vehicle !== undefined && isTniVehicle(+vehicle.id)) {
+			if (vehicle !== undefined && isTniVehicle(+stripAgencyPrefix(vehicle.id))) {
 				return "TNI";
 			}
 
 			return "TCAR";
 		},
-		getVehicleRef: (vehicle) => vehicle?.id,
+		getVehicleRef: (vehicle) => (vehicle !== undefined ? stripAgencyPrefix(vehicle.id) : undefined),
 		getDestination: (journey, vehicle) =>
 			vehicle?.label ?? journey?.calls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		isValidJourney: (vehicleJourney) => {
@@ -59,80 +56,14 @@ const sources = [
 
 			return true;
 		},
-		mapLineRef: (lineRef) => lineRef.replace("TCAR:", ""),
-		mapVehiclePosition: (vehicle) => {
-			vehicle.vehicle.id = vehicle.vehicle.id.replace("TCAR:", "");
-			return vehicle;
-		},
-	},
-	{
-		id: "tae",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tae.zip",
-		realtimeResourceHrefs: [
-			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?tcar=0&tae=1", pollMs: 20_000 },
-			{
-				href: "https://api.mrn.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TAE&dataFormat=GTFS-RT",
-				pollMs: 20_000,
-			},
-			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/service-alerts?tcar=0&tae=1", pollMs: 60_000 },
-		],
-		mode: "NO-TU",
-		excludeScheduled: (trip) => trip.route.name !== "I",
-		getAheadTime: () => 5,
-		getNetworkRef: () => "ASTUCE",
-		getOperatorRef: () => "TAE",
-		getVehicleRef: (vehicle) => vehicle?.id.replace(/TAE:?/, ""),
-		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
-		mapLineRef: (lineRef) => lineRef.replace("TAE:", ""),
-	},
-	{
-		id: "tni",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/astuce-tni.zip",
-		realtimeResourceHrefs: [
-			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/trip-updates?tcar=0&tni=1", pollMs: 20_000 },
-			{ href: "https://mrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions", pollMs: 20_000 },
-			{ href: "https://gtfs.bus-tracker.fr/gtfs-rt/tcar/service-alerts?tcar=0&tni=1", pollMs: 60_000 },
-		],
-		mode: "NO-TU",
-		mapTripUpdate: (tripUpdate) => {
-			tripUpdate.stopTimeUpdate?.forEach((stopTimeUpdate) => {
-				if (typeof stopTimeUpdate.stopId === "string") {
-					stopTimeUpdate.stopId = `TNI:${stopTimeUpdate.stopId}`;
-				}
-			});
-
-			if (typeof tripUpdate.trip.routeId === "string") {
-				tripUpdate.trip.routeId = `TNI:${tripUpdate.trip.routeId}`;
-			}
-
-			tripUpdate.trip.tripId = `TNI:${tripUpdate.trip.tripId}`;
-			return tripUpdate;
-		},
-		mapVehiclePosition: (vehicle) => {
-			if (typeof vehicle.stopId === "string") {
-				vehicle.stopId = `TNI:${vehicle.stopId}`;
-			}
-
-			if (vehicle.trip !== undefined) {
-				vehicle.trip.tripId = `TNI:${vehicle.trip.tripId}`;
-				if (vehicle.trip.routeId !== undefined) {
-					vehicle.trip.routeId = `TNI:${vehicle.trip.routeId}`;
-				}
-			}
-
-			return vehicle;
-		},
-		getNetworkRef: () => "ASTUCE",
-		getOperatorRef: () => "TNI",
-		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
-		mapLineRef: (lineRef) => lineRef.replace("TNI:", ""),
+		mapLineRef: stripAgencyPrefix,
 	},
 ];
 
 /** @type {import('../src/configuration/configuration.ts').Configuration} */
 const configuration = {
 	id: "rouen",
-	computeDelayMs: 10_000,
+	computeDelayMs: 5_000,
 	sources,
 };
 
