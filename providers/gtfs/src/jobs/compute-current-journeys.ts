@@ -417,11 +417,18 @@ function getCurrentStopHeadsign(journey: Journey, at: Temporal.Instant): string 
 }
 
 /**
- * Accessibilité de la course en fauteuil roulant : celle annoncée par le véhicule prime sur celle du
- * GTFS statique (spec), sauf `NO_VALUE`, qui laisse la seconde s'appliquer.
+ * Accessibilité de la course en fauteuil roulant : celle annoncée par un descripteur de véhicule
+ * prime sur celle du GTFS statique (spec), sauf `NO_VALUE`, qui passe la main au suivant. Les
+ * descripteurs sont donnés par priorité décroissante (VehiclePosition, puis TripUpdate).
  */
-function getWheelchairAccessible(journey: Journey | undefined, vehicleDescriptor: VehicleDescriptor | undefined) {
-	return match(vehicleDescriptor?.wheelchairAccessible)
+function getWheelchairAccessible(
+	journey: Journey | undefined,
+	...vehicleDescriptors: (VehicleDescriptor | undefined)[]
+) {
+	const override = vehicleDescriptors.find(
+		(descriptor) => descriptor?.wheelchairAccessible !== undefined && descriptor.wheelchairAccessible !== "NO_VALUE",
+	);
+	return match(override?.wheelchairAccessible)
 		.with("WHEELCHAIR_ACCESSIBLE", () => true)
 		.with("WHEELCHAIR_INACCESSIBLE", () => false)
 		.with("UNKNOWN", () => undefined)
@@ -795,7 +802,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					(unknownTripCalls !== undefined ? getCurrentCallHeadsign(unknownTripCalls, now) : undefined) ??
 					unknownTripCalls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 				missionCode: source.options.getMissionCode?.(journey, vehiclePosition.vehicle) ?? undefined,
-				wheelchairAccessible: getWheelchairAccessible(journey, vehiclePosition.vehicle),
+				wheelchairAccessible: getWheelchairAccessible(journey, vehiclePosition.vehicle, journey?.vehicleDescriptor),
 				bikesAllowed: journey?.trip.bikesAllowed,
 				position: {
 					latitude: vehiclePosition.position.latitude,
