@@ -32,7 +32,7 @@ function parseTimeToSecs(time: string): number {
 
 export async function importTrips(
 	gtfsDirectory: string,
-	{ filterTrips, mapTripId, mapRouteId, mapStopId, ignoreBlocks, computeShapeDistTraveled }: ImportGtfsOptions,
+	{ filterTrips, mapTripId, mapRouteId, mapStopId, mapTime, ignoreBlocks, computeShapeDistTraveled }: ImportGtfsOptions,
 	routes: Map<string, Route>,
 	services: Map<string, Service>,
 	shapes: Map<string, Shape>,
@@ -171,11 +171,11 @@ export async function importTrips(
 		const idx = tripStart[trip.idx]! + writeCursor[trip.idx]!;
 		writeCursor[trip.idx]! += 1;
 
-		const aSecs = parseTimeToSecs(stopTimeRecord.arrival_time);
+		const aSecs = parseTimeToSecs(mapTime?.(stopTimeRecord.arrival_time) ?? stopTimeRecord.arrival_time);
 		const dSecs =
 			stopTimeRecord.arrival_time === stopTimeRecord.departure_time
 				? aSecs
-				: parseTimeToSecs(stopTimeRecord.departure_time);
+				: parseTimeToSecs(mapTime?.(stopTimeRecord.departure_time) ?? stopTimeRecord.departure_time);
 
 		stopRefs[idx] = stop;
 		stopHeadsigns[idx] = stopTimeRecord.stop_headsign || undefined;

@@ -20,6 +20,7 @@ export type ImportGtfsOptions = {
 	mapTripId?: (tripId: string) => string;
 	mapStopId?: (stopId: string) => string;
 	mapRouteId?: (routeId: string) => string;
+	mapTime?: (time: string) => string;
 	importAllStops?: boolean;
 	shapesStrategy?: LoadShapesStrategy;
 	computeShapeDistTraveled?: ComputeShapeDistTraveledStrategy;

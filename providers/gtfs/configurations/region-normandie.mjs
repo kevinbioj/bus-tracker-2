@@ -427,6 +427,13 @@ const sources = [
 					realtimeResourceHrefs: [
 						`https://alto.maxtrip.fr/api/v1/Export/GtfsRealtime/alto?apiKey=${process.env.ALTOBUS_API_KEY}`,
 					],
+					gtfsOptions: {
+						mapTime: (time) => {
+							const separator = time.indexOf(":");
+							const hours = +time.slice(0, separator);
+							return hours < 48 ? time : `${String(hours % 24).padStart(2, "0")}${time.slice(separator)}`;
+						},
+					},
 					excludeScheduled: true,
 					mode: "NO-TU",
 					getNetworkRef: () => "ALTOBUS",
