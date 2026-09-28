@@ -149,6 +149,16 @@ export const stopDepartureSchema = type({
 	aimedTime: "string.date.iso",
 	"expectedTime?": "string.date.iso",
 	callStatus: vehicleJourneyCallStatusEnum,
+	/**
+	 * Vrai lorsque la course entière est supprimée, et non le seul arrêt : `callStatus` vaut alors
+	 * `SKIPPED`. Absent : la course circule.
+	 */
+	"canceled?": "boolean",
+	/**
+	 * Vrai lorsque la course porte au moins un horaire temps réel, même si ce passage n'en a pas (un
+	 * arrêt supprimé, notamment). Absent : la course n'est connue que par l'horaire théorique.
+	 */
+	"realtime?": "boolean",
 	/** Vrai lorsque la station est le terminus de départ de la course : le passage y est un départ. */
 	"origin?": "boolean",
 	/**

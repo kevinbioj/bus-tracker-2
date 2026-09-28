@@ -276,6 +276,7 @@
 	"stop_departures_departure_in": "Abfahrt in {time}",
 	"stop_departures_departure_imminent": "Abfahrt sofort",
 	"stop_departures_title": "Nächste Abfahrten",
+	"stop_departures_trip_cancelled": "Fahrt entfällt",
 	"page_title_data": "Netzdaten - Bus-Tracker",
 	"page_title_embed_map": "Karte des Verkehrsnetzes {networkName}",
 	"page_title_line_data": "{lineNumber} – {networkName} – Liniendaten – Bus Tracker",

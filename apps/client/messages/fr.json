@@ -267,6 +267,7 @@
 	"stop_departures_departure_in": "Départ dans {time}",
 	"stop_departures_departure_imminent": "Départ imminent",
 	"stop_departures_title": "Prochains passages",
+	"stop_departures_trip_cancelled": "Course supprimée",
 	"page_title_data": "Données des réseaux - Bus-Tracker",
 	"page_title_embed_map": "Carte du réseau {networkName}",
 	"page_title_line_data": "{lineNumber} – {networkName} – Données – Bus Tracker",

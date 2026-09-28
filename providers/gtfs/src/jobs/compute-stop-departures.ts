@@ -195,6 +195,8 @@ export function computeStopDepartures(
 				aimedTime: formatCallTime(aimedMs, stop.timeZone, timeZone),
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, stop.timeZone, timeZone) : undefined,
 				callStatus: canceled ? "SKIPPED" : (call?.status ?? "SCHEDULED"),
+				canceled: canceled ? true : undefined,
+				realtime: journey?.hasRealtime() ? true : undefined,
 				origin,
 				// Les identifiants publiés remplacent leurs barres obliques côté serveur : la valeur
 				// rendue ici doit pouvoir être comparée telle quelle à celles du store des courses.
@@ -253,6 +255,7 @@ export function computeStopDepartures(
 						? formatCallTime(call.expectedDepartureTime, call.stop.timeZone, timeZone)
 						: undefined,
 				callStatus: call.status,
+				realtime: journey.hasRealtime() ? true : undefined,
 				origin: call === originCall,
 				journeyId: journey.lastPublishedKey?.replaceAll("/", "_"),
 				journeyRef: `${networkRef}:ServiceJourney:${mapTripRef?.(trip.id) ?? trip.id}`,

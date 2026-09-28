@@ -175,6 +175,8 @@ function mergeTrackedJourneys(
 		const lastCall = journey.calls?.at(-1);
 		// Terminus effectif : une déviation ou le temps réel peuvent avoir retiré les derniers arrêts.
 		const terminusCall = journey.calls?.findLast((call) => call.callStatus !== "SKIPPED");
+		// Course en temps réel : au moins une de ses dessertes publiées en porte un horaire.
+		const realtime = journey.calls?.some((call) => call.expectedTime !== undefined) ? true : undefined;
 
 		let matched = false;
 		for (const call of journey.calls ?? []) {
@@ -206,6 +208,9 @@ function mergeTrackedJourneys(
 				// le processeur a calculées pour répondre.
 				known.expectedTime = call.expectedTime ?? known.expectedTime;
 				known.callStatus = call.callStatus;
+				// Les dessertes publiées partent de l'arrêt courant : le processeur, qui voit la course
+				// entière, a pu y trouver du temps réel que celles-ci n'ont plus.
+				known.realtime = known.realtime ?? realtime;
 				known.platformName = call.platformName ?? known.platformName;
 				// Calculée avec le véhicule effectivement affecté, elle est la plus juste des deux.
 				known.destination = journey.destination ?? known.destination;
@@ -230,6 +235,7 @@ function mergeTrackedJourneys(
 				aimedTime: call.aimedTime,
 				expectedTime: call.expectedTime,
 				callStatus: call.callStatus,
+				realtime,
 				journeyId: journey.id,
 				journeyRef: journey.journeyRef,
 				serviceDate: journey.serviceDate,

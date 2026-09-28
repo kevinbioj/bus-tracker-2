@@ -189,9 +189,11 @@ describe("computeStopDepartures", () => {
 			aimedTime: "2026-05-18T08:00:00+00:00",
 			expectedTime: undefined,
 			callStatus: "SKIPPED",
+			canceled: true,
 			journeyId: undefined,
 		});
 		expect(departures[1]!.callStatus).toBe("SCHEDULED");
+		expect(departures[1]!.canceled).toBeUndefined();
 	});
 
 	it("remonte l'identifiant de publication d'une course déjà suivie", () => {

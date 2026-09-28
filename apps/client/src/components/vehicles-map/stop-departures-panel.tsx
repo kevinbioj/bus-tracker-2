@@ -48,7 +48,8 @@ function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDi
 		return m.stop_departures_departure_in({ time: formatCountdown(minutes) });
 	}
 
-	if (departure.callStatus === "SKIPPED") return m.stop_call_cancelled();
+	// Un passage supprimé garde son attente, barrée : la raison de la suppression s'affiche dessous.
+	if (departure.callStatus === "SKIPPED") return formatCountdown(Math.max(minutes, 0));
 
 	// Moins d'une minute, ou heure dépassée alors que le véhicule n'est pas encore passé (source jugeant
 	// le passage sur sa progression) : il arrive.
@@ -108,7 +109,9 @@ function DepartureRow({
 }: Readonly<DepartureRowProps>) {
 	const skipped = departure.callStatus === "SKIPPED";
 	const extra = departure.callStatus === "UNSCHEDULED";
-	const realtime = departure.expectedTime !== undefined;
+	// Un passage supprimé n'a pas d'heure attendue : c'est alors la course qui dit si elle est suivie en
+	// temps réel.
+	const realtime = departure.expectedTime !== undefined || (skipped && departure.realtime === true);
 
 	// L'heure théorique n'est rappelée que lorsqu'elle diffère de celle affichée : un passage à l'heure
 	// n'a rien à corriger.
@@ -194,6 +197,12 @@ function DepartureRow({
 					{showAimedTime && (
 						<span className="text-[10px] text-muted-foreground line-through tabular-nums">
 							{formatLocalTime(departure.aimedTime)}
+						</span>
+					)}
+					{/* Sous l'heure barrée, ce qui est supprimé : la course entière, ou le seul arrêt. */}
+					{skipped && (
+						<span className="text-xs font-semibold text-red-700 dark:text-red-500 whitespace-nowrap">
+							{departure.canceled ? m.stop_departures_trip_cancelled() : m.stop_call_skipped()}
 						</span>
 					)}
 				</div>

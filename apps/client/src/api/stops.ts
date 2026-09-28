@@ -47,6 +47,10 @@ export type StopDeparture = {
 	aimedTime: string;
 	expectedTime?: string;
 	callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
+	/** La course entière est supprimée, et non le seul arrêt : `callStatus` vaut alors `SKIPPED`. */
+	canceled?: boolean;
+	/** La course porte au moins un horaire temps réel, même si ce passage n'en a pas. */
+	realtime?: boolean;
 	/** La station est le terminus de départ de la course : le passage y est annoncé comme un départ. */
 	origin?: boolean;
 	/** Course effectivement suivie par l'application : elle peut être rejointe sur la carte. */
