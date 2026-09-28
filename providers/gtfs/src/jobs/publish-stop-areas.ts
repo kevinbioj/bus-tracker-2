@@ -4,6 +4,7 @@ import {
 	STOP_AREAS_INVALIDATION_CHANNEL,
 	type StopAreaManifest,
 	type StopAreaMode,
+	type StopPoint,
 	stopAreaKey,
 	stopAreaModes,
 	stopAreasSourceKey,
@@ -15,6 +16,7 @@ import type { createRedisClient } from "@bus-tracker/redis";
 
 import type { Route, RouteType } from "../model/route.js";
 import type { Source } from "../model/source.js";
+import type { Stop } from "../model/stop.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
 
@@ -34,6 +36,47 @@ const heaviestMode = (a: StopAreaMode, b: StopAreaMode) =>
 /** `GEOADD` refuse les latitudes au-delà de ±85,05° ; un arrêt en (0, 0) trahit des coordonnées absentes. */
 const isIndexable = ({ latitude, longitude }: StopAreaManifest) =>
 	Math.abs(latitude) <= 85.05 && Math.abs(longitude) <= 180 && (latitude !== 0 || longitude !== 0);
+
+/**
+ * Quais d'une station, un par référence publiée. `mapStopRef` peut confondre plusieurs arrêts GTFS
+ * en un seul quai — à la SNCF, `StopPoint:OCETrain TER-87411017` et `StopPoint:OCECar TER-87411017`
+ * deviennent tous deux `87411017` : les dessertes ne les distinguent plus, la carte non plus. Le quai
+ * prend alors le plus lourd de leurs modes, et la position de l'arrêt qui l'apporte ; publiés tels
+ * quels, ils s'empileraient au même endroit et l'arrêt de car pourrait masquer la gare.
+ */
+function buildStopPoints(
+	stops: Stop[],
+	refOf: (stop: Stop) => string,
+	stopModeOf: (stop: Stop) => StopAreaMode,
+): StopPoint[] {
+	const stopsByRef = Map.groupBy(stops, refOf);
+
+	return [...stopsByRef].map(([ref, [first, ...others]]) => {
+		let leading = first!;
+		let mode = stopModeOf(leading);
+		for (const stop of others) {
+			const stopMode = stopModeOf(stop);
+			if (heaviestMode(mode, stopMode) !== mode) {
+				leading = stop;
+				mode = stopMode;
+			}
+		}
+
+		// Des arrêts confondus qui se contredisent laissent l'accès au quai inconnu.
+		const wheelchairBoarding = others.every((stop) => stop.wheelchairBoarding === first!.wheelchairBoarding)
+			? first!.wheelchairBoarding
+			: undefined;
+
+		return {
+			ref,
+			latitude: leading.latitude,
+			longitude: leading.longitude,
+			...(leading.platformCode !== undefined ? { platformCode: leading.platformCode } : {}),
+			mode,
+			...(wheelchairBoarding !== undefined ? { wheelchairBoarding } : {}),
+		};
+	});
+}
 
 function buildStopAreaManifests(providerId: string, source: Source, updatedAt: string): StopAreaManifest[] {
 	const gtfs = source.gtfs;
@@ -103,16 +146,16 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 				longitude: stopArea.longitude,
 				networkRef,
 				networkRefs,
-				stopRefs: networkRefs.flatMap((network) => stopArea.stops.map((stop) => stopRefOf(network, stop.id))),
-				stopPoints: stopArea.stops.map((stop) => ({
-					ref: stopRefOf(networkRef, stop.id),
-					latitude: stop.latitude,
-					longitude: stop.longitude,
-					...(stop.platformCode !== undefined ? { platformCode: stop.platformCode } : {}),
-					// Un quai où aucun départ n'a été relevé (terminus seulement) reprend le mode de sa station.
-					mode: stopModes.get(stop.id) ?? service.mode,
-					...(stop.wheelchairBoarding !== undefined ? { wheelchairBoarding: stop.wheelchairBoarding } : {}),
-				})),
+				stopRefs: [
+					...new Set(networkRefs.flatMap((network) => stopArea.stops.map((stop) => stopRefOf(network, stop.id)))),
+				],
+				stopPoints: buildStopPoints(
+					stopArea.stops,
+					(stop) => stopRefOf(networkRef, stop.id),
+					(stop) =>
+						// Un quai où aucun départ n'a été relevé (terminus seulement) reprend le mode de sa station.
+						stopModes.get(stop.id) ?? service.mode,
+				),
 				providerId,
 				sourceId: source.id,
 				lineRefs: [...service.lineRefs].sort(),

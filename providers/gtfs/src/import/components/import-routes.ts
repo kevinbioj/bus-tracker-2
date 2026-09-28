@@ -1,7 +1,7 @@
 import { join } from "node:path";
 
 import type { Agency } from "../../model/agency.js";
-import { Route, routeTypes } from "../../model/route.js";
+import { parseRouteType, Route } from "../../model/route.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
@@ -29,7 +29,7 @@ export async function importRoutes(
 			mapRouteId?.(routeRecord.route_id) ?? routeRecord.route_id,
 			agency,
 			routeRecord.route_short_name,
-			routeRecord.route_type in routeTypes ? routeTypes[routeRecord.route_type as keyof typeof routeTypes] : "UNKNOWN",
+			parseRouteType(routeRecord.route_type),
 			routeRecord.route_color?.toUpperCase() || "000000",
 			routeRecord.route_text_color?.toUpperCase() || "FFFFFF",
 		);
