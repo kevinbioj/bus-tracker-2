@@ -45,6 +45,7 @@ const isIndexable = ({ latitude, longitude }: StopAreaManifest) =>
  * quels, ils s'empileraient au même endroit et l'arrêt de car pourrait masquer la gare.
  */
 function buildStopPoints(
+	areaName: string,
 	stops: Stop[],
 	refOf: (stop: Stop) => string,
 	stopModeOf: (stop: Stop) => StopAreaMode,
@@ -69,6 +70,7 @@ function buildStopPoints(
 
 		return {
 			ref,
+			...(leading.name !== areaName ? { name: leading.name } : {}),
 			latitude: leading.latitude,
 			longitude: leading.longitude,
 			...(leading.platformCode !== undefined ? { platformCode: leading.platformCode } : {}),
@@ -150,6 +152,7 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 					...new Set(networkRefs.flatMap((network) => stopArea.stops.map((stop) => stopRefOf(network, stop.id)))),
 				],
 				stopPoints: buildStopPoints(
+					stopArea.name,
 					stopArea.stops,
 					(stop) => stopRefOf(networkRef, stop.id),
 					(stop) =>

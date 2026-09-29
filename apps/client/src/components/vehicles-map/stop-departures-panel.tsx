@@ -335,7 +335,7 @@ function useStopDepartures() {
 
 	return {
 		selectedRef,
-		stopName: data?.stop.name,
+		stopName: stopPoint?.name ?? data?.stop.name,
 		stopPoint,
 		// Tant que le tableau n'est pas chargé, l'accessibilité n'est pas inconnue : elle n'est pas encore là.
 		wheelchairStatus: showWheelchairAccessibility && data !== undefined ? wheelchairStatus : undefined,

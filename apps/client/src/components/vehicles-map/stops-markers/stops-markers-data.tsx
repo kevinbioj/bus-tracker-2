@@ -79,7 +79,10 @@ function featuresOf(area: Area, withStopPoints: boolean, selection: Selection): 
 					kind: "point",
 					ref: area.ref,
 					stopPointRef: point?.ref,
-					label: point?.platformCode !== undefined ? `${area.name} (${point.platformCode})` : area.name,
+					label:
+						point?.platformCode !== undefined
+							? `${point.name ?? area.name} (${point.platformCode})`
+							: (point?.name ?? area.name),
 					mode: point?.mode ?? area.mode,
 					// Sans quai désigné, tous les quais de la station sélectionnée le sont.
 					selected:

@@ -7,6 +7,7 @@ import { client } from "./client";
 /** Quai d'une station : un arrêt physique, avec sa position propre. */
 export type StopPoint = {
 	ref: string;
+	name?: string;
 	latitude: number;
 	longitude: number;
 	platformCode?: string;

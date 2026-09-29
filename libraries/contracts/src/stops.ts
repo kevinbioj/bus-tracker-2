@@ -63,6 +63,7 @@ export type StopAreaMode = typeof stopAreaModeEnum.infer;
 export const stopPointSchema = type({
 	/** Sous la forme exacte des `stopRef` des dessertes. */
 	ref: "string",
+	"name?": "string",
 	latitude: "number",
 	longitude: "number",
 	"platformCode?": "string",
