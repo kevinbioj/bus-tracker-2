@@ -80,6 +80,13 @@ const sources = [
 		getNetworkRef: () => "GRANDOLE",
 	},
 	{
+		id: "le-creusot",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/128b06bc-f263-4530-8e03-395402f87256",
+		realtimeResourceHrefs: [],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		getNetworkRef: () => "LE-CREUSOT",
+	},
+	{
 		id: "macon",
 		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/0a01b036-796f-43a3-9c64-a2f6024427b0",
 		realtimeResourceHrefs: [
