@@ -103,7 +103,7 @@ export function NetworksListVirtualList() {
 
 				return {
 					key: String(region.id),
-					title: getRegionName(region.name),
+					title: getRegionName(region),
 					networks,
 				};
 			}),

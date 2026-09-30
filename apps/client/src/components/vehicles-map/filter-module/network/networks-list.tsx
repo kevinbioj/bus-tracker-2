@@ -96,7 +96,7 @@ export function FilterModuleNetworkList({
 					return [];
 				}
 
-				return { title: getRegionName(region.name), networks };
+				return { title: getRegionName(region), networks };
 			}),
 			...(orphanNetworks !== undefined ? [{ title: m.map_network_other(), networks: orphanNetworks }] : []),
 		];

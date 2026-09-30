@@ -57,7 +57,7 @@ function AttributionsPage() {
 
 		const regionBlocks: AttributionsBlock[] = regions.flatMap((region) => {
 			const entries = matchingEntries.filter((entry) => entry.network.regionId === region.id);
-			return entries.length === 0 ? [] : [{ key: String(region.id), title: getRegionName(region.name), entries }];
+			return entries.length === 0 ? [] : [{ key: String(region.id), title: getRegionName(region), entries }];
 		});
 
 		const otherEntries = matchingEntries.filter(

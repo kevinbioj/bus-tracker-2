@@ -24,15 +24,13 @@ export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<
 		isSpecialRegionFilter(parsedRegionFilter) || regions.some((region) => String(region.id) === parsedRegionFilter)
 			? parsedRegionFilter
 			: ALL_REGIONS_FILTER;
+	const selectedRegion = regions.find((region) => String(region.id) === selectedRegionFilter);
 	const selectedRegionLabel =
 		selectedRegionFilter === ALL_REGIONS_FILTER
 			? m.networks_list_region_all()
 			: selectedRegionFilter === OTHER_REGIONS_FILTER
 				? m.map_network_other()
-				: (() => {
-						const region = regions.find((region) => String(region.id) === selectedRegionFilter);
-						return region ? getRegionName(region.name) : undefined;
-					})();
+				: selectedRegion && getRegionName(selectedRegion);
 
 	return (
 		<div className={cn("bg-background z-1", className)} {...props}>
@@ -69,7 +67,7 @@ export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<
 								</SelectItem>
 								{regions.map((region) => (
 									<SelectItem key={region.id} value={String(region.id)}>
-										{getRegionName(region.name)}
+										{getRegionName(region)}
 									</SelectItem>
 								))}
 								<SelectItem value={OTHER_REGIONS_FILTER}>{m.map_network_other()}</SelectItem>

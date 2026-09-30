@@ -1,7 +1,6 @@
+import type { Region } from "~/api/regions";
 import { getLocale } from "~/paraglide/runtime";
 
-export function getRegionName(name: Record<string, string>): string {
-	const locale = getLocale();
-
-	return name[locale] ?? name.fr ?? Object.values(name)[0] ?? "";
+export function getRegionName(region: Region): string {
+	return region.localizedNames?.[getLocale()] ?? region.name;
 }
