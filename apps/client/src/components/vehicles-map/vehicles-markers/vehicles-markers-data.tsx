@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { type GeoJSONSource, LngLatBounds } from "maplibre-gl";
+import { useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
@@ -60,6 +61,7 @@ export function VehiclesMarkersData({
 	const [displayedPositionTypes] = useDisplayedPositionTypes();
 	const [displayedCountryCodes] = useDisplayedCountryCodes();
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
+	const [targetedJourneyId] = useQueryState("marker-id");
 
 	const {
 		data,
@@ -67,7 +69,14 @@ export function VehiclesMarkersData({
 		isFetching,
 		isPlaceholderData,
 		refetch,
-	} = useQuery(GetVehicleJourneyMarkersQuery(bounds, { embeddedNetworkId, filteredNetworkId, lineId }));
+	} = useQuery(
+		GetVehicleJourneyMarkersQuery(bounds, {
+			embeddedNetworkId,
+			filteredNetworkId,
+			lineId,
+			targetedJourneyId: targetedJourneyId ?? undefined,
+		}),
+	);
 
 	// Détail de la course dont la popup est ouverte : c'est lui qui alimente l'horodatage,
 	// les prochains arrêts et le tracé parcouru/à parcourir. Les deux requêtes n'arrivent pas
@@ -146,6 +155,14 @@ export function VehiclesMarkersData({
 	// requête : c'est cet effet qui redemande les marqueurs quand elles changent. Le premier
 	// rendu est ignoré, `useQuery` vient d'émettre la requête initiale.
 	const hasFetchedOnce = useRef(false);
+
+	// Une course ciblée est redemandée aussitôt, sans attendre que la carte bouge. Pas quand la cible
+	// est effacée en revanche : la popup vient alors de s'ouvrir, mais le marqueur actif n'est pas
+	// encore consigné — la requête partirait sans lui et le ferait disparaître s'il est filtré.
+	useEffect(() => {
+		if (targetedJourneyId === null || !hasFetchedOnce.current) return;
+		refetch();
+	}, [targetedJourneyId, refetch]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to refetch if that setting changes
 	useEffect(() => {

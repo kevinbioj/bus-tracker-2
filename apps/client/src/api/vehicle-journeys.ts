@@ -79,11 +79,16 @@ export type VehicleJourneyMarkersFilter = {
 	/** Réseau choisi par l'utilisateur depuis le module de filtre. */
 	filteredNetworkId?: number;
 	lineId?: number;
+	/**
+	 * Course ciblée (`?marker-id=`) : elle est renvoyée quels que soient les filtres et préférences
+	 * d'affichage, sans quoi la carte ne trouverait jamais le marqueur sur lequel ouvrir la popup.
+	 */
+	targetedJourneyId?: string;
 };
 
 export const GetVehicleJourneyMarkersQuery = (
 	bounds: LngLatBounds,
-	{ embeddedNetworkId, filteredNetworkId, lineId }: VehicleJourneyMarkersFilter = {},
+	{ embeddedNetworkId, filteredNetworkId, lineId, targetedJourneyId }: VehicleJourneyMarkersFilter = {},
 ) =>
 	queryOptions({
 		placeholderData: keepPreviousData,
@@ -111,9 +116,11 @@ export const GetVehicleJourneyMarkersQuery = (
 						positionTypes:
 							displayedPositionTypes.length < positionTypes.length ? displayedPositionTypes.join(",") : undefined,
 						countryCodes: displayedCountryCodes?.join(","),
-						// Ne pas réintroduire de force un véhicule qui n'appartient pas au filtre demandé.
+						// Ne pas réintroduire de force un véhicule qui n'appartient pas au filtre demandé — sauf s'il
+						// a été explicitement ciblé.
 						includeMarker:
-							lineId === undefined && filteredNetworkId === undefined ? (activeMarkerId ?? undefined) : undefined,
+							targetedJourneyId ??
+							(lineId === undefined && filteredNetworkId === undefined ? (activeMarkerId ?? undefined) : undefined),
 					},
 				})
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
