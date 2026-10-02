@@ -94,9 +94,7 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		string,
 		{ courseCountByNetwork: Map<string, number>; lineRefs: Set<string>; mode: StopAreaMode }
 	>();
-	// Mode de chaque quai, relevé à part : dans une gare, l'arrêt de bus du parvis reste un arrêt de bus.
-	const stopModes = new Map<string, StopAreaMode>();
-	const record = (areaId: string, stopId: string, networkRef: string, route: Route) => {
+	const record = (areaId: string, networkRef: string, route: Route) => {
 		const mode = modeOf(route.type);
 		let service = services.get(areaId);
 		if (service === undefined) {
@@ -106,16 +104,32 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		service.courseCountByNetwork.set(networkRef, (service.courseCountByNetwork.get(networkRef) ?? 0) + 1);
 		service.lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
 		service.mode = heaviestMode(service.mode, mode);
+	};
 
+	// Mode de chaque quai, relevé à part : dans une gare, l'arrêt de bus du parvis reste un arrêt de bus.
+	// Toutes les dessertes comptent, terminus et descentes seules compris : un quai où l'on ne fait que
+	// descendre d'un bus reste un arrêt de bus, même dans une station de métro.
+	const stopModes = new Map<string, StopAreaMode>();
+	const recordStopMode = (stopId: string, route: Route) => {
+		const mode = modeOf(route.type);
 		const stopMode = stopModes.get(stopId);
 		stopModes.set(stopId, stopMode !== undefined ? heaviestMode(stopMode, mode) : mode);
 	};
 
-	const { stops } = gtfs.stopTimeStore;
+	const { stops, tripStart, tripCount } = gtfs.stopTimeStore;
+	for (const trip of gtfs.tripsByIdx) {
+		if (trip === undefined) continue;
+		const start = tripStart[trip.idx]!;
+		const end = start + tripCount[trip.idx]!;
+		for (let index = start; index < end; index += 1) {
+			recordStopMode(stops[index]!.id, trip.route);
+		}
+	}
+
 	for (const stopArea of gtfs.stopAreas.values()) {
-		for (const [stopTimeIdx, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
+		for (const [, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
 			const trip = gtfs.tripsByIdx[tripIdx];
-			if (trip !== undefined) record(stopArea.id, stops[stopTimeIdx]!.id, networkOf(trip), trip.route);
+			if (trip !== undefined) record(stopArea.id, networkOf(trip), trip.route);
 		}
 	}
 
@@ -125,7 +139,8 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		if (journey === undefined) continue;
 		for (const call of journey.calls) {
 			if (source.realtimeStopAreas.has(call.stop.id)) {
-				record(call.stop.id, call.stop.id, networkOf(journey.trip, journey), journey.trip.route);
+				record(call.stop.id, networkOf(journey.trip, journey), journey.trip.route);
+				recordStopMode(call.stop.id, journey.trip.route);
 			}
 		}
 	}
@@ -156,7 +171,7 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 					stopArea.stops,
 					(stop) => stopRefOf(networkRef, stop.id),
 					(stop) =>
-						// Un quai où aucun départ n'a été relevé (terminus seulement) reprend le mode de sa station.
+						// Un quai qu'aucune course ne dessert reprend le mode de sa station.
 						stopModes.get(stop.id) ?? service.mode,
 				),
 				providerId,
