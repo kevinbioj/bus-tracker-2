@@ -2,16 +2,13 @@ import type { StopArea } from "./stop-area.js";
 import type { StopTimeStore } from "./stop-time-store.js";
 import type { Trip } from "./trip.js";
 
-/** Bit de `StopTimeStore.flagsBitmask` marquant un arrêt où la montée est interdite. */
-const NO_PICKUP_FLAG = 1;
-
 /**
  * Index inverse station → stop_times, en stockage columnar (CSR) comme {@link StopTimeStore} : le
  * GTFS n'est indexé que par course, et balayer toutes les courses d'un réseau pour répondre sur un
  * arrêt coûterait bien plus que les huit octets par stop_time que cet index demande.
  *
- * N'y figurent que les stop_times d'où l'on peut effectivement partir : ni le terminus, qui n'a pas
- * de départ, ni les arrêts interdits à la montée.
+ * Y figurent tous les stop_times, terminus et arrêts interdits à la montée ou à la descente compris :
+ * c'est le sens du tableau demandé — départs ou arrivées — qui décide à la lecture lesquels écarter.
  */
 export class StopIndex {
 	constructor(
@@ -47,14 +44,13 @@ export function buildStopIndex(
 	trips: Iterable<Trip>,
 	stopAreaByStopId: Map<string, string>,
 ): StopIndex {
-	const { stops, flagsBitmask, departureSecs, tripStart, tripCount } = stopTimeStore;
+	const { stops, departureSecs, tripStart, tripCount } = stopTimeStore;
 
 	const tripOfStopTime = new Int32Array(stopTimeStore.size).fill(-1);
 	for (const trip of trips) {
 		const start = tripStart[trip.idx]!;
 		const end = start + tripCount[trip.idx]!;
-		for (let index = start; index < end - 1; index += 1) {
-			// La dernière desserte de la course est exclue : un terminus n'a pas de départ.
+		for (let index = start; index < end; index += 1) {
 			tripOfStopTime[index] = trip.idx;
 		}
 	}
@@ -66,7 +62,6 @@ export function buildStopIndex(
 
 	for (let index = 0; index < stopTimeStore.size; index += 1) {
 		if (tripOfStopTime[index] === -1) continue;
-		if ((flagsBitmask[index]! & NO_PICKUP_FLAG) !== 0) continue;
 
 		const areaId = stopAreaByStopId.get(stops[index]!.id);
 		if (areaId === undefined) continue;
@@ -127,7 +122,10 @@ export function buildStopIndex(
 	return new StopIndex(areaSlots, areaStart, areaCount, stopTimeIdx, tripIdx);
 }
 
-/** Stations réellement desservies : celles que l'index connaît. */
+/**
+ * Stations réellement desservies, au départ ou à l'arrivée : celles que l'index connaît. C'est à la
+ * publication de décider si une station sans départ mérite d'être montrée.
+ */
 export function filterServedStopAreas(stopAreas: Map<string, StopArea>, stopIndex: StopIndex) {
 	const served = new Map<string, StopArea>();
 	for (const [id, stopArea] of stopAreas) {

@@ -19,6 +19,7 @@ import type {
 } from "./gtfs-rt.js";
 import type { Journey } from "./journey.js";
 import { buildEncodedLinePaths } from "./line-path.js";
+import type { Route } from "./route.js";
 import type { StopArea } from "./stop-area.js";
 import type { Trip } from "./trip.js";
 
@@ -82,6 +83,12 @@ export type SourceOptions = {
 	 * effectif. Ne vaut que pour les véhicules suivis en GPS : les autres restent jugés à l'heure.
 	 */
 	passedCallDetection?: PassedCallDetection;
+	/**
+	 * Stations dont le tableau propose aussi les prochaines arrivées : toutes (`true`), ou celles
+	 * desservies par une route qui satisfait le prédicat. Elles sont publiées même sans départ — un
+	 * terminus. Absent : aucune, et une station sans départ n'est pas publiée.
+	 */
+	stopArrivals?: boolean | ((route: Route) => boolean);
 	// --- Additional data acquirance
 	mode?: "ALL" | "VP-ONLY" | "VP+TU" | "NO-TU";
 	excludeScheduled?: ((trip: Trip) => boolean) | boolean;

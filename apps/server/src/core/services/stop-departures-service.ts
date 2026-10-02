@@ -3,6 +3,7 @@ import {
 	type ExcludedStopDepartureJourney,
 	type PassedCallDetection,
 	STOP_DEPARTURES_REPLY_CHANNEL,
+	type StopCallDirection,
 	type StopDeparture,
 	type StopDeparturesReply,
 	stopDeparturesReplySchema,
@@ -20,7 +21,7 @@ const REPLY_TIMEOUT_MS = 2_000;
 
 export type StopDeparturesResult = {
 	departures: StopDeparture[];
-	/** Courses dont le passage a été écarté par la configuration de la source. */
+	/** Courses dont le passage a été écarté du tableau. */
 	excludedJourneys: ExcludedStopDepartureJourney[];
 	passedCallDetection: PassedCallDetection;
 };
@@ -76,7 +77,7 @@ export async function startStopDeparturesService(redis: ReturnType<typeof create
 }
 
 /**
- * Demande au provider détenteur les prochains passages d'une station. Renvoie une liste vide plutôt
+ * Demande au provider détenteur les prochains passages d'une station, au départ ou à l'arrivée. Renvoie une liste vide plutôt
  * qu'une erreur lorsque Redis est indisponible ou que personne ne répond : l'appelant complète de
  * toute façon avec les courses qu'il suit lui-même.
  */
@@ -85,12 +86,15 @@ export async function requestStopDepartures({
 	sourceId,
 	stopAreaRef,
 	stopRef,
+	direction,
 }: {
 	providerId: string;
 	sourceId: string;
 	stopAreaRef: string;
 	/** Restreint le tableau à un quai de la station. */
 	stopRef?: string;
+	/** Absent : les départs. */
+	direction?: StopCallDirection;
 }): Promise<StopDeparturesResult> {
 	if (publisher === undefined || !publisher.isReady) return EMPTY_RESULT;
 
@@ -110,7 +114,7 @@ export async function requestStopDepartures({
 	try {
 		await publisher.publish(
 			stopDeparturesRequestChannel(providerId),
-			JSON.stringify({ requestId, stopAreaRef, sourceId, stopRef }),
+			JSON.stringify({ requestId, stopAreaRef, sourceId, stopRef, direction }),
 		);
 	} catch (error) {
 		console.error("✘ Failed to publish a stop departures request:", error);

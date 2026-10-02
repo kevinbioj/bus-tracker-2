@@ -1,4 +1,4 @@
-import type { StopAreaMode } from "@bus-tracker/contracts";
+import type { StopAreaMode, StopCallDirection } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
@@ -41,6 +41,8 @@ export type StopDeparture = {
 	/** Réseau de la ligne, qui n'est pas toujours parmi ceux de la station. */
 	lineNetworkId?: number;
 	destination?: string;
+	/** Provenance de la course, renseignée à l'arrivée. */
+	originName?: string;
 	/** Code mission de la course, comme dans la pop-up du véhicule. */
 	missionCode?: string;
 	/** Numéro de la course, là où la source n'a pas de véhicule réel : le numéro de train à la SNCF. */
@@ -73,6 +75,8 @@ export type StopDepartures = {
 		networkId: number;
 		/** Tous les réseaux qui desservent la station. */
 		networkIds: number[];
+		/** Le tableau propose aussi les prochaines arrivées. */
+		arrivals: boolean;
 		stopPoints: StopPoint[];
 	};
 	/** Quai sur lequel le tableau est restreint, lorsque c'est un quai qui a été demandé. */
@@ -140,15 +144,16 @@ export const GetStopMarkersQuery = (
 		},
 	});
 
-export const GetStopDeparturesQuery = (stopRef: string | null) =>
+/** Prochains départs de l'arrêt, ou, à l'inverse, ses prochaines arrivées. */
+export const GetStopDeparturesQuery = (stopRef: string | null, direction: StopCallDirection = "departures") =>
 	queryOptions({
 		enabled: stopRef !== null,
 		retry: false,
 		refetchInterval: 5_000,
 		staleTime: 4_000,
-		queryKey: ["stop-departures", stopRef],
+		queryKey: ["stop-departures", stopRef, direction],
 		queryFn: () =>
 			client
-				.get(`/stops/${encodeURIComponent(stopRef!)}/departures`)
+				.get(`/stops/${encodeURIComponent(stopRef!)}/departures`, { searchParams: { direction } })
 				.then((response) => response.json<StopDepartures>()),
 	});

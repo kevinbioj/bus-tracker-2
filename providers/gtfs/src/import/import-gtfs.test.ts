@@ -38,8 +38,10 @@ describe("indexStopAreas", () => {
 		// construits à partir de l'itérable, et l'un des deux repartirait à vide.
 		const { stopAreas, stopIndex, tripsByIdx } = indexStopAreas(store, new Map([[trip.id, trip]]).values());
 
-		expect([...stopAreas.keys()]).toEqual(["a"]);
+		// Le terminus est desservi à l'arrivée : il a sa station, que la publication montre ou non.
+		expect([...stopAreas.keys()]).toEqual(["a", "b"]);
 		expect([...stopIndex.entriesOf("a")]).toEqual([[0, 0]]);
+		expect([...stopIndex.entriesOf("b")]).toEqual([[1, 0]]);
 		expect(tripsByIdx[0]).toBe(trip);
 	});
 });

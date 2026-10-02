@@ -20,6 +20,9 @@ import type { Stop } from "../model/stop.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
 
+/** Bit de `StopTimeStore.flagsBitmask` marquant un arrêt où la montée est interdite. */
+const NO_PICKUP_FLAG = 1;
+
 /** Taille des transactions d'écriture, pour ne pas bloquer Redis sur un réseau de plusieurs milliers de stations. */
 const CHUNK_SIZE = 500;
 
@@ -116,7 +119,7 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		stopModes.set(stopId, stopMode !== undefined ? heaviestMode(stopMode, mode) : mode);
 	};
 
-	const { stops, tripStart, tripCount } = gtfs.stopTimeStore;
+	const { flagsBitmask, stops, tripStart, tripCount } = gtfs.stopTimeStore;
 	for (const trip of gtfs.tripsByIdx) {
 		if (trip === undefined) continue;
 		const start = tripStart[trip.idx]!;
@@ -126,10 +129,25 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		}
 	}
 
+	// L'index tient tous les passages, terminus compris : une station où l'on ne fait que descendre
+	// n'est publiée que si la source y propose les arrivées — sinon, son tableau serait vide.
+	const { stopArrivals } = source.options;
+	const offersArrivals = (route: Route) =>
+		typeof stopArrivals === "function" ? stopArrivals(route) : stopArrivals === true;
+	const departingAreaIds = new Set<string>();
+	const arrivalAreaIds = new Set<string>();
+
 	for (const stopArea of gtfs.stopAreas.values()) {
-		for (const [, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
+		for (const [stopTimeIdx, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
 			const trip = gtfs.tripsByIdx[tripIdx];
-			if (trip !== undefined) record(stopArea.id, networkOf(trip), trip.route);
+			if (trip === undefined) continue;
+			record(stopArea.id, networkOf(trip), trip.route);
+
+			const departs =
+				stopTimeIdx !== trip.stopTimeStart + trip.stopTimeCount - 1 &&
+				(flagsBitmask[stopTimeIdx]! & NO_PICKUP_FLAG) === 0;
+			if (departs) departingAreaIds.add(stopArea.id);
+			if (offersArrivals(trip.route)) arrivalAreaIds.add(stopArea.id);
 		}
 	}
 
@@ -141,6 +159,8 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 			if (source.realtimeStopAreas.has(call.stop.id)) {
 				record(call.stop.id, networkOf(journey.trip, journey), journey.trip.route);
 				recordStopMode(call.stop.id, journey.trip.route);
+				departingAreaIds.add(call.stop.id);
+				if (offersArrivals(journey.trip.route)) arrivalAreaIds.add(call.stop.id);
 			}
 		}
 	}
@@ -148,6 +168,8 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 	return [...gtfs.stopAreas.values(), ...source.realtimeStopAreas.values()].flatMap((stopArea) => {
 		const service = services.get(stopArea.id);
 		if (service === undefined) return [];
+		const arrivals = arrivalAreaIds.has(stopArea.id);
+		if (!arrivals && !departingAreaIds.has(stopArea.id)) return [];
 
 		// Le réseau qui dessert le plus la station devient son réseau principal.
 		const networkRefs = [...service.courseCountByNetwork]
@@ -178,6 +200,7 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 				sourceId: source.id,
 				lineRefs: [...service.lineRefs].sort(),
 				mode: service.mode,
+				...(arrivals ? { arrivals } : {}),
 				updatedAt,
 			},
 		];

@@ -494,4 +494,64 @@ describe("computeStopDepartures", () => {
 		});
 		expect(platform.map(({ stopRef }) => stopRef)).toEqual(["network-b:StopPoint:mairie-b"]);
 	});
+	describe("à l'arrivée", () => {
+		it("présente le terminus, aux heures d'arrivée, avec la provenance de la course", () => {
+			const source = makeSource();
+			const arrivals = computeStopDepartures(source, "terminus", MONDAY_MORNING, { direction: "arrivals" });
+
+			expect(arrivals.departures.map((arrival) => arrival.aimedTime)).toEqual([
+				"2026-05-18T08:10:00+00:00",
+				"2026-05-18T08:40:00+00:00",
+			]);
+			expect(arrivals.departures.map((arrival) => arrival.originName)).toEqual(["Mairie", "Mairie"]);
+			expect(arrivals.departures.every((arrival) => arrival.origin === undefined)).toBe(true);
+			// Au départ, le terminus n'a rien à annoncer.
+			expect(computeStopDepartures(source, "terminus", MONDAY_MORNING).departures).toEqual([]);
+		});
+
+		it("écarte le terminus de départ et en signale les courses", () => {
+			const { departures, excludedJourneys } = computeStopDepartures(makeSource(), "mairie-a", MONDAY_MORNING, {
+				direction: "arrivals",
+			});
+
+			expect(departures).toEqual([]);
+			expect(excludedJourneys.map(({ journeyRef }) => journeyRef)).toEqual([
+				"network:ServiceJourney:aller",
+				"network:ServiceJourney:retour",
+			]);
+		});
+
+		it("présente les arrêts intermédiaires, sans le passage interdit à la descente", () => {
+			const { source, gtfs } = makeLinearSource();
+
+			const arrivalsAt = (areaId: string) =>
+				computeStopDepartures(source, areaId, MONDAY_MORNING, { direction: "arrivals" }).departures;
+
+			expect(arrivalsAt("B")).toMatchObject([{ aimedTime: "2026-05-18T08:10:00+00:00", originName: "A" }]);
+
+			// B interdit à la descente.
+			gtfs.stopTimeStore.flagsBitmask[1] = 2;
+			expect(arrivalsAt("B")).toEqual([]);
+			// Il reste un départ.
+			expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toHaveLength(1);
+		});
+
+		it("écarte l'arrivée au terminus de départ effectif, avancé par le temps réel", () => {
+			const { source, gtfs, trip } = makeLinearSource();
+			const date = Temporal.PlainDate.from("2026-05-18");
+			const journey = trip.getScheduledJourney(date, true);
+			// A n'est plus desservi : la course part de B.
+			journey.updateJourney(gtfs, [
+				{ stopId: "A", stopSequence: 1, scheduleRelationship: "SKIPPED" },
+				{ stopId: "B", stopSequence: 2, departure: { delay: 60 } },
+			]);
+			gtfs.journeys.set(getJourneyKey(date, "original"), journey);
+
+			const arrivalsAt = (areaId: string) =>
+				computeStopDepartures(source, areaId, MONDAY_MORNING, { direction: "arrivals" }).departures;
+
+			expect(arrivalsAt("B")).toEqual([]);
+			expect(arrivalsAt("C")).toMatchObject([{ originName: "B" }]);
+		});
+	});
 });

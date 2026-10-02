@@ -51,7 +51,8 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 			typeof request.requestId !== "string" ||
 			typeof request.stopAreaRef !== "string" ||
 			(request.stopRef !== undefined && typeof request.stopRef !== "string") ||
-			(request.sourceId !== undefined && typeof request.sourceId !== "string")
+			(request.sourceId !== undefined && typeof request.sourceId !== "string") ||
+			(request.direction !== undefined && request.direction !== "departures" && request.direction !== "arrivals")
 		) {
 			console.warn("⚠ Rejected a malformed stop departures request:", message);
 			return;
@@ -66,7 +67,7 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 			located.source,
 			located.areaId,
 			Temporal.Now.instant(),
-			{ stopRef: request.stopRef },
+			{ stopRef: request.stopRef, direction: request.direction },
 		);
 
 		const reply: StopDeparturesReply = {

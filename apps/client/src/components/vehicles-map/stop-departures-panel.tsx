@@ -1,7 +1,8 @@
+import type { StopCallDirection } from "@bus-tracker/contracts";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { clsx } from "clsx";
 import dayjs from "dayjs";
-import { LocateIcon, Rss, XIcon } from "lucide-react";
+import { ArrowRightLeftIcon, LocateIcon, Rss, XIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -87,6 +88,7 @@ function LinePictogram({ line }: Readonly<{ line?: Line }>) {
 
 type DepartureRowProps = {
 	departure: StopDeparture;
+	direction: StopCallDirection;
 	line?: Line;
 	label: string;
 	/** Accessibilité du véhicule, montrée seulement lorsque l'arrêt n'est pas connu comme inaccessible. */
@@ -105,6 +107,7 @@ const isLocatable = (departure: StopDeparture) => departure.tracked && departure
 
 function DepartureRow({
 	departure,
+	direction,
 	line,
 	label,
 	wheelchairStatus,
@@ -127,6 +130,10 @@ function DepartureRow({
 	// Rouge : le passage est supprimé. Orange : desserte ajoutée par une déviation, comme dans la
 	// pop-up du véhicule — l'icône dit seule si son heure vient du temps réel. Vert : l'heure vient du
 	// temps réel. Noir : elle n'est que théorique.
+	// À l'arrivée, la provenance de la course plutôt que sa destination.
+	const headline =
+		(direction === "arrivals" ? departure.originName : undefined) ?? departure.destination ?? departure.stopName;
+
 	const accentColor = skipped
 		? "text-red-700 dark:text-red-500"
 		: extra
@@ -167,9 +174,9 @@ function DepartureRow({
 							"min-w-0 break-words text-sm leading-tight",
 							departure.missionCode !== undefined ? "line-clamp-1" : "line-clamp-2",
 						)}
-						title={departure.destination}
+						title={headline}
 					>
-						{departure.destination ?? departure.stopName}
+						{headline}
 					</p>
 					{wheelchairStatus !== undefined && (
 						// Info-bulle portée hors du panneau : celui-ci rogne ce qui déborde de ses bords.
@@ -249,7 +256,16 @@ function useStopDepartures() {
 	const [displayMode] = useNextCallsDisplayMode();
 	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
 
-	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef));
+	// Départs par défaut ; un autre arrêt choisi y revient.
+	const [direction, setDirection] = useState<StopCallDirection>("departures");
+	const [directionStopRef, setDirectionStopRef] = useState(selectedRef);
+	if (directionStopRef !== selectedRef) {
+		setDirectionStopRef(selectedRef);
+		setDirection("departures");
+	}
+	const toggleDirection = () => setDirection((current) => (current === "departures" ? "arrivals" : "departures"));
+
+	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef, direction));
 	const { data: alerts } = useQuery(GetStopAlertsQuery(selectedRef));
 	// Les lignes des réseaux de la station, pour leur numéro, leurs couleurs et leur pictogramme : une
 	// requête au plus toutes les 5 min par réseau, souvent déjà en cache — le module de filtre fait la
@@ -273,6 +289,15 @@ function useStopDepartures() {
 
 	// Quai choisi sur la carte au zoom le plus fort : le serveur a déjà restreint le tableau à ce quai.
 	const stopPoint = data?.stop.stopPoints.find((point) => point.ref === data.stopPointRef);
+
+	// Seules les stations dont la source le prévoit proposent leurs arrivées. Le tableau le dit : c'est
+	// retenu pendant que se charge celui de l'autre sens.
+	const [reversibleStopRef, setReversibleStopRef] = useState<string | null>(null);
+	if (data !== undefined) {
+		const nextReversibleStopRef = data.stop.arrivals ? selectedRef : null;
+		if (nextReversibleStopRef !== reversibleStopRef) setReversibleStopRef(nextReversibleStopRef);
+	}
+	const reversible = selectedRef !== null && reversibleStopRef === selectedRef;
 	// Accessibilité du quai choisi, sinon de la station lorsque tous ses quais s'accordent : une station
 	// dont les quais diffèrent, ou dont l'un est inconnu, est présentée comme inconnue.
 	const wheelchairBoardings = stopPoint !== undefined ? [stopPoint] : (data?.stop.stopPoints ?? []);
@@ -335,6 +360,9 @@ function useStopDepartures() {
 
 	return {
 		selectedRef,
+		direction,
+		reversible,
+		toggleDirection,
 		stopName: stopPoint?.name ?? data?.stop.name,
 		stopPoint,
 		// Tant que le tableau n'est pas chargé, l'accessibilité n'est pas inconnue : elle n'est pas encore là.
@@ -392,7 +420,7 @@ function StopName({
 	);
 }
 
-type StopDeparturesListProps = Pick<StopDeparturesState, "rows" | "isError" | "isLoading"> & {
+type StopDeparturesListProps = Pick<StopDeparturesState, "direction" | "rows" | "isError" | "isLoading"> & {
 	touch?: boolean;
 	/** Classes de la zone défilante. */
 	scrollClassName: string;
@@ -400,6 +428,7 @@ type StopDeparturesListProps = Pick<StopDeparturesState, "rows" | "isError" | "i
 };
 
 function StopDeparturesList({
+	direction,
 	rows,
 	isError,
 	isLoading,
@@ -407,12 +436,19 @@ function StopDeparturesList({
 	scrollClassName,
 	onLocate,
 }: Readonly<StopDeparturesListProps>) {
+	const arrivals = direction === "arrivals";
 	const message = isError
-		? m.stop_departures_error()
+		? arrivals
+			? m.stop_arrivals_error()
+			: m.stop_departures_error()
 		: isLoading
-			? m.stop_departures_loading()
+			? arrivals
+				? m.stop_arrivals_loading()
+				: m.stop_departures_loading()
 			: rows.length === 0
-				? m.stop_departures_empty()
+				? arrivals
+					? m.stop_arrivals_empty()
+					: m.stop_departures_empty()
 				: undefined;
 
 	if (message !== undefined) {
@@ -427,6 +463,7 @@ function StopDeparturesList({
 				{rows.map(({ departure, line, label, wheelchairStatus, key }) => (
 					<DepartureRow
 						departure={departure}
+						direction={direction}
 						key={key}
 						line={line}
 						label={label}
@@ -440,6 +477,34 @@ function StopDeparturesList({
 	);
 }
 
+const directionTitle = (direction: StopCallDirection) =>
+	direction === "arrivals" ? m.stop_arrivals_title() : m.stop_departures_title();
+
+/** Bascule le tableau entre prochains départs et prochaines arrivées. */
+function ReverseDirectionButton({
+	direction,
+	toggleDirection,
+	touch = false,
+}: Readonly<Pick<StopDeparturesState, "direction" | "toggleDirection"> & { touch?: boolean }>) {
+	// Enveloppé : dans un contrôle MapLibre, un bouton qui en suit un autre reçoit une bordure haute.
+	return (
+		<span className="flex shrink-0">
+			<Button
+				aria-label={m.stop_departures_reverse()}
+				aria-pressed={direction === "arrivals"}
+				className={touch ? "size-9" : "size-6"}
+				size="icon"
+				title={m.stop_departures_reverse()}
+				type="button"
+				variant="ghost"
+				onClick={toggleDirection}
+			>
+				<ArrowRightLeftIcon className={clsx("m-auto", touch ? "size-5" : "size-4")} />
+			</Button>
+		</span>
+	);
+}
+
 /**
  * Sur grand écran : panneau en surimpression de la carte — au même endroit et dans le même habillage
  * que le panneau des véhicules en ligne.
@@ -449,7 +514,18 @@ function StopDeparturesControl() {
 	const containerRef = useRef(document.createElement("div"));
 	const { clearSelection } = useStopSelection();
 	const [, setMarkerId] = useQueryState("marker-id");
-	const { stopName, stopPoint, wheelchairStatus, rows, alerts, isError, isLoading } = useStopDepartures();
+	const {
+		direction,
+		reversible,
+		toggleDirection,
+		stopName,
+		stopPoint,
+		wheelchairStatus,
+		rows,
+		alerts,
+		isError,
+		isLoading,
+	} = useStopDepartures();
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -481,7 +557,7 @@ function StopDeparturesControl() {
 		<div className="bg-background/95 rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
 			<div className="flex items-center gap-1 border-b px-1 py-0.5">
 				<div className="flex-1 min-w-0">
-					<p className="text-[10px] font-thin uppercase tracking-wide leading-tight">{m.stop_departures_title()}</p>
+					<p className="text-[10px] font-thin uppercase tracking-wide leading-tight">{directionTitle(direction)}</p>
 					<StopName
 						className="text-base"
 						stopName={stopName}
@@ -490,6 +566,7 @@ function StopDeparturesControl() {
 					/>
 				</div>
 				<ServiceAlertsButton alerts={alerts} scope="stop" />
+				{reversible && <ReverseDirectionButton direction={direction} toggleDirection={toggleDirection} />}
 				<Button
 					className="size-6 shrink-0"
 					size="icon"
@@ -504,6 +581,7 @@ function StopDeparturesControl() {
 			{/* Hauteur minimale : le panneau ne saute pas entre chargement, tableau vide et tableau rempli. */}
 			<div className="flex min-h-[min(10rem,25dvh)] flex-col">
 				<StopDeparturesList
+					direction={direction}
 					isError={isError}
 					isLoading={isLoading}
 					rows={rows}
@@ -528,8 +606,20 @@ function StopDeparturesDrawer() {
 	const [open, setOpen] = useState(true);
 	const { clearSelection } = useStopSelection();
 	const [, setMarkerId] = useQueryState("marker-id");
-	const { selectedRef, stopName, stopPoint, wheelchairStatus, location, rows, alerts, isError, isLoading } =
-		useStopDepartures();
+	const {
+		selectedRef,
+		direction,
+		reversible,
+		toggleDirection,
+		stopName,
+		stopPoint,
+		wheelchairStatus,
+		location,
+		rows,
+		alerts,
+		isError,
+		isLoading,
+	} = useStopDepartures();
 
 	// Le drawer masque le bas de la carte, et peut-être l'arrêt qu'il décrit : la carte est recentrée
 	// pour placer celui-ci au milieu de la partie restée visible. Une seule fois par sélection, pour ne
@@ -580,12 +670,13 @@ function StopDeparturesDrawer() {
 			>
 				<div className="flex items-start gap-2 border-b px-3 pt-1 pb-2">
 					<div className="min-w-0 flex-1">
-						<p className="text-xs uppercase tracking-wide text-muted-foreground">{m.stop_departures_title()}</p>
+						<p className="text-xs uppercase tracking-wide text-muted-foreground">{directionTitle(direction)}</p>
 						<DrawerTitle className="text-lg">
 							<StopName stopName={stopName} stopPoint={stopPoint} wheelchairStatus={wheelchairStatus} />
 						</DrawerTitle>
 					</div>
 					<ServiceAlertsButton alerts={alerts} className="mt-1.5" scope="stop" />
+					{reversible && <ReverseDirectionButton direction={direction} toggleDirection={toggleDirection} touch />}
 					<DrawerClose
 						render={
 							<Button className="size-9 shrink-0" size="icon" title={m.stop_departures_close()} variant="ghost">
@@ -601,6 +692,7 @@ function StopDeparturesDrawer() {
 				 */}
 				<div className="flex min-h-[min(10rem,25dvh)] flex-1 flex-col">
 					<StopDeparturesList
+						direction={direction}
 						isError={isError}
 						isLoading={isLoading}
 						rows={rows}

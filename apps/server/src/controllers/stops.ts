@@ -1,4 +1,10 @@
-import type { StopAreaMode, StopDeparture, StopPoint } from "@bus-tracker/contracts";
+import type {
+	StopAreaMode,
+	StopCallDirection,
+	StopDeparture,
+	StopPoint,
+	VehicleJourneyCall,
+} from "@bus-tracker/contracts";
 import * as z from "zod";
 
 import { resolveLineRefs } from "../core/services/line-ref-service.js";
@@ -114,6 +120,17 @@ function journeyKeyOf(departure: { journeyRef?: string; serviceDate?: string }) 
 }
 
 /**
+ * Heures d'un passage dans le sens du tableau. L'arrivée n'est publiée à part que lorsqu'elle diffère
+ * du départ : sinon, c'est l'heure de la desserte.
+ */
+function callTimesOf(call: VehicleJourneyCall, direction: StopCallDirection) {
+	if (direction === "arrivals" && call.aimedArrivalTime !== undefined) {
+		return { aimedTime: call.aimedArrivalTime, expectedTime: call.expectedArrivalTime };
+	}
+	return { aimedTime: call.aimedTime, expectedTime: call.expectedTime };
+}
+
+/**
  * Complète la réponse du provider par les courses réellement suivies. Elle prend le relais lorsque
  * le provider ne répond pas, et couvre à elle seule ce que l'horaire théorique ignore : les courses
  * supplémentaires, les dessertes ajoutées par une déviation, et les véhicules suivis en GPS dont
@@ -124,6 +141,7 @@ function mergeTrackedJourneys(
 	stopRefs: Set<string>,
 	{ departures, excludedJourneys, passedCallDetection }: StopDeparturesResult,
 	nowMs: number,
+	direction: StopCallDirection,
 ) {
 	const untilMs = nowMs + DEPARTURES_HORIZON_MS;
 
@@ -182,14 +200,21 @@ function mergeTrackedJourneys(
 		for (const call of journey.calls ?? []) {
 			if (!stopRefs.has(call.stopRef)) continue;
 			// Comme dans le processeur : ni le terminus, théorique ou effectif, où la course s'achève, ni
-			// un arrêt interdit à la montée ne sont des départs.
-			if (call === lastCall || call === terminusCall || call.flags?.includes("NO_PICKUP")) continue;
+			// un arrêt interdit à la montée ne sont des départs. Les dessertes publiées partant de l'arrêt
+			// courant, le terminus de départ n'y figure plus une fois la course partie : à l'arrivée, seul
+			// l'arrêt interdit à la descente est écarté, le provider écartant l'origine des passages connus.
+			if (direction === "arrivals") {
+				if (call.flags?.includes("NO_DROP_OFF")) continue;
+			} else if (call === lastCall || call === terminusCall || call.flags?.includes("NO_PICKUP")) {
+				continue;
+			}
 
 			const atStop = journey.position.atStop && call === currentCall;
+			const { aimedTime, expectedTime } = callTimesOf(call, direction);
 
 			// Un véhicule à quai reste affiché même si son heure de départ est dépassée : il est là. Il
 			// en va de même, si la source le demande, de tout véhicule qui n'a pas encore atteint l'arrêt.
-			const effectiveMs = Date.parse(call.expectedTime ?? call.aimedTime);
+			const effectiveMs = Date.parse(expectedTime ?? aimedTime);
 			if (Number.isNaN(effectiveMs) || effectiveMs > untilMs) continue;
 			if (effectiveMs < nowMs && !atStop && !followsVehicle) continue;
 
@@ -206,7 +231,7 @@ function mergeTrackedJourneys(
 				}
 				// Le store tient l'état le plus récent de la course : ses heures priment sur celles que
 				// le processeur a calculées pour répondre.
-				known.expectedTime = call.expectedTime ?? known.expectedTime;
+				known.expectedTime = expectedTime ?? known.expectedTime;
 				known.callStatus = call.callStatus;
 				// Les dessertes publiées partent de l'arrêt courant : le processeur, qui voit la course
 				// entière, a pu y trouver du temps réel que celles-ci n'ont plus.
@@ -232,8 +257,8 @@ function mergeTrackedJourneys(
 				destination: journey.destination,
 				missionCode: journey.missionCode,
 				wheelchairAccessible: journey.wheelchairAccessible,
-				aimedTime: call.aimedTime,
-				expectedTime: call.expectedTime,
+				aimedTime,
+				expectedTime,
 				callStatus: call.callStatus,
 				realtime,
 				journeyId: journey.id,
@@ -273,6 +298,10 @@ async function resolveLineIds(departures: ResolvedDeparture[]) {
 
 const getStopDeparturesParams = z.object({
 	ref: z.string(),
+});
+
+const getStopDeparturesQuery = z.object({
+	direction: z.enum(["departures", "arrivals"]).default("departures"),
 });
 
 /**
@@ -315,61 +344,75 @@ async function resolveStopArea(ref: string) {
 	return { stopArea, stopPointRef };
 }
 
-hono.get("/stops/:ref/departures", createParamValidator(getStopDeparturesParams), async (c) => {
-	const { ref } = c.req.valid("param");
+hono.get(
+	"/stops/:ref/departures",
+	createParamValidator(getStopDeparturesParams),
+	createQueryValidator(getStopDeparturesQuery),
+	async (c) => {
+		const { ref } = c.req.valid("param");
+		const { direction } = c.req.valid("query");
 
-	const cached = departuresCache.get(ref);
-	if (cached !== undefined) return c.json(cached);
+		const cacheKey = `${ref}|${direction}`;
+		const cached = departuresCache.get(cacheKey);
+		if (cached !== undefined) return c.json(cached);
 
-	const { stopArea, stopPointRef } = await resolveStopArea(ref);
-	if (stopArea === null) {
-		return c.json({ error: `No stop area was found for ref "${ref}".` }, 404);
-	}
+		const { stopArea, stopPointRef } = await resolveStopArea(ref);
+		if (stopArea === null) {
+			return c.json({ error: `No stop area was found for ref "${ref}".` }, 404);
+		}
+		if (direction === "arrivals" && stopArea.arrivals !== true) {
+			return c.json({ error: `Stop area "${stopArea.ref}" does not offer arrivals.` }, 400);
+		}
 
-	const nowMs = Date.now();
-	const departures = mergeTrackedJourneys(
-		stopArea,
-		new Set(stopPointRef !== undefined ? [stopPointRef] : stopArea.stopRefs),
-		await requestStopDepartures({
-			providerId: stopArea.providerId,
-			sourceId: stopArea.sourceId,
-			stopAreaRef: stopArea.ref,
-			stopRef: stopPointRef,
-		}),
-		nowMs,
-	);
-	await resolveLineIds(departures);
+		const nowMs = Date.now();
+		const departures = mergeTrackedJourneys(
+			stopArea,
+			new Set(stopPointRef !== undefined ? [stopPointRef] : stopArea.stopRefs),
+			await requestStopDepartures({
+				providerId: stopArea.providerId,
+				sourceId: stopArea.sourceId,
+				stopAreaRef: stopArea.ref,
+				stopRef: stopPointRef,
+				direction,
+			}),
+			nowMs,
+			direction,
+		);
+		await resolveLineIds(departures);
 
-	departures.sort((a, b) => Date.parse(a.expectedTime ?? a.aimedTime) - Date.parse(b.expectedTime ?? b.aimedTime));
+		departures.sort((a, b) => Date.parse(a.expectedTime ?? a.aimedTime) - Date.parse(b.expectedTime ?? b.aimedTime));
 
-	const payload = {
-		// La position permet au client de garder la station sélectionnée visible à tout niveau de zoom.
-		stop: {
-			ref: stopArea.ref,
-			name: stopArea.name,
-			latitude: stopArea.latitude,
-			longitude: stopArea.longitude,
-			mode: stopArea.mode ?? "BUS",
-			networkId: stopArea.networkId,
-			// Tous les réseaux de la station : le client en tire numéros et couleurs des lignes.
-			networkIds: stopArea.networkIds,
-			stopPoints: stopArea.stopPoints ?? [],
-		},
-		// Quai sur lequel le tableau est restreint, s'il l'est.
-		stopPointRef,
-		// Les références internes n'ont servi qu'au rapprochement : le client n'en a pas l'usage.
-		// Un passage dont la ligne reste inconnue n'aurait qu'un « ? » à montrer : il est écarté, avant la
-		// limite pour que le tableau reste plein.
-		departures: departures
-			.filter(({ lineId }) => lineId !== undefined)
-			.slice(0, DEPARTURES_LIMIT)
-			.map(({ lineRef, journeyRef, serviceDate, ...departure }) => departure),
-		at: Temporal.Now.instant(),
-	};
+		const payload = {
+			// La position permet au client de garder la station sélectionnée visible à tout niveau de zoom.
+			stop: {
+				ref: stopArea.ref,
+				name: stopArea.name,
+				latitude: stopArea.latitude,
+				longitude: stopArea.longitude,
+				mode: stopArea.mode ?? "BUS",
+				// Le tableau propose aussi les arrivées : la source l'a voulu pour cette station.
+				arrivals: stopArea.arrivals === true,
+				networkId: stopArea.networkId,
+				// Tous les réseaux de la station : le client en tire numéros et couleurs des lignes.
+				networkIds: stopArea.networkIds,
+				stopPoints: stopArea.stopPoints ?? [],
+			},
+			// Quai sur lequel le tableau est restreint, s'il l'est.
+			stopPointRef,
+			// Les références internes n'ont servi qu'au rapprochement : le client n'en a pas l'usage.
+			// Un passage dont la ligne reste inconnue n'aurait qu'un « ? » à montrer : il est écarté, avant la
+			// limite pour que le tableau reste plein.
+			departures: departures
+				.filter(({ lineId }) => lineId !== undefined)
+				.slice(0, DEPARTURES_LIMIT)
+				.map(({ lineRef, journeyRef, serviceDate, ...departure }) => departure),
+			at: Temporal.Now.instant(),
+		};
 
-	departuresCache.set(ref, payload);
-	return c.json(payload);
-});
+		departuresCache.set(cacheKey, payload);
+		return c.json(payload);
+	},
+);
 
 hono.get("/stops/:ref/alerts", createParamValidator(getStopDeparturesParams), async (c) => {
 	const { ref } = c.req.valid("param");

@@ -218,6 +218,7 @@ const sources = [
 			journey?.trip.route.agency.id === "22" ? "SOLEA" : `SNCF-${journey?.trip.route.agency.id ?? "UKN"}`,
 		getVehicleRef: (_, journey) => journey?.trip.headsign,
 		hasRealVehicles: false,
+		stopArrivals: true,
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapStopRef: (stopRef) => {
 			if (stopRef.startsWith("StopArea:OCE")) {

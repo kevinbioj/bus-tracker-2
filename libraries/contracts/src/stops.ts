@@ -117,10 +117,16 @@ export const stopAreaManifestSchema = type({
 	lineRefs: "string[]",
 	/** Mode le plus lourd qui dessert la station ({@link stopAreaModes}). Absent : un bus. */
 	"mode?": stopAreaModeEnum,
+	/** Le tableau de la station propose aussi ses prochaines arrivées. Absent : seulement ses départs. */
+	"arrivals?": "boolean",
 	updatedAt: "string.date.iso",
 });
 
 export type StopAreaManifest = typeof stopAreaManifestSchema.infer;
+
+/** Sens du tableau d'une station : les passages d'où l'on part, ou ceux où l'on arrive. */
+export const stopCallDirectionEnum = type("'departures'|'arrivals'");
+export type StopCallDirection = typeof stopCallDirectionEnum.infer;
 
 export const stopDeparturesRequestSchema = type({
 	requestId: "string",
@@ -129,6 +135,8 @@ export const stopDeparturesRequestSchema = type({
 	"sourceId?": "string",
 	/** Restreint le tableau à un quai de la station, avant la limite du nombre de passages. */
 	"stopRef?": "string",
+	/** Absent : les départs. */
+	"direction?": stopCallDirectionEnum,
 });
 
 export type StopDeparturesRequest = typeof stopDeparturesRequestSchema.infer;
@@ -143,6 +151,8 @@ export const stopDepartureSchema = type({
 	"platformName?": "string",
 	lineRef: "string",
 	"destination?": "string",
+	/** Provenance de la course : son terminus de départ. Rempli pour les arrivées. */
+	"originName?": "string",
 	/** Code mission de la course, comme celui publié avec le véhicule. */
 	"missionCode?": "string",
 	/**
@@ -189,7 +199,7 @@ export type StopDeparture = typeof stopDepartureSchema.infer;
 export const passedCallDetectionEnum = type("'SCHEDULE'|'VEHICLE'");
 export type PassedCallDetection = typeof passedCallDetectionEnum.infer;
 
-/** Course dont un passage a été écarté par la configuration de la source. */
+/** Course dont un passage a été écarté du tableau. */
 export const excludedStopDepartureJourneySchema = type({
 	"journeyId?": "string",
 	"journeyRef?": "string",
@@ -203,8 +213,9 @@ export const stopDeparturesReplySchema = type({
 	stopAreaRef: "string",
 	departures: stopDepartureSchema.array(),
 	/**
-	 * Courses dont le passage a été écarté : le serveur ne doit pas les réintroduire depuis les courses
-	 * qu'il suit. Absent : aucune.
+	 * Courses dont le passage a été écarté — par la configuration de la source, ou, à l'arrivée, parce
+	 * qu'elles partent de la station : le serveur ne doit pas les réintroduire depuis les courses qu'il
+	 * suit. Absent : aucune.
 	 */
 	"excludedJourneys?": excludedStopDepartureJourneySchema.array(),
 	/** Absent : `SCHEDULE`. */
