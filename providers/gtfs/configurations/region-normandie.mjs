@@ -94,10 +94,7 @@ const sources = [
 	{
 		id: "lia",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/lia.zip",
-		realtimeResourceHrefs: [
-			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/trip-updates",
-			"https://gtfs.bus-tracker.fr/gtfs-rt/lia/vehicle-positions",
-		],
+		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/lia/"],
 		mode: "NO-TU",
 		getAheadTime: () => 60,
 		excludeScheduled: (trip) => !["12", "13", "21", "60", "70", "71", "91", "FUNI", "NB"].includes(trip.route.id),
