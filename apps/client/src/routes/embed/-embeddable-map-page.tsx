@@ -1,12 +1,15 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { FullscreenControl, GeolocateControl, type Map as MaplibreMap, NavigationControl } from "maplibre-gl";
-import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo } from "react";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
+import { EmbedDisplaySettingsProvider } from "~/components/vehicles-map/embed-display-settings";
+import { EmbedSettingsControl } from "~/components/vehicles-map/embed-settings-control";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
+import { nextCallsDisplayModes } from "~/components/vehicles-map/next-calls-display-mode";
 import { Signature } from "~/components/vehicles-map/signature";
 import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-panel";
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
@@ -20,12 +23,29 @@ export default function EmbeddableMapPage() {
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
 	const [withFullscreen] = useQueryState("with-fullscreen", parseAsString);
 	const [withGeolocate] = useQueryState("with-geolocate", parseAsString);
+	// Réglages d'affichage choisis par l'intégrateur, tant que le visiteur ne les a pas changés depuis
+	// la carte. Heure des prochains passages : absolue par défaut, comme dans l'application.
+	const [nextCallsDisplayMode] = useQueryState(
+		"next-calls-display",
+		parseAsStringLiteral(nextCallsDisplayModes).withDefault("absolute"),
+	);
+	const [withAccessibility] = useQueryState("with-accessibility", parseAsString);
+	const [withBikes] = useQueryState("with-bikes", parseAsString);
 	const { selectedRef: selectedStopRef, clearSelection: clearStopSelection } = useStopSelection();
 
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 	const filteredLine = network.lines.find((line) => line.id === lineId);
 	// Comme sur la carte principale, une ligne filtrée ne montre que ses véhicules : pas d'arrêts.
 	const showStops = lineId === null;
+
+	const initialDisplaySettings = useMemo(
+		() => ({
+			nextCallsDisplayMode,
+			showWheelchairAccessibility: withAccessibility !== null,
+			showBikesAllowed: withBikes !== null,
+		}),
+		[nextCallsDisplayMode, withAccessibility, withBikes],
+	);
 
 	const mapOptions = useMemo(
 		() => ({
@@ -72,18 +92,21 @@ export default function EmbeddableMapPage() {
 			<title>{m.page_title_embed_map({ networkName: network.name })}</title>
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			{/* Isolée : la signature reste au-dessus de la carte, mais sous le drawer des prochains passages. */}
-			<MapComponent containerProps={{ className: "h-dvh relative isolate" }} mapOptions={mapOptions} ref={onMap}>
-				<FilterModuleControl
-					filter={filteredLine ? { kind: "line", network, line: filteredLine } : undefined}
-					fixedNetworkId={+networkId}
-					onFilterChange={(filter) => setLineId(filter?.kind === "line" ? filter.line.id : null)}
-					withDataLink={false}
-				/>
-				<VehiclesMarkers embeddedNetworkId={+networkId} lineId={filteredLine?.id} />
-				{showStops && <StopsMarkers networkId={+networkId} />}
-				{showStops && selectedStopRef !== null && <StopDeparturesPanel networkId={+networkId} />}
-				<Signature />
-			</MapComponent>
+			<EmbedDisplaySettingsProvider initialSettings={initialDisplaySettings} networkId={+networkId}>
+				<MapComponent containerProps={{ className: "h-dvh relative isolate" }} mapOptions={mapOptions} ref={onMap}>
+					<FilterModuleControl
+						filter={filteredLine ? { kind: "line", network, line: filteredLine } : undefined}
+						fixedNetworkId={+networkId}
+						onFilterChange={(filter) => setLineId(filter?.kind === "line" ? filter.line.id : null)}
+						withDataLink={false}
+					/>
+					<VehiclesMarkers embeddedNetworkId={+networkId} lineId={filteredLine?.id} />
+					{showStops && <StopsMarkers networkId={+networkId} />}
+					{showStops && selectedStopRef !== null && <StopDeparturesPanel networkId={+networkId} />}
+					<EmbedSettingsControl />
+					<Signature />
+				</MapComponent>
+			</EmbedDisplaySettingsProvider>
 		</>
 	);
 }
