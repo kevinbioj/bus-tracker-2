@@ -83,7 +83,7 @@ services:
       interval: 1s
       timeout: 5s
       retries: 10
-      start_period: 3s
+      start_period: 120s
 
   client:
     image: ghcr.io/kevinbioj/bus-tracker-2/client:sha-${GITHUB_SHA}
