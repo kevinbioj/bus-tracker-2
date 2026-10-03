@@ -29,6 +29,12 @@ const DEPARTURES_HORIZON_MS = 2 * 60 * 60 * 1000;
 
 const DEPARTURES_LIMIT = 15;
 
+/**
+ * Au-delà, la position d'un véhicule est jugée figée — le véhicule s'est délocalisé : elle ne dit
+ * plus ni où il en est de sa course, ni s'il stationne à l'arrêt.
+ */
+const STALE_POSITION_MS = 5 * 60 * 1000;
+
 type StopMarker = {
 	ref: string;
 	name: string;
@@ -182,8 +188,11 @@ function mergeTrackedJourneys(
 
 		// Pour un véhicule suivi en GPS, le processeur ne publie que les dessertes à partir de son
 		// arrêt courant (séquence, à défaut identifiant d'arrêt) : la liste publiée *est* sa
-		// progression. Une desserte qui y figure n'est pas encore passée, quelle que soit l'heure.
-		const followsVehicle = passedCallDetection === "VEHICLE" && journey.position.type === "GPS";
+		// progression. Une desserte qui y figure n'est pas encore passée, quelle que soit l'heure — tant
+		// que la position est fraîche : figée, elle retient la course sur des arrêts déjà desservis, et
+		// le passage est alors jugé sur l'horaire.
+		const freshPosition = nowMs - Date.parse(journey.position.recordedAt) <= STALE_POSITION_MS;
+		const followsVehicle = passedCallDetection === "VEHICLE" && journey.position.type === "GPS" && freshPosition;
 
 		const known = byJourneyId.get(journey.id) ?? (journeyKey !== undefined ? byJourneyKey.get(journeyKey) : undefined);
 
@@ -209,7 +218,7 @@ function mergeTrackedJourneys(
 				continue;
 			}
 
-			const atStop = journey.position.atStop && call === currentCall;
+			const atStop = freshPosition && journey.position.atStop && call === currentCall;
 			const { aimedTime, expectedTime } = callTimesOf(call, direction);
 
 			// Un véhicule à quai reste affiché même si son heure de départ est dépassée : il est là. Il
