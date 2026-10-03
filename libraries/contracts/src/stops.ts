@@ -177,6 +177,8 @@ export const stopDepartureSchema = type({
 	"realtime?": "boolean",
 	/** Vrai lorsque la station est le terminus de départ de la course : le passage y est un départ. */
 	"origin?": "boolean",
+	/** Vrai lorsque la station est le terminus de la course : le passage y est une arrivée. */
+	"terminus?": "boolean",
 	/**
 	 * Identifiant sous lequel la course serait publiée si elle circulait : permet au client de
 	 * rejoindre le véhicule sur la carte lorsqu'il y est effectivement suivi.

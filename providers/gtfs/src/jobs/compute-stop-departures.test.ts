@@ -494,6 +494,26 @@ describe("computeStopDepartures", () => {
 		});
 		expect(platform.map(({ stopRef }) => stopRef)).toEqual(["network-b:StopPoint:mairie-b"]);
 	});
+	it("garde le départ tardif d'une course publiée lorsque le véhicule fait foi", () => {
+		const { source, gtfs, trip } = makeLinearSource();
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const journey = trip.getScheduledJourney(date, true);
+		gtfs.journeys.set(getJourneyKey(date, "original"), journey);
+		// 8:05 : la course aurait dû quitter A à 8:00.
+		const late = Temporal.Instant.from("2026-05-18T08:05:00Z");
+		const departuresAt = (areaId: string, at = late) => computeStopDepartures(source, areaId, at).departures;
+
+		// Ni suivie par le véhicule, ni publiée : le départ est passé.
+		expect(departuresAt("A")).toEqual([]);
+		journey.lastPublishedKey = "network/original";
+		expect(departuresAt("A")).toEqual([]);
+
+		source.options.passedCallDetection = "VEHICLE";
+		expect(departuresAt("A")).toMatchObject([{ aimedTime: "2026-05-18T08:00:00+00:00", origin: true }]);
+		// Seul le terminus de départ en profite : un arrêt intermédiaire passé reste écarté.
+		expect(departuresAt("B", Temporal.Instant.from("2026-05-18T08:12:00Z"))).toEqual([]);
+	});
+
 	describe("à l'arrivée", () => {
 		it("présente le terminus, aux heures d'arrivée, avec la provenance de la course", () => {
 			const source = makeSource();
@@ -505,6 +525,7 @@ describe("computeStopDepartures", () => {
 			]);
 			expect(arrivals.departures.map((arrival) => arrival.originName)).toEqual(["Mairie", "Mairie"]);
 			expect(arrivals.departures.every((arrival) => arrival.origin === undefined)).toBe(true);
+			expect(arrivals.departures.every((arrival) => arrival.terminus === true)).toBe(true);
 			// Au départ, le terminus n'a rien à annoncer.
 			expect(computeStopDepartures(source, "terminus", MONDAY_MORNING).departures).toEqual([]);
 		});
@@ -527,7 +548,9 @@ describe("computeStopDepartures", () => {
 			const arrivalsAt = (areaId: string) =>
 				computeStopDepartures(source, areaId, MONDAY_MORNING, { direction: "arrivals" }).departures;
 
-			expect(arrivalsAt("B")).toMatchObject([{ aimedTime: "2026-05-18T08:10:00+00:00", originName: "A" }]);
+			expect(arrivalsAt("B")).toMatchObject([
+				{ aimedTime: "2026-05-18T08:10:00+00:00", originName: "A", terminus: false },
+			]);
 
 			// B interdit à la descente.
 			gtfs.stopTimeStore.flagsBitmask[1] = 2;
@@ -551,7 +574,7 @@ describe("computeStopDepartures", () => {
 				computeStopDepartures(source, areaId, MONDAY_MORNING, { direction: "arrivals" }).departures;
 
 			expect(arrivalsAt("B")).toEqual([]);
-			expect(arrivalsAt("C")).toMatchObject([{ originName: "B" }]);
+			expect(arrivalsAt("C")).toMatchObject([{ originName: "B", terminus: true }]);
 		});
 	});
 });

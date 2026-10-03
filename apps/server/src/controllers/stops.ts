@@ -236,6 +236,8 @@ function mergeTrackedJourneys(
 				// Les dessertes publiées partent de l'arrêt courant : le processeur, qui voit la course
 				// entière, a pu y trouver du temps réel que celles-ci n'ont plus.
 				known.realtime = known.realtime ?? realtime;
+				// Les dessertes publiées vont jusqu'au terminus : la course suivie sait où elle s'achève.
+				if (direction === "arrivals") known.terminus = call === terminusCall;
 				known.platformName = call.platformName ?? known.platformName;
 				// Calculée avec le véhicule effectivement affecté, elle est la plus juste des deux.
 				known.destination = journey.destination ?? known.destination;
@@ -261,6 +263,7 @@ function mergeTrackedJourneys(
 				expectedTime,
 				callStatus: call.callStatus,
 				realtime,
+				terminus: direction === "arrivals" ? call === terminusCall : undefined,
 				journeyId: journey.id,
 				journeyRef: journey.journeyRef,
 				serviceDate: journey.serviceDate,
@@ -278,7 +281,15 @@ function mergeTrackedJourneys(
 		}
 	}
 
-	return passed.size > 0 ? merged.filter((departure) => !passed.has(departure)) : merged;
+	// Le provider garde un départ tardif de terminus tant que sa course est publiée : il n'est à venir
+	// que si le véhicule suivi y attend encore.
+	return merged.filter(
+		(departure) =>
+			!passed.has(departure) &&
+			(departure.tracked ||
+				departure.origin !== true ||
+				Date.parse(departure.expectedTime ?? departure.aimedTime) >= nowMs),
+	);
 }
 
 async function resolveLineIds(departures: ResolvedDeparture[]) {

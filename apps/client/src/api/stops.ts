@@ -58,6 +58,8 @@ export type StopDeparture = {
 	realtime?: boolean;
 	/** La station est le terminus de départ de la course : le passage y est annoncé comme un départ. */
 	origin?: boolean;
+	/** La station est le terminus de la course : le passage y est annoncé comme une arrivée. */
+	terminus?: boolean;
 	/** Course effectivement suivie par l'application : elle peut être rejointe sur la carte. */
 	tracked: boolean;
 	/** Le véhicule stationne en ce moment à l'arrêt. */

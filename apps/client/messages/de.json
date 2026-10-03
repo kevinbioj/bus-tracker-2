@@ -282,6 +282,7 @@
 	"stop_arrivals_loading": "Nächste Ankünfte werden geladen…",
 	"stop_arrivals_empty": "Keine Ankunft in den nächsten zwei Stunden.",
 	"stop_arrivals_error": "Die nächsten Ankünfte dieser Haltestelle sind nicht verfügbar.",
+	"stop_arrivals_arrival_imminent": "Ankunft sofort",
 	"page_title_data": "Netzdaten - Bus-Tracker",
 	"page_title_embed_map": "Karte des Verkehrsnetzes {networkName}",
 	"page_title_line_data": "{lineNumber} – {networkName} – Liniendaten – Bus Tracker",

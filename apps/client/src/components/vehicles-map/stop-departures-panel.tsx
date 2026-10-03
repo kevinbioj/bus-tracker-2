@@ -54,7 +54,8 @@ function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDi
 
 	// Moins d'une minute, ou heure dépassée alors que le véhicule n'est pas encore passé (source jugeant
 	// le passage sur sa progression) : il arrive.
-	if (minutes < 1) return m.stop_departures_approaching();
+	if (minutes < 1)
+		return departure.terminus === true ? m.stop_arrivals_arrival_imminent() : m.stop_departures_approaching();
 	return formatCountdown(minutes);
 }
 

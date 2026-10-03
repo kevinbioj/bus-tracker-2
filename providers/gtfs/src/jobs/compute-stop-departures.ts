@@ -113,6 +113,9 @@ export function computeStopDepartures(
 		"UTC";
 	const nowMs = at.epochMilliseconds;
 	const untilMs = nowMs + horizonMs;
+	// Le serveur juge alors un passage sur la progression du véhicule : il saura écarter un départ
+	// tardif dont le véhicule est déjà parti.
+	const followsVehicle = source.options.passedCallDetection === "VEHICLE";
 
 	const today = at.toZonedDateTimeISO(referenceTimeZone).toPlainDate();
 	const dates = [today.subtract({ days: 1 }), today, today.add({ days: 1 })];
@@ -155,6 +158,12 @@ export function computeStopDepartures(
 			serviceDate: date.toString(),
 		});
 	};
+
+	/**
+	 * Un véhicule suivi qui attend encore à son terminus de départ, son heure passée, part en retard :
+	 * le départ reste annoncé comme tel. Le serveur l'écarte dès que le véhicule n'y est plus.
+	 */
+	const isLateDepartureKept = (journey?: Journey) => followsVehicle && journey?.lastPublishedKey !== undefined;
 
 	for (const date of dates) {
 		const midnightMs = createZonedDateTimeFromSecs(date, 0, referenceTimeZone).epochMilliseconds;
@@ -224,10 +233,6 @@ export function computeStopDepartures(
 			const networkRef = networkOf(trip, journey);
 			const stopRef = stopRefOf(networkRef, servedStop.id);
 
-			const expectedMs = arrivals ? call?.expectedArrivalTime : call?.expectedDepartureTime;
-			const effectiveMs = expectedMs ?? aimedMs;
-			if (effectiveMs < nowMs || effectiveMs > untilMs) continue;
-
 			// Terminus de départ : la première desserte assurée de la course, qu'une déviation peut avoir
 			// déplacée. Sans arrêts matérialisés, c'est le premier stop_time de la course. Sans objet à
 			// l'arrivée, où il est toujours écarté.
@@ -236,6 +241,18 @@ export function computeStopDepartures(
 				: call !== undefined
 					? call === findOriginCall(journey!.calls)
 					: stopTimeIdx === trip.stopTimeStart;
+
+			const expectedMs = arrivals ? call?.expectedArrivalTime : call?.expectedDepartureTime;
+			const effectiveMs = expectedMs ?? aimedMs;
+			if (effectiveMs > untilMs) continue;
+			if (effectiveMs < nowMs && !(origin && isLateDepartureKept(journey))) continue;
+			// Terminus de la course, symétriquement : sa dernière desserte assurée, qu'une déviation peut
+			// avoir avancée. Sans objet au départ, où il est toujours écarté.
+			const terminus = arrivals
+				? call !== undefined
+					? call === findTerminusCall(journey!.calls)
+					: stopTimeIdx === trip.stopTimeStart + trip.stopTimeCount - 1
+				: undefined;
 
 			emittedCalls.add(`${journeyKey}|${stop.id}`);
 			departures.push({
@@ -262,6 +279,7 @@ export function computeStopDepartures(
 				canceled: canceled ? true : undefined,
 				realtime: journey?.hasRealtime() ? true : undefined,
 				origin,
+				terminus,
 				// Les identifiants publiés remplacent leurs barres obliques côté serveur : la valeur
 				// rendue ici doit pouvoir être comparée telle quelle à celles du store des courses.
 				journeyId: journey?.lastPublishedKey?.replaceAll("/", "_"),
@@ -308,7 +326,8 @@ export function computeStopDepartures(
 			const aimedMs = arrivals ? call.aimedArrivalTime : call.aimedDepartureTime;
 			const expectedMs = arrivals ? call.expectedArrivalTime : call.expectedDepartureTime;
 			const effectiveMs = expectedMs ?? aimedMs;
-			if (effectiveMs < nowMs || effectiveMs > untilMs) continue;
+			if (effectiveMs > untilMs) continue;
+			if (effectiveMs < nowMs && !(call === originCall && isLateDepartureKept(journey))) continue;
 
 			departures.push({
 				sortKey: effectiveMs,
@@ -329,6 +348,7 @@ export function computeStopDepartures(
 				callStatus: call.status,
 				realtime: journey.hasRealtime() ? true : undefined,
 				origin: arrivals ? undefined : call === originCall,
+				terminus: arrivals ? call === terminusCall : undefined,
 				journeyId: journey.lastPublishedKey?.replaceAll("/", "_"),
 				journeyRef: `${networkRef}:ServiceJourney:${mapTripRef?.(trip.id) ?? trip.id}`,
 				serviceDate: date.toString(),

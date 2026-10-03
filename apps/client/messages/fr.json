@@ -273,6 +273,7 @@
 	"stop_arrivals_loading": "Chargement des prochaines arrivées…",
 	"stop_arrivals_empty": "Aucune arrivée dans les deux prochaines heures.",
 	"stop_arrivals_error": "Les prochaines arrivées de cet arrêt sont indisponibles.",
+	"stop_arrivals_arrival_imminent": "Arrivée imminente",
 	"page_title_data": "Données des réseaux - Bus-Tracker",
 	"page_title_embed_map": "Carte du réseau {networkName}",
 	"page_title_line_data": "{lineNumber} – {networkName} – Données – Bus Tracker",
