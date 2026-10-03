@@ -172,12 +172,17 @@ if (process.env.NODE_ENV !== "test") {
 	startSiriLiteJourneyPolling();
 }
 
+let internalIdToTripIds = new Map();
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
 		id: "sncf",
 		staticResourceHref: "https://1.gtfs.download/sncf/sncf.zip",
-		realtimeResourceHrefs: [GTFS_RT_TRIP_UPDATES_URL],
+		realtimeResourceHrefs: [
+			GTFS_RT_TRIP_UPDATES_URL,
+			{ href: "https://proxy.transport.data.gouv.fr/resource/sncf-gtfs-rt-service-alerts", pollMs: 120_000 },
+		],
 		excludeScheduled: true,
 		gtfsOptions: {
 			filterTrips: (trip) => {
@@ -211,6 +216,9 @@ const sources = [
 
 				return true;
 			},
+			postLoad: (resource) => {
+				internalIdToTripIds = Map.groupBy(resource.trips.keys(), (key) => key.slice(0, key.indexOf("F") + 1));
+			},
 			ignoreBlocks: true,
 		},
 		getAheadTime: () => 10 * 60,
@@ -226,6 +234,23 @@ const sources = [
 			}
 
 			return stopRef.split("-")[1];
+		},
+		mapAlert: (alert) => {
+			alert.informedEntity =
+				alert.informedEntity?.flatMap((entity) => {
+					if (typeof entity.trip?.tripId !== "string") {
+						return [];
+					}
+
+					const tripIds = internalIdToTripIds.get(entity.trip.tripId);
+					if (tripIds === undefined) {
+						return [];
+					}
+
+					return tripIds.map((tripId) => ({ trip: { tripId } }));
+				}) ?? [];
+
+			return alert;
 		},
 		isValidJourney: enrichSncfJourneyWithSiriLitePlatformsByTrainNumber,
 		mapStopDeparture: enrichSncfStopDepartureWithSiriLitePlatform,
