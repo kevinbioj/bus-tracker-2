@@ -95,17 +95,22 @@ export const linesTable = pgTable(
 
 export type LineEntity = InferSelectModel<typeof linesTable>;
 
-export const girouettesTable = pgTable("girouette", {
-	id: serial("id").primaryKey(),
-	networkId: integer("network_id")
-		.notNull()
-		.references(() => networksTable.id),
-	lineId: integer("line_id").references(() => linesTable.id),
-	directionId: smallint("direction_id"),
-	destinations: varchar("destinations").array(),
-	data: json("data").notNull(),
-	enabled: boolean("enabled").notNull().default(true),
-});
+export const girouettesTable = pgTable(
+	"girouette",
+	{
+		id: serial("id").primaryKey(),
+		networkId: integer("network_id")
+			.notNull()
+			.references(() => networksTable.id),
+		lineId: integer("line_id").references(() => linesTable.id),
+		directionId: smallint("direction_id"),
+		destinations: varchar("destinations").array(),
+		data: json("data").notNull(),
+		enabled: boolean("enabled").notNull().default(true),
+	},
+	// La fiche d'une course cherche sa girouette par réseau et ligne à chaque rafraîchissement.
+	(table) => [index("girouette_network_line_index").on(table.networkId, table.lineId)],
+);
 
 export type GirouetteEntity = InferSelectModel<typeof girouettesTable>;
 
@@ -137,10 +142,8 @@ export const vehiclesTable = pgTable(
 		archivedAt: timestamp("archived_at", { precision: 0 }),
 		archivedFor: varchar("archived_for", { enum: vehicleArchiveReasons }),
 	},
-	(table) => [
-		index("vehicle_network_index").on(table.networkId),
-		uniqueIndex("vehicle_network_ref_unique_index").on(table.networkId, table.ref),
-	],
+	// L'index unique sert aussi les recherches par réseau seul : un index sur `network_id` ferait doublon.
+	(table) => [uniqueIndex("vehicle_network_ref_unique_index").on(table.networkId, table.ref)],
 );
 
 export type VehicleEntity = InferSelectModel<typeof vehiclesTable>;
@@ -184,10 +187,14 @@ export const lineActivitiesTable = pgTable(
 		startedAt: timestamp("started_at", { precision: 0 }).notNull(),
 		updatedAt: timestamp("updated_at", { precision: 0 }).notNull(),
 	},
+	// `updated_at` n'est volontairement dans aucun index : réécrit à chaque passage d'un véhicule, il
+	// empêcherait PostgreSQL de mettre la ligne à jour sur place (HOT), et chaque écriture devrait
+	// alors toucher tous les index de la table.
 	(table) => [
-		index("line_activity_line_indeex").on(table.lineId),
-		index("line_activity_vehicle_index").on(table.vehicleId),
-		index("line_activity_vehicle_line_updated_at_index").on(table.vehicleId, table.lineId, table.updatedAt),
+		index("line_activity_line_service_date_index").on(table.lineId, table.serviceDate),
+		index("line_activity_vehicle_service_date_index").on(table.vehicleId, table.serviceDate),
+		// L'activité à prolonger est la dernière démarrée du couple : ses activités se succèdent sans se chevaucher.
+		index("line_activity_vehicle_line_started_at_index").on(table.vehicleId, table.lineId, table.startedAt),
 	],
 );
 

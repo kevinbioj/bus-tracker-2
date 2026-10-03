@@ -295,6 +295,20 @@
 			"when": 1789578252905,
 			"tag": "0041_tired_jean_grey",
 			"breakpoints": true
+		},
+		{
+			"idx": 42,
+			"version": "7",
+			"when": 1791047279292,
+			"tag": "0042_hot_line_activities",
+			"breakpoints": true
+		},
+		{
+			"idx": 43,
+			"version": "7",
+			"when": 1791047284024,
+			"tag": "0043_jsonb_import_functions",
+			"breakpoints": true
 		}
 	]
 }

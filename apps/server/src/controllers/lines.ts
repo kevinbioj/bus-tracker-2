@@ -1,5 +1,5 @@
 import { decodeLinePath, type EncodedLinePath, type LinePath } from "@bus-tracker/contracts";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import * as z from "zod";
 import { database } from "../core/database/database.js";
 import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
@@ -216,8 +216,9 @@ hono.get(
 			.where(
 				and(
 					eq(lineActivitiesTable.lineId, id),
-					sql`EXTRACT(MONTH FROM service_date) = ${date.month}`,
-					sql`EXTRACT(YEAR FROM service_date) = ${date.year}`,
+					// Bornes du mois plutôt qu'un EXTRACT : l'index (line_id, service_date) peut alors servir.
+					gte(lineActivitiesTable.serviceDate, date.with({ day: 1 }).toString()),
+					lt(lineActivitiesTable.serviceDate, date.with({ day: 1 }).add({ months: 1 }).toString()),
 				),
 			)
 			.groupBy(lineActivitiesTable.serviceDate);

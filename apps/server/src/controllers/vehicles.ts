@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { vehicleJourneyLineTypeZodEnum } from "@bus-tracker/contracts";
-import { and, asc, between, desc, eq, gt, ilike, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, between, desc, eq, gt, ilike, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { getCookie, setCookie } from "hono/cookie";
 import { match } from "ts-pattern";
 import { z } from "zod";
@@ -16,9 +16,9 @@ import {
 	vehicleReportsTable,
 	vehiclesTable,
 } from "../core/database/schema.js";
-import { journeyStore } from "../core/store/journey-store.js";
+import { findActivityStarts } from "../core/services/line-activity-service.js";
+import { findJourneysByVehicleId, findOnlineLineId } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
-import { keyBy } from "../utils/key-by.js";
 import { createJsonValidator, createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
 import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
@@ -123,38 +123,27 @@ hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
 		.offset(page * limit)
 		.limit(limit);
 
-	const recentActivities = await database
-		.select({
-			vehicleId: lineActivitiesTable.vehicleId,
-			lineId: lineActivitiesTable.lineId,
-			since: lineActivitiesTable.startedAt,
-		})
-		.from(lineActivitiesTable)
-		.where(
-			and(
-				inArray(
-					lineActivitiesTable.vehicleId,
-					vehicleList.map((v) => v.id),
-				),
-				gt(lineActivitiesTable.updatedAt, sql`NOW() - INTERVAL '10 minutes'`),
-			),
-		)
-		.orderBy(desc(lineActivitiesTable.updatedAt));
+	// Les courses reçues disent quels véhicules sont en ligne et sur quelle ligne : seul le début de
+	// leur activité est à chercher en base.
+	const onlineLineIds = new Map<number, number>();
+	for (const vehicle of vehicleList) {
+		const lineId = findOnlineLineId(vehicle.id);
+		if (lineId !== undefined) onlineLineIds.set(vehicle.id, lineId);
+	}
 
-	const lastActivityByVehicleId = keyBy(recentActivities, (currentActivity) => currentActivity.vehicleId, "ignore");
+	const activityStarts = await findActivityStarts(
+		Array.from(onlineLineIds, ([vehicleId, lineId]) => ({ vehicleId, lineId })),
+	);
 
 	const vehicleWithActivityList = vehicleList.map(({ lastSeenAt, ...vehicle }) => {
-		// Ce n'est pas possible, dans un monde normal et pour un même véhicule,
-		// de tourner sur plusieurs lignes en même temps. Si jamais c'est le cas,
-		// et bien on prendra le dernier début puis le reste ira se faire voir 👍
-		const currentActivity = lastActivityByVehicleId.get(vehicle.id);
+		const lineId = onlineLineIds.get(vehicle.id);
 
 		return {
 			...vehicle,
 			activity: {
-				status: currentActivity ? "online" : "offline",
-				since: currentActivity ? currentActivity.since : lastSeenAt,
-				lineId: currentActivity?.lineId,
+				status: lineId !== undefined ? "online" : "offline",
+				since: lineId !== undefined ? (activityStarts.get(vehicle.id) ?? lastSeenAt) : lastSeenAt,
+				lineId,
 			},
 		};
 	});
@@ -175,39 +164,23 @@ hono.get("/vehicles/:id", createParamValidator(getVehicleByIdParamSchema), async
 
 	const { vehicle, network, operator } = data;
 
-	const currentActivity = (
-		await database
-			.select({
-				vehicleId: lineActivitiesTable.vehicleId,
-				lineId: lineActivitiesTable.lineId,
-				since: lineActivitiesTable.startedAt,
-			})
-			.from(lineActivitiesTable)
-			.where(
-				and(
-					eq(lineActivitiesTable.vehicleId, vehicle.id),
-					gt(lineActivitiesTable.updatedAt, sql`NOW() - INTERVAL '10 minutes'`),
-				),
-			)
-			.orderBy(desc(lineActivitiesTable.startedAt))
-			.limit(1)
-	).at(0);
+	const journey = findJourneysByVehicleId().get(vehicle.id);
+	const lineId = findOnlineLineId(vehicle.id);
+	const activityStart =
+		lineId !== undefined ? (await findActivityStarts([{ vehicleId: vehicle.id, lineId }])).get(vehicle.id) : undefined;
 
 	const activeMonths = await database
 		.select({ month: sql<string>`DISTINCT TO_CHAR(service_date, 'YYYY-MM')` })
 		.from(lineActivitiesTable)
 		.where(eq(lineActivitiesTable.vehicleId, vehicle.id));
 
-	const journey = journeyStore.values().find((journey) => journey.vehicle?.id === vehicle.id);
-
 	return c.json({
 		...vehicle,
 		operator,
 		activity: {
-			status: currentActivity ? "online" : "offline",
-			since:
-				(currentActivity ? currentActivity.since : vehicle.lastSeenAt)?.toZonedDateTimeISO(network.timezone) ?? null,
-			lineId: currentActivity?.lineId,
+			status: lineId !== undefined ? "online" : "offline",
+			since: (activityStart ?? vehicle.lastSeenAt)?.toZonedDateTimeISO(network.timezone) ?? null,
+			lineId,
 			markerId: journey?.id,
 			position: journey
 				? {

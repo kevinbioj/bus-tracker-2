@@ -2,6 +2,7 @@ import { STOP_AREAS_GEO_KEY, type StopAreaManifest, stopAreaKey, stopPointAreaKe
 import { inArray } from "drizzle-orm";
 
 import { redis } from "../../index.js";
+import { useCache } from "../../utils/use-cache.js";
 import { database } from "../database/database.js";
 import { networksTable } from "../database/schema.js";
 
@@ -63,29 +64,54 @@ async function attachNetworks(manifests: StopAreaManifest[]): Promise<StopArea[]
 }
 
 /**
+ * Fiches déjà lues et décodées. Chaque déplacement de la carte relit des centaines de fiches, pour la
+ * plupart les mêmes : elles ne changent qu'avec la ressource GTFS de leur source, dont la republication
+ * les invalide ({@link invalidateStopAreaManifests}).
+ */
+const manifestsCache = useCache<StopAreaManifest>(300_000);
+
+/** Oublie les fiches d'une source qui vient de republier son inventaire, ou toutes à défaut. */
+export function invalidateStopAreaManifests(source?: { providerId: string; sourceId: string }) {
+	if (source === undefined) {
+		manifestsCache.clear();
+		return;
+	}
+	manifestsCache.deleteWhere(
+		(manifest) => manifest.providerId === source.providerId && manifest.sourceId === source.sourceId,
+	);
+}
+
+/**
  * Lit les fiches de stations. Une station présente dans l'index mais dont la fiche a expiré — son
  * provider a cessé de la publier — en est retirée au passage.
  */
 async function readStopAreas(refs: string[]) {
 	if (refs.length === 0) return [];
 
-	const rawManifests = await redis.mGet(refs.map(stopAreaKey));
+	// L'ordre des références est conservé : celui de la recherche géographique, du centre vers les bords.
+	const manifests = refs.map((ref) => manifestsCache.get(ref));
+	const missingIndexes = manifests.flatMap((manifest, index) => (manifest === undefined ? [index] : []));
 
-	const manifests: StopAreaManifest[] = [];
 	const expiredRefs: string[] = [];
-	rawManifests.forEach((rawManifest, index) => {
-		if (rawManifest === null || rawManifest === undefined) {
-			expiredRefs.push(refs[index]!);
-			return;
-		}
-		manifests.push(JSON.parse(rawManifest));
-	});
+	if (missingIndexes.length > 0) {
+		const rawManifests = await redis.mGet(missingIndexes.map((index) => stopAreaKey(refs[index]!)));
+		rawManifests.forEach((rawManifest, position) => {
+			const index = missingIndexes[position]!;
+			if (rawManifest === null || rawManifest === undefined) {
+				expiredRefs.push(refs[index]!);
+				return;
+			}
+			const manifest: StopAreaManifest = JSON.parse(rawManifest);
+			manifestsCache.set(refs[index]!, manifest);
+			manifests[index] = manifest;
+		});
+	}
 
 	if (expiredRefs.length > 0) {
 		void redis.zRem(STOP_AREAS_GEO_KEY, expiredRefs).catch(() => void 0);
 	}
 
-	return manifests;
+	return manifests.filter((manifest) => manifest !== undefined);
 }
 
 /**

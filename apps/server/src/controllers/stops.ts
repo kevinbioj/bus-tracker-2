@@ -13,6 +13,7 @@ import {
 	findStopArea,
 	findStopAreaOfStopPoint,
 	findStopAreasWithin,
+	invalidateStopAreaManifests,
 	type StopArea,
 } from "../core/services/stop-area-service.js";
 import { requestStopDepartures, type StopDeparturesResult } from "../core/services/stop-departures-service.js";
@@ -45,8 +46,14 @@ type StopMarker = {
 	stopPoints?: StopPoint[];
 };
 
-/** L'inventaire ne bouge qu'au rythme des ressources GTFS : une minute de cache est sans risque. */
-const markersCache = useCache<StopMarker[]>(60_000);
+/** Source d'une station, sous la forme `${providerId}:${sourceId}`. */
+const sourceKeyOf = ({ providerId, sourceId }: { providerId: string; sourceId: string }) => `${providerId}:${sourceId}`;
+
+/**
+ * L'inventaire ne bouge qu'au rythme des ressources GTFS : une minute de cache est sans risque. Chaque
+ * entrée retient les sources de ses stations, pour n'être oubliée qu'à la republication de l'une d'elles.
+ */
+const markersCache = useCache<{ items: StopMarker[]; sourceKeys: Set<string> }>(60_000);
 
 const getStopMarkersQuery = z.object({
 	swLat: z.coerce.number().min(-90).max(90),
@@ -73,7 +80,7 @@ hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) 
 		.concat(networkId?.join(",") ?? "", String(withStopPoints))
 		.join("|");
 
-	let items = markersCache.get(cacheKey);
+	let items = markersCache.get(cacheKey)?.items;
 	if (items === undefined) {
 		const stopAreas = await findStopAreasWithin(
 			{ swLat, swLon, neLat, neLon },
@@ -90,7 +97,7 @@ hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) 
 			mode: mode ?? "BUS",
 			...(withStopPoints ? { stopPoints: stopPoints ?? [] } : {}),
 		}));
-		markersCache.set(cacheKey, items);
+		markersCache.set(cacheKey, { items, sourceKeys: new Set(stopAreas.map(sourceKeyOf)) });
 	}
 
 	return c.json({ items, at: Temporal.Now.instant() });
@@ -336,13 +343,27 @@ const stopAreasCache = useCache<StopArea | null>(300_000);
 /**
  * Oublie stations, marqueurs et tableaux en cache : appelé dès qu'un provider republie l'inventaire
  * d'une source, pour ne pas servir quelques minutes encore une station que sa ressource a supprimée.
- * Le tout est vidé plutôt que la seule source concernée : ces caches sont courts et bon marché à
- * reconstituer, les trier par source ne vaudrait pas la complexité.
+ *
+ * Seul ce qui provient de la source est oublié : des dizaines de sources republient chacune à leur
+ * rythme, et tout vider à chaque fois laisserait les caches presque toujours froids. Une station que la
+ * source vient d'ajouter n'apparaît donc dans un cadrage déjà en cache qu'à son expiration, une minute
+ * au plus. Sans source désignée, tout est oublié.
  */
-export function invalidateStopAreaCaches() {
-	markersCache.clear();
-	stopAreasCache.clear();
+export function invalidateStopAreaCaches(source?: { providerId: string; sourceId: string }) {
+	invalidateStopAreaManifests(source);
+	// Les tableaux ne vivent que quelques secondes : inutile de les trier par source.
 	departuresCache.clear();
+
+	if (source === undefined) {
+		markersCache.clear();
+		stopAreasCache.clear();
+		return;
+	}
+
+	const sourceKey = sourceKeyOf(source);
+	markersCache.deleteWhere(({ sourceKeys }) => sourceKeys.has(sourceKey));
+	// Une référence restée sans station a pu être créée par cette publication.
+	stopAreasCache.deleteWhere((stopArea) => stopArea === null || sourceKeyOf(stopArea) === sourceKey);
 }
 
 /**

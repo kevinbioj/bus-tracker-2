@@ -10,7 +10,7 @@ import {
 	startVehicleReportCleanupService,
 	sweepExpiredVehicleReports,
 } from "./core/services/vehicle-report-cleanup-service.js";
-import { journeyStore } from "./core/store/journey-store.js";
+import { storeJourneys } from "./core/store/journey-store.js";
 import { port } from "./options.js";
 import { hono } from "./server.js";
 import type { DisposeableVehicleJourney } from "./types/disposeable-vehicle-journey.js";
@@ -45,11 +45,7 @@ function startVehicleWorker() {
 
 	const workerPath = new URL("./vehicle-handling/vehicle-worker.js", import.meta.url);
 	worker = new Worker(workerPath);
-	worker.on("message", (data: DisposeableVehicleJourney[]) => {
-		for (const journey of data) {
-			journeyStore.set(journey.id, journey);
-		}
-	});
+	worker.on("message", (data: DisposeableVehicleJourney[]) => storeJourneys(data));
 
 	worker.on("error", (error) => {
 		console.error("✘ Worker has encountered an error:", error instanceof Error ? error.stack : error);
@@ -92,11 +88,24 @@ dataSourcesSubscriber
 		}),
 	)
 	// Même connexion : un abonné Redis peut écouter plusieurs canaux.
-	.then(() => dataSourcesSubscriber.subscribe(STOP_AREAS_INVALIDATION_CHANNEL, () => invalidateStopAreaCaches()))
+	.then(() =>
+		dataSourcesSubscriber.subscribe(STOP_AREAS_INVALIDATION_CHANNEL, (message) =>
+			invalidateStopAreaCaches(parseStopAreasInvalidation(message)),
+		),
+	)
 	.then(() => console.log("► Subscribed to the data sources and stop areas invalidation channels."))
 	.catch((error) => {
 		console.error("✘ Failed to subscribe to the data sources channel:", error);
 	});
+
+/** Source désignée par un message d'invalidation ; illisible, toutes les sources sont invalidées. */
+function parseStopAreasInvalidation(message: string) {
+	try {
+		const { providerId, sourceId } = JSON.parse(message);
+		if (typeof providerId === "string" && typeof sourceId === "string") return { providerId, sourceId };
+	} catch {}
+	return undefined;
+}
 
 startStopDeparturesService(redis).catch((error) => {
 	console.error("✘ Failed to start the stop departures service:", error);
