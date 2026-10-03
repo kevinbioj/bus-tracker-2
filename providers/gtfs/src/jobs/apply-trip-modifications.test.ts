@@ -20,7 +20,7 @@ function makeGtfs(): Gtfs {
 	const service = new Service("service", [true, true, true, true, true, true, true]);
 	const staticShape = new Shape("shape:static", new Float64Array([0, 0, 0, 0, 0.01, 1000, 0, 0.02, 2000]));
 	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("X", "Déviation", 0.01, 0.01)];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops.slice(0, 2),
 		new Uint8Array([1, 2]),
 		new Uint8Array([0, 0]),

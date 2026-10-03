@@ -1,6 +1,6 @@
 import type { VehicleJourneyCallFlags } from "@bus-tracker/contracts";
 
-import { createZonedDateTimeFromSecs } from "../cache/temporal-cache.js";
+import { getEpochMsFromSecs } from "../cache/temporal-cache.js";
 
 import { Journey } from "./journey.js";
 import type { Route } from "./route.js";
@@ -72,18 +72,18 @@ export class Trip {
 		// croissent même lorsqu'elle traverse des fuseaux. `stop_timezone` ne sert qu'à restituer
 		// l'instant obtenu en heure locale de l'arrêt, à la sérialisation.
 		const tz = this.route.agency.timeZone;
-		const { stops, sequence, flagsBitmask, arrivalSecs, departureSecs, distanceTraveled, stopHeadsigns } = this.store;
+		const { store } = this;
+		const { stopList, stopIdx, sequence, flagsBitmask, arrivalSecs, departureSecs, distanceTraveled } = store;
 
 		const calls = new Array(count);
 		for (let i = 0; i < count; i++) {
 			const idx = start + i;
 			const aSecs = arrivalSecs[idx]!;
 			const dSecs = departureSecs[idx]!;
-			const stop = stops[idx]!;
+			const stop = stopList[stopIdx[idx]!]!;
 
-			const aimedArrivalTimeMs = createZonedDateTimeFromSecs(date, aSecs, tz).epochMilliseconds;
-			const aimedDepartureTimeMs =
-				dSecs === aSecs ? aimedArrivalTimeMs : createZonedDateTimeFromSecs(date, dSecs, tz).epochMilliseconds;
+			const aimedArrivalTimeMs = getEpochMsFromSecs(date, aSecs, tz);
+			const aimedDepartureTimeMs = dSecs === aSecs ? aimedArrivalTimeMs : getEpochMsFromSecs(date, dSecs, tz);
 
 			const dist = distanceTraveled[idx]!;
 			calls[i] = {
@@ -97,7 +97,7 @@ export class Trip {
 				distanceTraveled: Number.isNaN(dist) ? undefined : dist,
 				status: "SCHEDULED" as const,
 				flags: bitmaskToFlags(flagsBitmask[idx]!),
-				headsign: stopHeadsigns?.[idx],
+				headsign: store.getStopHeadsign(idx),
 			};
 		}
 		return calls;
@@ -109,8 +109,8 @@ export class Trip {
 		if (!force && !this.service.runsOn(date)) return;
 
 		const tz = this.route.agency.timeZone;
-		const firstCallArrivalMs = createZonedDateTimeFromSecs(date, this.firstArrivalSecs, tz).epochMilliseconds;
-		const lastCallDepartureMs = createZonedDateTimeFromSecs(date, this.lastDepartureSecs, tz).epochMilliseconds;
+		const firstCallArrivalMs = getEpochMsFromSecs(date, this.firstArrivalSecs, tz);
+		const lastCallDepartureMs = getEpochMsFromSecs(date, this.lastDepartureSecs, tz);
 
 		return new Journey(`${this.id}:${date}`, this, date, firstCallArrivalMs, lastCallDepartureMs);
 	}

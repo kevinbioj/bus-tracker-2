@@ -38,7 +38,7 @@ function makeGtfs() {
 		new Stop("C", "C", 0, 0.02, "3"),
 		new Stop("X", "Replacement", 0.01, 0.01, "4"),
 	];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops.slice(0, 3),
 		new Uint8Array([1, 2, 3]),
 		new Uint8Array([0, 0, 0]),
@@ -183,7 +183,7 @@ function blockSource(options?: Partial<SourceOptions>) {
 		8 * 3600 + 32 * 60,
 		8 * 3600 + 42 * 60,
 	];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		[stops[0]!, stops[1]!, stops[2]!, stops[2]!, stops[1]!, stops[0]!],
 		new Uint8Array([1, 2, 3, 1, 2, 3]),
 		new Uint8Array([0, 0, 0, 0, 0, 0]),
@@ -580,7 +580,7 @@ function crossBorderSource() {
 		new Stop("B", "B", 0, 0.01),
 		new Stop("C", "C", 0, 0.02, undefined, "Europe/Lisbon"),
 	];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 3]),
 		new Uint8Array([0, 0, 0]),
@@ -625,7 +625,7 @@ function flixbusLikeSource() {
 		new Stop("B", "B", 0, 0.01, undefined, "Europe/Paris"),
 		new Stop("C", "C", 0, 0.02, undefined, "Europe/Paris"),
 	];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 3]),
 		new Uint8Array([0, 0, 0]),
@@ -664,7 +664,7 @@ function dwellingSource(options?: Partial<SourceOptions>) {
 	const route = new Route("line:1", agency, "1", "RAIL");
 	const service = new Service("service", [true, true, true, true, true, true, true]);
 	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 3]),
 		new Uint8Array([0, 0, 0]),

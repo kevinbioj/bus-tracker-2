@@ -34,7 +34,7 @@ function makeShapedGtfs(options?: { withDistances?: boolean; withShapeDistances?
 			? new Shape("shape", new Float64Array([0, 0, Number.NaN, 0, 0.01, Number.NaN, 0, 0.02, Number.NaN]))
 			: new Shape("shape", new Float64Array([0, 0, 0, 0, 0.01, 1000, 0, 0.02, 2000]));
 	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 3]),
 		new Uint8Array([0, 0, 0]),
@@ -85,7 +85,7 @@ function makeGtfs() {
 		new Stop("B", "B", 0, 0.01, "2"),
 		new Stop("X", "Replacement", 0.01, 0.01, "3"),
 	];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops.slice(0, 2),
 		new Uint8Array([1, 2]),
 		new Uint8Array([0, 0]),

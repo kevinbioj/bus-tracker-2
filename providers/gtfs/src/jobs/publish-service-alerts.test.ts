@@ -33,7 +33,7 @@ function makeGtfs(): Gtfs {
 	const terminus = new Stop("TCAR:TERM", "Terminus", 0, 0.02);
 
 	const stops = [martaA, terminus, martaB, terminus];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 1, 2]),
 		new Uint8Array([0, 0, 0, 0]),

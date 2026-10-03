@@ -44,7 +44,7 @@ export function buildStopIndex(
 	trips: Iterable<Trip>,
 	stopAreaByStopId: Map<string, string>,
 ): StopIndex {
-	const { stops, departureSecs, tripStart, tripCount } = stopTimeStore;
+	const { stopList, stopIdx, departureSecs, tripStart, tripCount } = stopTimeStore;
 
 	const tripOfStopTime = new Int32Array(stopTimeStore.size).fill(-1);
 	for (const trip of trips) {
@@ -58,22 +58,33 @@ export function buildStopIndex(
 	const areaSlots = new Map<string, number>();
 	const counts: number[] = [];
 
-	const areaOfStopTime = new Array<string | undefined>(stopTimeStore.size);
+	// Station de chaque arrêt, résolue une fois par arrêt plutôt qu'à chacun de ses stop_times.
+	const UNRESOLVED = -2;
+	const NO_AREA = -1;
+	const slotOfStop = new Int32Array(stopList.length).fill(UNRESOLVED);
+	const slotOfStopTime = new Int32Array(stopTimeStore.size).fill(NO_AREA);
 
 	for (let index = 0; index < stopTimeStore.size; index += 1) {
 		if (tripOfStopTime[index] === -1) continue;
 
-		const areaId = stopAreaByStopId.get(stops[index]!.id);
-		if (areaId === undefined) continue;
-
-		areaOfStopTime[index] = areaId;
-
-		let slot = areaSlots.get(areaId);
-		if (slot === undefined) {
-			slot = counts.length;
-			areaSlots.set(areaId, slot);
-			counts.push(0);
+		const stopIndex = stopIdx[index]!;
+		let slot = slotOfStop[stopIndex]!;
+		if (slot === UNRESOLVED) {
+			const areaId = stopAreaByStopId.get(stopList[stopIndex]!.id);
+			if (areaId === undefined) {
+				slot = NO_AREA;
+			} else {
+				slot = areaSlots.get(areaId) ?? counts.length;
+				if (slot === counts.length) {
+					areaSlots.set(areaId, slot);
+					counts.push(0);
+				}
+			}
+			slotOfStop[stopIndex] = slot;
 		}
+		if (slot === NO_AREA) continue;
+
+		slotOfStopTime[index] = slot;
 		counts[slot] = counts[slot]! + 1;
 	}
 
@@ -90,10 +101,9 @@ export function buildStopIndex(
 	const writeCursor = Uint32Array.from(areaStart);
 
 	for (let index = 0; index < stopTimeStore.size; index += 1) {
-		const areaId = areaOfStopTime[index];
-		if (areaId === undefined) continue;
+		const slot = slotOfStopTime[index]!;
+		if (slot === NO_AREA) continue;
 
-		const slot = areaSlots.get(areaId)!;
 		const cursor = writeCursor[slot]!;
 		stopTimeIdx[cursor] = index;
 		tripIdx[cursor] = tripOfStopTime[index]!;

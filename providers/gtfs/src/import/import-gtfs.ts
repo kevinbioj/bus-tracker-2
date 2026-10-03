@@ -41,7 +41,7 @@ export function indexStopAreas(
 	// Matérialisé : l'itérable est parcouru deux fois, et `trips.values()` ne l'est qu'une.
 	const tripList = Array.from(trips);
 
-	const { stopAreas, stopAreaByStopId } = groupStopAreas(new Set(stopTimeStore.stops), stations);
+	const { stopAreas, stopAreaByStopId } = groupStopAreas(stopTimeStore.getServedStops(), stations);
 	const stopIndex = buildStopIndex(stopTimeStore, tripList, stopAreaByStopId);
 
 	const tripsByIdx: (Trip | undefined)[] = [];

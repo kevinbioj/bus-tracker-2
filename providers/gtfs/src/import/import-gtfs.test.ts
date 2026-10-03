@@ -14,7 +14,7 @@ function makeTrip() {
 	const route = new Route("line:1", agency, "1", "BUS");
 	const service = new Service("service", [true, true, true, true, true, true, true]);
 	const stops = [new Stop("a", "A", 0, 0), new Stop("b", "B", 0, 0.01)];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2]),
 		new Uint8Array([0, 0]),

@@ -51,6 +51,7 @@ export async function importTrips(
 	// Store vide partagé : populé en place après les passes sur stop_times.txt.
 	const placeholderStore = new StopTimeStore(
 		[],
+		new Uint32Array(0),
 		new Uint8Array(0),
 		new Uint8Array(0),
 		new Uint32Array(0),
@@ -143,14 +144,26 @@ export async function importTrips(
 		cursor += tripCount[trip.idx]!;
 	}
 
+	// Table des arrêts, que les stop_times désignent par leur indice.
+	const stopList = Array.from(stops.values());
+	const stopIndexById = new Map<string, number>();
+	for (let index = 0; index < stopList.length; index++) {
+		stopIndexById.set(stopList[index]!.id, index);
+	}
+
+	// Girouettes internées : une même girouette se répète sur toutes les courses d'une mission.
+	const headsignList = [""];
+	const headsignIndexByValue = new Map<string, number>();
+
 	// Allocation des tableaux par stop_time.
+	const stopIdx = new Uint32Array(totalRows);
 	const sequence = new Uint8Array(totalRows);
 	const flagsBitmask = new Uint8Array(totalRows);
 	const arrivalSecs = new Uint32Array(totalRows);
 	const departureSecs = new Uint32Array(totalRows);
 	const distanceTraveled = new Float32Array(totalRows);
-	const stopRefs: Stop[] = new Array(totalRows);
-	const stopHeadsigns: (string | undefined)[] = new Array(totalRows);
+	// Alloué à la première girouette rencontrée : un GTFS sans `stop_headsign` n'en paie rien.
+	let headsignIdx: Uint32Array | undefined;
 
 	// Curseur d'écriture par trip (relatif au trip, pas absolu).
 	const writeCursor = new Uint32Array(totalTrips);
@@ -170,8 +183,8 @@ export async function importTrips(
 		}
 
 		const stopId = mapStopId?.(stopTimeRecord.stop_id) ?? stopTimeRecord.stop_id;
-		const stop = stops.get(stopId);
-		if (stop === undefined) {
+		const stopIndex = stopIndexById.get(stopId);
+		if (stopIndex === undefined) {
 			throw new Error(
 				`Unknown stop with id '${stopId}' for {${stopTimeRecord.stop_sequence}/${stopId}/${stopTimeRecord.arrival_time}/${stopTimeRecord.departure_time}}.`,
 			);
@@ -186,8 +199,17 @@ export async function importTrips(
 				? aSecs
 				: parseTimeToSecs(mapTime?.(stopTimeRecord.departure_time) ?? stopTimeRecord.departure_time);
 
-		stopRefs[idx] = stop;
-		stopHeadsigns[idx] = stopTimeRecord.stop_headsign || undefined;
+		stopIdx[idx] = stopIndex;
+		if (stopTimeRecord.stop_headsign) {
+			let headsignIndex = headsignIndexByValue.get(stopTimeRecord.stop_headsign);
+			if (headsignIndex === undefined) {
+				headsignIndex = headsignList.length;
+				headsignList.push(stopTimeRecord.stop_headsign);
+				headsignIndexByValue.set(stopTimeRecord.stop_headsign, headsignIndex);
+			}
+			headsignIdx ??= new Uint32Array(totalRows);
+			headsignIdx[idx] = headsignIndex;
+		}
 		sequence[idx] = +stopTimeRecord.stop_sequence;
 		flagsBitmask[idx] = (stopTimeRecord.pickup_type === "1" ? 1 : 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
 		arrivalSecs[idx] = aSecs;
@@ -203,8 +225,8 @@ export async function importTrips(
 		if (c > maxCount) maxCount = c;
 	}
 	const idxBuf = new Uint32Array(maxCount);
-	const tmpStops: Stop[] = new Array(maxCount);
-	const tmpHeadsigns: (string | undefined)[] = new Array(maxCount);
+	const tmpStops = new Uint32Array(maxCount);
+	const tmpHeadsigns = new Uint32Array(maxCount);
 	const tmpSeq = new Uint8Array(maxCount);
 	const tmpFlags = new Uint8Array(maxCount);
 	const tmpArr = new Uint32Array(maxCount);
@@ -230,8 +252,8 @@ export async function importTrips(
 
 		for (let i = 0; i < count; i++) {
 			const src = idxBuf[i]!;
-			tmpStops[i] = stopRefs[src]!;
-			tmpHeadsigns[i] = stopHeadsigns[src];
+			tmpStops[i] = stopIdx[src]!;
+			if (headsignIdx !== undefined) tmpHeadsigns[i] = headsignIdx[src]!;
 			tmpSeq[i] = sequence[src]!;
 			tmpFlags[i] = flagsBitmask[src]!;
 			tmpArr[i] = arrivalSecs[src]!;
@@ -239,8 +261,8 @@ export async function importTrips(
 			tmpDist[i] = distanceTraveled[src]!;
 		}
 		for (let i = 0; i < count; i++) {
-			stopRefs[start + i] = tmpStops[i]!;
-			stopHeadsigns[start + i] = tmpHeadsigns[i];
+			stopIdx[start + i] = tmpStops[i]!;
+			if (headsignIdx !== undefined) headsignIdx[start + i] = tmpHeadsigns[i]!;
 			sequence[start + i] = tmpSeq[i]!;
 			flagsBitmask[start + i] = tmpFlags[i]!;
 			arrivalSecs[start + i] = tmpArr[i]!;
@@ -249,7 +271,24 @@ export async function importTrips(
 		}
 	}
 
-	// Calcul des distanceTraveled si demandé.
+	// Calcul des distanceTraveled si demandé. La projection d'un arrêt sur un tracé ne dépend que de
+	// ce couple : les courses d'une même mission partagent les deux, elle n'est calculée qu'une fois.
+	const projectedDistances = new Map<Shape, Map<number, number>>();
+	const projectOnShape = (shape: Shape, stopIndex: number) => {
+		let byStop = projectedDistances.get(shape);
+		if (byStop === undefined) {
+			byStop = new Map();
+			projectedDistances.set(shape, byStop);
+		}
+		let distance = byStop.get(stopIndex);
+		if (distance === undefined) {
+			const stop = stopList[stopIndex]!;
+			distance = shape.findClosestPointDistance(stop.latitude, stop.longitude);
+			byStop.set(stopIndex, distance);
+		}
+		return distance;
+	};
+
 	if (computeShapeDistTraveled !== undefined) {
 		for (const trip of trips.values()) {
 			const start = tripStart[trip.idx]!;
@@ -273,14 +312,14 @@ export async function importTrips(
 			let currentDist = 0;
 			for (let i = 0; i < count; i++) {
 				const idx = start + i;
-				const stop = stopRefs[idx]!;
 
 				if (alwaysRecompute || shapeRecalculated || Number.isNaN(distanceTraveled[idx]!)) {
 					if (trip.shape !== undefined) {
-						distanceTraveled[idx] = trip.shape.findClosestPointDistance(stop.latitude, stop.longitude);
+						distanceTraveled[idx] = projectOnShape(trip.shape, stopIdx[idx]!);
 					} else {
 						if (i > 0) {
-							const prev = stopRefs[idx - 1]!;
+							const prev = stopList[stopIdx[idx - 1]!]!;
+							const stop = stopList[stopIdx[idx]!]!;
 							currentDist += getDistance(prev.latitude, prev.longitude, stop.latitude, stop.longitude);
 						}
 						distanceTraveled[idx] = currentDist;
@@ -310,13 +349,15 @@ export async function importTrips(
 	}
 
 	// Finalise les arrays per-stop_time du store.
-	placeholderStore.stops = stopRefs;
+	placeholderStore.stopList = stopList;
+	placeholderStore.stopIdx = stopIdx;
 	placeholderStore.sequence = sequence;
 	placeholderStore.flagsBitmask = flagsBitmask;
 	placeholderStore.arrivalSecs = arrivalSecs;
 	placeholderStore.departureSecs = departureSecs;
 	placeholderStore.distanceTraveled = distanceTraveled;
-	placeholderStore.stopHeadsigns = stopHeadsigns;
+	placeholderStore.headsignList = headsignList;
+	placeholderStore.headsignIdx = headsignIdx;
 
 	return { trips, stopTimeStore: placeholderStore };
 }

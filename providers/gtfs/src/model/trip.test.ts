@@ -24,7 +24,7 @@ function makeCrossBorderTrip() {
 		new Stop("B", "B", 0, 0.01),
 		new Stop("C", "C", 0, 0.02, undefined, "Europe/Lisbon"),
 	];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 3]),
 		new Uint8Array([0, 0, 0]),

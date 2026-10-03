@@ -1,6 +1,6 @@
 import type { ExcludedStopDepartureJourney, StopCallDirection, StopDeparture } from "@bus-tracker/contracts";
 
-import { createZonedDateTimeFromSecs } from "../cache/temporal-cache.js";
+import { getEpochMsFromSecs } from "../cache/temporal-cache.js";
 import { getJourneyKey } from "../model/gtfs.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
 import type { Source } from "../model/source.js";
@@ -67,9 +67,9 @@ function findOriginCall(calls: JourneyCall[]) {
 }
 
 function resolveDestination(trip: Trip, stopTimeIdx: number, call?: JourneyCall) {
-	const { stopHeadsigns, stops, tripStart, tripCount } = trip.store;
-	const lastStop = stops[tripStart[trip.idx]! + tripCount[trip.idx]! - 1];
-	return call?.headsign ?? stopHeadsigns?.[stopTimeIdx] ?? trip.headsign ?? lastStop?.name;
+	const { store } = trip;
+	const lastStop = store.getStop(store.tripStart[trip.idx]! + store.tripCount[trip.idx]! - 1);
+	return call?.headsign ?? store.getStopHeadsign(stopTimeIdx) ?? trip.headsign ?? lastStop?.name;
 }
 
 export type ComputeStopDeparturesOptions = {
@@ -111,7 +111,8 @@ export function computeStopDepartures(
 	const entries = Array.from(gtfs.stopIndex.entriesOf(areaId));
 
 	const arrivals = direction === "arrivals";
-	const { arrivalSecs, departureSecs, flagsBitmask, sequence, stops } = gtfs.stopTimeStore;
+	const { stopTimeStore } = gtfs;
+	const { arrivalSecs, departureSecs, flagsBitmask, sequence } = stopTimeStore;
 
 	const referenceTimeZone =
 		(entries.length > 0 ? gtfs.tripsByIdx[entries[0]![1]]?.route.agency.timeZone : undefined) ??
@@ -175,7 +176,7 @@ export function computeStopDepartures(
 	const isLateDepartureKept = (effectiveMs: number) => followsVehicle && nowMs - effectiveMs <= LATE_DEPARTURE_MAX_MS;
 
 	for (const date of dates) {
-		const midnightMs = createZonedDateTimeFromSecs(date, 0, referenceTimeZone).epochMilliseconds;
+		const midnightMs = getEpochMsFromSecs(date, 0, referenceTimeZone);
 		const fromSecs = (nowMs - midnightMs) / 1000 - WINDOW_SLACK_SECS;
 		const untilSecs = (untilMs - midnightMs) / 1000 + WINDOW_SLACK_SECS;
 		if (untilSecs < 0) continue;
@@ -195,14 +196,10 @@ export function computeStopDepartures(
 
 			if (!trip.service.runsOn(date)) continue;
 
-			const stop = stops[stopTimeIdx]!;
+			const stop = stopTimeStore.getStop(stopTimeIdx);
 
 			const timeZone = trip.route.agency.timeZone;
-			const aimedMs = createZonedDateTimeFromSecs(
-				date,
-				(arrivals ? arrivalSecs : departureSecs)[stopTimeIdx]!,
-				timeZone,
-			).epochMilliseconds;
+			const aimedMs = getEpochMsFromSecs(date, (arrivals ? arrivalSecs : departureSecs)[stopTimeIdx]!, timeZone);
 
 			// Les arrêts ne sont matérialisés que lorsqu'ils ont quelque chose à dire de plus que
 			// l'horaire théorique : les matérialiser tous rendrait le calcul bien plus coûteux que la
@@ -281,7 +278,7 @@ export function computeStopDepartures(
 					) ?? resolveDestination(trip, stopTimeIdx, call),
 				resolveOriginName: () =>
 					(journey !== undefined ? findOriginCall(journey.calls)?.stop.name : undefined) ??
-					stops[trip.stopTimeStart]?.name,
+					stopTimeStore.getStop(trip.stopTimeStart)?.name,
 				resolveJourney: () => journey ?? trip.getScheduledJourney(date, true),
 				wheelchairAccessible: getWheelchairAccessible(trip, journey?.vehicleDescriptor),
 				aimedTime: formatCallTime(aimedMs, stop.timeZone, timeZone),

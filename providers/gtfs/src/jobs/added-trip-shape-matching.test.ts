@@ -41,7 +41,7 @@ function makeGtfs() {
 		new Stop("D", "D", 0, 0.03),
 		new Stop("X", "Diversion", 0.01, 0.01),
 	];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 3, 4]),
 		new Uint8Array([0, 0, 0, 0]),
@@ -129,7 +129,7 @@ describe("findAddedTripShapeMatch", () => {
 		const { gtfs, trip } = makeGtfs();
 		const date = Temporal.PlainDate.from("2026-05-18");
 		const reverseStops = ["D", "C", "A"].map((stopId) => gtfs.stops.get(stopId)!);
-		const reverseStore = new StopTimeStore(
+		const reverseStore = StopTimeStore.fromStops(
 			reverseStops,
 			new Uint8Array([1, 2, 3]),
 			new Uint8Array([0, 0, 0]),
@@ -249,7 +249,7 @@ describe("findAddedTripShapeMatch", () => {
 		const { gtfs, trip } = makeGtfs();
 		const date = Temporal.PlainDate.from("2026-05-18");
 		const reverseStops = ["D", "C", "B", "A"].map((stopId) => gtfs.stops.get(stopId)!);
-		const reverseStore = new StopTimeStore(
+		const reverseStore = StopTimeStore.fromStops(
 			reverseStops,
 			new Uint8Array([1, 2, 3, 4]),
 			new Uint8Array([0, 0, 0, 0]),

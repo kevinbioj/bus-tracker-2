@@ -76,6 +76,13 @@ function serializeCall(
 	};
 }
 
+/**
+ * Rejet rapide via les bornes précalculées, sans matérialiser le tableau calls : la plupart des
+ * courses de la journée ne sont pas encore parties ou sont déjà arrivées.
+ */
+const isOutsidePublicationWindow = (journey: Journey, atMs: number, aheadTime: number, graceMs: number) =>
+	atMs + aheadTime * 1000 < journey.firstCallArrivalMs || atMs - graceMs > journey.lastCallDepartureMs;
+
 const getCalls = (
 	journey: Journey,
 	at: Temporal.Instant,
@@ -86,9 +93,7 @@ const getCalls = (
 	const aheadTime = getAheadTime?.(journey) ?? 0;
 	const atMs = at.epochMilliseconds;
 
-	// Rejet rapide via les bornes précalculées, sans matérialiser le tableau calls.
-	if (atMs + aheadTime * 1000 < journey.firstCallArrivalMs) return;
-	if (atMs - graceMs > journey.lastCallDepartureMs) return;
+	if (isOutsidePublicationWindow(journey, atMs, aheadTime, graceMs)) return;
 
 	// Le voyage est dans la fenêtre : on accède aux calls (matérialisation si nécessaire).
 	const firstCall = journey.calls[0];
@@ -939,6 +944,9 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 				if (handledJourneyIds.has(journey.id)) continue;
 				if (canceledJourneyIds.has(journey.id)) continue;
 				if (journey.trip.block !== undefined && handledBlockIds.has(journey.trip.block)) continue;
+				// Avant tout le reste : réseau, clé et filtres de la configuration ne valent d'être calculés
+				// que pour les courses en circulation, une poignée parmi celles de la journée.
+				if (isOutsidePublicationWindow(journey, nowMs, source.options.getAheadTime?.(journey) ?? 0, graceMs)) continue;
 
 				const vehicleDescriptor = journey.vehicleDescriptor;
 

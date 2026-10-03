@@ -46,15 +46,22 @@ export class Shape {
 		return [this.getPointLatitude(index), this.getPointLongitude(index)];
 	}
 
-	/** Indice du point du tracé le plus proche de la position donnée. */
+	/**
+	 * Indice du point du tracé le plus proche de la position donnée.
+	 *
+	 * Les points sont classés sur leur écart planaire (projection équirectangulaire locale), qui suffit
+	 * à les départager à l'échelle d'un tracé : un haversine par point coûterait bien davantage, pour
+	 * un classement identique au voisinage de la position.
+	 */
 	findClosestPointIndex(lat: number, lon: number) {
+		const cosLat = Math.cos((lat * Math.PI) / 180);
 		let closestDist = Infinity;
 		let closestIndex = 0;
 
 		for (let i = 0; i < this.length; i++) {
-			const pointLat = this.getPointLatitude(i);
-			const pointLon = this.getPointLongitude(i);
-			const dist = getDistance(lat, lon, pointLat, pointLon);
+			const dx = (this.getPointLongitude(i) - lon) * cosLat;
+			const dy = this.getPointLatitude(i) - lat;
+			const dist = dx * dx + dy * dy;
 
 			if (dist < closestDist) {
 				closestDist = dist;

@@ -34,7 +34,7 @@ function makeGtfs(): Gtfs {
 	const terminus = new Stop("terminus", "Terminus", 0, 0.02);
 
 	const stops = [mairieA, terminus, mairieB, terminus, mairieA, terminus];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 1, 2, 1, 2]),
 		new Uint8Array([0, 0, 0, 0, 0, 0]),
@@ -85,7 +85,7 @@ function makeLinearSource() {
 	const route = new Route("line:1", agency, "1", "BUS");
 	const service = new Service("service", [true, true, true, true, true, true, true]);
 	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
-	const store = new StopTimeStore(
+	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 3]),
 		new Uint8Array([0, 0, 0]),
@@ -308,7 +308,7 @@ describe("computeStopDepartures", () => {
 		const zone = new Stop("zone", "Gare", 0, 0, undefined, undefined, "gare");
 		const voie2 = new Stop("voie-2", "Gare", 0, 0.0001, "2", undefined, "gare");
 		const terminus = new Stop("terminus", "Terminus", 0, 0.02);
-		const store = new StopTimeStore(
+		const store = StopTimeStore.fromStops(
 			[zone, terminus],
 			new Uint8Array([1, 2]),
 			new Uint8Array([0, 0]),

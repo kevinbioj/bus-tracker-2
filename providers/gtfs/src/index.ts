@@ -12,6 +12,7 @@ import { computeVehicleJourneys } from "./jobs/compute-current-journeys.js";
 import { computeNextJourneys } from "./jobs/compute-next-journeys.js";
 import { initializeResources } from "./jobs/initialize-resources.js";
 import { publishDataSourceManifests } from "./jobs/publish-data-sources.js";
+import { createJourneyPathPublisher } from "./jobs/publish-journey-paths.js";
 import { publishServiceAlerts } from "./jobs/publish-service-alerts.js";
 import { publishStopAreas } from "./jobs/publish-stop-areas.js";
 import { serveStopDepartures } from "./jobs/serve-stop-departures.js";
@@ -42,6 +43,12 @@ const redis = createRedisClient({
 });
 const channel = process.env.REDIS_CHANNEL ?? "journeys";
 const linePathTtlSeconds = 172_800;
+/** Rafraîchissement de la durée de vie des tracés de ligne : très en deçà de celle-ci, qui se compte en jours. */
+const linePathTtlRefreshMs = 3_600_000;
+const lastLinePathTtlRefreshAt = new Map<string, number>();
+// Les tracés de course vivent 15 min dans Redis ; un tracé inchangé y est réécrit toutes les 5 min,
+// ce qui laisse la marge de plusieurs cycles manqués avant son expiration.
+const journeyPaths = createJourneyPathPublisher(900, 300_000);
 await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
 console.log();
@@ -101,6 +108,7 @@ while (true) {
 
 	if (needsResync) {
 		needsResync = false;
+		journeyPaths.reset();
 		await publishLinePaths(configuration.sources);
 		await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
 		await publishStopAreas(redis, configuration.id, configuration.sources);
@@ -173,9 +181,7 @@ async function computeCurrentJourneys() {
 						await redis.publish(channel, JSON.stringify(chunk));
 					}
 
-					for (const [ref, path] of Object.entries(paths)) {
-						await redis.set(ref, JSON.stringify(path), { EX: 900 });
-					}
+					await journeyPaths.publish(redis, paths, Date.now());
 
 					await refreshLinePathTtls(source);
 
@@ -212,9 +218,11 @@ async function computeCurrentJourneys() {
 async function publishLinePaths(sources: typeof configuration.sources) {
 	try {
 		for (const source of sources) {
-			for (const [ref, path] of source.linePaths) {
-				await redis.set(ref, JSON.stringify(path), { EX: linePathTtlSeconds });
-			}
+			// Émises sans s'attendre les unes les autres : le client Redis les envoie d'un seul tenant.
+			await Promise.all(
+				Array.from(source.linePaths, ([ref, path]) => redis.set(ref, JSON.stringify(path), { EX: linePathTtlSeconds })),
+			);
+			lastLinePathTtlRefreshAt.set(source.id, Date.now());
 		}
 	} catch (e) {
 		console.error("Failed to publish line paths", e);
@@ -225,6 +233,8 @@ async function publishLinePaths(sources: typeof configuration.sources) {
 
 async function refreshLinePathTtls(source: (typeof configuration.sources)[number]) {
 	if (source.linePaths.size === 0) return;
+	if (Date.now() - (lastLinePathTtlRefreshAt.get(source.id) ?? 0) < linePathTtlRefreshMs) return;
 
 	await Promise.all(Array.from(source.linePaths.keys(), (ref) => redis.expire(ref, linePathTtlSeconds)));
+	lastLinePathTtlRefreshAt.set(source.id, Date.now());
 }

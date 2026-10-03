@@ -119,13 +119,13 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		stopModes.set(stopId, stopMode !== undefined ? heaviestMode(stopMode, mode) : mode);
 	};
 
-	const { flagsBitmask, stops, tripStart, tripCount } = gtfs.stopTimeStore;
+	const { flagsBitmask, stopList, stopIdx, tripStart, tripCount } = gtfs.stopTimeStore;
 	for (const trip of gtfs.tripsByIdx) {
 		if (trip === undefined) continue;
 		const start = tripStart[trip.idx]!;
 		const end = start + tripCount[trip.idx]!;
 		for (let index = start; index < end; index += 1) {
-			recordStopMode(stops[index]!.id, trip.route);
+			recordStopMode(stopList[stopIdx[index]!]!.id, trip.route);
 		}
 	}
 
