@@ -14,6 +14,12 @@ const DEFAULT_HORIZON_MS = 2 * 60 * 60 * 1000;
 
 const DEFAULT_LIMIT = 15;
 
+/**
+ * Retard au-delà duquel un départ de terminus n'est plus gardé pour le serveur : un véhicule qui
+ * attendrait encore n'est plus vraisemblable, et ces départs ne doivent pas encombrer la réponse.
+ */
+const LATE_DEPARTURE_MAX_MS = 30 * 60 * 1000;
+
 /** Bits de `StopTimeStore.flagsBitmask` marquant un arrêt interdit à la montée, à la descente. */
 const NO_PICKUP_FLAG = 1;
 const NO_DROP_OFF_FLAG = 2;
@@ -122,6 +128,8 @@ export function computeStopDepartures(
 
 	const departures: (Omit<StopDeparture, "destination"> & {
 		sortKey: number;
+		/** Départ de terminus à l'heure dépassée, gardé pour le serveur : il ne compte pas dans la limite. */
+		late: boolean;
 		resolveDestination: () => string | undefined;
 		/** Provenance, résolue seulement pour les arrivées. */
 		resolveOriginName: () => string | undefined;
@@ -161,9 +169,10 @@ export function computeStopDepartures(
 
 	/**
 	 * Un véhicule suivi qui attend encore à son terminus de départ, son heure passée, part en retard :
-	 * le départ reste annoncé comme tel. Le serveur l'écarte dès que le véhicule n'y est plus.
+	 * le départ reste annoncé comme tel. Le serveur, qui seul sait quelles courses sont suivies — le
+	 * véhicule peut être publié par une autre source —, l'écarte si aucun véhicule n'y attend.
 	 */
-	const isLateDepartureKept = (journey?: Journey) => followsVehicle && journey?.lastPublishedKey !== undefined;
+	const isLateDepartureKept = (effectiveMs: number) => followsVehicle && nowMs - effectiveMs <= LATE_DEPARTURE_MAX_MS;
 
 	for (const date of dates) {
 		const midnightMs = createZonedDateTimeFromSecs(date, 0, referenceTimeZone).epochMilliseconds;
@@ -245,7 +254,8 @@ export function computeStopDepartures(
 			const expectedMs = arrivals ? call?.expectedArrivalTime : call?.expectedDepartureTime;
 			const effectiveMs = expectedMs ?? aimedMs;
 			if (effectiveMs > untilMs) continue;
-			if (effectiveMs < nowMs && !(origin && isLateDepartureKept(journey))) continue;
+			const late = effectiveMs < nowMs;
+			if (late && !(origin && isLateDepartureKept(effectiveMs))) continue;
 			// Terminus de la course, symétriquement : sa dernière desserte assurée, qu'une déviation peut
 			// avoir avancée. Sans objet au départ, où il est toujours écarté.
 			const terminus = arrivals
@@ -257,6 +267,7 @@ export function computeStopDepartures(
 			emittedCalls.add(`${journeyKey}|${stop.id}`);
 			departures.push({
 				sortKey: effectiveMs,
+				late,
 				stopRef,
 				stopName: servedStop.name,
 				platformName: call?.platform ?? stop.platformCode,
@@ -327,10 +338,12 @@ export function computeStopDepartures(
 			const expectedMs = arrivals ? call.expectedArrivalTime : call.expectedDepartureTime;
 			const effectiveMs = expectedMs ?? aimedMs;
 			if (effectiveMs > untilMs) continue;
-			if (effectiveMs < nowMs && !(call === originCall && isLateDepartureKept(journey))) continue;
+			const late = effectiveMs < nowMs;
+			if (late && !(call === originCall && isLateDepartureKept(effectiveMs))) continue;
 
 			departures.push({
 				sortKey: effectiveMs,
+				late,
 				stopRef,
 				stopName: servedStop.name,
 				platformName: call.platform ?? call.stop.platformCode,
@@ -360,12 +373,13 @@ export function computeStopDepartures(
 
 	const { filterStopDeparture, getMissionCode, getVehicleRef, hasRealVehicles, mapStopDeparture } = source.options;
 	const kept: StopDeparture[] = [];
+	let keptOnTime = 0;
 
 	// Les passages sont résolus un à un jusqu'à la limite : ceux que le filtre écarte laissent leur
 	// place aux suivants, sans matérialiser la destination ni la course des passages qui ne seront pas
 	// rendus.
-	for (const { sortKey, resolveDestination, resolveOriginName, resolveJourney, ...rest } of departures) {
-		if (kept.length >= limit) break;
+	for (const { sortKey, late, resolveDestination, resolveOriginName, resolveJourney, ...rest } of departures) {
+		if (keptOnTime >= limit) break;
 
 		// La course n'est fabriquée qu'une fois, et seulement si la configuration en a l'usage.
 		let journey: Journey | undefined;
@@ -396,6 +410,7 @@ export function computeStopDepartures(
 		}
 
 		kept.push(departure);
+		if (!late) keptOnTime += 1;
 	}
 
 	return { departures: kept, excludedJourneys };

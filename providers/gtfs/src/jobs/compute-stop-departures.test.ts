@@ -494,24 +494,24 @@ describe("computeStopDepartures", () => {
 		});
 		expect(platform.map(({ stopRef }) => stopRef)).toEqual(["network-b:StopPoint:mairie-b"]);
 	});
-	it("garde le départ tardif d'une course publiée lorsque le véhicule fait foi", () => {
+	it("garde le départ tardif de terminus lorsque le véhicule fait foi", () => {
 		const { source, gtfs, trip } = makeLinearSource();
 		const date = Temporal.PlainDate.from("2026-05-18");
-		const journey = trip.getScheduledJourney(date, true);
-		gtfs.journeys.set(getJourneyKey(date, "original"), journey);
+		gtfs.journeys.set(getJourneyKey(date, "original"), trip.getScheduledJourney(date, true));
 		// 8:05 : la course aurait dû quitter A à 8:00.
 		const late = Temporal.Instant.from("2026-05-18T08:05:00Z");
 		const departuresAt = (areaId: string, at = late) => computeStopDepartures(source, areaId, at).departures;
 
-		// Ni suivie par le véhicule, ni publiée : le départ est passé.
-		expect(departuresAt("A")).toEqual([]);
-		journey.lastPublishedKey = "network/original";
+		// Passage jugé sur l'horaire : le départ est passé.
 		expect(departuresAt("A")).toEqual([]);
 
+		// Le véhicule peut être publié par une autre source : la course n'a pas à l'être par celle-ci.
 		source.options.passedCallDetection = "VEHICLE";
 		expect(departuresAt("A")).toMatchObject([{ aimedTime: "2026-05-18T08:00:00+00:00", origin: true }]);
 		// Seul le terminus de départ en profite : un arrêt intermédiaire passé reste écarté.
 		expect(departuresAt("B", Temporal.Instant.from("2026-05-18T08:12:00Z"))).toEqual([]);
+		// Trop tardif, plus aucun véhicule n'y attend vraisemblablement.
+		expect(departuresAt("A", Temporal.Instant.from("2026-05-18T08:31:00Z"))).toEqual([]);
 	});
 
 	describe("à l'arrivée", () => {
