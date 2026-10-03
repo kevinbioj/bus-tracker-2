@@ -59,7 +59,10 @@ const sources = [
 	{
 		id: "idfm",
 		staticResourceHref: "http://gtfsidfm.clarifygdps.com/gtfs",
-		realtimeResourceHrefs: [{ href: "http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm", pollMs: 60_000 }],
+		realtimeResourceHrefs: [
+			{ href: "http://gtfsidfm.clarifygdps.com/gtfs-rt-trips-idfm", pollMs: 60_000 },
+			{ href: "http://gtfsidfm.clarifygdps.com/gtfs-rt-alerts-idfm", pollMs: 120_000 },
+		],
 		appendTripUpdateInformation: true,
 		gtfsOptions: {
 			computeShapeDistTraveled: "always",
