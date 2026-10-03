@@ -249,9 +249,9 @@ function DepartureRow({
 
 /**
  * Prochains passages de l'arrêt sélectionné, lignes du réseau comprises, prêts à afficher — communs
- * au panneau et au drawer.
+ * au panneau et au drawer. Un réseau imposé (carte embarquée) restreint le tableau à ses lignes.
  */
-function useStopDepartures() {
+function useStopDepartures(networkId?: number) {
 	const { selectedRef } = useStopSelection();
 	const [displayMode] = useNextCallsDisplayMode();
 	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
@@ -270,13 +270,18 @@ function useStopDepartures() {
 	// Les lignes des réseaux de la station, pour leur numéro, leurs couleurs et leur pictogramme : une
 	// requête au plus toutes les 5 min par réseau, souvent déjà en cache — le module de filtre fait la
 	// même. Une gare peut en réunir plusieurs (TER, Intercités, TGV…), et une ligne peut relever d'un
-	// réseau que la station ne déclare pas : ceux des passages s'y ajoutent.
-	const networkIds = [
-		...new Set([
-			...(data?.stop.networkIds ?? []),
-			...(data?.departures.flatMap(({ lineNetworkId }) => (lineNetworkId !== undefined ? [lineNetworkId] : [])) ?? []),
-		]),
-	].toSorted((a, b) => a - b);
+	// réseau que la station ne déclare pas : ceux des passages s'y ajoutent. Un réseau imposé est seul
+	// chargé : les passages des autres, dont la ligne reste inconnue, sont écartés du tableau.
+	const networkIds =
+		networkId !== undefined
+			? [networkId]
+			: [
+					...new Set([
+						...(data?.stop.networkIds ?? []),
+						...(data?.departures.flatMap(({ lineNetworkId }) => (lineNetworkId !== undefined ? [lineNetworkId] : [])) ??
+							[]),
+					]),
+				].toSorted((a, b) => a - b);
 	const { linesById, isPending: areLinesPending } = useQueries({
 		queries: networkIds.map((networkId) => GetNetworkQuery(networkId, true)),
 		combine: (networks) => ({
@@ -509,7 +514,7 @@ function ReverseDirectionButton({
  * Sur grand écran : panneau en surimpression de la carte — au même endroit et dans le même habillage
  * que le panneau des véhicules en ligne.
  */
-function StopDeparturesControl() {
+function StopDeparturesControl({ networkId }: Readonly<StopDeparturesPanelProps>) {
 	const map = useMap();
 	const containerRef = useRef(document.createElement("div"));
 	const { clearSelection } = useStopSelection();
@@ -525,7 +530,7 @@ function StopDeparturesControl() {
 		alerts,
 		isError,
 		isLoading,
-	} = useStopDepartures();
+	} = useStopDepartures(networkId);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -601,7 +606,7 @@ function StopDeparturesControl() {
  * de sortie terminée seulement : désélectionner l'arrêt démonte le drawer, qui disparaîtrait sinon
  * d'un coup.
  */
-function StopDeparturesDrawer() {
+function StopDeparturesDrawer({ networkId }: Readonly<StopDeparturesPanelProps>) {
 	const map = useMap();
 	const [open, setOpen] = useState(true);
 	const { clearSelection } = useStopSelection();
@@ -619,7 +624,7 @@ function StopDeparturesDrawer() {
 		alerts,
 		isError,
 		isLoading,
-	} = useStopDepartures();
+	} = useStopDepartures(networkId);
 
 	// Le drawer masque le bas de la carte, et peut-être l'arrêt qu'il décrit : la carte est recentrée
 	// pour placer celui-ci au milieu de la partie restée visible. Une seule fois par sélection, pour ne
@@ -706,11 +711,16 @@ function StopDeparturesDrawer() {
 	);
 }
 
+type StopDeparturesPanelProps = {
+	/** Réseau imposé par la carte embarquée : seules ses lignes figurent au tableau. */
+	networkId?: number;
+};
+
 /** Prochains passages de l'arrêt sélectionné : panneau sur grand écran, drawer sur petit. */
-export function StopDeparturesPanel() {
+export function StopDeparturesPanel({ networkId }: Readonly<StopDeparturesPanelProps>) {
 	const isDesktop = useMediaQuery("(min-width: 640px)");
-	if (isDesktop) return <StopDeparturesControl />;
+	if (isDesktop) return <StopDeparturesControl networkId={networkId} />;
 	// Non modal, le drawer pose des gardes de focus à l'endroit où il est rendu, et non dans son portail :
 	// dans le conteneur de la carte, dont MapLibre réordonne les enfants, React ne s'y retrouverait plus.
-	return createPortal(<StopDeparturesDrawer />, document.body);
+	return createPortal(<StopDeparturesDrawer networkId={networkId} />, document.body);
 }

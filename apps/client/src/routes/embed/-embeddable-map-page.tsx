@@ -2,12 +2,15 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { FullscreenControl, GeolocateControl, type Map as MaplibreMap, NavigationControl } from "maplibre-gl";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
 import { Signature } from "~/components/vehicles-map/signature";
+import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-panel";
+import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
+import { StopsMarkers } from "~/components/vehicles-map/stops-markers/stops-markers-layer";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
 import * as m from "~/paraglide/messages";
 
@@ -17,9 +20,12 @@ export default function EmbeddableMapPage() {
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
 	const [withFullscreen] = useQueryState("with-fullscreen", parseAsString);
 	const [withGeolocate] = useQueryState("with-geolocate", parseAsString);
+	const { selectedRef: selectedStopRef, clearSelection: clearStopSelection } = useStopSelection();
 
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 	const filteredLine = network.lines.find((line) => line.id === lineId);
+	// Comme sur la carte principale, une ligne filtrée ne montre que ses véhicules : pas d'arrêts.
+	const showStops = lineId === null;
 
 	const mapOptions = useMemo(
 		() => ({
@@ -55,11 +61,18 @@ export default function EmbeddableMapPage() {
 		[withFullscreen, withGeolocate],
 	);
 
+	// Le filtre par ligne masque les arrêts : l'arrêt sélectionné est oublié, et son tableau ne ressurgit
+	// pas une fois le filtre retiré.
+	useEffect(() => {
+		if (lineId !== null && selectedStopRef !== null) clearStopSelection();
+	}, [clearStopSelection, lineId, selectedStopRef]);
+
 	return (
 		<>
 			<title>{m.page_title_embed_map({ networkName: network.name })}</title>
 			<style>{` body { background-color: var(--color-branding); } `}</style>
-			<MapComponent containerProps={{ className: "h-dvh relative" }} mapOptions={mapOptions} ref={onMap}>
+			{/* Isolée : la signature reste au-dessus de la carte, mais sous le drawer des prochains passages. */}
+			<MapComponent containerProps={{ className: "h-dvh relative isolate" }} mapOptions={mapOptions} ref={onMap}>
 				<FilterModuleControl
 					filter={filteredLine ? { kind: "line", network, line: filteredLine } : undefined}
 					fixedNetworkId={+networkId}
@@ -67,6 +80,8 @@ export default function EmbeddableMapPage() {
 					withDataLink={false}
 				/>
 				<VehiclesMarkers embeddedNetworkId={+networkId} lineId={filteredLine?.id} />
+				{showStops && <StopsMarkers networkId={+networkId} />}
+				{showStops && selectedStopRef !== null && <StopDeparturesPanel networkId={+networkId} />}
 				<Signature />
 			</MapComponent>
 		</>
