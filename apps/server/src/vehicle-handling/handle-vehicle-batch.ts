@@ -38,10 +38,16 @@ export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 		(vehicleJourney) => vehicleJourney.networkRef,
 	);
 
+	// Un réseau en échec n'emporte que ses propres courses : sans cela, une seule erreur (une ligne
+	// impossible à importer, par exemple) viderait la carte de tous les réseaux du lot.
 	const processedJourneysByNetwork = await mapWithConcurrency(
 		vehicleJourneysByNetwork,
 		NETWORK_CONCURRENCY,
-		([networkRef, vehicleJourneys]) => handleNetworkJourneys(networkRef, vehicleJourneys, now),
+		([networkRef, vehicleJourneys]) =>
+			handleNetworkJourneys(networkRef, vehicleJourneys, now).catch((error) => {
+				console.error(`✘ [Worker] Failed to handle journeys of network '${networkRef}':`, error);
+				return [];
+			}),
 	);
 
 	return processedJourneysByNetwork.flat();
