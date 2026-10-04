@@ -46,6 +46,8 @@ export class Trip {
 		readonly wheelchairAccessible?: boolean,
 		/** Acceptation des vélos à bord (`bikes_allowed`) : `undefined` lorsqu'elle est inconnue. */
 		readonly bikesAllowed?: boolean,
+		/** Nom commercial de la course (`trip_short_name`), typiquement le numéro de train. */
+		readonly shortName?: string,
 	) {}
 
 	get stopTimeStart() {
