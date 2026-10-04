@@ -596,6 +596,7 @@
 	"service_alerts_since": "Depuis le {date}",
 	"service_alerts_until": "Jusqu'au {date}",
 	"service_alerts_between": "Du {start} au {end}",
+	"service_alerts_on": "Le {date}",
 	"service_alerts_more_info": "En savoir plus",
 	"service_alerts_close": "Fermer",
 	"service_alert_effect_no_service": "Service interrompu",

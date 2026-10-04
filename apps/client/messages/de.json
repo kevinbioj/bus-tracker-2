@@ -575,6 +575,7 @@
 	"service_alerts_since": "Seit {date}",
 	"service_alerts_until": "Bis {date}",
 	"service_alerts_between": "Vom {start} bis {end}",
+	"service_alerts_on": "Am {date}",
 	"service_alerts_more_info": "Mehr erfahren",
 	"service_alerts_close": "Schließen",
 	"service_alert_effect_no_service": "Kein Betrieb",

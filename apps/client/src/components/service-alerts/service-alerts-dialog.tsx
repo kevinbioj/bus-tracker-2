@@ -70,7 +70,10 @@ function formatPeriod(alert: ServiceAlert) {
 		return value.format(onDayBoundary ? "L" : "L LT");
 	};
 	if (period.start !== undefined && period.end !== undefined) {
-		return m.service_alerts_between({ start: format(period.start), end: format(period.end) });
+		const start = format(period.start);
+		const end = format(period.end);
+		if (start === end) return m.service_alerts_on({ date: start });
+		return m.service_alerts_between({ start, end });
 	}
 	if (period.start !== undefined) return m.service_alerts_since({ date: format(period.start) });
 	if (period.end !== undefined) return m.service_alerts_until({ date: format(period.end) });
