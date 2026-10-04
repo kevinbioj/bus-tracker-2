@@ -210,15 +210,6 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
-		id: "traverse-brancion-commerce",
-		staticResourceHref: "https://pysae.com/api/v2/groups/traverse-brancion-commerce/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/traverse-brancion-commerce/gtfs-rt"],
-		mode: "NO-TU",
-		excludeScheduled: true,
-		getNetworkRef: () => "TRAVERSE-BRANCION-COMMERCE",
-		getVehicleRef: (vehicle) => vehicle?.label,
-	},
-	{
 		id: "keolis-seine-oise-est",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/keolis-seine-oise-est-8Bw7/gtfs/pub",
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/keolis-seine-oise-est-8Bw7/gtfs-rt"],
