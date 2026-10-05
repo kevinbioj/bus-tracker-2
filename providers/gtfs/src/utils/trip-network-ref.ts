@@ -16,7 +16,8 @@ export function createTripNetworkResolver(source: Source) {
 	const today = Temporal.Now.plainDateISO();
 
 	return (trip: Trip, journey?: Journey) => {
-		if (journey !== undefined) return source.options.getNetworkRef(journey);
+		if (journey !== undefined)
+			return source.options.getNetworkRef(journey, journey.vehicleDescriptor, journey.tripDescriptor);
 
 		let networkRef = cache.get(trip);
 		if (networkRef === undefined) {

@@ -11,6 +11,15 @@ function nthIndexOf(input, pattern, n) {
 	return i;
 }
 
+const lineIdsToNetworkRef = new Map([
+	['1006979', 'NOMAD-27'], // 216 -> Eure
+	['1006959', 'NOMAD-27'], // 228 -> Eure
+	['1008229', 'NOMAD-61'], // 407 -> Orne
+	['1009747', 'NOMAD-61'], // 423 -> Orne
+	['1009928', 'NOMAD-61'], // 424 -> Orne
+	['1006919', 'NOMAD-76'], // 527 -> Seine-Maritime
+])
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	//- NOMAD
@@ -20,75 +29,23 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=NOMAD&dataFormat=GTFS-RT",
 			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=NOMAD&dataFormat=GTFS-RT",
+			"https://gtfs.bus-tracker.fr/gtfs-rt/nomad-geo3d/"
 		],
+		mode: 'NO-TU',
 		getAheadTime: () => 5 * 60,
-		excludeScheduled: (trip) => ["216", "228", "407", "423", "425", "424", "527", "530"].includes(trip.route.name),
-		getNetworkRef: (journey) => {
-			if (journey?.trip.route.name.startsWith("1")) {
-				return "NOMAD-14";
+		excludeScheduled: (trip) => ["530"].includes(trip.route.name),
+		getNetworkRef: (journey, _, tripDescriptor) => {
+			const routeId = tripDescriptor?.routeId ?? journey?.trip.route.id;
+			if (typeof routeId !== 'string') {
+				return 'NOMAD';
 			}
 
-			if (journey?.trip.route.name.startsWith("2")) {
-				return "NOMAD-27";
-			}
-
-			if (journey?.trip.route.name.startsWith("3")) {
-				return "NOMAD-50";
-			}
-
-			if (journey?.trip.route.name.startsWith("4")) {
-				return "NOMAD-61";
-			}
-
-			if (journey?.trip.route.name.startsWith("5")) {
-				return "NOMAD-76";
-			}
+			const cleanedRouteId = routeId.split(':')[2];
+			return lineIdsToNetworkRef.get(cleanedRouteId) ?? null;
 		},
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
-	},
-	{
-		id: "nomad-car-geo3d",
-		staticResourceHref: "https://gtfs.bus-tracker.fr/nomad-geo3d.zip",
-		realtimeResourceHrefs: [
-			"https://lrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/trip-updates",
-			"https://lrn.geo3d.hanoverdisplays.com/api-1.0/gtfs-rt/vehicle-positions",
-		],
-		mode: "NO-TU",
-		getNetworkRef: (journey) => {
-			if (journey?.trip.route.name === "1010") {
-				return "SNCF-10";
-			}
-
-			if (journey?.trip.route.name.startsWith("1")) {
-				return "NOMAD-14";
-			}
-
-			if (journey?.trip.route.name.startsWith("2")) {
-				return "NOMAD-27";
-			}
-
-			if (journey?.trip.route.name.startsWith("3")) {
-				return "NOMAD-50";
-			}
-
-			if (journey?.trip.route.name.startsWith("4")) {
-				return "NOMAD-61";
-			}
-
-			if (journey?.trip.route.name.startsWith("5")) {
-				return "NOMAD-76";
-			}
-		},
-		mapTripUpdate: (tripUpdate) => {
-			// no vehicle data = trip ain't actually performed
-			if (typeof tripUpdate.vehicle?.id !== "string") {
-				return undefined;
-			}
-
-			return tripUpdate;
-		},
 	},
 	//- LiA
 	{

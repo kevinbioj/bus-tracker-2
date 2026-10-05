@@ -596,6 +596,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					journey.hasModifications() && tripUpdate.trip.modifiedTrip === undefined,
 				);
 				journey.setVehicleDescriptor(tripUpdate.vehicle, tripUpdate.timestamp * 1000);
+				journey.setTripDescriptor(tripUpdate.trip, tripUpdate.timestamp * 1000);
 				journey.lastTripUpdateAtMs = nowMs;
 			}
 
@@ -710,7 +711,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			)
 				continue;
 
-			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle);
+			const networkRef = source.options.getNetworkRef(journey, vehiclePosition.vehicle, vehiclePosition.trip);
 			const operatorRef = source.options.getOperatorRef?.(journey, vehiclePosition.vehicle);
 			const vehicleRef =
 				source.options.getVehicleRef !== undefined
@@ -834,7 +835,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					candidate?.trip.route ??
 					(tripUpdate.trip.routeId !== undefined ? source.gtfs.routes.get(tripUpdate.trip.routeId) : undefined);
 
-				const networkRef = source.options.getNetworkRef(candidateJourney, vehicleDescriptor);
+				const networkRef = source.options.getNetworkRef(candidateJourney, vehicleDescriptor, tripUpdate.trip);
 				const operatorRef = source.options.getOperatorRef?.(candidateJourney, vehicleDescriptor);
 				const vehicleRef =
 					source.options.getVehicleRef !== undefined
@@ -950,7 +951,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 				const vehicleDescriptor = journey.vehicleDescriptor;
 
-				const networkRef = source.options.getNetworkRef(journey);
+				const networkRef = source.options.getNetworkRef(journey, vehicleDescriptor, journey.tripDescriptor);
 				const operatorRef = source.options.getOperatorRef?.(journey, vehicleDescriptor);
 				const tripRef = source.options.mapTripRef?.(journey.trip.id) ?? journey.trip.id;
 

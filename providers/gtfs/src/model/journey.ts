@@ -2,7 +2,7 @@ import type { LinePath, VehicleJourneyCallFlags, VehicleJourneyPosition } from "
 
 import { groupBy } from "../utils/group-by.js";
 import type { Gtfs } from "./gtfs.js";
-import type { StopTimeUpdate, VehicleDescriptor } from "./gtfs-rt.js";
+import type { StopTimeUpdate, TripDescriptor, VehicleDescriptor } from "./gtfs-rt.js";
 import { restoreShapePrecision } from "./restore-shape-precision.js";
 import type { Shape } from "./shape.js";
 import type { Stop } from "./stop.js";
@@ -309,6 +309,8 @@ export class Journey {
 	private bearing: number | undefined;
 	private _vehicleDescriptor: VehicleDescriptor | undefined;
 	private _vehicleDescriptorUpdatedAt: number | undefined;
+	private _tripDescriptor: TripDescriptor | undefined;
+	private _tripDescriptorUpdatedAt: number | undefined;
 	private _calls: JourneyCall[] | null = null;
 	private _hasRealtime = false;
 	private _positionGuard: PositionGuardState | undefined;
@@ -572,6 +574,18 @@ export class Journey {
 	setVehicleDescriptor(descriptor: VehicleDescriptor | undefined, updatedAt: number) {
 		this._vehicleDescriptor = descriptor;
 		this._vehicleDescriptorUpdatedAt = updatedAt;
+	}
+
+	/** Descripteur de course du dernier TripUpdate reçu, périmé comme celui du véhicule. */
+	get tripDescriptor(): TripDescriptor | undefined {
+		if (this._tripDescriptorUpdatedAt === undefined) return undefined;
+		if (Date.now() - this._tripDescriptorUpdatedAt > VEHICLE_DESCRIPTOR_TTL_MS) return undefined;
+		return this._tripDescriptor;
+	}
+
+	setTripDescriptor(descriptor: TripDescriptor | undefined, updatedAt: number) {
+		this._tripDescriptor = descriptor;
+		this._tripDescriptorUpdatedAt = updatedAt;
 	}
 
 	guessPosition(at: Temporal.Instant): VehicleJourneyPosition {

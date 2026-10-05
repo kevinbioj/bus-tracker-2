@@ -12,6 +12,7 @@ import type { Gtfs } from "./gtfs.js";
 import type {
 	Alert,
 	IdentifiedAlert,
+	TripDescriptor,
 	TripModifications,
 	TripUpdate,
 	VehicleDescriptor,
@@ -93,7 +94,12 @@ export type SourceOptions = {
 	mode?: "ALL" | "VP-ONLY" | "VP+TU" | "NO-TU";
 	excludeScheduled?: ((trip: Trip) => boolean) | boolean;
 	getAheadTime?: (journey?: Journey) => number;
-	getNetworkRef: (journey?: Journey, vehicle?: VehicleDescriptor) => string;
+	/**
+	 * Réseau d'une course. `trip` est le descripteur de course GTFS-RT de la position ou du TripUpdate
+	 * qui la décrit, lorsqu'il y en a un : il porte ce que le flux dit de la course, au-delà du GTFS
+	 * statique (route d'une course inconnue, par exemple).
+	 */
+	getNetworkRef: (journey?: Journey, vehicle?: VehicleDescriptor, trip?: TripDescriptor) => string;
 	getOperatorRef?: (journey?: Journey, vehicle?: VehicleDescriptor) => string | undefined;
 	getVehicleRef?: (vehicle?: VehicleDescriptor, journey?: Journey) => string | undefined;
 	hasRealVehicles?: boolean;
