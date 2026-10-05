@@ -87,12 +87,12 @@ const sources = [
 		getAheadTime: () => 120,
 	},
 	{
-		id: 'calibus',
-		staticResourceHref: 'https://api.pysae.com/api/v4/groups/calibus/gtfs/pub',
-		realtimeResourceHrefs: ['https://api.pysae.com/api/v4/groups/calibus/gtfs-rt'],
-		gtfsOptions: { computeShapeDistTraveled: 'always' },
-		mode: 'NO-TU',
-		getNetworkRef: () => 'CALIBUS',
+		id: "calibus",
+		staticResourceHref: "https://api.pysae.com/api/v4/groups/calibus/gtfs/pub",
+		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/calibus/gtfs-rt"],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		mode: "NO-TU",
+		getNetworkRef: () => "CALIBUS",
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
