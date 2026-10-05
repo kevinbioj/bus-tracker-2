@@ -87,6 +87,15 @@ const sources = [
 		getAheadTime: () => 120,
 	},
 	{
+		id: 'calibus',
+		staticResourceHref: 'https://api.pysae.com/api/v4/groups/calibus/gtfs/pub',
+		realtimeResourceHrefs: ['https://api.pysae.com/api/v4/groups/calibus/gtfs-rt'],
+		gtfsOptions: { computeShapeDistTraveled: 'always' },
+		mode: 'NO-TU',
+		getNetworkRef: () => 'CALIBUS',
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "la-rochelle",
 		staticResourceHref:
 			"https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/ca_la_rochelle-aggregated-gtfs.zip",
