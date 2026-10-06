@@ -12,12 +12,12 @@ function nthIndexOf(input, pattern, n) {
 }
 
 const linePrefixToNetworkRef = new Map([
-	['1', 'NOMAD-14'], // 1XX -> Calvados
-	['2', 'NOMAD-27'], // 2XX -> Eure
-	['3', 'NOMAD-50'], // 3XX -> Manche
-	['4', 'NOMAD-61'], // 4XX -> Orne
-	['5', 'NOMAD-76'], // 5XX -> Seine-Maritime
-])
+	["1", "NOMAD-14"], // 1XX -> Calvados
+	["2", "NOMAD-27"], // 2XX -> Eure
+	["3", "NOMAD-50"], // 3XX -> Manche
+	["4", "NOMAD-61"], // 4XX -> Orne
+	["5", "NOMAD-76"], // 5XX -> Seine-Maritime
+]);
 
 const lineIdsToNetworkRef = new Map([
 	["1006979", "NOMAD-27"], // 216 -> Eure
@@ -40,21 +40,21 @@ const sources = [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/nomad-geo3d/",
 		],
 		mode: "NO-TU",
-		passedCallDetection: 'VEHICLE',
+		passedCallDetection: "VEHICLE",
 		getAheadTime: () => 5 * 60,
 		excludeScheduled: (trip) => ["530"].includes(trip.route.name),
 		getNetworkRef: (journey, _, tripDescriptor) => {
 			if (journey?.trip.route.name) {
-				return linePrefixToNetworkRef.get(journey.trip.route.name[0]) ?? 'NOMAD';
+				return linePrefixToNetworkRef.get(journey.trip.route.name[0]) ?? "NOMAD";
 			}
 
 			const routeId = tripDescriptor?.routeId ?? journey?.trip.route.id;
-			return lineIdsToNetworkRef.get(routeId.split(':')[2]) ?? 'NOMAD';
+			return lineIdsToNetworkRef.get(routeId.split(":")[2]) ?? "NOMAD";
 		},
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 		mapTripRef: (tripRef) => tripRef.slice(nthIndexOf(tripRef, ":", 2) + 1, nthIndexOf(tripRef, ":", 3)),
-		mapTripUpdate: (tripUpdate) => tripUpdate.vehicle ? tripUpdate : undefined,
+		mapTripUpdate: (tripUpdate) => (tripUpdate.vehicle ? tripUpdate : undefined),
 	},
 	//- LiA
 	{
