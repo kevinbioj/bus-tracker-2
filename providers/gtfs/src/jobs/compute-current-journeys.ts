@@ -638,25 +638,6 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 				vehiclePosition.timestamp > 0 &&
 				nowMs - vehiclePosition.timestamp * 1000 >= maxVehiclePositionAgeMs;
 
-			// nomad-car-geo3d patch
-			if (source.id === "nomad-car-geo3d") {
-				const tripUpdate =
-					vehiclePosition.trip?.tripId !== undefined
-						? tripUpdates.find((tripUpdate) => tripUpdate.trip.tripId === vehiclePosition.trip!.tripId)
-						: undefined;
-				if (tripUpdate !== undefined) {
-					const nextStop = tripUpdate.stopTimeUpdate?.find(
-						(stopTimeUpdate) =>
-							stopTimeUpdate.scheduleRelationship === "SCHEDULED" && stopTimeUpdate.departure === undefined,
-					);
-					if (nextStop !== undefined) {
-						vehiclePosition.currentStatus = "IN_TRANSIT_TO";
-						vehiclePosition.currentStopSequence = nextStop.stopSequence;
-						vehiclePosition.stopId = nextStop.stopId;
-					}
-				}
-			}
-
 			let journey: Journey | undefined;
 
 			const updatedAt = Temporal.Instant.fromEpochMilliseconds(vehiclePosition.timestamp * 1000);
