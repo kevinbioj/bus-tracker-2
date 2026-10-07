@@ -171,6 +171,11 @@ export const stopDepartureSchema = type({
 	 */
 	"canceled?": "boolean",
 	/**
+	 * Vrai lorsque le passage a lieu à un arrêt provisoire : une desserte ajoutée par une déviation,
+	 * dans la même station qu'un quai que la course ne dessert plus. Absent : arrêt ordinaire.
+	 */
+	"temporary?": "boolean",
+	/**
 	 * Vrai lorsque la course porte au moins un horaire temps réel, même si ce passage n'en a pas (un
 	 * arrêt supprimé, notamment). Absent : la course n'est connue que par l'horaire théorique.
 	 */

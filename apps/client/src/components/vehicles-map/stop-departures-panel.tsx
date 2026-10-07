@@ -23,6 +23,7 @@ import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components
 import { SELECTED_STOP_ICON_SCALE, STOP_PLATE_CENTER_OFFSET } from "~/components/vehicles-map/stops-markers/stop-icon";
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
+import { TriangleAlertFilledIcon } from "~/icons/triangle-alert-filled";
 import { getWheelchairStatus, WheelchairIcon, type WheelchairStatus, wheelchairIconDetails } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
 
@@ -94,6 +95,12 @@ type DepartureRowProps = {
 	label: string;
 	/** Accessibilité du véhicule, montrée seulement lorsque l'arrêt n'est pas connu comme inaccessible. */
 	wheelchairStatus?: WheelchairStatus;
+	/**
+	 * Le passage a lieu à un arrêt provisoire, alors que le tableau est celui de la station : pour la
+	 * station, l'arrêt est déplacé, et le voyageur doit être averti que la course ne s'arrête pas à son
+	 * quai habituel.
+	 */
+	relocated?: boolean;
 	/** Ligne plus haute et bouton plus large, pour le doigt plutôt que le pointeur. */
 	touch?: boolean;
 	onLocate: (journeyId: string) => void;
@@ -112,19 +119,23 @@ function DepartureRow({
 	line,
 	label,
 	wheelchairStatus,
+	relocated = false,
 	touch = false,
 	onLocate,
 }: Readonly<DepartureRowProps>) {
 	const skipped = departure.callStatus === "SKIPPED";
 	const extra = departure.callStatus === "UNSCHEDULED";
+	const temporary = !skipped && departure.temporary === true;
 	// Un passage supprimé n'a pas d'heure attendue : c'est alors la course qui dit si elle est suivie en
 	// temps réel.
 	const realtime = departure.expectedTime !== undefined || (skipped && departure.realtime === true);
 
 	// L'heure théorique n'est rappelée que lorsqu'elle diffère de celle affichée : un passage à l'heure
-	// n'a rien à corriger.
+	// n'a rien à corriger. Sous un arrêt provisoire, elle cède la place à la mention : elle n'est de
+	// toute façon qu'estimée par la déviation, et la hauteur de la ligne ne tient pas les deux.
 	const showAimedTime =
 		!skipped &&
+		!temporary &&
 		departure.expectedTime !== undefined &&
 		formatLocalTime(departure.expectedTime) !== formatLocalTime(departure.aimedTime);
 
@@ -226,6 +237,16 @@ function DepartureRow({
 					{skipped && (
 						<span className="text-xs font-semibold text-red-700 dark:text-red-500 whitespace-nowrap">
 							{departure.canceled ? m.stop_departures_trip_cancelled() : m.stop_call_skipped()}
+						</span>
+					)}
+					{/*
+					 * Sous l'heure, l'arrêt provisoire qui remplace pour cette course un quai de la station : au
+					 * tableau de la station, c'est l'arrêt qui est déplacé ; à celui du quai, c'est un arrêt provisoire.
+					 */}
+					{temporary && (
+						<span className="flex items-center gap-0.5 text-xs font-semibold text-yellow-700 dark:text-yellow-500 whitespace-nowrap">
+							{relocated && <TriangleAlertFilledIcon className="shrink-0" size={12} />}
+							{relocated ? m.stop_call_relocated() : m.stop_call_temporary()}
 						</span>
 					)}
 				</div>
@@ -359,6 +380,8 @@ function useStopDepartures(networkId?: number) {
 				line,
 				label: labels[index] ?? "",
 				wheelchairStatus: vehicleWheelchairStatus,
+				// Au tableau d'un quai, la course s'y arrête bel et bien : l'arrêt n'y est que provisoire.
+				relocated: departure.temporary === true && stopPoint === undefined,
 				key: `${baseKey}-${occurrence}`,
 			},
 		];
@@ -466,13 +489,14 @@ function StopDeparturesList({
 	return (
 		<div className={clsx("overflow-y-auto overscroll-contain", scrollClassName)}>
 			<ul className={clsx("divide-y", touch ? "px-3" : "px-2")}>
-				{rows.map(({ departure, line, label, wheelchairStatus, key }) => (
+				{rows.map(({ departure, line, label, wheelchairStatus, relocated, key }) => (
 					<DepartureRow
 						departure={departure}
 						direction={direction}
 						key={key}
 						line={line}
 						label={label}
+						relocated={relocated}
 						touch={touch}
 						wheelchairStatus={wheelchairStatus}
 						onLocate={onLocate}

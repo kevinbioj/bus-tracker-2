@@ -8,12 +8,13 @@ import { createRealtimeResources } from "../model/realtime-lookup.js";
 import { Route } from "../model/route.js";
 import { Service } from "../model/service.js";
 import { Source, type SourceOptions } from "../model/source.js";
-import { Stop } from "../model/stop.js";
+import { type StationRecord, Stop } from "../model/stop.js";
 import { StopArea } from "../model/stop-area.js";
 import { StopTimeStore } from "../model/stop-time-store.js";
 import { Trip } from "../model/trip.js";
 
 import { indexTripModifications } from "./apply-trip-modifications.js";
+import { collectRealtimeStopAreas } from "./compute-current-journeys.js";
 import { computeStopDepartures } from "./compute-stop-departures.js";
 
 const HOUR = 3600;
@@ -79,12 +80,19 @@ function makeSource(options?: Partial<SourceOptions>) {
 /** Lundi 18 mai 2026, 7h30 UTC. */
 const MONDAY_MORNING = Temporal.Instant.from("2026-05-18T07:30:00Z");
 
-/** Course `original` A 8:00 → B 8:10 → C 8:20, seule de sa source. */
-function makeLinearSource() {
+/**
+ * Course `original` A 8:00 → B 8:10 → C 8:20, seule de sa source. B déclare la station parente
+ * `station-b`, qui n'existe que si `stations` la fournit.
+ */
+function makeLinearSource(stations?: Map<string, StationRecord>) {
 	const agency = new Agency("agency", "Agency", "UTC");
 	const route = new Route("line:1", agency, "1", "BUS");
 	const service = new Service("service", [true, true, true, true, true, true, true]);
-	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
+	const stops = [
+		new Stop("A", "A", 0, 0),
+		new Stop("B", "B", 0, 0.01, undefined, undefined, "station-b"),
+		new Stop("C", "C", 0, 0.02),
+	];
 	const store = StopTimeStore.fromStops(
 		stops,
 		new Uint8Array([1, 2, 3]),
@@ -108,7 +116,7 @@ function makeLinearSource() {
 		routes: new Map([[route.id, route]]),
 		stops: new Map(stops.map((stop) => [stop.id, stop])),
 		trips: new Map([[trip.id, trip]]),
-		...indexStopAreas(store, [trip]),
+		...indexStopAreas(store, [trip], stations),
 		shapes: new Map(),
 		journeys: new Map(),
 		stopTimeStore: store,
@@ -432,6 +440,104 @@ describe("computeStopDepartures", () => {
 		expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toMatchObject([
 			{ stopRef: "network:StopPoint:B", callStatus: "SKIPPED" },
 		]);
+	});
+
+	it("annonce un arrêt provisoire rattaché à la station du quai qu'il remplace", () => {
+		const { source, gtfs, trip } = makeLinearSource(
+			new Map([["station-b", { id: "station-b", name: "Gare", latitude: 0, longitude: 0.01 }]]),
+		);
+
+		// B est remplacé par un arrêt que seul le flux temps réel déclare, rattaché à la même station.
+		const resources = createRealtimeResources();
+		const replacement = new Stop("RT", "Gare (provisoire)", 0.001, 0.01, undefined, undefined, "station-b");
+		resources.stops.set(replacement.id, replacement);
+		const plan = indexTripModifications(
+			gtfs,
+			[
+				{
+					id: "detour:1",
+					serviceDates: ["20260518"],
+					selectedTrips: [{ tripIds: ["original"] }],
+					modifications: [
+						{
+							startStopSelector: { stopSequence: 2 },
+							endStopSelector: { stopSequence: 2 },
+							replacementStops: [{ stopId: "RT", travelTimeToStop: 300 }],
+						},
+					],
+				},
+			],
+			resources,
+		).get("2026-05-18-original")!;
+
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const journeyKey = getJourneyKey(date, "original");
+		const journey = trip.getScheduledJourney(date, true);
+		journey.applyModifications(plan, MONDAY_MORNING.epochMilliseconds);
+		gtfs.journeys.set(journeyKey, journey);
+		source.modifiedJourneyKeys.add(journeyKey);
+		source.realtimeStopAreas = collectRealtimeStopAreas(source);
+
+		// L'arrêt rejoint la station comme un quai de plus, au lieu d'en former une à lui seul.
+		expect([...source.realtimeStopAreas.keys()]).toEqual(["station-b"]);
+		expect(source.realtimeStopAreas.get("station-b")).toMatchObject({
+			name: "Gare",
+			latitude: 0,
+			longitude: 0.01,
+			stops: [{ id: "B" }, { id: "RT" }],
+		});
+
+		// Au tableau de la station, seul l'arrêt provisoire est annoncé : la course la dessert toujours.
+		expect(computeStopDepartures(source, "station-b", MONDAY_MORNING).departures).toMatchObject([
+			{ stopRef: "network:StopPoint:RT", callStatus: "UNSCHEDULED", temporary: true },
+		]);
+		// Celui du quai remplacé annonce sa suppression ; celui de l'arrêt provisoire, l'arrêt provisoire.
+		expect(
+			computeStopDepartures(source, "station-b", MONDAY_MORNING, { stopRef: "network:StopPoint:B" }).departures,
+		).toMatchObject([{ stopRef: "network:StopPoint:B", callStatus: "SKIPPED", temporary: undefined }]);
+		expect(
+			computeStopDepartures(source, "station-b", MONDAY_MORNING, { stopRef: "network:StopPoint:RT" }).departures,
+		).toMatchObject([{ stopRef: "network:StopPoint:RT", temporary: true }]);
+	});
+
+	it("n'annonce pas d'arrêt provisoire pour une desserte ajoutée hors de la station du quai supprimé", () => {
+		const { source, gtfs, trip } = makeLinearSource();
+
+		const resources = createRealtimeResources();
+		const replacement = new Stop("RT", "Ailleurs", 0.001, 0.01);
+		resources.stops.set(replacement.id, replacement);
+		const plan = indexTripModifications(
+			gtfs,
+			[
+				{
+					id: "detour:1",
+					serviceDates: ["20260518"],
+					selectedTrips: [{ tripIds: ["original"] }],
+					modifications: [
+						{
+							startStopSelector: { stopSequence: 2 },
+							endStopSelector: { stopSequence: 2 },
+							replacementStops: [{ stopId: "RT", travelTimeToStop: 300 }],
+						},
+					],
+				},
+			],
+			resources,
+		).get("2026-05-18-original")!;
+
+		const date = Temporal.PlainDate.from("2026-05-18");
+		const journeyKey = getJourneyKey(date, "original");
+		const journey = trip.getScheduledJourney(date, true);
+		journey.applyModifications(plan, MONDAY_MORNING.epochMilliseconds);
+		gtfs.journeys.set(journeyKey, journey);
+		source.modifiedJourneyKeys.add(journeyKey);
+		source.realtimeStopAreas = collectRealtimeStopAreas(source);
+
+		expect([...source.realtimeStopAreas.keys()]).toEqual(["RT"]);
+		expect(computeStopDepartures(source, "RT", MONDAY_MORNING).departures).toMatchObject([
+			{ callStatus: "UNSCHEDULED", temporary: undefined },
+		]);
+		expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toMatchObject([{ callStatus: "SKIPPED" }]);
 	});
 
 	it("n'annonce pas la course à son terminus effectif, avancé par le temps réel", () => {

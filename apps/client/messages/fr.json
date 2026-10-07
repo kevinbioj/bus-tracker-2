@@ -228,6 +228,8 @@
 	"marker_destination_unknown": "Destination inconnue",
 	"stop_call_skipped": "Arrêt non desservi",
 	"stop_call_extra": "Desserte supplémentaire",
+	"stop_call_temporary": "Arrêt provisoire",
+	"stop_call_relocated": "Arrêt déplacé",
 	"stop_call_realtime": "Horaire temps réel",
 	"stop_call_delay": [
 		{

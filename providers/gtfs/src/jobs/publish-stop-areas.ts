@@ -151,21 +151,32 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		}
 	}
 
-	// Arrêts créés par le flux temps réel : seules les courses déviées les desservent.
+	// Arrêts créés par le flux temps réel : seules les courses déviées les desservent. Ils forment leur
+	// propre station, ou complètent celle du GTFS à laquelle ils sont rattachés.
+	const realtimeAreaIdByStopId = new Map<string, string>();
+	for (const stopArea of source.realtimeStopAreas.values()) {
+		for (const stop of stopArea.stops) {
+			if (!gtfs.stops.has(stop.id)) realtimeAreaIdByStopId.set(stop.id, stopArea.id);
+		}
+	}
+
 	for (const journeyKey of source.modifiedJourneyKeys) {
 		const journey = gtfs.journeys.get(journeyKey);
 		if (journey === undefined) continue;
 		for (const call of journey.calls) {
-			if (source.realtimeStopAreas.has(call.stop.id)) {
-				record(call.stop.id, networkOf(journey.trip, journey), journey.trip.route);
-				recordStopMode(call.stop.id, journey.trip.route);
-				departingAreaIds.add(call.stop.id);
-				if (offersArrivals(journey.trip.route)) arrivalAreaIds.add(call.stop.id);
-			}
+			const areaId = realtimeAreaIdByStopId.get(call.stop.id);
+			if (areaId === undefined) continue;
+			record(areaId, networkOf(journey.trip, journey), journey.trip.route);
+			recordStopMode(call.stop.id, journey.trip.route);
+			departingAreaIds.add(areaId);
+			if (offersArrivals(journey.trip.route)) arrivalAreaIds.add(areaId);
 		}
 	}
 
-	return [...gtfs.stopAreas.values(), ...source.realtimeStopAreas.values()].flatMap((stopArea) => {
+	// Une station complétée par le flux temps réel remplace celle du GTFS statique.
+	const stopAreas = new Map([...gtfs.stopAreas, ...source.realtimeStopAreas]);
+
+	return [...stopAreas.values()].flatMap((stopArea) => {
 		const service = services.get(stopArea.id);
 		if (service === undefined) return [];
 		const arrivals = arrivalAreaIds.has(stopArea.id);

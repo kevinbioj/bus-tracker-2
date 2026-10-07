@@ -170,7 +170,11 @@ async function computeCurrentJourneys() {
 
 					// Les arrêts créés par le flux temps réel vont et viennent avec les déviations : l'inventaire
 					// est republié dès que leur ensemble change, sans attendre le rafraîchissement horaire.
-					const realtimeStopAreasFingerprint = [...source.realtimeStopAreas.keys()].sort().join("|");
+					// Les quais comptent : un arrêt peut rejoindre une station déjà complétée par un autre.
+					const realtimeStopAreasFingerprint = [...source.realtimeStopAreas.values()]
+						.flatMap((stopArea) => stopArea.stops.map((stop) => `${stopArea.id}:${stop.id}`))
+						.sort()
+						.join("|");
 					if (realtimeStopAreasFingerprint !== (publishedRealtimeStopAreas.get(source.id) ?? "")) {
 						await publishStopAreas(redis, configuration.id, [source]);
 						publishedRealtimeStopAreas.set(source.id, realtimeStopAreasFingerprint);

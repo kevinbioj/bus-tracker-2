@@ -212,9 +212,17 @@ function mergeTrackedJourneys(
 		// Course en temps réel : au moins une de ses dessertes publiées en porte un horaire.
 		const realtime = journey.calls?.some((call) => call.expectedTime !== undefined) ? true : undefined;
 
+		// Une déviation peut troquer un quai de la station contre un arrêt provisoire : la course la dessert
+		// toujours, c'est l'arrêt provisoire qui compte — le provider n'annonce plus que lui.
+		const stationCalls = journey.calls?.filter((call) => stopRefs.has(call.stopRef)) ?? [];
+		const temporary =
+			stationCalls.some((call) => call.callStatus === "UNSCHEDULED") &&
+			stationCalls.some((call) => call.callStatus === "SKIPPED");
+
 		let matched = false;
 		for (const call of journey.calls ?? []) {
 			if (!stopRefs.has(call.stopRef)) continue;
+			if (temporary && call.callStatus === "SKIPPED") continue;
 			// Comme dans le processeur : ni le terminus, théorique ou effectif, où la course s'achève, ni
 			// un arrêt interdit à la montée ne sont des départs. Les dessertes publiées partant de l'arrêt
 			// courant, le terminus de départ n'y figure plus une fois la course partie : à l'arrivée, seul
@@ -278,6 +286,7 @@ function mergeTrackedJourneys(
 				aimedTime,
 				expectedTime,
 				callStatus: call.callStatus,
+				temporary: temporary && call.callStatus === "UNSCHEDULED" ? true : undefined,
 				realtime,
 				terminus: direction === "arrivals" ? call === terminusCall : undefined,
 				journeyId: journey.id,

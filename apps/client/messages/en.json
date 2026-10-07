@@ -228,6 +228,8 @@
 	"marker_destination_unknown": "Unknown destination",
 	"stop_call_skipped": "Stop not served",
 	"stop_call_extra": "Additional stop",
+	"stop_call_temporary": "Temporary stop",
+	"stop_call_relocated": "Relocated stop",
 	"stop_call_realtime": "Real-time schedule",
 	"stop_call_delay": [
 		{

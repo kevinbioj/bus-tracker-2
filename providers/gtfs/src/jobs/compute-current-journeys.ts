@@ -1107,10 +1107,13 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 }
 
 /**
- * Arrêts du flux temps réel effectivement desservis par une course déviée, chacun en sa propre
- * station. Un arrêt que le flux déclare sans qu'aucune course ne le desserve n'intéresse personne.
+ * Arrêts du flux temps réel effectivement desservis par une course déviée. Un arrêt rattaché à une
+ * station desservie du GTFS (`parent_station`) la rejoint comme un quai de plus : la station est
+ * alors republiée ici, complétée, et remplace celle du GTFS statique. Les autres sont érigés chacun
+ * en sa propre station. Un arrêt que le flux déclare sans qu'aucune course ne le desserve
+ * n'intéresse personne.
  */
-function collectRealtimeStopAreas(source: Source) {
+export function collectRealtimeStopAreas(source: Source) {
 	const stopAreas = new Map<string, StopArea>();
 	const gtfs = source.gtfs;
 	if (gtfs === undefined) return stopAreas;
@@ -1120,7 +1123,20 @@ function collectRealtimeStopAreas(source: Source) {
 		if (journey === undefined) continue;
 
 		for (const call of journey.calls) {
-			if (call.status === "SKIPPED" || gtfs.stops.has(call.stop.id) || stopAreas.has(call.stop.id)) continue;
+			if (call.status === "SKIPPED" || gtfs.stops.has(call.stop.id)) continue;
+
+			const { parentStationId } = call.stop;
+			const station = parentStationId !== undefined ? gtfs.stopAreas.get(parentStationId) : undefined;
+			if (station !== undefined) {
+				const current = stopAreas.get(station.id) ?? station;
+				if (current.stops.some(({ id }) => id === call.stop.id)) continue;
+				// La position reste celle de la station : elle se place là où ses courses s'arrêtent d'ordinaire.
+				const { id, name, latitude, longitude } = station;
+				stopAreas.set(id, new StopArea(id, name, latitude, longitude, [...current.stops, call.stop]));
+				continue;
+			}
+
+			if (stopAreas.has(call.stop.id)) continue;
 			const { id, name, latitude, longitude } = call.stop;
 			stopAreas.set(id, new StopArea(id, name, latitude, longitude, [call.stop]));
 		}

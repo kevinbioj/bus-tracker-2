@@ -25,7 +25,9 @@ function getTranslation(translatedString?: TranslatedString) {
 }
 
 /**
- * Projette un arrêt publié par le flux temps réel sur le modèle interne.
+ * Projette un arrêt publié par le flux temps réel sur le modèle interne. Sa `parent_station`, qui
+ * désigne une station de `stops.txt`, est conservée : l'arrêt rejoindra cette station comme un quai
+ * de plus.
  * @returns undefined si le nom ou la position manquent — la spec les rend obligatoires.
  */
 export function createStopFromRtStop(rtStop: RtStop): Stop | undefined {
@@ -40,6 +42,7 @@ export function createStopFromRtStop(rtStop: RtStop): Stop | undefined {
 		rtStop.stopLon,
 		getTranslation(rtStop.platformCode),
 		rtStop.stopTimezone,
+		rtStop.parentStation || undefined,
 	);
 }
 

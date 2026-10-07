@@ -237,6 +237,8 @@
 	"marker_destination_unknown": "Unbekanntes Ziel",
 	"stop_call_skipped": "Haltestelle entfällt",
 	"stop_call_extra": "Zusätzliche Bedienung",
+	"stop_call_temporary": "Ersatzhaltestelle",
+	"stop_call_relocated": "Haltestelle verlegt",
 	"stop_call_realtime": "Echtzeit-Fahrplan",
 	"stop_call_delay": [
 		{

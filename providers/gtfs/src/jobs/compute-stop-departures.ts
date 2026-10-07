@@ -66,6 +66,23 @@ function findOriginCall(calls: JourneyCall[]) {
 	return calls.find((call) => call.status !== "SKIPPED");
 }
 
+/**
+ * Arrêt provisoire : desserte ajoutée par une déviation dans une station dont la course ne dessert
+ * plus un autre quai. Le véhicule s'y arrête à la place de celui-ci.
+ */
+function isTemporaryCall(call: JourneyCall, calls: JourneyCall[], areaStopIds: Set<string>) {
+	return (
+		call.modification === "ADDED" &&
+		areaStopIds.has(call.stop.id) &&
+		calls.some((other) => other.status === "SKIPPED" && areaStopIds.has(other.stop.id))
+	);
+}
+
+/** Quai supprimé de la station, que remplace un arrêt provisoire de la même station. */
+function isReplacedByTemporaryCall(call: JourneyCall, calls: JourneyCall[], areaStopIds: Set<string>) {
+	return call.status === "SKIPPED" && calls.some((other) => isTemporaryCall(other, calls, areaStopIds));
+}
+
 function resolveDestination(trip: Trip, stopTimeIdx: number, call?: JourneyCall) {
 	const { store } = trip;
 	const lastStop = store.getStop(store.tripStart[trip.idx]! + store.tripCount[trip.idx]! - 1);
@@ -104,8 +121,8 @@ export function computeStopDepartures(
 	const gtfs = source.gtfs;
 	if (gtfs === undefined) return { departures: [], excludedJourneys: [] };
 
-	// Station du GTFS statique, ou arrêt créé à la volée par le flux temps réel.
-	const stopArea = gtfs.stopAreas.get(areaId) ?? source.realtimeStopAreas.get(areaId);
+	// Station créée ou complétée par le flux temps réel, à défaut station du GTFS statique.
+	const stopArea = source.realtimeStopAreas.get(areaId) ?? gtfs.stopAreas.get(areaId);
 	if (stopArea === undefined) return { departures: [], excludedJourneys: [] };
 
 	const entries = Array.from(gtfs.stopIndex.entriesOf(areaId));
@@ -150,6 +167,15 @@ export function computeStopDepartures(
 			? stopArea.stops.find((stop) => onlyStopRef.endsWith(`:StopPoint:${mapStopRef?.(stop.id) ?? stop.id}`))?.id
 			: undefined;
 	if (onlyStopRef !== undefined && onlyStopId === undefined) return { departures: [], excludedJourneys: [] };
+
+	const areaStopIds = new Set(stopArea.stops.map(({ id }) => id));
+	/**
+	 * Au tableau de la station, une course qui troque un quai contre un arrêt provisoire de la même
+	 * station la dessert toujours : seul l'arrêt provisoire est annoncé. Le quai supprimé ne l'est plus
+	 * qu'à son propre tableau.
+	 */
+	const isHiddenSkippedCall = (call: JourneyCall, calls: JourneyCall[]) =>
+		onlyStopId === undefined && isReplacedByTemporaryCall(call, calls, areaStopIds);
 
 	/** Dessertes déjà rendues par l'index, pour ne pas les redoubler depuis les courses déviées. */
 	const emittedCalls = new Set<string>();
@@ -225,6 +251,8 @@ export function computeStopDepartures(
 				continue;
 			}
 
+			if (call !== undefined && isHiddenSkippedCall(call, journey!.calls)) continue;
+
 			// Le quai désigné par le temps réel remplace celui de l'horaire : c'est là que la course passe.
 			const servedStop = call?.assignedStop ?? stop;
 			if (onlyStopId !== undefined && servedStop.id !== onlyStopId) continue;
@@ -285,6 +313,7 @@ export function computeStopDepartures(
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, stop.timeZone, timeZone) : undefined,
 				callStatus: canceled ? "SKIPPED" : (call?.status ?? "SCHEDULED"),
 				canceled: canceled ? true : undefined,
+				temporary: call !== undefined && isTemporaryCall(call, journey!.calls, areaStopIds) ? true : undefined,
 				realtime: journey?.hasRealtime() ? true : undefined,
 				origin,
 				terminus,
@@ -299,7 +328,6 @@ export function computeStopDepartures(
 
 	// Dessertes ajoutées par une déviation : absentes de l'index théorique, elles ne sont connues que
 	// des courses déviées — y compris celles des arrêts créés à la volée par le flux temps réel.
-	const areaStopIds = new Set(stopArea.stops.map(({ id }) => id));
 	for (const journeyKey of source.modifiedJourneyKeys) {
 		if (source.canceledJourneyKeys.has(journeyKey)) continue;
 		const journey = gtfs.journeys.get(journeyKey);
@@ -323,7 +351,7 @@ export function computeStopDepartures(
 			} else if (index === calls.length - 1 || call === terminusCall || call.flags.includes("NO_PICKUP")) {
 				continue;
 			}
-			if (emittedCalls.has(`${journeyKey}|${call.stop.id}`)) continue;
+			if (emittedCalls.has(`${journeyKey}|${call.stop.id}`) || isHiddenSkippedCall(call, calls)) continue;
 
 			const servedStop = call.assignedStop ?? call.stop;
 			if (onlyStopId !== undefined && servedStop.id !== onlyStopId) continue;
@@ -356,6 +384,7 @@ export function computeStopDepartures(
 				aimedTime: formatCallTime(aimedMs, call.stop.timeZone, timeZone),
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, call.stop.timeZone, timeZone) : undefined,
 				callStatus: call.status,
+				temporary: isTemporaryCall(call, calls, areaStopIds) ? true : undefined,
 				realtime: journey.hasRealtime() ? true : undefined,
 				origin: arrivals ? undefined : call === originCall,
 				terminus: arrivals ? call === terminusCall : undefined,

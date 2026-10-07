@@ -182,9 +182,11 @@ export class Source {
 	 */
 	canceledJourneyKeys = new Set<string>();
 	/**
-	 * Arrêts créés à la volée par le flux temps réel et desservis par une course déviée, chacun
-	 * érigé en station : ils n'existent dans aucun fichier du GTFS statique, mais un voyageur doit
-	 * pouvoir les trouver sur la carte et y consulter ses passages. Recalculés à chaque cycle.
+	 * Arrêts créés à la volée par le flux temps réel et desservis par une course déviée : ils
+	 * n'existent dans aucun fichier du GTFS statique, mais un voyageur doit pouvoir les trouver sur la
+	 * carte et y consulter ses passages. Rattaché à une station du GTFS, un tel arrêt y figure comme
+	 * un quai de plus — la station complétée prime alors sur celle de {@link Gtfs.stopAreas}, sous le
+	 * même identifiant ; sinon, il est érigé en sa propre station. Recalculés à chaque cycle.
 	 */
 	realtimeStopAreas = new Map<string, StopArea>();
 	/**
