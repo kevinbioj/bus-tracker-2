@@ -88,15 +88,15 @@
       // Pages avec carte : ce que maplibre demande en cascade (style, puis TileJSON et sprite, puis
       // glyphes une fois les tuiles lues) part dès le HTML. À garder aligné sur liberty-fr.json.
       if (location.pathname === '/' || location.pathname.startsWith('/embed/')) {
-        const sprite = 'https://tiles.openfreemap.org/sprites/ofm_f384/ofm' + (devicePixelRatio > 1 ? '@2x' : '');
+        const sprite = `https://tiles.openfreemap.org/sprites/ofm_f384/ofm${devicePixelRatio > 1 ? '@2x' : ''}`;
         const glyphs = ['Noto Sans Regular', 'Noto Sans Italic', 'Noto Sans Bold'].map(
-          (font) => 'https://tiles.bus-tracker.fr/fonts/' + encodeURIComponent(font) + '/0-255.pbf'
+          (font) => `https://tiles.bus-tracker.fr/fonts/${encodeURIComponent(font)}/0-255.pbf`
         );
         for (const href of [
           '/map-styles/liberty-fr.json',
           'https://tiles.openfreemap.org/planet',
-          sprite + '.json',
-          sprite + '.png',
+          `${sprite}.json`,
+          `${sprite}.png`,
           ...glyphs,
         ]) {
           const link = document.createElement('link');
