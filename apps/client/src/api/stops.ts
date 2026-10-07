@@ -123,14 +123,19 @@ function searchBounds(bounds: LngLatBounds, withStopPoints: boolean) {
 
 export const GetStopMarkersQuery = (
 	bounds: LngLatBounds,
-	{ enabled, networkId, withStopPoints }: { enabled: boolean; networkId?: number; withStopPoints: boolean },
+	{
+		enabled,
+		networkId,
+		lineId,
+		withStopPoints,
+	}: { enabled: boolean; networkId?: number; lineId?: number; withStopPoints: boolean },
 ) =>
 	queryOptions({
 		enabled,
 		placeholderData: keepPreviousData,
 		// L'inventaire ne bouge qu'au rythme des ressources GTFS : inutile de le sonder.
 		staleTime: 300_000,
-		queryKey: ["stops", networkId, withStopPoints],
+		queryKey: ["stops", networkId, lineId, withStopPoints],
 		queryFn: () => {
 			const { swLat, swLon, neLat, neLon } = searchBounds(bounds, withStopPoints);
 			return client
@@ -141,6 +146,7 @@ export const GetStopMarkersQuery = (
 						neLat: String(Math.min(neLat, 90)),
 						neLon: String(Math.min(neLon, 180)),
 						networkId: networkId ? String(networkId) : undefined,
+						lineId: lineId !== undefined ? String(lineId) : undefined,
 						withStopPoints: String(withStopPoints),
 					},
 				})
@@ -148,16 +154,25 @@ export const GetStopMarkersQuery = (
 		},
 	});
 
-/** Prochains départs de l'arrêt, ou, à l'inverse, ses prochaines arrivées. */
-export const GetStopDeparturesQuery = (stopRef: string | null, direction: StopCallDirection = "departures") =>
+/**
+ * Prochains départs de l'arrêt, ou, à l'inverse, ses prochaines arrivées — ceux de la seule ligne
+ * filtrée sur la carte, s'il y en a une.
+ */
+export const GetStopDeparturesQuery = (
+	stopRef: string | null,
+	direction: StopCallDirection = "departures",
+	lineId?: number,
+) =>
 	queryOptions({
 		enabled: stopRef !== null,
 		retry: false,
 		refetchInterval: 5_000,
 		staleTime: 4_000,
-		queryKey: ["stop-departures", stopRef, direction],
+		queryKey: ["stop-departures", stopRef, direction, lineId],
 		queryFn: () =>
 			client
-				.get(`/stops/${encodeURIComponent(stopRef!)}/departures`, { searchParams: { direction } })
+				.get(`/stops/${encodeURIComponent(stopRef!)}/departures`, {
+					searchParams: { direction, lineId: lineId !== undefined ? String(lineId) : undefined },
+				})
 				.then((response) => response.json<StopDepartures>()),
 	});

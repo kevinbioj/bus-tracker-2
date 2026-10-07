@@ -120,7 +120,7 @@ async function readStopAreas(refs: string[]) {
  */
 export async function findStopAreasWithin(
 	{ swLat, swLon, neLat, neLon }: StopAreaBounds,
-	{ limit, networkIds }: { limit: number; networkIds?: number[] },
+	{ limit, networkIds, lineRefs }: { limit: number; networkIds?: number[]; lineRefs?: string[] },
 ): Promise<StopArea[]> {
 	if (!redis.isReady) return [];
 
@@ -134,16 +134,19 @@ export async function findStopAreasWithin(
 		STOP_AREAS_GEO_KEY,
 		{ longitude, latitude },
 		{ width, height, unit: "km" },
-		// Filtrée par réseau après coup : la marge évite qu'un réseau voisin, plus dense, n'évince tout.
-		{ SORT: "ASC", COUNT: networkIds !== undefined ? limit * 4 : limit },
+		// Filtrée par réseau ou par ligne après coup : la marge évite qu'un réseau voisin, plus dense,
+		// n'évince tout.
+		{ SORT: "ASC", COUNT: networkIds !== undefined || lineRefs !== undefined ? limit * 4 : limit },
 	);
 
 	const stopAreas = await attachNetworks(await readStopAreas(refs));
-	return (
-		networkIds !== undefined
-			? stopAreas.filter((stopArea) => stopArea.networkIds.some((networkId) => networkIds.includes(networkId)))
-			: stopAreas
-	).slice(0, limit);
+	return stopAreas
+		.filter(
+			(stopArea) =>
+				(networkIds === undefined || stopArea.networkIds.some((networkId) => networkIds.includes(networkId))) &&
+				(lineRefs === undefined || stopArea.lineRefs.some((lineRef) => lineRefs.includes(lineRef))),
+		)
+		.slice(0, limit);
 }
 
 export async function findStopArea(ref: string): Promise<StopArea | undefined> {

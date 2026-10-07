@@ -271,9 +271,10 @@ function DepartureRow({
 
 /**
  * Prochains passages de l'arrêt sélectionné, lignes du réseau comprises, prêts à afficher — communs
- * au panneau et au drawer. Un réseau imposé (carte embarquée) restreint le tableau à ses lignes.
+ * au panneau et au drawer. Un réseau imposé (carte embarquée) restreint le tableau à ses lignes, une
+ * ligne filtrée à elle seule.
  */
-function useStopDepartures(networkId?: number) {
+function useStopDepartures({ networkId, lineId }: StopDeparturesPanelProps) {
 	const { selectedRef } = useStopSelection();
 	const [displayMode] = useNextCallsDisplayMode();
 	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
@@ -287,7 +288,7 @@ function useStopDepartures(networkId?: number) {
 	}
 	const toggleDirection = () => setDirection((current) => (current === "departures" ? "arrivals" : "departures"));
 
-	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef, direction));
+	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef, direction, lineId));
 	const { data: alerts } = useQuery(GetStopAlertsQuery(selectedRef));
 	// Les lignes des réseaux de la station, pour leur numéro, leurs couleurs et leur pictogramme : une
 	// requête au plus toutes les 5 min par réseau, souvent déjà en cache — le module de filtre fait la
@@ -539,7 +540,7 @@ function ReverseDirectionButton({
  * Sur grand écran : panneau en surimpression de la carte — au même endroit et dans le même habillage
  * que le panneau des véhicules en ligne.
  */
-function StopDeparturesControl({ networkId }: Readonly<StopDeparturesPanelProps>) {
+function StopDeparturesControl(props: Readonly<StopDeparturesPanelProps>) {
 	const map = useMap();
 	const containerRef = useRef(document.createElement("div"));
 	const { clearSelection } = useStopSelection();
@@ -555,7 +556,7 @@ function StopDeparturesControl({ networkId }: Readonly<StopDeparturesPanelProps>
 		alerts,
 		isError,
 		isLoading,
-	} = useStopDepartures(networkId);
+	} = useStopDepartures(props);
 
 	useEffect(() => {
 		const container = containerRef.current;
@@ -631,7 +632,7 @@ function StopDeparturesControl({ networkId }: Readonly<StopDeparturesPanelProps>
  * de sortie terminée seulement : désélectionner l'arrêt démonte le drawer, qui disparaîtrait sinon
  * d'un coup.
  */
-function StopDeparturesDrawer({ networkId }: Readonly<StopDeparturesPanelProps>) {
+function StopDeparturesDrawer(props: Readonly<StopDeparturesPanelProps>) {
 	const map = useMap();
 	const [open, setOpen] = useState(true);
 	const { clearSelection } = useStopSelection();
@@ -649,7 +650,7 @@ function StopDeparturesDrawer({ networkId }: Readonly<StopDeparturesPanelProps>)
 		alerts,
 		isError,
 		isLoading,
-	} = useStopDepartures(networkId);
+	} = useStopDepartures(props);
 
 	// Le drawer masque le bas de la carte, et peut-être l'arrêt qu'il décrit : la carte est recentrée
 	// pour placer celui-ci au milieu de la partie restée visible. Une seule fois par sélection, pour ne
@@ -739,13 +740,15 @@ function StopDeparturesDrawer({ networkId }: Readonly<StopDeparturesPanelProps>)
 type StopDeparturesPanelProps = {
 	/** Réseau imposé par la carte embarquée : seules ses lignes figurent au tableau. */
 	networkId?: number;
+	/** Ligne filtrée sur la carte : elle seule figure au tableau. */
+	lineId?: number;
 };
 
 /** Prochains passages de l'arrêt sélectionné : panneau sur grand écran, drawer sur petit. */
-export function StopDeparturesPanel({ networkId }: Readonly<StopDeparturesPanelProps>) {
+export function StopDeparturesPanel(props: Readonly<StopDeparturesPanelProps>) {
 	const isDesktop = useMediaQuery("(min-width: 640px)");
-	if (isDesktop) return <StopDeparturesControl networkId={networkId} />;
+	if (isDesktop) return <StopDeparturesControl {...props} />;
 	// Non modal, le drawer pose des gardes de focus à l'endroit où il est rendu, et non dans son portail :
 	// dans le conteneur de la carte, dont MapLibre réordonne les enfants, React ne s'y retrouverait plus.
-	return createPortal(<StopDeparturesDrawer networkId={networkId} />, document.body);
+	return createPortal(<StopDeparturesDrawer {...props} />, document.body);
 }

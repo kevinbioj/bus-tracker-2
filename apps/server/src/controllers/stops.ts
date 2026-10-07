@@ -7,7 +7,7 @@ import type {
 } from "@bus-tracker/contracts";
 import * as z from "zod";
 
-import { resolveLineRefs } from "../core/services/line-ref-service.js";
+import { findLineRefs, resolveLineRefs } from "../core/services/line-ref-service.js";
 import { findStopAlerts } from "../core/services/service-alert-service.js";
 import {
 	findStopArea,
@@ -46,6 +46,9 @@ type StopMarker = {
 	stopPoints?: StopPoint[];
 };
 
+/** Quais tels que servis au client : leurs lignes n'ont servi qu'au filtre. */
+const publicStopPoints = (stopPoints: StopPoint[]) => stopPoints.map(({ lineRefs, ...stopPoint }) => stopPoint);
+
 /** Source d'une station, sous la forme `${providerId}:${sourceId}`. */
 const sourceKeyOf = ({ providerId, sourceId }: { providerId: string; sourceId: string }) => `${providerId}:${sourceId}`;
 
@@ -64,6 +67,8 @@ const getStopMarkersQuery = z.object({
 		.union([z.coerce.number(), z.array(z.coerce.number())])
 		.optional()
 		.transform((values) => (typeof values === "number" ? [values] : values)),
+	// Ligne filtrée sur la carte : seules les stations qu'elle dessert.
+	lineId: z.coerce.number().optional(),
 	// Les quais ne servent qu'aux zooms les plus forts : inutile de les transporter en deçà.
 	withStopPoints: z
 		.enum(["true", "false"])
@@ -72,30 +77,44 @@ const getStopMarkersQuery = z.object({
 });
 
 hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) => {
-	const { swLat, swLon, neLat, neLon, networkId, withStopPoints } = c.req.valid("query");
+	const { swLat, swLon, neLat, neLon, networkId, lineId, withStopPoints } = c.req.valid("query");
 
 	// L'emprise est arrondie pour que deux cadrages voisins partagent la même entrée de cache.
 	const cacheKey = [swLat, swLon, neLat, neLon]
 		.map((bound) => bound.toFixed(3))
-		.concat(networkId?.join(",") ?? "", String(withStopPoints))
+		.concat(networkId?.join(",") ?? "", String(lineId ?? ""), String(withStopPoints))
 		.join("|");
 
 	let items = markersCache.get(cacheKey)?.items;
 	if (items === undefined) {
+		const lineRefs = lineId !== undefined ? new Set(await findLineRefs(lineId)) : undefined;
 		const stopAreas = await findStopAreasWithin(
 			{ swLat, swLon, neLat, neLon },
-			{ limit: MARKERS_LIMIT, networkIds: networkId },
+			{ limit: MARKERS_LIMIT, networkIds: networkId, lineRefs: lineRefs !== undefined ? [...lineRefs] : undefined },
 		);
 
-		items = stopAreas.map(({ ref, name, latitude, longitude, lineRefs, mode, stopPoints }) => ({
+		items = stopAreas.map(({ ref, name, latitude, longitude, lineRefs: areaLineRefs, mode, stopPoints = [] }) => ({
 			ref,
 			name,
 			latitude,
 			longitude,
-			lineRefs,
+			lineRefs: areaLineRefs,
 			// Fiche publiée avant l'apparition du mode : un bus, le temps qu'elle soit republiée.
 			mode: mode ?? "BUS",
-			...(withStopPoints ? { stopPoints: stopPoints ?? [] } : {}),
+			// Sur une ligne filtrée, la carte ne montre que ses quais, à tout zoom : ils sont toujours servis.
+			// Un quai publié sans ses lignes reprend celles de sa station, qui en est.
+			...(lineRefs !== undefined
+				? {
+						stopPoints: publicStopPoints(
+							stopPoints.filter(
+								(stopPoint) =>
+									stopPoint.lineRefs === undefined || stopPoint.lineRefs.some((lineRef) => lineRefs.has(lineRef)),
+							),
+						),
+					}
+				: withStopPoints
+					? { stopPoints: publicStopPoints(stopPoints) }
+					: {}),
 		}));
 		markersCache.set(cacheKey, { items, sourceKeys: new Set(stopAreas.map(sourceKeyOf)) });
 	}
@@ -338,6 +357,8 @@ const getStopDeparturesParams = z.object({
 
 const getStopDeparturesQuery = z.object({
 	direction: z.enum(["departures", "arrivals"]).default("departures"),
+	// Ligne filtrée sur la carte : le tableau ne présente qu'elle.
+	lineId: z.coerce.number().optional(),
 });
 
 /**
@@ -400,9 +421,9 @@ hono.get(
 	createQueryValidator(getStopDeparturesQuery),
 	async (c) => {
 		const { ref } = c.req.valid("param");
-		const { direction } = c.req.valid("query");
+		const { direction, lineId } = c.req.valid("query");
 
-		const cacheKey = `${ref}|${direction}`;
+		const cacheKey = `${ref}|${direction}|${lineId ?? ""}`;
 		const cached = departuresCache.get(cacheKey);
 		if (cached !== undefined) return c.json(cached);
 
@@ -423,6 +444,8 @@ hono.get(
 				sourceId: stopArea.sourceId,
 				stopAreaRef: stopArea.ref,
 				stopRef: stopPointRef,
+				// Le provider écarte les autres lignes avant sa limite : le tableau reste plein.
+				lineRefs: lineId !== undefined ? await findLineRefs(lineId) : undefined,
 				direction,
 			}),
 			nowMs,
@@ -445,15 +468,15 @@ hono.get(
 				networkId: stopArea.networkId,
 				// Tous les réseaux de la station : le client en tire numéros et couleurs des lignes.
 				networkIds: stopArea.networkIds,
-				stopPoints: stopArea.stopPoints ?? [],
+				stopPoints: publicStopPoints(stopArea.stopPoints ?? []),
 			},
 			// Quai sur lequel le tableau est restreint, s'il l'est.
 			stopPointRef,
 			// Les références internes n'ont servi qu'au rapprochement : le client n'en a pas l'usage.
 			// Un passage dont la ligne reste inconnue n'aurait qu'un « ? » à montrer : il est écarté, avant la
-			// limite pour que le tableau reste plein.
+			// limite pour que le tableau reste plein — comme, sur une ligne filtrée, ceux des autres lignes.
 			departures: departures
-				.filter(({ lineId }) => lineId !== undefined)
+				.filter((departure) => departure.lineId !== undefined && (lineId === undefined || departure.lineId === lineId))
 				.slice(0, DEPARTURES_LIMIT)
 				.map(({ lineRef, journeyRef, serviceDate, ...departure }) => departure),
 			at: Temporal.Now.instant(),

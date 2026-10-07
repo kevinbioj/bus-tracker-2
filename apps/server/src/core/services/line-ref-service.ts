@@ -1,4 +1,4 @@
-import { arrayOverlaps } from "drizzle-orm";
+import { arrayOverlaps, eq } from "drizzle-orm";
 
 import { database } from "../database/database.js";
 import { linesTable } from "../database/schema.js";
@@ -18,10 +18,14 @@ const linesByRef = new Map<string, ResolvedLine>();
  */
 const unknownLineRefsUntil = new Map<string, number>();
 
+/** Références de chaque ligne, dans l'autre sens : celles d'une ligne filtrée sur la carte. */
+const refsByLineId = new Map<number, string[]>();
+
 /** Oubli périodique des correspondances, pour suivre une ligne recréée ou fusionnée par un éditeur. */
 setInterval(() => {
 	linesByRef.clear();
 	unknownLineRefsUntil.clear();
+	refsByLineId.clear();
 }, 30 * 60_000).unref();
 
 const UNKNOWN_LINE_RETRY_MS = 60_000;
@@ -58,4 +62,21 @@ export async function resolveLineRefs(refs: Iterable<string>) {
 		if (line !== undefined) resolved.set(ref, line);
 	}
 	return resolved;
+}
+
+/**
+ * Références d'une ligne, sous la forme des `lineRef` des passages et des `lineRefs` des stations.
+ * Une ligne inconnue n'en a aucune : rien ne s'y rapporte.
+ */
+export async function findLineRefs(lineId: number) {
+	let refs = refsByLineId.get(lineId);
+	if (refs === undefined) {
+		const [line] = await database
+			.select({ references: linesTable.references })
+			.from(linesTable)
+			.where(eq(linesTable.id, lineId));
+		refs = line?.references ?? [];
+		refsByLineId.set(lineId, refs);
+	}
+	return refs;
 }

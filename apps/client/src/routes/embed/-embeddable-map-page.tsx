@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { FullscreenControl, GeolocateControl, type Map as MaplibreMap, NavigationControl } from "maplibre-gl";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
@@ -31,12 +31,10 @@ export default function EmbeddableMapPage() {
 	);
 	const [withAccessibility] = useQueryState("with-accessibility", parseAsString);
 	const [withBikes] = useQueryState("with-bikes", parseAsString);
-	const { selectedRef: selectedStopRef, clearSelection: clearStopSelection } = useStopSelection();
+	const { selectedRef: selectedStopRef } = useStopSelection();
 
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 	const filteredLine = network.lines.find((line) => line.id === lineId);
-	// Comme sur la carte principale, une ligne filtrée ne montre que ses véhicules : pas d'arrêts.
-	const showStops = lineId === null;
 
 	const initialDisplaySettings = useMemo(
 		() => ({
@@ -81,12 +79,6 @@ export default function EmbeddableMapPage() {
 		[withFullscreen, withGeolocate],
 	);
 
-	// Le filtre par ligne masque les arrêts : l'arrêt sélectionné est oublié, et son tableau ne ressurgit
-	// pas une fois le filtre retiré.
-	useEffect(() => {
-		if (lineId !== null && selectedStopRef !== null) clearStopSelection();
-	}, [clearStopSelection, lineId, selectedStopRef]);
-
 	return (
 		<>
 			<title>{m.page_title_embed_map({ networkName: network.name })}</title>
@@ -101,8 +93,9 @@ export default function EmbeddableMapPage() {
 						withDataLink={false}
 					/>
 					<VehiclesMarkers embeddedNetworkId={+networkId} lineId={filteredLine?.id} />
-					{showStops && <StopsMarkers networkId={+networkId} />}
-					{showStops && selectedStopRef !== null && <StopDeparturesPanel networkId={+networkId} />}
+					{/* Comme sur la carte principale, une ligne filtrée ne montre que ses arrêts et ses passages. */}
+					<StopsMarkers lineId={filteredLine?.id} networkId={+networkId} />
+					{selectedStopRef !== null && <StopDeparturesPanel lineId={filteredLine?.id} networkId={+networkId} />}
 					<EmbedSettingsControl />
 					<Signature />
 				</MapComponent>

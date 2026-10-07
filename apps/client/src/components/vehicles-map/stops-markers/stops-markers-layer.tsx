@@ -73,9 +73,10 @@ const initialData: SourceSpecification = {
 /**
  * Nature d'un marqueur : `area`, une station, affichée jusqu'au seuil ; `point`, un de ses quais,
  * affiché au-delà. Chaque station a au moins un quai : une station d'un seul quai, ou dont les quais
- * sont inconnus, en produit un à sa propre position.
+ * sont inconnus, en produit un à sa propre position. `line-point` : un quai de la ligne filtrée, seul
+ * affiché à tout zoom, sans station.
  */
-export type StopFeatureKind = "area" | "point";
+export type StopFeatureKind = "area" | "point" | "line-point";
 
 const FADE_START = STOP_POINTS_ZOOM - STOP_POINTS_FADE;
 const FADE_END = STOP_POINTS_ZOOM + STOP_POINTS_FADE;
@@ -210,19 +211,57 @@ const selectedPointsLayerObject: AddLayerObject = {
 	},
 };
 
+/**
+ * Quais de la ligne filtrée : peu nombreux, ils s'affichent à tout zoom, sans passer par leur
+ * station — c'est le quai où passe la ligne qu'on cherche.
+ */
+const linePointsLayerObject: AddLayerObject = {
+	id: "stops-line-points",
+	source: "stops",
+	type: "symbol",
+	filter: ["all", ["==", ["get", "kind"], "line-point"], ["!", ["get", "selected"]]],
+	layout: {
+		...labelLayout,
+		"icon-image": stopIconImage,
+		"text-field": ["step", ["zoom"], "", STOPS_LABEL_MIN_ZOOM, ["get", "label"]],
+	},
+	paint: {
+		...labelPaint,
+		"text-opacity": ["interpolate", ["linear"], ["zoom"], STOPS_LABEL_MIN_ZOOM, 0, STOPS_LABEL_MIN_ZOOM + 0.4, 1],
+	},
+};
+
+const selectedLinePointsLayerObject: AddLayerObject = {
+	id: "stops-selected-line-points",
+	source: "stops",
+	type: "symbol",
+	filter: ["all", ["==", ["get", "kind"], "line-point"], ["get", "selected"]],
+	layout: {
+		...labelLayout,
+		"icon-image": selectedStopIconImage,
+		"icon-size": SELECTED_STOP_ICON_SCALE,
+		"text-field": ["get", "label"],
+	},
+	paint: labelPaint,
+};
+
 /** Couches répondant au survol et au clic. */
 const CLICKABLE_LAYERS = [
 	areasLayerObject.id,
 	pointsLayerObject.id,
 	selectedAreasLayerObject.id,
 	selectedPointsLayerObject.id,
+	linePointsLayerObject.id,
+	selectedLinePointsLayerObject.id,
 ];
 
 type StopsMarkersProps = {
 	networkId?: number;
+	/** Ligne filtrée : seules les stations qu'elle dessert. */
+	lineId?: number;
 };
 
-export function StopsMarkers({ networkId }: StopsMarkersProps) {
+export function StopsMarkers({ networkId, lineId }: StopsMarkersProps) {
 	const map = useMap();
 	const { selectedRef, stopPointRef, selectStopArea, selectStopPoint, clearSelection } = useStopSelection();
 	const isCoarsePointer = useMediaQuery("(pointer: coarse)");
@@ -234,6 +273,8 @@ export function StopsMarkers({ networkId }: StopsMarkersProps) {
 	useMapLayer(pointsLayerObject, "vehicles");
 	useMapLayer(selectedAreasLayerObject, "vehicles");
 	useMapLayer(selectedPointsLayerObject, "vehicles");
+	useMapLayer(linePointsLayerObject, "vehicles");
+	useMapLayer(selectedLinePointsLayerObject, "vehicles");
 
 	useEffect(() => {
 		let abort = false;
@@ -367,6 +408,7 @@ export function StopsMarkers({ networkId }: StopsMarkersProps) {
 	if (source === null) return null;
 	return (
 		<StopsMarkersData
+			lineId={lineId}
 			networkId={networkId}
 			selectedRef={selectedRef}
 			selectedStopPointRef={stopPointRef}

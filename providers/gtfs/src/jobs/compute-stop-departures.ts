@@ -94,6 +94,8 @@ export type ComputeStopDeparturesOptions = {
 	horizonMs?: number;
 	/** Restreint le tableau à un quai de la station, sous la forme publiée de son `stopRef`. */
 	stopRef?: string;
+	/** Restreint le tableau aux passages de ces lignes, sous la forme publiée de leur `lineRef`. */
+	lineRefs?: string[];
 	/** Départs (par défaut) ou arrivées. */
 	direction?: StopCallDirection;
 };
@@ -115,6 +117,7 @@ export function computeStopDepartures(
 		limit = DEFAULT_LIMIT,
 		horizonMs = DEFAULT_HORIZON_MS,
 		stopRef: onlyStopRef,
+		lineRefs,
 		direction = "departures",
 	}: ComputeStopDeparturesOptions = {},
 ): { departures: StopDeparture[]; excludedJourneys: ExcludedStopDepartureJourney[] } {
@@ -400,12 +403,16 @@ export function computeStopDepartures(
 	const { filterStopDeparture, getMissionCode, getVehicleRef, hasRealVehicles, mapStopDeparture } = source.options;
 	const kept: StopDeparture[] = [];
 	let keptOnTime = 0;
+	const onlyLineRefs = lineRefs !== undefined ? new Set(lineRefs) : undefined;
 
 	// Les passages sont résolus un à un jusqu'à la limite : ceux que le filtre écarte laissent leur
 	// place aux suivants, sans matérialiser la destination ni la course des passages qui ne seront pas
 	// rendus.
 	for (const { sortKey, late, resolveDestination, resolveOriginName, resolveJourney, ...rest } of departures) {
 		if (keptOnTime >= limit) break;
+		// Une autre ligne que celle demandée laisse sa place, comme un passage écarté par le filtre — sans
+		// être signalée au serveur : il ne retient lui-même que les courses de la ligne.
+		if (onlyLineRefs !== undefined && !onlyLineRefs.has(rest.lineRef)) continue;
 
 		// La course n'est fabriquée qu'une fois, et seulement si la configuration en a l'usage.
 		let journey: Journey | undefined;

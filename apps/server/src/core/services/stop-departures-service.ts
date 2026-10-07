@@ -86,6 +86,7 @@ export async function requestStopDepartures({
 	sourceId,
 	stopAreaRef,
 	stopRef,
+	lineRefs,
 	direction,
 }: {
 	providerId: string;
@@ -93,6 +94,8 @@ export async function requestStopDepartures({
 	stopAreaRef: string;
 	/** Restreint le tableau à un quai de la station. */
 	stopRef?: string;
+	/** Restreint le tableau aux passages d'une ligne, désignée par toutes ses références. */
+	lineRefs?: string[];
 	/** Absent : les départs. */
 	direction?: StopCallDirection;
 }): Promise<StopDeparturesResult> {
@@ -114,7 +117,7 @@ export async function requestStopDepartures({
 	try {
 		await publisher.publish(
 			stopDeparturesRequestChannel(providerId),
-			JSON.stringify({ requestId, stopAreaRef, sourceId, stopRef, direction }),
+			JSON.stringify({ requestId, stopAreaRef, sourceId, stopRef, lineRefs, direction }),
 		);
 	} catch (error) {
 		console.error("✘ Failed to publish a stop departures request:", error);

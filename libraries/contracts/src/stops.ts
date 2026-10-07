@@ -71,6 +71,11 @@ export const stopPointSchema = type({
 	"mode?": stopAreaModeEnum,
 	/** Accès au quai en fauteuil roulant (`wheelchair_boarding`). Absent : inconnu. */
 	"wheelchairBoarding?": "boolean",
+	/**
+	 * Lignes desservant le quai, sous la forme `${networkRef}:Line:${lineRef}` : sur une ligne filtrée,
+	 * seuls ses quais sont montrés. Absent : celles de la station, faute de mieux.
+	 */
+	"lineRefs?": "string[]",
 });
 
 export type StopPoint = typeof stopPointSchema.infer;
@@ -135,6 +140,11 @@ export const stopDeparturesRequestSchema = type({
 	"sourceId?": "string",
 	/** Restreint le tableau à un quai de la station, avant la limite du nombre de passages. */
 	"stopRef?": "string",
+	/**
+	 * Restreint le tableau aux passages d'une ligne, avant la limite du nombre de passages : toutes les
+	 * références de la ligne, sous la forme des `lineRef` des passages.
+	 */
+	"lineRefs?": "string[]",
 	/** Absent : les départs. */
 	"direction?": stopCallDirectionEnum,
 });

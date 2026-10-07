@@ -50,9 +50,10 @@ type StopFeature = GeoJSON.Feature<
 /**
  * Marqueurs d'une station : elle-même, puis ses quais lorsqu'ils sont chargés — la couche se charge
  * de n'en montrer qu'une partie selon le zoom. Une station dont les quais sont inconnus en reçoit un
- * à sa propre position, pour rester affichée au-delà du seuil.
+ * à sa propre position, pour rester affichée au-delà du seuil. Sur une ligne filtrée, seuls ses quais,
+ * montrés à tout zoom.
  */
-function featuresOf(area: Area, withStopPoints: boolean, selection: Selection): StopFeature[] {
+function featuresOf(area: Area, withStopPoints: boolean, selection: Selection, lineOnly: boolean): StopFeature[] {
 	const areaSelected = area.ref === selection.stopRef;
 
 	const areaFeature: StopFeature = {
@@ -61,50 +62,56 @@ function featuresOf(area: Area, withStopPoints: boolean, selection: Selection): 
 		properties: { kind: "area", ref: area.ref, label: area.name, mode: area.mode, selected: areaSelected },
 	};
 
-	if (!withStopPoints) return [areaFeature];
+	if (!withStopPoints && !lineOnly) return [areaFeature];
 
 	const points: (StopPoint | undefined)[] =
 		area.stopPoints !== undefined && area.stopPoints.length > 0 ? area.stopPoints : [undefined];
 
-	return [
-		areaFeature,
-		...points.map(
-			(point): StopFeature => ({
-				type: "Feature",
-				geometry: {
-					type: "Point",
-					coordinates: point !== undefined ? [point.longitude, point.latitude] : [area.longitude, area.latitude],
-				},
-				properties: {
-					kind: "point",
-					ref: area.ref,
-					stopPointRef: point?.ref,
-					label:
-						point?.platformCode !== undefined
-							? `${point.name ?? area.name} (${point.platformCode})`
-							: (point?.name ?? area.name),
-					mode: point?.mode ?? area.mode,
-					// Sans quai désigné, tous les quais de la station sélectionnée le sont.
-					selected:
-						areaSelected &&
-						(selection.stopPointRef === null || point === undefined || selection.stopPointRef === point.ref),
-				},
-			}),
-		),
-	];
+	const pointFeatures = points.map(
+		(point): StopFeature => ({
+			type: "Feature",
+			geometry: {
+				type: "Point",
+				coordinates: point !== undefined ? [point.longitude, point.latitude] : [area.longitude, area.latitude],
+			},
+			properties: {
+				kind: lineOnly ? "line-point" : "point",
+				ref: area.ref,
+				stopPointRef: point?.ref,
+				label:
+					point?.platformCode !== undefined
+						? `${point.name ?? area.name} (${point.platformCode})`
+						: (point?.name ?? area.name),
+				mode: point?.mode ?? area.mode,
+				// Sans quai désigné, tous les quais de la station sélectionnée le sont.
+				selected:
+					areaSelected &&
+					(selection.stopPointRef === null || point === undefined || selection.stopPointRef === point.ref),
+			},
+		}),
+	);
+
+	return lineOnly ? pointFeatures : [areaFeature, ...pointFeatures];
 }
 
 const selectStop = (departures: StopDepartures) => departures.stop;
 
 type StopsMarkersDataProps = {
 	networkId?: number;
+	lineId?: number;
 	selectedStopPointRef: string | null;
 	/** Référence du tableau ouvert : station, ou quai. */
 	selectedRef: string | null;
 	source: GeoJSONSource;
 };
 
-export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef, source }: StopsMarkersDataProps) {
+export function StopsMarkersData({
+	networkId,
+	lineId,
+	selectedRef,
+	selectedStopPointRef,
+	source,
+}: StopsMarkersDataProps) {
 	const map = useMap();
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
 	const [level, setLevel] = useState(() => levelAt(map.getZoom()));
@@ -119,8 +126,17 @@ export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef,
 		};
 	}, [map]);
 
+	// Sur une ligne filtrée, ses quais sont affichés à tout zoom.
+	const lineOnly = lineId !== undefined;
+	const loaded = lineOnly || level !== "none";
+
 	const { data, refetch } = useQuery(
-		GetStopMarkersQuery(bounds, { enabled: level !== "none", networkId, withStopPoints: level === "points" }),
+		GetStopMarkersQuery(bounds, {
+			enabled: loaded,
+			networkId,
+			lineId,
+			withStopPoints: lineOnly || level === "points",
+		}),
 	);
 
 	// Même requête que le tableau des passages, donc même cache : elle ne coûte rien de plus, et donne
@@ -129,7 +145,10 @@ export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef,
 	// Seule la station compte ici, et non les passages : ceux-ci changent à chaque rafraîchissement
 	// (toutes les 5 s), elle non — le partage structurel de React Query en garde la référence, et la
 	// source des arrêts n'est pas réécrite pour rien.
-	const { data: selectedStop } = useQuery({ ...GetStopDeparturesQuery(selectedRef), select: selectStop });
+	const { data: selectedStop } = useQuery({
+		...GetStopDeparturesQuery(selectedRef, "departures", lineId),
+		select: selectStop,
+	});
 
 	// Les bornes ne font pas partie de la clé de la requête : c'est cet effet qui redemande les
 	// arrêts quand la carte bouge. Le premier rendu est ignoré, `useQuery` vient d'émettre la requête.
@@ -137,7 +156,7 @@ export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef,
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: les bornes pilotent le refetch, pas la clé
 	useEffect(() => {
-		if (level === "none") return;
+		if (!loaded) return;
 
 		if (!hasFetchedOnce.current) {
 			hasFetchedOnce.current = true;
@@ -145,7 +164,7 @@ export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef,
 		}
 
 		refetch();
-	}, [bounds, networkId, level]);
+	}, [bounds, networkId, lineId, loaded, level]);
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
 		// Tant que le tableau n'est pas chargé, seule une station sélectionnée est connue de l'URL.
@@ -153,7 +172,7 @@ export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef,
 		const selection = { stopRef: selectedStopRef, stopPointRef: selectedStopPointRef };
 		const withStopPoints = level === "points";
 
-		const areas: Area[] = level === "none" ? [] : (data?.items ?? []);
+		const areas: Area[] = loaded ? (data?.items ?? []) : [];
 
 		// L'arrêt sélectionné reste affiché à tout zoom, y compris hors de l'emprise chargée.
 		const selectedArea =
@@ -163,9 +182,17 @@ export function StopsMarkersData({ networkId, selectedRef, selectedStopPointRef,
 
 		return {
 			type: "FeatureCollection",
-			features: [...areas, ...selectedArea].flatMap((area) => featuresOf(area, withStopPoints, selection)),
+			features: [
+				...areas.flatMap((area) => featuresOf(area, withStopPoints, selection, lineOnly)),
+				// Les quais du tableau ne sont pas restreints à la ligne filtrée : seul le sélectionné est montré.
+				...selectedArea.flatMap((area) =>
+					featuresOf(area, withStopPoints, selection, lineOnly).filter(
+						(feature) => !lineOnly || feature.properties.selected,
+					),
+				),
+			],
 		};
-	}, [data, level, selectedRef, selectedStop, selectedStopPointRef]);
+	}, [data, level, lineOnly, loaded, selectedRef, selectedStop, selectedStopPointRef]);
 
 	useEffect(() => {
 		source.setData(geojson);

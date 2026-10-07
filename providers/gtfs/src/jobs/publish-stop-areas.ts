@@ -52,6 +52,7 @@ function buildStopPoints(
 	stops: Stop[],
 	refOf: (stop: Stop) => string,
 	stopModeOf: (stop: Stop) => StopAreaMode,
+	stopLineRefsOf: (stop: Stop) => Iterable<string>,
 ): StopPoint[] {
 	const stopsByRef = Map.groupBy(stops, refOf);
 
@@ -71,6 +72,9 @@ function buildStopPoints(
 			? first!.wheelchairBoarding
 			: undefined;
 
+		// Les arrêts confondus mettent leurs lignes en commun, comme leurs dessertes.
+		const lineRefs = new Set([first!, ...others].flatMap((stop) => [...stopLineRefsOf(stop)]));
+
 		return {
 			ref,
 			...(leading.name !== areaName ? { name: leading.name } : {}),
@@ -79,6 +83,7 @@ function buildStopPoints(
 			...(leading.platformCode !== undefined ? { platformCode: leading.platformCode } : {}),
 			mode,
 			...(wheelchairBoarding !== undefined ? { wheelchairBoarding } : {}),
+			lineRefs: [...lineRefs].sort(),
 		};
 	});
 }
@@ -109,23 +114,32 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		service.mode = heaviestMode(service.mode, mode);
 	};
 
-	// Mode de chaque quai, relevé à part : dans une gare, l'arrêt de bus du parvis reste un arrêt de bus.
-	// Toutes les dessertes comptent, terminus et descentes seules compris : un quai où l'on ne fait que
-	// descendre d'un bus reste un arrêt de bus, même dans une station de métro.
+	// Mode et lignes de chaque quai, relevés à part : dans une gare, l'arrêt de bus du parvis reste un
+	// arrêt de bus. Toutes les dessertes comptent, terminus et descentes seules compris : un quai où l'on
+	// ne fait que descendre d'un bus reste un arrêt de bus, même dans une station de métro.
 	const stopModes = new Map<string, StopAreaMode>();
-	const recordStopMode = (stopId: string, route: Route) => {
+	const stopLineRefs = new Map<string, Set<string>>();
+	const recordStop = (stopId: string, networkRef: string, route: Route) => {
 		const mode = modeOf(route.type);
 		const stopMode = stopModes.get(stopId);
 		stopModes.set(stopId, stopMode !== undefined ? heaviestMode(stopMode, mode) : mode);
+
+		let lineRefs = stopLineRefs.get(stopId);
+		if (lineRefs === undefined) {
+			lineRefs = new Set();
+			stopLineRefs.set(stopId, lineRefs);
+		}
+		lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
 	};
 
 	const { flagsBitmask, stopList, stopIdx, tripStart, tripCount } = gtfs.stopTimeStore;
 	for (const trip of gtfs.tripsByIdx) {
 		if (trip === undefined) continue;
+		const networkRef = networkOf(trip);
 		const start = tripStart[trip.idx]!;
 		const end = start + tripCount[trip.idx]!;
 		for (let index = start; index < end; index += 1) {
-			recordStopMode(stopList[stopIdx[index]!]!.id, trip.route);
+			recordStop(stopList[stopIdx[index]!]!.id, networkRef, trip.route);
 		}
 	}
 
@@ -166,8 +180,9 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		for (const call of journey.calls) {
 			const areaId = realtimeAreaIdByStopId.get(call.stop.id);
 			if (areaId === undefined) continue;
-			record(areaId, networkOf(journey.trip, journey), journey.trip.route);
-			recordStopMode(call.stop.id, journey.trip.route);
+			const networkRef = networkOf(journey.trip, journey);
+			record(areaId, networkRef, journey.trip.route);
+			recordStop(call.stop.id, networkRef, journey.trip.route);
 			departingAreaIds.add(areaId);
 			if (offersArrivals(journey.trip.route)) arrivalAreaIds.add(areaId);
 		}
@@ -206,6 +221,7 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 					(stop) =>
 						// Un quai qu'aucune course ne dessert reprend le mode de sa station.
 						stopModes.get(stop.id) ?? service.mode,
+					(stop) => stopLineRefs.get(stop.id) ?? [],
 				),
 				providerId,
 				sourceId: source.id,

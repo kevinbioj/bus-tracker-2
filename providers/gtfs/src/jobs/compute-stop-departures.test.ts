@@ -307,6 +307,14 @@ describe("computeStopDepartures", () => {
 		expect(departures[0]!.aimedTime).toBe("2026-05-18T08:30:00+00:00");
 	});
 
+	it("restreint le tableau aux lignes demandées", () => {
+		const onLines = (lineRefs: string[]) =>
+			computeStopDepartures(makeSource(), "mairie-a", MONDAY_MORNING, { lineRefs }).departures;
+
+		expect(onLines(["network:Line:line:1"])).toHaveLength(2);
+		expect(onLines(["network:Line:line:2"])).toHaveLength(0);
+	});
+
 	it("présente au tableau du quai désigné par le temps réel la course qui dessert la zone d'arrêt", () => {
 		// La course dessert une zone d'arrêt sans voie ; la voie 2, qu'aucune course ne dessert, n'est
 		// rattachée à la gare que par sa `parent_station`.
