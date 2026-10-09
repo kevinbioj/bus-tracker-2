@@ -1023,6 +1023,55 @@ describe("computeVehicleJourneys (dessertes déviées)", () => {
 
 		expect(callsOf(result)).toEqual(["Replacement:UNSCHEDULED", "C:SCHEDULED"]);
 	});
+
+	it("signale l'arrêt provisoire même une fois le quai qu'il remplace franchi", async () => {
+		const source = scheduledSource();
+		const stationId = source.gtfs!.stopAreas.values().find(({ stops }) => stops.some(({ id }) => id === "B"))!.id;
+		// B est remplacé par un arrêt que seul le flux temps réel déclare, rattaché à la même station.
+		const resources = createRealtimeResources();
+		resources.stops.set("RT", new Stop("RT", "B (provisoire)", 0.001, 0.01, undefined, undefined, stationId));
+
+		const result = await cycleAt(source, "08:05:00", {
+			tripModifications: [
+				detour({
+					modifications: [
+						{
+							startStopSelector: { stopSequence: 2 },
+							endStopSelector: { stopSequence: 2 },
+							replacementStops: [{ stopId: "RT", travelTimeToStop: 12 * 60 }],
+						},
+					],
+				}),
+			],
+			resources,
+			vehiclePositions: [
+				{
+					timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+					trip: { modifiedTrip: { modificationsId: "detour:1", affectedTripId: "original" } },
+					vehicle: { id: "vehicle:1" },
+					position: { latitude: 0.001, longitude: 0.01 },
+					currentStopSequence: 3,
+				},
+			],
+		});
+
+		expect(result.journeys[0]?.calls?.map((call) => [call.stopName, call.temporary])).toEqual([
+			["B (provisoire)", true],
+			["C", undefined],
+		]);
+	});
+
+	it("ne signale pas comme provisoire un arrêt de déviation hors de la station du quai supprimé", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
+
+		expect(result.journeys[0]?.calls?.map((call) => [call.stopName, call.temporary])).toEqual([
+			["B", undefined],
+			["Replacement", undefined],
+			["C", undefined],
+		]);
+	});
 });
 
 /** Course supplémentaire A 8:00 → X 8:10 → C 8:20, étrangère au GTFS statique. */

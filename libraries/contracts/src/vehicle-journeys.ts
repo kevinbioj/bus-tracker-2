@@ -54,6 +54,8 @@ export const vehicleJourneyCallSchema = type({
 	"latitude?": "number",
 	"longitude?": "number",
 	callStatus: vehicleJourneyCallStatusEnum,
+	// Arrêt provisoire : desserte ajoutée par une déviation à la place d'un quai de la même station.
+	"temporary?": "boolean",
 	"flags?": vehicleJourneyCallFlagsEnum.array(),
 });
 

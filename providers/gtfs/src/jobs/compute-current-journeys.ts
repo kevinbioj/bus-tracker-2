@@ -44,6 +44,7 @@ function serializeCall(
 	source: Source,
 	networkRef: string,
 	timeZone: string,
+	temporary = false,
 ): NonNullable<VehicleJourney["calls"]>[number] {
 	const stopId = (call.assignedStop ?? call.stop).id;
 	const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
@@ -72,6 +73,7 @@ function serializeCall(
 		longitude: call.stop.longitude,
 		platformName: call.platform,
 		callStatus: call.status,
+		temporary: temporary ? true : undefined,
 		flags: call.flags,
 	};
 }
@@ -717,6 +719,8 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					? getCallsFromVehiclePosition(journey, vehiclePosition, now)
 					: unknownTripCalls?.filter(({ aimedDepartureTime }) => now.epochMilliseconds < aimedDepartureTime);
 
+			const temporaryCalls = journey !== undefined ? findTemporaryCalls(source, journey) : undefined;
+
 			const key = `${networkRef}:${operatorRef ?? ""}:VehicleTracking:${vehiclePosition.vehicle.id}`;
 
 			const pathRef =
@@ -759,7 +763,14 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 				calls:
 					journey !== undefined || calls !== undefined
 						? (calls?.map((call, index) =>
-								serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
+								serializeCall(
+									call,
+									index === calls.length - 1,
+									source,
+									networkRef,
+									timeZone,
+									temporaryCalls?.has(call),
+								),
 							) ?? [])
 						: undefined,
 				destination:
@@ -997,6 +1008,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 				const cancelledPathRef = resolveCancelledPathRef(journey, source, networkRef, paths);
 
 				const timeZone = journey.trip.route.agency.timeZone;
+				const temporaryCalls = findTemporaryCalls(source, journey);
 
 				const vehicleJourney: VehicleJourney = {
 					id: key,
@@ -1016,7 +1028,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					wheelchairAccessible: getWheelchairAccessible(journey.trip, vehicleDescriptor),
 					bikesAllowed: journey.trip.bikesAllowed,
 					calls: calls.map((call, index) =>
-						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone),
+						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone, temporaryCalls.has(call)),
 					),
 					position: journey.guessPosition(now),
 					pathRef,
@@ -1143,4 +1155,43 @@ export function collectRealtimeStopAreas(source: Source) {
 	}
 
 	return stopAreas;
+}
+
+const staticStopAreaIds = new WeakMap<Gtfs, Map<string, string>>();
+
+function getStopAreaId(source: Source, gtfs: Gtfs, stopId: string) {
+	for (const stopArea of source.realtimeStopAreas.values()) {
+		if (stopArea.stops.some(({ id }) => id === stopId)) return stopArea.id;
+	}
+
+	let stopAreaIds = staticStopAreaIds.get(gtfs);
+	if (stopAreaIds === undefined) {
+		stopAreaIds = new Map(
+			gtfs.stopAreas.values().flatMap((stopArea) => stopArea.stops.map(({ id }) => [id, stopArea.id] as const)),
+		);
+		staticStopAreaIds.set(gtfs, stopAreaIds);
+	}
+	return stopAreaIds.get(stopId);
+}
+
+/** Publiés tels quels : le quai supprimé, une fois franchi, ne figure plus parmi les dessertes publiées. */
+function findTemporaryCalls(source: Source, journey: Journey) {
+	const temporaryCalls = new Set<JourneyCall>();
+	const gtfs = source.gtfs;
+	if (gtfs === undefined || !journey.hasModifications()) return temporaryCalls;
+
+	const addedCalls = journey.calls.filter((call) => call.modification === "ADDED");
+	if (addedCalls.length === 0) return temporaryCalls;
+
+	const skippedAreaIds = new Set(
+		journey.calls.flatMap((call) => {
+			const areaId = call.status === "SKIPPED" ? getStopAreaId(source, gtfs, call.stop.id) : undefined;
+			return areaId !== undefined ? [areaId] : [];
+		}),
+	);
+	for (const call of addedCalls) {
+		const areaId = getStopAreaId(source, gtfs, call.stop.id);
+		if (areaId !== undefined && skippedAreaIds.has(areaId)) temporaryCalls.add(call);
+	}
+	return temporaryCalls;
 }

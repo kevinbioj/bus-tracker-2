@@ -176,6 +176,7 @@ function mergeTrackedJourneys(
 	direction: StopCallDirection,
 ) {
 	const untilMs = nowMs + DEPARTURES_HORIZON_MS;
+	const stationStopRefs = new Set(stopArea.stopRefs);
 
 	const merged: ResolvedDeparture[] = departures.map((departure) => ({ ...departure, tracked: false, atStop: false }));
 
@@ -233,10 +234,11 @@ function mergeTrackedJourneys(
 
 		// Une déviation peut troquer un quai de la station contre un arrêt provisoire : la course la dessert
 		// toujours, c'est l'arrêt provisoire qui compte — le provider n'annonce plus que lui.
-		const stationCalls = journey.calls?.filter((call) => stopRefs.has(call.stopRef)) ?? [];
+		const stationCalls = journey.calls?.filter((call) => stationStopRefs.has(call.stopRef)) ?? [];
 		const temporary =
-			stationCalls.some((call) => call.callStatus === "UNSCHEDULED") &&
-			stationCalls.some((call) => call.callStatus === "SKIPPED");
+			stationCalls.some((call) => call.temporary === true) ||
+			(stationCalls.some((call) => call.callStatus === "UNSCHEDULED") &&
+				stationCalls.some((call) => call.callStatus === "SKIPPED"));
 
 		let matched = false;
 		for (const call of journey.calls ?? []) {
@@ -305,7 +307,7 @@ function mergeTrackedJourneys(
 				aimedTime,
 				expectedTime,
 				callStatus: call.callStatus,
-				temporary: temporary && call.callStatus === "UNSCHEDULED" ? true : undefined,
+				temporary: call.temporary === true || (temporary && call.callStatus === "UNSCHEDULED") ? true : undefined,
 				realtime,
 				terminus: direction === "arrivals" ? call === terminusCall : undefined,
 				journeyId: journey.id,
