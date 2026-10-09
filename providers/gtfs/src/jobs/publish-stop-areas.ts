@@ -165,6 +165,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 	for (const trip of gtfs.tripsByIdx) {
 		if (trip === undefined) continue;
 		const networkRef = networkOf(trip);
+		if (networkRef === undefined) continue;
 		const start = tripStart[trip.idx]!;
 		const end = start + tripCount[trip.idx]!;
 		for (let index = start; index < end; index += 1) {
@@ -184,7 +185,9 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 		for (const [stopTimeIdx, tripIdx] of gtfs.stopIndex.entriesOf(stopArea.id)) {
 			const trip = gtfs.tripsByIdx[tripIdx];
 			if (trip === undefined) continue;
-			record(stopArea.id, networkOf(trip), trip.route);
+			const networkRef = networkOf(trip);
+			if (networkRef === undefined) continue;
+			record(stopArea.id, networkRef, trip.route);
 
 			const departs =
 				stopTimeIdx !== trip.stopTimeStart + trip.stopTimeCount - 1 &&
@@ -197,6 +200,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 	// Arrêts desservis par une déviation : créés par le flux temps réel, ou déclarés sans desserte théorique.
 	for (const { journey, call, areaId } of realtimeServedCalls(source, gtfs)) {
 		const networkRef = networkOf(journey.trip, journey);
+		if (networkRef === undefined) continue;
 		record(areaId, networkRef, journey.trip.route);
 		recordStop(call.stop.id, networkRef, journey.trip.route);
 		departingAreaIds.add(areaId);

@@ -10,20 +10,21 @@ import type { Trip } from "../model/trip.js";
  * `getNetworkRef` attend une course datée : à défaut, une course théorique est fabriquée pour la
  * question, sans être conservée, et la réponse est gardée pour les appels suivants — elle dépend de la
  * course, pas de sa date.
+ *
+ * Une course que la configuration écarte (`getNetworkRef` renvoyant `null` ou `undefined`) n'a pas de
+ * réseau : `undefined`.
  */
 export function createTripNetworkResolver(source: Source) {
-	const cache = new Map<Trip, string>();
+	const cache = new Map<Trip, string | undefined>();
 	const today = Temporal.Now.plainDateISO();
 
-	return (trip: Trip, journey?: Journey) => {
+	return (trip: Trip, journey?: Journey): string | undefined => {
 		if (journey !== undefined)
-			return source.options.getNetworkRef(journey, journey.vehicleDescriptor, journey.tripDescriptor);
+			return source.options.getNetworkRef(journey, journey.vehicleDescriptor, journey.tripDescriptor) ?? undefined;
 
-		let networkRef = cache.get(trip);
-		if (networkRef === undefined) {
-			networkRef = source.options.getNetworkRef(trip.getScheduledJourney(today, true));
-			cache.set(trip, networkRef);
-		}
+		if (cache.has(trip)) return cache.get(trip);
+		const networkRef = source.options.getNetworkRef(trip.getScheduledJourney(today, true)) ?? undefined;
+		cache.set(trip, networkRef);
 		return networkRef;
 	};
 }

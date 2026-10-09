@@ -137,6 +137,17 @@ describe("buildStopAreaManifests", () => {
 
 		expect(stopPointOf(source, "RT")).toMatchObject({ mode: "BUS", lineRefs: ["network:Line:bus"] });
 	});
+
+	it("ignore les courses que la configuration n'attribue à aucun réseau", () => {
+		const { source } = makeSource();
+		// Les configurations JavaScript écartent une course en renvoyant `null`.
+		source.options.getNetworkRef = (journey) => (journey?.trip.route.id === "metro" ? (null as never) : "network");
+
+		const manifests = buildStopAreaManifests("provider", source, NOW.toString());
+
+		expect(manifests.map(({ ref }) => ref).sort()).toEqual(["network:StopArea:A", "network:StopArea:B"]);
+		expect(manifests.map(({ networkRefs }) => networkRefs)).toEqual([["network"], ["network"]]);
+	});
 });
 
 describe("getRealtimeServiceFingerprint", () => {

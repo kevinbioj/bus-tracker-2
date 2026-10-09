@@ -113,6 +113,10 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 
 	// Une route n'a de réseau qu'à travers ses courses : l'index n'est construit que si une alerte en vise une.
 	let tripByRouteId: Map<string, Trip> | undefined;
+	const networkRefsOfTrip = (trip: Trip) => {
+		const networkRef = networkOf(trip);
+		return networkRef !== undefined ? [networkRef] : [];
+	};
 	const networkRefsOfRoute = (routeId: string) => {
 		if (tripByRouteId === undefined) {
 			tripByRouteId = new Map();
@@ -121,7 +125,7 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 			}
 		}
 		const trip = tripByRouteId.get(routeId);
-		return trip !== undefined ? [networkOf(trip)] : sourceNetworkRefs;
+		return trip !== undefined ? networkRefsOfTrip(trip) : sourceNetworkRefs;
 	};
 
 	const lineRefOf = (networkRef: string, routeId: string) => `${networkRef}:Line:${mapLineRef?.(routeId) ?? routeId}`;
@@ -151,7 +155,11 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 		const directionId = selector.directionId ?? (trip === undefined ? selector.trip?.directionId : undefined);
 
 		const networkRefs =
-			trip !== undefined ? [networkOf(trip)] : routeId !== undefined ? networkRefsOfRoute(routeId) : sourceNetworkRefs;
+			trip !== undefined
+				? networkRefsOfTrip(trip)
+				: routeId !== undefined
+					? networkRefsOfRoute(routeId)
+					: sourceNetworkRefs;
 
 		// Ne désigner qu'un type de route ne dit rien que l'on sache rapprocher.
 		if (trip === undefined && routeId === undefined && selector.stopId === undefined) {

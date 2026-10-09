@@ -190,9 +190,11 @@ export function computeStopDepartures(
 	 * terminus de départ tant qu'elle n'en est pas partie.
 	 */
 	const excludeOriginJourney = (trip: Trip, date: Temporal.PlainDate, journey?: Journey) => {
+		const networkRef = networkOf(trip, journey);
+		if (networkRef === undefined) return;
 		excludedJourneys.push({
 			journeyId: journey?.lastPublishedKey?.replaceAll("/", "_"),
-			journeyRef: `${networkOf(trip, journey)}:ServiceJourney:${mapTripRef?.(trip.id) ?? trip.id}`,
+			journeyRef: `${networkRef}:ServiceJourney:${mapTripRef?.(trip.id) ?? trip.id}`,
 			serviceDate: date.toString(),
 		});
 	};
@@ -268,6 +270,7 @@ export function computeStopDepartures(
 			}
 
 			const networkRef = networkOf(trip, journey);
+			if (networkRef === undefined) continue;
 			const stopRef = stopRefOf(networkRef, servedStop.id);
 
 			// Terminus de départ : la première desserte assurée de la course, qu'une déviation peut avoir
@@ -360,6 +363,7 @@ export function computeStopDepartures(
 			if (onlyStopId !== undefined && servedStop.id !== onlyStopId) continue;
 
 			const networkRef = networkOf(trip, journey);
+			if (networkRef === undefined) continue;
 			const stopRef = stopRefOf(networkRef, servedStop.id);
 
 			const aimedMs = arrivals ? call.aimedArrivalTime : call.aimedDepartureTime;
