@@ -6,6 +6,7 @@ import { useDebounceValue } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
+import { GetNetworksQuery } from "~/api/networks";
 import {
 	GetStopDeparturesQuery,
 	GetStopMarkersQuery,
@@ -13,6 +14,7 @@ import {
 	type StopMarker,
 	type StopPoint,
 } from "~/api/stops";
+import { findHomonyms } from "~/components/vehicles-map/stops-markers/homonyms";
 import {
 	STOP_POINTS_LOAD_ZOOM,
 	STOPS_MIN_ZOOM,
@@ -28,7 +30,7 @@ type Level = "none" | "areas" | "points";
 const levelAt = (zoom: number): Level =>
 	zoom >= STOP_POINTS_LOAD_ZOOM ? "points" : zoom >= STOPS_MIN_ZOOM ? "areas" : "none";
 
-type Area = Pick<StopMarker, "ref" | "name" | "latitude" | "longitude" | "mode" | "stopPoints">;
+type Area = Pick<StopMarker, "ref" | "name" | "latitude" | "longitude" | "mode" | "networkId" | "stopPoints">;
 
 type Selection = { stopRef: string | null; stopPointRef: string | null };
 
@@ -41,11 +43,19 @@ type StopFeature = GeoJSON.Feature<
 		/** Quai, lorsque le marqueur en représente un. */
 		stopPointRef?: string;
 		label: string;
+		/** Réseau de l'arrêt, nommé sous son libellé lorsqu'un homonyme d'un autre réseau est affiché. */
+		network?: string;
 		/** Pictogramme de la plaque : le mode le plus lourd de la station, ou du quai. */
 		mode: StopAreaMode;
 		selected: boolean;
 	}
 >;
+
+/** Au-delà, deux quais homonymes de réseaux différents sont trop éloignés pour être confondus. */
+const STOP_POINT_HOMONYM_DISTANCE_M = 30;
+
+/** Marqueur, avec ce qui le désigne pour le rapprochement des homonymes. */
+type StopCandidate = { feature: StopFeature; name: string; networkId: number; latitude: number; longitude: number };
 
 /**
  * Marqueurs d'une station : elle-même, puis ses quais lorsqu'ils sont chargés — la couche se charge
@@ -53,45 +63,56 @@ type StopFeature = GeoJSON.Feature<
  * à sa propre position, pour rester affichée au-delà du seuil. Sur une ligne filtrée, seuls ses quais,
  * montrés à tout zoom.
  */
-function featuresOf(area: Area, withStopPoints: boolean, selection: Selection, lineOnly: boolean): StopFeature[] {
+function featuresOf(area: Area, withStopPoints: boolean, selection: Selection, lineOnly: boolean): StopCandidate[] {
 	const areaSelected = area.ref === selection.stopRef;
 
-	const areaFeature: StopFeature = {
-		type: "Feature",
-		geometry: { type: "Point", coordinates: [area.longitude, area.latitude] },
-		properties: { kind: "area", ref: area.ref, label: area.name, mode: area.mode, selected: areaSelected },
+	const areaCandidate: StopCandidate = {
+		feature: {
+			type: "Feature",
+			geometry: { type: "Point", coordinates: [area.longitude, area.latitude] },
+			properties: { kind: "area", ref: area.ref, label: area.name, mode: area.mode, selected: areaSelected },
+		},
+		name: area.name,
+		networkId: area.networkId,
+		latitude: area.latitude,
+		longitude: area.longitude,
 	};
 
-	if (!withStopPoints && !lineOnly) return [areaFeature];
+	if (!withStopPoints && !lineOnly) return [areaCandidate];
 
 	const points: (StopPoint | undefined)[] =
 		area.stopPoints !== undefined && area.stopPoints.length > 0 ? area.stopPoints : [undefined];
 
-	const pointFeatures = points.map(
-		(point): StopFeature => ({
-			type: "Feature",
-			geometry: {
-				type: "Point",
-				coordinates: point !== undefined ? [point.longitude, point.latitude] : [area.longitude, area.latitude],
+	const pointCandidates = points.map((point): StopCandidate => {
+		const { latitude, longitude } = point ?? area;
+		return {
+			feature: {
+				type: "Feature",
+				geometry: { type: "Point", coordinates: [longitude, latitude] },
+				properties: {
+					kind: lineOnly ? "line-point" : "point",
+					ref: area.ref,
+					stopPointRef: point?.ref,
+					label:
+						point?.platformCode !== undefined
+							? `${point.name ?? area.name} (${point.platformCode})`
+							: (point?.name ?? area.name),
+					mode: point?.mode ?? area.mode,
+					// Sans quai désigné, tous les quais de la station sélectionnée le sont.
+					selected:
+						areaSelected &&
+						(selection.stopPointRef === null || point === undefined || selection.stopPointRef === point.ref),
+				},
 			},
-			properties: {
-				kind: lineOnly ? "line-point" : "point",
-				ref: area.ref,
-				stopPointRef: point?.ref,
-				label:
-					point?.platformCode !== undefined
-						? `${point.name ?? area.name} (${point.platformCode})`
-						: (point?.name ?? area.name),
-				mode: point?.mode ?? area.mode,
-				// Sans quai désigné, tous les quais de la station sélectionnée le sont.
-				selected:
-					areaSelected &&
-					(selection.stopPointRef === null || point === undefined || selection.stopPointRef === point.ref),
-			},
-		}),
-	);
+			// Le code de quai n'est pas du nom : « Rue Verte (A) » et « Rue Verte (B) » sont homonymes.
+			name: point?.name ?? area.name,
+			networkId: area.networkId,
+			latitude,
+			longitude,
+		};
+	});
 
-	return lineOnly ? pointFeatures : [areaFeature, ...pointFeatures];
+	return lineOnly ? pointCandidates : [areaCandidate, ...pointCandidates];
 }
 
 const selectStop = (departures: StopDepartures) => departures.stop;
@@ -139,6 +160,12 @@ export function StopsMarkersData({
 		}),
 	);
 
+	const { data: networks } = useQuery(GetNetworksQuery);
+	const networkNames = useMemo(
+		() => new Map(networks?.map((network) => [network.id, network.name] as const)),
+		[networks],
+	);
+
 	// Même requête que le tableau des passages, donc même cache : elle ne coûte rien de plus, et donne
 	// la position de la station sélectionnée même lorsqu'elle sort de l'emprise ou du zoom affichés.
 	// Elle donne aussi la station d'un quai sélectionné, que l'URL ne porte pas.
@@ -180,19 +207,32 @@ export function StopsMarkersData({
 				? [selectedStop]
 				: [];
 
-		return {
-			type: "FeatureCollection",
-			features: [
-				...areas.flatMap((area) => featuresOf(area, withStopPoints, selection, lineOnly)),
-				// Les quais du tableau ne sont pas restreints à la ligne filtrée : seul le sélectionné est montré.
-				...selectedArea.flatMap((area) =>
-					featuresOf(area, withStopPoints, selection, lineOnly).filter(
-						(feature) => !lineOnly || feature.properties.selected,
-					),
+		const candidates = [
+			...areas.flatMap((area) => featuresOf(area, withStopPoints, selection, lineOnly)),
+			// Les quais du tableau ne sont pas restreints à la ligne filtrée : seul le sélectionné est montré.
+			...selectedArea.flatMap((area) =>
+				featuresOf(area, withStopPoints, selection, lineOnly).filter(
+					({ feature }) => !lineOnly || feature.properties.selected,
 				),
-			],
-		};
-	}, [data, level, lineOnly, loaded, selectedRef, selectedStop, selectedStopPointRef]);
+			),
+		];
+
+		// Les stations se distinguent dès qu'un homonyme est affiché ; les quais, seulement s'il est tout proche.
+		const homonyms = new Set([
+			...findHomonyms(candidates.filter(({ feature }) => feature.properties.kind === "area")),
+			...findHomonyms(
+				candidates.filter(({ feature }) => feature.properties.kind !== "area"),
+				STOP_POINT_HOMONYM_DISTANCE_M,
+			),
+		]);
+		for (const candidate of homonyms) {
+			const network = networkNames.get(candidate.networkId);
+			// Une propriété présente, même indéfinie, vaut `has` pour la carte : elle n'est posée qu'au besoin.
+			if (network !== undefined) candidate.feature.properties.network = network;
+		}
+
+		return { type: "FeatureCollection", features: candidates.map(({ feature }) => feature) };
+	}, [data, level, lineOnly, loaded, networkNames, selectedRef, selectedStop, selectedStopPointRef]);
 
 	useEffect(() => {
 		source.setData(geojson);

@@ -65,6 +65,38 @@ const selectedStopIconImage: ExpressionSpecification = ["concat", SELECTED_STOP_
 
 const LABEL_TEXT_SIZE = 12;
 
+const NETWORK_FONT_SCALE = 0.85;
+
+/**
+ * Nom de l'arrêt, suivi du réseau sur une seconde ligne, plus discrète, lorsqu'un homonyme d'un autre
+ * réseau est affiché.
+ */
+const labelText: ExpressionSpecification = [
+	"format",
+	["get", "label"],
+	{},
+	["case", ["has", "network"], ["concat", "\n", ["get", "network"]], ""],
+	{ "font-scale": NETWORK_FONT_SCALE, "text-color": "#3A4458" },
+];
+
+/** Seuil entier : il tombe sur un zoom de tuile, le libellé apparaît donc sans retard. */
+const labelTextFromMinZoom: ExpressionSpecification = [
+	"step",
+	["zoom"],
+	["format", "", {}],
+	STOPS_LABEL_MIN_ZOOM,
+	labelText,
+];
+
+const LABEL_OFFSET_X = (STOP_ICON_WIDTH / 2 + 3) / LABEL_TEXT_SIZE;
+const LABEL_OFFSET_Y = -STOP_PLATE_CENTER_OFFSET / LABEL_TEXT_SIZE;
+
+/**
+ * Un libellé sur deux lignes est centré sur la plaque : il est abaissé d'une demi-ligne de réseau
+ * (interligne de 1,2 em), pour que le nom de l'arrêt reste aligné sur elle.
+ */
+const NETWORK_LINE_SHIFT = (1.2 * NETWORK_FONT_SCALE) / 2;
+
 const initialData: SourceSpecification = {
 	type: "geojson",
 	data: { type: "FeatureCollection", features: [] },
@@ -103,7 +135,13 @@ const labelLayout: SymbolLayerSpecification["layout"] = {
 	"text-size": LABEL_TEXT_SIZE,
 	"text-anchor": "left",
 	// Aligné sur le centre de la plaque, juste à sa droite.
-	"text-offset": [(STOP_ICON_WIDTH / 2 + 3) / LABEL_TEXT_SIZE, -STOP_PLATE_CENTER_OFFSET / LABEL_TEXT_SIZE],
+	"text-offset": [
+		"case",
+		["has", "network"],
+		["literal", [LABEL_OFFSET_X, LABEL_OFFSET_Y + NETWORK_LINE_SHIFT]],
+		["literal", [LABEL_OFFSET_X, LABEL_OFFSET_Y]],
+	],
+	"text-justify": "left",
 	"text-optional": true,
 	"text-max-width": 10,
 	// La pointe de la hampe marque l'emplacement exact de l'arrêt.
@@ -140,8 +178,7 @@ const areasLayerObject: AddLayerObject = {
 	layout: {
 		...labelLayout,
 		"icon-image": stopIconImage,
-		// Seuil entier : il tombe sur un zoom de tuile, le libellé apparaît donc sans retard.
-		"text-field": ["step", ["zoom"], "", STOPS_LABEL_MIN_ZOOM, ["get", "label"]],
+		"text-field": labelTextFromMinZoom,
 	},
 	paint: {
 		...labelPaint,
@@ -160,7 +197,7 @@ const pointsLayerObject: AddLayerObject = {
 	layout: {
 		...labelLayout,
 		"icon-image": stopIconImage,
-		"text-field": ["get", "label"],
+		"text-field": labelText,
 	},
 	paint: {
 		...labelPaint,
@@ -183,7 +220,7 @@ const selectedAreasLayerObject: AddLayerObject = {
 		...labelLayout,
 		"icon-image": selectedStopIconImage,
 		"icon-size": SELECTED_STOP_ICON_SCALE,
-		"text-field": ["get", "label"],
+		"text-field": labelText,
 	},
 	paint: {
 		...labelPaint,
@@ -202,7 +239,7 @@ const selectedPointsLayerObject: AddLayerObject = {
 		...labelLayout,
 		"icon-image": selectedStopIconImage,
 		"icon-size": SELECTED_STOP_ICON_SCALE,
-		"text-field": ["get", "label"],
+		"text-field": labelText,
 	},
 	paint: {
 		...labelPaint,
@@ -223,7 +260,7 @@ const linePointsLayerObject: AddLayerObject = {
 	layout: {
 		...labelLayout,
 		"icon-image": stopIconImage,
-		"text-field": ["step", ["zoom"], "", STOPS_LABEL_MIN_ZOOM, ["get", "label"]],
+		"text-field": labelTextFromMinZoom,
 	},
 	paint: {
 		...labelPaint,
@@ -240,7 +277,7 @@ const selectedLinePointsLayerObject: AddLayerObject = {
 		...labelLayout,
 		"icon-image": selectedStopIconImage,
 		"icon-size": SELECTED_STOP_ICON_SCALE,
-		"text-field": ["get", "label"],
+		"text-field": labelText,
 	},
 	paint: labelPaint,
 };

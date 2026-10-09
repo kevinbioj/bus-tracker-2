@@ -25,6 +25,8 @@ export type StopMarker = {
 	lineRefs: string[];
 	/** Mode le plus lourd qui dessert la station : il en donne le pictogramme. */
 	mode: StopAreaMode;
+	/** Réseau principal de la station. */
+	networkId: number;
 	/** Présents seulement lorsqu'ils ont été demandés, aux zooms les plus forts. */
 	stopPoints?: StopPoint[];
 };

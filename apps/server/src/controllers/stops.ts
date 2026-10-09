@@ -43,6 +43,8 @@ type StopMarker = {
 	longitude: number;
 	lineRefs: string[];
 	mode: StopAreaMode;
+	/** Réseau principal : il distingue sur la carte deux stations homonymes de réseaux différents. */
+	networkId: number;
 	stopPoints?: StopPoint[];
 };
 
@@ -93,29 +95,41 @@ hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) 
 			{ limit: MARKERS_LIMIT, networkIds: networkId, lineRefs: lineRefs !== undefined ? [...lineRefs] : undefined },
 		);
 
-		items = stopAreas.map(({ ref, name, latitude, longitude, lineRefs: areaLineRefs, mode, stopPoints = [] }) => ({
-			ref,
-			name,
-			latitude,
-			longitude,
-			lineRefs: areaLineRefs,
-			// Fiche publiée avant l'apparition du mode : un bus, le temps qu'elle soit republiée.
-			mode: mode ?? "BUS",
-			// Sur une ligne filtrée, la carte ne montre que ses quais, à tout zoom : ils sont toujours servis.
-			// Un quai publié sans ses lignes reprend celles de sa station, qui en est.
-			...(lineRefs !== undefined
-				? {
-						stopPoints: publicStopPoints(
-							stopPoints.filter(
-								(stopPoint) =>
-									stopPoint.lineRefs === undefined || stopPoint.lineRefs.some((lineRef) => lineRefs.has(lineRef)),
+		items = stopAreas.map(
+			({
+				ref,
+				name,
+				latitude,
+				longitude,
+				lineRefs: areaLineRefs,
+				mode,
+				networkId: areaNetworkId,
+				stopPoints = [],
+			}) => ({
+				ref,
+				name,
+				latitude,
+				longitude,
+				lineRefs: areaLineRefs,
+				// Fiche publiée avant l'apparition du mode : un bus, le temps qu'elle soit republiée.
+				mode: mode ?? "BUS",
+				networkId: areaNetworkId,
+				// Sur une ligne filtrée, la carte ne montre que ses quais, à tout zoom : ils sont toujours servis.
+				// Un quai publié sans ses lignes reprend celles de sa station, qui en est.
+				...(lineRefs !== undefined
+					? {
+							stopPoints: publicStopPoints(
+								stopPoints.filter(
+									(stopPoint) =>
+										stopPoint.lineRefs === undefined || stopPoint.lineRefs.some((lineRef) => lineRefs.has(lineRef)),
+								),
 							),
-						),
-					}
-				: withStopPoints
-					? { stopPoints: publicStopPoints(stopPoints) }
-					: {}),
-		}));
+						}
+					: withStopPoints
+						? { stopPoints: publicStopPoints(stopPoints) }
+						: {}),
+			}),
+		);
 		markersCache.set(cacheKey, { items, sourceKeys: new Set(stopAreas.map(sourceKeyOf)) });
 	}
 
