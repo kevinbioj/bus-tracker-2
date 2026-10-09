@@ -14,7 +14,7 @@ import { initializeResources } from "./jobs/initialize-resources.js";
 import { publishDataSourceManifests } from "./jobs/publish-data-sources.js";
 import { createJourneyPathPublisher } from "./jobs/publish-journey-paths.js";
 import { publishServiceAlerts } from "./jobs/publish-service-alerts.js";
-import { publishStopAreas } from "./jobs/publish-stop-areas.js";
+import { getRealtimeServiceFingerprint, publishStopAreas } from "./jobs/publish-stop-areas.js";
 import { serveStopDepartures } from "./jobs/serve-stop-departures.js";
 import { sweepJourneys } from "./jobs/sweep-journeys.js";
 import { updateResources } from "./jobs/update-resources.js";
@@ -168,13 +168,9 @@ async function computeCurrentJourneys() {
 						source.observedNetworkRefs.add(journey.networkRef);
 					}
 
-					// Les arrêts créés par le flux temps réel vont et viennent avec les déviations : l'inventaire
-					// est republié dès que leur ensemble change, sans attendre le rafraîchissement horaire.
-					// Les quais comptent : un arrêt peut rejoindre une station déjà complétée par un autre.
-					const realtimeStopAreasFingerprint = [...source.realtimeStopAreas.values()]
-						.flatMap((stopArea) => stopArea.stops.map((stop) => `${stopArea.id}:${stop.id}`))
-						.sort()
-						.join("|");
+					// Les dessertes ajoutées vont et viennent avec les déviations : l'inventaire est republié dès que
+					// leur ensemble change, sans attendre le rafraîchissement horaire.
+					const realtimeStopAreasFingerprint = getRealtimeServiceFingerprint(source);
 					if (realtimeStopAreasFingerprint !== (publishedRealtimeStopAreas.get(source.id) ?? "")) {
 						await publishStopAreas(redis, configuration.id, [source]);
 						publishedRealtimeStopAreas.set(source.id, realtimeStopAreasFingerprint);

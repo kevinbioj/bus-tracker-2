@@ -15,6 +15,7 @@ import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { scatterOverlappingPositions } from "../utils/scatter-overlapping-positions.js";
 import { stackStoppedPositions } from "../utils/stack-stopped-positions.js";
+import { getStopAreaId } from "../utils/stop-area-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 import {
 	createCallsFromTripUpdate,
@@ -1155,23 +1156,6 @@ export function collectRealtimeStopAreas(source: Source) {
 	}
 
 	return stopAreas;
-}
-
-const staticStopAreaIds = new WeakMap<Gtfs, Map<string, string>>();
-
-function getStopAreaId(source: Source, gtfs: Gtfs, stopId: string) {
-	for (const stopArea of source.realtimeStopAreas.values()) {
-		if (stopArea.stops.some(({ id }) => id === stopId)) return stopArea.id;
-	}
-
-	let stopAreaIds = staticStopAreaIds.get(gtfs);
-	if (stopAreaIds === undefined) {
-		stopAreaIds = new Map(
-			gtfs.stopAreas.values().flatMap((stopArea) => stopArea.stops.map(({ id }) => [id, stopArea.id] as const)),
-		);
-		staticStopAreaIds.set(gtfs, stopAreaIds);
-	}
-	return stopAreaIds.get(stopId);
 }
 
 /** Publiés tels quels : le quai supprimé, une fois franchi, ne figure plus parmi les dessertes publiées. */

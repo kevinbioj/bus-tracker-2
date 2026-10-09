@@ -14,10 +14,12 @@ import {
 import { captureException } from "@bus-tracker/monitoring";
 import type { createRedisClient } from "@bus-tracker/redis";
 
+import type { Gtfs } from "../model/gtfs.js";
 import type { Route, RouteType } from "../model/route.js";
 import type { Source } from "../model/source.js";
 import type { Stop } from "../model/stop.js";
 import { padSourceId } from "../utils/pad-source-id.js";
+import { getStopAreaId } from "../utils/stop-area-id.js";
 import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
 
 /** Bit de `StopTimeStore.flagsBitmask` marquant un arrêt où la montée est interdite. */
@@ -88,7 +90,34 @@ function buildStopPoints(
 	});
 }
 
-function buildStopAreaManifests(providerId: string, source: Source, updatedAt: string): StopAreaManifest[] {
+/** Dessertes ajoutées par une déviation, avec la station de leur arrêt. */
+function* realtimeServedCalls(source: Source, gtfs: Gtfs) {
+	for (const journeyKey of source.modifiedJourneyKeys) {
+		const journey = gtfs.journeys.get(journeyKey);
+		if (journey === undefined) continue;
+		for (const call of journey.calls) {
+			if (call.modification !== "ADDED" || call.status === "SKIPPED") continue;
+			const areaId = getStopAreaId(source, gtfs, call.stop.id);
+			if (areaId !== undefined) yield { journey, call, areaId };
+		}
+	}
+}
+
+/** Change dès qu'une desserte ajoutée apparaît ou disparaît : l'inventaire est alors à republier. */
+export function getRealtimeServiceFingerprint(source: Source) {
+	const gtfs = source.gtfs;
+	if (gtfs === undefined) return "";
+
+	const entries = new Set([
+		...source.realtimeStopAreas
+			.values()
+			.flatMap((stopArea) => stopArea.stops.map((stop) => `${stopArea.id}:${stop.id}`)),
+		...realtimeServedCalls(source, gtfs).map(({ journey, call }) => `${call.stop.id}:${journey.trip.route.id}`),
+	]);
+	return [...entries].sort().join("|");
+}
+
+export function buildStopAreaManifests(providerId: string, source: Source, updatedAt: string): StopAreaManifest[] {
 	const gtfs = source.gtfs;
 	if (gtfs === undefined) return [];
 
@@ -165,27 +194,13 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 		}
 	}
 
-	// Arrêts créés par le flux temps réel : seules les courses déviées les desservent. Ils forment leur
-	// propre station, ou complètent celle du GTFS à laquelle ils sont rattachés.
-	const realtimeAreaIdByStopId = new Map<string, string>();
-	for (const stopArea of source.realtimeStopAreas.values()) {
-		for (const stop of stopArea.stops) {
-			if (!gtfs.stops.has(stop.id)) realtimeAreaIdByStopId.set(stop.id, stopArea.id);
-		}
-	}
-
-	for (const journeyKey of source.modifiedJourneyKeys) {
-		const journey = gtfs.journeys.get(journeyKey);
-		if (journey === undefined) continue;
-		for (const call of journey.calls) {
-			const areaId = realtimeAreaIdByStopId.get(call.stop.id);
-			if (areaId === undefined) continue;
-			const networkRef = networkOf(journey.trip, journey);
-			record(areaId, networkRef, journey.trip.route);
-			recordStop(call.stop.id, networkRef, journey.trip.route);
-			departingAreaIds.add(areaId);
-			if (offersArrivals(journey.trip.route)) arrivalAreaIds.add(areaId);
-		}
+	// Arrêts desservis par une déviation : créés par le flux temps réel, ou déclarés sans desserte théorique.
+	for (const { journey, call, areaId } of realtimeServedCalls(source, gtfs)) {
+		const networkRef = networkOf(journey.trip, journey);
+		record(areaId, networkRef, journey.trip.route);
+		recordStop(call.stop.id, networkRef, journey.trip.route);
+		departingAreaIds.add(areaId);
+		if (offersArrivals(journey.trip.route)) arrivalAreaIds.add(areaId);
 	}
 
 	// Une station complétée par le flux temps réel remplace celle du GTFS statique.
@@ -218,9 +233,8 @@ function buildStopAreaManifests(providerId: string, source: Source, updatedAt: s
 					stopArea.name,
 					stopArea.stops,
 					(stop) => stopRefOf(networkRef, stop.id),
-					(stop) =>
-						// Un quai qu'aucune course ne dessert reprend le mode de sa station.
-						stopModes.get(stop.id) ?? service.mode,
+					// Sans desserte, un quai déclaré reprend le mode de sa station ; un arrêt du seul flux temps réel est un bus.
+					(stop) => stopModes.get(stop.id) ?? (gtfs.stops.has(stop.id) ? service.mode : "BUS"),
 					(stop) => stopLineRefs.get(stop.id) ?? [],
 				),
 				providerId,
