@@ -7,6 +7,10 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://bdx.mecatran.com/utw/ws/gtfsfeed/vehicles/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt",
 			"https://bdx.mecatran.com/utw/ws/gtfsfeed/realtime/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt",
+			{
+				href: "https://bdx.mecatran.com/utw/ws/gtfsfeed/alerts/bordeaux?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt",
+				pollMs: 120_000,
+			},
 		],
 		mode: "NO-TU",
 		excludeScheduled: true,

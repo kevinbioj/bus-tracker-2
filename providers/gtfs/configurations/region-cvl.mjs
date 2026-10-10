@@ -18,6 +18,10 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/bourges-agglobus.zip",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/agglobus-bourges-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			{
+				href: "https://proxy.transport.data.gouv.fr/resource/agglobus-bourges-gtfs-rt-alerts?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+				pollMs: 120_000,
+			},
 		],
 		getNetworkRef: () => "BOURGES",
 	},
@@ -134,6 +138,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/trip-updates",
 			"https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/vehicle-positions",
+			{ href: "https://data.filbleu.fr/ws-tr/gtfs-rt/opendata/service-alerts", pollMs: 120_000 },
 		],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -156,6 +161,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/le-vib-vierzon-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/le-vib-vierzon-gtfs-rt-vehicle-position",
+			{ href: "https://proxy.transport.data.gouv.fr/resource/le-vib-vierzon-gtfs-rt-alerts", pollMs: 120_000 },
 		],
 		excludeScheduled: true,
 		mode: "NO-TU",

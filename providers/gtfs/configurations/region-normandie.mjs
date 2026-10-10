@@ -94,6 +94,10 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
 			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=SEMO&dataFormat=GTFS-RT",
+			{
+				href: "https://api.atm.cityway.fr/dataflow/info-transport/download?provider=SEMO&dataFormat=GTFS-RT&dataProfil=OPENDATA",
+				pollMs: 120_000,
+			},
 		],
 		gtfsOptions: {
 			computeShapeDistTraveled: "always",
@@ -135,6 +139,10 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://api.atm.cityway.fr/dataflow/vehicule-tc-tr/download?provider=TRANSURBAIN&dataFormat=GTFS-RT",
 			"https://api.atm.cityway.fr/dataflow/horaire-tc-tr/download?provider=TRANSURBAIN&dataFormat=GTFS-RT",
+			{
+				href: "https://api.atm.cityway.fr/dataflow/info-transport/download?provider=TRANSURBAIN&dataFormat=GTFS-RT&dataProfil=OPENDATA",
+				pollMs: 120_000,
+			},
 		],
 		mode: "NO-TU",
 		// 2025/01/23 - stop_id values in the Vehicle Position feed match the stop_code GTFS field instead

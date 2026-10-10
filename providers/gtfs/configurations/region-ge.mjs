@@ -110,9 +110,22 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/mulhouse.zip",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/solea-mulhouse-gtfs-rt?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			{
+				href: "https://proxy.transport.data.gouv.fr/resource/solea-mulhouse-gtfs-rt-service-alert?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+				pollMs: 120_000,
+			},
 		],
 		excludeScheduled: (journey) => journey.route.id === "93",
 		getNetworkRef: () => "SOLEA",
+		// Le flux d'alertes désigne lignes et arrêts par leur identifiant NeTEx (SITRAM:Line:16).
+		mapAlert: (alert) => {
+			for (const entity of alert.informedEntity ?? []) {
+				entity.routeId = entity.routeId?.replace(/^SITRAM:Line:/, "");
+				entity.stopId = entity.stopId?.replace(/^SITRAM:StopPoint:/, "");
+			}
+
+			return alert;
+		},
 	},
 	{
 		id: "strasbourg",

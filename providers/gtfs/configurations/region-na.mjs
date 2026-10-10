@@ -48,22 +48,6 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
-		id: "agen-scolaire",
-		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/3fd582f2-e2ef-4ad7-894c-6f057b53b006",
-		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?src=true&dataset=agen-scolaire"],
-		maxVehiclePositionAgeMs: 10 * 60_000,
-		excludeScheduled: true,
-		mode: "NO-TU",
-		mapVehiclePosition: (vehicle) =>
-			Temporal.Now.instant()
-				.since(Temporal.Instant.fromEpochMilliseconds(vehicle.timestamp * 1000))
-				.total("minutes") < 60
-				? vehicle
-				: undefined,
-		getNetworkRef: () => "TEMPOBUS",
-		getVehicleRef: () => undefined,
-	},
-	{
 		id: "angouleme",
 		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/021fd4a3-ba9a-4d78-aa65-71d4d289f389",
 		realtimeResourceHrefs: [
@@ -81,6 +65,10 @@ const sources = [
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/txiktxak?apiKey=0f64273f070b7d4621002040646e180d374e5373",
 		realtimeResourceHrefs: [
 			"https://app.mecatran.com/utw/ws/gtfsfeed/realtime/txiktxak?apiKey=0f64273f070b7d4621002040646e180d374e5373",
+			{
+				href: "https://app.mecatran.com/utw/ws/gtfsfeed/alerts/txiktxak?apiKey=0f64273f070b7d4621002040646e180d374e5373",
+				pollMs: 120_000,
+			},
 		],
 		excludeScheduled: true,
 		getNetworkRef: () => "TXIKTXAK",

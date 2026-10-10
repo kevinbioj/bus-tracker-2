@@ -166,6 +166,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://feed-rdtpm-toulon.ratpdev.com/VehiclePosition/GTFS-RT",
 			"https://feed-rdtpm-toulon.ratpdev.com/TripUpdate/GTFS-RT",
+			{ href: "https://notify.ratpdev.com/api/networks/RD%20TPM/alerts/gtfsrt", pollMs: 120_000 },
 		],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -197,7 +198,10 @@ const sources = [
 	{
 		id: "zou-proximite",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/",
-		realtimeResourceHrefs: ["https://proxy-data.zou.maregionsud.fr/GTFS-RT/GTFS-RT_trips_ZOU_proximite.pb"],
+		realtimeResourceHrefs: [
+			"https://proxy-data.zou.maregionsud.fr/GTFS-RT/GTFS-RT_trips_ZOU_proximite.pb",
+			{ href: "https://proxy-data.zou.maregionsud.fr/GTFS-RT/GTFS-RT_SA_ZOU_proximite.pb", pollMs: 120_000 },
+		],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		getNetworkRef: () => "ZOU",
 		mapLineRef: (lineRef) => lineRef.replace("ZOP:", ""),
@@ -205,7 +209,10 @@ const sources = [
 	{
 		id: "zou-express",
 		staticResourceHref: "https://www.datasud.fr/fr/dataset/datasets/3743/resource/5153/download/",
-		realtimeResourceHrefs: ["https://proxy-data.zou.maregionsud.fr/GTFS-RT/GTFS-RT_trips_ZOU_express.pb"],
+		realtimeResourceHrefs: [
+			"https://proxy-data.zou.maregionsud.fr/GTFS-RT/GTFS-RT_trips_ZOU_express.pb",
+			{ href: "https://proxy-data.zou.maregionsud.fr/GTFS-RT/GTFS-RT_SA_ZOU_express.pb", pollMs: 120_000 },
+		],
 		gtfsOptions: { computeShapeDistTraveled: "always", filterTrips: (trip) => trip.route.agency.id === "EXP" },
 		getNetworkRef: () => "ZOU",
 		mapLineRef: (lineRef) => lineRef.replace("ZOE:", ""),

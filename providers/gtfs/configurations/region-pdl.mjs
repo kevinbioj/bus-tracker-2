@@ -6,6 +6,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-vehicle-position",
+			{ href: "https://proxy.transport.data.gouv.fr/resource/aleop-pdl-gtfs-rt-alerts", pollMs: 120_000 },
 		],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -45,6 +46,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://ara-api.enroute.mobi/irigo/gtfs/trip-updates",
 			"https://ara-api.enroute.mobi/irigo/gtfs/vehicle-positions",
+			{ href: "https://notify.ratpdev.com/api/networks/RD%20ANGERS/alerts/gtfsrt", pollMs: 120_000 },
 		],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -102,6 +104,10 @@ const sources = [
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/choletbus?apiKey=0b0f0b6035007b7f1243311973401c294e6a0143",
 		realtimeResourceHrefs: [
 			"https://app.mecatran.com/utw/ws/gtfsfeed/realtime/choletbus?apiKey=0b0f0b6035007b7f1243311973401c294e6a0143",
+			{
+				href: "https://app.mecatran.com/utw/ws/gtfsfeed/alerts/choletbus?apiKey=0b0f0b6035007b7f1243311973401c294e6a0143",
+				pollMs: 120_000,
+			},
 		],
 		getNetworkRef: () => "CHOLETBUS",
 	},
@@ -125,7 +131,10 @@ const sources = [
 	{
 		id: "roche-sur-yon",
 		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/impulsyon/current/revision/gtfs",
-		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/impulsyon/realtime"],
+		realtimeResourceHrefs: [
+			"https://gtfs-rt.infra-hubup.fr/impulsyon/realtime",
+			{ href: "https://proxy.transport.data.gouv.fr/resource/la-roche-sur-yon-ct-gtfs-rt-alerts", pollMs: 120_000 },
+		],
 		mode: "NO-TU",
 		mapVehiclePosition: (vehicle) => {
 			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {

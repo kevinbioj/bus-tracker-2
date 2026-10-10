@@ -194,7 +194,10 @@ const sources = [
 		id: "narbonne",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/narbonne/exports/scolaires-sans-tad.zip",
-		realtimeResourceHrefs: ["https://feed-citibus-narbonne.ratpdev.com/GTFS-RT/gtfs-rt.bin"],
+		realtimeResourceHrefs: [
+			"https://feed-citibus-narbonne.ratpdev.com/GTFS-RT/gtfs-rt.bin",
+			{ href: "https://notify.ratpdev.com/api/networks/RD%20GRAND%20NARBONNE/alerts/gtfsrt", pollMs: 120_000 },
+		],
 		mode: "NO-TU",
 		getNetworkRef: () => "NARBONNE",
 	},

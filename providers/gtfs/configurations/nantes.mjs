@@ -140,6 +140,7 @@ const sources = [
 				pollMs: 60_000,
 			},
 			// "https://api.staging.okina.fr/gateway/semgtfsrt/realtime/vehicle-positions/NAOLIBORG",
+			{ href: "https://proxy.transport.data.gouv.fr/resource/naolib-nantes-gtfs-rt-alerts", pollMs: 120_000 },
 		],
 		excludeScheduled: (trip) => nantesExcludedLines.includes(trip.route.name),
 		getNetworkRef: () => "NAOLIB",

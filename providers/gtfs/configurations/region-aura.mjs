@@ -97,6 +97,10 @@ const sources = [
 		staticResourceHref: "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=ISERE&dataFormat=gtfs",
 		realtimeResourceHrefs: [
 			"https://api.oura3.cityway.fr/dataflow/horaire-tr/download?provider=ISERE&dataFormat=GTFS-RT&dataProfil=OPENDATA",
+			{
+				href: "https://api.oura3.cityway.fr/dataflow/info-transport/download?provider=ISERE&dataFormat=GTFS-RT&dataProfil=OPENDATA",
+				pollMs: 120_000,
+			},
 		],
 		getNetworkRef: () => "AURA-38",
 		getAheadTime: () => 5 * 60,
@@ -120,7 +124,13 @@ const sources = [
 		id: "chambery",
 		staticResourceHref:
 			"https://mwe.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
-		realtimeResourceHrefs: ["https://proxy.transport.data.gouv.fr/resource/synchrobus-chambery-gtfs-rt-trip-update"],
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/synchrobus-chambery-gtfs-rt-trip-update",
+			{
+				href: "https://mwe.mecatran.com/utw/ws/gtfsfeed/alerts/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72",
+				pollMs: 120_000,
+			},
+		],
 		getNetworkRef: () => "SYNCHRO",
 	},
 	{
@@ -317,11 +327,24 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://api.stas3.cityway.fr/dataflow/horaire-tc-tr/download?provider=STAS&dataFormat=GTFS-RT",
 			"https://api.stas3.cityway.fr/dataflow/vehicule-tc-tr/download?provider=STAS&dataFormat=GTFS-RT",
+			{
+				href: "https://api.stas3.cityway.fr/dataflow/info-transport/download?provider=STAS&dataFormat=GTFS-RT&dataProfil=OPENDATA",
+				pollMs: 120_000,
+			},
 		],
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "STAS",
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+		// Le flux d'alertes désigne lignes et arrêts par leur identifiant NeTEx (STAS:Line:50).
+		mapAlert: (alert) => {
+			for (const entity of alert.informedEntity ?? []) {
+				entity.routeId = entity.routeId?.replace(/^STAS:Line:/, "");
+				entity.stopId = entity.stopId?.replace(/^STAS:StopPoint:/, "");
+			}
+
+			return alert;
+		},
 	},
 	{
 		id: "valence",
@@ -363,7 +386,10 @@ const sources = [
 		id: "vienne",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/vienne-mobi/exports/medias.zip",
-		realtimeResourceHrefs: ["https://feed-vienne-mobi.ratpdev.com/GTFS-RT/gtfs-rt.bin"],
+		realtimeResourceHrefs: [
+			"https://feed-vienne-mobi.ratpdev.com/GTFS-RT/gtfs-rt.bin",
+			{ href: "https://notify.ratpdev.com/api/networks/VIENNE%20MOBI/alerts/gtfsrt", pollMs: 120_000 },
+		],
 		mode: "NO-TU",
 		getNetworkRef: () => "VIENNE",
 		getVehicleRef: (vehicle) => vehicle?.label,

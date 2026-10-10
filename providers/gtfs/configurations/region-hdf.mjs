@@ -36,6 +36,10 @@ const sources = [
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/boulogne/exports/medias.zip",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/marineo-boulonnais-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			{
+				href: "https://proxy.transport.data.gouv.fr/resource/marineo-boulonnais-gtfs-rt-alerts?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+				pollMs: 120_000,
+			},
 		],
 		getNetworkRef: () => "MARINEO",
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,

@@ -48,6 +48,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/bibus-brest-gtfs-rt-vehicle-position",
 			"https://proxy.transport.data.gouv.fr/resource/bibus-brest-gtfs-rt-trip-update",
+			{ href: "https://proxy.transport.data.gouv.fr/resource/bibus-brest-gtfs-rt-alerts", pollMs: 120_000 },
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "BIBUS",
@@ -120,7 +121,10 @@ const sources = [
 	{
 		id: "lorient",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/izilo.zip",
-		realtimeResourceHrefs: ["https://feed-rdla-lorient.ratpdev.com/GTFS-RT"],
+		realtimeResourceHrefs: [
+			"https://feed-rdla-lorient.ratpdev.com/GTFS-RT",
+			{ href: "https://proxy.transport.data.gouv.fr/resource/ctrl-lorient-gtfs-rt-alerts", pollMs: 120_000 },
+		],
 		getNetworkRef: () => "IZILO",
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
@@ -153,6 +157,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://feed-qub-quimper.ratpdev.com/GTFS-RT_tripUpdate/gtfs-rt.bin",
 			"https://feed-qub-quimper.ratpdev.com/GTFS-RT_vehiclePosition/gtfs-rt.bin",
+			{ href: "https://notify.ratpdev.com/api/networks/RD%20QUIMPER/alerts/gtfsrt", pollMs: 120_000 },
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "QUB",
@@ -165,11 +170,25 @@ const sources = [
 	{
 		id: "quimperle",
 		staticResourceHref: "https://pysae.com/api/v2/groups/quimperle/gtfs/pub",
-		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/quimperle/gtfs-rt"],
+		realtimeResourceHrefs: [
+			"https://pysae.com/api/v2/groups/quimperle/gtfs-rt",
+			{
+				href: "https://proxy.transport.data.gouv.fr/resource/tbk-quimperle-communaute-gtfs-rt-alerts",
+				pollMs: 120_000,
+			},
+		],
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "TBK",
 		mapLineRef: (lineRef) => lineRef.split("-")[0],
+		// Le flux d'alertes ne vient pas de Pysae : ses lignes n'ont pas le suffixe -652 du GTFS.
+		mapAlert: (alert) => {
+			for (const entity of alert.informedEntity ?? []) {
+				if (entity.routeId !== undefined && !entity.routeId.includes("-")) entity.routeId += "-652";
+			}
+
+			return alert;
+		},
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
@@ -178,6 +197,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/star-rennes-integration-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/star-rennes-integration-gtfs-rt-vehicle-position",
+			{ href: "https://proxy.transport.data.gouv.fr/resource/star-rennes-integration-gtfs-rt-alerts", pollMs: 120_000 },
 		],
 		excludeScheduled: (trip) => trip.route.type !== "SUBWAY",
 		mode: "NO-TU",
@@ -216,6 +236,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-trip-update",
 			"https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-vehicle-position",
+			{ href: "https://proxy.transport.data.gouv.fr/resource/kiceo-vannes-gtfs-rt-service-alert", pollMs: 120_000 },
 		],
 		mode: "NO-TU",
 		excludeScheduled: true,

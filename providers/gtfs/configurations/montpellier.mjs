@@ -6,6 +6,7 @@ const sources = [
 		realtimeResourceHrefs: [
 			{ href: "https://gtfsproxy.e-tam.fr/COMMON/TripUpdate.pb", pollMs: 30_000 },
 			"https://gtfsproxy.e-tam.fr/COMMON/VehiclePosition.pb",
+			{ href: "https://gtfsproxy.e-tam.fr/COMMON/Alert.pb", pollMs: 120_000 },
 		],
 		mode: "NO-TU",
 		getNetworkRef: () => "TAM",
