@@ -1,6 +1,24 @@
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
+		id: "airbus-nantes",
+		staticResourceHref: "https://pysae.com/api/v2/groups/airbus-nantes/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/airbus-nantes/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "AIRBUS-NTE",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "airbus-st-nazaire",
+		staticResourceHref: "https://pysae.com/api/v2/groups/airbus-st-nazaire/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/airbus-st-nazaire/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "AIRBUS-SNR",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "aleop",
 		staticResourceHref: "https://donnees.paysdelaloire.fr/data/pdl.zip",
 		realtimeResourceHrefs: [
@@ -99,6 +117,31 @@ const sources = [
 		},
 	},
 	{
+		id: "brevibus",
+		staticResourceHref: "https://pysae.com/api/v2/groups/brevibus/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/brevibus/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "BREVIBUS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "cbus",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/cbus/current/revision/gtfs",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/cbus/realtime"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		mapVehiclePosition: (vehicle) => {
+			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
+				vehicle.trip = undefined;
+			}
+
+			return vehicle;
+		},
+		getNetworkRef: () => "CBUS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "cholet",
 		staticResourceHref:
 			"https://app.mecatran.com/utw/ws/gtfsfeed/static/choletbus?apiKey=0b0f0b6035007b7f1243311973401c294e6a0143",
@@ -112,6 +155,15 @@ const sources = [
 		getNetworkRef: () => "CHOLETBUS",
 	},
 	{
+		id: "fontelys",
+		staticResourceHref: "https://pysae.com/api/v2/groups/sovetours-navettes-fontelys/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/sovetours-navettes-fontelys/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "FONTELYS",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "guerande",
 		staticResourceHref:
 			"https://transport.data.gouv.fr/resources/83762/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
@@ -122,11 +174,64 @@ const sources = [
 		getNetworkRef: () => "GUERANDE-ATLANTIQUE",
 	},
 	{
+		id: "heoh",
+		staticResourceHref: "https://pysae.com/api/v2/groups/heoh/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/heoh/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "HEOH",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "illygo",
+		staticResourceHref: "https://pysae.com/api/v2/groups/illygo/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/illygo/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "ILLYGO",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "laval",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rd-laval/exports/pan.zip",
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "LAVAL",
+	},
+	{
+		id: "maybus",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=maybus",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=maybus"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "MAYBUS",
+		getVehicleRef: () => undefined,
+	},
+	{
+		id: "pornic-agglo",
+		staticResourceHref: "https://pysae.com/api/v2/groups/navettes_pornicagglo/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/navettes_pornicagglo/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "PORNIC-AGGLO",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
+		id: "reso",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/reso/current/revision/gtfs",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/reso/realtime"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		mapVehiclePosition: (vehicle) => {
+			if (/(?:DM|\d{6})-.+/.test(vehicle.trip?.routeId)) {
+				vehicle.trip = undefined;
+			}
+
+			return vehicle;
+		},
+		getNetworkRef: () => "RESO",
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
 		id: "roche-sur-yon",
@@ -160,6 +265,15 @@ const sources = [
 		realtimeResourceHrefs: [],
 		getNetworkRef: () => "OGALO",
 		getDestination: (journey) => journey?.calls.at(-1)?.stop.name,
+	},
+	{
+		id: "yole",
+		staticResourceHref: "https://pysae.com/api/v2/groups/challans/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/challans/gtfs-rt"],
+		mode: "NO-TU",
+		excludeScheduled: true,
+		getNetworkRef: () => "YOLE",
+		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 ];
 
