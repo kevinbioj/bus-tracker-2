@@ -44,6 +44,7 @@ const sources = [
 		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "TEMPOBUS",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
