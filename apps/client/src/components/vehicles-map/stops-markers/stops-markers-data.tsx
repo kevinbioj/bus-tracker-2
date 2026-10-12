@@ -60,8 +60,7 @@ type StopCandidate = { feature: StopFeature; name: string; networkId: number; la
 /**
  * Marqueurs d'une station : elle-même, puis ses quais lorsqu'ils sont chargés — la couche se charge
  * de n'en montrer qu'une partie selon le zoom. Une station dont les quais sont inconnus en reçoit un
- * à sa propre position, pour rester affichée au-delà du seuil. Sur une ligne filtrée, seuls ses quais,
- * montrés à tout zoom.
+ * à sa propre position, pour rester affichée au-delà du seuil. Sur une ligne filtrée, seuls ses quais.
  */
 function featuresOf(area: Area, withStopPoints: boolean, selection: Selection, lineOnly: boolean): StopCandidate[] {
 	const areaSelected = area.ref === selection.stopRef;
@@ -147,9 +146,8 @@ export function StopsMarkersData({
 		};
 	}, [map]);
 
-	// Sur une ligne filtrée, ses quais sont affichés à tout zoom.
 	const lineOnly = lineId !== undefined;
-	const loaded = lineOnly || level !== "none";
+	const loaded = level !== "none";
 
 	const { data, refetch } = useQuery(
 		GetStopMarkersQuery(bounds, {

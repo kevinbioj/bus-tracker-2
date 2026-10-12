@@ -106,7 +106,7 @@ const initialData: SourceSpecification = {
  * Nature d'un marqueur : `area`, une station, affichée jusqu'au seuil ; `point`, un de ses quais,
  * affiché au-delà. Chaque station a au moins un quai : une station d'un seul quai, ou dont les quais
  * sont inconnus, en produit un à sa propre position. `line-point` : un quai de la ligne filtrée, seul
- * affiché à tout zoom, sans station.
+ * affiché, sans station.
  */
 export type StopFeatureKind = "area" | "point" | "line-point";
 
@@ -126,6 +126,17 @@ function fadeOutAtThreshold(appearAt?: number): ExpressionSpecification {
 		0,
 	] as ExpressionSpecification;
 }
+
+/** Opacité d'un marqueur qui apparaît en fondu à partir d'un zoom. */
+const fadeInFrom = (zoom: number): ExpressionSpecification => [
+	"interpolate",
+	["linear"],
+	["zoom"],
+	zoom,
+	0,
+	zoom + 0.4,
+	1,
+];
 
 /** Opacité d'un quai : il apparaît au seuil, à mesure que sa station s'efface. */
 const fadeInAtThreshold: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], FADE_START, 0, FADE_END, 1];
@@ -249,13 +260,14 @@ const selectedPointsLayerObject: AddLayerObject = {
 };
 
 /**
- * Quais de la ligne filtrée : peu nombreux, ils s'affichent à tout zoom, sans passer par leur
+ * Quais de la ligne filtrée : ils s'affichent dès l'apparition des arrêts, sans passer par leur
  * station — c'est le quai où passe la ligne qu'on cherche.
  */
 const linePointsLayerObject: AddLayerObject = {
 	id: "stops-line-points",
 	source: "stops",
 	type: "symbol",
+	minzoom: STOPS_MIN_ZOOM,
 	filter: ["all", ["==", ["get", "kind"], "line-point"], ["!", ["get", "selected"]]],
 	layout: {
 		...labelLayout,
@@ -264,7 +276,8 @@ const linePointsLayerObject: AddLayerObject = {
 	},
 	paint: {
 		...labelPaint,
-		"text-opacity": ["interpolate", ["linear"], ["zoom"], STOPS_LABEL_MIN_ZOOM, 0, STOPS_LABEL_MIN_ZOOM + 0.4, 1],
+		"icon-opacity": fadeInFrom(STOPS_MIN_ZOOM),
+		"text-opacity": fadeInFrom(STOPS_LABEL_MIN_ZOOM),
 	},
 };
 
