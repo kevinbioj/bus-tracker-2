@@ -23,41 +23,21 @@ import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components
 import { SELECTED_STOP_ICON_SCALE, STOP_PLATE_CENTER_OFFSET } from "~/components/vehicles-map/stops-markers/stop-icon";
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
+import { useFitToLines } from "~/hooks/use-fit-to-lines";
 import { TriangleAlertFilledIcon } from "~/icons/triangle-alert-filled";
 import { getWheelchairStatus, WheelchairIcon, type WheelchairStatus, wheelchairIconDetails } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
 
-/** En heure absolue, un départ de terminus n'est annoncé comme tel qu'à l'approche de son heure. */
-const DEPARTURE_ANNOUNCE_MINUTES = 10;
-
 function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDisplayMode, now: dayjs.Dayjs) {
 	const time = departure.expectedTime ?? departure.aimedTime;
-	const minutes = dayjs(time).diff(now, "minutes");
-
-	// Au terminus de départ, le véhicule attend souvent déjà son heure : le passage est annoncé comme
-	// un départ.
-	const departing = departure.origin === true && departure.callStatus !== "SKIPPED";
 
 	// En heure absolue, l'heure est toujours affichée telle quelle, même dépassée ou supprimée.
-	if (displayMode === "absolute") {
-		return departing && minutes < DEPARTURE_ANNOUNCE_MINUTES
-			? m.stop_departures_departure_at({ time: formatLocalTime(time) })
-			: formatLocalTime(time);
-	}
-
-	if (departing) {
-		if (minutes < 1) return m.stop_departures_departure_imminent();
-		return m.stop_departures_departure_in({ time: formatCountdown(minutes) });
-	}
-
-	// Un passage supprimé garde son attente, barrée : la raison de la suppression s'affiche dessous.
-	if (departure.callStatus === "SKIPPED") return formatCountdown(Math.max(minutes, 0));
+	if (displayMode === "absolute") return formatLocalTime(time);
 
 	// Moins d'une minute, ou heure dépassée alors que le véhicule n'est pas encore passé (source jugeant
-	// le passage sur sa progression) : il arrive.
-	if (minutes < 1)
-		return departure.terminus === true ? m.stop_arrivals_arrival_imminent() : m.stop_departures_approaching();
-	return formatCountdown(minutes);
+	// le passage sur sa progression).
+	const minutes = dayjs(time).diff(now, "minutes");
+	return minutes < 1 ? m.stop_call_under_a_minute() : formatCountdown(minutes);
 }
 
 /**
@@ -145,6 +125,7 @@ function DepartureRow({
 	// À l'arrivée, la provenance de la course plutôt que sa destination.
 	const headline =
 		(direction === "arrivals" ? departure.originName : undefined) ?? departure.destination ?? departure.stopName;
+	const headlineRef = useFitToLines<HTMLParagraphElement>(headline);
 
 	const accentColor = skipped
 		? "text-red-700 dark:text-red-500"
@@ -187,6 +168,7 @@ function DepartureRow({
 							departure.missionCode !== undefined ? "line-clamp-1" : "line-clamp-2",
 						)}
 						title={headline}
+						ref={headlineRef}
 					>
 						{headline}
 					</p>
@@ -214,7 +196,7 @@ function DepartureRow({
 					)}
 				</div>
 			</div>
-			<div className="flex shrink-0 items-center gap-1">
+			<div className="flex shrink-0 items-center gap-1 ml-2">
 				{departure.platformName !== undefined && (
 					<span
 						className="rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4.5 text-center text-[13px] font-bold leading-4 text-background"
