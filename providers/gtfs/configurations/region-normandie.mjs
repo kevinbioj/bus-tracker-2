@@ -429,20 +429,20 @@ const sources = [
 					],
 					mode: "NO-TU",
 					getNetworkRef: () => "BAGNOLES",
-					// mapTripUpdate: (tripUpdate, gtfs) => {
-					// 	if (!gtfs.routes.has(tripUpdate.trip.routeId)) {
-					// 		return;
-					// 	}
+					mapTripUpdate: (tripUpdate, gtfs) => {
+						if (!gtfs.routes.has(tripUpdate.trip.routeId)) {
+							return;
+						}
 
-					// 	return tripUpdate;
-					// },
-					// mapVehiclePosition: (vehiclePosition, gtfs) => {
-					// 	if (!gtfs.routes.has(vehiclePosition.trip?.routeId)) {
-					// 		return;
-					// 	}
+						return tripUpdate;
+					},
+					mapVehiclePosition: (vehiclePosition, gtfs) => {
+						if (!gtfs.routes.has(vehiclePosition.trip?.routeId)) {
+							return;
+						}
 
-					// 	return vehiclePosition;
-					// },
+						return vehiclePosition;
+					},
 				},
 			]
 		: []),
