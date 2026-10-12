@@ -104,7 +104,11 @@ export function FilterModuleNetworkList({
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
-			<SheetContent ref={scrollRef} className="gap-0 z-999 overflow-y-auto overscroll-none">
+			<SheetContent
+				ref={scrollRef}
+				className="gap-0 z-999 overflow-y-auto overscroll-none"
+				initialFocus={() => (window.matchMedia("(pointer: coarse)").matches ? scrollRef.current : true)}
+			>
 				<SheetHeader className="bg-popover text-popover-foreground shrink-0 sticky top-0 z-9999">
 					<SheetTitle>{m.map_network_list_title()}</SheetTitle>
 					<FilterModuleSearchBar
