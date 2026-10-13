@@ -75,6 +75,16 @@
 	"nav_map": "Carte",
 	"networks_list_description": "Sélectionnez un réseau pour consulter ses véhicules et lignes.",
 	"networks_list_empty": "Aucun réseau ne correspond à ces critères.",
+	"networks_list_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} réseau trouvé",
+				"countPlural=other": "{count} réseaux trouvés"
+			}
+		}
+	],
 	"networks_list_region_all": "Toutes les régions",
 	"networks_list_region_filter_label": "Filtrer par région",
 	"networks_list_search_placeholder": "Rechercher un réseau ou une ville…",
@@ -83,6 +93,16 @@
 	"network_lines_label": "Ligne {lineNumber}",
 	"network_lines_search_placeholder": "Rechercher une ligne…",
 	"network_lines_search_empty": "Aucune ligne ne correspond à cette recherche.",
+	"network_lines_search_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} ligne trouvée",
+				"countPlural=other": "{count} lignes trouvées"
+			}
+		}
+	],
 	"network_lines_tab": "Lignes",
 	"network_data_sources_title": "Sources de données",
 	"network_online_vehicle_count": [
@@ -96,6 +116,8 @@
 		}
 	],
 	"network_vehicle_filter_label": "Filtrer par",
+	"network_vehicle_archived_toggle": "Afficher les véhicules archivés",
+	"network_vehicle_filter_aria_label": "Rechercher par numéro ou désignation",
 	"network_vehicle_filter_placeholder": "numéro ou désignation",
 	"network_vehicle_operator_filter": "Opérateur",
 	"network_vehicle_operator_all": "Tous les opérateurs",
@@ -115,6 +137,7 @@
 	"network_vehicle_sort_label": "Tri",
 	"network_vehicle_sort_number": "Numéro",
 	"network_vehicle_type_filter": "Type",
+	"network_vehicle_type_all": "Tous les types",
 	"network_vehicles_archived_count": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -377,16 +400,25 @@
 	"vehicle_details_archive_reason_retired": "a été réformé",
 	"vehicle_details_archive_reason_sold": "a été vendu",
 	"vehicle_details_archive_reason_transfer": "a été transféré",
-	"vehicle_details_characteristics_title": "Informations du véhicule",
 	"vehicle_details_click_live": "Cliquer pour voir en direct",
+	"vehicle_details_view_live": "Voir en direct",
 	"vehicle_details_number": "Véhicule n°{vehicleNumber}",
 	"vehicle_details_offline": "Hors-ligne",
 	"vehicle_details_offline_since": "depuis le",
 	"vehicle_details_operated_by": "Opéré par",
 	"vehicle_details_running_since": "En circulation depuis",
+	"vehicle_card_since_date_time": "depuis le {date} à {time}",
+	"vehicle_card_since_date": "depuis le {date}",
+	"vehicle_card_since_time": "depuis {time}",
+	"vehicle_card_line": "la ligne {lineNumber}",
+	"vehicle_card_online_on_line": "En circulation sur {line}",
+	"vehicle_card_offline": "Hors ligne",
+	"vehicle_card_online": "En circulation",
 	"vehicle_details_tc_infos_alt": "Voir sur TC-Infos",
 	"vehicle_history_since": "depuis",
-	"vehicle_activities_title": "Activités du véhicule",
+	"vehicle_history_time_on_date": "{time} le {date}",
+	"vehicle_history_range": "de {start} à {end}",
+	"vehicle_activities_title": "Activités du véhicule en {month}",
 	"vehicle_air_conditioning_absent": "Absente",
 	"vehicle_air_conditioning_out_of_service": "Hors-service",
 	"vehicle_air_conditioning_present": "Présente",
@@ -450,6 +482,11 @@
 	"vehicle_action_unarchive_title": "Désarchiver ce véhicule",
 	"line_assignments_empty": "Aucun véhicule n'a été observé sur cette ligne à cette date.",
 	"line_assignments_since": "depuis",
+	"line_assignments_table_caption": "Véhicules observés sur la ligne le {date}",
+	"line_assignments_column_vehicle": "Véhicule",
+	"line_assignments_column_designation": "Modèle",
+	"line_assignments_column_activities": "Périodes d'activité",
+	"line_assignments_range": "de {start} à {end}",
 	"line_girouettes_breadcrumb": "Girouettes",
 	"line_girouettes_column_actions": "Actions",
 	"line_girouettes_column_destination": "Destination",

@@ -43,6 +43,7 @@ export function NetworksListHeaderBlock({ className, ...props }: ComponentProps<
 					<div className="relative min-w-0 flex-1">
 						<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
 						<Input
+							aria-label={m.networks_list_search_placeholder()}
 							className="pl-9"
 							placeholder={m.networks_list_search_placeholder()}
 							value={searchQuery ?? ""}

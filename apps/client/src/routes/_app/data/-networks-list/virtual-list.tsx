@@ -167,8 +167,17 @@ export function NetworksListVirtualList() {
 		scrollMargin: listRef.current?.offsetTop ?? 0,
 	});
 
+	const displayedNetworkCount = virtualBlocks.reduce((count, block) => count + block.networks.length, 0);
+
 	return (
 		<div ref={listRef} className="max-w-(--breakpoint-xl) mx-auto px-3">
+			<p aria-live="polite" className="sr-only">
+				{!hasSearchQuery && regionFilter === ALL_REGIONS_FILTER
+					? ""
+					: displayedNetworkCount === 0
+						? m.networks_list_empty()
+						: m.networks_list_count({ count: displayedNetworkCount })}
+			</p>
 			{virtualBlocks.length === 0 && (
 				<p className="py-8 text-center text-sm text-muted-foreground">{m.networks_list_empty()}</p>
 			)}

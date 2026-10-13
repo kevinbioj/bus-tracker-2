@@ -38,7 +38,7 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 
 	return (activities?.timeline.length ?? 0) > 0 ? (
 		<div className="flex-1">
-			<h2 className="hidden">{m.vehicle_activities_title()}</h2>
+			<h2 className="sr-only">{m.vehicle_activities_title({ month: dayjs(month).format("MMMM YYYY") })}</h2>
 			<PeriodNavigator
 				sticky
 				previous={
@@ -84,8 +84,10 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 					)
 				}
 			>
-				<span className="hidden lg:inline">{m.activity_of()}</span>
-				{dayjs(month).format("MMMM YYYY")}
+				<span aria-hidden="true">
+					<span className="hidden lg:inline">{m.activity_of()}</span>
+					{dayjs(month).format("MMMM YYYY")}
+				</span>
 			</PeriodNavigator>
 			<section className="flex flex-col gap-3 w-full">
 				{activities?.timeline
@@ -97,15 +99,13 @@ export function VehicleActivities({ vehicleId }: VehicleActivitiesProps) {
 							<h3 className="sm:sticky sm:top-29 bg-background py-1 text-center text-xl sm:text-right sm:w-72">
 								{dayjs(date, "DD/MM/YYYY").format("dddd DD MMMM")}
 							</h3>
-							<div className="flex flex-col gap-2 w-full">
+							<ul className="flex flex-col gap-2 w-full">
 								{activities.map((activity) => (
-									<ActivityCard
-										activity={activity}
-										day={date}
-										key={`${activity.lineId}_${activity.startedAt}_${activity.updatedAt}`}
-									/>
+									<li key={`${activity.lineId}_${activity.startedAt}_${activity.updatedAt}`}>
+										<ActivityCard activity={activity} day={date} />
+									</li>
 								))}
-							</div>
+							</ul>
 						</div>
 					))}
 			</section>

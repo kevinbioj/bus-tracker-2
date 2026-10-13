@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
-import { Button } from "~/components/ui/button";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { useEditor } from "~/hooks/use-editor";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
@@ -41,7 +41,7 @@ export function LinePage() {
 
 	const { data: assignments } = useSuspenseQuery(GetLineVehicleAssignmentsQuery(line.id, selectedDate));
 
-	const currentDateRef = useRef<HTMLButtonElement>(null);
+	const currentDateRef = useRef<HTMLAnchorElement>(null);
 
 	const daysInMonth = useMemo(() => {
 		const startOfMonth = dayjs(month).startOf("month");
@@ -154,24 +154,44 @@ export function LinePage() {
 						const isFuture = d.isAfter(dayjs(), "day");
 						const hasData = assignments.activeDays.includes(dateStr);
 
+						const dayClassName = "flex flex-col gap-0 items-center justify-center h-full min-w-12 py-1";
+						const dayContent = (
+							<>
+								<span aria-hidden="true" className="uppercase">
+									{d.format("ddd")}
+								</span>
+								<span aria-hidden="true" className="font-bold text-lg">
+									{d.format("DD")}
+								</span>
+								<span className="sr-only">{d.format("dddd D MMMM")}</span>
+							</>
+						);
+
+						if (isFuture || !hasData) {
+							return (
+								<div
+									className={cn(buttonVariants({ variant: "secondary", size: "sm" }), dayClassName, "opacity-50")}
+									key={dateStr}
+								>
+									{dayContent}
+								</div>
+							);
+						}
+
 						return (
-							<Button
-								key={dateStr}
-								variant={isSelected ? "branding-default" : "secondary"}
-								size="sm"
-								ref={isSelected ? currentDateRef : undefined}
+							<Link
 								className={cn(
-									"flex flex-col gap-0 items-center justify-center h-full min-w-12 py-1",
-									(isFuture || !hasData) && "opacity-50 pointer-events-none hover:cursor-not-allowed",
+									buttonVariants({ variant: isSelected ? "branding-default" : "secondary", size: "sm" }),
+									dayClassName,
 								)}
-								nativeButton={false}
-								render={
-									<Link from="/data/lines/$lineId/" to="." search={(prev) => ({ ...prev, date: dateStr })}>
-										<p className="uppercase">{d.format("ddd")}</p>
-										<p className="font-bold text-lg">{d.format("DD")}</p>
-									</Link>
-								}
-							/>
+								from="/data/lines/$lineId/"
+								key={dateStr}
+								ref={isSelected ? currentDateRef : undefined}
+								search={(prev) => ({ ...prev, date: dateStr })}
+								to="."
+							>
+								{dayContent}
+							</Link>
 						);
 					})}
 				</div>

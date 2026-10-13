@@ -10,7 +10,7 @@ type VehiclesTableProps = {
 };
 
 export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
-	const listRef = useRef<HTMLDivElement>(null);
+	const listRef = useRef<HTMLUListElement>(null);
 
 	const isDesktop = useMediaQuery("(min-width: 640px)");
 
@@ -37,11 +37,13 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 	}
 
 	return (
-		<div ref={listRef} className="w-full relative" style={{ height: `${virtualizer.getTotalSize()}px` }}>
+		<ul ref={listRef} className="w-full relative" style={{ height: `${virtualizer.getTotalSize()}px` }}>
 			{virtualizer.getVirtualItems().map((virtualItem) => {
 				const vehicle = data[virtualItem.index];
 				return (
-					<div
+					<li
+						aria-posinset={virtualItem.index + 1}
+						aria-setsize={data.length}
 						className="absolute py-1 top-0 left-0 w-full [will-change:transform]"
 						data-index={virtualItem.index}
 						key={virtualItem.key}
@@ -51,9 +53,9 @@ export function VehiclesTable({ data }: Readonly<VehiclesTableProps>) {
 						}}
 					>
 						<VehicleCard vehicle={vehicle} />
-					</div>
+					</li>
 				);
 			})}
-		</div>
+		</ul>
 	);
 }

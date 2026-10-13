@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
 import { Activity, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { DataSet } from "vis-data";
@@ -108,6 +108,20 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 
 		return { newGroups: groups, newItems: items, minStartedAt: min, maxUpdatedAt: max };
 	}, [assignments, timezone, date]);
+
+	const accessibleRows = useMemo(
+		() =>
+			assignments.vehicles
+				.toSorted((a, b) => numberSort(a.number, b.number))
+				.map((vehicle) => ({
+					...vehicle,
+					activities: vehicle.activities.map((activity) => ({
+						start: dayjs(activity.startedAt).tz(timezone),
+						end: activity.endedAt ? dayjs(activity.endedAt).tz(timezone) : undefined,
+					})),
+				})),
+		[assignments, timezone],
+	);
 
 	// Applique les données courantes aux DataSets. Extrait en effect event pour pouvoir être
 	// appelé au moment de la construction de la timeline, sans dépendre d'un rendu supplémentaire.
@@ -287,7 +301,54 @@ export function LineVehiclesTimeline({ lineId, date }: Readonly<LineVehiclesTime
 				`}
 			</style>
 			<Activity mode={assignments.vehicles.length > 0 ? "visible" : "hidden"}>
-				<div className="border rounded-lg bg-white dark:bg-neutral-900 vis-timeline-custom" ref={containerRef} />
+				<div className="peer sr-only focus-within:not-sr-only focus-within:block focus-within:rounded-lg focus-within:border focus-within:text-sm">
+					<table className="w-full">
+						<caption className="p-2 text-start font-bold">
+							{m.line_assignments_table_caption({ date: currentDate.format("dddd D MMMM YYYY") })}
+						</caption>
+						<thead>
+							<tr>
+								<th className="p-2 text-start" scope="col">
+									{m.line_assignments_column_vehicle()}
+								</th>
+								<th className="p-2 text-start" scope="col">
+									{m.line_assignments_column_designation()}
+								</th>
+								<th className="p-2 text-start" scope="col">
+									{m.line_assignments_column_activities()}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							{accessibleRows.map((vehicle) => (
+								<tr className="border-t" key={vehicle.id}>
+									<th className="p-2 text-start" scope="row">
+										<Link params={{ vehicleId: String(vehicle.id) }} to="/data/vehicles/$vehicleId">
+											n°{vehicle.number}
+										</Link>
+									</th>
+									<td className="p-2">{vehicle.designation}</td>
+									<td className="p-2">
+										<ul>
+											{vehicle.activities.map(({ start, end }) => (
+												<li key={start.valueOf()}>
+													{end
+														? m.line_assignments_range({ start: start.format("HH:mm"), end: end.format("HH:mm") })
+														: `${m.line_assignments_since()} ${start.format("HH:mm")}`}
+												</li>
+											))}
+										</ul>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				</div>
+				<div
+					aria-hidden="true"
+					className="border rounded-lg bg-white dark:bg-neutral-900 vis-timeline-custom peer-focus-within:hidden"
+					ref={containerRef}
+				/>
 			</Activity>
 			{assignments.vehicles.length === 0 ? (
 				<p className="mt-4 text-center text-muted-foreground">{m.line_assignments_empty()}</p>

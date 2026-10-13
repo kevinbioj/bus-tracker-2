@@ -75,6 +75,16 @@
 	"nav_map": "Map",
 	"networks_list_description": "Select a network to view its vehicles and lines.",
 	"networks_list_empty": "No network matches these criteria.",
+	"networks_list_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} network found",
+				"countPlural=other": "{count} networks found"
+			}
+		}
+	],
 	"networks_list_region_all": "All regions",
 	"networks_list_region_filter_label": "Filter by region",
 	"networks_list_search_placeholder": "Search for a network or city…",
@@ -83,6 +93,16 @@
 	"network_lines_label": "Line {lineNumber}",
 	"network_lines_search_placeholder": "Search for a line…",
 	"network_lines_search_empty": "No line matches this search.",
+	"network_lines_search_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} line found",
+				"countPlural=other": "{count} lines found"
+			}
+		}
+	],
 	"network_lines_tab": "Lines",
 	"network_data_sources_title": "Data sources",
 	"network_online_vehicle_count": [
@@ -96,6 +116,8 @@
 		}
 	],
 	"network_vehicle_filter_label": "Filter by",
+	"network_vehicle_archived_toggle": "Show archived vehicles",
+	"network_vehicle_filter_aria_label": "Search by number or designation",
 	"network_vehicle_filter_placeholder": "number or designation",
 	"network_vehicle_operator_filter": "Operator",
 	"network_vehicle_operator_all": "All operators",
@@ -115,6 +137,7 @@
 	"network_vehicle_sort_label": "Sort",
 	"network_vehicle_sort_number": "Number",
 	"network_vehicle_type_filter": "Type",
+	"network_vehicle_type_all": "All types",
 	"network_vehicles_archived_count": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -377,16 +400,25 @@
 	"vehicle_details_archive_reason_retired": "was retired",
 	"vehicle_details_archive_reason_sold": "was sold",
 	"vehicle_details_archive_reason_transfer": "was transferred",
-	"vehicle_details_characteristics_title": "Vehicle information",
 	"vehicle_details_click_live": "Click to view live",
+	"vehicle_details_view_live": "View live",
 	"vehicle_details_number": "Vehicle no. {vehicleNumber}",
 	"vehicle_details_offline": "Offline",
 	"vehicle_details_offline_since": "since",
 	"vehicle_details_operated_by": "Operated by",
 	"vehicle_details_running_since": "In service since",
+	"vehicle_card_since_date_time": "since {date} at {time}",
+	"vehicle_card_since_date": "since {date}",
+	"vehicle_card_since_time": "since {time}",
+	"vehicle_card_line": "line {lineNumber}",
+	"vehicle_card_online_on_line": "In service on {line}",
+	"vehicle_card_offline": "Offline",
+	"vehicle_card_online": "In service",
 	"vehicle_details_tc_infos_alt": "View on TC-Infos",
 	"vehicle_history_since": "since",
-	"vehicle_activities_title": "Vehicle activities",
+	"vehicle_history_time_on_date": "{time} on {date}",
+	"vehicle_history_range": "from {start} to {end}",
+	"vehicle_activities_title": "Vehicle activities in {month}",
 	"vehicle_air_conditioning_absent": "Absent",
 	"vehicle_air_conditioning_out_of_service": "Out of service",
 	"vehicle_air_conditioning_present": "Present",
@@ -450,6 +482,11 @@
 	"vehicle_action_unarchive_title": "Unarchive this vehicle",
 	"line_assignments_empty": "No vehicle was observed on this line on this date.",
 	"line_assignments_since": "since",
+	"line_assignments_table_caption": "Vehicles observed on the line on {date}",
+	"line_assignments_column_vehicle": "Vehicle",
+	"line_assignments_column_designation": "Model",
+	"line_assignments_column_activities": "Activity periods",
+	"line_assignments_range": "from {start} to {end}",
 	"line_girouettes_breadcrumb": "Destination boards",
 	"line_girouettes_column_actions": "Actions",
 	"line_girouettes_column_destination": "Destination",

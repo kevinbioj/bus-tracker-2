@@ -14,7 +14,7 @@ export function TitleSeparator({ className, children, TitleComponent = "span", .
 				<TitleComponent className={cn("font-semibold whitespace-nowrap text-muted-foreground", className)} {...props}>
 					{children}
 				</TitleComponent>
-				<Separator className="flex-1" />
+				<Separator aria-hidden="true" className="flex-1" />
 			</div>
 		</div>
 	);

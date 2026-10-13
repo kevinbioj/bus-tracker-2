@@ -44,6 +44,7 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 
 	return (
 		<Link
+			aria-label={m.vehicle_details_view_live()}
 			className="relative isolate block border border-border rounded-md shadow-lg min-w-64 h-32 lg:h-auto lg:aspect-square mt-3 overflow-hidden"
 			to="/"
 			search={{ "marker-id": vehicle.activity.markerId }}
@@ -61,6 +62,7 @@ export function VehicleLive({ vehicle }: Readonly<VehicleLiveProps>) {
 				doubleClickZoom={false}
 				scrollWheelZoom={false}
 				dragging={false}
+				keyboard={false}
 				attributionControl={false}
 				ref={mapRef}
 			>

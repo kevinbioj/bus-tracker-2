@@ -26,6 +26,20 @@ function lineNumberTextSize(number: string) {
 	return "text-2xl";
 }
 
+const vehicleTypeLabel = (type: Vehicle["type"]) =>
+	match(type)
+		.with("SUBWAY", () => m.vehicle_type_subway())
+		.with("TRAMWAY", () => m.vehicle_type_tramway())
+		.with("FERRY", () => m.vehicle_type_ferry())
+		.with("TROLLEY", () => m.vehicle_type_trolley())
+		.with("COACH", () => m.vehicle_type_coach())
+		.with("GONDOLA", () => m.vehicle_type_gondola())
+		.with("BUS", () => m.vehicle_type_bus())
+		.with("RAIL", () => m.vehicle_type_rail())
+		.with("FUNICULAR", () => m.vehicle_type_funicular())
+		.with("UNKNOWN", () => m.vehicle_type_other())
+		.exhaustive();
+
 export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 	const line = useLine(vehicle.networkId, vehicle.activity?.status === "online" ? vehicle.activity.lineId : undefined);
 	const { data: network } = useQuery(GetNetworkQuery(vehicle.networkId, true));
@@ -41,10 +55,10 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 				.otherwise(() => <ArchiveIcon className="size-full" />);
 		}
 
-		if (line === undefined) return <Zzz className="h-full mx-auto" />;
+		if (line === undefined) return <Zzz aria-hidden="true" className="h-full mx-auto" />;
 
 		return line.cartridgeHref ? (
-			<img className="h-full max-w-full mx-auto object-contain" src={line.cartridgeHref} alt={line.number} />
+			<img alt="" className="h-full max-w-full mx-auto object-contain" src={line.cartridgeHref} />
 		) : (
 			<p
 				className={`font-bold text-center leading-tight wrap-break-words line-clamp-2 ${lineNumberTextSize(line.number)}`}
@@ -54,8 +68,46 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 		);
 	}, [line, vehicle]);
 
+	const accessibleLabel = useMemo(() => {
+		const timezone = network?.timezone;
+		const dateTime = (date: string) => {
+			const at = dayjsTz(date, timezone);
+			return dayjs().diff(date, "years") >= 1
+				? { date: at.format("DD/MM/YYYY") }
+				: { date: at.format("DD/MM"), time: at.format("HH:mm") };
+		};
+
+		let status: string;
+		if (vehicle.archivedAt !== null) {
+			const { date, time } = dateTime(vehicle.archivedAt);
+			status = [m.vehicle_details_archived_at(), date, time && `${m.vehicle_time_at()} ${time}`]
+				.filter(Boolean)
+				.join(" ");
+		} else if (vehicle.activity?.status === "online") {
+			const since = m.vehicle_card_since_time({ time: dayjsTz(vehicle.activity.since, timezone).format("HH:mm") });
+			const lineLabel =
+				line === undefined
+					? undefined
+					: line.girouetteNumber
+						? line.number
+						: m.vehicle_card_line({ lineNumber: line.number });
+			status = `${lineLabel ? m.vehicle_card_online_on_line({ line: lineLabel }) : m.vehicle_card_online()} ${since}`;
+		} else if (vehicle.activity.since !== null) {
+			const { date, time } = dateTime(vehicle.activity.since);
+			const since = time ? m.vehicle_card_since_date_time({ date, time }) : m.vehicle_card_since_date({ date });
+			status = `${m.vehicle_card_offline()} ${since}`;
+		} else {
+			status = m.vehicle_card_offline();
+		}
+
+		return [`${vehicleTypeLabel(vehicle.type)} n°${vehicle.number}`, vehicle.designation, status]
+			.filter(Boolean)
+			.join(" ");
+	}, [line, network?.timezone, vehicle]);
+
 	return (
 		<Link
+			aria-label={accessibleLabel}
 			className={`border border-border flex flex-col sm:flex-row py-1 px-2 rounded-md hover:brightness-90 active:not-aria-[haspopup]:translate-y-px transition-all ${
 				!line && "bg-neutral-200 text-black dark:bg-neutral-800 dark:text-white"
 			}`}
@@ -90,9 +142,9 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 					className="border-l border-black dark:border-white mx-2 my-1"
 					style={{ borderColor: line?.textColor ?? undefined }}
 				/>
-				<h2 className="flex font-bold gap-1.5 justify-center ml-1 tabular-nums text-2xl sm:my-auto sm:text-4xl sm:min-w-32">
+				<p className="flex font-bold gap-1.5 justify-center ml-1 tabular-nums text-2xl sm:my-auto sm:text-4xl sm:min-w-32">
 					{vehicle.number}
-				</h2>
+				</p>
 			</div>
 			<div
 				className="border-t sm:border-l border-black dark:border-white mx-2 my-1"

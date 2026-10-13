@@ -43,7 +43,6 @@ export function BreadcrumbPage({ className, ...props }: ComponentProps<"span">) 
 	return (
 		<span
 			data-slot="breadcrumb-page"
-			aria-disabled="true"
 			aria-current="page"
 			className={cn("font-normal text-foreground", className)}
 			{...props}

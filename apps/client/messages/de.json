@@ -75,6 +75,16 @@
 	"nav_map": "Karte",
 	"networks_list_description": "Wählen Sie ein Verkehrsnetz aus, um die Fahrzeuge und Linien anzuzeigen.",
 	"networks_list_empty": "Kein Verkehrsnetz entspricht diesen Kriterien.",
+	"networks_list_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Verkehrsnetz gefunden",
+				"countPlural=other": "{count} Verkehrsnetze gefunden"
+			}
+		}
+	],
 	"networks_list_region_all": "Alle Regionen",
 	"networks_list_region_filter_label": "Nach Region filtern",
 	"networks_list_search_placeholder": "Verkehrsnetz oder Stadt suchen...",
@@ -83,6 +93,16 @@
 	"network_lines_label": "Linie {lineNumber}",
 	"network_lines_search_placeholder": "Linie suchen…",
 	"network_lines_search_empty": "Keine Linie entspricht dieser Suche.",
+	"network_lines_search_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Linie gefunden",
+				"countPlural=other": "{count} Linien gefunden"
+			}
+		}
+	],
 	"network_lines_tab": "Linien",
 	"network_data_sources_title": "Datenquellen",
 	"network_online_vehicle_count": [
@@ -96,6 +116,8 @@
 		}
 	],
 	"network_vehicle_filter_label": "Filtern nach",
+	"network_vehicle_archived_toggle": "Archivierte Fahrzeuge anzeigen",
+	"network_vehicle_filter_aria_label": "Nach Nummer oder Bezeichnung suchen",
 	"network_vehicle_filter_placeholder": "Fahrzeugnummer oder Modell",
 	"network_vehicle_operator_filter": "Betreiber",
 	"network_vehicle_operator_all": "Alle Betreiber",
@@ -115,6 +137,7 @@
 	"network_vehicle_sort_label": "Sortierung",
 	"network_vehicle_sort_number": "Nummer",
 	"network_vehicle_type_filter": "Typ",
+	"network_vehicle_type_all": "Alle Typen",
 	"network_vehicles_archived_count": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],
@@ -386,16 +409,25 @@
 	"vehicle_details_archive_reason_retired": "wurde ausgemustert",
 	"vehicle_details_archive_reason_sold": "wurde verkauft",
 	"vehicle_details_archive_reason_transfer": "wurde versetzt",
-	"vehicle_details_characteristics_title": "Fahrzeuginformationen",
 	"vehicle_details_click_live": "Klicken, um live zu sehen",
+	"vehicle_details_view_live": "Live ansehen",
 	"vehicle_details_number": "Fahrzeug n°{vehicleNumber}",
 	"vehicle_details_offline": "Offline",
 	"vehicle_details_offline_since": "seit dem",
 	"vehicle_details_operated_by": "Betrieben von",
 	"vehicle_details_running_since": "Im Einsatz seit",
+	"vehicle_card_since_date_time": "seit dem {date} um {time}",
+	"vehicle_card_since_date": "seit dem {date}",
+	"vehicle_card_since_time": "seit {time}",
+	"vehicle_card_line": "der Linie {lineNumber}",
+	"vehicle_card_online_on_line": "Im Einsatz auf {line}",
+	"vehicle_card_offline": "Offline",
+	"vehicle_card_online": "Im Einsatz",
 	"vehicle_details_tc_infos_alt": "Auf TC-Infos öffnen",
 	"vehicle_history_since": "seit",
-	"vehicle_activities_title": "Fahrzeugaktivitäten",
+	"vehicle_history_time_on_date": "{time} am {date}",
+	"vehicle_history_range": "von {start} bis {end}",
+	"vehicle_activities_title": "Fahrzeugaktivitäten im {month}",
 	"vehicle_air_conditioning_absent": "Nicht vorhanden",
 	"vehicle_air_conditioning_out_of_service": "Außer Betrieb",
 	"vehicle_air_conditioning_present": "Vorhanden",
@@ -459,6 +491,11 @@
 	"vehicle_action_unarchive_title": "Dieses Fahrzeug dearchivieren",
 	"line_assignments_empty": "An diesem Datum wurde kein Fahrzeug auf dieser Linie beobachtet.",
 	"line_assignments_since": "seit",
+	"line_assignments_table_caption": "Auf der Linie beobachtete Fahrzeuge am {date}",
+	"line_assignments_column_vehicle": "Fahrzeug",
+	"line_assignments_column_designation": "Modell",
+	"line_assignments_column_activities": "Einsatzzeiten",
+	"line_assignments_range": "von {start} bis {end}",
 	"line_girouettes_breadcrumb": "Zielanzeigen",
 	"line_girouettes_column_actions": "Aktionen",
 	"line_girouettes_column_destination": "Ziel",

@@ -41,12 +41,11 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 
 	return (
 		<div className="border border-border px-3 py-2 rounded-md shadow-lg lg:w-80 w-full relative">
-			<h2 className="hidden">{m.vehicle_details_characteristics_title()}</h2>
 			<div className="flex justify-between gap-2">
 				<div>
-					<div className="font-bold text-lg">
+					<h2 className="font-bold text-lg">
 						{vehicleIcon} {m.vehicle_details_number({ vehicleNumber: vehicle.number })}
-					</div>
+					</h2>
 					{vehicle.designation !== null && <div>{vehicle.designation}</div>}
 					{vehicle.operator !== null && (
 						<div className="mt-0.5 text-xs text-muted-foreground">

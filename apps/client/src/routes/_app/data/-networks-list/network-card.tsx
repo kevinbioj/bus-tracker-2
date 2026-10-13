@@ -32,9 +32,12 @@ export function NetworksListCard({ network }: Readonly<NetworksListCardProps>) {
 				}}
 				nativeButton={false}
 				render={
-					<Link to={`/data/networks/${network.id}`}>
-						<div className="flex-1 overflow-auto text-start text-wrap px-2">
-							<h3 className="font-bold text-lg leading-tight">{network.name}</h3>
+					<Link
+						aria-label={network.authority !== null ? `${network.name}, ${network.authority}` : network.name}
+						to={`/data/networks/${network.id}`}
+					>
+						<div aria-hidden="true" className="flex-1 overflow-auto text-start text-wrap px-2">
+							<p className="font-bold text-lg leading-tight">{network.name}</p>
 							{network.authority !== null && <p className="text-xs">{network.authority}</p>}
 						</div>
 						<ArrowRight />

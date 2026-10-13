@@ -18,7 +18,14 @@ import { filterVehicles } from "~/utils/vehicle-search";
 
 const vehicleTypeOptions = {
 	ALL: {
-		label: () => <span className="text-muted-foreground">{m.network_vehicle_type_filter()}</span>,
+		label: () => (
+			<>
+				<span aria-hidden="true" className="text-muted-foreground">
+					{m.network_vehicle_type_filter()}
+				</span>
+				<span className="sr-only">{m.network_vehicle_type_all()}</span>
+			</>
+		),
 		icon: null,
 	},
 	TRAMWAY: {
@@ -94,6 +101,8 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 	const [showArchived, setShowArchived] = useQueryState("archived", parseAsBoolean.withDefault(false));
 	const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 	const mobileFiltersId = useId();
+	const filterLabelId = useId();
+	const [resultsAnnouncement, setResultsAnnouncement] = useState("");
 
 	const [debouncedFilter] = useDebounceValue(filter, 100);
 
@@ -163,16 +172,35 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		});
 	}, [filteredAndSortedVehicles, onlineVehicles, showArchived]);
 
+	const typeValue = vehicleTypeOptions[type].icon ? (
+		<>
+			{vehicleTypeOptions[type].icon}
+			<span className="sr-only">{vehicleTypeOptions[type].label()}</span>
+		</>
+	) : (
+		<span className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+			{vehicleTypeOptions.ALL.label()}
+		</span>
+	);
+
+	const sortValue = (
+		<>
+			{sortingOptions[sort].icon}
+			<span className="sr-only">{sortingOptions[sort].label()}</span>
+		</>
+	);
+
 	const filterSortKey = `${type}|${operatorIds.join(",")}|${debouncedFilter}|${sort}|${showArchived}`;
 	const prevFilterSortKey = useRef(filterSortKey);
 	useEffect(() => {
 		if (prevFilterSortKey.current === filterSortKey) return;
 		prevFilterSortKey.current = filterSortKey;
+		setResultsAnnouncement(activeVehiclesLabel);
 		const stickyY = window.innerWidth >= 640 ? 134 : 76;
 		if (window.scrollY > stickyY) {
 			window.scrollTo({ top: stickyY, behavior: "instant" });
 		}
-	}, [filterSortKey]);
+	}, [filterSortKey, activeVehiclesLabel]);
 
 	return (
 		<div>
@@ -185,20 +213,14 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 				>
 					{/* Filters */}
 					<div className="flex min-w-0 flex-col gap-1">
-						<Label className="inline-flex items-center gap-1" htmlFor="filter">
+						<Label aria-hidden="true" className="inline-flex items-center gap-1" id={filterLabelId}>
 							<FilterIcon size={16} /> {m.network_vehicle_filter_label()}
 						</Label>
-						<div className="flex min-w-0 gap-1">
+						<fieldset aria-labelledby={filterLabelId} className="flex min-w-0 gap-1">
 							{availableNetworkTypeFilters.length > 2 && (
 								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
 									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="w-20 shrink-0" size="lg">
-										<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
-											{vehicleTypeOptions[type].icon ?? (
-												<span className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-													{vehicleTypeOptions.ALL.label()}
-												</span>
-											)}
-										</SelectValue>
+										<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">{typeValue}</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										<SelectGroup>
@@ -254,21 +276,22 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 								)}
 								<Input
 									className="h-10 min-w-0"
+									aria-label={m.network_vehicle_filter_aria_label()}
 									placeholder={m.network_vehicle_filter_placeholder()}
 									value={filter}
 									onChange={(e) => setFilter(e.target.value || null)}
 								/>
 							</div>
-						</div>
+						</fieldset>
 					</div>
 					{/* Sort */}
 					<div className="flex min-w-0 flex-col gap-1">
-						<Label className="inline-flex items-center gap-1" htmlFor="sort">
+						<Label aria-hidden="true" className="inline-flex items-center gap-1">
 							<SortAscIcon size={16} /> {m.network_vehicle_sort_label()}
 						</Label>
 						<Select value={sort} onValueChange={(newSort) => setSort(newSort as typeof sort)}>
 							<SelectTrigger aria-label={m.network_vehicle_sort_aria_label()} className="w-full" size="lg">
-								<SelectValue>{sortingOptions[sort].icon}</SelectValue>
+								<SelectValue>{sortValue}</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
 								<SelectGroup>
@@ -287,6 +310,8 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					{/* Archive */}
 					{hasArchivedVehicles && (
 						<Button
+							aria-label={m.network_vehicle_archived_toggle()}
+							aria-pressed={showArchived}
 							className="mt-auto"
 							onClick={() => setShowArchived(showArchived ? null : true)}
 							size="icon-xl"
@@ -300,6 +325,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					<div className="flex gap-1">
 						<Input
 							className="h-10 min-w-0 flex-1"
+							aria-label={m.network_vehicle_filter_aria_label()}
 							placeholder={m.network_vehicle_filter_placeholder()}
 							value={filter}
 							onChange={(e) => setFilter(e.target.value || null)}
@@ -328,13 +354,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							{availableNetworkTypeFilters.length > 2 ? (
 								<Select value={type} onValueChange={(newType) => setType(newType as typeof type)}>
 									<SelectTrigger aria-label={m.network_vehicle_type_filter()} className="w-full min-w-0 px-2" size="lg">
-										<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
-											{vehicleTypeOptions[type].icon ?? (
-												<span className="block w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-													{vehicleTypeOptions.ALL.label()}
-												</span>
-											)}
-										</SelectValue>
+										<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">{typeValue}</SelectValue>
 									</SelectTrigger>
 									<SelectContent>
 										<SelectGroup>
@@ -391,7 +411,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 									<SelectValue className="w-0 min-w-0 flex-1 overflow-hidden">
 										<span className="flex w-full min-w-0 items-center gap-1">
 											<SortAscIcon className="size-4" />
-											{sortingOptions[sort].icon}
+											{sortValue}
 										</span>
 									</SelectValue>
 								</SelectTrigger>
@@ -410,6 +430,8 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 							</Select>
 							{hasArchivedVehicles && (
 								<Button
+									aria-label={m.network_vehicle_archived_toggle()}
+									aria-pressed={showArchived}
 									className="h-full"
 									onClick={() => setShowArchived(showArchived ? null : true)}
 									size="icon-lg"
@@ -429,6 +451,9 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 					)}
 				>
 					{activeVehiclesLabel}
+				</p>
+				<p aria-live="polite" className="sr-only">
+					{resultsAnnouncement}
 				</p>
 			</div>
 			<VehiclesTable data={filteredAndSortedVehicles} />
