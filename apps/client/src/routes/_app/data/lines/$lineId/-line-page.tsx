@@ -154,7 +154,7 @@ export function LinePage() {
 						const isFuture = d.isAfter(dayjs(), "day");
 						const hasData = assignments.activeDays.includes(dateStr);
 
-						const dayClassName = "flex flex-col gap-0 items-center justify-center h-full min-w-12 py-1";
+						const dayClassName = "relative flex flex-col gap-0 items-center justify-center h-full min-w-12 py-1";
 						const dayContent = (
 							<>
 								<span aria-hidden="true" className="uppercase">

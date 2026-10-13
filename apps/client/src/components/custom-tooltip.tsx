@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { type ComponentPropsWithoutRef, useMemo } from "react";
+import { type ComponentPropsWithoutRef, useMemo, useState } from "react";
 import { match } from "ts-pattern";
 import { twMerge } from "tw-merge";
 
@@ -11,6 +11,8 @@ export type TooltipProps = ComponentPropsWithoutRef<"span"> & {
 };
 
 export function CustomTooltip({ children, content, place, spacing = 5, ...tooltipProps }: TooltipProps) {
+	const [open, setOpen] = useState(false);
+
 	const tooltipStyles = useMemo(
 		() =>
 			match(place)
@@ -37,13 +39,14 @@ export function CustomTooltip({ children, content, place, spacing = 5, ...toolti
 
 	const { className, style, ...props } = tooltipProps;
 	return (
-		<div className="group/tooltip relative inline-block">
+		// biome-ignore lint/a11y/noStaticElementInteractions: the tap emulates mouseenter on touch devices
+		<div className="relative inline-block" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
 			{children}
 			<span
 				className={twMerge(
 					clsx(
 						"z-[999] absolute whitespace-nowrap rounded-md bg-neutral-300 px-1 py-0.5 text-black text-xs shadow-lg dark:bg-neutral-700 dark:text-white",
-						"hidden group-hover/tooltip:block",
+						!open && "hidden",
 						className,
 					),
 				)}
