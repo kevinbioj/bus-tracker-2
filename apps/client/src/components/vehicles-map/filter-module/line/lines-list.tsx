@@ -108,7 +108,13 @@ export function FilterModuleLinesList({
 			<SheetContent ref={scrollRef} className="z-999 gap-0 overflow-y-auto overscroll-none" showCloseButton={false}>
 				<SheetHeader className="pt-4 pb-1.5 shrink-0 sticky top-0 z-9999 bg-popover text-popover-foreground">
 					<div className="flex items-start gap-2">
-						<Button className="size-6" onClick={onClose} size="icon" variant="branding-default">
+						<Button
+							aria-label={m.map_network_list_back()}
+							className="size-6"
+							onClick={onClose}
+							size="icon"
+							variant="branding-default"
+						>
 							<ArrowLeft className="size-full" />
 						</Button>
 						<SheetTitle className="flex flex-col">

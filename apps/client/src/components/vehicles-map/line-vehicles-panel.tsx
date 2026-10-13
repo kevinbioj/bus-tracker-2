@@ -71,8 +71,9 @@ function LineVehiclesList({ vehicles, timezone, touch = false, className }: Read
 						<div className="flex-1 min-w-0">
 							<div className="text-sm font-medium truncate">
 								<span className="font-bold">
-									{vehicleIcon} n°{vehicle.number}
+									<span aria-hidden="true">{vehicleIcon}</span> n°{vehicle.number}
 								</span>
+								{vehicle.activity.since && " "}
 								{vehicle.activity.since && (
 									<span className="ml-1.5 text-xs text-muted-foreground tabular-nums">
 										{m.map_vehicle_since()} {dayjsTz(vehicle.activity.since, timezone).format("HH:mm")}
@@ -82,6 +83,7 @@ function LineVehiclesList({ vehicles, timezone, touch = false, className }: Read
 							{vehicle.designation && <div className="text-wrap">{vehicle.designation}</div>}
 						</div>
 						<Button
+							aria-label={m.map_vehicle_locate_label({ number: vehicle.number })}
 							className={buttonClassName}
 							size="icon"
 							title={m.map_vehicle_locate()}
@@ -98,6 +100,7 @@ function LineVehiclesList({ vehicles, timezone, touch = false, className }: Read
 							nativeButton={false}
 							render={
 								<Link
+									aria-label={m.map_vehicle_history_label({ number: vehicle.number })}
 									title={m.map_vehicle_history()}
 									to="/data/vehicles/$vehicleId"
 									params={{ vehicleId: String(vehicle.id) }}
@@ -138,9 +141,9 @@ function LineVehiclesControl({ lineId, timezone }: Readonly<LineVehiclesPanelPro
 
 	return createPortal(
 		<div className="bg-background/95 rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
-			<div className="px-2 py-2 border-b text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+			<h2 className="px-2 py-2 border-b text-xs font-semibold text-muted-foreground uppercase tracking-wide">
 				{m.map_vehicles_online({ count: vehicles.length })}
-			</div>
+			</h2>
 			<LineVehiclesList className="max-h-52" timezone={timezone} vehicles={vehicles} />
 		</div>,
 		containerRef.current,

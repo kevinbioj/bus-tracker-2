@@ -56,8 +56,11 @@ function FilterModuleVehiclesCount({ filter, fixedNetworkId }: Readonly<FilterMo
 	if (isPlaceholderData) return null;
 	return (
 		<span className="shrink-0 text-muted-foreground tabular-nums">
-			{data?.items.length ?? 0}
-			<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
+			<span aria-hidden="true">
+				{data?.items.length ?? 0}
+				<CircleIcon className="align-text-top animate-pulse fill-green-500 stroke-none size-1.5 inline ml-0.5" />
+			</span>
+			<span className="sr-only">{m.map_filter_vehicle_count({ count: data?.items.length ?? 0 })}</span>
 		</span>
 	);
 }

@@ -4,6 +4,7 @@ import { memo } from "react";
 
 import type { Line } from "~/api/networks";
 import { Button } from "~/components/ui/button";
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 function lineNumberTextSize(number: string) {
@@ -26,12 +27,16 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 	onToggleFavorite,
 	onSelect,
 }: FilterModuleLineCardProps) {
+	const lineLabel = line.girouetteNumber ? line.number : m.network_lines_label({ lineNumber: line.number });
+
 	return (
 		<div
 			className="card-item px-3 py-0.5 relative w-full"
 			style={line.textColor ? ({ "--line-text-color": line.textColor } as React.CSSProperties) : undefined}
 		>
 			<Button
+				aria-label={m.map_favorite_toggle({ name: lineLabel })}
+				aria-pressed={isFavorite}
 				className="absolute top-4 left-4.5 z-10 hover:bg-inherit hover:opacity-75 favorite-line-background"
 				onClick={() => onToggleFavorite(line)}
 				size="icon"
@@ -41,6 +46,7 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 				{isFavorite ? <StarIcon className="fill-yellow-400 stroke-yellow-600" /> : <StarIcon />}
 			</Button>
 			<Button
+				aria-label={`${lineLabel}, ${m.network_online_vehicle_count({ count: line.onlineMarkerCount ?? 0 })}`}
 				className={cn(
 					"border border-border flex justify-between items-center h-16 min-h-16 px-2 py-1 pl-12 rounded-lg transition text-primary-foreground w-full drop-shadow-xs",
 					!line.onlineMarkerCount && "brightness-90 cursor-not-allowed",
@@ -51,7 +57,7 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 					color: line.textColor ?? undefined,
 				}}
 			>
-				<div className="flex flex-1 items-center h-full gap-2 min-w-0">
+				<div aria-hidden="true" className="flex flex-1 items-center h-full gap-2 min-w-0">
 					{line.cartridgeHref === null ? (
 						<p
 							className={cn(

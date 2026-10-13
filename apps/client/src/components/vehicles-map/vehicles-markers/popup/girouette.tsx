@@ -162,6 +162,8 @@ export type GirouetteData = {
 type GirouetteProps = ComponentPropsWithoutRef<"div"> &
 	GirouetteData & {
 		onRouteNumberClick?: () => void;
+		routeNumberLabel?: string;
+		pagesHidden?: boolean;
 		/**
 		 * Displays that page instead of cycling through them automatically. The
 		 * index is wrapped around the number of pages, so it may grow indefinitely.
@@ -180,6 +182,8 @@ export function Girouette({
 	onRouteNumberClick,
 	pageIndex,
 	pages = [],
+	pagesHidden,
+	routeNumberLabel,
 	routeNumber = { text: "" },
 	width,
 	...props
@@ -197,12 +201,14 @@ export function Girouette({
 			<RouteNumber
 				dimensions={dimensions}
 				ledColor={ledColor}
+				label={routeNumberLabel}
 				onClick={onRouteNumberClick}
 				routeNumber={routeNumber}
 				width={width}
 			/>
 			<Pages
 				controlledPageIndex={pageIndex}
+				hidden={pagesHidden}
 				dimensions={dimensions}
 				ledColor={ledColor}
 				onPageIndexChange={onPageIndexChange}
@@ -328,13 +334,14 @@ function ScrollingText({
 
 type RouteNumberProps = {
 	dimensions: GirouetteDimensions;
+	label?: string;
 	ledColor: LedColor;
 	onClick?: () => void;
 	routeNumber: RouteNumberData;
 	width: number;
 };
 
-function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Readonly<RouteNumberProps>) {
+function RouteNumber({ dimensions, label, ledColor, onClick, routeNumber, width }: Readonly<RouteNumberProps>) {
 	const [halfPattern, setHalfPattern] = useState<RouteNumberData["halfPattern"]>();
 
 	useEffect(() => {
@@ -374,6 +381,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 		const onePixel = width / (dimensions.rnWidth + dimensions.destinationWidth);
 		return (
 			<button
+				aria-label={label}
 				className="flex items-center justify-center overflow-hidden"
 				onClick={onClick}
 				type="button"
@@ -405,6 +413,7 @@ function RouteNumber({ dimensions, ledColor, onClick, routeNumber, width }: Read
 	const virtualHeight = (height / dimensions.height) * fontProperties[fontFamily].height;
 	return (
 		<button
+			aria-label={label}
 			className="flex items-center justify-center overflow-hidden whitespace-nowrap"
 			onClick={onClick}
 			type="button"
@@ -451,13 +460,22 @@ type PagesProps = {
 	/** When set, that page is displayed and the automatic cycling is suspended. */
 	controlledPageIndex?: number;
 	dimensions: GirouetteDimensions;
+	hidden?: boolean;
 	ledColor: LedColor;
 	onPageIndexChange?: (pageIndex: number) => void;
 	pages: PagesData[];
 	width: number;
 };
 
-function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, pages, width }: Readonly<PagesProps>) {
+function Pages({
+	controlledPageIndex,
+	dimensions,
+	hidden,
+	ledColor,
+	onPageIndexChange,
+	pages,
+	width,
+}: Readonly<PagesProps>) {
 	const [currentPageIndex, setCurrentPageIndex] = useState(0);
 
 	// Scrolling durations of the lines of the displayed page, keyed by line index.
@@ -504,6 +522,7 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 	if (isBitmapPage(activePage)) {
 		return (
 			<div
+				aria-hidden={hidden}
 				className="flex items-center justify-center overflow-hidden"
 				style={{ width: `${onePixel * dimensions.destinationWidth}px` }}
 			>
@@ -521,6 +540,7 @@ function Pages({ controlledPageIndex, dimensions, ledColor, onPageIndexChange, p
 
 	return (
 		<div
+			aria-hidden={hidden}
 			className="flex flex-col items-center overflow-hidden"
 			style={{
 				color: ledColors[ledColor],

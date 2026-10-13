@@ -121,7 +121,9 @@ export function NetworkInnerList({
 						>
 							{row.kind === "separator" && (
 								<div className={cn("px-3", !row.first && "pt-3")}>
-									<TitleSeparator className="flex items-center gap-2 text-base">{row.title}</TitleSeparator>
+									<TitleSeparator TitleComponent="h3" className="flex items-center gap-2 text-base">
+										{row.title}
+									</TitleSeparator>
 								</div>
 							)}
 							{row.kind === "no-result" && (

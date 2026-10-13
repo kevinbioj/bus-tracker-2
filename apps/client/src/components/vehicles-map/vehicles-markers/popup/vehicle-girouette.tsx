@@ -63,7 +63,7 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 	const [, setLineId] = useQueryState("line-id", parseAsInteger);
 	const [, setNetworkId] = useQueryState("network-id", parseAsInteger);
 
-	const line = useLine(girouette ? undefined : journey.networkId, journey.lineId);
+	const line = useLine(journey.networkId, journey.lineId);
 	const destination =
 		journey.destination ?? journey.calls?.[journey.calls.length - 1]?.stopName ?? m.marker_destination_unknown();
 
@@ -104,7 +104,18 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 
 	return (
 		<div className="border-b-[1px] border-black">
-			<Girouette ledColor="WHITE" onRouteNumberClick={onRouteNumberClick} width={width} {...displayedGirouette} />
+			<Girouette
+				ledColor="WHITE"
+				onRouteNumberClick={onRouteNumberClick}
+				pagesHidden
+				routeNumberLabel={
+					journey.lineId !== undefined
+						? m.marker_route_number_filter({ lineNumber: line?.number ?? girouetteData.routeNumber?.text ?? "" })
+						: undefined
+				}
+				width={width}
+				{...displayedGirouette}
+			/>
 		</div>
 	);
 }

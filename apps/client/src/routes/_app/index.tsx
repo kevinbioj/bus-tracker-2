@@ -21,7 +21,9 @@ function MapPage() {
 		<>
 			<title>{m.page_title_map()}</title>
 			<style>{` body { background-color: var(--color-branding); } `}</style>
-			<VehiclesMap className="h-[calc(100dvh-56px)]" />
+			<main>
+				<VehiclesMap className="h-[calc(100dvh-56px)]" />
+			</main>
 		</>
 	);
 }

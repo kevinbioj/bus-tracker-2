@@ -156,10 +156,19 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 		() => {
 			const recordedAtTime = dayjs(journey.position.recordedAt);
 			if (displayAbsoluteTime) {
-				return { label: recordedAtTime.format("HH:mm:ss"), title: undefined };
+				const label = recordedAtTime.format("HH:mm:ss");
+				return {
+					label,
+					title: undefined,
+					ariaLabel: m.marker_recorded_aria({ ago: `${m.vehicle_time_at()} ${label}` }),
+				};
 			}
 			if (dayjs().isBefore(recordedAtTime)) {
-				return { label: m.marker_chip_before_departure(), title: m.marker_before_departure() };
+				return {
+					label: m.marker_chip_before_departure(),
+					title: m.marker_before_departure(),
+					ariaLabel: m.marker_before_departure(),
+				};
 			}
 
 			const seconds = dayjs().diff(recordedAtTime, "second");
@@ -167,6 +176,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				return {
 					label: m.marker_chip_recorded_seconds({ count: seconds }),
 					title: m.marker_recorded_ago_seconds({ count: seconds }),
+					ariaLabel: m.marker_recorded_aria({ ago: m.marker_recorded_ago_seconds({ count: seconds }) }),
 				};
 			}
 			if (seconds < 3_600) {
@@ -174,12 +184,14 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				return {
 					label: m.marker_chip_recorded_minutes({ count: minutes }),
 					title: m.marker_recorded_ago_minutes({ count: minutes }),
+					ariaLabel: m.marker_recorded_aria({ ago: m.marker_recorded_ago_minutes({ count: minutes }) }),
 				};
 			}
 			const hours = Math.floor(seconds / 3_600);
 			return {
 				label: m.marker_chip_recorded_hours({ count: hours }),
 				title: m.marker_recorded_ago_hours({ count: hours }),
+				ariaLabel: m.marker_recorded_aria({ ago: m.marker_recorded_ago_hours({ count: hours }) }),
 			};
 		},
 		3_000,
@@ -209,6 +221,11 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 			className={neutralChipClasses}
 			icon={
 				journey.vehicle.type ? <MeansOfTransportIcon className="size-full" type={journey.vehicle.type} /> : undefined
+			}
+			aria-label={
+				journey.vehicle.designation
+					? `${m.marker_popup_vehicle({ number: journey.vehicle.number })}, ${journey.vehicle.designation}`
+					: m.marker_popup_vehicle({ number: journey.vehicle.number })
 			}
 			label={journey.vehicle.number}
 			render={
@@ -395,6 +412,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 							place="top"
 						>
 							<InformationChip
+								aria-label={airConditioningInformation.label()}
 								className={airConditioningInformation.chipClasses}
 								icon={<AirConditioningIcon className="size-full" status={airConditioningStatus} tone="on-color" />}
 								onClick={canReportAirConditioning ? () => setOpenedDialog("air-conditioning-report") : undefined}
@@ -426,8 +444,10 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 							place="top"
 						>
 							<InformationChip
+								aria-label={occupancyInformation.label()}
 								className={occupancyInformation.chipClasses}
 								icon={<occupancyInformation.IconElement className="size-full fill-current" />}
+								role="img"
 							/>
 						</CustomTooltip>
 					),
@@ -480,6 +500,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 			key: "position",
 			element: (
 				<InformationChip
+					aria-label={positionInformation.title()}
 					className={positionInformation.chipClasses}
 					icon={<SatelliteDishIcon className="size-full" />}
 					label={positionInformation.label()}
@@ -492,9 +513,11 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 			key: "recorded-at",
 			element: (
 				<InformationChip
+					aria-label={recordedAt.ariaLabel}
 					className={neutralChipClasses}
 					icon={<ClockIcon className="size-full" />}
 					label={recordedAt.label}
+					role="img"
 					title={recordedAt.title}
 				/>
 			),

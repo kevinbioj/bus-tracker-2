@@ -49,12 +49,18 @@ export function VehiclesMarkersPopupRoot({
 }: VehiclesMarkersPopupRootProps) {
 	return (
 		<GeojsonPopup layer={layer} popupOptions={popupOptions}>
-			{({ activeFeature, openPopup }) => {
+			{({ activeFeature, closePopup, openPopup }) => {
 				return (
 					<>
 						<ActiveJourneyReporter journeyId={activeFeature?.id ?? null} onChange={onActiveJourneyChange} />
 						{activeFeature !== null && (
-							<VehicleMarkerPopup embedMode={embedMode} key={activeFeature.id} journeyId={activeFeature.id} />
+							<VehicleMarkerPopup
+								autoFocus={activeFeature.type === "selected"}
+								embedMode={embedMode}
+								key={activeFeature.id}
+								journeyId={activeFeature.id}
+								onClose={closePopup}
+							/>
 						)}
 						<VehiclePath journeyId={activeFeature?.id} lineId={lineId} />
 						<JumpTo openPopup={openPopup} />

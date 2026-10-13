@@ -193,8 +193,25 @@ const NextStopRow = memo(function NextStopRow({
 	);
 
 	return (
-		<div className="flex gap-1">
+		<li className="flex gap-1">
+			<span className="sr-only">
+				{[
+					call.stopName,
+					label,
+					tooltipProps?.content,
+					call.platformName !== undefined ? m.stop_call_platform({ platform: call.platformName }) : undefined,
+					call.flags !== undefined
+						? match(call.flags)
+								.with(["NO_DROP_OFF"], () => m.stop_call_pickup_only())
+								.with(["NO_PICKUP"], () => m.stop_call_drop_off_only())
+								.otherwise(() => undefined)
+						: undefined,
+				]
+					.filter(Boolean)
+					.join(", ")}
+			</span>
 			<div
+				aria-hidden="true"
 				className={clsx("font-bold overflow-hidden text-ellipsis whitespace-nowrap", !hasExtra && "flex-1")}
 				title={call.stopName}
 			>
@@ -202,7 +219,7 @@ const NextStopRow = memo(function NextStopRow({
 			</div>
 			{hasExtra && (
 				// Quai et pictogramme restent sur une ligne : c'est le nom de l'arrêt qui cède la place.
-				<div className="flex-1 whitespace-nowrap">
+				<div aria-hidden="true" className="flex-1 whitespace-nowrap">
 					{call.platformName !== undefined && (
 						<span className="inline-block ml-px bg-foreground/80 dark:bg-foreground text-background font-bold px-1 min-w-4 text-center rounded-xs">
 							{call.platformName}
@@ -212,24 +229,30 @@ const NextStopRow = memo(function NextStopRow({
 						<span>
 							{match(call.flags)
 								.with(["NO_DROP_OFF"], () => (
-									<ArrowUpRight className="inline size-4 text-slate-500 dark:text-slate-400" />
+									<span title={m.stop_call_pickup_only_title()}>
+										<ArrowUpRight className="inline size-4 text-slate-500 dark:text-slate-400" />
+									</span>
 								))
 								.with(["NO_PICKUP"], () => (
-									<ArrowDownRight className="inline size-4 text-slate-500 dark:text-slate-400" />
+									<span title={m.stop_call_drop_off_only_title()}>
+										<ArrowDownRight className="inline size-4 text-slate-500 dark:text-slate-400" />
+									</span>
 								))
 								.otherwise(() => null)}
 						</span>
 					)}
 				</div>
 			)}
-			{tooltipProps ? (
-				<CustomTooltip {...tooltipProps} place="left" spacing={8}>
-					{children}
-				</CustomTooltip>
-			) : (
-				children
-			)}
-		</div>
+			<div aria-hidden="true" className="flex">
+				{tooltipProps ? (
+					<CustomTooltip {...tooltipProps} place="left" spacing={8}>
+						{children}
+					</CustomTooltip>
+				) : (
+					children
+				)}
+			</div>
+		</li>
 	);
 });
 
@@ -257,7 +280,7 @@ export const VehicleNextStops = memo(function VehicleNextStops({
 	if (calls.length === 0) return null;
 	return (
 		<div className="-my-0.5">
-			<div className="flex max-h-24 flex-col gap-1 overflow-y-auto overscroll-contain py-0.5 px-1.5">
+			<ul className="flex max-h-24 flex-col gap-1 overflow-y-auto overscroll-contain py-0.5 px-1.5">
 				{calls.map((call, index) => (
 					<NextStopRow
 						addedJourney={addedJourney}
@@ -268,7 +291,7 @@ export const VehicleNextStops = memo(function VehicleNextStops({
 						label={rows[index]?.label ?? ""}
 					/>
 				))}
-			</div>
+			</ul>
 		</div>
 	);
 });

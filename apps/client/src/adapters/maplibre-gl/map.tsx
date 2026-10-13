@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { useMapDiagnostics } from "~/adapters/maplibre-gl/use-map-diagnostics";
+import * as m from "~/paraglide/messages";
 
 setWorkerUrl(maplibreWorkerUrl);
 // Hors Safari, maplibre n'utilise qu'un worker : les tuiles du premier affichage y sont traitées l'une
@@ -40,6 +41,21 @@ export function MapComponent({ children, containerProps, mapOptions, ref }: MapC
 
 		const instance = new MaplibreMap({
 			validateStyle: false,
+			locale: {
+				"AttributionControl.ToggleAttribution": m.maplibre_toggle_attribution(),
+				"AttributionControl.MapFeedback": m.maplibre_map_feedback(),
+				"FullscreenControl.Enter": m.maplibre_fullscreen_enter(),
+				"FullscreenControl.Exit": m.maplibre_fullscreen_exit(),
+				"GeolocateControl.FindMyLocation": m.maplibre_find_my_location(),
+				"GeolocateControl.LocationNotAvailable": m.maplibre_location_not_available(),
+				"LogoControl.Title": m.maplibre_logo_title(),
+				"Map.Title": m.maplibre_map_title(),
+				"Marker.Title": m.maplibre_marker_title(),
+				"NavigationControl.ResetBearing": m.maplibre_reset_bearing(),
+				"NavigationControl.ZoomIn": m.maplibre_zoom_in(),
+				"NavigationControl.ZoomOut": m.maplibre_zoom_out(),
+				"Popup.Close": m.maplibre_popup_close(),
+			},
 			...mapOptions,
 			container,
 		});

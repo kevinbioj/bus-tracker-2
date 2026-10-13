@@ -1,6 +1,7 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 import { Button } from "./button";
@@ -63,7 +64,7 @@ export function SheetContent({
 						render={
 							<Button variant="ghost" className="absolute top-3 right-3" size="icon-sm">
 								<XIcon />
-								<span className="sr-only">Close</span>
+								<span className="sr-only">{m.common_close()}</span>
 							</Button>
 						}
 					/>

@@ -28,6 +28,7 @@ type ActiveFeature = {
 type MapCircleMarkersPopup = {
 	children: (props: {
 		activeFeature: ActiveFeature | null;
+		closePopup: () => void;
 		openPopup: (feature: CircleMarkerFeature, type: "hover" | "selected") => void;
 	}) => ReactNode;
 	layer: StyleLayer;
@@ -282,6 +283,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 	return createPortal(
 		children({
 			activeFeature,
+			closePopup,
 			openPopup: (feature, type) => {
 				setActiveFeature({ id: feature.properties.id, type });
 				openPopup(feature);
