@@ -7,6 +7,7 @@ import { useLayoutEffect, useRef } from "react";
 export function useFitToLines<T extends HTMLElement>(text: string) {
 	const ref = useRef<T>(null);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: le texte change la mise en page sans redimensionner le conteneur
 	useLayoutEffect(() => {
 		const element = ref.current;
 		const container = element?.parentElement;
