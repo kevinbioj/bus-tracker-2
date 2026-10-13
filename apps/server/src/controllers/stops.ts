@@ -418,6 +418,17 @@ export function invalidateStopAreaCaches(source?: { providerId: string; sourceId
  */
 const isStopPointRef = (ref: string) => ref.includes(":StopPoint:");
 
+/**
+ * Références des quais sur lesquels porte le tableau. Un quai n'est publié que sous le réseau
+ * principal de sa station, alors que chaque course désigne ses dessertes sous le sien : il est
+ * retrouvé sous tous les réseaux de la station.
+ */
+function stopRefsOf(stopArea: StopArea, stopPointRef?: string) {
+	if (stopPointRef === undefined) return new Set(stopArea.stopRefs);
+	const suffix = stopPointRef.slice(stopPointRef.indexOf(":StopPoint:"));
+	return new Set([stopPointRef, ...stopArea.stopRefs.filter((stopRef) => stopRef.endsWith(suffix))]);
+}
+
 /** Station désignée par `ref`, et le quai sur lequel se restreindre si `ref` en désigne un. */
 async function resolveStopArea(ref: string) {
 	const stopPointRef = isStopPointRef(ref) ? ref : undefined;
@@ -454,7 +465,7 @@ hono.get(
 		const nowMs = Date.now();
 		const departures = mergeTrackedJourneys(
 			stopArea,
-			new Set(stopPointRef !== undefined ? [stopPointRef] : stopArea.stopRefs),
+			stopRefsOf(stopArea, stopPointRef),
 			await requestStopDepartures({
 				providerId: stopArea.providerId,
 				sourceId: stopArea.sourceId,
@@ -512,9 +523,6 @@ hono.get("/stops/:ref/alerts", createParamValidator(getStopDeparturesParams), as
 	}
 
 	// Un quai choisi ne perd pas l'info trafic de sa station : celle-ci le vise aussi.
-	const items = await findStopAlerts(
-		stopArea,
-		new Set(stopPointRef !== undefined ? [stopPointRef] : stopArea.stopRefs),
-	);
+	const items = await findStopAlerts(stopArea, stopRefsOf(stopArea, stopPointRef));
 	return c.json({ items, at: Temporal.Now.instant() });
 });
