@@ -22,7 +22,9 @@ const linePrefixToNetworkRef = new Map([
 const lineIdsToNetworkRef = new Map([
 	["1006979", "NOMAD-27"], // 216 -> Eure
 	["1006959", "NOMAD-27"], // 228 -> Eure
+	["1008217", "NOMAD-61"], // 401 -> Orne
 	["1008229", "NOMAD-61"], // 407 -> Orne
+	["1008231", "NOMAD-61"], // 408 -> Orne
 	["1009747", "NOMAD-61"], // 423 -> Orne
 	["1009928", "NOMAD-61"], // 424 -> Orne
 	["1006919", "NOMAD-76"], // 527 -> Seine-Maritime
