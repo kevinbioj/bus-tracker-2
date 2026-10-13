@@ -201,7 +201,8 @@ const NextStopRow = memo(function NextStopRow({
 				{call.stopName}
 			</div>
 			{hasExtra && (
-				<div className="flex-1">
+				// Quai et pictogramme restent sur une ligne : c'est le nom de l'arrêt qui cède la place.
+				<div className="flex-1 whitespace-nowrap">
 					{call.platformName !== undefined && (
 						<span className="inline-block ml-px bg-foreground/80 dark:bg-foreground text-background font-bold px-1 min-w-4 text-center rounded-xs">
 							{call.platformName}
