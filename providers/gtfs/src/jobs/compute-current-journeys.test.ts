@@ -566,6 +566,87 @@ describe("computeVehicleJourneys (positions figées)", () => {
 	});
 });
 
+describe("computeVehicleJourneys (courses créées par le temps réel)", () => {
+	beforeEach(() => {
+		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		Reflect.deleteProperty(console, "draft");
+	});
+
+	function realtimeSource(options?: Partial<SourceOptions>) {
+		const source = makeSource(options);
+		source.gtfs = makeGtfs();
+		return source;
+	}
+
+	function vehiclePosition(time: string): VehiclePosition {
+		return {
+			timestamp: epochSeconds(`2026-05-18T${time}Z`),
+			trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18" },
+			vehicle: { id: "vehicle:1" },
+			position: { latitude: 0, longitude: 0.005 },
+		};
+	}
+
+	it("supprime la course dont le TripUpdate a périmé", async () => {
+		const source = realtimeSource({ tripUpdateTtlMs: 0 });
+
+		const tracked = await cycleAt(source, "08:05:00", { tripUpdates: [delayedTripUpdate(5 * 60)] });
+		expect(tracked.journeys).toHaveLength(1);
+
+		const expired = await cycleAt(source, "08:06:00");
+		expect(expired.journeys).toHaveLength(0);
+		expect(source.gtfs!.journeys.size).toBe(0);
+	});
+
+	it("conserve la course tant que le TripUpdate n'a pas périmé", async () => {
+		const source = realtimeSource();
+
+		await cycleAt(source, "08:05:00", { tripUpdates: [delayedTripUpdate(5 * 60)] });
+
+		const result = await cycleAt(source, "08:06:00");
+		expect(result.journeys).toHaveLength(1);
+		expect(result.journeys[0]?.calls?.some((call) => call.expectedTime !== undefined)).toBe(true);
+	});
+
+	it("supprime la course que plus aucune position ne désigne", async () => {
+		const source = realtimeSource();
+
+		const tracked = await cycleAt(source, "08:05:00", { vehiclePositions: [vehiclePosition("08:05:00")] });
+		expect(tracked.journeys).toHaveLength(1);
+
+		const released = await cycleAt(source, "08:06:00", {
+			vehiclePositions: [{ ...vehiclePosition("08:06:00"), trip: undefined }],
+		});
+		expect(released.journeys.every((journey) => journey.journeyRef === undefined)).toBe(true);
+		expect(source.gtfs!.journeys.size).toBe(0);
+	});
+
+	it("supprime la course dont la position s'est figée plutôt que de publier le théorique", async () => {
+		const source = realtimeSource({ maxVehiclePositionAgeMs: 10 * 60_000 });
+
+		const result = await cycleAt(source, "08:16:00", {
+			vehiclePositions: [vehiclePosition("08:05:00")],
+			tripUpdates: [delayedTripUpdate(5 * 60)],
+		});
+		expect(result.journeys).toHaveLength(0);
+		expect(source.gtfs!.journeys.size).toBe(0);
+	});
+
+	it("ne supprime pas une course pré-calculée que le temps réel a quittée", async () => {
+		const source = scheduledSource({ tripUpdateTtlMs: 0 });
+
+		await cycleAt(source, "08:05:00", { tripUpdates: [delayedTripUpdate(5 * 60)] });
+
+		const result = await cycleAt(source, "08:06:00");
+		expect(result.journeys).toHaveLength(1);
+		expect(source.gtfs!.journeys.size).toBe(1);
+	});
+});
+
 /**
  * Course transfrontalière d'une agence déclarée en `Europe/Paris` (UTC+2 en mai) dont le dernier
  * arrêt est portugais (UTC+1) : A 10:00, B 10:30, C 11:00 heures locales respectives.

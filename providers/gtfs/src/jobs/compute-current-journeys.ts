@@ -248,6 +248,21 @@ const getTripFromDescriptor = (gtfs: Gtfs, tripDescriptor: TripDescriptor, allow
 	return trip;
 };
 
+const getOrCreateRealtimeJourney = (
+	gtfs: Gtfs,
+	trip: NonNullable<ReturnType<typeof getTripFromDescriptor>>,
+	startDate: Temporal.PlainDate,
+) => {
+	const journeyKey = getJourneyKey(startDate, trip.id);
+	let journey = gtfs.journeys.get(journeyKey);
+	if (journey === undefined) {
+		journey = trip.getScheduledJourney(startDate, true);
+		journey.createdFromRealtime = true;
+		gtfs.journeys.set(journeyKey, journey);
+	}
+	return journey;
+};
+
 const getStartDateFromTripDescriptor = (
 	trip: NonNullable<ReturnType<typeof getTripFromDescriptor>>,
 	tripDescriptor: TripDescriptor,
@@ -585,11 +600,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 				const startDate = getStartDateFromTripDescriptor(trip, tripUpdate.trip, updatedAt);
 				if (canceledJourneyIds.has(`${trip.id}:${startDate}`)) continue;
 
-				let journey = source.gtfs.journeys.get(getJourneyKey(startDate, trip.id));
-				if (journey === undefined) {
-					journey = trip.getScheduledJourney(startDate, true);
-					source.gtfs.journeys.set(getJourneyKey(startDate, trip.id), journey);
-				}
+				const journey = getOrCreateRealtimeJourney(source.gtfs, trip, startDate);
 				// Un producteur qui décrit une course déviée sans passer par `modified_trip` numérote
 				// encore ses arrêts comme le GTFS statique : seul l'identifiant d'arrêt reste fiable.
 				journey.updateJourney(
@@ -657,20 +668,16 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 					if (canceledJourneyIds.has(`${trip.id}:${startDate}`)) continue;
 
-					journey = source.gtfs.journeys.get(getJourneyKey(startDate, trip.id));
-					if (journey === undefined) {
-						journey = trip.getScheduledJourney(startDate, true);
-						source.gtfs.journeys.set(getJourneyKey(startDate, trip.id), journey);
-					}
-
 					// La course n'est pas marquée comme suivie : elle retombe sur son traitement plus bas —
 					// ou disparaît si la source ne le publie pas (`mode: "VP-ONLY"`, `excludeScheduled`).
 					// Son temps réel part avec la position : le TripUpdate qui continue de dériver derrière
 					// un terminal muet ne décrit plus la course, l'horaire théorique reprend la main.
 					if (isStalePosition) {
-						journey.dropRealtime();
+						source.gtfs.journeys.get(getJourneyKey(startDate, trip.id))?.dropRealtime();
 						continue;
 					}
+
+					journey = getOrCreateRealtimeJourney(source.gtfs, trip, startDate);
 
 					const minutesSinceUpdate = (now.epochMilliseconds - updatedAt.epochMilliseconds) / 60000;
 					if (minutesSinceUpdate >= 10) {
@@ -818,6 +825,13 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			if (source.options.isValidJourney === undefined || source.options.isValidJourney(vehicleJourney)) {
 				activeJourneys.set(key, vehicleJourney);
 			}
+		}
+
+		for (const [journeyKey, journey] of source.gtfs.journeys) {
+			if (!journey.createdFromRealtime) continue;
+			if (handledJourneyIds.has(journey.id)) continue;
+			if (journey.lastTripUpdateAtMs !== undefined || journey.hasModifications()) continue;
+			source.gtfs.journeys.delete(journeyKey);
 		}
 
 		if (source.options.mode !== "VP-ONLY" && source.options.mode !== "NO-TU") {

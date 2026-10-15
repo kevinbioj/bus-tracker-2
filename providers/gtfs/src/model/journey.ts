@@ -332,6 +332,7 @@ export class Journey {
 	lastModificationAtMs: number | undefined;
 	/** Clé sous laquelle la course a été publiée pour la dernière fois depuis son horaire (théorique ou TripUpdate). */
 	lastPublishedKey: string | undefined;
+	createdFromRealtime = false;
 
 	constructor(
 		readonly id: string,
