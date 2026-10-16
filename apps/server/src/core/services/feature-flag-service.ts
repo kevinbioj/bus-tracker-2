@@ -3,10 +3,10 @@ import { PostHog } from "posthog-node";
 const posthogKey = process.env.POSTHOG_KEY;
 
 const posthog =
-	posthogKey !== undefined
+	posthogKey
 		? new PostHog(posthogKey, {
-				host: process.env.POSTHOG_HOST,
-				personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY,
+				host: process.env.POSTHOG_HOST || undefined,
+				personalApiKey: process.env.POSTHOG_FEATURE_FLAGS_KEY || undefined,
 				featureFlagsPollingInterval: 30_000,
 				sendFeatureFlagEvent: false,
 			})

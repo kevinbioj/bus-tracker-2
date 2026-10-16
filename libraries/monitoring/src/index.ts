@@ -9,7 +9,7 @@ export function initMonitoring(id: string): void {
 	if (!key) return;
 
 	posthog = new PostHog(key, {
-		host: process.env.POSTHOG_HOST,
+		host: process.env.POSTHOG_HOST || undefined,
 		flushAt: 1,
 		flushInterval: 0,
 	});
