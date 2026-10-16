@@ -121,30 +121,54 @@ export function VehicleCard({ vehicle }: Readonly<{ vehicle: Vehicle }>) {
 			<div className="flex justify-center">
 				{match(vehicle.type)
 					.with(P.union("SUBWAY", "TRAMWAY"), () => (
-						<TramwayIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+						<TramwayIcon
+							aria-hidden="true"
+							className="my-auto size-6 sm:size-8"
+							style={{ fill: line?.color ?? undefined }}
+						/>
 					))
 					.with("FERRY", () => (
-						<ShipIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+						<ShipIcon
+							aria-hidden="true"
+							className="my-auto size-6 sm:size-8"
+							style={{ fill: line?.color ?? undefined }}
+						/>
 					))
 					.with("TROLLEY", () => (
-						<TrolleybusIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+						<TrolleybusIcon
+							aria-hidden="true"
+							className="my-auto size-6 sm:size-8"
+							style={{ fill: line?.color ?? undefined }}
+						/>
 					))
 					.with("COACH", () => (
-						<CoachIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+						<CoachIcon
+							aria-hidden="true"
+							className="my-auto size-6 sm:size-8"
+							style={{ fill: line?.color ?? undefined }}
+						/>
 					))
 					.with("GONDOLA", () => (
-						<GondolaIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+						<GondolaIcon
+							aria-hidden="true"
+							className="my-auto size-6 sm:size-8"
+							style={{ fill: line?.color ?? undefined }}
+						/>
 					))
 					.otherwise(() => (
-						<BusIcon className="my-auto size-6 sm:size-8" style={{ fill: line?.color ?? undefined }} />
+						<BusIcon
+							aria-hidden="true"
+							className="my-auto size-6 sm:size-8"
+							style={{ fill: line?.color ?? undefined }}
+						/>
 					))}
 				<div
 					className="border-l border-black dark:border-white mx-2 my-1"
 					style={{ borderColor: line?.textColor ?? undefined }}
 				/>
-				<p className="flex font-bold gap-1.5 justify-center ml-1 tabular-nums text-2xl sm:my-auto sm:text-4xl sm:min-w-32">
+				<h2 className="flex font-bold gap-1.5 justify-center ml-1 tabular-nums text-2xl sm:my-auto sm:text-4xl sm:min-w-32">
 					{vehicle.number}
-				</p>
+				</h2>
 			</div>
 			<div
 				className="border-t sm:border-l border-black dark:border-white mx-2 my-1"
