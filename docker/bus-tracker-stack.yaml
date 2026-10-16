@@ -55,6 +55,10 @@ services:
       - PG_DATABASE=bustracker
       - PG_PASSWORD_FILE=/run/secrets/database_password
       - REDIS_URL=redis://redis:6379
+      - POSTHOG_KEY=${POSTHOG_KEY:-}
+      - POSTHOG_HOST=${POSTHOG_HOST:-}
+      - POSTHOG_FEATURE_FLAGS_KEY=${POSTHOG_FEATURE_FLAGS_KEY:-}
+      - REPORT_HASH_SECRET=${REPORT_HASH_SECRET:-}
     secrets:
       - database_password
     deploy:

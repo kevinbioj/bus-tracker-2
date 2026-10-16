@@ -28,7 +28,8 @@ ARG BUILD_TIMESTAMP
 ENV VITE_BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
 
 # Build client, then upload and remove source maps from the resulting image.
-RUN --mount=type=secret,id=posthog_cli_api_key,required=false \
+RUN --mount=type=secret,id=client_env,target=/bus-tracker/apps/client/.env,required=false \
+	--mount=type=secret,id=posthog_cli_api_key,required=false \
 	--mount=type=secret,id=posthog_cli_project_id,required=false \
 	--mount=type=secret,id=posthog_cli_host,required=false \
 	pnpm -r build && \

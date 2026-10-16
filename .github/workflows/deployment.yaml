@@ -140,11 +140,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - name: Copy environment files
-        run: |
-          echo "${{ secrets.CLIENT_ENV }}" > apps/client/.env
-          echo "${{ secrets.SERVER_ENV }}" > apps/server/.env
-
       - name: Prepare build variables
         run: |
           # Applications live at <repo>/<name>, providers at <repo>/provider/<name>.
@@ -195,6 +190,8 @@ jobs:
       - name: Build and push Docker image by digest
         id: build
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        env:
+          CLIENT_ENV: ${{ secrets.CLIENT_ENV }}
         with:
           cache-from: type=gha,scope=${{ matrix.component }}-${{ env.PLATFORM_PAIR }}
           cache-to: type=gha,mode=max,scope=${{ matrix.component }}-${{ env.PLATFORM_PAIR }}
@@ -205,6 +202,8 @@ jobs:
             posthog_cli_api_key=${{ secrets.POSTHOG_CLI_API_KEY }}
             posthog_cli_project_id=${{ secrets.POSTHOG_CLI_PROJECT_ID }}
             posthog_cli_host=${{ secrets.POSTHOG_CLI_HOST }}
+          secret-envs: |
+            client_env=CLIENT_ENV
           context: .
           file: ${{ env.DOCKERFILE }}
           platforms: ${{ matrix.platform }}
@@ -318,3 +317,4 @@ jobs:
           remote_private_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           stack_file: "docker/bus-tracker-stack.yaml"
           stack_name: "bus-tracker"
+          env_file: ${{ secrets.SERVER_ENV }}
