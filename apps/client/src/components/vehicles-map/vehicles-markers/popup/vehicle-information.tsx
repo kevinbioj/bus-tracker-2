@@ -31,6 +31,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip
 import { useShowBikesAllowed, useShowWheelchairAccessibility } from "~/components/vehicles-map/accessibility-display";
 import { InformationChip } from "~/components/vehicles-map/vehicles-markers/popup/information-chip";
 import { InformationChipsRow } from "~/components/vehicles-map/vehicles-markers/popup/information-chips-row";
+import { useAirConditioningFeature } from "~/hooks/use-air-conditioning-feature";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 import { AirConditioningIcon, airConditioningIconDetails } from "~/icons/air-conditioning";
 import { BikesAllowedIcon, bikesAllowedIconDetails, getBikesAllowedStatus } from "~/icons/bikes-allowed";
@@ -141,6 +142,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
 	const [showBikesAllowed] = useShowBikesAllowed();
 	const [openedDialog, setOpenedDialog] = useState<InformationDialog | null>(null);
+	const airConditioningFeatureEnabled = useAirConditioningFeature();
 	const queryClient = useQueryClient();
 	const snackbar = useSnackbar();
 
@@ -254,7 +256,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 	const bikesAllowedStatus = getBikesAllowedStatus(journey.bikesAllowed);
 	const bikesAllowedInformation = bikesAllowedIconDetails[bikesAllowedStatus];
 
-	const airConditioningStatus = journey.vehicle?.airConditioning;
+	const airConditioningStatus = airConditioningFeatureEnabled ? journey.vehicle?.airConditioning : undefined;
 	const airConditioningInformation = airConditioningStatus
 		? airConditioningIconDetails[airConditioningStatus]
 		: undefined;

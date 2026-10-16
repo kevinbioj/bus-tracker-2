@@ -16,6 +16,7 @@ import {
 	vehicleReportsTable,
 	vehiclesTable,
 } from "../core/database/schema.js";
+import { isFeatureEnabled } from "../core/services/feature-flag-service.js";
 import { findActivityStarts } from "../core/services/line-activity-service.js";
 import { findJourneysByVehicleId, findOnlineLineId } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
@@ -276,6 +277,10 @@ hono.post(
 	createParamValidator(getVehicleByIdParamSchema),
 	createJsonValidator(createVehicleReportBodySchema),
 	async (c) => {
+		if (!(await isFeatureEnabled("air-conditioning"))) {
+			return c.json({ error: "Air conditioning reports are currently disabled." }, 403);
+		}
+
 		const { id } = c.req.valid("param");
 		const { field, value } = c.req.valid("json");
 
