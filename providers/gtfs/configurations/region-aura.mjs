@@ -110,7 +110,8 @@ const sources = [
 	},
 	{
 		id: "bourg-en-bresse",
-		staticResourceHref: "https://transport.data.gouv.fr/resources/84243/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		staticResourceHref:
+			"https://transport.data.gouv.fr/resources/84243/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/rubis-bourg-en-bresse-gtfs-rt-vehicle-position",
 			"https://proxy.transport.data.gouv.fr/resource/rubis-bourg-en-bresse-gtfs-rt-trip-update",
