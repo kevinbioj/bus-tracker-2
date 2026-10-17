@@ -997,26 +997,17 @@ describe("computeVehicleJourneys (dessertes déviées)", () => {
 		expect(Object.keys(paths)).toEqual(["network:RoutePath:test:shape:original"]);
 	});
 
-	it("rétablit la desserte théorique quand la déviation quitte le flux", async () => {
-		const source = scheduledSource({ tripUpdateTtlMs: 0 });
+	it("rétablit la desserte théorique dès que la déviation quitte le flux", async () => {
+		const source = scheduledSource();
 
 		await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
-		const result = await cycleAt(source, "08:06:00");
+		const result = await cycleAt(source, "08:05:30");
 
 		expect(callsOf(result)).toEqual(["B:SCHEDULED", "C:SCHEDULED"]);
 	});
 
-	it("conserve la déviation tant que le délai de tolérance n'est pas écoulé", async () => {
-		const source = scheduledSource();
-
-		await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
-		const result = await cycleAt(source, "08:06:00");
-
-		expect(callsOf(result)).toEqual(["B:SKIPPED", "Replacement:UNSCHEDULED", "C:SCHEDULED"]);
-	});
-
 	it("ne rétablit rien lors d'un cycle où un flux n'a pas répondu", async () => {
-		const source = scheduledSource({ tripUpdateTtlMs: 0 });
+		const source = scheduledSource();
 
 		await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
 		const result = await cycleAt(source, "08:06:00", { failedFeedCount: 1 });

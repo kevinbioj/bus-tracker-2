@@ -102,7 +102,7 @@ function detour(source: Source, gtfs: Gtfs, trip: Trip, stopId: string, resource
 
 	const journeyKey = getJourneyKey(DATE, trip.id);
 	const journey = trip.getScheduledJourney(DATE, true);
-	journey.applyModifications(plan, NOW.epochMilliseconds);
+	journey.applyModifications(plan);
 	gtfs.journeys.set(journeyKey, journey);
 	source.modifiedJourneyKeys.add(journeyKey);
 	source.realtimeStopAreas = collectRealtimeStopAreas(source);

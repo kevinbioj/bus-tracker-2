@@ -435,7 +435,7 @@ describe("computeStopDepartures", () => {
 		const date = Temporal.PlainDate.from("2026-05-18");
 		const journeyKey = getJourneyKey(date, "original");
 		const journey = trip.getScheduledJourney(date, true);
-		journey.applyModifications(plan, MONDAY_MORNING.epochMilliseconds);
+		journey.applyModifications(plan);
 		gtfs.journeys.set(journeyKey, journey);
 		source.modifiedJourneyKeys.add(journeyKey);
 		source.realtimeStopAreas.set("RT", new StopArea("RT", replacement.name, 0.001, 0.01, [replacement]));
@@ -481,7 +481,7 @@ describe("computeStopDepartures", () => {
 		const date = Temporal.PlainDate.from("2026-05-18");
 		const journeyKey = getJourneyKey(date, "original");
 		const journey = trip.getScheduledJourney(date, true);
-		journey.applyModifications(plan, MONDAY_MORNING.epochMilliseconds);
+		journey.applyModifications(plan);
 		gtfs.journeys.set(journeyKey, journey);
 		source.modifiedJourneyKeys.add(journeyKey);
 		source.realtimeStopAreas = collectRealtimeStopAreas(source);
@@ -536,7 +536,7 @@ describe("computeStopDepartures", () => {
 		const date = Temporal.PlainDate.from("2026-05-18");
 		const journeyKey = getJourneyKey(date, "original");
 		const journey = trip.getScheduledJourney(date, true);
-		journey.applyModifications(plan, MONDAY_MORNING.epochMilliseconds);
+		journey.applyModifications(plan);
 		gtfs.journeys.set(journeyKey, journey);
 		source.modifiedJourneyKeys.add(journeyKey);
 		source.realtimeStopAreas = collectRealtimeStopAreas(source);
@@ -581,7 +581,7 @@ describe("computeStopDepartures", () => {
 		const date = Temporal.PlainDate.from("2026-05-18");
 		const journeyKey = getJourneyKey(date, "original");
 		const journey = trip.getScheduledJourney(date, true);
-		journey.applyModifications(plan, MONDAY_MORNING.epochMilliseconds);
+		journey.applyModifications(plan);
 		gtfs.journeys.set(journeyKey, journey);
 		source.modifiedJourneyKeys.add(journeyKey);
 

@@ -328,8 +328,6 @@ export class Journey {
 	lastVehiclePositionAtMs: number | undefined;
 	/** Instant (epoch ms) du dernier cycle ayant appliqué un TripUpdate à cette course. */
 	lastTripUpdateAtMs: number | undefined;
-	/** Instant (epoch ms) du dernier cycle où une déviation a été vue dans le flux. */
-	lastModificationAtMs: number | undefined;
 	/** Clé sous laquelle la course a été publiée pour la dernière fois depuis son horaire (théorique ou TripUpdate). */
 	lastPublishedKey: string | undefined;
 	createdFromRealtime = false;
@@ -457,7 +455,7 @@ export class Journey {
 	 * une déviation est republiée à chaque cycle, en recalculer les arrêts à chaque fois effacerait
 	 * le temps réel appliqué au cycle précédent.
 	 */
-	applyModifications(plan: TripModificationPlan, nowMs: number) {
+	applyModifications(plan: TripModificationPlan) {
 		if (this._modificationPlan?.revision !== plan.revision) {
 			// Le tracé d'une déviation publié par le flux temps réel est une polyligne arrondie à 1e-5 :
 			// là où il suit celui de la course, il en reprend les sommets à pleine précision. Remplacé
@@ -471,7 +469,6 @@ export class Journey {
 			this._cancelledPath = undefined;
 			this.refreshBounds();
 		}
-		this.lastModificationAtMs = nowMs;
 	}
 
 	/**
@@ -485,7 +482,6 @@ export class Journey {
 
 		this._modificationPlan = undefined;
 		this._modificationsApplied = false;
-		this.lastModificationAtMs = undefined;
 		this._calls = null;
 		this._detourShape = undefined;
 		this._cancelledPath = undefined;

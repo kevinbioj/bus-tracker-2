@@ -517,6 +517,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 		// Les déviations sont appliquées avant tout : elles redéfinissent la desserte de la course, à
 		// laquelle les TripUpdate viendront ensuite rattacher leurs horaires.
+		const seenModifiedJourneyKeys = new Set<string>();
 		if (tripModifications.length > 0) {
 			for (const [journeyKey, plan] of indexTripModifications(source.gtfs, tripModifications, resources)) {
 				const trip = source.gtfs.trips.get(plan.tripId);
@@ -528,31 +529,19 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					source.gtfs.journeys.set(journeyKey, journey);
 				}
 
-				journey.applyModifications(plan, nowMs);
+				journey.applyModifications(plan);
 				source.modifiedJourneyKeys.add(journeyKey);
+				seenModifiedJourneyKeys.add(journeyKey);
 			}
 		}
 
-		// Une déviation disparue du flux a été levée : la desserte théorique reprend ses droits, au
-		// même délai de tolérance que les TripUpdate et sous la même réserve d'un cycle complet.
+		// Une déviation disparue du flux a été levée : la desserte théorique reprend ses droits dès ce
+		// cycle, sous la seule réserve qu'il soit complet.
 		if (failedFeedCount === 0) {
 			for (const journeyKey of source.modifiedJourneyKeys) {
-				const journey = source.gtfs.journeys.get(journeyKey);
+				if (seenModifiedJourneyKeys.has(journeyKey)) continue;
 
-				// Course balayée entre-temps : sa déviation a disparu avec elle.
-				if (journey === undefined) {
-					source.modifiedJourneyKeys.delete(journeyKey);
-					continue;
-				}
-
-				if (journey.lastModificationAtMs === undefined) {
-					source.modifiedJourneyKeys.delete(journeyKey);
-					continue;
-				}
-
-				if (nowMs - journey.lastModificationAtMs <= tripUpdateTtlMs) continue;
-
-				journey.clearModifications();
+				source.gtfs.journeys.get(journeyKey)?.clearModifications();
 				source.modifiedJourneyKeys.delete(journeyKey);
 			}
 		}

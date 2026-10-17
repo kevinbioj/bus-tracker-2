@@ -143,22 +143,19 @@ describe("Journey", () => {
 		const { gtfs, trip } = makeGtfs();
 		const journey = trip.getScheduledJourney(DATE, true);
 
-		journey.applyModifications(
-			{
-				modificationsIds: ["detour:1"],
-				tripId: "trip",
-				date: DATE,
-				revision: "rev:1",
-				modifications: [
-					{
-						startStopSelector: { stopSequence: 2 },
-						propagatedModificationDelayMs: 0,
-						replacementStops: [{ stop: gtfs.stops.get("X")!, travelTimeToStopMs: 5 * 60 * 1000 }],
-					},
-				],
-			},
-			at("08:00").epochMilliseconds,
-		);
+		journey.applyModifications({
+			modificationsIds: ["detour:1"],
+			tripId: "trip",
+			date: DATE,
+			revision: "rev:1",
+			modifications: [
+				{
+					startStopSelector: { stopSequence: 2 },
+					propagatedModificationDelayMs: 0,
+					replacementStops: [{ stop: gtfs.stops.get("X")!, travelTimeToStopMs: 5 * 60 * 1000 }],
+				},
+			],
+		});
 
 		expect(journey.calls.map((call) => call.stop.id)).toEqual(["A", "X", "B"]);
 		// L'heure de l'arrêt ajouté vient de la déviation, pas d'une prédiction : sans quoi les sources
@@ -176,22 +173,19 @@ describe("Journey", () => {
 		function makeDetouredJourney(beforeSequence: number, travelTimeToStopMs: number) {
 			const { gtfs, trip } = makeGtfs();
 			const journey = trip.getScheduledJourney(DATE, true);
-			journey.applyModifications(
-				{
-					modificationsIds: ["detour:1"],
-					tripId: "trip",
-					date: DATE,
-					revision: "rev:1",
-					modifications: [
-						{
-							startStopSelector: { stopSequence: beforeSequence },
-							propagatedModificationDelayMs: 0,
-							replacementStops: [{ stop: gtfs.stops.get("X")!, travelTimeToStopMs }],
-						},
-					],
-				},
-				at("08:00").epochMilliseconds,
-			);
+			journey.applyModifications({
+				modificationsIds: ["detour:1"],
+				tripId: "trip",
+				date: DATE,
+				revision: "rev:1",
+				modifications: [
+					{
+						startStopSelector: { stopSequence: beforeSequence },
+						propagatedModificationDelayMs: 0,
+						replacementStops: [{ stop: gtfs.stops.get("X")!, travelTimeToStopMs }],
+					},
+				],
+			});
 			const callAt = (stopId: string) => journey.calls.find((call) => call.stop.id === stopId)!;
 			return { gtfs, journey, callAt };
 		}
@@ -510,7 +504,7 @@ describe("Journey#shape", () => {
 		const { trip } = makeShapedGtfs();
 		const journey = trip.getScheduledJourney(DATE, true);
 
-		journey.applyModifications(plan, at("08:00").epochMilliseconds);
+		journey.applyModifications(plan);
 
 		// Le retour vers l'ancien terminus est abandonné : le tracé s'arrête à l'arrêt de déviation,
 		// sans le trait droit qui le reliait à l'itinéraire d'origine.
@@ -526,7 +520,7 @@ describe("Journey#shape", () => {
 		const { trip } = makeShapedGtfs();
 		const journey = trip.getScheduledJourney(DATE, true);
 
-		journey.applyModifications(plan, at("08:00").epochMilliseconds);
+		journey.applyModifications(plan);
 
 		const segment = journey.cancelledPath!.segments[0]!;
 
@@ -540,7 +534,7 @@ describe("Journey#shape", () => {
 		const journey = trip.getScheduledJourney(DATE, true);
 
 		// Déviation de tracé seul : tous les arrêts sont desservis, il n'y a rien à rogner.
-		journey.applyModifications({ ...plan, modifications: [] }, at("08:00").epochMilliseconds);
+		journey.applyModifications({ ...plan, modifications: [] });
 
 		expect(journey.shape).toBe(detourShape);
 	});
@@ -572,7 +566,7 @@ describe("Journey#cancelledPath", () => {
 		const { trip } = makeShapedGtfs();
 		const journey = trip.getScheduledJourney(DATE, true);
 
-		journey.applyModifications(detourPlan(detourShape), at("08:00").epochMilliseconds);
+		journey.applyModifications(detourPlan(detourShape));
 
 		// B est retiré : la portion abandonnée relie A (0 m) à C (2000 m), soit tout le tracé théorique.
 		expect(journey.cancelledPath?.segments).toEqual([
@@ -588,7 +582,7 @@ describe("Journey#cancelledPath", () => {
 		const { trip } = makeShapedGtfs({ withShapeDistances: false });
 		const journey = trip.getScheduledJourney(DATE, true);
 
-		journey.applyModifications(detourPlan(detourShape), at("08:00").epochMilliseconds);
+		journey.applyModifications(detourPlan(detourShape));
 
 		expect(journey.cancelledPath?.segments).toEqual([
 			[
@@ -609,7 +603,7 @@ describe("Journey#cancelledPath", () => {
 			"shape:offset",
 			new Float64Array([0.00015, 0, 0, 0.00015, 0.01, 1100, 0.00015, 0.02, 2200]),
 		);
-		journey.applyModifications(detourPlan(offsetShape), at("08:00").epochMilliseconds);
+		journey.applyModifications(detourPlan(offsetShape));
 
 		const segment = journey.cancelledPath!.segments[0]!;
 
@@ -634,20 +628,17 @@ describe("Journey#cancelledPath", () => {
 			"shape:offset",
 			new Float64Array([0.00015, 0, 0, 0.00015, 0.01, 1100, 0.00015, 0.02, 2200]),
 		);
-		journey.applyModifications(
-			{
-				...detourPlan(offsetShape),
-				modifications: [
-					{
-						startStopSelector: { stopSequence: 2 },
-						endStopSelector: { stopSequence: 3 },
-						propagatedModificationDelayMs: 0,
-						replacementStops: [],
-					},
-				],
-			},
-			at("08:00").epochMilliseconds,
-		);
+		journey.applyModifications({
+			...detourPlan(offsetShape),
+			modifications: [
+				{
+					startStopSelector: { stopSequence: 2 },
+					endStopSelector: { stopSequence: 3 },
+					propagatedModificationDelayMs: 0,
+					replacementStops: [],
+				},
+			],
+		});
 
 		const segment = journey.cancelledPath!.segments[0]!;
 
@@ -664,7 +655,7 @@ describe("Journey#cancelledPath", () => {
 		// Tracé de remplacement à une centaine de mètres au nord : là où la course le quitte, les deux
 		// tracés sont déjà séparés pour de bon. Les raccorder dessinerait un virage que rien ne porte.
 		const farShape = new Shape("shape:far", new Float64Array([0.001, 0, 0, 0.001, 0.01, 1100, 0.001, 0.02, 2200]));
-		journey.applyModifications(detourPlan(farShape), at("08:00").epochMilliseconds);
+		journey.applyModifications(detourPlan(farShape));
 
 		// La portion abandonnée s'en tient aux points du tracé théorique, sans trait vers la déviation.
 		expect(journey.cancelledPath?.segments).toEqual([
@@ -686,7 +677,7 @@ describe("Journey#cancelledPath", () => {
 			"shape:parallel",
 			new Float64Array([0.0002, 0, 0, 0.0002, 0.01, 1100, 0, 0.02, 2200]),
 		);
-		journey.applyModifications(detourPlan(parallelStreetShape), at("08:00").epochMilliseconds);
+		journey.applyModifications(detourPlan(parallelStreetShape));
 
 		// La portion abandonnée va jusqu'au carrefour, sans bifurquer vers la rue voisine en chemin :
 		// aucun de ses points ne quitte le tracé théorique, qui est rectiligne.
@@ -704,7 +695,7 @@ describe("Journey#cancelledPath", () => {
 			"shape:overlapping",
 			new Float64Array([0, 0, 0, 0, 0.005, 550, 0, 0.01, 1100, 0, 0.02, 2200]),
 		);
-		journey.applyModifications(detourPlan(overlappingShape), at("08:00").epochMilliseconds);
+		journey.applyModifications(detourPlan(overlappingShape));
 
 		expect(journey.cancelledPath).toBeUndefined();
 	});
@@ -714,7 +705,7 @@ describe("Journey#cancelledPath", () => {
 		const journey = trip.getScheduledJourney(DATE, true);
 
 		// Déviation de tracé seul : toute la desserte est conservée, seul l'itinéraire change.
-		journey.applyModifications({ ...detourPlan(detourShape), modifications: [] }, at("08:00").epochMilliseconds);
+		journey.applyModifications({ ...detourPlan(detourShape), modifications: [] });
 
 		expect(journey.calls.map((call) => call.stop.id)).toEqual(["A", "B", "C"]);
 		// Le point médian du tracé théorique est le seul que la déviation contourne.
@@ -734,7 +725,7 @@ describe("Journey#cancelledPath", () => {
 		// Tracé de remplacement à des kilomètres du tracé théorique : tous ses points s'en écartent,
 		// signaler la course entière comme abandonnée n'aurait aucun sens.
 		const unrelatedShape = new Shape("shape:unrelated", new Float64Array([1, 1, 0, 1, 1.01, 1100]));
-		journey.applyModifications({ ...detourPlan(unrelatedShape), modifications: [] }, at("08:00").epochMilliseconds);
+		journey.applyModifications({ ...detourPlan(unrelatedShape), modifications: [] });
 
 		expect(journey.cancelledPath).toBeUndefined();
 	});
@@ -743,7 +734,7 @@ describe("Journey#cancelledPath", () => {
 		const { trip } = makeShapedGtfs();
 		const journey = trip.getScheduledJourney(DATE, true);
 
-		journey.applyModifications(detourPlan(), at("08:00").epochMilliseconds);
+		journey.applyModifications(detourPlan());
 
 		expect(journey.cancelledPath).toBeUndefined();
 	});
@@ -752,7 +743,7 @@ describe("Journey#cancelledPath", () => {
 		const { trip } = makeShapedGtfs();
 		const journey = trip.getScheduledJourney(DATE, true);
 
-		journey.applyModifications(detourPlan(detourShape), at("08:00").epochMilliseconds);
+		journey.applyModifications(detourPlan(detourShape));
 		expect(journey.cancelledPath).toBeDefined();
 
 		journey.clearModifications();
