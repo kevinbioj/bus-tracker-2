@@ -266,8 +266,8 @@ export const VehicleNextStops = memo(function VehicleNextStops({
 		() => {
 			const now = dayjs();
 
-			return calls.map((call) => {
-				const dwelling = isDwelling(call, now);
+			return calls.map((call, index) => {
+				const dwelling = index === 0 && isDwelling(call, now);
 				return { dwelling, label: formatCallLabel(call, nextCallsDisplayMode, dwelling, now) };
 			});
 		},
