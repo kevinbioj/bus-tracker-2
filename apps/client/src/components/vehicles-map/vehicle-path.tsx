@@ -9,6 +9,7 @@ import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
 import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { GetLinePathQuery, GetLineQuery } from "~/api/lines";
+import { useRealtimeAvailable } from "~/api/realtime";
 import { GetJourneyPathsQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
@@ -328,13 +329,14 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	const [stopLabelsStyle] = useLocalStorage<StopLabelsStyle>("stop-labels-style", "with-background");
 	const showJourneyPath = pathDisplayMode !== "disabled" && journeyId !== undefined;
 
-	const { data: journey } = useQuery(GetVehicleJourneyQuery(showJourneyPath ? journeyId : null, true));
+	const realtime = useRealtimeAvailable();
+	const { data: journey } = useQuery(GetVehicleJourneyQuery(showJourneyPath ? journeyId : null, true, realtime));
 
 	// La course détaillée peut encore être la précédente le temps d'un rendu : demander ses tracés
 	// afficherait ceux d'une autre course.
 	const pathsReady = showJourneyPath && journey?.id === journeyId;
 	const { data: paths } = useQuery(
-		GetJourneyPathsQuery(pathsReady ? journeyId : undefined, pathsReady ? journey.pathRef : undefined),
+		GetJourneyPathsQuery(pathsReady ? journeyId : undefined, pathsReady ? journey.pathRef : undefined, realtime),
 	);
 	const path = paths?.path;
 	const cancelledPath = paths?.cancelled;
@@ -343,10 +345,10 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	const showLinePath =
 		pathDisplayMode === "journeys-and-lines" && lineId !== undefined && (journeyId === undefined || !journeyPathReady);
 
-	const { data: linePath } = useQuery(GetLinePathQuery(showLinePath ? lineId : undefined));
+	const { data: linePath } = useQuery(GetLinePathQuery(showLinePath ? lineId : undefined, realtime));
 
 	const resolvedLineId = journey?.lineId ?? lineId;
-	const { data: line, isError: lineErrored } = useQuery(GetLineQuery(resolvedLineId));
+	const { data: line, isError: lineErrored } = useQuery(GetLineQuery(resolvedLineId, realtime));
 	const awaitingLineColors = resolvedLineId !== undefined && line === undefined && !lineErrored;
 
 	const stopsLabelLayer = useMemo<AddLayerObject>(

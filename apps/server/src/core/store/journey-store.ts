@@ -3,9 +3,23 @@ import { createStringPool } from "../../utils/string-pool.js";
 
 export const journeyStore = new Map<string, DisposeableVehicleJourney>();
 
+type JourneysChangedListener = (journeyIds: string[]) => void;
+
+const journeysChangedListeners = new Set<JourneysChangedListener>();
+
+export function onJourneysChanged(listener: JourneysChangedListener) {
+	journeysChangedListeners.add(listener);
+	return () => journeysChangedListeners.delete(listener);
+}
+
+function notifyJourneysChanged(journeyIds: string[]) {
+	if (journeyIds.length === 0) return;
+	for (const listener of journeysChangedListeners) listener(journeyIds);
+}
+
 setInterval(() => {
 	const now = Temporal.Now.instant();
-	let sweptJourneys = 0;
+	const sweptJourneyIds: string[] = [];
 	for (const [key, journey] of journeyStore) {
 		let shouldDelete = false;
 
@@ -20,10 +34,11 @@ setInterval(() => {
 
 		if (shouldDelete) {
 			journeyStore.delete(key);
-			sweptJourneys += 1;
+			sweptJourneyIds.push(key);
 		}
 	}
-	console.log("► Swept %d outdated vehicle journeys.", sweptJourneys);
+	notifyJourneysChanged(sweptJourneyIds);
+	console.log("► Swept %d outdated vehicle journeys.", sweptJourneyIds.length);
 }, 60_000);
 
 export type JourneyStore = typeof journeyStore;
@@ -52,6 +67,7 @@ export function storeJourneys(journeys: DisposeableVehicleJourney[]) {
 		journeyStore.set(journey.id, journey);
 		recordLineSighting(journey);
 	}
+	notifyJourneysChanged(journeys.map((journey) => journey.id));
 }
 
 /**

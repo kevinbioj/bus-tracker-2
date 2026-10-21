@@ -1,21 +1,23 @@
-import type { VehicleJourneyCallFlags, VehicleJourneyLineType, VehicleJourneyPaths } from "@bus-tracker/contracts";
+import type {
+	VehicleJourneyCallFlags,
+	VehicleJourneyLineType,
+	VehicleJourneyMarker,
+	VehicleJourneyPaths,
+} from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
 import { readDisplayedCountryCodes } from "~/components/vehicles-map/displayed-countries";
-import { positionTypes, readDisplayedPositionTypes } from "~/components/vehicles-map/displayed-position-types";
+import {
+	type PositionType,
+	positionTypes,
+	readDisplayedPositionTypes,
+} from "~/components/vehicles-map/displayed-position-types";
 import type { GirouetteData } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
 import { client } from "./client";
 import type { VehicleAirConditioningStatus } from "./vehicles";
 
-export type VehicleJourneyMarker = {
-	id: string;
-	lineNumber?: string;
-	vehicleNumber?: string;
-	color?: string;
-	fillColor?: string;
-	position: { latitude: number; longitude: number; bearing?: number; type: "GPS" | "COMPUTED" };
-};
+export type { VehicleJourneyMarker };
 
 export type DisposeableVehicleJourney = {
 	id: string;
@@ -86,23 +88,53 @@ export type VehicleJourneyMarkersFilter = {
 	targetedJourneyId?: string;
 };
 
+export type VehicleJourneyMarkersParams = {
+	networkId?: number;
+	lineId?: number;
+	positionTypes?: PositionType[];
+	countryCodes?: string[];
+	includeMarker?: string;
+};
+
+export function getVehicleJourneyMarkersParams(
+	{ embeddedNetworkId, filteredNetworkId, lineId, targetedJourneyId }: VehicleJourneyMarkersFilter,
+	activeMarkerId: string | null,
+): VehicleJourneyMarkersParams {
+	const networkId = embeddedNetworkId ?? filteredNetworkId;
+	// En mode embarqué seulement : les réglages d'affichage de l'utilisateur ne s'appliquent pas.
+	const displayedPositionTypes = embeddedNetworkId ? positionTypes : readDisplayedPositionTypes();
+
+	return {
+		networkId,
+		lineId,
+		positionTypes: displayedPositionTypes.length < positionTypes.length ? [...displayedPositionTypes] : undefined,
+		// Le réseau étant imposé, filtrer par pays serait redondant — et masquerait tout si le pays
+		// du réseau se trouve décoché dans les préférences.
+		countryCodes: networkId ? undefined : readDisplayedCountryCodes(),
+		// Ne pas réintroduire de force un véhicule qui n'appartient pas au filtre demandé — sauf s'il
+		// a été explicitement ciblé.
+		includeMarker:
+			targetedJourneyId ??
+			(lineId === undefined && filteredNetworkId === undefined ? (activeMarkerId ?? undefined) : undefined),
+	};
+}
+
 export const GetVehicleJourneyMarkersQuery = (
 	bounds: LngLatBounds,
-	{ embeddedNetworkId, filteredNetworkId, lineId, targetedJourneyId }: VehicleJourneyMarkersFilter = {},
+	filter: VehicleJourneyMarkersFilter = {},
+	realtime = false,
 ) =>
 	queryOptions({
+		enabled: !realtime,
 		placeholderData: keepPreviousData,
-		refetchInterval: 10_000,
+		refetchInterval: realtime ? false : 10_000,
 		staleTime: 20_000,
-		queryKey: ["vehicle-journeys", embeddedNetworkId, filteredNetworkId, lineId],
+		queryKey: ["vehicle-journeys", filter.embeddedNetworkId, filter.filteredNetworkId, filter.lineId],
 		queryFn: () => {
-			const activeMarkerId = localStorage.getItem("active-feature");
-			const networkId = embeddedNetworkId ?? filteredNetworkId;
-			// En mode embarqué seulement : les réglages d'affichage de l'utilisateur ne s'appliquent pas.
-			const displayedPositionTypes = embeddedNetworkId ? positionTypes : readDisplayedPositionTypes();
-			// Le réseau étant imposé, filtrer par pays serait redondant — et masquerait tout si le pays
-			// du réseau se trouve décoché dans les préférences.
-			const displayedCountryCodes = networkId ? undefined : readDisplayedCountryCodes();
+			const { networkId, lineId, positionTypes, countryCodes, includeMarker } = getVehicleJourneyMarkersParams(
+				filter,
+				localStorage.getItem("active-feature"),
+			);
 
 			return client
 				.get("/vehicle-journeys/markers", {
@@ -113,25 +145,20 @@ export const GetVehicleJourneyMarkersQuery = (
 						neLon: String(Math.min(bounds.getNorthEast().lng, 180)),
 						networkId: networkId ? String(networkId) : undefined,
 						lineId: lineId ? String(lineId) : undefined,
-						positionTypes:
-							displayedPositionTypes.length < positionTypes.length ? displayedPositionTypes.join(",") : undefined,
-						countryCodes: displayedCountryCodes?.join(","),
-						// Ne pas réintroduire de force un véhicule qui n'appartient pas au filtre demandé — sauf s'il
-						// a été explicitement ciblé.
-						includeMarker:
-							targetedJourneyId ??
-							(lineId === undefined && filteredNetworkId === undefined ? (activeMarkerId ?? undefined) : undefined),
+						positionTypes: positionTypes?.join(","),
+						countryCodes: countryCodes?.join(","),
+						includeMarker,
 					},
 				})
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
 		},
 	});
 
-export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
+export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean, realtime = false) =>
 	queryOptions({
-		enabled: id !== null,
+		enabled: id !== null && !realtime,
 		retry: false,
-		refetchInterval: refetch ? 5_000 : undefined,
+		refetchInterval: refetch && !realtime ? 5_000 : undefined,
 		staleTime: 10_000,
 		queryKey: ["vehicle-journeys", id],
 		queryFn: () => client.get(`/vehicle-journeys/${id}`).then((response) => response.json<DisposeableVehicleJourney>()),
@@ -144,9 +171,9 @@ export const GetVehicleJourneyQuery = (id: string | null, refetch?: boolean) =>
  * `pathRef` entre dans la clé du cache en guise de version : il change dès que la course emprunte un
  * autre tracé — application ou levée d'une déviation — et les deux tracés sont alors rechargés.
  */
-export const GetJourneyPathsQuery = (journeyId?: string, pathRef?: string) =>
+export const GetJourneyPathsQuery = (journeyId?: string, pathRef?: string, realtime = false) =>
 	queryOptions({
-		enabled: journeyId !== undefined && pathRef !== undefined,
+		enabled: journeyId !== undefined && pathRef !== undefined && !realtime,
 		retry: false,
 		staleTime: 120_000,
 		queryKey: ["vehicle-journeys", journeyId, "paths", pathRef],

@@ -7,6 +7,7 @@ import { useDebounceValue } from "usehooks-ts";
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import { GetNetworksQuery } from "~/api/networks";
+import { isRealtimeAvailable, useRealtimeStatus } from "~/api/realtime";
 import {
 	GetStopDeparturesQuery,
 	GetStopMarkersQuery,
@@ -20,6 +21,7 @@ import {
 	STOPS_MIN_ZOOM,
 	type StopFeatureKind,
 } from "~/components/vehicles-map/stops-markers/stops-markers-layer";
+import { useRealtimeStops } from "~/components/vehicles-map/stops-markers/use-realtime-stops";
 
 /**
  * Granularité chargée selon le zoom : rien, les stations, puis les stations *et* leurs quais — les
@@ -149,14 +151,22 @@ export function StopsMarkersData({
 	const lineOnly = lineId !== undefined;
 	const loaded = level !== "none";
 
+	const realtimeStatus = useRealtimeStatus();
+	const realtime = isRealtimeAvailable(realtimeStatus);
+	const withStopPoints = lineOnly || level === "points";
+
 	const { data, refetch } = useQuery(
-		GetStopMarkersQuery(bounds, {
-			enabled: loaded,
-			networkId,
-			lineId,
-			withStopPoints: lineOnly || level === "points",
-		}),
+		GetStopMarkersQuery(bounds, { enabled: loaded, networkId, lineId, withStopPoints }, realtime),
 	);
+
+	useRealtimeStops({
+		connected: realtimeStatus === "open",
+		bounds,
+		loaded,
+		networkId,
+		lineId,
+		withStopPoints,
+	});
 
 	const { data: networks } = useQuery(GetNetworksQuery);
 	const networkNames = useMemo(
@@ -171,7 +181,7 @@ export function StopsMarkersData({
 	// (toutes les 5 s), elle non — le partage structurel de React Query en garde la référence, et la
 	// source des arrêts n'est pas réécrite pour rien.
 	const { data: selectedStop } = useQuery({
-		...GetStopDeparturesQuery(selectedRef, "departures", lineId),
+		...GetStopDeparturesQuery(selectedRef, "departures", lineId, realtime),
 		select: selectStop,
 	});
 
@@ -188,8 +198,8 @@ export function StopsMarkersData({
 			return;
 		}
 
-		refetch();
-	}, [bounds, networkId, lineId, loaded, level]);
+		if (!realtime) refetch();
+	}, [realtime, bounds, networkId, lineId, loaded, level]);
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
 		// Tant que le tableau n'est pas chargé, seule une station sélectionnée est connue de l'URL.

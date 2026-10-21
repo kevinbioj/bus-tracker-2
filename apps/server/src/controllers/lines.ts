@@ -1,8 +1,8 @@
-import { decodeLinePath, type EncodedLinePath, type LinePath } from "@bus-tracker/contracts";
-import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
 import * as z from "zod";
 import { database } from "../core/database/database.js";
 import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
+import { loadLineDetails, loadLinePath } from "../core/services/line-details-service.js";
 import { findLineAlerts } from "../core/services/service-alert-service.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import { redis } from "../index.js";
@@ -21,26 +21,10 @@ const getLineVehicleAssignmentsQuerySchema = z.object({
 hono.get("/lines/:id", createParamValidator(getLineByIdParamSchema), async (c) => {
 	const { id } = c.req.valid("param");
 
-	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
+	const line = await loadLineDetails(id);
 	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
-	const activeMonths = await database
-		.select({ month: sql<string>`DISTINCT TO_CHAR(service_date, 'YYYY-MM')` })
-		.from(lineActivitiesTable)
-		.where(eq(lineActivitiesTable.lineId, line.id));
-
-	const [latestActivity] = await database
-		.select({ serviceDate: lineActivitiesTable.serviceDate })
-		.from(lineActivitiesTable)
-		.where(eq(lineActivitiesTable.lineId, line.id))
-		.orderBy(desc(lineActivitiesTable.serviceDate))
-		.limit(1);
-
-	return c.json({
-		...line,
-		activeMonths: activeMonths.map(({ month }) => month).toSorted((a, b) => a.localeCompare(b)),
-		latestServiceDate: latestActivity?.serviceDate ?? null,
-	});
+	return c.json(line);
 });
 
 hono.get("/lines/:id/alerts", createParamValidator(getLineByIdParamSchema), async (c) => {
@@ -126,41 +110,13 @@ hono.get("/lines/:id/path", createParamValidator(getLineByIdParamSchema), async 
 	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
 	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
-	const refs = line.references ?? [];
-	if (refs.length === 0) return c.json({ error: `No path was found for line '${id}'.` }, 404);
-
+	if ((line.references ?? []).length === 0) return c.json({ error: `No path was found for line '${id}'.` }, 404);
 	if (!redis.isReady) return c.json({ error: "Paths are temporarily unavailable." }, 503);
 
-	const redisKeys = refs.map((ref) => `${ref}:LinePath`);
-	const rawPaths = await redis.mGet(redisKeys);
-	// Chaque version d'encodage a sa propre précision : les segments ne sont dédoublonnés qu'entre
-	// tracés de même version.
-	const encodedSegments = new Map<EncodedLinePath["v"], Set<string>>();
+	const path = await loadLinePath(line);
+	if (path === undefined) return c.json({ error: `No path was found for line '${id}'.` }, 404);
 
-	for (const rawPath of rawPaths) {
-		if (rawPath === null) continue;
-
-		const encodedPath = JSON.parse(rawPath) as EncodedLinePath;
-		if ((encodedPath.v !== 1 && encodedPath.v !== 2) || !Array.isArray(encodedPath.segments)) continue;
-
-		let segments = encodedSegments.get(encodedPath.v);
-		if (segments === undefined) {
-			segments = new Set();
-			encodedSegments.set(encodedPath.v, segments);
-		}
-
-		for (const segment of encodedPath.segments) {
-			segments.add(segment);
-		}
-	}
-
-	if (encodedSegments.size === 0) return c.json({ error: `No path was found for line '${id}'.` }, 404);
-
-	return c.json({
-		segments: Array.from(encodedSegments).flatMap(
-			([v, segments]) => decodeLinePath({ v, segments: Array.from(segments) }).segments,
-		),
-	} satisfies LinePath);
+	return c.json(path);
 });
 
 hono.get(

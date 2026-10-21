@@ -10,6 +10,7 @@ import { useMediaQuery } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery, type Line } from "~/api/networks";
+import { isRealtimeAvailable, sendRealtimeMessage, useRealtimeStatus } from "~/api/realtime";
 import { GetStopAlertsQuery } from "~/api/service-alerts";
 import { GetStopDeparturesQuery, type StopDeparture } from "~/api/stops";
 import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
@@ -270,8 +271,20 @@ function useStopDepartures({ networkId, lineId }: StopDeparturesPanelProps) {
 	}
 	const toggleDirection = () => setDirection((current) => (current === "departures" ? "arrivals" : "departures"));
 
-	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef, direction, lineId));
-	const { data: alerts } = useQuery(GetStopAlertsQuery(selectedRef));
+	const realtimeStatus = useRealtimeStatus();
+	const realtime = isRealtimeAvailable(realtimeStatus);
+	const connected = realtimeStatus === "open";
+
+	useEffect(() => {
+		if (!connected || selectedRef === null) return;
+		sendRealtimeMessage({ type: "watch-stop", stop: { ref: selectedRef, direction, lineId } });
+		return () => {
+			sendRealtimeMessage({ type: "watch-stop", stop: null });
+		};
+	}, [connected, selectedRef, direction, lineId]);
+
+	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef, direction, lineId, realtime));
+	const { data: alerts } = useQuery(GetStopAlertsQuery(selectedRef, realtime));
 	// Les lignes des réseaux de la station, pour leur numéro, leurs couleurs et leur pictogramme : une
 	// requête au plus toutes les 5 min par réseau, souvent déjà en cache — le module de filtre fait la
 	// même. Une gare peut en réunir plusieurs (TER, Intercités, TGV…), et une ligne peut relever d'un

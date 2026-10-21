@@ -105,7 +105,7 @@ const STOP_POINTS_SEARCH_MARGIN_M = 500;
 
 const METERS_PER_DEGREE_OF_LATITUDE = 111_320;
 
-function searchBounds(bounds: LngLatBounds, withStopPoints: boolean) {
+export function searchBounds(bounds: LngLatBounds, withStopPoints: boolean) {
 	const southWest = bounds.getSouthWest();
 	const northEast = bounds.getNorthEast();
 	if (!withStopPoints)
@@ -131,9 +131,10 @@ export const GetStopMarkersQuery = (
 		lineId,
 		withStopPoints,
 	}: { enabled: boolean; networkId?: number; lineId?: number; withStopPoints: boolean },
+	realtime = false,
 ) =>
 	queryOptions({
-		enabled,
+		enabled: enabled && !realtime,
 		placeholderData: keepPreviousData,
 		// L'inventaire ne bouge qu'au rythme des ressources GTFS : inutile de le sonder.
 		staleTime: 300_000,
@@ -164,11 +165,12 @@ export const GetStopDeparturesQuery = (
 	stopRef: string | null,
 	direction: StopCallDirection = "departures",
 	lineId?: number,
+	realtime = false,
 ) =>
 	queryOptions({
-		enabled: stopRef !== null,
+		enabled: stopRef !== null && !realtime,
 		retry: false,
-		refetchInterval: 5_000,
+		refetchInterval: realtime ? false : 5_000,
 		staleTime: 4_000,
 		queryKey: ["stop-departures", stopRef, direction, lineId],
 		queryFn: () =>

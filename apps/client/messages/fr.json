@@ -222,6 +222,7 @@
 	"map_vehicle_since": "depuis",
 	"map_refresh_loading": "Rafraichissement en cours...",
 	"map_refresh_data": "Rafraichir les données",
+	"map_realtime_live": "Positions en direct",
 	"marker_missing_title": "Entrée introuvable",
 	"marker_missing_description": "Cette entrée n'est plus d'actualité, elle devrait disparaitre au prochain rafraichissement de la carte.",
 	"marker_position_gps": "Position GPS",

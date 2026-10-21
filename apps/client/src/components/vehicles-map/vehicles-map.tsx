@@ -7,6 +7,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { isRealtimeAvailable, useRealtimeConnection } from "~/api/realtime";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { DebugCoordinates } from "~/components/vehicles-map/debug-coordinates";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
@@ -30,7 +31,8 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	const [showIdentifiedVehiclesPanel] = useLocalStorage("show-identified-vehicles-panel", false);
 	const [geolocateOnStart] = useGeolocateOnStart();
 
-	const { data: line } = useQuery(GetLineQuery(lineId ?? undefined));
+	const realtime = isRealtimeAvailable(useRealtimeConnection());
+	const { data: line } = useQuery(GetLineQuery(lineId ?? undefined, realtime));
 	// Une ligne filtrée impose son réseau ; sinon le réseau filtré vient directement de l'URL.
 	const filteredNetworkId = line?.networkId ?? networkId ?? undefined;
 	const { data: networkData } = useQuery(GetNetworkQuery(filteredNetworkId, true));
@@ -90,7 +92,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 		(map: MaplibreGl) => {
 			// Les marqueurs attendraient sinon que le style soit chargé, la couche ne se montant qu'alors :
 			// la requête part en même temps que le style, et la couche la retrouve en cache.
-			if (shouldPrefetchMarkers) {
+			if (shouldPrefetchMarkers && !isRealtimeAvailable()) {
 				void queryClient.prefetchQuery(GetVehicleJourneyMarkersQuery(map.getBounds()));
 			}
 

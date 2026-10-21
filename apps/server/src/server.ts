@@ -4,6 +4,14 @@ import { createMiddleware } from "hono/factory";
 
 export const hono = new Hono();
 
+export const allowedOrigins = [
+	"https://bus-tracker.fr",
+	"https://www.bus-tracker.fr",
+	"https://dev.bus-tracker.fr",
+	"http://localhost:3000",
+	"http://localhost:4173",
+];
+
 /**
  * Journal des seules requêtes en erreur. Les clients rafraîchissent carte, courses et tableaux de
  * passages toutes les quelques secondes : une ligne par requête noierait le journal, pour un coût
@@ -28,12 +36,6 @@ hono.use(
 hono.use(
 	cors({
 		credentials: true,
-		origin: [
-			"https://bus-tracker.fr",
-			"https://www.bus-tracker.fr",
-			"https://dev.bus-tracker.fr",
-			"http://localhost:3000",
-			"http://localhost:4173",
-		],
+		origin: allowedOrigins,
 	}),
 );

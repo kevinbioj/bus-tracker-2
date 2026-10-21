@@ -33,10 +33,11 @@ const serviceAlertsQueryOptions = {
 	staleTime: 30_000,
 } as const;
 
-export const GetStopAlertsQuery = (stopRef: string | null) =>
+export const GetStopAlertsQuery = (stopRef: string | null, realtime = false) =>
 	queryOptions({
 		...serviceAlertsQueryOptions,
-		enabled: stopRef !== null,
+		enabled: stopRef !== null && !realtime,
+		refetchInterval: realtime ? false : serviceAlertsQueryOptions.refetchInterval,
 		queryKey: ["service-alerts", "stop", stopRef],
 		queryFn: () =>
 			client
@@ -45,9 +46,11 @@ export const GetStopAlertsQuery = (stopRef: string | null) =>
 				.then(({ items }) => items),
 	});
 
-export const GetVehicleJourneyAlertsQuery = (journeyId: string) =>
+export const GetVehicleJourneyAlertsQuery = (journeyId: string, realtime = false) =>
 	queryOptions({
 		...serviceAlertsQueryOptions,
+		enabled: !realtime,
+		refetchInterval: realtime ? false : serviceAlertsQueryOptions.refetchInterval,
 		queryKey: ["service-alerts", "vehicle-journey", journeyId],
 		queryFn: () =>
 			client
@@ -56,9 +59,11 @@ export const GetVehicleJourneyAlertsQuery = (journeyId: string) =>
 				.then(({ items }) => items),
 	});
 
-export const GetLineAlertsQuery = (lineId: number) =>
+export const GetLineAlertsQuery = (lineId: number, realtime = false) =>
 	queryOptions({
 		...serviceAlertsQueryOptions,
+		enabled: !realtime,
+		refetchInterval: realtime ? false : serviceAlertsQueryOptions.refetchInterval,
 		queryKey: ["service-alerts", "line", lineId],
 		queryFn: () =>
 			client

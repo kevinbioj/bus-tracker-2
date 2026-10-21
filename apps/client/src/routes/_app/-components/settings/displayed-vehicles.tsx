@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { SatelliteDishIcon } from "lucide-react";
 
+import { isRealtimeAvailable } from "~/api/realtime";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Label } from "~/components/ui/label";
 import {
@@ -43,7 +44,7 @@ export function DisplayedVehiclesSetting() {
 		setDisplayedPositionTypes(
 			positionTypes.filter((value) => (value === type ? checked : displayedPositionTypes.includes(value))),
 		);
-		queryClient.refetchQueries({ queryKey: ["vehicle-journeys"] });
+		if (!isRealtimeAvailable()) queryClient.refetchQueries({ queryKey: ["vehicle-journeys"] });
 	};
 
 	return (

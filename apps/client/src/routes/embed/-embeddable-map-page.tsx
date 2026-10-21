@@ -6,6 +6,7 @@ import { useCallback, useMemo } from "react";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
+import { useRealtimeConnection } from "~/api/realtime";
 import { EmbedDisplaySettingsProvider } from "~/components/vehicles-map/embed-display-settings";
 import { EmbedSettingsControl } from "~/components/vehicles-map/embed-settings-control";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
@@ -19,6 +20,7 @@ import * as m from "~/paraglide/messages";
 
 export default function EmbeddableMapPage() {
 	const { networkId } = useParams({ from: "/embed/$networkId" });
+	useRealtimeConnection();
 
 	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
 	const [withFullscreen] = useQueryState("with-fullscreen", parseAsString);

@@ -1,4 +1,4 @@
-import { RefreshCwIcon } from "lucide-react";
+import { RadioIcon, RefreshCwIcon } from "lucide-react";
 import type { IControl } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -8,11 +8,12 @@ import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 type VehiclesMarkersStatusControlProps = {
+	live?: boolean;
 	loading: boolean;
 	onClick?: () => void;
 };
 
-export function VehiclesMarkersStatusControl({ loading, onClick }: VehiclesMarkersStatusControlProps) {
+export function VehiclesMarkersStatusControl({ live, loading, onClick }: VehiclesMarkersStatusControlProps) {
 	const map = useMap();
 	const [controlRef, setControlRef] = useState<HTMLDivElement | null>(null);
 
@@ -43,10 +44,14 @@ export function VehiclesMarkersStatusControl({ loading, onClick }: VehiclesMarke
 				className="text-black"
 				disabled={onClick === undefined}
 				onClick={onClick}
-				title={loading ? m.map_refresh_loading() : m.map_refresh_data()}
+				title={live ? m.map_realtime_live() : loading ? m.map_refresh_loading() : m.map_refresh_data()}
 				type="button"
 			>
-				<RefreshCwIcon className={cn("m-auto p-0.5", loading && "animate-spin")} strokeWidth={3} />
+				{live ? (
+					<RadioIcon className="m-auto p-0.5" strokeWidth={3} />
+				) : (
+					<RefreshCwIcon className={cn("m-auto p-0.5", loading && "animate-spin")} strokeWidth={3} />
+				)}
 			</button>,
 			controlRef,
 		)

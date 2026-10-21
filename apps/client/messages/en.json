@@ -222,6 +222,7 @@
 	"map_vehicle_since": "since",
 	"map_refresh_loading": "Refreshing...",
 	"map_refresh_data": "Refresh data",
+	"map_realtime_live": "Live positions",
 	"marker_missing_title": "Entry not found",
 	"marker_missing_description": "This entry is no longer current and should disappear on the next map refresh.",
 	"marker_position_gps": "GPS position",

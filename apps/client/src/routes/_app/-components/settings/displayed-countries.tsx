@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import { useDeferredValue, useId, useMemo, useState } from "react";
-
 import { GetNetworksQuery } from "~/api/networks";
+import { isRealtimeAvailable } from "~/api/realtime";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
@@ -68,7 +68,7 @@ export function DisplayedCountriesSetting() {
 				.map(({ code }) => code)
 				.filter((code) => (code === countryCode ? checked : displayedCountryCodes.includes(code))),
 		);
-		queryClient.refetchQueries({ queryKey: ["vehicle-journeys"] });
+		if (!isRealtimeAvailable()) queryClient.refetchQueries({ queryKey: ["vehicle-journeys"] });
 	};
 
 	return (

@@ -11,6 +11,7 @@ import { match } from "ts-pattern";
 import { useLocalStorage } from "usehooks-ts";
 
 import { GetNetworkQuery } from "~/api/networks";
+import { sendRealtimeMessage, useRealtimeAvailable } from "~/api/realtime";
 import { GetVehicleJourneyAlertsQuery } from "~/api/service-alerts";
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
 import { CreateVehicleReportMutation, GetLastVehicleReportQuery } from "~/api/vehicles";
@@ -271,7 +272,8 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 
 	const closeDialog = () => setOpenedDialog(null);
 
-	const { data: serviceAlerts = [] } = useQuery(GetVehicleJourneyAlertsQuery(journey.id));
+	const realtime = useRealtimeAvailable();
+	const { data: serviceAlerts = [] } = useQuery(GetVehicleJourneyAlertsQuery(journey.id, realtime));
 
 	const onAirConditioningReport = async (value: "PRESENT" | "OUT_OF_SERVICE") => {
 		if (!canReportAirConditioning || journey.vehicle?.id === undefined) return;
@@ -284,7 +286,9 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 					: m.marker_air_conditioning_report_recorded(),
 				{ variant: "success" },
 			);
-			await queryClient.invalidateQueries({ queryKey: ["vehicle-journeys", journey.id] });
+			if (!sendRealtimeMessage({ type: "watch-journey", id: journey.id })) {
+				await queryClient.invalidateQueries({ queryKey: ["vehicle-journeys", journey.id] });
+			}
 			await queryClient.invalidateQueries({ queryKey: ["vehicles", journey.vehicle.id] });
 		} catch (error) {
 			snackbar.enqueueSnackbar(

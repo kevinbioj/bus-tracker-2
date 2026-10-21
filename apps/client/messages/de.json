@@ -231,6 +231,7 @@
 	"map_vehicle_since": "seit",
 	"map_refresh_loading": "Daten werden aktualisiert...",
 	"map_refresh_data": "Daten aktualisieren",
+	"map_realtime_live": "Live-Positionen",
 	"marker_missing_title": "Fahrzeug nicht gefunden",
 	"marker_missing_description": "Dieses Fahrzeug ist nicht mehr verfügbar und sollte beim nächsten Aktualisieren der Karte verschwinden.",
 	"marker_position_gps": "GPS-Position",

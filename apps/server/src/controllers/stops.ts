@@ -36,7 +36,7 @@ const DEPARTURES_LIMIT = 15;
  */
 const STALE_POSITION_MS = 5 * 60 * 1000;
 
-type StopMarker = {
+export type StopMarker = {
 	ref: string;
 	name: string;
 	latitude: number;
@@ -78,6 +78,61 @@ const getStopMarkersQuery = z.object({
 		.transform((value) => value === "true"),
 });
 
+export type StopMarkersFilter = {
+	swLat: number;
+	swLon: number;
+	neLat: number;
+	neLon: number;
+	networkIds?: number[];
+	lineId?: number;
+	withStopPoints: boolean;
+};
+
+export async function buildStopMarkers({
+	swLat,
+	swLon,
+	neLat,
+	neLon,
+	networkIds,
+	lineId,
+	withStopPoints,
+}: StopMarkersFilter) {
+	const lineRefs = lineId !== undefined ? new Set(await findLineRefs(lineId)) : undefined;
+	const stopAreas = await findStopAreasWithin(
+		{ swLat, swLon, neLat, neLon },
+		{ limit: MARKERS_LIMIT, networkIds, lineRefs: lineRefs !== undefined ? [...lineRefs] : undefined },
+	);
+
+	const items: StopMarker[] = stopAreas.map(
+		({ ref, name, latitude, longitude, lineRefs: areaLineRefs, mode, networkId: areaNetworkId, stopPoints = [] }) => ({
+			ref,
+			name,
+			latitude,
+			longitude,
+			lineRefs: areaLineRefs,
+			// Fiche publiée avant l'apparition du mode : un bus, le temps qu'elle soit republiée.
+			mode: mode ?? "BUS",
+			networkId: areaNetworkId,
+			// Sur une ligne filtrée, la carte ne montre que ses quais, à tout zoom : ils sont toujours servis.
+			// Un quai publié sans ses lignes reprend celles de sa station, qui en est.
+			...(lineRefs !== undefined
+				? {
+						stopPoints: publicStopPoints(
+							stopPoints.filter(
+								(stopPoint) =>
+									stopPoint.lineRefs === undefined || stopPoint.lineRefs.some((lineRef) => lineRefs.has(lineRef)),
+							),
+						),
+					}
+				: withStopPoints
+					? { stopPoints: publicStopPoints(stopPoints) }
+					: {}),
+		}),
+	);
+
+	return { items, sourceKeys: new Set(stopAreas.map(sourceKeyOf)) };
+}
+
 hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) => {
 	const { swLat, swLon, neLat, neLon, networkId, lineId, withStopPoints } = c.req.valid("query");
 
@@ -89,48 +144,17 @@ hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) 
 
 	let items = markersCache.get(cacheKey)?.items;
 	if (items === undefined) {
-		const lineRefs = lineId !== undefined ? new Set(await findLineRefs(lineId)) : undefined;
-		const stopAreas = await findStopAreasWithin(
-			{ swLat, swLon, neLat, neLon },
-			{ limit: MARKERS_LIMIT, networkIds: networkId, lineRefs: lineRefs !== undefined ? [...lineRefs] : undefined },
-		);
-
-		items = stopAreas.map(
-			({
-				ref,
-				name,
-				latitude,
-				longitude,
-				lineRefs: areaLineRefs,
-				mode,
-				networkId: areaNetworkId,
-				stopPoints = [],
-			}) => ({
-				ref,
-				name,
-				latitude,
-				longitude,
-				lineRefs: areaLineRefs,
-				// Fiche publiée avant l'apparition du mode : un bus, le temps qu'elle soit republiée.
-				mode: mode ?? "BUS",
-				networkId: areaNetworkId,
-				// Sur une ligne filtrée, la carte ne montre que ses quais, à tout zoom : ils sont toujours servis.
-				// Un quai publié sans ses lignes reprend celles de sa station, qui en est.
-				...(lineRefs !== undefined
-					? {
-							stopPoints: publicStopPoints(
-								stopPoints.filter(
-									(stopPoint) =>
-										stopPoint.lineRefs === undefined || stopPoint.lineRefs.some((lineRef) => lineRefs.has(lineRef)),
-								),
-							),
-						}
-					: withStopPoints
-						? { stopPoints: publicStopPoints(stopPoints) }
-						: {}),
-			}),
-		);
-		markersCache.set(cacheKey, { items, sourceKeys: new Set(stopAreas.map(sourceKeyOf)) });
+		const markers = await buildStopMarkers({
+			swLat,
+			swLon,
+			neLat,
+			neLon,
+			networkIds: networkId,
+			lineId,
+			withStopPoints,
+		});
+		items = markers.items;
+		markersCache.set(cacheKey, markers);
 	}
 
 	return c.json({ items, at: Temporal.Now.instant() });
@@ -381,7 +405,7 @@ const getStopDeparturesQuery = z.object({
  * Le client sonde le tableau toutes les 5 s : le cache, plus court, ne fait que mutualiser les
  * demandes simultanées de plusieurs visiteurs sur une même station sans rendre de réponse périmée.
  */
-const departuresCache = useCache<unknown>(4_000);
+const departuresCache = useCache<StopDeparturesPayload>(4_000);
 
 /** La station elle-même ne change qu'avec la ressource GTFS. */
 const stopAreasCache = useCache<StopArea | null>(300_000);
@@ -395,8 +419,16 @@ const stopAreasCache = useCache<StopArea | null>(300_000);
  * source vient d'ajouter n'apparaît donc dans un cadrage déjà en cache qu'à son expiration, une minute
  * au plus. Sans source désignée, tout est oublié.
  */
+const stopAreasInvalidationListeners = new Set<() => void>();
+
+export function onStopAreasInvalidated(listener: () => void) {
+	stopAreasInvalidationListeners.add(listener);
+	return () => stopAreasInvalidationListeners.delete(listener);
+}
+
 export function invalidateStopAreaCaches(source?: { providerId: string; sourceId: string }) {
 	invalidateStopAreaManifests(source);
+	for (const listener of stopAreasInvalidationListeners) listener();
 	// Les tableaux ne vivent que quelques secondes : inutile de les trier par source.
 	departuresCache.clear();
 
@@ -442,6 +474,83 @@ async function resolveStopArea(ref: string) {
 	return { stopArea, stopPointRef };
 }
 
+function toStopDeparturesPayload(
+	stopArea: StopArea,
+	stopPointRef: string | undefined,
+	departures: ResolvedDeparture[],
+	lineId: number | undefined,
+) {
+	return {
+		// La position permet au client de garder la station sélectionnée visible à tout niveau de zoom.
+		stop: {
+			ref: stopArea.ref,
+			name: stopArea.name,
+			latitude: stopArea.latitude,
+			longitude: stopArea.longitude,
+			mode: stopArea.mode ?? "BUS",
+			// Le tableau propose aussi les arrivées : la source l'a voulu pour cette station.
+			arrivals: stopArea.arrivals === true,
+			networkId: stopArea.networkId,
+			// Tous les réseaux de la station : le client en tire numéros et couleurs des lignes.
+			networkIds: stopArea.networkIds,
+			stopPoints: publicStopPoints(stopArea.stopPoints ?? []),
+		},
+		// Quai sur lequel le tableau est restreint, s'il l'est.
+		stopPointRef,
+		// Les références internes n'ont servi qu'au rapprochement : le client n'en a pas l'usage.
+		// Un passage dont la ligne reste inconnue n'aurait qu'un « ? » à montrer : il est écarté, avant la
+		// limite pour que le tableau reste plein — comme, sur une ligne filtrée, ceux des autres lignes.
+		departures: departures
+			.filter((departure) => departure.lineId !== undefined && (lineId === undefined || departure.lineId === lineId))
+			.slice(0, DEPARTURES_LIMIT)
+			.map(({ lineRef, journeyRef, serviceDate, ...departure }) => departure),
+		at: Temporal.Now.instant(),
+	};
+}
+
+export type StopDeparturesPayload = ReturnType<typeof toStopDeparturesPayload>;
+
+export type StopCallDirectionQuery = z.infer<typeof getStopDeparturesQuery>["direction"];
+
+export async function buildStopDepartures(ref: string, direction: StopCallDirectionQuery, lineId?: number) {
+	const cacheKey = `${ref}|${direction}|${lineId ?? ""}`;
+	const cached = departuresCache.get(cacheKey);
+	if (cached !== undefined) return { payload: cached };
+
+	const { stopArea, stopPointRef } = await resolveStopArea(ref);
+	if (stopArea === null) {
+		return { status: 404, error: `No stop area was found for ref "${ref}".` } as const;
+	}
+	if (direction === "arrivals" && stopArea.arrivals !== true) {
+		return { status: 400, error: `Stop area "${stopArea.ref}" does not offer arrivals.` } as const;
+	}
+
+	const nowMs = Date.now();
+	const departures = mergeTrackedJourneys(
+		stopArea,
+		stopRefsOf(stopArea, stopPointRef),
+		await requestStopDepartures({
+			providerId: stopArea.providerId,
+			sourceId: stopArea.sourceId,
+			stopAreaRef: stopArea.ref,
+			stopRef: stopPointRef,
+			// Le provider écarte les autres lignes avant sa limite : le tableau reste plein.
+			lineRefs: lineId !== undefined ? await findLineRefs(lineId) : undefined,
+			direction,
+		}),
+		nowMs,
+		direction,
+	);
+	await resolveLineIds(departures);
+
+	departures.sort((a, b) => Date.parse(a.expectedTime ?? a.aimedTime) - Date.parse(b.expectedTime ?? b.aimedTime));
+
+	const payload = toStopDeparturesPayload(stopArea, stopPointRef, departures, lineId);
+
+	departuresCache.set(cacheKey, payload);
+	return { payload };
+}
+
 hono.get(
 	"/stops/:ref/departures",
 	createParamValidator(getStopDeparturesParams),
@@ -450,79 +559,27 @@ hono.get(
 		const { ref } = c.req.valid("param");
 		const { direction, lineId } = c.req.valid("query");
 
-		const cacheKey = `${ref}|${direction}|${lineId ?? ""}`;
-		const cached = departuresCache.get(cacheKey);
-		if (cached !== undefined) return c.json(cached);
-
-		const { stopArea, stopPointRef } = await resolveStopArea(ref);
-		if (stopArea === null) {
-			return c.json({ error: `No stop area was found for ref "${ref}".` }, 404);
-		}
-		if (direction === "arrivals" && stopArea.arrivals !== true) {
-			return c.json({ error: `Stop area "${stopArea.ref}" does not offer arrivals.` }, 400);
-		}
-
-		const nowMs = Date.now();
-		const departures = mergeTrackedJourneys(
-			stopArea,
-			stopRefsOf(stopArea, stopPointRef),
-			await requestStopDepartures({
-				providerId: stopArea.providerId,
-				sourceId: stopArea.sourceId,
-				stopAreaRef: stopArea.ref,
-				stopRef: stopPointRef,
-				// Le provider écarte les autres lignes avant sa limite : le tableau reste plein.
-				lineRefs: lineId !== undefined ? await findLineRefs(lineId) : undefined,
-				direction,
-			}),
-			nowMs,
-			direction,
-		);
-		await resolveLineIds(departures);
-
-		departures.sort((a, b) => Date.parse(a.expectedTime ?? a.aimedTime) - Date.parse(b.expectedTime ?? b.aimedTime));
-
-		const payload = {
-			// La position permet au client de garder la station sélectionnée visible à tout niveau de zoom.
-			stop: {
-				ref: stopArea.ref,
-				name: stopArea.name,
-				latitude: stopArea.latitude,
-				longitude: stopArea.longitude,
-				mode: stopArea.mode ?? "BUS",
-				// Le tableau propose aussi les arrivées : la source l'a voulu pour cette station.
-				arrivals: stopArea.arrivals === true,
-				networkId: stopArea.networkId,
-				// Tous les réseaux de la station : le client en tire numéros et couleurs des lignes.
-				networkIds: stopArea.networkIds,
-				stopPoints: publicStopPoints(stopArea.stopPoints ?? []),
-			},
-			// Quai sur lequel le tableau est restreint, s'il l'est.
-			stopPointRef,
-			// Les références internes n'ont servi qu'au rapprochement : le client n'en a pas l'usage.
-			// Un passage dont la ligne reste inconnue n'aurait qu'un « ? » à montrer : il est écarté, avant la
-			// limite pour que le tableau reste plein — comme, sur une ligne filtrée, ceux des autres lignes.
-			departures: departures
-				.filter((departure) => departure.lineId !== undefined && (lineId === undefined || departure.lineId === lineId))
-				.slice(0, DEPARTURES_LIMIT)
-				.map(({ lineRef, journeyRef, serviceDate, ...departure }) => departure),
-			at: Temporal.Now.instant(),
-		};
-
-		departuresCache.set(cacheKey, payload);
-		return c.json(payload);
+		const result = await buildStopDepartures(ref, direction, lineId);
+		if ("error" in result) return c.json({ error: result.error }, result.status);
+		return c.json(result.payload);
 	},
 );
+
+export async function buildStopAlerts(ref: string) {
+	const { stopArea, stopPointRef } = await resolveStopArea(ref);
+	if (stopArea === null) return undefined;
+
+	// Un quai choisi ne perd pas l'info trafic de sa station : celle-ci le vise aussi.
+	return findStopAlerts(stopArea, stopRefsOf(stopArea, stopPointRef));
+}
 
 hono.get("/stops/:ref/alerts", createParamValidator(getStopDeparturesParams), async (c) => {
 	const { ref } = c.req.valid("param");
 
-	const { stopArea, stopPointRef } = await resolveStopArea(ref);
-	if (stopArea === null) {
+	const items = await buildStopAlerts(ref);
+	if (items === undefined) {
 		return c.json({ error: `No stop area was found for ref "${ref}".` }, 404);
 	}
 
-	// Un quai choisi ne perd pas l'info trafic de sa station : celle-ci le vise aussi.
-	const items = await findStopAlerts(stopArea, stopRefsOf(stopArea, stopPointRef));
 	return c.json({ items, at: Temporal.Now.instant() });
 });

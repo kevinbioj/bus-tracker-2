@@ -7,6 +7,7 @@ import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
+import { isRealtimeAvailable, useRealtimeConnection } from "~/api/realtime";
 import {
 	type DisposeableVehicleJourney,
 	GetVehicleJourneyMarkersQuery,
@@ -14,6 +15,7 @@ import {
 } from "~/api/vehicle-journeys";
 import { useDisplayedCountryCodes } from "~/components/vehicles-map/displayed-countries";
 import { useDisplayedPositionTypes } from "~/components/vehicles-map/displayed-position-types";
+import { useRealtimeMarkers } from "~/components/vehicles-map/vehicles-markers/use-realtime-markers";
 import { VehiclesMarkersStatusControl } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-status-control";
 
 const hashSeed = (str: string): number => {
@@ -40,6 +42,8 @@ const noise = ([lon, lat]: [number, number], seed: string): [number, number] => 
 	return [lon + ((rand() * 2 - 1) * 2.5) / 111111, lat + ((rand() * 2 - 1) * 2.5) / 75000];
 };
 
+const NO_POSITION_OVERRIDES = new Map<string, { position: DisposeableVehicleJourney["position"]; at: number }>();
+
 type VehiclesMarkersDataProps = {
 	/** Course dont la popup est ouverte, s'il y en a une. */
 	activeJourneyId: string | null;
@@ -62,6 +66,16 @@ export function VehiclesMarkersData({
 	const [displayedCountryCodes] = useDisplayedCountryCodes();
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
 	const [targetedJourneyId] = useQueryState("marker-id");
+	const realtimeStatus = useRealtimeConnection();
+	const realtime = isRealtimeAvailable(realtimeStatus);
+	const connected = realtimeStatus === "open";
+
+	const filter = {
+		embeddedNetworkId,
+		filteredNetworkId,
+		lineId,
+		targetedJourneyId: targetedJourneyId ?? undefined,
+	};
 
 	const {
 		data,
@@ -69,14 +83,15 @@ export function VehiclesMarkersData({
 		isFetching,
 		isPlaceholderData,
 		refetch,
-	} = useQuery(
-		GetVehicleJourneyMarkersQuery(bounds, {
-			embeddedNetworkId,
-			filteredNetworkId,
-			lineId,
-			targetedJourneyId: targetedJourneyId ?? undefined,
-		}),
-	);
+	} = useQuery(GetVehicleJourneyMarkersQuery(bounds, filter, realtime));
+
+	useRealtimeMarkers({
+		connected,
+		bounds,
+		filter,
+		activeJourneyId,
+		preferencesKey: `${displayedPositionTypes.join(",")}|${displayedCountryCodes.join(",")}`,
+	});
 
 	// Détail de la course dont la popup est ouverte : c'est lui qui alimente l'horodatage,
 	// les prochains arrêts et le tracé parcouru/à parcourir. Les deux requêtes n'arrivent pas
@@ -87,16 +102,16 @@ export function VehiclesMarkersData({
 		data: activeJourney,
 		dataUpdatedAt: journeyUpdatedAt,
 		refetch: refetchActiveJourney,
-	} = useQuery(GetVehicleJourneyQuery(activeJourneyId, false));
+	} = useQuery(GetVehicleJourneyQuery(activeJourneyId, false, realtime));
 
 	// Et, en retour, le détail est redemandé dès que les marqueurs sont plus récents que lui : la
 	// popup ne décrit jamais un instantané plus ancien que le point qu'elle désigne. Suivi ici, avec
 	// la requête des marqueurs réellement affichée — filtre compris — plutôt que dans la popup.
 	useEffect(() => {
-		if (activeJourneyId !== null && markersUpdatedAt > journeyUpdatedAt) {
+		if (!realtime && activeJourneyId !== null && markersUpdatedAt > journeyUpdatedAt) {
 			refetchActiveJourney({ cancelRefetch: false });
 		}
-	}, [activeJourneyId, markersUpdatedAt, journeyUpdatedAt, refetchActiveJourney]);
+	}, [realtime, activeJourneyId, markersUpdatedAt, journeyUpdatedAt, refetchActiveJourney]);
 
 	// Positions relevées sur le détail des courses dont une popup a été ouverte. Une entrée ne
 	// vaut que tant qu'elle est *plus fraîche* que les marqueurs : au-delà, ces derniers décrivent
@@ -110,6 +125,8 @@ export function VehiclesMarkersData({
 	const positionOverridesSnapshot = useRef(journeyPositions.current);
 
 	const positionOverrides = useMemo(() => {
+		if (realtime) return NO_POSITION_OVERRIDES;
+
 		const overrides = journeyPositions.current;
 		let changed = false;
 
@@ -140,7 +157,7 @@ export function VehiclesMarkersData({
 		}
 
 		return positionOverridesSnapshot.current;
-	}, [activeJourney, journeyUpdatedAt, markersUpdatedAt]);
+	}, [realtime, activeJourney, journeyUpdatedAt, markersUpdatedAt]);
 
 	// Clé du filtre actif, pour ne recadrer qu'une fois par filtre (ligne comme réseau).
 	const refocusKey =
@@ -160,9 +177,9 @@ export function VehiclesMarkersData({
 	// est effacée en revanche : la popup vient alors de s'ouvrir, mais le marqueur actif n'est pas
 	// encore consigné — la requête partirait sans lui et le ferait disparaître s'il est filtré.
 	useEffect(() => {
-		if (targetedJourneyId === null || !hasFetchedOnce.current) return;
+		if (realtime || targetedJourneyId === null || !hasFetchedOnce.current) return;
 		refetch();
-	}, [targetedJourneyId, refetch]);
+	}, [realtime, targetedJourneyId, refetch]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we need to refetch if that setting changes
 	useEffect(() => {
@@ -171,8 +188,9 @@ export function VehiclesMarkersData({
 			return;
 		}
 
-		refetch();
+		if (!realtime) refetch();
 	}, [
+		realtime,
 		bounds,
 		displayedPositionTypes.join(","),
 		displayedCountryCodes.join(","),
@@ -250,7 +268,11 @@ export function VehiclesMarkersData({
 
 	return (
 		<>
-			<VehiclesMarkersStatusControl loading={isFetching} onClick={!isFetching ? refetch : undefined} />
+			<VehiclesMarkersStatusControl
+				live={connected}
+				loading={realtime ? !connected : isFetching}
+				onClick={!realtime && !isFetching ? refetch : undefined}
+			/>
 			<GeojsonCircles features={features} source={source} />
 		</>
 	);

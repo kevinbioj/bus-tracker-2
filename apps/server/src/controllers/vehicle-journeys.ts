@@ -1,11 +1,12 @@
-import { getVehicleJourneyPositionType, type VehicleJourneyPaths } from "@bus-tracker/contracts";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import * as z from "zod";
 
 import { database } from "../core/database/database.js";
-import { linesTable, vehiclesTable } from "../core/database/schema.js";
-import { findGirouette } from "../core/services/girouette-service.js";
+import { linesTable } from "../core/database/schema.js";
 import { findJourneyAlerts } from "../core/services/service-alert-service.js";
+import { buildJourneyDetails } from "../core/services/vehicle-journey-details.js";
+import { type MarkersFilter, matchesMarkersFilter, toMarker } from "../core/services/vehicle-journey-markers.js";
+import { loadJourneyPaths } from "../core/services/vehicle-journey-paths.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import { redis } from "../index.js";
 import { hono } from "../server.js";
@@ -54,54 +55,24 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 		countryCodes,
 	} = c.req.valid("query");
 
+	const filter: MarkersFilter = {
+		swLat,
+		swLon,
+		neLat,
+		neLon,
+		networkIds: networkId,
+		lineIds: lineId,
+		positionTypes,
+		excludeScheduled,
+		countryCodes,
+	};
+
 	const boundedLineIds = new Set<number>();
 	const boundedJourneys = journeyStore
 		.values()
 		.filter((journey) => {
-			if (countryCodes !== undefined && !countryCodes.has(journey.countryCode)) {
-				return false;
-			}
-
-			if (positionTypes !== undefined) {
-				if (!positionTypes.includes(getVehicleJourneyPositionType(journey))) {
-					return false;
-				}
-			} else if (excludeScheduled && getVehicleJourneyPositionType(journey) === "SCHEDULED") {
-				return false;
-			}
-
-			if (Array.isArray(lineId)) {
-				if (journey.lineId === undefined || !lineId.includes(journey.lineId)) {
-					return false;
-				}
-
-				boundedLineIds.add(journey.lineId);
-				return true;
-			}
-
-			if (Array.isArray(networkId)) {
-				if (journey.networkId === undefined || !networkId.includes(journey.networkId)) {
-					return false;
-				}
-
-				if (journey.lineId !== undefined) {
-					boundedLineIds.add(journey.lineId);
-				}
-
-				return true;
-			}
-
-			const { latitude, longitude } = journey.position;
-			const isWithin = swLat <= latitude && latitude <= neLat && swLon <= longitude && longitude <= neLon;
-
-			if (!isWithin) {
-				return false;
-			}
-
-			if (journey.lineId !== undefined) {
-				boundedLineIds.add(journey.lineId);
-			}
-
+			if (!matchesMarkersFilter(journey, filter)) return false;
+			if (journey.lineId !== undefined) boundedLineIds.add(journey.lineId);
 			return true;
 		})
 		.toArray();
@@ -124,18 +95,9 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 		(line) => line.id,
 	);
 
-	const items = boundedJourneys.map(({ id, lineId, position, vehicle }) => {
-		const { latitude, longitude, bearing, type } = position;
-		const line = lineId ? lines.get(lineId) : undefined;
-		return {
-			id,
-			lineNumber: line?.number,
-			vehicleNumber: vehicle?.number,
-			color: line?.textColor ? `#${line.textColor}` : undefined,
-			fillColor: line?.color ? `#${line.color}` : undefined,
-			position: { latitude, longitude, bearing, type },
-		};
-	});
+	const items = boundedJourneys.map((journey) =>
+		toMarker(journey, journey.lineId ? lines.get(journey.lineId) : undefined),
+	);
 
 	return c.json({
 		items,
@@ -156,44 +118,7 @@ hono.get("/vehicle-journeys/:id", createParamValidator(getVehicleJourneyParams),
 		return c.json({ error: `No journey was found with id "${id}".` });
 	}
 
-	const vehicle = journey.vehicle?.id
-		? (
-				await database
-					.select({
-						type: vehiclesTable.type,
-						designation: vehiclesTable.designation,
-						airConditioning: vehiclesTable.airConditioning,
-						usbPorts: vehiclesTable.usbPorts,
-					})
-					.from(vehiclesTable)
-					.where(eq(vehiclesTable.id, journey.vehicle.id))
-			).at(0)
-		: undefined;
-
-	const girouette = await findGirouette({
-		networkId: journey.networkId,
-		lineId: journey.lineId,
-		directionId: journey.direction === "OUTBOUND" ? 0 : 1,
-		destination: journey.destination ?? journey.calls?.findLast((call) => call.callStatus !== "SKIPPED")?.stopName,
-	});
-
-	// La référence du tracé abandonné reste interne : les deux tracés de la course sont servis
-	// ensemble par `/vehicle-journeys/:id/paths`, le client n'a pas à la connaître.
-	const { cancelledPathRef, ...exposedJourney } = journey;
-
-	return c.json({
-		...exposedJourney,
-		vehicle: journey.vehicle
-			? {
-					...journey.vehicle,
-					type: vehicle?.type ?? undefined,
-					designation: vehicle?.designation ?? undefined,
-					airConditioning: vehicle?.airConditioning ?? undefined,
-					usbPorts: vehicle?.usbPorts ?? undefined,
-				}
-			: undefined,
-		girouette: girouette?.data,
-	});
+	return c.json(await buildJourneyDetails(journey));
 });
 
 hono.get("/vehicle-journeys/:id/alerts", createParamValidator(getVehicleJourneyParams), async (c) => {
@@ -218,19 +143,8 @@ hono.get("/vehicle-journeys/:id/paths", createParamValidator(getVehicleJourneyPa
 
 	if (!redis.isReady) return c.json({ error: "Paths are temporarily unavailable." }, 503);
 
-	const refs = journey.cancelledPathRef !== undefined ? [journey.pathRef, journey.cancelledPathRef] : [journey.pathRef];
-	const [rawPath, rawCancelledPath] = await redis.mGet(refs);
-
-	// Les tracés expirent d'eux-mêmes : une course encore suivie peut en avoir perdu le sien si son
-	// producteur a cessé de le republier.
-	if (rawPath === null || rawPath === undefined) {
-		return c.json({ error: `No path was found for journey "${id}".` }, 404);
-	}
-
-	const paths: VehicleJourneyPaths = { path: JSON.parse(rawPath) };
-	if (rawCancelledPath !== null && rawCancelledPath !== undefined) {
-		paths.cancelled = JSON.parse(rawCancelledPath);
-	}
+	const paths = await loadJourneyPaths(journey);
+	if (paths === undefined) return c.json({ error: `No path was found for journey "${id}".` }, 404);
 
 	return c.json(paths);
 });

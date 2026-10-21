@@ -30,10 +30,10 @@ export type LineVehicleAssignmentsResponse = {
 	vehicles: LineVehicleAssignment[];
 };
 
-export const GetLineQuery = (lineId?: number) =>
+export const GetLineQuery = (lineId?: number, realtime = false) =>
 	queryOptions({
 		enabled: lineId !== undefined,
-		staleTime: 15_000,
+		staleTime: realtime ? Number.POSITIVE_INFINITY : 15_000,
 		queryKey: ["lines", lineId],
 		queryFn: () => client.get(`/lines/${lineId}`).then((response) => response.json<Line>()),
 	});
@@ -56,9 +56,9 @@ export const GetLineOnlineDestinationsQuery = (lineId?: number) =>
 		queryFn: () => client.get(`/lines/${lineId}/online-destinations`).then((response) => response.json<string[]>()),
 	});
 
-export const GetLinePathQuery = (lineId?: number) =>
+export const GetLinePathQuery = (lineId?: number, realtime = false) =>
 	queryOptions({
-		enabled: lineId !== undefined,
+		enabled: lineId !== undefined && !realtime,
 		retry: false,
 		staleTime: 120_000,
 		queryKey: ["lines", lineId, "path"],

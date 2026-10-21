@@ -9,6 +9,7 @@ import { useDebounceValue } from "usehooks-ts";
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import type { Line, Network } from "~/api/networks";
+import { useRealtimeAvailable } from "~/api/realtime";
 import { GetLineAlertsQuery } from "~/api/service-alerts";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
@@ -44,13 +45,18 @@ type FilterModuleVehiclesCountProps = {
  */
 function FilterModuleVehiclesCount({ filter, fixedNetworkId }: Readonly<FilterModuleVehiclesCountProps>) {
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
+	const realtime = useRealtimeAvailable();
 	// Mêmes arguments que ceux de la couche de marqueurs : les deux partagent le cache de la query.
 	const { data, isPlaceholderData } = useQuery(
-		GetVehicleJourneyMarkersQuery(bounds, {
-			embeddedNetworkId: fixedNetworkId,
-			filteredNetworkId: filter.kind === "network" ? filter.network.id : undefined,
-			lineId: filter.kind === "line" ? filter.line.id : undefined,
-		}),
+		GetVehicleJourneyMarkersQuery(
+			bounds,
+			{
+				embeddedNetworkId: fixedNetworkId,
+				filteredNetworkId: filter.kind === "network" ? filter.network.id : undefined,
+				lineId: filter.kind === "line" ? filter.line.id : undefined,
+			},
+			realtime,
+		),
 	);
 
 	if (isPlaceholderData) return null;
@@ -70,7 +76,8 @@ function FilterModuleVehiclesCount({ filter, fixedNetworkId }: Readonly<FilterMo
  * véhicules en ligne, qu'un réglage peut masquer.
  */
 function FilterModuleLineAlerts({ line }: Readonly<{ line: Line }>) {
-	const { data: alerts = [] } = useQuery(GetLineAlertsQuery(line.id));
+	const realtime = useRealtimeAvailable();
+	const { data: alerts = [] } = useQuery(GetLineAlertsQuery(line.id, realtime));
 	return <ServiceAlertsButton alerts={alerts} scope="line" />;
 }
 

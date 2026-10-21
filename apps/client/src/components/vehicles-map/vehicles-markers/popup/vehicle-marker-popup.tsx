@@ -3,6 +3,7 @@ import { LoaderCircleIcon } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef } from "react";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 
+import { useRealtimeAvailable } from "~/api/realtime";
 import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { CopyToClipboard } from "~/components/copy-to-clipboard";
 import { Separator } from "~/components/ui/separator";
@@ -25,7 +26,8 @@ export function VehicleMarkerPopup({ autoFocus, embedMode, journeyId, onClose }:
 	const rootRef = useRef<HTMLDivElement>(null);
 	const returnFocusRef = useRef<HTMLElement | null>(null);
 
-	const { data: journey, isError } = useQuery(GetVehicleJourneyQuery(journeyId, false));
+	const realtime = useRealtimeAvailable();
+	const { data: journey, isError } = useQuery(GetVehicleJourneyQuery(journeyId, false, realtime));
 	const popupWidth = journey?.girouette?.width ?? Math.min(width - 50, 384);
 	const line = useLine(journey?.networkId, journey?.lineId);
 
