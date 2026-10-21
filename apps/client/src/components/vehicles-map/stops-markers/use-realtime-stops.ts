@@ -5,6 +5,8 @@ import { useEffect, useRef } from "react";
 import { sendRealtimeMessage, subscribeRealtimeMessages } from "~/api/realtime";
 import { GetStopMarkersQuery, type StopMarker, searchBounds } from "~/api/stops";
 
+let nextSeq = 0;
+
 type UseRealtimeStopsOptions = {
 	connected: boolean;
 	bounds: LngLatBounds;
@@ -25,16 +27,16 @@ export function useRealtimeStops({
 	const queryClient = useQueryClient();
 	const stops = useRef(new Map<string, StopMarker>());
 	const queryKeysBySeq = useRef(new Map<number, QueryKey>());
-	const nextSeq = useRef(0);
 
 	useEffect(() => {
 		if (!connected) return;
 
 		stops.current.clear();
 		queryKeysBySeq.current.clear();
+		const sinceSeq = nextSeq;
 
 		return subscribeRealtimeMessages((message) => {
-			if (message.stops === undefined) return;
+			if (message.stops === undefined || message.stops.seq < sinceSeq) return;
 
 			const { seq, upsert, remove } = message.stops;
 			for (const ref of remove) stops.current.delete(ref);
@@ -54,7 +56,7 @@ export function useRealtimeStops({
 	useEffect(() => {
 		if (!connected) return;
 
-		const seq = nextSeq.current++;
+		const seq = nextSeq++;
 		if (!loaded) {
 			stops.current.clear();
 			sendRealtimeMessage({ type: "subscribe-stops", seq, subscription: null });
@@ -84,7 +86,7 @@ export function useRealtimeStops({
 
 	useEffect(() => {
 		return () => {
-			sendRealtimeMessage({ type: "subscribe-stops", seq: nextSeq.current++, subscription: null });
+			sendRealtimeMessage({ type: "subscribe-stops", seq: nextSeq++, subscription: null });
 		};
 	}, []);
 }

@@ -40,6 +40,7 @@ let releaseTimer: ReturnType<typeof setTimeout> | undefined;
 
 const statusListeners = new Set<() => void>();
 const messageListeners = new Set<(message: RealtimeMessage) => void>();
+const connectionListeners = new Set<() => void>();
 
 function setStatus(nextStatus: RealtimeStatus) {
 	if (status === nextStatus) return;
@@ -82,6 +83,7 @@ function connect() {
 			opened = true;
 			reconnectAttempts = 0;
 			failedAttempts = 0;
+			for (const listener of connectionListeners) listener();
 			setStatus("open");
 			return;
 		}
@@ -148,6 +150,13 @@ export function subscribeRealtimeMessages(listener: (message: RealtimeMessage) =
 	messageListeners.add(listener);
 	return () => {
 		messageListeners.delete(listener);
+	};
+}
+
+export function subscribeRealtimeConnections(listener: () => void) {
+	connectionListeners.add(listener);
+	return () => {
+		connectionListeners.delete(listener);
 	};
 }
 

@@ -4,7 +4,12 @@ import type { LngLatBounds } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 
 import { GetLinePathQuery, GetLineQuery } from "~/api/lines";
-import { type RealtimeMessage, sendRealtimeMessage, subscribeRealtimeMessages } from "~/api/realtime";
+import {
+	type RealtimeMessage,
+	sendRealtimeMessage,
+	subscribeRealtimeConnections,
+	subscribeRealtimeMessages,
+} from "~/api/realtime";
 import { GetLineAlertsQuery, GetStopAlertsQuery, GetVehicleJourneyAlertsQuery } from "~/api/service-alerts";
 import { GetStopDeparturesQuery } from "~/api/stops";
 import {
@@ -76,6 +81,16 @@ function applyJourneyContext(queryClient: QueryClient, message: RealtimeMessage)
 	if (message.journey !== undefined) applyJourneyUpdate(queryClient, message.journey);
 }
 
+let nextSeq = 0;
+const markers = new Map<string, VehicleJourneyMarker>();
+
+subscribeRealtimeConnections(() => markers.clear());
+subscribeRealtimeMessages((message) => {
+	if (message.markers === undefined) return;
+	for (const journeyId of message.markers.remove) markers.delete(journeyId);
+	for (const marker of message.markers.upsert) markers.set(marker.id, marker);
+});
+
 type UseRealtimeMarkersOptions = {
 	connected: boolean;
 	bounds: LngLatBounds;
@@ -92,9 +107,7 @@ export function useRealtimeMarkers({
 	preferencesKey,
 }: UseRealtimeMarkersOptions) {
 	const queryClient = useQueryClient();
-	const markers = useRef(new Map<string, VehicleJourneyMarker>());
 	const queryKeysBySeq = useRef(new Map<number, QueryKey>());
-	const nextSeq = useRef(0);
 
 	const latest = useRef({ filter, activeJourneyId });
 	useEffect(() => {
@@ -109,22 +122,18 @@ export function useRealtimeMarkers({
 	useEffect(() => {
 		if (!connected) return;
 
-		markers.current.clear();
 		queryKeysBySeq.current.clear();
 
 		return subscribeRealtimeMessages((message) => {
 			if (message.markers !== undefined) {
-				const { seq, upsert, remove } = message.markers;
-				for (const journeyId of remove) markers.current.delete(journeyId);
-				for (const marker of upsert) markers.current.set(marker.id, marker);
-
+				const { seq } = message.markers;
 				for (const knownSeq of queryKeysBySeq.current.keys()) {
 					if (knownSeq < seq) queryKeysBySeq.current.delete(knownSeq);
 				}
 
 				const queryKey = queryKeysBySeq.current.get(seq);
 				if (queryKey !== undefined) {
-					queryClient.setQueryData(queryKey, { items: [...markers.current.values()] });
+					queryClient.setQueryData(queryKey, { items: [...markers.values()] });
 				}
 			}
 
@@ -140,7 +149,7 @@ export function useRealtimeMarkers({
 
 		const currentFilter = latest.current.filter;
 		const params = getVehicleJourneyMarkersParams(currentFilter, latest.current.activeJourneyId);
-		const seq = nextSeq.current++;
+		const seq = nextSeq++;
 		queryKeysBySeq.current.set(seq, GetVehicleJourneyMarkersQuery(bounds, currentFilter).queryKey);
 
 		sendRealtimeMessage({
