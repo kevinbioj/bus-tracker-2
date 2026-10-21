@@ -1,7 +1,6 @@
 import type { GeoJSONFeatureDiff, GeoJSONSource } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
-import { useMap } from "~/adapters/maplibre-gl/map";
 import { isLowEndDevice } from "~/utils/device-capabilities";
 
 export type CircleMarkerSource = {
@@ -95,14 +94,11 @@ function mergeUpdates(updates: GeoJSONFeatureDiff[]) {
 }
 
 /**
- * Animer coûte une mise à jour de la source par image : on s'en abstient quand l'utilisateur déplace
- * la carte — c'est là que les images manquées se voient —, quand il préfère moins d'animations, et
- * quand la page est cachée.
+ * Animer coûte une mise à jour de la source par image : on s'en abstient quand l'utilisateur préfère
+ * moins d'animations, et quand la page est cachée.
  */
-const canAnimate = (map: ReturnType<typeof useMap>) =>
-	!map.isMoving() &&
-	document.visibilityState === "visible" &&
-	!window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const canAnimate = () =>
+	document.visibilityState === "visible" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 type MapCircleMarkersProps<T extends CircleMarkerProperties> = {
 	features: CircleMarkerFeature<T>[];
@@ -110,8 +106,6 @@ type MapCircleMarkersProps<T extends CircleMarkerProperties> = {
 };
 
 export function GeojsonCircles<T extends CircleMarkerProperties>({ features, source }: MapCircleMarkersProps<T>) {
-	const map = useMap();
-
 	// Marqueurs tels que la source les affiche, tenus ici plutôt que relus de la source. Ils ne valent
 	// que pour la source qui les a reçus : une source recréée (contexte WebGL perdu) repart vide.
 	const displayed = useRef<{ source: GeoJSONSource; markers: Map<string, DisplayedMarker<T>> } | null>(null);
@@ -208,7 +202,7 @@ export function GeojsonCircles<T extends CircleMarkerProperties>({ features, sou
 
 		// Rien ne bouge, trop de marqueurs pour les animer, ou un moment mal choisi : une seule écriture,
 		// directement aux positions finales.
-		if (movements.length === 0 || movements.length > ANIMATION_MAX_MOVEMENTS || !canAnimate(map)) {
+		if (movements.length === 0 || movements.length > ANIMATION_MAX_MOVEMENTS || !canAnimate()) {
 			const updates = mergeUpdates([...update, ...movementsAt(1)]);
 			if (remove.length > 0 || add.length > 0 || updates.length > 0)
 				source.updateData({ remove, add, update: updates });
@@ -226,14 +220,6 @@ export function GeojsonCircles<T extends CircleMarkerProperties>({ features, sou
 		const stop = () => {
 			if (frameRequest !== null) cancelAnimationFrame(frameRequest);
 			frameRequest = null;
-			map.off("movestart", finish);
-		};
-
-		// Un déplacement de la carte qui commence met fin à l'animation : les marqueurs gagnent aussitôt
-		// leur position, plutôt que de disputer chaque image au déplacement.
-		const finish = () => {
-			stop();
-			source.updateData({ update: movementsAt(1) });
 		};
 
 		const step = (now: number) => {
@@ -254,11 +240,10 @@ export function GeojsonCircles<T extends CircleMarkerProperties>({ features, sou
 			}
 		};
 
-		map.on("movestart", finish);
 		frameRequest = requestAnimationFrame(step);
 
 		return stop;
-	}, [features, map, source]);
+	}, [features, source]);
 
 	return null;
 }
