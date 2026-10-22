@@ -17,6 +17,7 @@ import { ShowStopsSetting } from "~/routes/_app/-components/settings/show-stops"
 import { ShowVehiclePathsSetting } from "~/routes/_app/-components/settings/show-vehicle-paths";
 import { ShowWheelchairAccessibilitySetting } from "~/routes/_app/-components/settings/show-wheelchair-accessibility";
 import { StopLabelsStyleSetting } from "~/routes/_app/-components/settings/stop-labels-style";
+import { StopLinesDisplayModeSetting } from "~/routes/_app/-components/settings/stop-lines-display-mode";
 import { DisplayAbsoluteTimeSetting } from "~/routes/_app/-components/settings/use-absolute-time";
 import { LanguageSetting } from "./language-setting";
 
@@ -57,6 +58,7 @@ export function Settings() {
 							<div className="flex flex-col gap-4">
 								<DisplayedVehiclesSetting />
 								<ShowStopsSetting />
+								<StopLinesDisplayModeSetting />
 								<StopLabelsStyleSetting />
 								<ShowVehiclePathsSetting />
 								<PreviewVehicleNumberSetting />

@@ -23,11 +23,10 @@ const NOW = Temporal.Instant.from("2026-05-18T07:30:00Z");
  * Bus `original` A 8:00 → B 8:10 → C 8:20, et métro M1 → Z. La station `station-m` déclare le quai
  * de métro M1 et le quai P, qu'aucune course théorique ne dessert.
  */
-function makeSource() {
+function makeSource(service = new Service("service", [true, true, true, true, true, true, true])) {
 	const agency = new Agency("agency", "Agency", "UTC");
 	const bus = new Route("bus", agency, "1", "BUS");
 	const metro = new Route("metro", agency, "M", "SUBWAY");
-	const service = new Service("service", [true, true, true, true, true, true, true]);
 	const stops = [
 		new Stop("A", "A", 0, 0),
 		new Stop("B", "B", 0, 0.01),
@@ -147,6 +146,32 @@ describe("buildStopAreaManifests", () => {
 
 		expect(manifests.map(({ ref }) => ref).sort()).toEqual(["network:StopArea:A", "network:StopArea:B"]);
 		expect(manifests.map(({ networkRefs }) => networkRefs)).toEqual([["network"], ["network"]]);
+	});
+
+	it("ne retient pas les lignes dont le service a pris fin", () => {
+		const { source } = makeSource(
+			new Service(
+				"ended",
+				[true, true, true, true, true, true, true],
+				Temporal.PlainDate.from("2026-01-01"),
+				Temporal.PlainDate.from("2026-05-17"),
+			),
+		);
+
+		const manifest = buildStopAreaManifests("provider", source, NOW.toString()).find(
+			({ ref }) => ref === "network:StopArea:station-m",
+		);
+
+		expect(manifest).toMatchObject({ lineRefs: [] });
+		expect(stopPointOf(source, "M1")).toMatchObject({ lineRefs: [] });
+	});
+
+	it("retient les lignes dont le service reprend plus tard", () => {
+		const { source } = makeSource(
+			new Service("later", undefined, undefined, undefined, [], [Temporal.PlainDate.from("2026-06-01")]),
+		);
+
+		expect(stopPointOf(source, "M1")).toMatchObject({ lineRefs: ["network:Line:metro"] });
 	});
 });
 

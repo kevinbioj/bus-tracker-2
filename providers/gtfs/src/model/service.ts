@@ -33,4 +33,19 @@ export class Service {
 
 		return this.days[(date.dayOfWeek - 1) as 0 | 1 | 2 | 3 | 4 | 5 | 6];
 	}
+
+	runsOnOrAfter(date: Temporal.PlainDate) {
+		if (this.includedDates.some((includedDate) => Temporal.PlainDate.compare(includedDate, date) >= 0)) {
+			return true;
+		}
+
+		if (!this.days.includes(true)) return false;
+
+		let current = Temporal.PlainDate.compare(date, this.startsOn) < 0 ? this.startsOn : date;
+		while (Temporal.PlainDate.compare(current, this.endsOn) <= 0) {
+			if (this.runsOn(current)) return true;
+			current = current.add({ days: 1 });
+		}
+		return false;
+	}
 }

@@ -65,6 +65,8 @@ const selectedStopIconImage: ExpressionSpecification = ["concat", SELECTED_STOP_
 
 const LABEL_TEXT_SIZE = 12;
 
+const LABEL_LINE_HEIGHT = 1.2;
+
 const NETWORK_FONT_SCALE = 0.85;
 
 /**
@@ -79,15 +81,6 @@ const labelText: ExpressionSpecification = [
 	{ "font-scale": NETWORK_FONT_SCALE, "text-color": "#3A4458" },
 ];
 
-/** Seuil entier : il tombe sur un zoom de tuile, le libellé apparaît donc sans retard. */
-const labelTextFromMinZoom: ExpressionSpecification = [
-	"step",
-	["zoom"],
-	["format", "", {}],
-	STOPS_LABEL_MIN_ZOOM,
-	labelText,
-];
-
 const LABEL_OFFSET_X = (STOP_ICON_WIDTH / 2 + 3) / LABEL_TEXT_SIZE;
 const LABEL_OFFSET_Y = -STOP_PLATE_CENTER_OFFSET / LABEL_TEXT_SIZE;
 
@@ -95,7 +88,7 @@ const LABEL_OFFSET_Y = -STOP_PLATE_CENTER_OFFSET / LABEL_TEXT_SIZE;
  * Un libellé sur deux lignes est centré sur la plaque : il est abaissé d'une demi-ligne de réseau
  * (interligne de 1,2 em), pour que le nom de l'arrêt reste aligné sur elle.
  */
-const NETWORK_LINE_SHIFT = (1.2 * NETWORK_FONT_SCALE) / 2;
+const NETWORK_LINE_SHIFT = (LABEL_LINE_HEIGHT * NETWORK_FONT_SCALE) / 2;
 
 const initialData: SourceSpecification = {
 	type: "geojson",
@@ -112,31 +105,6 @@ export type StopFeatureKind = "area" | "point" | "line-point";
 
 const FADE_START = STOP_POINTS_ZOOM - STOP_POINTS_FADE;
 const FADE_END = STOP_POINTS_ZOOM + STOP_POINTS_FADE;
-
-/** Opacité d'une station : elle apparaît (arrêts ordinaires seulement), puis s'efface au seuil. */
-function fadeOutAtThreshold(appearAt?: number): ExpressionSpecification {
-	return [
-		"interpolate",
-		["linear"],
-		["zoom"],
-		...(appearAt !== undefined ? [appearAt, 0, appearAt + 0.4, 1] : []),
-		FADE_START,
-		1,
-		FADE_END,
-		0,
-	] as ExpressionSpecification;
-}
-
-/** Opacité d'un marqueur qui apparaît en fondu à partir d'un zoom. */
-const fadeInFrom = (zoom: number): ExpressionSpecification => [
-	"interpolate",
-	["linear"],
-	["zoom"],
-	zoom,
-	0,
-	zoom + 0.4,
-	1,
-];
 
 /** Opacité d'un quai : il apparaît au seuil, à mesure que sa station s'efface. */
 const fadeInAtThreshold: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], FADE_START, 0, FADE_END, 1];
@@ -160,6 +128,8 @@ const labelLayout: SymbolLayerSpecification["layout"] = {
 	"icon-allow-overlap": true,
 };
 
+const pointLabelMaxWidth: ExpressionSpecification = ["case", ["has", "badges"], 100, 10];
+
 const labelPaint: SymbolLayerSpecification["paint"] = {
 	"text-color": "#1E2A4A",
 	"text-halo-color": "#FFFFFF",
@@ -174,6 +144,42 @@ const labelPaint: SymbolLayerSpecification["paint"] = {
  * disputent pas la place de ceux de l'autre. Les deux ne cohabitent que le temps du fondu enchaîné.
  */
 
+const isSelected: ExpressionSpecification = ["get", "selected"];
+
+const selectableLayout: SymbolLayerSpecification["layout"] = {
+	...labelLayout,
+	"icon-image": ["case", isSelected, selectedStopIconImage, stopIconImage],
+	"icon-size": ["case", isSelected, SELECTED_STOP_ICON_SCALE, 1],
+	"symbol-sort-key": ["case", isSelected, 0, 1],
+};
+
+/** Seuil entier : il tombe sur un zoom de tuile, le libellé apparaît donc sans retard. */
+const labelTextFromMinZoom: ExpressionSpecification = [
+	"step",
+	["zoom"],
+	["case", isSelected, labelText, ["format", "", {}]],
+	STOPS_LABEL_MIN_ZOOM,
+	labelText,
+];
+
+const unlessSelectedFadeInFrom = (zoom: number): ExpressionSpecification[] =>
+	[zoom, ["case", isSelected, 1, 0], zoom + 0.4, 1] as ExpressionSpecification[];
+
+const areaOpacity = (appearAt: number): ExpressionSpecification =>
+	[
+		"interpolate",
+		["linear"],
+		["zoom"],
+		...unlessSelectedFadeInFrom(appearAt),
+		FADE_START,
+		1,
+		FADE_END,
+		0,
+	] as ExpressionSpecification;
+
+const linePointOpacity = (appearAt: number): ExpressionSpecification =>
+	["interpolate", ["linear"], ["zoom"], ...unlessSelectedFadeInFrom(appearAt)] as ExpressionSpecification;
+
 /**
  * Plaque et nom de la station dans une même couche : le nom se place à droite de la plaque et cède
  * sa place en cas de collision (`text-optional`), la plaque, elle, reste toujours affichée. Le clic
@@ -185,17 +191,15 @@ const areasLayerObject: AddLayerObject = {
 	type: "symbol",
 	minzoom: STOPS_MIN_ZOOM,
 	maxzoom: FADE_END,
-	filter: ["all", ["==", ["get", "kind"], "area"], ["!", ["get", "selected"]]],
+	filter: ["==", ["get", "kind"], "area"],
 	layout: {
-		...labelLayout,
-		"icon-image": stopIconImage,
+		...selectableLayout,
 		"text-field": labelTextFromMinZoom,
 	},
 	paint: {
 		...labelPaint,
-		// Fondu à l'apparition, comme les flèches et les libellés des véhicules, puis au profit des quais.
-		"icon-opacity": fadeOutAtThreshold(STOPS_MIN_ZOOM),
-		"text-opacity": fadeOutAtThreshold(STOPS_LABEL_MIN_ZOOM),
+		"icon-opacity": areaOpacity(STOPS_MIN_ZOOM),
+		"text-opacity": areaOpacity(STOPS_LABEL_MIN_ZOOM),
 	},
 };
 
@@ -204,58 +208,17 @@ const pointsLayerObject: AddLayerObject = {
 	source: "stops",
 	type: "symbol",
 	minzoom: FADE_START,
-	filter: ["all", ["==", ["get", "kind"], "point"], ["!", ["get", "selected"]]],
+	filter: ["==", ["get", "kind"], "point"],
 	layout: {
-		...labelLayout,
-		"icon-image": stopIconImage,
-		"text-field": labelText,
+		"icon-image": selectableLayout["icon-image"],
+		"icon-size": selectableLayout["icon-size"],
+		"icon-anchor": "bottom",
+		"icon-allow-overlap": true,
+		"icon-padding": 0,
+		"symbol-sort-key": selectableLayout["symbol-sort-key"],
 	},
 	paint: {
-		...labelPaint,
 		"icon-opacity": fadeInAtThreshold,
-		"text-opacity": fadeInAtThreshold,
-	},
-};
-
-/**
- * Arrêt sélectionné, dans ses propres couches et sans zoom minimal : il reste repérable jusqu'au
- * dézoom complet, tant que son tableau de passages est ouvert. Son nom l'accompagne à tout zoom.
- */
-const selectedAreasLayerObject: AddLayerObject = {
-	id: "stops-selected-areas",
-	source: "stops",
-	type: "symbol",
-	maxzoom: FADE_END,
-	filter: ["all", ["==", ["get", "kind"], "area"], ["get", "selected"]],
-	layout: {
-		...labelLayout,
-		"icon-image": selectedStopIconImage,
-		"icon-size": SELECTED_STOP_ICON_SCALE,
-		"text-field": labelText,
-	},
-	paint: {
-		...labelPaint,
-		"icon-opacity": fadeOutAtThreshold(),
-		"text-opacity": fadeOutAtThreshold(),
-	},
-};
-
-const selectedPointsLayerObject: AddLayerObject = {
-	id: "stops-selected-points",
-	source: "stops",
-	type: "symbol",
-	minzoom: FADE_START,
-	filter: ["all", ["==", ["get", "kind"], "point"], ["get", "selected"]],
-	layout: {
-		...labelLayout,
-		"icon-image": selectedStopIconImage,
-		"icon-size": SELECTED_STOP_ICON_SCALE,
-		"text-field": labelText,
-	},
-	paint: {
-		...labelPaint,
-		"icon-opacity": fadeInAtThreshold,
-		"text-opacity": fadeInAtThreshold,
 	},
 };
 
@@ -268,24 +231,28 @@ const linePointsLayerObject: AddLayerObject = {
 	source: "stops",
 	type: "symbol",
 	minzoom: STOPS_MIN_ZOOM,
-	filter: ["all", ["==", ["get", "kind"], "line-point"], ["!", ["get", "selected"]]],
+	filter: ["==", ["get", "kind"], "line-point"],
 	layout: {
-		...labelLayout,
-		"icon-image": stopIconImage,
+		...selectableLayout,
 		"text-field": labelTextFromMinZoom,
 	},
 	paint: {
 		...labelPaint,
-		"icon-opacity": fadeInFrom(STOPS_MIN_ZOOM),
-		"text-opacity": fadeInFrom(STOPS_LABEL_MIN_ZOOM),
+		"icon-opacity": linePointOpacity(STOPS_MIN_ZOOM),
+		"text-opacity": linePointOpacity(STOPS_LABEL_MIN_ZOOM),
 	},
 };
 
-const selectedLinePointsLayerObject: AddLayerObject = {
-	id: "stops-selected-line-points",
+/**
+ * Arrêt sélectionné en deçà du zoom des arrêts : il reste repérable jusqu'au dézoom complet, tant que
+ * son tableau de passages est ouvert, et son nom l'accompagne.
+ */
+const selectedBelowMinZoomLayerObject: AddLayerObject = {
+	id: "stops-selected-below-min-zoom",
 	source: "stops",
 	type: "symbol",
-	filter: ["all", ["==", ["get", "kind"], "line-point"], ["get", "selected"]],
+	maxzoom: STOPS_MIN_ZOOM,
+	filter: ["all", ["in", ["get", "kind"], ["literal", ["area", "line-point"]]], isSelected],
 	layout: {
 		...labelLayout,
 		"icon-image": selectedStopIconImage,
@@ -295,14 +262,56 @@ const selectedLinePointsLayerObject: AddLayerObject = {
 	paint: labelPaint,
 };
 
+const LINE_BADGES_GAP = 1;
+
+const badgesOffsetBelowName = (shift: number): ExpressionSpecification => [
+	"literal",
+	[
+		STOP_ICON_WIDTH / 2 + 3,
+		-STOP_PLATE_CENTER_OFFSET + (LABEL_LINE_HEIGHT * LABEL_TEXT_SIZE) / 2 + shift + LINE_BADGES_GAP,
+	],
+];
+
+const pointsLabelsLayerObject: AddLayerObject = {
+	id: "stops-points-labels",
+	source: "stops",
+	type: "symbol",
+	minzoom: FADE_START,
+	filter: ["==", ["get", "kind"], "point"],
+	layout: {
+		"text-field": labelText,
+		"text-font": labelLayout["text-font"],
+		"text-size": labelLayout["text-size"],
+		"text-anchor": labelLayout["text-anchor"],
+		"text-offset": labelLayout["text-offset"],
+		"text-justify": labelLayout["text-justify"],
+		"text-max-width": pointLabelMaxWidth,
+		"text-padding": 0,
+		"icon-image": ["get", "badges"],
+		"icon-anchor": "top-left",
+		"icon-offset": [
+			"case",
+			["has", "network"],
+			badgesOffsetBelowName(LABEL_LINE_HEIGHT * NETWORK_FONT_SCALE * LABEL_TEXT_SIZE),
+			badgesOffsetBelowName(0),
+		],
+		"icon-padding": 0,
+		"symbol-sort-key": selectableLayout["symbol-sort-key"],
+	},
+	paint: {
+		...labelPaint,
+		"icon-opacity": fadeInAtThreshold,
+		"text-opacity": fadeInAtThreshold,
+	},
+};
+
 /** Couches répondant au survol et au clic. */
 const CLICKABLE_LAYERS = [
 	areasLayerObject.id,
 	pointsLayerObject.id,
-	selectedAreasLayerObject.id,
-	selectedPointsLayerObject.id,
+	pointsLabelsLayerObject.id,
 	linePointsLayerObject.id,
-	selectedLinePointsLayerObject.id,
+	selectedBelowMinZoomLayerObject.id,
 ];
 
 type StopsMarkersProps = {
@@ -320,11 +329,10 @@ export function StopsMarkers({ networkId, lineId }: StopsMarkersProps) {
 	const source = useMapSource<GeoJSONSource>("stops", initialData);
 	// Insérées sous les véhicules : un arrêt ne doit jamais masquer le marqueur qui s'y arrête.
 	const stopsLayer = useMapLayer(areasLayerObject, "vehicles");
+	useMapLayer(pointsLabelsLayerObject, "vehicles");
 	useMapLayer(pointsLayerObject, "vehicles");
-	useMapLayer(selectedAreasLayerObject, "vehicles");
-	useMapLayer(selectedPointsLayerObject, "vehicles");
 	useMapLayer(linePointsLayerObject, "vehicles");
-	useMapLayer(selectedLinePointsLayerObject, "vehicles");
+	useMapLayer(selectedBelowMinZoomLayerObject, "vehicles");
 
 	useEffect(() => {
 		let abort = false;

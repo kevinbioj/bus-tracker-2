@@ -16,8 +16,10 @@ import type { createRedisClient } from "@bus-tracker/redis";
 
 import type { Gtfs } from "../model/gtfs.js";
 import type { Route, RouteType } from "../model/route.js";
+import type { Service } from "../model/service.js";
 import type { Source } from "../model/source.js";
 import type { Stop } from "../model/stop.js";
+import type { Trip } from "../model/trip.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { getStopAreaId } from "../utils/stop-area-id.js";
 import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
@@ -125,13 +127,31 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 	const networkOf = createTripNetworkResolver(source);
 	const stopRefOf = (networkRef: string, stopId: string) => `${networkRef}:StopPoint:${mapStopRef?.(stopId) ?? stopId}`;
 
+	const publishedAt = Temporal.Instant.from(updatedAt);
+	const todayByTimeZone = new Map<string, Temporal.PlainDate>();
+	const ongoingByService = new Map<Service, boolean>();
+	const isOngoing = ({ route, service }: Trip) => {
+		let ongoing = ongoingByService.get(service);
+		if (ongoing === undefined) {
+			const { timeZone } = route.agency;
+			let today = todayByTimeZone.get(timeZone);
+			if (today === undefined) {
+				today = publishedAt.toZonedDateTimeISO(timeZone).toPlainDate();
+				todayByTimeZone.set(timeZone, today);
+			}
+			ongoing = service.runsOnOrAfter(today);
+			ongoingByService.set(service, ongoing);
+		}
+		return ongoing;
+	};
+
 	// Réseaux et lignes de chaque station, relevés sur les courses qui la desservent : une source peut
 	// alimenter plusieurs réseaux, et c'est la course, pas l'arrêt, qui en décide.
 	const services = new Map<
 		string,
 		{ courseCountByNetwork: Map<string, number>; lineRefs: Set<string>; mode: StopAreaMode }
 	>();
-	const record = (areaId: string, networkRef: string, route: Route) => {
+	const record = (areaId: string, networkRef: string, route: Route, ongoing: boolean) => {
 		const mode = modeOf(route.type);
 		let service = services.get(areaId);
 		if (service === undefined) {
@@ -139,7 +159,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 			services.set(areaId, service);
 		}
 		service.courseCountByNetwork.set(networkRef, (service.courseCountByNetwork.get(networkRef) ?? 0) + 1);
-		service.lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
+		if (ongoing) service.lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
 		service.mode = heaviestMode(service.mode, mode);
 	};
 
@@ -148,7 +168,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 	// ne fait que descendre d'un bus reste un arrêt de bus, même dans une station de métro.
 	const stopModes = new Map<string, StopAreaMode>();
 	const stopLineRefs = new Map<string, Set<string>>();
-	const recordStop = (stopId: string, networkRef: string, route: Route) => {
+	const recordStop = (stopId: string, networkRef: string, route: Route, ongoing: boolean) => {
 		const mode = modeOf(route.type);
 		const stopMode = stopModes.get(stopId);
 		stopModes.set(stopId, stopMode !== undefined ? heaviestMode(stopMode, mode) : mode);
@@ -158,7 +178,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 			lineRefs = new Set();
 			stopLineRefs.set(stopId, lineRefs);
 		}
-		lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
+		if (ongoing) lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
 	};
 
 	const { flagsBitmask, stopList, stopIdx, tripStart, tripCount } = gtfs.stopTimeStore;
@@ -166,10 +186,11 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 		if (trip === undefined) continue;
 		const networkRef = networkOf(trip);
 		if (networkRef === undefined) continue;
+		const ongoing = isOngoing(trip);
 		const start = tripStart[trip.idx]!;
 		const end = start + tripCount[trip.idx]!;
 		for (let index = start; index < end; index += 1) {
-			recordStop(stopList[stopIdx[index]!]!.id, networkRef, trip.route);
+			recordStop(stopList[stopIdx[index]!]!.id, networkRef, trip.route, ongoing);
 		}
 	}
 
@@ -187,7 +208,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 			if (trip === undefined) continue;
 			const networkRef = networkOf(trip);
 			if (networkRef === undefined) continue;
-			record(stopArea.id, networkRef, trip.route);
+			record(stopArea.id, networkRef, trip.route, isOngoing(trip));
 
 			const departs =
 				stopTimeIdx !== trip.stopTimeStart + trip.stopTimeCount - 1 &&
@@ -201,8 +222,8 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 	for (const { journey, call, areaId } of realtimeServedCalls(source, gtfs)) {
 		const networkRef = networkOf(journey.trip, journey);
 		if (networkRef === undefined) continue;
-		record(areaId, networkRef, journey.trip.route);
-		recordStop(call.stop.id, networkRef, journey.trip.route);
+		record(areaId, networkRef, journey.trip.route, true);
+		recordStop(call.stop.id, networkRef, journey.trip.route, true);
 		departingAreaIds.add(areaId);
 		if (offersArrivals(journey.trip.route)) arrivalAreaIds.add(areaId);
 	}

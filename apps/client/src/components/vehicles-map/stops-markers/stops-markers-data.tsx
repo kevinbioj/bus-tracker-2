@@ -1,12 +1,12 @@
 import type { StopAreaMode } from "@bus-tracker/contracts";
-import { useQuery } from "@tanstack/react-query";
+import { type QueryObserverResult, useQueries, useQuery } from "@tanstack/react-query";
 import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
-import { GetNetworksQuery } from "~/api/networks";
+import { GetNetworkQuery, GetNetworksQuery, type Line, type NetworkWithDetails } from "~/api/networks";
 import { isRealtimeAvailable, useRealtimeStatus } from "~/api/realtime";
 import {
 	GetStopDeparturesQuery,
@@ -15,7 +15,14 @@ import {
 	type StopMarker,
 	type StopPoint,
 } from "~/api/stops";
+import { useStopLinesDisplayMode } from "~/components/vehicles-map/stop-lines-display-mode";
 import { findHomonyms } from "~/components/vehicles-map/stops-markers/homonyms";
+import {
+	createLineBadges,
+	LINE_BADGES_FONT,
+	type LineBadges,
+	lineBadgesImageId,
+} from "~/components/vehicles-map/stops-markers/line-badges";
 import {
 	STOP_POINTS_LOAD_ZOOM,
 	STOPS_MIN_ZOOM,
@@ -50,8 +57,11 @@ type StopFeature = GeoJSON.Feature<
 		/** Pictogramme de la plaque : le mode le plus lourd de la station, ou du quai. */
 		mode: StopAreaMode;
 		selected: boolean;
+		badges?: string;
 	}
 >;
+
+const MAX_LINE_BADGES = 5;
 
 /** Au-delà, deux quais homonymes de réseaux différents sont trop éloignés pour être confondus. */
 const STOP_POINT_HOMONYM_DISTANCE_M = 30;
@@ -64,7 +74,13 @@ type StopCandidate = { feature: StopFeature; name: string; networkId: number; la
  * de n'en montrer qu'une partie selon le zoom. Une station dont les quais sont inconnus en reçoit un
  * à sa propre position, pour rester affichée au-delà du seuil. Sur une ligne filtrée, seuls ses quais.
  */
-function featuresOf(area: Area, withStopPoints: boolean, selection: Selection, lineOnly: boolean): StopCandidate[] {
+function featuresOf(
+	area: Area,
+	withStopPoints: boolean,
+	selection: Selection,
+	lineOnly: boolean,
+	badgesOf: (area: Area, point?: StopPoint) => string | undefined,
+): StopCandidate[] {
 	const areaSelected = area.ref === selection.stopRef;
 
 	const areaCandidate: StopCandidate = {
@@ -86,6 +102,7 @@ function featuresOf(area: Area, withStopPoints: boolean, selection: Selection, l
 
 	const pointCandidates = points.map((point): StopCandidate => {
 		const { latitude, longitude } = point ?? area;
+		const badges = lineOnly ? undefined : badgesOf(area, point);
 		return {
 			feature: {
 				type: "Feature",
@@ -103,6 +120,7 @@ function featuresOf(area: Area, withStopPoints: boolean, selection: Selection, l
 					selected:
 						areaSelected &&
 						(selection.stopPointRef === null || point === undefined || selection.stopPointRef === point.ref),
+					...(badges !== undefined ? { badges } : {}),
 				},
 			},
 			// Le code de quai n'est pas du nom : « Rue Verte (A) » et « Rue Verte (B) » sont homonymes.
@@ -117,6 +135,20 @@ function featuresOf(area: Area, withStopPoints: boolean, selection: Selection, l
 }
 
 const selectStop = (departures: StopDepartures) => departures.stop;
+
+function combineLines(networks: QueryObserverResult<NetworkWithDetails>[]) {
+	return new Map(networks.flatMap(({ data: network }) => network?.lines.map((line) => [line.id, line] as const) ?? []));
+}
+
+function compareLines(networkId: number) {
+	return (a: Line & { networkId: number }, b: Line & { networkId: number }) => {
+		const networkDiff = Number(a.networkId !== networkId) - Number(b.networkId !== networkId);
+		const sortOrderDiff = (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER);
+		return networkDiff || sortOrderDiff || a.number.localeCompare(b.number, undefined, { numeric: true });
+	};
+}
+
+const isFontLoaded = () => document.fonts.check(LINE_BADGES_FONT);
 
 type StopsMarkersDataProps = {
 	networkId?: number;
@@ -168,6 +200,43 @@ export function StopsMarkersData({
 		withStopPoints,
 	});
 
+	const [stopLinesDisplayMode] = useStopLinesDisplayMode();
+	const showLines = stopLinesDisplayMode === "with";
+
+	const lineNetworkIds = useMemo(
+		() =>
+			showLines
+				? [
+						...new Set(
+							data?.items.flatMap(
+								(area) =>
+									area.stopPoints?.flatMap((point) => point.lines?.map(({ networkId }) => networkId) ?? []) ?? [],
+							),
+						),
+					].toSorted((a, b) => a - b)
+				: [],
+		[data, showLines],
+	);
+	const linesById = useQueries({
+		queries: lineNetworkIds.map((lineNetworkId) => GetNetworkQuery(lineNetworkId, true)),
+		combine: combineLines,
+	});
+
+	const [fontLoaded, setFontLoaded] = useState(isFontLoaded);
+	useEffect(() => {
+		if (fontLoaded) return;
+		let abort = false;
+		document.fonts
+			.load(LINE_BADGES_FONT)
+			.catch(() => undefined)
+			.then(() => {
+				if (!abort) setFontLoaded(true);
+			});
+		return () => {
+			abort = true;
+		};
+	}, [fontLoaded]);
+
 	const { data: networks } = useQuery(GetNetworksQuery);
 	const networkNames = useMemo(
 		() => new Map(networks?.map((network) => [network.id, network.name] as const)),
@@ -201,13 +270,32 @@ export function StopsMarkersData({
 		if (!realtime) refetch();
 	}, [realtime, bounds, networkId, lineId, loaded, level]);
 
-	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
+	const { geojson, badges } = useMemo(() => {
 		// Tant que le tableau n'est pas chargé, seule une station sélectionnée est connue de l'URL.
 		const selectedStopRef = selectedStop?.ref ?? (selectedStopPointRef === null ? selectedRef : null);
 		const selection = { stopRef: selectedStopRef, stopPointRef: selectedStopPointRef };
 		const withStopPoints = level === "points";
 
 		const areas: Area[] = loaded ? (data?.items ?? []) : [];
+
+		const badges = new Map<string, LineBadges>();
+		const badgesOf = (area: Area, point?: StopPoint) => {
+			if (!showLines || !fontLoaded || point?.lines === undefined) return;
+			const lines = point.lines
+				.flatMap(({ id, networkId }) => {
+					const line = linesById.get(id);
+					return line !== undefined && line.archivedAt === null ? [{ ...line, networkId }] : [];
+				})
+				.toSorted(compareLines(area.networkId));
+			if (lines.length === 0) return;
+			const lineBadges = {
+				lines: lines.slice(0, MAX_LINE_BADGES),
+				more: Math.max(0, lines.length - MAX_LINE_BADGES),
+			};
+			const imageId = lineBadgesImageId(lineBadges);
+			badges.set(imageId, lineBadges);
+			return imageId;
+		};
 
 		// L'arrêt sélectionné reste affiché à tout zoom, y compris hors de l'emprise chargée.
 		const selectedArea =
@@ -216,10 +304,10 @@ export function StopsMarkersData({
 				: [];
 
 		const candidates = [
-			...areas.flatMap((area) => featuresOf(area, withStopPoints, selection, lineOnly)),
+			...areas.flatMap((area) => featuresOf(area, withStopPoints, selection, lineOnly, badgesOf)),
 			// Les quais du tableau ne sont pas restreints à la ligne filtrée : seul le sélectionné est montré.
 			...selectedArea.flatMap((area) =>
-				featuresOf(area, withStopPoints, selection, lineOnly).filter(
+				featuresOf(area, withStopPoints, selection, lineOnly, badgesOf).filter(
 					({ feature }) => !lineOnly || feature.properties.selected,
 				),
 			),
@@ -239,8 +327,41 @@ export function StopsMarkersData({
 			if (network !== undefined) candidate.feature.properties.network = network;
 		}
 
-		return { type: "FeatureCollection", features: candidates.map(({ feature }) => feature) };
-	}, [data, level, lineOnly, loaded, networkNames, selectedRef, selectedStop, selectedStopPointRef]);
+		const geojson: GeoJSON.FeatureCollection = {
+			type: "FeatureCollection",
+			features: candidates.map(({ feature }) => feature),
+		};
+		return { geojson, badges };
+	}, [
+		data,
+		fontLoaded,
+		level,
+		lineOnly,
+		linesById,
+		loaded,
+		networkNames,
+		selectedRef,
+		selectedStop,
+		selectedStopPointRef,
+		showLines,
+	]);
+
+	useEffect(() => {
+		const addBadges = (imageId: string) => {
+			const lineBadges = badges.get(imageId);
+			if (lineBadges === undefined || map.hasImage(imageId)) return;
+			const { image, pixelRatio } = createLineBadges(lineBadges);
+			map.addImage(imageId, image, { pixelRatio });
+		};
+
+		for (const imageId of badges.keys()) addBadges(imageId);
+
+		const onImageMissing = ({ id }: { id: string }) => addBadges(id);
+		map.on("styleimagemissing", onImageMissing);
+		return () => {
+			map.off("styleimagemissing", onImageMissing);
+		};
+	}, [badges, map]);
 
 	useEffect(() => {
 		source.setData(geojson);

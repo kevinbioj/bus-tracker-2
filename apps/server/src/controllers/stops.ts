@@ -7,7 +7,7 @@ import type {
 } from "@bus-tracker/contracts";
 import * as z from "zod";
 
-import { findLineRefs, resolveLineRefs } from "../core/services/line-ref-service.js";
+import { findLineRefs, type ResolvedLine, resolveLineRefs } from "../core/services/line-ref-service.js";
 import { findStopAlerts } from "../core/services/service-alert-service.js";
 import {
 	findStopArea,
@@ -45,11 +45,23 @@ export type StopMarker = {
 	mode: StopAreaMode;
 	/** Réseau principal : il distingue sur la carte deux stations homonymes de réseaux différents. */
 	networkId: number;
-	stopPoints?: StopPoint[];
+	stopPoints?: PublicStopPoint[];
 };
+
+type PublicStopPoint = Omit<StopPoint, "lineRefs"> & { lines?: ResolvedLine[] };
 
 /** Quais tels que servis au client : leurs lignes n'ont servi qu'au filtre. */
 const publicStopPoints = (stopPoints: StopPoint[]) => stopPoints.map(({ lineRefs, ...stopPoint }) => stopPoint);
+
+const markerStopPoints = (
+	stopPoints: StopPoint[],
+	areaLineRefs: string[],
+	lines: Map<string, ResolvedLine>,
+): PublicStopPoint[] =>
+	stopPoints.map(({ lineRefs = areaLineRefs, ...stopPoint }) => ({
+		...stopPoint,
+		lines: lineRefs.flatMap((lineRef) => lines.get(lineRef) ?? []),
+	}));
 
 /** Source d'une station, sous la forme `${providerId}:${sourceId}`. */
 const sourceKeyOf = ({ providerId, sourceId }: { providerId: string; sourceId: string }) => `${providerId}:${sourceId}`;
@@ -103,6 +115,15 @@ export async function buildStopMarkers({
 		{ limit: MARKERS_LIMIT, networkIds, lineRefs: lineRefs !== undefined ? [...lineRefs] : undefined },
 	);
 
+	const lines =
+		lineRefs !== undefined || withStopPoints
+			? await resolveLineRefs(
+					stopAreas.flatMap((stopArea) =>
+						(stopArea.stopPoints ?? []).flatMap((stopPoint) => stopPoint.lineRefs ?? stopArea.lineRefs),
+					),
+				)
+			: new Map<string, ResolvedLine>();
+
 	const items: StopMarker[] = stopAreas.map(
 		({ ref, name, latitude, longitude, lineRefs: areaLineRefs, mode, networkId: areaNetworkId, stopPoints = [] }) => ({
 			ref,
@@ -117,15 +138,17 @@ export async function buildStopMarkers({
 			// Un quai publié sans ses lignes reprend celles de sa station, qui en est.
 			...(lineRefs !== undefined
 				? {
-						stopPoints: publicStopPoints(
+						stopPoints: markerStopPoints(
 							stopPoints.filter(
 								(stopPoint) =>
 									stopPoint.lineRefs === undefined || stopPoint.lineRefs.some((lineRef) => lineRefs.has(lineRef)),
 							),
+							areaLineRefs,
+							lines,
 						),
 					}
 				: withStopPoints
-					? { stopPoints: publicStopPoints(stopPoints) }
+					? { stopPoints: markerStopPoints(stopPoints, areaLineRefs, lines) }
 					: {}),
 		}),
 	);

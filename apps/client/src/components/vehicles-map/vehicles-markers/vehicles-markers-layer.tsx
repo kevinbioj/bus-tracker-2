@@ -202,19 +202,16 @@ export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineId }
 			if (abort) return;
 			if (!isStyleLoaded(map)) return;
 
-			const arrowIcon = createArrowIcon("black");
 			if (map.getImage(arrowImageId) === undefined) {
-				map.addImage(arrowImageId, arrowIcon, { sdf: true });
+				map.addImage(arrowImageId, createArrowIcon("black"), { sdf: true });
 			}
 
-			const arrowOutlineIcon = createArrowOutlineIcon("black");
 			if (map.getImage(arrowOutlineImageId) === undefined) {
-				map.addImage(arrowOutlineImageId, arrowOutlineIcon, { sdf: true });
+				map.addImage(arrowOutlineImageId, createArrowOutlineIcon("black"), { sdf: true });
 			}
 
-			const squareIcon = createSquareIcon("black");
 			if (map.getImage(squareImageId) === undefined) {
-				map.addImage(squareImageId, squareIcon, { sdf: true });
+				map.addImage(squareImageId, createSquareIcon("black"), { sdf: true });
 			}
 		};
 

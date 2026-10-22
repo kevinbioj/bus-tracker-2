@@ -15,6 +15,7 @@ export type StopPoint = {
 	mode?: StopAreaMode;
 	/** Accès au quai en fauteuil roulant. Absent : inconnu. */
 	wheelchairBoarding?: boolean;
+	lines?: { id: number; networkId: number }[];
 };
 
 export type StopMarker = {

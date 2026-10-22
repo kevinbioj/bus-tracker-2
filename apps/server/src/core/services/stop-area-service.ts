@@ -26,13 +26,22 @@ const EARTH_RADIUS_KM = 6_371;
  * les identifiants de la base — et un réseau ne change pas de référence : la table est gardée en
  * mémoire, et seules les références encore inconnues sont cherchées en base.
  */
-const networkIdsByRef = new Map<string, number | null>();
+const networkIdsByRef = new Map<string, number>();
 
-/** Oubli périodique, pour retrouver un réseau créé après la première publication de ses stations. */
-setInterval(() => networkIdsByRef.clear(), 30 * 60_000).unref();
+const unknownNetworkRefsUntil = new Map<string, number>();
+
+const UNKNOWN_NETWORK_RETRY_MS = 60_000;
+
+setInterval(() => {
+	networkIdsByRef.clear();
+	unknownNetworkRefsUntil.clear();
+}, 30 * 60_000).unref();
 
 export async function resolveNetworkIds(networkRefs: string[]) {
-	const unknownRefs = [...new Set(networkRefs)].filter((ref) => !networkIdsByRef.has(ref));
+	const nowMs = Date.now();
+	const unknownRefs = [...new Set(networkRefs)].filter(
+		(ref) => !networkIdsByRef.has(ref) && (unknownNetworkRefsUntil.get(ref) ?? 0) <= nowMs,
+	);
 	if (unknownRefs.length > 0) {
 		const networks = await database
 			.select({ id: networksTable.id, ref: networksTable.ref })
@@ -40,7 +49,13 @@ export async function resolveNetworkIds(networkRefs: string[]) {
 			.where(inArray(networksTable.ref, unknownRefs));
 
 		for (const ref of unknownRefs) {
-			networkIdsByRef.set(ref, networks.find((network) => network.ref === ref)?.id ?? null);
+			const network = networks.find((network) => network.ref === ref);
+			if (network !== undefined) {
+				networkIdsByRef.set(ref, network.id);
+				unknownNetworkRefsUntil.delete(ref);
+			} else {
+				unknownNetworkRefsUntil.set(ref, nowMs + UNKNOWN_NETWORK_RETRY_MS);
+			}
 		}
 	}
 	return networkIdsByRef;
