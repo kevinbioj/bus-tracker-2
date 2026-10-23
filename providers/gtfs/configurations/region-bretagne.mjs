@@ -250,7 +250,7 @@ const sources = [
 	},
 	{
 		id: "vitre",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/282974b2-bf13-41f2-a0bf-feb0682e594e",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/e6e71df3-0163-42ed-9c1f-927c4026ab1b",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/vitre/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/vitre/vehicle-positions",
