@@ -22,6 +22,7 @@ import {
 	LINE_BADGES_FONT,
 	type LineBadges,
 	lineBadgesImageId,
+	MAX_LINE_BADGES,
 } from "~/components/vehicles-map/stops-markers/line-badges";
 import {
 	STOP_POINTS_LOAD_ZOOM,
@@ -58,10 +59,9 @@ type StopFeature = GeoJSON.Feature<
 		mode: StopAreaMode;
 		selected: boolean;
 		badges?: string;
+		expanded?: true;
 	}
 >;
-
-const MAX_LINE_BADGES = 5;
 
 /** Au-delà, deux quais homonymes de réseaux différents sont trop éloignés pour être confondus. */
 const STOP_POINT_HOMONYM_DISTANCE_M = 30;
@@ -79,7 +79,7 @@ function featuresOf(
 	withStopPoints: boolean,
 	selection: Selection,
 	lineOnly: boolean,
-	badgesOf: (area: Area, point?: StopPoint) => string | undefined,
+	badgesOf: (area: Area, point?: StopPoint) => { imageId: string; expanded: boolean } | undefined,
 ): StopCandidate[] {
 	const areaSelected = area.ref === selection.stopRef;
 
@@ -120,7 +120,8 @@ function featuresOf(
 					selected:
 						areaSelected &&
 						(selection.stopPointRef === null || point === undefined || selection.stopPointRef === point.ref),
-					...(badges !== undefined ? { badges } : {}),
+					...(badges !== undefined ? { badges: badges.imageId } : {}),
+					...(badges?.expanded ? { expanded: true as const } : {}),
 				},
 			},
 			// Le code de quai n'est pas du nom : « Rue Verte (A) » et « Rue Verte (B) » sont homonymes.
@@ -154,12 +155,14 @@ type StopsMarkersDataProps = {
 	networkId?: number;
 	lineId?: number;
 	selectedStopPointRef: string | null;
+	expandedStopRef: string | null;
 	/** Référence du tableau ouvert : station, ou quai. */
 	selectedRef: string | null;
 	source: GeoJSONSource;
 };
 
 export function StopsMarkersData({
+	expandedStopRef,
 	networkId,
 	lineId,
 	selectedRef,
@@ -288,13 +291,13 @@ export function StopsMarkersData({
 				})
 				.toSorted(compareLines(area.networkId));
 			if (lines.length === 0) return;
-			const lineBadges = {
-				lines: lines.slice(0, MAX_LINE_BADGES),
-				more: Math.max(0, lines.length - MAX_LINE_BADGES),
-			};
+			const expanded = lines.length > MAX_LINE_BADGES && point.ref === expandedStopRef;
+			const lineBadges = expanded
+				? { lines, more: 0 }
+				: { lines: lines.slice(0, MAX_LINE_BADGES), more: Math.max(0, lines.length - MAX_LINE_BADGES) };
 			const imageId = lineBadgesImageId(lineBadges);
 			badges.set(imageId, lineBadges);
-			return imageId;
+			return { imageId, expanded };
 		};
 
 		// L'arrêt sélectionné reste affiché à tout zoom, y compris hors de l'emprise chargée.
@@ -334,6 +337,7 @@ export function StopsMarkersData({
 		return { geojson, badges };
 	}, [
 		data,
+		expandedStopRef,
 		fontLoaded,
 		level,
 		lineOnly,

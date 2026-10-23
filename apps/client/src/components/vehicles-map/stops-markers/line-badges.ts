@@ -19,7 +19,15 @@ const OUTLINE_COLOR = "#FFFFFF";
 const MORE_COLOR = "#E4E4E7";
 const MORE_TEXT_COLOR = "#1E2A4A";
 
+export const MAX_LINE_BADGES = 5;
+
 export type LineBadges = { lines: Line[]; more: number };
+
+type BadgeBox = { x: number; y: number; width: number; height: number };
+
+const moreBadgeBoxes = new Map<string, BadgeBox>();
+
+export const getMoreBadgeBox = (imageId: string) => moreBadgeBoxes.get(imageId);
 
 export const lineBadgesImageId = ({ lines, more }: LineBadges) =>
 	`line-badges-${lines.map(({ id }) => id).join("-")}${more > 0 ? `-plus-${more}` : ""}`;
@@ -42,30 +50,47 @@ function getMeasureContext() {
 	return measureContext;
 }
 
-export function createLineBadges({ lines, more }: LineBadges) {
+type Badge = { label: string; color: string; textColor: string; more?: boolean };
+
+export function createLineBadges(lineBadges: LineBadges) {
+	const { lines, more } = lineBadges;
 	const scale = window.devicePixelRatio;
 	const measure = getMeasureContext();
 
 	const capHeight = measure.measureText("H").actualBoundingBoxAscent;
-
-	const badges = lines.map((line) => ({
-		label: line.number,
-		color: line.color ?? DEFAULT_COLOR,
-		textColor: line.textColor ?? DEFAULT_TEXT_COLOR,
-	}));
-	if (more > 0) badges.push({ label: `+${more}`, color: MORE_COLOR, textColor: MORE_TEXT_COLOR });
-
-	const widths = badges.map(({ label }) =>
+	const widthOf = (label: string) =>
 		Math.min(
 			BADGE_MAX_WIDTH,
 			Math.max(BADGE_MIN_WIDTH, Math.ceil(measure.measureText(label).width) + BADGE_PADDING_X * 2),
-		),
-	);
-	const width = widths.reduce((total, badgeWidth) => total + badgeWidth, 0) + BADGE_GAP * (badges.length - 1);
+		);
+
+	const rows: Badge[][] = [];
+	lines.forEach((line, index) => {
+		if (index % MAX_LINE_BADGES === 0) rows.push([]);
+		rows.at(-1)!.push({
+			label: line.number,
+			color: line.color ?? DEFAULT_COLOR,
+			textColor: line.textColor ?? DEFAULT_TEXT_COLOR,
+		});
+	});
+	if (more > 0) rows[0]!.push({ label: `+${more}`, color: MORE_COLOR, textColor: MORE_TEXT_COLOR, more: true });
+
+	const layout = rows.flatMap((row, rowIndex) => {
+		let x = OUTLINE_WIDTH;
+		return row.map((badge) => {
+			const width = widthOf(badge.label);
+			const box = { ...badge, x, y: OUTLINE_WIDTH + rowIndex * (LINE_BADGES_HEIGHT + BADGE_GAP), width };
+			x += width + BADGE_GAP;
+			return box;
+		});
+	});
+
+	const width = Math.max(...layout.map(({ x, width }) => x + width)) + OUTLINE_WIDTH;
+	const height = rows.length * LINE_BADGES_HEIGHT + (rows.length - 1) * BADGE_GAP;
 
 	const canvas = document.createElement("canvas");
-	canvas.width = Math.ceil((width + OUTLINE_WIDTH * 2) * scale);
-	canvas.height = Math.ceil(LINE_BADGES_HEIGHT * scale);
+	canvas.width = Math.ceil(width * scale);
+	canvas.height = Math.ceil(height * scale);
 
 	const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
 	ctx.scale(scale, scale);
@@ -73,15 +98,15 @@ export function createLineBadges({ lines, more }: LineBadges) {
 	ctx.textAlign = "center";
 	ctx.textBaseline = "alphabetic";
 
-	let x = OUTLINE_WIDTH;
-	badges.forEach(({ label, color, textColor }, index) => {
-		const badgeWidth = widths[index]!;
+	const imageId = lineBadgesImageId(lineBadges);
+	moreBadgeBoxes.delete(imageId);
 
+	for (const { label, color, textColor, more: isMore, x, y, width: badgeWidth } of layout) {
 		ctx.fillStyle = OUTLINE_COLOR;
 		ctx.beginPath();
 		ctx.roundRect(
 			x - OUTLINE_WIDTH,
-			0,
+			y - OUTLINE_WIDTH,
 			badgeWidth + OUTLINE_WIDTH * 2,
 			LINE_BADGES_HEIGHT,
 			BADGE_RADIUS + OUTLINE_WIDTH,
@@ -90,18 +115,25 @@ export function createLineBadges({ lines, more }: LineBadges) {
 
 		ctx.fillStyle = color;
 		ctx.beginPath();
-		ctx.roundRect(x, OUTLINE_WIDTH, badgeWidth, LINE_BADGE_HEIGHT, BADGE_RADIUS);
+		ctx.roundRect(x, y, badgeWidth, LINE_BADGE_HEIGHT, BADGE_RADIUS);
 		ctx.fill();
 
 		ctx.fillStyle = textColor;
 		ctx.fillText(
 			fitLabel(ctx, label, badgeWidth - BADGE_PADDING_X * 2),
 			x + badgeWidth / 2,
-			OUTLINE_WIDTH + (LINE_BADGE_HEIGHT + capHeight) / 2,
+			y + (LINE_BADGE_HEIGHT + capHeight) / 2,
 		);
 
-		x += badgeWidth + BADGE_GAP;
-	});
+		if (isMore) {
+			moreBadgeBoxes.set(imageId, {
+				x: x - OUTLINE_WIDTH,
+				y: y - OUTLINE_WIDTH,
+				width: badgeWidth + OUTLINE_WIDTH * 2,
+				height: LINE_BADGES_HEIGHT,
+			});
+		}
+	}
 
 	return {
 		image: ctx.getImageData(0, 0, canvas.width, canvas.height),

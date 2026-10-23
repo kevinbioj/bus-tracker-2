@@ -10,13 +10,14 @@ import type {
 	SourceSpecification,
 	SymbolLayerSpecification,
 } from "maplibre-gl";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
 import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
+import { getMoreBadgeBox } from "~/components/vehicles-map/stops-markers/line-badges";
 import {
 	createStopIcon,
 	SELECTED_STOP_ICON_SCALE,
@@ -214,7 +215,7 @@ const pointsLayerObject: AddLayerObject = {
 		"icon-size": selectableLayout["icon-size"],
 		"icon-anchor": "bottom",
 		"icon-allow-overlap": true,
-		"icon-padding": 0,
+		"icon-ignore-placement": true,
 		"symbol-sort-key": selectableLayout["symbol-sort-key"],
 	},
 	paint: {
@@ -264,12 +265,12 @@ const selectedBelowMinZoomLayerObject: AddLayerObject = {
 
 const LINE_BADGES_GAP = 1;
 
-const badgesOffsetBelowName = (shift: number): ExpressionSpecification => [
-	"literal",
-	[
-		STOP_ICON_WIDTH / 2 + 3,
-		-STOP_PLATE_CENTER_OFFSET + (LABEL_LINE_HEIGHT * LABEL_TEXT_SIZE) / 2 + shift + LINE_BADGES_GAP,
-	],
+const badgesOffset = (withNetwork: boolean): [number, number] => [
+	STOP_ICON_WIDTH / 2 + 3,
+	-STOP_PLATE_CENTER_OFFSET +
+		(LABEL_LINE_HEIGHT * LABEL_TEXT_SIZE) / 2 +
+		(withNetwork ? LABEL_LINE_HEIGHT * NETWORK_FONT_SCALE * LABEL_TEXT_SIZE : 0) +
+		LINE_BADGES_GAP,
 ];
 
 const pointsLabelsLayerObject: AddLayerObject = {
@@ -286,17 +287,11 @@ const pointsLabelsLayerObject: AddLayerObject = {
 		"text-offset": labelLayout["text-offset"],
 		"text-justify": labelLayout["text-justify"],
 		"text-max-width": pointLabelMaxWidth,
-		"text-padding": 0,
 		"icon-image": ["get", "badges"],
 		"icon-anchor": "top-left",
-		"icon-offset": [
-			"case",
-			["has", "network"],
-			badgesOffsetBelowName(LABEL_LINE_HEIGHT * NETWORK_FONT_SCALE * LABEL_TEXT_SIZE),
-			badgesOffsetBelowName(0),
-		],
+		"icon-offset": ["case", ["has", "network"], ["literal", badgesOffset(true)], ["literal", badgesOffset(false)]],
 		"icon-padding": 0,
-		"symbol-sort-key": selectableLayout["symbol-sort-key"],
+		"symbol-sort-key": ["case", ["has", "expanded"], -1, isSelected, 0, 1],
 	},
 	paint: {
 		...labelPaint,
@@ -325,6 +320,7 @@ export function StopsMarkers({ networkId, lineId }: StopsMarkersProps) {
 	const { selectedRef, stopPointRef, selectStopArea, selectStopPoint, clearSelection } = useStopSelection();
 	const isCoarsePointer = useMediaQuery("(pointer: coarse)");
 	const hitPadding = isCoarsePointer ? COARSE_POINTER_HIT_PADDING : 0;
+	const [expandedStopRef, setExpandedStopRef] = useState<string | null>(null);
 
 	const source = useMapSource<GeoJSONSource>("stops", initialData);
 	// Insérées sous les véhicules : un arrêt ne doit jamais masquer le marqueur qui s'y arrête.
@@ -415,6 +411,36 @@ export function StopsMarkers({ networkId, lineId }: StopsMarkersProps) {
 				return;
 			}
 
+			const onMoreBadge = (feature: MapGeoJSONFeature) => {
+				const box =
+					typeof feature.properties.badges === "string" ? getMoreBadgeBox(feature.properties.badges) : undefined;
+				if (box === undefined) return false;
+				const [longitude, latitude] = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+				const anchor = map.project([longitude, latitude]);
+				const [offsetX, offsetY] = badgesOffset(feature.properties.network !== undefined);
+				const left = anchor.x + offsetX + box.x;
+				const top = anchor.y + offsetY + box.y;
+				return (
+					event.point.x >= left - hitPadding &&
+					event.point.x <= left + box.width + hitPadding &&
+					event.point.y >= top - hitPadding &&
+					event.point.y <= top + box.height + hitPadding
+				);
+			};
+
+			const moreBadgeFeature =
+				map.getLayer(pointsLabelsLayerObject.id) !== undefined
+					? map
+							.queryRenderedFeatures(queryArea(event.point), { layers: [pointsLabelsLayerObject.id] })
+							.find(onMoreBadge)
+					: undefined;
+			if (moreBadgeFeature !== undefined) {
+				const { ref, stopPointRef } = moreBadgeFeature.properties as { ref: string; stopPointRef?: string };
+				setExpandedStopRef(stopPointRef ?? ref);
+				return;
+			}
+			setExpandedStopRef(null);
+
 			// Chaque couche porte la plaque et le nom : l'un comme l'autre ouvre l'arrêt. Pendant et après
 			// le fondu, stations et quais coexistent : seul compte celui qui l'emporte à ce zoom.
 			const hiddenKind: StopFeatureKind = map.getZoom() >= STOP_POINTS_ZOOM ? "area" : "point";
@@ -470,6 +496,7 @@ export function StopsMarkers({ networkId, lineId }: StopsMarkersProps) {
 			networkId={networkId}
 			selectedRef={selectedRef}
 			selectedStopPointRef={stopPointRef}
+			expandedStopRef={expandedStopRef}
 			source={source}
 		/>
 	);
