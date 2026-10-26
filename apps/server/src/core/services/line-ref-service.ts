@@ -40,13 +40,21 @@ export async function resolveLineRefs(refs: Iterable<string>) {
 
 	if (unknownRefs.length > 0) {
 		const lines = await database
-			.select({ id: linesTable.id, networkId: linesTable.networkId, references: linesTable.references })
+			.select({
+				id: linesTable.id,
+				networkId: linesTable.networkId,
+				references: linesTable.references,
+				archivedAt: linesTable.archivedAt,
+			})
 			.from(linesTable)
 			// Les références de ligne portent leur réseau en préfixe : elles suffisent à la désigner.
 			.where(arrayOverlaps(linesTable.references, unknownRefs));
 
 		for (const ref of unknownRefs) {
-			const line = lines.find(({ references }) => references?.includes(ref));
+			const candidates = lines.filter(({ references }) => references?.includes(ref));
+			const line =
+				candidates.find(({ archivedAt }) => archivedAt === null) ??
+				candidates.toSorted((a, b) => b.archivedAt!.epochMilliseconds - a.archivedAt!.epochMilliseconds).at(0);
 			if (line !== undefined) {
 				linesByRef.set(ref, { id: line.id, networkId: line.networkId });
 				unknownLineRefsUntil.delete(ref);
