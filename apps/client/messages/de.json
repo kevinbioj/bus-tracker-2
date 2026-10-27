@@ -563,6 +563,7 @@
 	"line_girouettes_form_destination_hint_unknown": "Um Fahrten mit unbekanntem Ziel zu erfassen, darf kein Ziel angegeben werden.",
 	"line_girouettes_form_destination_hint_replace": "Um eine automatische Zielanzeige zu ersetzen, muss deren Ziel Buchstabe für Buchstabe identisch eingegeben werden.",
 	"line_girouettes_form_destination_any": "Alle Fahrziele",
+	"line_girouettes_form_destination_unconfigured": "Für dieses Fahrziel ist keine Zielanzeige eingerichtet",
 	"line_girouettes_form_direction_any": "Alle Richtungen",
 	"line_girouettes_form_direction_inbound": "Rückfahrt (1)",
 	"line_girouettes_form_direction_label": "Richtung",

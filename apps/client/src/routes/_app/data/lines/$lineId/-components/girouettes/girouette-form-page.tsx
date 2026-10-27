@@ -13,6 +13,7 @@ import {
 	PaletteIcon,
 	PlusIcon,
 	TrashIcon,
+	TriangleAlertIcon,
 	TypeIcon,
 	XIcon,
 	ZapIcon,
@@ -31,7 +32,7 @@ import {
 	type GirouetteInput,
 	UpdateGirouetteMutation,
 } from "~/api/girouettes";
-import { GetLineOnlineDestinationsQuery, GetLineQuery } from "~/api/lines";
+import { GetLineQuery, GetLineRecentDestinationsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import { ColorPicker } from "~/components/ui/color-picker";
@@ -441,8 +442,11 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 
 	const watchedDestinations = useWatch({ control: form.control, name: "destinations" }) ?? [];
 
-	const { data: onlineDestinations } = useQuery(GetLineOnlineDestinationsQuery(line.id));
-	const destinationSuggestions = (onlineDestinations ?? []).filter(
+	const { data: recentDestinations } = useQuery(GetLineRecentDestinationsQuery(line.id));
+	const configuredDestinations = new Set(
+		girouettes.filter((g) => g.enabled && g.id !== girouette?.id).flatMap((g) => g.destinations),
+	);
+	const destinationSuggestions = (recentDestinations ?? []).filter(
 		(destination) =>
 			!watchedDestinations.includes(destination) && destination.toLowerCase().includes(newDest.trim().toLowerCase()),
 	);
@@ -772,12 +776,20 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 												{destinationSuggestions.map((destination) => (
 													<li key={destination}>
 														<button
-															className="w-full px-2 py-1.5 text-left text-sm hover:bg-muted"
+															className="flex w-full items-center justify-between gap-2 px-2 py-1.5 text-left text-sm hover:bg-muted"
 															onMouseDown={(e) => e.preventDefault()}
 															onClick={() => handleAddDestination(destination)}
 															type="button"
 														>
-															{destination}
+															<span className="min-w-0 truncate">{destination}</span>
+															{!configuredDestinations.has(destination) && (
+																<TriangleAlertIcon
+																	aria-label={m.line_girouettes_form_destination_unconfigured()}
+																	className="size-3.5 shrink-0 text-amber-500"
+																>
+																	<title>{m.line_girouettes_form_destination_unconfigured()}</title>
+																</TriangleAlertIcon>
+															)}
 														</button>
 													</li>
 												))}

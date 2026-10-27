@@ -554,6 +554,7 @@
 	"line_girouettes_form_destination_hint_unknown": "To target journeys whose destination is unknown, do not enter any destination.",
 	"line_girouettes_form_destination_hint_replace": "To replace an automatic destination board, enter its destination exactly as displayed, letter for letter.",
 	"line_girouettes_form_destination_any": "Any destination",
+	"line_girouettes_form_destination_unconfigured": "No destination board configured for this destination",
 	"line_girouettes_form_direction_any": "All directions",
 	"line_girouettes_form_direction_inbound": "Inbound (1)",
 	"line_girouettes_form_direction_label": "Direction",

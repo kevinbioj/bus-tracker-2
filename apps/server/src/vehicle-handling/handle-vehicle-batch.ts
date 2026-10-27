@@ -8,6 +8,7 @@ import { importLines } from "./import/import-lines.js";
 import { importNetwork } from "./import/import-network.js";
 import { importVehicles } from "./import/import-vehicles.js";
 import { registerActivities } from "./register-activities.js";
+import { registerDestinations } from "./register-destinations.js";
 
 /**
  * Réseaux traités en parallèle. Un réseau n'apparaît qu'une fois par lot, quel que soit le nombre de
@@ -126,6 +127,8 @@ async function handleNetworkJourneys(networkRef: string, vehicleJourneys: Vehicl
 	if (network.hasVehiclesFeature) {
 		await registerActivities(registerableActivities);
 	}
+
+	await registerDestinations(processedJourneys, now);
 
 	return processedJourneys;
 }

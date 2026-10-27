@@ -6,6 +6,10 @@ import { WebSocketServer } from "ws";
 
 import { migrateDatabase } from "./core/database/migrate.js";
 import { parseDataSourceManifests, upsertDataSources } from "./core/services/data-source-service.js";
+import {
+	startLineDestinationCleanupService,
+	sweepExpiredLineDestinations,
+} from "./core/services/line-destination-service.js";
 import { startStopDeparturesService } from "./core/services/stop-departures-service.js";
 import {
 	startVehicleReportCleanupService,
@@ -39,6 +43,8 @@ console.log("► Running database migrations.");
 await migrateDatabase();
 await sweepExpiredVehicleReports();
 startVehicleReportCleanupService();
+await sweepExpiredLineDestinations();
+startLineDestinationCleanupService();
 
 let worker: Worker;
 

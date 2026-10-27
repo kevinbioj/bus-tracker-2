@@ -10,6 +10,7 @@ import {
 	json,
 	jsonb,
 	pgTable,
+	primaryKey,
 	serial,
 	smallint,
 	text,
@@ -199,6 +200,18 @@ export const lineActivitiesTable = pgTable(
 );
 
 export type LineActivityEntity = InferSelectModel<typeof lineActivitiesTable>;
+
+export const lineDestinationsTable = pgTable(
+	"line_destination",
+	{
+		lineId: integer("line_id")
+			.notNull()
+			.references(() => linesTable.id),
+		destination: varchar("destination").notNull(),
+		lastSeenAt: timestamp("last_seen_at", { precision: 0 }).notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.lineId, table.destination] })],
+);
 
 /**
  * Inventaire des sources de données consommées par les providers, publié par ceux-ci et affiché

@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
 import * as z from "zod";
 import { database } from "../core/database/database.js";
 import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
+import { findRecentLineDestinations } from "../core/services/line-destination-service.js";
 import { loadLineDetails, loadLinePath } from "../core/services/line-details-service.js";
 import { findLineAlerts } from "../core/services/service-alert-service.js";
 import { journeyStore } from "../core/store/journey-store.js";
@@ -88,20 +89,13 @@ hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSche
 	);
 });
 
-hono.get("/lines/:id/online-destinations", createParamValidator(getLineByIdParamSchema), async (c) => {
+hono.get("/lines/:id/recent-destinations", createParamValidator(getLineByIdParamSchema), async (c) => {
 	const { id } = c.req.valid("param");
 
 	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
 	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
-	const destinations = new Set<string>();
-	for (const journey of journeyStore.values()) {
-		if (journey.lineId !== line.id) continue;
-		const destination = journey.destination?.trim();
-		if (destination) destinations.add(destination);
-	}
-
-	return c.json(Array.from(destinations).toSorted((a, b) => a.localeCompare(b)));
+	return c.json(await findRecentLineDestinations(line.id));
 });
 
 hono.get("/lines/:id/path", createParamValidator(getLineByIdParamSchema), async (c) => {
