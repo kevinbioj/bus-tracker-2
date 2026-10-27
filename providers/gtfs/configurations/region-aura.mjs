@@ -295,6 +295,13 @@ const sources = [
 		getDestination: (journey) => journey?.trip?.headsign?.replace(`LIGNE ${journey?.trip?.route.name} - `, ""),
 	},
 	{
+		id: "puy-en-velay",
+		staticResourceHref: "https://geoportail.lepuyenvelay.fr/data/gtfs/urbain/gtfs_urbain.zip",
+		realtimeResourceHrefs: [],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		getNetworkRef: () => "PUY-EN-VELAY",
+	},
+	{
 		id: "roanne",
 		staticResourceHref:
 			"https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=STAR&dataFormat=GTFS&dataProfil=OPENDATA",
