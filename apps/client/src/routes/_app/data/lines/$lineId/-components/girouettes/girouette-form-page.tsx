@@ -8,12 +8,12 @@ import {
 	BrushIcon,
 	ChevronsLeftRightIcon,
 	ChevronsRightLeftIcon,
+	CircleCheckIcon,
 	FastForwardIcon,
 	InfoIcon,
 	PaletteIcon,
 	PlusIcon,
 	TrashIcon,
-	TriangleAlertIcon,
 	TypeIcon,
 	XIcon,
 	ZapIcon,
@@ -782,13 +782,22 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 															type="button"
 														>
 															<span className="min-w-0 truncate">{destination}</span>
-															{!configuredDestinations.has(destination) && (
-																<TriangleAlertIcon
-																	aria-label={m.line_girouettes_form_destination_unconfigured()}
-																	className="size-3.5 shrink-0 text-amber-500"
-																>
-																	<title>{m.line_girouettes_form_destination_unconfigured()}</title>
-																</TriangleAlertIcon>
+															{configuredDestinations.has(destination) && (
+																<Tooltip>
+																	<TooltipTrigger
+																		render={
+																			<span className="shrink-0 text-green-600 dark:text-green-500">
+																				<CircleCheckIcon
+																					aria-label={m.line_girouettes_form_destination_configured()}
+																					className="size-3.5"
+																				/>
+																			</span>
+																		}
+																	/>
+																	<TooltipContent className="shadow-xl">
+																		{m.line_girouettes_form_destination_configured()}
+																	</TooltipContent>
+																</Tooltip>
 															)}
 														</button>
 													</li>

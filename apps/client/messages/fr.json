@@ -554,7 +554,7 @@
 	"line_girouettes_form_destination_hint_unknown": "Pour cibler les courses dont la destination est inconnue, ne renseignez aucune destination.",
 	"line_girouettes_form_destination_hint_replace": "Pour remplacer une girouette automatique, saisissez sa destination à l'identique, lettre par lettre.",
 	"line_girouettes_form_destination_any": "Toutes destinations",
-	"line_girouettes_form_destination_unconfigured": "Aucune girouette configurée pour cette destination",
+	"line_girouettes_form_destination_configured": "Cette destination est déjà couverte par une girouette personnalisée.",
 	"line_girouettes_form_direction_any": "Toutes directions",
 	"line_girouettes_form_direction_inbound": "Retour (1)",
 	"line_girouettes_form_direction_label": "Direction",
