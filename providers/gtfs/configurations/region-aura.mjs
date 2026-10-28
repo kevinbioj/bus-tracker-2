@@ -371,7 +371,6 @@ const sources = [
 		],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		excludeScheduled: true,
-		mode: "NO-TU",
 		getNetworkRef: () => "CITEA",
 	},
 	{
