@@ -122,6 +122,14 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "chabannes",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/gtfs/revision/chabannes_current.zip",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/chabannes/realtime"],
+		mode: "NO-TU",
+		getNetworkRef: () => "CHABANNES",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "chambery",
 		staticResourceHref:
 			"https://mwe.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
