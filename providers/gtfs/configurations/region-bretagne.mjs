@@ -142,6 +142,16 @@ const sources = [
 		getDestination: (journey, vehicle) => vehicle?.label ?? journey?.trip.headsign,
 	},
 	{
+		id: "pontivy",
+		staticResourceHref: "https://pysae.com/api/v2/groups/pondibus/gtfs/pub",
+		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/pondibus/gtfs-rt"],
+		gtfsOptions: { computeShapeDistTraveled: "always" },
+		mode: "NO-TU",
+		getNetworkRef: () => "PONTIVY",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "quiberon",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/glazgo/gtfs/pub",
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/glazgo/gtfs-rt"],
