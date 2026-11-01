@@ -134,7 +134,8 @@ const sources = [
 		staticResourceHref:
 			"https://mwe.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
 		realtimeResourceHrefs: [
-			"https://proxy.transport.data.gouv.fr/resource/synchrobus-chambery-gtfs-rt-trip-update",
+			"https://mwe.mecatran.com/utw/ws/gtfsfeed/realtime/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72",
+			"https://mwe.mecatran.com/utw/ws/gtfsfeed/vehicles/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72",
 			{
 				href: "https://mwe.mecatran.com/utw/ws/gtfsfeed/alerts/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72",
 				pollMs: 120_000,
