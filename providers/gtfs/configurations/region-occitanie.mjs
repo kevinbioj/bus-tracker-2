@@ -82,6 +82,17 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
+		id: "bagnols-sur-ceze",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/3ba2db00-235a-4958-980e-5cdd20ce204e",
+		realtimeResourceHrefs: [
+			"https://cagr.2cloud.app/api/gtfsrt/2.0/vehiclepositions/CAGR-3920-8301-5738/bin",
+			"https://cagr.2cloud.app/api/gtfsrt/2.0/tripupdates/CAGR-3920-8301-5738/bin",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "BAGNOLS-SUR-CEZE",
+		getVehicleRef: (vehicle) => vehicle?.label,
+	},
+	{
 		id: "beziers",
 		staticResourceHref:
 			"https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rdbm/exports/gtfs-pour-le-pan.zip",
