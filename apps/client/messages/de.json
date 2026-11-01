@@ -649,6 +649,7 @@
 	"service_alerts_count": "Verkehrsinfo ({count})",
 	"service_alerts_show": "Verkehrsinfo anzeigen",
 	"service_alerts_since": "Seit {date}",
+	"service_alerts_starting": "Ab {date}",
 	"service_alerts_until": "Bis {date}",
 	"service_alerts_between": "Vom {start} bis {end}",
 	"service_alerts_on": "Am {date}",

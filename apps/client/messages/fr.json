@@ -670,6 +670,7 @@
 	"service_alerts_count": "Info trafic ({count})",
 	"service_alerts_show": "Voir l'info trafic",
 	"service_alerts_since": "Depuis le {date}",
+	"service_alerts_starting": "À partir du {date}",
 	"service_alerts_until": "Jusqu'au {date}",
 	"service_alerts_between": "Du {start} au {end}",
 	"service_alerts_on": "Le {date}",

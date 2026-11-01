@@ -670,6 +670,7 @@
 	"service_alerts_count": "Service alerts ({count})",
 	"service_alerts_show": "Show service alerts",
 	"service_alerts_since": "Since {date}",
+	"service_alerts_starting": "Starting {date}",
 	"service_alerts_until": "Until {date}",
 	"service_alerts_between": "From {start} to {end}",
 	"service_alerts_on": "On {date}",

@@ -75,7 +75,10 @@ function formatPeriod(alert: ServiceAlert) {
 		if (start === end) return m.service_alerts_on({ date: start });
 		return m.service_alerts_between({ start, end });
 	}
-	if (period.start !== undefined) return m.service_alerts_since({ date: format(period.start) });
+	if (period.start !== undefined) {
+		const message = now < Date.parse(period.start) ? m.service_alerts_starting : m.service_alerts_since;
+		return message({ date: format(period.start) });
+	}
 	if (period.end !== undefined) return m.service_alerts_until({ date: format(period.end) });
 }
 
