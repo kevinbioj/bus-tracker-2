@@ -329,6 +329,17 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.id,
 	},
 	{
+		id: "rumilly",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/9ba40024-aa3c-4e5c-b065-47eef0edf4e6",
+		realtimeResourceHrefs: [
+			"https://proxy.transport.data.gouv.fr/resource/jybus-rumilly-gtfs-rt-service-alert?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			"https://proxy.transport.data.gouv.fr/resource/jybus-rumilly-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+			"https://proxy.transport.data.gouv.fr/resource/jybus-rumilly-gtfs-rt-vehicle-position?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
+		],
+		mode: "NO-TU",
+		getNetworkRef: () => "RUMILLY",
+	},
+	{
 		id: "st-die-des-vosges",
 		staticResourceHref: "https://pysae.com/api/v2/groups/saint-die-des-vosges/gtfs/pub",
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/saint-die-des-vosges/gtfs-rt"],
