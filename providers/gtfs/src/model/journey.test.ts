@@ -218,6 +218,24 @@ describe("Journey", () => {
 			expect(callAt("X").expectedDepartureTime).toBe(at("08:07").epochMilliseconds);
 		});
 
+		it("reprend le retard au départ de son arrêt de référence, pas celui à l'arrivée", () => {
+			const { gtfs, journey, callAt } = makeDetouredJourney(2, 5 * 60 * 1000);
+
+			journey.updateJourney(gtfs, [
+				{
+					stopId: "A",
+					stopSequence: 1,
+					arrival: { time: at("07:30").epochMilliseconds / 1000 },
+					departure: { time: at("08:02").epochMilliseconds / 1000 },
+				},
+			]);
+
+			expect(callAt("A").expectedArrivalTime).toBe(at("07:30").epochMilliseconds);
+			expect(callAt("A").expectedDepartureTime).toBe(at("08:02").epochMilliseconds);
+			expect(callAt("X").expectedArrivalTime).toBe(at("08:07").epochMilliseconds);
+			expect(callAt("B").expectedArrivalTime).toBe(at("08:12").epochMilliseconds);
+		});
+
 		it("n'en a aucune en tête de course, faute d'arrêt de référence qui le précède", () => {
 			const { gtfs, journey, callAt } = makeDetouredJourney(1, 0);
 

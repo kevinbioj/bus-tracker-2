@@ -6,7 +6,7 @@ import type { Stop } from "./stop.js";
 /** Un arrêt de déviation, dont l'arrêt et le temps de parcours sont déjà résolus. */
 export type ResolvedReplacementStop = {
 	stop: Stop;
-	/** Écart avec l'heure d'arrivée à l'arrêt de référence, en millisecondes. */
+	/** Écart avec l'heure de départ de l'arrêt de référence, en millisecondes. */
 	travelTimeToStopMs: number;
 };
 
@@ -226,7 +226,7 @@ export function buildModifiedCalls(scheduledCalls: JourneyCall[], plan: TripModi
 		for (const { stop, travelTimeToStopMs } of modification.replacementStops) {
 			// Aucune heure attendue : celle de la déviation n'est qu'un horaire. Le temps réel de l'arrêt de
 			// référence ne s'y reporte qu'à l'application d'un TripUpdate.
-			const timeMs = referenceCall.aimedArrivalTime + travelTimeToStopMs;
+			const timeMs = referenceCall.aimedDepartureTime + travelTimeToStopMs;
 			calls.push({
 				aimedArrivalTime: timeMs,
 				aimedDepartureTime: timeMs,

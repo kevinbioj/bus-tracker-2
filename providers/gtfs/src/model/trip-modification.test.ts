@@ -84,6 +84,42 @@ describe("buildModifiedCalls", () => {
 		]);
 	});
 
+	it("calcule l'horaire des arrêts de déviation depuis le départ de l'arrêt de référence", () => {
+		const scheduled = scheduledCalls();
+		scheduled[0]!.aimedArrivalTime = at(-15);
+
+		const calls = buildModifiedCalls(
+			scheduled,
+			makePlan([
+				{
+					startStopSelector: { stopSequence: 2 },
+					endStopSelector: { stopSequence: 2 },
+					replacementStops: [{ stop: STOPS.X, travelTimeToStopMs: 8 * 60_000 }],
+				},
+			]),
+		);
+
+		expect(summarize(calls)?.find((call) => call.stop === "X")?.minutes).toBe(8);
+	});
+
+	it("calcule l'horaire depuis le départ du premier arrêt quand la modification le retire", () => {
+		const scheduled = scheduledCalls();
+		scheduled[0]!.aimedArrivalTime = at(-15);
+
+		const calls = buildModifiedCalls(
+			scheduled,
+			makePlan([
+				{
+					startStopSelector: { stopSequence: 1 },
+					endStopSelector: { stopSequence: 1 },
+					replacementStops: [{ stop: STOPS.X, travelTimeToStopMs: 3 * 60_000 }],
+				},
+			]),
+		);
+
+		expect(summarize(calls)?.find((call) => call.stop === "X")?.minutes).toBe(3);
+	});
+
 	it("marque l'origine des arrêts de la déviation", () => {
 		const calls = buildModifiedCalls(
 			scheduledCalls(),

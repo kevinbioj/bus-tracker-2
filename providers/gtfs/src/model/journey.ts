@@ -818,6 +818,7 @@ export class Journey {
 
 			if (departureDelay !== undefined) {
 				call.expectedDepartureTime = call.aimedDepartureTime + departureDelay * 1000;
+				arrivalDelay = departureDelay;
 			}
 
 			call.status = getBaseCallStatus(call);
