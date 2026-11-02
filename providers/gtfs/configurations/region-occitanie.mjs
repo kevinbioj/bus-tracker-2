@@ -91,6 +91,7 @@ const sources = [
 		mode: "NO-TU",
 		getNetworkRef: () => "BAGNOLS-SUR-CEZE",
 		getVehicleRef: (vehicle) => vehicle?.label,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 	{
 		id: "beziers",
