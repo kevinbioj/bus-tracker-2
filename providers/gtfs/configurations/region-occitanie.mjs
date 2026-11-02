@@ -83,7 +83,7 @@ const sources = [
 	},
 	{
 		id: "bagnols-sur-ceze",
-		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/3ba2db00-235a-4958-980e-5cdd20ce204e",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/bagnols-sur-ceze.zip",
 		realtimeResourceHrefs: [
 			"https://cagr.2cloud.app/api/gtfsrt/2.0/vehiclepositions/CAGR-3920-8301-5738/bin",
 			"https://cagr.2cloud.app/api/gtfsrt/2.0/tripupdates/CAGR-3920-8301-5738/bin",
