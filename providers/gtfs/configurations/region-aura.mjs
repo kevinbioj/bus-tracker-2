@@ -281,6 +281,7 @@ const sources = [
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/skibus_morzine-avoriaz/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "MORZINE-AVORIAZ",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
