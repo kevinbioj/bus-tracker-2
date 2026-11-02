@@ -150,6 +150,7 @@ const sources = [
 		mode: "NO-TU",
 		excludeScheduled: true,
 		getNetworkRef: () => "CHAMONIX",
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
 	},
 	{
