@@ -304,6 +304,11 @@ const getActiveAddedCalls = (calls: JourneyCall[], at: Temporal.Instant, aheadTi
 	return calls.slice(Math.min(lastPassedIndex + 1, calls.length - 1));
 };
 
+const hasReachedAddedTerminus = (calls: JourneyCall[], atMs: number) => {
+	const lastCall = calls[calls.length - 1];
+	return lastCall !== undefined && atMs >= lastCall.aimedArrivalTime;
+};
+
 const getPositionFromLastPassedAddedCall = (calls: JourneyCall[], at: Temporal.Instant, timeZone: string) => {
 	const atMs = at.epochMilliseconds;
 	const lastPassedIndex = calls.findLastIndex((call, index) => {
@@ -824,7 +829,11 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		}
 
 		if (source.options.mode !== "VP-ONLY" && source.options.mode !== "NO-TU") {
-			for (const { tripUpdate, calls: addedCalls, startDate, shape, candidate } of addedTrips) {
+			const orderedAddedTrips = addedTrips.toSorted(
+				(a, b) => Number(hasReachedAddedTerminus(a.calls, nowMs)) - Number(hasReachedAddedTerminus(b.calls, nowMs)),
+			);
+
+			for (const { tripUpdate, calls: addedCalls, startDate, shape, candidate } of orderedAddedTrips) {
 				const candidateJourney = candidate?.trip.getScheduledJourney(candidate.date, true);
 				const vehicleDescriptor = tripUpdate.vehicle;
 				const route =

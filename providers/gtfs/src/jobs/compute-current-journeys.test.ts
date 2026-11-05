@@ -1273,6 +1273,57 @@ describe("computeVehicleJourneys (courses supplémentaires)", () => {
 		expect(journeys[0]?.calls?.[0]?.flags).toEqual(["NO_PICKUP"]);
 	});
 
+	it("enchaîne sur la course suivante du véhicule dès son arrivée au terminus", async () => {
+		const source = addedTripSource();
+		const at = (time: string) => ({ time: epochSeconds(`2026-05-18T${time}Z`) });
+		const tripUpdates = [
+			newTripUpdate({
+				trip: { tripId: "1", routeId: "line:1", startDate: "2026-05-18", scheduleRelationship: "NEW" },
+				stopTimeUpdate: [
+					{ stopId: "A", stopSequence: 1, arrival: at("08:00:00"), departure: at("08:00:00") },
+					{ stopId: "B", stopSequence: 2, arrival: at("08:10:00"), departure: at("08:10:00") },
+					{ stopId: "C", stopSequence: 3, arrival: at("08:20:00"), departure: at("08:22:00") },
+				],
+			}),
+			newTripUpdate({
+				trip: { tripId: "1:A", routeId: "line:1", startDate: "2026-05-18", scheduleRelationship: "NEW" },
+				stopTimeUpdate: [
+					{ stopId: "C", stopSequence: 1, arrival: at("08:20:00"), departure: at("08:22:00") },
+					{ stopId: "B", stopSequence: 2, arrival: at("08:32:00"), departure: at("08:32:00") },
+					{ stopId: "A", stopSequence: 3, arrival: at("08:42:00"), departure: at("08:42:00") },
+				],
+			}),
+		];
+
+		const { journeys } = await cycleAt(source, "08:21:00", { tripUpdates });
+
+		expect(journeys).toHaveLength(1);
+		expect(journeys[0]?.journeyRef).toBe("network:ServiceJourney:1:A");
+		expect(journeys[0]?.calls?.map((call) => call.stopName)).toEqual(["C", "B", "A"]);
+	});
+
+	it("garde la course au terminus tant qu'aucune course suivante n'a commencé", async () => {
+		const source = addedTripSource();
+		const at = (time: string) => ({ time: epochSeconds(`2026-05-18T${time}Z`) });
+
+		const { journeys } = await cycleAt(source, "08:21:00", {
+			tripUpdates: [
+				newTripUpdate({
+					trip: { tripId: "1", routeId: "line:1", startDate: "2026-05-18", scheduleRelationship: "NEW" },
+					stopTimeUpdate: [
+						{ stopId: "A", stopSequence: 1, arrival: at("08:00:00"), departure: at("08:00:00") },
+						{ stopId: "B", stopSequence: 2, arrival: at("08:10:00"), departure: at("08:10:00") },
+						{ stopId: "C", stopSequence: 3, arrival: at("08:20:00"), departure: at("08:22:00") },
+					],
+				}),
+			],
+		});
+
+		expect(journeys).toHaveLength(1);
+		expect(journeys[0]?.journeyRef).toBe("network:ServiceJourney:1");
+		expect(journeys[0]?.calls?.map((call) => call.stopName)).toEqual(["C"]);
+	});
+
 	it("écarte une course supplémentaire réduite à un seul arrêt", async () => {
 		const source = addedTripSource();
 
