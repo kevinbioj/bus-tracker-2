@@ -23,6 +23,7 @@ import type {
 	TimeRange,
 	TranslatedString,
 } from "../model/gtfs-rt.js";
+import type { Route } from "../model/route.js";
 import type { Source } from "../model/source.js";
 import type { Trip } from "../model/trip.js";
 import { padSourceId } from "../utils/pad-source-id.js";
@@ -113,22 +114,55 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 
 	// Une route n'a de réseau qu'à travers ses courses : l'index n'est construit que si une alerte en vise une.
 	let tripByRouteId: Map<string, Trip> | undefined;
-	const networkRefsOfTrip = (trip: Trip) => {
-		const networkRef = networkOf(trip);
-		return networkRef !== undefined ? [networkRef] : [];
-	};
-	const networkRefsOfRoute = (routeId: string) => {
+	const tripOfRoute = (routeId: string) => {
 		if (tripByRouteId === undefined) {
 			tripByRouteId = new Map();
 			for (const trip of gtfs.trips.values()) {
 				if (!tripByRouteId.has(trip.route.id)) tripByRouteId.set(trip.route.id, trip);
 			}
 		}
-		const trip = tripByRouteId.get(routeId);
+		return tripByRouteId.get(routeId);
+	};
+	const networkRefsOfTrip = (trip: Trip) => {
+		const networkRef = networkOf(trip);
+		return networkRef !== undefined ? [networkRef] : [];
+	};
+	const networkRefsOfRoute = (routeId: string) => {
+		const trip = tripOfRoute(routeId);
 		return trip !== undefined ? networkRefsOfTrip(trip) : sourceNetworkRefs;
 	};
 
 	const lineRefOf = (networkRef: string, routeId: string) => `${networkRef}:Line:${mapLineRef?.(routeId) ?? routeId}`;
+
+	/** Routes exploitées de chaque réseau : une route sans course n'est publiée sur aucun. */
+	let routesByNetworkRef: Map<string, Route[]> | undefined;
+	const exploitedRoutesByNetworkRef = () => {
+		if (routesByNetworkRef === undefined) {
+			routesByNetworkRef = new Map();
+			for (const route of gtfs.routes.values()) {
+				const trip = tripOfRoute(route.id);
+				if (trip === undefined) continue;
+				for (const networkRef of networkRefsOfTrip(trip)) {
+					const routes = routesByNetworkRef.get(networkRef);
+					if (routes !== undefined) routes.push(route);
+					else routesByNetworkRef.set(networkRef, [route]);
+				}
+			}
+		}
+		return routesByNetworkRef;
+	};
+
+	/**
+	 * Désignation d'une agence : tout réseau dont elle exploite chaque ligne, ses seules lignes sur un
+	 * réseau qu'elle partage. Une agence sans ligne exploitée ne désigne rien.
+	 */
+	const agencyTargetsOf = (agencyId: string): ServiceAlertInformedEntity[] =>
+		[...exploitedRoutesByNetworkRef()].flatMap(([networkRef, routes]) => {
+			const agencyRoutes = routes.filter((route) => route.agency.id === agencyId);
+			if (agencyRoutes.length === 0) return [];
+			if (agencyRoutes.length === routes.length) return [{ networkRef }];
+			return agencyRoutes.map((route) => ({ networkRef, lineRef: lineRefOf(networkRef, route.id) }));
+		});
 	const stopRefOf = (networkRef: string, stopId: string) => `${networkRef}:StopPoint:${mapStopRef?.(stopId) ?? stopId}`;
 
 	/** Désignation d'un arrêt : un quai, ou une station et chacun de ses quais. */
@@ -154,17 +188,18 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 		const routeId = selector.routeId ?? (trip === undefined ? selector.trip?.routeId : undefined);
 		const directionId = selector.directionId ?? (trip === undefined ? selector.trip?.directionId : undefined);
 
+		if (trip === undefined && routeId === undefined && selector.stopId === undefined) {
+			// Ne désigner qu'un type de route ne dit rien que l'on sache rapprocher.
+			if (selector.agencyId === undefined || selector.routeType !== undefined) return [];
+			return agencyTargetsOf(selector.agencyId);
+		}
+
 		const networkRefs =
 			trip !== undefined
 				? networkRefsOfTrip(trip)
 				: routeId !== undefined
 					? networkRefsOfRoute(routeId)
 					: sourceNetworkRefs;
-
-		// Ne désigner qu'un type de route ne dit rien que l'on sache rapprocher.
-		if (trip === undefined && routeId === undefined && selector.stopId === undefined) {
-			if (selector.agencyId === undefined || selector.routeType !== undefined) return [];
-		}
 
 		return networkRefs.flatMap((networkRef) => {
 			const base: ServiceAlertInformedEntity = { networkRef };

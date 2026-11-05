@@ -79,6 +79,17 @@ function makeSource(options?: Partial<SourceOptions>) {
 	return source;
 }
 
+/** Ajoute la ligne `TNI:30`, d'une autre agence, desservie par une course empruntant l'horaire de `TCAR:aller`. */
+function withSecondAgency(source: Source) {
+	const gtfs = source.gtfs!;
+	const aller = gtfs.trips.get("TCAR:aller")!;
+	const route = new Route("TNI:30", new Agency("TNI", "TNI", "UTC"), "30", "BUS");
+	const trip = new Trip(0, "TNI:aller", route, aller.service, aller.store, 0, "Terminus");
+	gtfs.routes.set(route.id, route);
+	gtfs.trips.set(trip.id, trip);
+	return source;
+}
+
 const text = (value: string) => ({ translation: [{ text: value, language: "fr" }] });
 
 function makeAlert(alert: Partial<IdentifiedAlert>): IdentifiedAlert {
@@ -227,10 +238,42 @@ describe("buildServiceAlerts", () => {
 		]);
 	});
 
-	it("désigne tout le réseau lorsque seule l'agence est visée", () => {
+	it("désigne tout le réseau lorsque seule l'agence est visée et qu'elle en exploite chaque ligne", () => {
 		const [alert] = buildServiceAlerts(makeSource(), [makeAlert({ informedEntity: [{ agencyId: "TCAR" }] })], NOW);
 
 		expect(alert?.informedEntities).toEqual([{ networkRef: "ASTUCE" }]);
+	});
+
+	it("ne désigne que les lignes d'une agence qui partage son réseau", () => {
+		const source = withSecondAgency(makeSource());
+
+		const [tcar, tni] = buildServiceAlerts(
+			source,
+			[
+				makeAlert({ id: "SA:1", informedEntity: [{ agencyId: "TCAR" }] }),
+				makeAlert({ id: "SA:2", informedEntity: [{ agencyId: "TNI" }] }),
+			],
+			NOW,
+		);
+
+		expect(tcar?.informedEntities).toEqual([{ networkRef: "ASTUCE", lineRef: "ASTUCE:Line:15" }]);
+		expect(tni?.informedEntities).toEqual([{ networkRef: "ASTUCE", lineRef: "ASTUCE:Line:TNI:30" }]);
+	});
+
+	it("désigne le seul réseau d'une agence parmi ceux de la source", () => {
+		const source = withSecondAgency(
+			makeSource({ getNetworkRef: (journey) => (journey?.trip.route.agency.id === "TNI" ? "TNI" : "ASTUCE") }),
+		);
+
+		const [alert] = buildServiceAlerts(source, [makeAlert({ informedEntity: [{ agencyId: "TNI" }] })], NOW);
+
+		expect(alert?.informedEntities).toEqual([{ networkRef: "TNI" }]);
+	});
+
+	it("écarte une alerte qui ne désigne qu'une agence sans ligne exploitée", () => {
+		const alerts = buildServiceAlerts(makeSource(), [makeAlert({ informedEntity: [{ agencyId: "INCONNUE" }] })], NOW);
+
+		expect(alerts).toEqual([]);
 	});
 
 	it("écarte une alerte dont toutes les périodes sont échues", () => {
