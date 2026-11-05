@@ -92,21 +92,25 @@ function buildStopPoints(
 	});
 }
 
+const REALTIME_LINE_HORIZON_MS = 24 * 3600 * 1000;
+
 /** Dessertes ajoutées par une déviation, avec la station de leur arrêt. */
-function* realtimeServedCalls(source: Source, gtfs: Gtfs) {
+function* realtimeServedCalls(source: Source, gtfs: Gtfs, nowMs: number) {
 	for (const journeyKey of source.modifiedJourneyKeys) {
 		const journey = gtfs.journeys.get(journeyKey);
 		if (journey === undefined) continue;
 		for (const call of journey.calls) {
 			if (call.modification !== "ADDED" || call.status === "SKIPPED") continue;
 			const areaId = getStopAreaId(source, gtfs, call.stop.id);
-			if (areaId !== undefined) yield { journey, call, areaId };
+			if (areaId === undefined) continue;
+			const delayMs = (call.expectedDepartureTime ?? call.aimedDepartureTime) - nowMs;
+			yield { journey, call, areaId, imminent: delayMs >= 0 && delayMs <= REALTIME_LINE_HORIZON_MS };
 		}
 	}
 }
 
 /** Change dès qu'une desserte ajoutée apparaît ou disparaît : l'inventaire est alors à republier. */
-export function getRealtimeServiceFingerprint(source: Source) {
+export function getRealtimeServiceFingerprint(source: Source, nowMs = Date.now()) {
 	const gtfs = source.gtfs;
 	if (gtfs === undefined) return "";
 
@@ -114,7 +118,10 @@ export function getRealtimeServiceFingerprint(source: Source) {
 		...source.realtimeStopAreas
 			.values()
 			.flatMap((stopArea) => stopArea.stops.map((stop) => `${stopArea.id}:${stop.id}`)),
-		...realtimeServedCalls(source, gtfs).map(({ journey, call }) => `${call.stop.id}:${journey.trip.route.id}`),
+		...realtimeServedCalls(source, gtfs, nowMs).flatMap(({ journey, call, imminent }) => {
+			const entry = `${call.stop.id}:${journey.trip.route.id}`;
+			return imminent ? [entry, `${entry}:imminent`] : [entry];
+		}),
 	]);
 	return [...entries].sort().join("|");
 }
@@ -219,11 +226,11 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 	}
 
 	// Arrêts desservis par une déviation : créés par le flux temps réel, ou déclarés sans desserte théorique.
-	for (const { journey, call, areaId } of realtimeServedCalls(source, gtfs)) {
+	for (const { journey, call, areaId, imminent } of realtimeServedCalls(source, gtfs, publishedAt.epochMilliseconds)) {
 		const networkRef = networkOf(journey.trip, journey);
 		if (networkRef === undefined) continue;
-		record(areaId, networkRef, journey.trip.route, true);
-		recordStop(call.stop.id, networkRef, journey.trip.route, true);
+		record(areaId, networkRef, journey.trip.route, imminent);
+		recordStop(call.stop.id, networkRef, journey.trip.route, imminent);
 		departingAreaIds.add(areaId);
 		if (offersArrivals(journey.trip.route)) arrivalAreaIds.add(areaId);
 	}

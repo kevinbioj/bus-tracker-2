@@ -107,8 +107,8 @@ function detour(source: Source, gtfs: Gtfs, trip: Trip, stopId: string, resource
 	source.realtimeStopAreas = collectRealtimeStopAreas(source);
 }
 
-function stopPointOf(source: Source, stopId: string) {
-	return buildStopAreaManifests("provider", source, NOW.toString())
+function stopPointOf(source: Source, stopId: string, at = NOW) {
+	return buildStopAreaManifests("provider", source, at.toString())
 		.find(({ ref }) => ref === "network:StopArea:station-m")
 		?.stopPoints?.find(({ ref }) => ref === `network:StopPoint:${stopId}`);
 }
@@ -135,6 +135,25 @@ describe("buildStopAreaManifests", () => {
 		detour(source, gtfs, original, "RT", resources);
 
 		expect(stopPointOf(source, "RT")).toMatchObject({ mode: "BUS", lineRefs: ["network:Line:bus"] });
+	});
+
+	it("n'annonce la ligne d'une déviation qu'à moins de 24 heures du passage", () => {
+		const { source, gtfs, original } = makeSource();
+		detour(source, gtfs, original, "P");
+
+		expect(stopPointOf(source, "P", Temporal.Instant.from("2026-05-17T08:00:00Z"))).toMatchObject({ lineRefs: [] });
+		expect(stopPointOf(source, "P", Temporal.Instant.from("2026-05-17T08:10:00Z"))).toMatchObject({
+			lineRefs: ["network:Line:bus"],
+		});
+		expect(stopPointOf(source, "P", Temporal.Instant.from("2026-05-18T08:10:00Z"))).toMatchObject({ lineRefs: [] });
+	});
+
+	it("annonce sans limite de durée les lignes théoriques", () => {
+		const { source } = makeSource();
+
+		expect(stopPointOf(source, "M1", Temporal.Instant.from("2026-05-10T00:00:00Z"))).toMatchObject({
+			lineRefs: ["network:Line:metro"],
+		});
 	});
 
 	it("ignore les courses que la configuration n'attribue à aucun réseau", () => {
@@ -188,5 +207,21 @@ describe("getRealtimeServiceFingerprint", () => {
 
 		expect(during).not.toBe(before);
 		expect(getRealtimeServiceFingerprint(source)).toBe(before);
+	});
+
+	it("change quand une desserte ajoutée entre dans l'horizon de 24 heures", () => {
+		const { source, gtfs, original } = makeSource();
+		detour(source, gtfs, original, "P");
+
+		const farAhead = getRealtimeServiceFingerprint(
+			source,
+			Temporal.Instant.from("2026-05-17T08:00:00Z").epochMilliseconds,
+		);
+		const imminent = getRealtimeServiceFingerprint(
+			source,
+			Temporal.Instant.from("2026-05-17T08:10:00Z").epochMilliseconds,
+		);
+
+		expect(imminent).not.toBe(farAhead);
 	});
 });
