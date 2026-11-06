@@ -64,22 +64,26 @@ function formatPeriod(alert: ServiceAlert) {
 		periods[0];
 	if (period === undefined) return;
 
-	const format = (date: string) => {
-		const value = dayjs(date);
-		const onDayBoundary = value.isSame(value.startOf("day"), "minute") || value.isSame(value.endOf("day"), "minute");
-		return value.format(onDayBoundary ? "L" : "L LT");
-	};
+	const onDayBoundary = (value: dayjs.Dayjs) =>
+		value.isSame(value.startOf("day"), "minute") || value.isSame(value.endOf("day"), "minute");
+	const format = (value: dayjs.Dayjs) => value.format(onDayBoundary(value) ? "L" : "L LT");
+	const toEndDay = (end: dayjs.Dayjs) => (end.isSame(end.startOf("day"), "minute") ? end.subtract(1, "minute") : end);
 	if (period.start !== undefined && period.end !== undefined) {
-		const start = format(period.start);
-		const end = format(period.end);
-		if (start === end) return m.service_alerts_on({ date: start });
-		return m.service_alerts_between({ start, end });
+		const start = dayjs(period.start);
+		const end = dayjs(period.end);
+		const endDay = end.isAfter(start) ? toEndDay(end) : end;
+		if (start.isSame(endDay, "day")) {
+			const date = start.format("L");
+			if (onDayBoundary(start) && onDayBoundary(end)) return m.service_alerts_on({ date });
+			return m.service_alerts_on_between_times({ date, start: start.format("LT"), end: end.format("LT") });
+		}
+		return m.service_alerts_between({ start: format(start), end: format(endDay) });
 	}
 	if (period.start !== undefined) {
 		const message = now < Date.parse(period.start) ? m.service_alerts_starting : m.service_alerts_since;
-		return message({ date: format(period.start) });
+		return message({ date: format(dayjs(period.start)) });
 	}
-	if (period.end !== undefined) return m.service_alerts_until({ date: format(period.end) });
+	if (period.end !== undefined) return m.service_alerts_until({ date: format(toEndDay(dayjs(period.end))) });
 }
 
 /** Délai pendant lequel une alerte tout juste dépliée est ramenée à l'écran, image chargée comprise. */
