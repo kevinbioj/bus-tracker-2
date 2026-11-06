@@ -12,21 +12,22 @@ const minimumSpacing = 12;
 const overflowChipClasses = "bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100";
 
 type InformationChipsRowProps = {
-	chips: Array<{ key: string; element: ReactNode }>;
+	chips: Array<{ key: string; element: ReactNode; compactElement?: ReactNode }>;
 	/** Identité du véhicule, placée en tête de ligne. */
 	leading: ReactNode;
 };
 
 /**
  * Range l'identité du véhicule et ses puces d'information sur une ligne unique. Faute de place,
- * les premières puces — les moins essentielles — se replient derrière un « … » qui les déploie,
- * plutôt que de faire passer la ligne à la ligne suivante.
+ * les puces qui en proposent une adoptent d'abord leur variante compacte ; si cela ne suffit
+ * toujours pas, les premières puces — les moins essentielles — se replient derrière un « … » qui
+ * les déploie, plutôt que de faire passer la ligne à la ligne suivante.
  */
 export function InformationChipsRow({ chips, leading }: Readonly<InformationChipsRowProps>) {
 	const rowRef = useRef<HTMLDivElement>(null);
 	const leadingRef = useRef<HTMLDivElement>(null);
 	const measureRef = useRef<HTMLDivElement>(null);
-	const [visibleCount, setVisibleCount] = useState(chips.length);
+	const [layout, setLayout] = useState({ compact: false, visibleCount: chips.length });
 
 	// Mesuré à chaque rendu : les libellés changent au fil du temps (horodatage) et de la course.
 	useLayoutEffect(() => {
@@ -37,10 +38,11 @@ export function InformationChipsRow({ chips, leading }: Readonly<InformationChip
 
 		const measured = Array.from(measure.children).map((child) => child.getBoundingClientRect().width);
 		const overflowWidth = measured.at(-1) ?? 0;
-		const chipWidths = measured.slice(0, -1);
+		const fullWidths = measured.slice(0, chips.length);
+		const compactWidths = measured.slice(chips.length, chips.length * 2);
 
 		// Les puces se remplissent depuis la fin : les dernières sont celles qu'on tient à voir.
-		const countFitting = (budget: number) => {
+		const countFitting = (chipWidths: number[], budget: number) => {
 			let remaining = budget;
 			let count = 0;
 			for (let index = chipWidths.length - 1; index >= 0; index -= 1) {
@@ -53,11 +55,15 @@ export function InformationChipsRow({ chips, leading }: Readonly<InformationChip
 		};
 
 		const available = row.clientWidth - leadingElement.getBoundingClientRect().width - minimumSpacing;
-		let count = countFitting(available);
+		const compact = countFitting(fullWidths, available) < chips.length;
+		const chipWidths = compact ? compactWidths : fullWidths;
+		let count = countFitting(chipWidths, available);
 		// Dès qu'une puce se replie, le « … » réclame lui aussi sa place.
-		if (count < chipWidths.length) count = countFitting(available - overflowWidth - chipGap);
+		if (count < chipWidths.length) count = countFitting(chipWidths, available - overflowWidth - chipGap);
 
-		setVisibleCount((current) => (current === count ? current : count));
+		setLayout((current) =>
+			current.compact === compact && current.visibleCount === count ? current : { compact, visibleCount: count },
+		);
 	});
 
 	// Le suivi du redimensionnement complète la mesure au rendu : la carte peut changer de taille
@@ -72,7 +78,7 @@ export function InformationChipsRow({ chips, leading }: Readonly<InformationChip
 		return () => observer.disconnect();
 	}, []);
 
-	const hiddenChips = chips.slice(0, Math.max(chips.length - visibleCount, 0));
+	const hiddenChips = chips.slice(0, Math.max(chips.length - layout.visibleCount, 0));
 	const visibleChips = chips.slice(hiddenChips.length);
 
 	return (
@@ -100,7 +106,7 @@ export function InformationChipsRow({ chips, leading }: Readonly<InformationChip
 					)}
 					{visibleChips.map((chip) => (
 						<span className="flex items-center" key={chip.key}>
-							{chip.element}
+							{layout.compact ? (chip.compactElement ?? chip.element) : chip.element}
 						</span>
 					))}
 				</div>
@@ -112,6 +118,11 @@ export function InformationChipsRow({ chips, leading }: Readonly<InformationChip
 					{chips.map((chip) => (
 						<span className="flex items-center" key={chip.key}>
 							{chip.element}
+						</span>
+					))}
+					{chips.map((chip) => (
+						<span className="flex items-center" key={`${chip.key}-compact`}>
+							{chip.compactElement ?? chip.element}
 						</span>
 					))}
 					<span className="flex items-center">

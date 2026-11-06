@@ -506,6 +506,15 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 					title={positionInformation.title()}
 				/>
 			),
+			compactElement: (
+				<InformationChip
+					aria-label={positionInformation.title()}
+					className={positionInformation.chipClasses}
+					icon={<SatelliteDishIcon className="size-full" />}
+					onClick={() => setOpenedDialog("position")}
+					title={positionInformation.title()}
+				/>
+			),
 		},
 		{
 			key: "recorded-at",
