@@ -166,15 +166,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 					ariaLabel: m.marker_recorded_aria({ ago: `${m.vehicle_time_at()} ${label}` }),
 				};
 			}
-			if (dayjs().isBefore(recordedAtTime)) {
-				return {
-					label: m.marker_chip_before_departure(),
-					title: m.marker_before_departure(),
-					ariaLabel: m.marker_before_departure(),
-				};
-			}
-
-			const seconds = dayjs().diff(recordedAtTime, "second");
+			const seconds = Math.max(0, dayjs().diff(recordedAtTime, "second"));
 			if (seconds < 60) {
 				return {
 					label: m.marker_chip_recorded_seconds({ count: seconds }),
