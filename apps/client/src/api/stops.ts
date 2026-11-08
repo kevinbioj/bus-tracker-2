@@ -57,8 +57,9 @@ export type StopDeparture = {
 	callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 	/** La course entière est supprimée, et non le seul arrêt : `callStatus` vaut alors `SKIPPED`. */
 	canceled?: boolean;
-	/** Le passage a lieu à un arrêt provisoire, qui remplace pour cette course un quai de la station. */
+	/** Le passage a lieu à un arrêt provisoire, que la course ne dessert pas d'ordinaire. */
 	temporary?: boolean;
+	relocated?: boolean;
 	/** La course porte au moins un horaire temps réel, même si ce passage n'en a pas. */
 	realtime?: boolean;
 	/** La station est le terminus de départ de la course : le passage y est annoncé comme un départ. */

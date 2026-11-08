@@ -45,7 +45,7 @@ function serializeCall(
 	source: Source,
 	networkRef: string,
 	timeZone: string,
-	temporary = false,
+	temporaryCall?: { relocated: boolean },
 ): NonNullable<VehicleJourney["calls"]>[number] {
 	const stopId = (call.assignedStop ?? call.stop).id;
 	const aimedTimeMs = isLast ? call.aimedArrivalTime : call.aimedDepartureTime;
@@ -74,7 +74,8 @@ function serializeCall(
 		longitude: call.stop.longitude,
 		platformName: call.platform,
 		callStatus: call.status,
-		temporary: temporary ? true : undefined,
+		temporary: temporaryCall !== undefined ? true : undefined,
+		relocated: temporaryCall?.relocated === true ? true : undefined,
 		flags: call.flags,
 	};
 }
@@ -771,7 +772,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 									source,
 									networkRef,
 									timeZone,
-									temporaryCalls?.has(call),
+									temporaryCalls?.get(call),
 								),
 							) ?? [])
 						: undefined,
@@ -1041,7 +1042,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					wheelchairAccessible: getWheelchairAccessible(journey.trip, vehicleDescriptor),
 					bikesAllowed: journey.trip.bikesAllowed,
 					calls: calls.map((call, index) =>
-						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone, temporaryCalls.has(call)),
+						serializeCall(call, index === calls.length - 1, source, networkRef, timeZone, temporaryCalls.get(call)),
 					),
 					position: journey.guessPosition(now),
 					pathRef,
@@ -1172,11 +1173,16 @@ export function collectRealtimeStopAreas(source: Source) {
 
 /** Publiés tels quels : le quai supprimé, une fois franchi, ne figure plus parmi les dessertes publiées. */
 function findTemporaryCalls(source: Source, journey: Journey) {
-	const temporaryCalls = new Set<JourneyCall>();
+	const temporaryCalls = new Map<JourneyCall, { relocated: boolean }>();
 	const gtfs = source.gtfs;
 	if (gtfs === undefined || !journey.hasModifications()) return temporaryCalls;
 
-	const addedCalls = journey.calls.filter((call) => call.modification === "ADDED");
+	const scheduledStopIds = new Set(
+		journey.calls.flatMap((call) => (call.modification !== "ADDED" ? [call.stop.id] : [])),
+	);
+	const addedCalls = journey.calls.filter(
+		(call) => call.modification === "ADDED" && !scheduledStopIds.has(call.stop.id),
+	);
 	if (addedCalls.length === 0) return temporaryCalls;
 
 	const skippedAreaIds = new Set(
@@ -1187,7 +1193,7 @@ function findTemporaryCalls(source: Source, journey: Journey) {
 	);
 	for (const call of addedCalls) {
 		const areaId = getStopAreaId(source, gtfs, call.stop.id);
-		if (areaId !== undefined && skippedAreaIds.has(areaId)) temporaryCalls.add(call);
+		temporaryCalls.set(call, { relocated: areaId !== undefined && skippedAreaIds.has(areaId) });
 	}
 	return temporaryCalls;
 }

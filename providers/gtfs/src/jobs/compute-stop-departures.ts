@@ -66,21 +66,25 @@ function findOriginCall(calls: JourneyCall[]) {
 	return calls.find((call) => call.status !== "SKIPPED");
 }
 
-/**
- * Arrêt provisoire : desserte ajoutée par une déviation dans une station dont la course ne dessert
- * plus un autre quai. Le véhicule s'y arrête à la place de celui-ci.
- */
-function isTemporaryCall(call: JourneyCall, calls: JourneyCall[], areaStopIds: Set<string>) {
+/** Arrêt provisoire : desserte ajoutée par une déviation, à un arrêt que la course ne dessert pas d'ordinaire. */
+function isTemporaryCall(call: JourneyCall, calls: JourneyCall[]) {
 	return (
 		call.modification === "ADDED" &&
+		!calls.some((other) => other.modification !== "ADDED" && other.stop.id === call.stop.id)
+	);
+}
+
+function isRelocatedCall(call: JourneyCall, calls: JourneyCall[], areaStopIds: Set<string>) {
+	return (
+		isTemporaryCall(call, calls) &&
 		areaStopIds.has(call.stop.id) &&
 		calls.some((other) => other.status === "SKIPPED" && areaStopIds.has(other.stop.id))
 	);
 }
 
 /** Quai supprimé de la station, que remplace un arrêt provisoire de la même station. */
-function isReplacedByTemporaryCall(call: JourneyCall, calls: JourneyCall[], areaStopIds: Set<string>) {
-	return call.status === "SKIPPED" && calls.some((other) => isTemporaryCall(other, calls, areaStopIds));
+function isReplacedByRelocatedCall(call: JourneyCall, calls: JourneyCall[], areaStopIds: Set<string>) {
+	return call.status === "SKIPPED" && calls.some((other) => isRelocatedCall(other, calls, areaStopIds));
 }
 
 function resolveDestination(trip: Trip, stopTimeIdx: number, call?: JourneyCall) {
@@ -178,7 +182,7 @@ export function computeStopDepartures(
 	 * qu'à son propre tableau.
 	 */
 	const isHiddenSkippedCall = (call: JourneyCall, calls: JourneyCall[]) =>
-		onlyStopId === undefined && isReplacedByTemporaryCall(call, calls, areaStopIds);
+		onlyStopId === undefined && isReplacedByRelocatedCall(call, calls, areaStopIds);
 
 	/** Dessertes déjà rendues par l'index, pour ne pas les redoubler depuis les courses déviées. */
 	const emittedCalls = new Set<string>();
@@ -319,7 +323,8 @@ export function computeStopDepartures(
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, stop.timeZone, timeZone) : undefined,
 				callStatus: canceled ? "SKIPPED" : (call?.status ?? "SCHEDULED"),
 				canceled: canceled ? true : undefined,
-				temporary: call !== undefined && isTemporaryCall(call, journey!.calls, areaStopIds) ? true : undefined,
+				temporary: call !== undefined && isTemporaryCall(call, journey!.calls) ? true : undefined,
+				relocated: call !== undefined && isRelocatedCall(call, journey!.calls, areaStopIds) ? true : undefined,
 				realtime: journey?.hasRealtime() ? true : undefined,
 				origin,
 				terminus,
@@ -391,7 +396,8 @@ export function computeStopDepartures(
 				aimedTime: formatCallTime(aimedMs, call.stop.timeZone, timeZone),
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, call.stop.timeZone, timeZone) : undefined,
 				callStatus: call.status,
-				temporary: isTemporaryCall(call, calls, areaStopIds) ? true : undefined,
+				temporary: isTemporaryCall(call, calls) ? true : undefined,
+				relocated: isRelocatedCall(call, calls, areaStopIds) ? true : undefined,
 				realtime: journey.hasRealtime() ? true : undefined,
 				origin: arrivals ? undefined : call === originCall,
 				terminus: arrivals ? call === terminusCall : undefined,

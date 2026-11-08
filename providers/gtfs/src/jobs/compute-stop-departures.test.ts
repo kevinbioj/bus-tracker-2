@@ -497,18 +497,20 @@ describe("computeStopDepartures", () => {
 
 		// Au tableau de la station, seul l'arrêt provisoire est annoncé : la course la dessert toujours.
 		expect(computeStopDepartures(source, "station-b", MONDAY_MORNING).departures).toMatchObject([
-			{ stopRef: "network:StopPoint:RT", callStatus: "UNSCHEDULED", temporary: true },
+			{ stopRef: "network:StopPoint:RT", callStatus: "UNSCHEDULED", temporary: true, relocated: true },
 		]);
 		// Celui du quai remplacé annonce sa suppression ; celui de l'arrêt provisoire, l'arrêt provisoire.
 		expect(
 			computeStopDepartures(source, "station-b", MONDAY_MORNING, { stopRef: "network:StopPoint:B" }).departures,
-		).toMatchObject([{ stopRef: "network:StopPoint:B", callStatus: "SKIPPED", temporary: undefined }]);
+		).toMatchObject([
+			{ stopRef: "network:StopPoint:B", callStatus: "SKIPPED", temporary: undefined, relocated: undefined },
+		]);
 		expect(
 			computeStopDepartures(source, "station-b", MONDAY_MORNING, { stopRef: "network:StopPoint:RT" }).departures,
-		).toMatchObject([{ stopRef: "network:StopPoint:RT", temporary: true }]);
+		).toMatchObject([{ stopRef: "network:StopPoint:RT", temporary: true, relocated: true }]);
 	});
 
-	it("n'annonce pas d'arrêt provisoire pour une desserte ajoutée hors de la station du quai supprimé", () => {
+	it("annonce sans le dire déplacé un arrêt provisoire hors de la station du quai supprimé", () => {
 		const { source, gtfs, trip } = makeLinearSource();
 
 		const resources = createRealtimeResources();
@@ -543,7 +545,7 @@ describe("computeStopDepartures", () => {
 
 		expect([...source.realtimeStopAreas.keys()]).toEqual(["RT"]);
 		expect(computeStopDepartures(source, "RT", MONDAY_MORNING).departures).toMatchObject([
-			{ callStatus: "UNSCHEDULED", temporary: undefined },
+			{ callStatus: "UNSCHEDULED", temporary: true, relocated: undefined },
 		]);
 		expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toMatchObject([{ callStatus: "SKIPPED" }]);
 	});

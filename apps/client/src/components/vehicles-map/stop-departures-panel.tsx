@@ -377,7 +377,7 @@ function useStopDepartures({ networkId, lineId }: StopDeparturesPanelProps) {
 				label: labels[index] ?? "",
 				wheelchairStatus: vehicleWheelchairStatus,
 				// Au tableau d'un quai, la course s'y arrête bel et bien : l'arrêt n'y est que provisoire.
-				relocated: departure.temporary === true && stopPoint === undefined,
+				relocated: departure.relocated === true && stopPoint === undefined,
 				key: `${baseKey}-${occurrence}`,
 			},
 		];

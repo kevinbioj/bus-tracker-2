@@ -15,6 +15,7 @@ export type DisposeableVehicleJourney = {
 		distanceTraveled?: number;
 		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 		temporary?: boolean;
+		relocated?: boolean;
 		flags?: ("NO_PICKUP" | "NO_DROP_OFF")[];
 	}>;
 	position: {

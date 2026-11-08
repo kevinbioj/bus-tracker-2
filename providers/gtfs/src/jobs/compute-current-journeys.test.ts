@@ -1127,21 +1127,45 @@ describe("computeVehicleJourneys (dessertes déviées)", () => {
 			],
 		});
 
-		expect(result.journeys[0]?.calls?.map((call) => [call.stopName, call.temporary])).toEqual([
-			["B (provisoire)", true],
-			["C", undefined],
+		expect(result.journeys[0]?.calls?.map((call) => [call.stopName, call.temporary, call.relocated])).toEqual([
+			["B (provisoire)", true, true],
+			["C", undefined, undefined],
 		]);
 	});
 
-	it("ne signale pas comme provisoire un arrêt de déviation hors de la station du quai supprimé", async () => {
+	it("signale comme provisoire, sans le dire déplacé, un arrêt existant que la course ne dessert pas d'ordinaire", async () => {
 		const source = scheduledSource();
 
 		const result = await cycleAt(source, "08:05:00", { tripModifications: [detour()] });
 
-		expect(result.journeys[0]?.calls?.map((call) => [call.stopName, call.temporary])).toEqual([
-			["B", undefined],
-			["Replacement", undefined],
-			["C", undefined],
+		expect(result.journeys[0]?.calls?.map((call) => [call.stopName, call.temporary, call.relocated])).toEqual([
+			["B", undefined, undefined],
+			["Replacement", true, undefined],
+			["C", undefined, undefined],
+		]);
+	});
+
+	it("ne signale pas comme provisoire un arrêt que la course dessert d'ordinaire", async () => {
+		const source = scheduledSource();
+
+		const result = await cycleAt(source, "08:05:00", {
+			tripModifications: [
+				detour({
+					modifications: [
+						{
+							startStopSelector: { stopSequence: 2 },
+							endStopSelector: { stopSequence: 2 },
+							replacementStops: [{ stopId: "B", travelTimeToStop: 12 * 60 }],
+						},
+					],
+				}),
+			],
+		});
+
+		expect(result.journeys[0]?.calls?.map((call) => [call.stopName, call.callStatus, call.temporary])).toEqual([
+			["B", "SKIPPED", undefined],
+			["B", "UNSCHEDULED", undefined],
+			["C", "SCHEDULED", undefined],
 		]);
 	});
 });
