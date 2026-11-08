@@ -217,6 +217,13 @@ const sources = [
 				return true;
 			},
 			postLoad: (resource) => {
+				for (const [oldTripId, trip] of Array.from(resource.trips)) {
+					const newTripId = oldTripId.slice(0, oldTripId.lastIndexOf(":"));
+					trip.id = newTripId;
+					resource.trips.delete(oldTripId);
+					resource.trips.set(newTripId, trip);
+				}
+
 				internalIdToTripIds = Map.groupBy(resource.trips.keys(), (key) => key.slice(0, key.indexOf("F") + 1));
 			},
 			ignoreBlocks: true,
@@ -251,6 +258,10 @@ const sources = [
 				}) ?? [];
 
 			return alert;
+		},
+		mapTripUpdate: (tripUpdate) => {
+			tripUpdate.trip.tripId = tripUpdate.trip.tripId.slice(0, tripUpdate.trip.tripId.lastIndexOf(":"));
+			return tripUpdate;
 		},
 		isValidJourney: enrichSncfJourneyWithSiriLitePlatformsByTrainNumber,
 		mapStopDeparture: enrichSncfStopDepartureWithSiriLitePlatform,
