@@ -16,6 +16,9 @@ const sources = [
 		realtimeResourceHrefs: [
 			"https://proxy.transport.data.gouv.fr/resource/fluo-sitac-chalons-gtfs-rt-trip-update?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
 		],
+		gtfsOptions: {
+			filterTrips: (trip) => trip.route.id !== "Flex",
+		},
 		getNetworkRef: () => "CHALONS-EN-CHAMPAGNE",
 	},
 	{
