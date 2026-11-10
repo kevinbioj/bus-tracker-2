@@ -18,7 +18,11 @@ const sources = [
 				}
 			}
 		},
-		getVehicleRef: (vehicle) => vehicle?.id.split(":")[1],
+		getVehicleRef: (vehicle) => {
+			const number = vehicle?.id.split(":")[1];
+			if (number.startsWith("UNKNOWN_")) return undefined;
+			return number;
+		},
 	},
 ];
 
