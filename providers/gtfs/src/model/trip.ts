@@ -11,12 +11,16 @@ import type { StopTimeStore } from "./stop-time-store.js";
 
 const EMPTY_FLAGS: VehicleJourneyCallFlags[] = [];
 
-function bitmaskToFlags(bitmask: number): VehicleJourneyCallFlags[] {
+const FLAG_BITS: [number, VehicleJourneyCallFlags][] = [
+	[1, "NO_PICKUP"],
+	[2, "NO_DROP_OFF"],
+	[4, "PHONE_PICKUP"],
+	[8, "DRIVER_PICKUP"],
+];
+
+export function bitmaskToFlags(bitmask: number): VehicleJourneyCallFlags[] {
 	if (bitmask === 0) return EMPTY_FLAGS;
-	const result: VehicleJourneyCallFlags[] = [];
-	if (bitmask & 1) result.push("NO_PICKUP");
-	if (bitmask & 2) result.push("NO_DROP_OFF");
-	return result;
+	return FLAG_BITS.flatMap(([bit, flag]) => (bitmask & bit ? [flag] : []));
 }
 
 export type StopTimeCall = {

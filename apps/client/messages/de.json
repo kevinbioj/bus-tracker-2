@@ -319,6 +319,8 @@
 	"stop_call_pickup_only_title": "Nur Einstieg",
 	"stop_call_drop_off_only": "nur Ausstieg",
 	"stop_call_drop_off_only_title": "Nur Ausstieg",
+	"stop_call_on_demand_phone": "Einstieg nur nach Reservierung",
+	"stop_call_on_demand_driver": "Zum Einsteigen dem Fahrer ein Zeichen geben",
 	"stop_call_cancelled": "Entfällt",
 	"stop_call_imminent": "Sofort",
 	"stop_call_in_minutes": "{count} Min.",

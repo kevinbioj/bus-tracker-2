@@ -1,3 +1,5 @@
+import type { VehicleJourneyCallFlags } from "@bus-tracker/contracts";
+
 export type DisposeableVehicleJourney = {
 	id: string;
 	/** Code pays ISO 3166-1 alpha-2 hérité du réseau (défaut "FR" en base). */
@@ -16,7 +18,7 @@ export type DisposeableVehicleJourney = {
 		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
 		temporary?: boolean;
 		relocated?: boolean;
-		flags?: ("NO_PICKUP" | "NO_DROP_OFF")[];
+		flags?: VehicleJourneyCallFlags[];
 	}>;
 	position: {
 		latitude: number;

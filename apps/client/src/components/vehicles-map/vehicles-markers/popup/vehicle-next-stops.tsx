@@ -1,4 +1,4 @@
-import type { VehicleJourneyCall } from "@bus-tracker/contracts";
+import { type CallOnDemand, getCallOnDemand, type VehicleJourneyCall } from "@bus-tracker/contracts";
 import { clsx } from "clsx";
 import dayjs from "dayjs";
 import { ArrowDownRight, ArrowUpRight, Rss } from "lucide-react";
@@ -9,6 +9,7 @@ import { CustomTooltip } from "~/components/custom-tooltip";
 import { formatCountdown, formatLocalTime } from "~/components/vehicles-map/call-time-format";
 import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components/vehicles-map/next-calls-display-mode";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
+import { OnDemandIcon, onDemandLabels } from "~/icons/on-demand";
 import * as m from "~/paraglide/messages";
 
 type NextStopsProps = {
@@ -24,6 +25,7 @@ type NextStopRowProps = {
 	displayMode: NextCallsDisplayMode;
 	dwelling: boolean;
 	label: string;
+	onDemand?: CallOnDemand;
 };
 
 type CallTimes = {
@@ -101,6 +103,7 @@ const NextStopRow = memo(function NextStopRow({
 	displayMode,
 	dwelling,
 	label,
+	onDemand,
 }: Readonly<NextStopRowProps>) {
 	// L'infobulle qualifie l'heure affichée : à quai, c'est celle du départ. Déclarer une avance parce
 	// que le véhicule est arrivé avant son heure de départ (au terminus notamment) n'aurait aucun sens.
@@ -175,7 +178,12 @@ const NextStopRow = memo(function NextStopRow({
 	// heure temps réel.
 	const showRealtimeIcon = call.expectedTime !== undefined;
 
-	const hasExtra = (call.flags !== undefined && call.flags.length > 0) || call.platformName !== undefined;
+	const noPickup = call.flags?.includes("NO_PICKUP") ?? false;
+	const noDropOff = call.flags?.includes("NO_DROP_OFF") ?? false;
+	const pickupOnly = noDropOff && !noPickup;
+	const dropOffOnly = noPickup && !noDropOff;
+
+	const hasExtra = pickupOnly || dropOffOnly || onDemand !== undefined || call.platformName !== undefined;
 
 	const children = (
 		<div className={clsx("flex font-bold ml-2", accentColor)}>
@@ -200,12 +208,9 @@ const NextStopRow = memo(function NextStopRow({
 					label,
 					tooltipProps?.content,
 					call.platformName !== undefined ? m.stop_call_platform({ platform: call.platformName }) : undefined,
-					call.flags !== undefined
-						? match(call.flags)
-								.with(["NO_DROP_OFF"], () => m.stop_call_pickup_only())
-								.with(["NO_PICKUP"], () => m.stop_call_drop_off_only())
-								.otherwise(() => undefined)
-						: undefined,
+					pickupOnly ? m.stop_call_pickup_only() : undefined,
+					dropOffOnly ? m.stop_call_drop_off_only() : undefined,
+					onDemand !== undefined ? onDemandLabels[onDemand]() : undefined,
 				]
 					.filter(Boolean)
 					.join(", ")}
@@ -225,20 +230,19 @@ const NextStopRow = memo(function NextStopRow({
 							{call.platformName}
 						</span>
 					)}
-					{call.flags !== undefined && call.flags.length > 0 && (
-						<span>
-							{match(call.flags)
-								.with(["NO_DROP_OFF"], () => (
-									<span title={m.stop_call_pickup_only_title()}>
-										<ArrowUpRight className="inline size-4 text-slate-500 dark:text-slate-400" />
-									</span>
-								))
-								.with(["NO_PICKUP"], () => (
-									<span title={m.stop_call_drop_off_only_title()}>
-										<ArrowDownRight className="inline size-4 text-slate-500 dark:text-slate-400" />
-									</span>
-								))
-								.otherwise(() => null)}
+					{pickupOnly && (
+						<span title={m.stop_call_pickup_only_title()}>
+							<ArrowUpRight className="inline size-4 text-slate-500 dark:text-slate-400" />
+						</span>
+					)}
+					{dropOffOnly && (
+						<span title={m.stop_call_drop_off_only_title()}>
+							<ArrowDownRight className="inline size-4 text-slate-500 dark:text-slate-400" />
+						</span>
+					)}
+					{onDemand !== undefined && (
+						<span title={onDemandLabels[onDemand]()}>
+							<OnDemandIcon className="inline ml-0.5 size-3.5 text-slate-500 dark:text-slate-400" kind={onDemand} />
 						</span>
 					)}
 				</div>
@@ -289,6 +293,7 @@ export const VehicleNextStops = memo(function VehicleNextStops({
 						dwelling={rows[index]?.dwelling ?? false}
 						key={call.stopOrder}
 						label={rows[index]?.label ?? ""}
+						onDemand={index === calls.length - 1 ? undefined : getCallOnDemand(call.flags)}
 					/>
 				))}
 			</ul>

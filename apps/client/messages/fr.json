@@ -310,6 +310,8 @@
 	"stop_call_pickup_only_title": "Montée uniquement",
 	"stop_call_drop_off_only": "descente uniquement",
 	"stop_call_drop_off_only_title": "Descente uniquement",
+	"stop_call_on_demand_phone": "Montée sur réservation",
+	"stop_call_on_demand_driver": "Montée sur signe au conducteur",
 	"stop_call_cancelled": "Supprimé",
 	"stop_call_imminent": "Imminent",
 	"stop_call_in_minutes": "{count} min",

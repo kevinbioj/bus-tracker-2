@@ -1,9 +1,10 @@
-import type {
-	StopAreaMode,
-	StopCallDirection,
-	StopDeparture,
-	StopPoint,
-	VehicleJourneyCall,
+import {
+	getCallOnDemand,
+	type StopAreaMode,
+	type StopCallDirection,
+	type StopDeparture,
+	type StopPoint,
+	type VehicleJourneyCall,
 } from "@bus-tracker/contracts";
 import * as z from "zod";
 
@@ -370,6 +371,7 @@ function mergeTrackedJourneys(
 				callStatus: call.callStatus,
 				temporary: call.temporary === true || (relocated && call.callStatus === "UNSCHEDULED") ? true : undefined,
 				relocated: call.relocated === true || (relocated && call.callStatus === "UNSCHEDULED") ? true : undefined,
+				onDemand: direction === "arrivals" ? undefined : getCallOnDemand(call.flags),
 				realtime,
 				terminus: direction === "arrivals" ? call === terminusCall : undefined,
 				journeyId: journey.id,

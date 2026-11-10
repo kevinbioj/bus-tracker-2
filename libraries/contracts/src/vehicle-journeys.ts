@@ -36,8 +36,17 @@ export type VehicleJourneyLine = typeof vehicleJourneyLineSchema.infer;
 export const vehicleJourneyCallStatusEnum = type("'SCHEDULED'|'UNSCHEDULED'|'SKIPPED'");
 export type VehicleJourneyCallStatus = typeof vehicleJourneyCallStatusEnum.infer;
 
-export const vehicleJourneyCallFlagsEnum = type("'NO_PICKUP'|'NO_DROP_OFF'");
+export const vehicleJourneyCallFlagsEnum = type("'NO_PICKUP'|'NO_DROP_OFF'|'PHONE_PICKUP'|'DRIVER_PICKUP'");
 export type VehicleJourneyCallFlags = typeof vehicleJourneyCallFlagsEnum.infer;
+
+export const callOnDemandEnum = type("'PHONE'|'DRIVER'");
+export type CallOnDemand = typeof callOnDemandEnum.infer;
+
+export function getCallOnDemand(flags: readonly VehicleJourneyCallFlags[] | undefined): CallOnDemand | undefined {
+	if (flags?.includes("PHONE_PICKUP")) return "PHONE";
+	if (flags?.includes("DRIVER_PICKUP")) return "DRIVER";
+	return undefined;
+}
 
 export const vehicleJourneyCallSchema = type({
 	// Heure de départ de l'arrêt — ou heure d'arrivée au terminus, qui n'a pas de départ.

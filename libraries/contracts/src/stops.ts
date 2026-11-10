@@ -1,6 +1,6 @@
 import { type } from "arktype";
 
-import { vehicleJourneyCallStatusEnum } from "./vehicle-journeys.js";
+import { callOnDemandEnum, vehicleJourneyCallStatusEnum } from "./vehicle-journeys.js";
 
 /*
  * Inventaire des stations, tenu dans Redis par les providers sur le modèle des tracés de ligne. Il
@@ -186,6 +186,7 @@ export const stopDepartureSchema = type({
 	 */
 	"temporary?": "boolean",
 	"relocated?": "boolean",
+	"onDemand?": callOnDemandEnum,
 	/**
 	 * Vrai lorsque la course porte au moins un horaire temps réel, même si ce passage n'en a pas (un
 	 * arrêt supprimé, notamment). Absent : la course n'est connue que par l'horaire théorique.

@@ -30,8 +30,11 @@ function getStopTimeMs(stopTimeUpdate: StopTimeUpdate) {
 /** Un arrêt qu'un producteur déclare non desservi n'accepte ni montée ni descente. */
 function getCallFlags(stopTimeUpdate: StopTimeUpdate): VehicleJourneyCallFlags[] {
 	const flags: VehicleJourneyCallFlags[] = [];
-	if (stopTimeUpdate.stopTimeProperties?.pickupType === "NONE") flags.push("NO_PICKUP");
-	if (stopTimeUpdate.stopTimeProperties?.dropOffType === "NONE") flags.push("NO_DROP_OFF");
+	const { pickupType, dropOffType } = stopTimeUpdate.stopTimeProperties ?? {};
+	if (pickupType === "NONE") flags.push("NO_PICKUP");
+	if (dropOffType === "NONE") flags.push("NO_DROP_OFF");
+	if (pickupType === "PHONE_AGENCY") flags.push("PHONE_PICKUP");
+	if (pickupType === "COORDINATE_WITH_DRIVER") flags.push("DRIVER_PICKUP");
 	return flags;
 }
 

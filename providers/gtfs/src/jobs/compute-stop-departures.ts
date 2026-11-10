@@ -1,10 +1,15 @@
-import type { ExcludedStopDepartureJourney, StopCallDirection, StopDeparture } from "@bus-tracker/contracts";
+import {
+	type ExcludedStopDepartureJourney,
+	getCallOnDemand,
+	type StopCallDirection,
+	type StopDeparture,
+} from "@bus-tracker/contracts";
 
 import { getEpochMsFromSecs } from "../cache/temporal-cache.js";
 import { getJourneyKey } from "../model/gtfs.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
 import type { Source } from "../model/source.js";
-import type { Trip } from "../model/trip.js";
+import { bitmaskToFlags, type Trip } from "../model/trip.js";
 import { formatCallTime } from "../utils/format-call-time.js";
 import { getWheelchairAccessible } from "../utils/get-wheelchair-accessible.js";
 import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
@@ -325,6 +330,7 @@ export function computeStopDepartures(
 				canceled: canceled ? true : undefined,
 				temporary: call !== undefined && isTemporaryCall(call, journey!.calls) ? true : undefined,
 				relocated: call !== undefined && isRelocatedCall(call, journey!.calls, areaStopIds) ? true : undefined,
+				onDemand: arrivals ? undefined : getCallOnDemand(call?.flags ?? bitmaskToFlags(flagsBitmask[stopTimeIdx]!)),
 				realtime: journey?.hasRealtime() ? true : undefined,
 				origin,
 				terminus,
@@ -398,6 +404,7 @@ export function computeStopDepartures(
 				callStatus: call.status,
 				temporary: isTemporaryCall(call, calls) ? true : undefined,
 				relocated: isRelocatedCall(call, calls, areaStopIds) ? true : undefined,
+				onDemand: arrivals ? undefined : getCallOnDemand(call.flags),
 				realtime: journey.hasRealtime() ? true : undefined,
 				origin: arrivals ? undefined : call === originCall,
 				terminus: arrivals ? call === terminusCall : undefined,

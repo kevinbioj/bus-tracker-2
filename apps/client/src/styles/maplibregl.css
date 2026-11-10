@@ -49,9 +49,11 @@
  * Même spécificité que le survol de MapLibre, déclaré plus tôt : celle-ci l'emporte.
  */
 .maplibregl-ctrl
-button:is([data-slot="information-chip"], [data-slot="wheelchair-badge"]):not(
-	:disabled
-) {
+button:is(
+	[data-slot="information-chip"],
+	[data-slot="wheelchair-badge"],
+	[data-slot="on-demand-badge"]
+):not(:disabled) {
 	all: revert-layer;
 }
 

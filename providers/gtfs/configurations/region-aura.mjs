@@ -362,7 +362,6 @@ const sources = [
 				pollMs: 120_000,
 			},
 		],
-		excludeScheduled: true,
 		mode: "NO-TU",
 		getNetworkRef: () => "STAS",
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,

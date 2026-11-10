@@ -25,6 +25,7 @@ import { SELECTED_STOP_ICON_SCALE, STOP_PLATE_CENTER_OFFSET } from "~/components
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { useDebouncedMemo } from "~/hooks/use-debounced-memo";
 import { useFitToLines } from "~/hooks/use-fit-to-lines";
+import { OnDemandIcon, onDemandLabels } from "~/icons/on-demand";
 import { TriangleAlertFilledIcon } from "~/icons/triangle-alert-filled";
 import { getWheelchairStatus, WheelchairIcon, type WheelchairStatus, wheelchairIconDetails } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
@@ -173,6 +174,21 @@ function DepartureRow({
 					>
 						{headline}
 					</p>
+					{departure.onDemand !== undefined && (
+						<TapTooltip
+							content={onDemandLabels[departure.onDemand]()}
+							render={
+								<button
+									aria-label={onDemandLabels[departure.onDemand]()}
+									data-slot="on-demand-badge"
+									className="inline-flex size-4 shrink-0 cursor-default text-muted-foreground"
+									type="button"
+								>
+									<OnDemandIcon className="size-full" kind={departure.onDemand} />
+								</button>
+							}
+						/>
+					)}
 					{wheelchairStatus !== undefined && (
 						// Info-bulle portée hors du panneau : celui-ci rogne ce qui déborde de ses bords.
 						<TapTooltip

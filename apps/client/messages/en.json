@@ -310,6 +310,8 @@
 	"stop_call_pickup_only_title": "Pickup only",
 	"stop_call_drop_off_only": "drop-off only",
 	"stop_call_drop_off_only_title": "Drop-off only",
+	"stop_call_on_demand_phone": "Boarding by reservation only",
+	"stop_call_on_demand_driver": "Signal the driver to board",
 	"stop_call_cancelled": "Cancelled",
 	"stop_call_imminent": "Due",
 	"stop_call_in_minutes": "{count} min",

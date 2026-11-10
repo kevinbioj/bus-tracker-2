@@ -26,6 +26,8 @@ type StopTimeRecord = CsvRecord<
 	"shape_dist_traveled" | "pickup_type" | "drop_off_type" | "stop_headsign"
 >;
 
+const PICKUP_TYPE_BITS: Record<string, number> = { "1": 1, "2": 4, "3": 8 };
+
 /** `wheelchair_accessible`, `bikes_allowed` : 1 oui, 2 non, vide ou 0 inconnu. */
 function parseTripAvailability(value: string | undefined) {
 	if (value === "1") return true;
@@ -218,7 +220,8 @@ export async function importTrips(
 			headsignIdx[idx] = headsignIndex;
 		}
 		sequence[idx] = +stopTimeRecord.stop_sequence;
-		flagsBitmask[idx] = (stopTimeRecord.pickup_type === "1" ? 1 : 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
+		flagsBitmask[idx] =
+			(PICKUP_TYPE_BITS[stopTimeRecord.pickup_type ?? ""] ?? 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
 		arrivalSecs[idx] = aSecs;
 		departureSecs[idx] = dSecs;
 		distanceTraveled[idx] =

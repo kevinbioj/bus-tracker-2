@@ -1,4 +1,4 @@
-import type { StopAreaMode, StopCallDirection } from "@bus-tracker/contracts";
+import type { CallOnDemand, StopAreaMode, StopCallDirection } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
@@ -60,6 +60,7 @@ export type StopDeparture = {
 	/** Le passage a lieu à un arrêt provisoire, que la course ne dessert pas d'ordinaire. */
 	temporary?: boolean;
 	relocated?: boolean;
+	onDemand?: CallOnDemand;
 	/** La course porte au moins un horaire temps réel, même si ce passage n'en a pas. */
 	realtime?: boolean;
 	/** La station est le terminus de départ de la course : le passage y est annoncé comme un départ. */
