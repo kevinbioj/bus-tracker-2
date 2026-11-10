@@ -73,7 +73,6 @@ const sources = [
 		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/hopbus/realtime"],
 		gtfsOptions: {
 			filterTrips: (trip) => {
-				if (["216", "217", "218"].includes(trip.route.id)) return false;
 				if (trip.direction === 2) trip.direction = 1;
 				return true;
 			},
