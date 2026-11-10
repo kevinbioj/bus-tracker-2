@@ -4,6 +4,9 @@ const sources = [
 		id: "tcl",
 		staticResourceHref: "https://gtfs.bus-tracker.fr/tcl.zip",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/tcl/"],
+		gtfsOptions: {
+			filterTrips: (trip) => trip.route.id !== "T36",
+		},
 		mode: "NO-TU",
 		appendTripUpdateInformation: true,
 		getNetworkRef: () => "TCL",
