@@ -1,13 +1,8 @@
 import { ListOrderedIcon } from "lucide-react";
 
+import { SettingSection, SettingToggle, settingIconClasses } from "~/components/setting-blocks";
 import { useShowBikesAllowed, useShowWheelchairAccessibility } from "~/components/vehicles-map/accessibility-display";
-import {
-	NextCallsDisplayModeChoice,
-	SettingSection,
-	SettingsPopoverControl,
-	SettingToggle,
-	settingIconClasses,
-} from "~/components/vehicles-map/settings-popover";
+import { NextCallsDisplayModeChoice, SettingsPopoverControl } from "~/components/vehicles-map/settings-popover";
 import { BikesAllowedIcon } from "~/icons/bikes-allowed";
 import { WheelchairIcon } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";

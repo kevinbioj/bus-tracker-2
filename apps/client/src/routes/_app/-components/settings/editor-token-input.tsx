@@ -1,19 +1,18 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { KeySquareIcon, LogIn, LogOut, User } from "lucide-react";
+import { KeySquareIcon, LogIn, LogOut, UserIcon } from "lucide-react";
 import { useSnackbar } from "notistack";
-import { type FormEvent, useId } from "react";
+import type { FormEvent } from "react";
 
 import { GetEditorSelf, loginEditor, logoutEditor } from "~/api/editors";
+import { SettingField, SettingLabel, settingIconClasses } from "~/components/setting-blocks";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import * as m from "~/paraglide/messages";
 
 export function EditorTokenInput() {
 	const queryClient = useQueryClient();
 	const { enqueueSnackbar } = useSnackbar();
-	const id = useId();
 
 	const { data: editor, isLoading } = useQuery(GetEditorSelf);
 
@@ -39,45 +38,27 @@ export function EditorTokenInput() {
 		await queryClient.invalidateQueries({ queryKey: ["editor"] });
 	};
 
-	return (
-		<div>
-			<h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-				{m.settings_contribution_section()}
-			</h3>
-			{editor ? (
-				<div className="flex items-center justify-between gap-2">
-					<p className="min-w-0 wrap-break-words">
-						<User className="align-text-bottom inline size-5" /> {editor.username}
-						<br />
-						<span className="text-muted-foreground text-sm">
-							{m.settings_editor_connected_since({ date: dayjs(editor.createdAt).format("L") })}
-						</span>
-					</p>
-					<div className="shrink-0 space-x-2">
-						<Button
-							onClick={onLogout}
-							type="button"
-							variant="destructive"
-							size="icon"
-							title={m.settings_editor_logout()}
-						>
-							<LogOut />
-						</Button>
-					</div>
-				</div>
-			) : (
-				<form onSubmit={onSubmit}>
-					<Label className="mb-2" htmlFor={id}>
-						<KeySquareIcon className="align-text-bottom inline size-4" /> {m.settings_editor_token_label()}
-					</Label>
-					<div className="flex gap-2">
-						<Input id={id} name="token" required />
-						<Button disabled={isLoading} type="submit" size="icon" title={m.settings_editor_login()}>
-							<LogIn />
-						</Button>
-					</div>
-				</form>
-			)}
+	return editor ? (
+		<div className="flex items-center gap-3 py-2.5 pr-3 pl-3">
+			<div className="min-w-0 flex-1 wrap-break-words">
+				<SettingLabel
+					description={m.settings_editor_connected_since({ date: dayjs(editor.createdAt).format("L") })}
+					icon={<UserIcon className={settingIconClasses} />}
+					label={editor.username}
+				/>
+			</div>
+			<Button size="icon-sm" title={m.settings_editor_logout()} type="button" variant="destructive" onClick={onLogout}>
+				<LogOut />
+			</Button>
 		</div>
+	) : (
+		<SettingField icon={<KeySquareIcon className={settingIconClasses} />} label={m.settings_editor_token_label()}>
+			<form className="flex gap-2" onSubmit={onSubmit}>
+				<Input aria-label={m.settings_editor_token_label()} name="token" required />
+				<Button disabled={isLoading} size="icon" title={m.settings_editor_login()} type="submit">
+					<LogIn />
+				</Button>
+			</form>
+		</SettingField>
 	);
 }

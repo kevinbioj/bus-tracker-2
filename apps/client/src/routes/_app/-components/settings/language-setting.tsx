@@ -1,6 +1,7 @@
-import { useId, useState } from "react";
+import { LanguagesIcon } from "lucide-react";
+import { useState } from "react";
 
-import { Label } from "~/components/ui/label";
+import { SettingField, settingIconClasses } from "~/components/setting-blocks";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import * as m from "~/paraglide/messages";
 import { type locales, setLocale } from "~/paraglide/runtime";
@@ -16,7 +17,6 @@ const languages = [
 ];
 
 export function LanguageSetting() {
-	const id = useId();
 	const [localePreference, setLocalePreference] = useState<LocalePreference>(getLocalePreference());
 
 	const onValueChange = (value: string | null) => {
@@ -32,11 +32,8 @@ export function LanguageSetting() {
 	};
 
 	return (
-		<div>
-			<Label className="block mb-1 text-base" htmlFor={id}>
-				{m.language_label()}
-			</Label>
-			<Select id={id} items={languages} value={localePreference} onValueChange={onValueChange}>
+		<SettingField icon={<LanguagesIcon className={settingIconClasses} />} label={m.language_label()}>
+			<Select items={languages} value={localePreference} onValueChange={onValueChange}>
 				<SelectTrigger className="w-full">
 					<SelectValue />
 				</SelectTrigger>
@@ -50,6 +47,6 @@ export function LanguageSetting() {
 					</SelectGroup>
 				</SelectContent>
 			</Select>
-		</div>
+		</SettingField>
 	);
 }

@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDownIcon, SearchIcon } from "lucide-react";
-import { useDeferredValue, useId, useMemo, useState } from "react";
+import { ChevronDownIcon, GlobeIcon, SearchIcon } from "lucide-react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { GetNetworksQuery } from "~/api/networks";
 import { isRealtimeAvailable } from "~/api/realtime";
+import { SettingField, settingIconClasses } from "~/components/setting-blocks";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
@@ -25,7 +26,6 @@ const SEARCH_THRESHOLD = 8;
 const SUMMARY_FLAG_LIMIT = 6;
 
 export function DisplayedCountriesSetting() {
-	const id = useId();
 	const queryClient = useQueryClient();
 	const locale = getLocale();
 	const { data: networks } = useQuery(GetNetworksQuery);
@@ -72,15 +72,15 @@ export function DisplayedCountriesSetting() {
 	};
 
 	return (
-		<div>
-			<Label className="block mb-px text-base" htmlFor={id}>
-				{m.settings_displayed_countries_label()}
-			</Label>
-			<p className="mb-2 text-sm text-muted-foreground">{m.settings_displayed_countries_description()}</p>
+		<SettingField
+			description={m.settings_displayed_countries_description()}
+			icon={<GlobeIcon className={settingIconClasses} />}
+			label={m.settings_displayed_countries_label()}
+		>
 			<Popover onOpenChange={(open) => !open && setSearch("")}>
 				<PopoverTrigger
 					render={
-						<Button id={id} size="lg" variant="outline" className="w-full justify-between font-normal">
+						<Button variant="outline" className="w-full justify-between font-normal">
 							<span className="min-w-0 truncate text-left">
 								{selectedCountries.length > SUMMARY_FLAG_LIMIT
 									? m.settings_displayed_countries_summary({ count: selectedCountries.length })
@@ -138,6 +138,6 @@ export function DisplayedCountriesSetting() {
 					</div>
 				</PopoverContent>
 			</Popover>
-		</div>
+		</SettingField>
 	);
 }

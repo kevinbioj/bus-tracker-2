@@ -1,33 +1,23 @@
-import { useId } from "react";
+import { HistoryIcon, ListFilterIcon, ListIcon } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
 
-import { Label } from "~/components/ui/label";
-import { Tabs } from "~/components/ui/tabs";
+import { SettingChoice, settingIconClasses } from "~/components/setting-blocks";
 import * as m from "~/paraglide/messages";
-import { SettingTabsList, SettingTabsTrigger } from "~/routes/_app/-components/settings/setting-tabs";
 
 export function OnlyNetworksWithHistorySetting() {
-	const id = useId();
 	const [onlyNetworksWithHistory, setOnlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
 
 	return (
-		<div>
-			<div className="grid gap-px mb-1">
-				<Label className="text-base" htmlFor={id}>
-					{m.settings_only_networks_with_history_label()}
-				</Label>
-				<p className="text-sm text-muted-foreground">{m.settings_only_networks_with_history_description()}</p>
-			</div>
-			<Tabs
-				value={onlyNetworksWithHistory ? "history" : "all"}
-				onValueChange={(v) => setOnlyNetworksWithHistory(v === "history")}
-				className="w-full"
-			>
-				<SettingTabsList className="grid-cols-2" id={id}>
-					<SettingTabsTrigger value="all">{m.settings_only_networks_with_history_all()}</SettingTabsTrigger>
-					<SettingTabsTrigger value="history">{m.settings_only_networks_with_history_history()}</SettingTabsTrigger>
-				</SettingTabsList>
-			</Tabs>
-		</div>
+		<SettingChoice<"all" | "history">
+			description={m.settings_only_networks_with_history_description()}
+			icon={<ListFilterIcon className={settingIconClasses} />}
+			label={m.settings_only_networks_with_history_label()}
+			options={[
+				{ value: "all", label: m.settings_only_networks_with_history_all(), icon: ListIcon },
+				{ value: "history", label: m.settings_only_networks_with_history_history(), icon: HistoryIcon },
+			]}
+			value={onlyNetworksWithHistory ? "history" : "all"}
+			onChange={(value) => setOnlyNetworksWithHistory(value === "history")}
+		/>
 	);
 }

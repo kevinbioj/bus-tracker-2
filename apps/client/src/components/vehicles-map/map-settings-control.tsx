@@ -22,6 +22,15 @@ import {
 import { useLocalStorage } from "usehooks-ts";
 
 import { isRealtimeAvailable } from "~/api/realtime";
+import {
+	SettingChoice,
+	SettingField,
+	SettingSection,
+	SettingToggle,
+	settingIconClasses,
+	settingOptionClasses,
+	settingOptionStateClasses,
+} from "~/components/setting-blocks";
 import { useShowBikesAllowed, useShowWheelchairAccessibility } from "~/components/vehicles-map/accessibility-display";
 import { useDisplayNextCalls } from "~/components/vehicles-map/display-next-calls";
 import {
@@ -32,17 +41,7 @@ import {
 import { useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
 import { type MapThemeSetting, useMapThemeSetting } from "~/components/vehicles-map/map-style";
 import { type PathDisplayMode, usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
-import {
-	NextCallsDisplayModeChoice,
-	SettingChoice,
-	SettingField,
-	SettingSection,
-	SettingsPopoverControl,
-	SettingToggle,
-	settingIconClasses,
-	settingOptionClasses,
-	settingOptionStateClasses,
-} from "~/components/vehicles-map/settings-popover";
+import { NextCallsDisplayModeChoice, SettingsPopoverControl } from "~/components/vehicles-map/settings-popover";
 import { useShowStops } from "~/components/vehicles-map/show-stops";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 import { type StopLinesDisplayMode, useStopLinesDisplayMode } from "~/components/vehicles-map/stop-lines-display-mode";
