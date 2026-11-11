@@ -214,6 +214,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 		<span>{network?.name}</span>
 	);
 
+	const vehicleLinkEnabled = Boolean(journey.vehicle?.id) && !disableLinks;
 	const vehicleChip = journey.vehicle ? (
 		<InformationChip
 			className={neutralChipClasses}
@@ -225,9 +226,10 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 					? `${m.marker_popup_vehicle({ number: journey.vehicle.number })}, ${journey.vehicle.designation}`
 					: m.marker_popup_vehicle({ number: journey.vehicle.number })
 			}
+			interactive={vehicleLinkEnabled}
 			label={journey.vehicle.number}
 			render={
-				journey.vehicle.id && !disableLinks ? (
+				vehicleLinkEnabled ? (
 					<Link to="/data/vehicles/$vehicleId" params={{ vehicleId: String(journey.vehicle.id) }} />
 				) : undefined
 			}

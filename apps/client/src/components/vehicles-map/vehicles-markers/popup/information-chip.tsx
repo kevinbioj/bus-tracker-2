@@ -7,6 +7,7 @@ type RenderableChip = ReactElement<Record<string, unknown> & { children?: ReactN
 type InformationChipProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
 	/** Omise, la puce se réduit à son libellé. */
 	icon?: ReactNode;
+	interactive?: boolean;
 	/** Omis, la puce se réduit à son icône. */
 	label?: string;
 	/** Rend la puce à partir de cet élément — un lien, par exemple — plutôt qu'en `<button>`. */
@@ -34,6 +35,7 @@ const interactiveChipClasses =
 export function InformationChip({
 	className,
 	icon,
+	interactive,
 	label,
 	onClick,
 	render,
@@ -69,7 +71,7 @@ export function InformationChip({
 	}
 
 	// Sans interaction, la puce est purement informative et rendue comme telle.
-	if (onClick === undefined) {
+	if (onClick === undefined || interactive === false) {
 		return (
 			<span
 				className={cn(chipClasses, size === "md" && mediumChipClasses, className)}
