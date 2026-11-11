@@ -43,16 +43,17 @@
 
 /*
  * Posée dans un contrôle (prochains passages, filtre), une puce d'information — ou la pastille
- * d'accessibilité d'un arrêt — n'est pas un bouton de carte. Les styles de MapLibre, hors couche,
- * l'emportent sinon sur les utilitaires Tailwind, rangés dans une couche : fond transparent, 29 px
- * de côté, `display: block`. On lui rend ces utilitaires.
+ * d'accessibilité d'un arrêt, ou un bouton du filtre — n'est pas un bouton de carte. Les styles de
+ * MapLibre, hors couche, l'emportent sinon sur les utilitaires Tailwind, rangés dans une couche :
+ * fond transparent, 29 px de côté, `display: block`. On lui rend ces utilitaires.
  * Même spécificité que le survol de MapLibre, déclaré plus tôt : celle-ci l'emporte.
  */
 .maplibregl-ctrl
 button:is(
 	[data-slot="information-chip"],
 	[data-slot="wheelchair-badge"],
-	[data-slot="on-demand-badge"]
+	[data-slot="on-demand-badge"],
+	[data-slot="map-filter-button"]
 ):not(:disabled) {
 	all: revert-layer;
 }
@@ -61,4 +62,55 @@ button:is(
    ce qui laissait voir le fond de page (violet sur la carte) au démarrage. */
 .maplibregl-map {
 	background-color: #f8f4f0;
+}
+
+/*
+ * Contrôles par défaut de MapLibre (zoom, plein écran, géolocalisation) et réglages de la carte
+ * intégrée : même hauteur et même habillage que le module de filtre, qui leur fait face.
+ */
+.maplibregl-ctrl-group:is(
+	:has(> .maplibregl-ctrl-zoom-in),
+	:has(> .maplibregl-ctrl-fullscreen),
+	:has(> .maplibregl-ctrl-shrink),
+	:has(> .maplibregl-ctrl-geolocate),
+	.map-default-control
+) {
+	border-radius: var(--radius);
+	box-shadow:
+		0 0 0 2px #fff,
+		0 4px 6px -1px rgb(0 0 0 / 0.1),
+		0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+	& button {
+		width: 36px;
+		height: 36px;
+	}
+
+	& button:first-child {
+		border-top-left-radius: var(--radius);
+		border-top-right-radius: var(--radius);
+	}
+
+	& button:last-child {
+		border-bottom-left-radius: var(--radius);
+		border-bottom-right-radius: var(--radius);
+	}
+
+	@media (hover: hover) {
+		& button:not(:disabled):hover {
+			background-color: color-mix(
+				in srgb,
+				var(--color-branding) 10%,
+				transparent
+			);
+		}
+	}
+
+	& button:not(:disabled):active {
+		background-color: color-mix(
+			in srgb,
+			var(--color-branding) 15%,
+			transparent
+		);
+	}
 }

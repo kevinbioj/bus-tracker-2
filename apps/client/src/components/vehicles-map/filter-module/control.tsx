@@ -81,6 +81,9 @@ function FilterModuleLineAlerts({ line }: Readonly<{ line: Line }>) {
 	return <ServiceAlertsButton alerts={alerts} scope="line" />;
 }
 
+const subtleActionClassName =
+	"flex items-center justify-center shrink-0 rounded-md bg-branding/10 text-branding transition-colors outline-none hover:bg-branding hover:text-branding-foreground focus-visible:ring-2 focus-visible:ring-branding/50";
+
 type FilterModuleControlProps = {
 	filter?: MapFilter;
 	fixedNetworkId?: number;
@@ -114,16 +117,17 @@ export function FilterModuleControl({
 
 	return (
 		<>
-			<div className="maplibregl-ctrl maplibregl-ctrl-group max-w-[calc(100vw-6.5rem)] text-black" ref={activatorRef}>
+			<div className="maplibregl-ctrl max-w-[calc(100vw-6.5rem)] font-sans" ref={activatorRef}>
 				{filter ? (
-					<div className="font-sans flex items-center gap-1.5 min-w-0 mr-1">
+					<div className="flex items-center gap-1.5 h-9 min-w-0 pl-1 pr-1 rounded-lg bg-white text-black shadow-md ring-2 ring-white">
 						<button
-							className="shrink-0"
+							className={clsx(subtleActionClassName, "size-7")}
+							data-slot="map-filter-button"
 							onClick={() => onFilterChange(undefined)}
 							title={m.map_filter_disable()}
 							type="button"
 						>
-							<FilterXIcon className="m-auto size-5" />
+							<FilterXIcon className="size-4.5" />
 						</button>
 
 						{filter.kind === "network" ? (
@@ -172,36 +176,43 @@ export function FilterModuleControl({
 
 						{filter.kind === "line" && <FilterModuleLineAlerts line={filter.line} />}
 
-						{withDataLink && (
-							<>
-								<span aria-hidden className="bg-black/15 h-5 shrink-0 w-px" />
-
-								{filter.kind === "network" ? (
-									<Link
-										className="flex items-center shrink-0"
-										params={{ networkId: `${filter.network.id}` }}
-										title={m.map_filter_network_data()}
-										to="/data/networks/$networkId"
-									>
-										{/* La page réseau liste le parc et les lignes : un inventaire, pas un historique. */}
-										<TableIcon className="size-5" />
-									</Link>
-								) : (
-									<Link
-										className="flex items-center shrink-0"
-										params={{ lineId: `${filter.line.id}` }}
-										title={m.map_filter_line_data()}
-										to="/data/lines/$lineId"
-									>
-										<HistoryIcon className="size-5" />
-									</Link>
-								)}
-							</>
-						)}
+						{withDataLink &&
+							(filter.kind === "network" ? (
+								<Link
+									className={clsx(subtleActionClassName, "gap-1.5 h-7 px-2.5 text-sm")}
+									params={{ networkId: `${filter.network.id}` }}
+									title={m.map_filter_network_data()}
+									to="/data/networks/$networkId"
+								>
+									{/* La page réseau liste le parc et les lignes : un inventaire, pas un historique. */}
+									<TableIcon className="shrink-0 size-4" />
+									<span className="hidden sm:inline">{m.map_filter_network_data()}</span>
+									<span className="sm:hidden">{m.map_filter_data_short()}</span>
+								</Link>
+							) : (
+								<Link
+									className={clsx(subtleActionClassName, "gap-1.5 h-7 px-2.5 text-sm")}
+									params={{ lineId: `${filter.line.id}` }}
+									title={m.map_filter_line_data()}
+									to="/data/lines/$lineId"
+								>
+									<HistoryIcon className="shrink-0 size-4" />
+									<span className="hidden sm:inline">{m.map_filter_line_data()}</span>
+									<span className="sm:hidden">{m.map_filter_data_short()}</span>
+								</Link>
+							))}
 					</div>
 				) : (
-					<button onClick={() => setOpen(true)} title={m.map_filter_vehicles()} type="button">
-						<FilterIcon className="m-auto p-0.5" />
+					<button
+						className="flex items-center gap-2 h-9 px-3.5 rounded-lg bg-white text-black text-sm shadow-md ring-2 ring-white transition-colors outline-none hover:bg-[color-mix(in_srgb,var(--color-branding)_10%,white)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-branding"
+						data-slot="map-filter-button"
+						onClick={() => setOpen(true)}
+						title={m.map_filter_vehicles()}
+						type="button"
+					>
+						<FilterIcon className="shrink-0 size-4" />
+						<span className="hidden sm:inline">{m.map_filter_by_network_or_line()}</span>
+						<span className="sm:hidden">{m.map_filter_short()}</span>
 					</button>
 				)}
 			</div>

@@ -148,7 +148,7 @@ export function EmbedSettingsControl() {
 	useEffect(() => {
 		if (controlRef === null) return;
 
-		controlRef.classList.add("maplibregl-ctrl", "maplibregl-ctrl-group");
+		controlRef.classList.add("maplibregl-ctrl", "maplibregl-ctrl-group", "map-default-control");
 
 		const control: IControl = {
 			onAdd: () => controlRef,

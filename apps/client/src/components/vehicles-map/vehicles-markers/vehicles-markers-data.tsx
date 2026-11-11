@@ -16,7 +16,6 @@ import {
 import { useDisplayedCountryCodes } from "~/components/vehicles-map/displayed-countries";
 import { useDisplayedPositionTypes } from "~/components/vehicles-map/displayed-position-types";
 import { useRealtimeMarkers } from "~/components/vehicles-map/vehicles-markers/use-realtime-markers";
-import { VehiclesMarkersStatusControl } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-status-control";
 
 const hashSeed = (str: string): number => {
 	let h = 1779033703 ^ str.length;
@@ -266,14 +265,5 @@ export function VehiclesMarkersData({
 		[data, positionOverrides, previewVehicleNumber],
 	);
 
-	return (
-		<>
-			<VehiclesMarkersStatusControl
-				live={connected}
-				loading={realtime ? !connected : isFetching}
-				onClick={!realtime && !isFetching ? refetch : undefined}
-			/>
-			<GeojsonCircles features={features} source={source} />
-		</>
-	);
+	return <GeojsonCircles features={features} source={source} />;
 }
