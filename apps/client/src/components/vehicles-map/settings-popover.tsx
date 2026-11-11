@@ -10,6 +10,7 @@ import { Button } from "~/components/ui/button";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "~/components/ui/popover";
 import { formatCountdown } from "~/components/vehicles-map/call-time-format";
 import { type NextCallsDisplayMode, useNextCallsDisplayMode } from "~/components/vehicles-map/next-calls-display-mode";
+import { useDisplayAbsoluteRecordedTime } from "~/components/vehicles-map/recorded-time-display";
 import * as m from "~/paraglide/messages";
 
 /** Minutes d'attente du passage pris en exemple pour illustrer les deux modes d'affichage. */
@@ -38,6 +39,35 @@ export function NextCallsDisplayModeChoice({ icon }: Readonly<{ icon?: ReactNode
 			]}
 			value={displayMode}
 			onChange={setDisplayMode}
+		/>
+	);
+}
+
+const EXAMPLE_RECORDED_SECONDS_AGO = 30;
+
+export function RecordedTimeDisplayChoice({ icon }: Readonly<{ icon?: ReactNode }>) {
+	const [displayAbsoluteTime, setDisplayAbsoluteTime] = useDisplayAbsoluteRecordedTime();
+
+	return (
+		<SettingChoice<"absolute" | "relative">
+			icon={icon}
+			label={m.settings_time_display_label()}
+			options={[
+				{
+					value: "absolute",
+					label: m.settings_time_display_absolute(),
+					icon: ClockIcon,
+					example: dayjs().subtract(EXAMPLE_RECORDED_SECONDS_AGO, "second").format("HH:mm:ss"),
+				},
+				{
+					value: "relative",
+					label: m.settings_time_display_relative(),
+					icon: TimerIcon,
+					example: m.marker_chip_recorded_seconds({ count: EXAMPLE_RECORDED_SECONDS_AGO }),
+				},
+			]}
+			value={displayAbsoluteTime ? "absolute" : "relative"}
+			onChange={(value) => setDisplayAbsoluteTime(value === "absolute")}
 		/>
 	);
 }

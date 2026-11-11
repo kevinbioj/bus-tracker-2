@@ -32,6 +32,7 @@ export default function EmbeddableMapPage() {
 		"next-calls-display",
 		parseAsStringLiteral(nextCallsDisplayModes).withDefault("absolute"),
 	);
+	const [withAbsoluteRecordedTime] = useQueryState("with-absolute-recorded-time", parseAsString);
 	const [withAccessibility] = useQueryState("with-accessibility", parseAsString);
 	const [withBikes] = useQueryState("with-bikes", parseAsString);
 	const { selectedRef: selectedStopRef } = useStopSelection();
@@ -42,10 +43,11 @@ export default function EmbeddableMapPage() {
 	const initialDisplaySettings = useMemo(
 		() => ({
 			nextCallsDisplayMode,
+			displayAbsoluteRecordedTime: withAbsoluteRecordedTime !== null,
 			showWheelchairAccessibility: withAccessibility !== null,
 			showBikesAllowed: withBikes !== null,
 		}),
-		[nextCallsDisplayMode, withAccessibility, withBikes],
+		[nextCallsDisplayMode, withAbsoluteRecordedTime, withAccessibility, withBikes],
 	);
 
 	const mapTheme = useMapTheme();

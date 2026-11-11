@@ -5,6 +5,7 @@ import type { NextCallsDisplayMode } from "~/components/vehicles-map/next-calls-
 
 type DisplaySettingsValues = {
 	nextCallsDisplayMode: NextCallsDisplayMode;
+	displayAbsoluteRecordedTime: boolean;
 	showWheelchairAccessibility: boolean;
 	showBikesAllowed: boolean;
 };
@@ -15,6 +16,7 @@ type DisplaySettingsValues = {
  */
 export type EmbedDisplaySettings = DisplaySettingsValues & {
 	setNextCallsDisplayMode: Dispatch<SetStateAction<NextCallsDisplayMode>>;
+	setDisplayAbsoluteRecordedTime: Dispatch<SetStateAction<boolean>>;
 	setShowWheelchairAccessibility: Dispatch<SetStateAction<boolean>>;
 	setShowBikesAllowed: Dispatch<SetStateAction<boolean>>;
 };
@@ -60,6 +62,7 @@ export function EmbedDisplaySettingsProvider({
 		return {
 			...values,
 			setNextCallsDisplayMode: setterOf("nextCallsDisplayMode"),
+			setDisplayAbsoluteRecordedTime: setterOf("displayAbsoluteRecordedTime"),
 			setShowWheelchairAccessibility: setterOf("showWheelchairAccessibility"),
 			setShowBikesAllowed: setterOf("showBikesAllowed"),
 		};

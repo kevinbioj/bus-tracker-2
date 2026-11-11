@@ -1,10 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { clsx } from "clsx";
-import dayjs from "dayjs";
 import {
 	BugIcon,
 	BusIcon,
-	ClockIcon,
 	HashIcon,
 	HistoryIcon,
 	ListOrderedIcon,
@@ -17,7 +15,6 @@ import {
 	SunIcon,
 	SunMoonIcon,
 	TableIcon,
-	TimerIcon,
 } from "lucide-react";
 import { useLocalStorage } from "usehooks-ts";
 
@@ -41,15 +38,17 @@ import {
 import { useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
 import { type MapThemeSetting, useMapThemeSetting } from "~/components/vehicles-map/map-style";
 import { type PathDisplayMode, usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
-import { NextCallsDisplayModeChoice, SettingsPopoverControl } from "~/components/vehicles-map/settings-popover";
+import {
+	NextCallsDisplayModeChoice,
+	RecordedTimeDisplayChoice,
+	SettingsPopoverControl,
+} from "~/components/vehicles-map/settings-popover";
 import { useShowStops } from "~/components/vehicles-map/show-stops";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 import { type StopLinesDisplayMode, useStopLinesDisplayMode } from "~/components/vehicles-map/stop-lines-display-mode";
 import { BikesAllowedIcon } from "~/icons/bikes-allowed";
 import { WheelchairIcon } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
-
-const EXAMPLE_RECORDED_SECONDS_AGO = 30;
 
 const positionTypeDetails = {
 	GPS: { iconClass: "text-green-600", label: m.settings_displayed_vehicles_gps },
@@ -112,7 +111,6 @@ export function MapSettingsControl() {
 	const [showStops, setShowStops] = useShowStops();
 	const [stopLinesDisplayMode, setStopLinesDisplayMode] = useStopLinesDisplayMode();
 	const [displayNextCalls, setDisplayNextCalls] = useDisplayNextCalls();
-	const [displayAbsoluteTime, setDisplayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
 	const [showWheelchairAccessibility, setShowWheelchairAccessibility] = useShowWheelchairAccessibility();
 	const [showBikesAllowed, setShowBikesAllowed] = useShowBikesAllowed();
 	const [showDebugInfo, setShowDebugInfo] = useLocalStorage("show-debug-info", false);
@@ -215,26 +213,7 @@ export function MapSettingsControl() {
 					nested={displayNextCalls && <NextCallsDisplayModeChoice />}
 					onCheckedChange={setDisplayNextCalls}
 				/>
-				<SettingChoice<"relative" | "absolute">
-					icon={<HistoryIcon className={settingIconClasses} />}
-					label={m.settings_time_display_label()}
-					options={[
-						{
-							value: "absolute",
-							label: m.settings_time_display_absolute(),
-							icon: ClockIcon,
-							example: dayjs().subtract(EXAMPLE_RECORDED_SECONDS_AGO, "second").format("HH:mm:ss"),
-						},
-						{
-							value: "relative",
-							label: m.settings_time_display_relative(),
-							icon: TimerIcon,
-							example: m.marker_chip_recorded_seconds({ count: EXAMPLE_RECORDED_SECONDS_AGO }),
-						},
-					]}
-					value={displayAbsoluteTime ? "absolute" : "relative"}
-					onChange={(value) => setDisplayAbsoluteTime(value === "absolute")}
-				/>
+				<RecordedTimeDisplayChoice icon={<HistoryIcon className={settingIconClasses} />} />
 			</SettingSection>
 
 			<SettingSection title={m.settings_accessibility_section()}>

@@ -220,8 +220,14 @@ export function FilterModuleControl({
 						type="button"
 					>
 						<FilterIcon className="shrink-0 size-4" />
-						<span className="hidden sm:inline">{m.map_filter_by_network_or_line()}</span>
-						<span className="sm:hidden">{m.map_filter_short()}</span>
+						{fixedNetworkId !== undefined ? (
+							<span>{m.map_filter_by_line()}</span>
+						) : (
+							<>
+								<span className="hidden sm:inline">{m.map_filter_by_network_or_line()}</span>
+								<span className="sm:hidden">{m.map_filter_short()}</span>
+							</>
+						)}
 					</button>
 				)}
 			</div>

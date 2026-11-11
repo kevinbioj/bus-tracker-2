@@ -1,8 +1,12 @@
-import { ListOrderedIcon } from "lucide-react";
+import { HistoryIcon, ListOrderedIcon } from "lucide-react";
 
 import { SettingSection, SettingToggle, settingIconClasses } from "~/components/setting-blocks";
 import { useShowBikesAllowed, useShowWheelchairAccessibility } from "~/components/vehicles-map/accessibility-display";
-import { NextCallsDisplayModeChoice, SettingsPopoverControl } from "~/components/vehicles-map/settings-popover";
+import {
+	NextCallsDisplayModeChoice,
+	RecordedTimeDisplayChoice,
+	SettingsPopoverControl,
+} from "~/components/vehicles-map/settings-popover";
 import { BikesAllowedIcon } from "~/icons/bikes-allowed";
 import { WheelchairIcon } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
@@ -19,6 +23,7 @@ export function EmbedSettingsControl() {
 		<SettingsPopoverControl>
 			<SettingSection title={m.settings_vehicle_card_section()}>
 				<NextCallsDisplayModeChoice icon={<ListOrderedIcon className={settingIconClasses} />} />
+				<RecordedTimeDisplayChoice icon={<HistoryIcon className={settingIconClasses} />} />
 			</SettingSection>
 			<SettingSection title={m.settings_accessibility_section()}>
 				<SettingToggle

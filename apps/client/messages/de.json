@@ -156,6 +156,7 @@
 	"map_filter_network_data": "Netzdaten anzeigen",
 	"map_filter_whole_network": "Gesamtes Netz anzeigen",
 	"map_filter_vehicles": "Fahrzeuge filtern",
+	"map_filter_by_line": "Nach Linie filtern",
 	"map_filter_by_network_or_line": "Nach Netz oder Linie filtern",
 	"map_filter_short": "Filtern",
 	"map_filter_data_short": "Daten",

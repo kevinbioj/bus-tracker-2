@@ -8,7 +8,6 @@ import { ClockIcon, SatelliteDishIcon, TriangleAlertIcon, UsbIcon } from "lucide
 import { useSnackbar } from "notistack";
 import { useMemo, useState } from "react";
 import { match } from "ts-pattern";
-import { useLocalStorage } from "usehooks-ts";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { sendRealtimeMessage, useRealtimeAvailable } from "~/api/realtime";
@@ -31,6 +30,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { useShowBikesAllowed, useShowWheelchairAccessibility } from "~/components/vehicles-map/accessibility-display";
 import { useMapTheme } from "~/components/vehicles-map/map-style";
+import { useDisplayAbsoluteRecordedTime } from "~/components/vehicles-map/recorded-time-display";
 import { InformationChip } from "~/components/vehicles-map/vehicles-markers/popup/information-chip";
 import { InformationChipsRow } from "~/components/vehicles-map/vehicles-markers/popup/information-chips-row";
 import { useAirConditioningFeature } from "~/hooks/use-air-conditioning-feature";
@@ -141,7 +141,7 @@ type VehicleInformationProps = {
 
 export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleInformationProps>) {
 	const mapTheme = useMapTheme();
-	const [displayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
+	const [displayAbsoluteTime] = useDisplayAbsoluteRecordedTime();
 	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
 	const [showBikesAllowed] = useShowBikesAllowed();
 	const [openedDialog, setOpenedDialog] = useState<InformationDialog | null>(null);
