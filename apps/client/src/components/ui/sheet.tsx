@@ -1,8 +1,7 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
-
-import * as m from "~/paraglide/messages";
 import { usePortalContainer } from "~/hooks/use-portal-container";
+import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
 import { Button } from "./button";
