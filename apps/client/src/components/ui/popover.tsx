@@ -18,9 +18,10 @@ export function PopoverContent({
 	alignOffset = 0,
 	side = "bottom",
 	sideOffset = 4,
+	collisionAvoidance,
 	...props
 }: PopoverPrimitive.Popup.Props &
-	Pick<PopoverPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset"> & {
+	Pick<PopoverPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "collisionAvoidance"> & {
 		positionerClassName?: string;
 	}) {
 	const container = usePortalContainer();
@@ -31,6 +32,7 @@ export function PopoverContent({
 				alignOffset={alignOffset}
 				side={side}
 				sideOffset={sideOffset}
+				collisionAvoidance={collisionAvoidance}
 				className={cn("isolate z-50", positionerClassName)}
 			>
 				<PopoverPrimitive.Popup

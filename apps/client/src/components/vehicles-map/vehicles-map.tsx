@@ -14,6 +14,7 @@ import { FilterModuleControl } from "~/components/vehicles-map/filter-module/con
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import { triggerGeolocateWhenReady, useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
 import { LineVehiclesPanel } from "~/components/vehicles-map/line-vehicles-panel";
+import { MapSettingsControl } from "~/components/vehicles-map/map-settings-control";
 import { getMapStyleUrl, MapThemeStyle, useMapTheme } from "~/components/vehicles-map/map-style";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { useShowStops } from "~/components/vehicles-map/show-stops";
@@ -147,6 +148,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 				<LineVehiclesPanel lineId={filteredLine.id} timezone={filteredNetwork?.timezone} />
 			)}
 			<FilterModuleControl filter={filter} onFilterChange={onFilterChange} />
+			<MapSettingsControl />
 		</MapComponent>
 	);
 }
