@@ -20,7 +20,7 @@ const sources = [
 		},
 		getVehicleRef: (vehicle) => {
 			const number = vehicle?.id.split(":")[1];
-			if (number.startsWith("UNKNOWN_")) return undefined;
+			if (number?.startsWith("UNKNOWN_")) return undefined;
 			return number;
 		},
 	},
