@@ -52,10 +52,10 @@ export default function EmbeddableMapPage() {
 	);
 
 	useEffect(() => {
-		const root = document.body;
-		root.dataset.mapTheme = "light";
+		const elements = [document.documentElement, document.body];
+		for (const element of elements) element.dataset.mapTheme = "light";
 		return () => {
-			delete root.dataset.mapTheme;
+			for (const element of elements) delete element.dataset.mapTheme;
 		};
 	}, []);
 

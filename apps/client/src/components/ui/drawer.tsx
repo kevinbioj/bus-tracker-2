@@ -1,6 +1,6 @@
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 
-import { usePortalContainer } from "~/hooks/use-portal-container";
+import { usePortalProps } from "~/hooks/use-portal-container";
 import { cn } from "~/utils/cn";
 
 export function Drawer({ ...props }: DrawerPrimitive.Root.Props) {
@@ -16,8 +16,8 @@ export function DrawerClose({ ...props }: DrawerPrimitive.Close.Props) {
 }
 
 export function DrawerPortal({ ...props }: DrawerPrimitive.Portal.Props) {
-	const container = usePortalContainer();
-	return <DrawerPrimitive.Portal container={container} data-slot="drawer-portal" {...props} />;
+	const portalProps = usePortalProps();
+	return <DrawerPrimitive.Portal {...portalProps} data-slot="drawer-portal" {...props} />;
 }
 
 export function DrawerOverlay({ className, ...props }: DrawerPrimitive.Backdrop.Props) {

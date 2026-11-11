@@ -22,7 +22,7 @@ import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-p
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { StopsMarkers } from "~/components/vehicles-map/stops-markers/stops-markers-layer";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
-import { notifyPseudoFullscreen } from "~/hooks/use-portal-container";
+import { notifyPseudoFullscreen, PortalThemeContext } from "~/hooks/use-portal-container";
 
 type VehiclesMapProps = ComponentPropsWithoutRef<"div">;
 
@@ -132,24 +132,26 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	);
 
 	return (
-		<MapComponent containerProps={{ ...props, "data-map-theme": mapTheme }} mapOptions={mapOptions} ref={onMap}>
-			<MapThemeStyle initialTheme={initialMapTheme} theme={mapTheme} />
-			<PositionSave />
-			<DebugCoordinates />
-			<VehiclesMarkers filteredNetworkId={filteredNetworkOnly?.id} lineId={filteredLine?.id} />
-			{/*
-			 * Arrêts du réseau filtré, ou de la ligne filtrée : celle-ci est lue dans l'URL, pour que les
-			 * arrêts des autres lignes ne s'affichent pas le temps de la charger. Elle impose son réseau.
-			 */}
-			{showStops && (
-				<StopsMarkers lineId={lineId ?? undefined} networkId={lineId === null ? filteredNetwork?.id : undefined} />
-			)}
-			{showStops && selectedStopRef !== null && <StopDeparturesPanel lineId={lineId ?? undefined} />}
-			{showIdentifiedVehiclesPanel && filteredLine !== undefined && (
-				<LineVehiclesPanel lineId={filteredLine.id} timezone={filteredNetwork?.timezone} />
-			)}
-			<FilterModuleControl filter={filter} onFilterChange={onFilterChange} />
-			<MapSettingsControl />
-		</MapComponent>
+		<PortalThemeContext value={mapTheme}>
+			<MapComponent containerProps={{ ...props, "data-map-theme": mapTheme }} mapOptions={mapOptions} ref={onMap}>
+				<MapThemeStyle initialTheme={initialMapTheme} theme={mapTheme} />
+				<PositionSave />
+				<DebugCoordinates />
+				<VehiclesMarkers filteredNetworkId={filteredNetworkOnly?.id} lineId={filteredLine?.id} />
+				{/*
+				 * Arrêts du réseau filtré, ou de la ligne filtrée : celle-ci est lue dans l'URL, pour que les
+				 * arrêts des autres lignes ne s'affichent pas le temps de la charger. Elle impose son réseau.
+				 */}
+				{showStops && (
+					<StopsMarkers lineId={lineId ?? undefined} networkId={lineId === null ? filteredNetwork?.id : undefined} />
+				)}
+				{showStops && selectedStopRef !== null && <StopDeparturesPanel lineId={lineId ?? undefined} />}
+				{showIdentifiedVehiclesPanel && filteredLine !== undefined && (
+					<LineVehiclesPanel lineId={filteredLine.id} timezone={filteredNetwork?.timezone} />
+				)}
+				<FilterModuleControl filter={filter} onFilterChange={onFilterChange} />
+				<MapSettingsControl />
+			</MapComponent>
+		</PortalThemeContext>
 	);
 }

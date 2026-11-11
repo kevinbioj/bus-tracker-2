@@ -1,5 +1,5 @@
 import type { FullscreenControl } from "maplibre-gl";
-import { useSyncExternalStore } from "react";
+import { createContext, useContext, useSyncExternalStore } from "react";
 
 const PSEUDO_FULLSCREEN_CHANGE = "pseudofullscreenchange";
 
@@ -23,8 +23,12 @@ function getServerSnapshot() {
 	return undefined;
 }
 
-export function usePortalContainer() {
-	return useSyncExternalStore(subscribe, getFullscreenElement, getServerSnapshot);
+export const PortalThemeContext = createContext<"light" | "dark" | undefined>(undefined);
+
+export function usePortalProps() {
+	const container = useSyncExternalStore(subscribe, getFullscreenElement, getServerSnapshot);
+	const theme = useContext(PortalThemeContext);
+	return { container, "data-map-theme": theme };
 }
 
 export function notifyPseudoFullscreen(control: FullscreenControl) {

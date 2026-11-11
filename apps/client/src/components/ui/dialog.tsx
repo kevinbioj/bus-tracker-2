@@ -2,7 +2,7 @@
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
-import { usePortalContainer } from "~/hooks/use-portal-container";
+import { usePortalProps } from "~/hooks/use-portal-container";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
@@ -17,8 +17,8 @@ export function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
 }
 
 export function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
-	const container = usePortalContainer();
-	return <DialogPrimitive.Portal container={container} data-slot="dialog-portal" {...props} />;
+	const portalProps = usePortalProps();
+	return <DialogPrimitive.Portal {...portalProps} data-slot="dialog-portal" {...props} />;
 }
 
 export function DialogClose({ ...props }: DialogPrimitive.Close.Props) {

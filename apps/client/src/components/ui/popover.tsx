@@ -1,6 +1,6 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 
-import { usePortalContainer } from "~/hooks/use-portal-container";
+import { usePortalProps } from "~/hooks/use-portal-container";
 import { cn } from "~/utils/cn";
 
 export function Popover({ ...props }: PopoverPrimitive.Root.Props) {
@@ -24,9 +24,9 @@ export function PopoverContent({
 	Pick<PopoverPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset" | "collisionAvoidance"> & {
 		positionerClassName?: string;
 	}) {
-	const container = usePortalContainer();
+	const portalProps = usePortalProps();
 	return (
-		<PopoverPrimitive.Portal container={container}>
+		<PopoverPrimitive.Portal {...portalProps}>
 			<PopoverPrimitive.Positioner
 				align={align}
 				alignOffset={alignOffset}
