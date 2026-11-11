@@ -14,6 +14,7 @@ import { FilterModuleControl } from "~/components/vehicles-map/filter-module/con
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import { triggerGeolocateWhenReady, useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
 import { LineVehiclesPanel } from "~/components/vehicles-map/line-vehicles-panel";
+import { getMapStyleUrl, MapThemeStyle, useMapTheme } from "~/components/vehicles-map/map-style";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { useShowStops } from "~/components/vehicles-map/show-stops";
 import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-panel";
@@ -78,14 +79,17 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	const [shouldPrefetchMarkers] = useState(() => lineId === null && networkId === null);
 	const queryClient = useQueryClient();
 
+	const mapTheme = useMapTheme();
+	const [initialMapTheme] = useState(mapTheme);
+
 	const mapOptions = useMemo(
 		() => ({
 			center: initialLocation.position,
 			// style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-			style: "/map-styles/liberty-fr.json",
+			style: getMapStyleUrl(initialMapTheme),
 			zoom: initialLocation.zoom,
 		}),
-		[initialLocation],
+		[initialLocation, initialMapTheme],
 	);
 
 	const onMap = useCallback(
@@ -126,7 +130,8 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	);
 
 	return (
-		<MapComponent containerProps={props} mapOptions={mapOptions} ref={onMap}>
+		<MapComponent containerProps={{ ...props, "data-map-theme": mapTheme }} mapOptions={mapOptions} ref={onMap}>
+			<MapThemeStyle initialTheme={initialMapTheme} theme={mapTheme} />
 			<PositionSave />
 			<DebugCoordinates />
 			<VehiclesMarkers filteredNetworkId={filteredNetworkOnly?.id} lineId={filteredLine?.id} />

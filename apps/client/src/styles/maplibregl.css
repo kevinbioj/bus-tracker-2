@@ -1,3 +1,11 @@
+.maplibregl-map {
+	--popup-border-color: #444444;
+}
+
+.maplibregl-map[data-map-theme="dark"] {
+	--popup-border-color: #6e737e;
+}
+
 .maplibregl-popup {
 	z-index: 1;
 }
@@ -10,12 +18,12 @@
 
 .maplibregl-popup-tip {
 	/* biome-ignore lint/complexity/noImportantStyles: required to override it */
-	border-top-color: #444444 !important;
+	border-top-color: var(--popup-border-color) !important;
 }
 
 /* biome-ignore lint/style/noDescendingSpecificity: works like that */
 .maplibregl-popup-content {
-	border: 1px solid #444444;
+	border: 1px solid var(--popup-border-color);
 	border-top-left-radius: 0px;
 	border-top-right-radius: 0px;
 	border-bottom-left-radius: 8px;
@@ -41,6 +49,12 @@
 	z-index: 1;
 }
 
+/* Les panneaux portent leur propre fond, arrondi et ombre : celui de MapLibre dépasserait de leurs coins. */
+.maplibregl-ctrl-group:is(.stop-departures-control, .line-vehicles-control) {
+	background: none;
+	box-shadow: none;
+}
+
 /*
  * Posée dans un contrôle (prochains passages, filtre), une puce d'information — ou la pastille
  * d'accessibilité d'un arrêt, ou un bouton du filtre — n'est pas un bouton de carte. Les styles de
@@ -58,10 +72,14 @@ button:is(
 	all: revert-layer;
 }
 
-/* Couleur du fond du style liberty-fr : la carte reste transparente tant que son style n'est pas chargé,
+/* Couleur du fond du style liberty-fr (ou liberty-fr-dark) : la carte reste transparente tant que son style n'est pas chargé,
    ce qui laissait voir le fond de page (violet sur la carte) au démarrage. */
 .maplibregl-map {
 	background-color: #f8f4f0;
+}
+
+.maplibregl-map[data-map-theme="dark"] {
+	background-color: #31353e;
 }
 
 /*
@@ -112,5 +130,39 @@ button:is(
 			var(--color-branding) 15%,
 			transparent
 		);
+	}
+
+	[data-map-theme="dark"] & {
+		background-color: var(--color-card);
+		box-shadow:
+			0 0 0 2px var(--color-card),
+			0 4px 6px -1px rgb(0 0 0 / 0.3),
+			0 2px 4px -2px rgb(0 0 0 / 0.3);
+
+		& button + button {
+			border-top-color: var(--color-border);
+		}
+
+		& .maplibregl-ctrl-icon {
+			filter: invert(1) hue-rotate(180deg);
+		}
+
+		& button:not(:disabled):active {
+			background-color: color-mix(
+				in srgb,
+				var(--color-branding) 40%,
+				transparent
+			);
+		}
+	}
+
+	@media (hover: hover) {
+		[data-map-theme="dark"] & button:not(:disabled):hover {
+			background-color: color-mix(
+				in srgb,
+				var(--color-branding) 30%,
+				transparent
+			);
+		}
 	}
 }

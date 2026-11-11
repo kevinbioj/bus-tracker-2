@@ -15,6 +15,7 @@ import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
 import { FilterModuleManager } from "~/components/vehicles-map/filter-module/manager";
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
+import { useMapTheme } from "~/components/vehicles-map/map-style";
 import * as m from "~/paraglide/messages";
 
 type NetworkBadgeProps = {
@@ -22,6 +23,8 @@ type NetworkBadgeProps = {
 };
 
 function NetworkBadge({ network }: Readonly<NetworkBadgeProps>) {
+	const mapTheme = useMapTheme();
+
 	if (network.logoHref === null) {
 		return (
 			<span className="max-w-24 shrink text-base truncate" title={network.name}>
@@ -30,7 +33,13 @@ function NetworkBadge({ network }: Readonly<NetworkBadgeProps>) {
 		);
 	}
 
-	return <img className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0" src={network.logoHref} alt={network.name} />;
+	return (
+		<img
+			className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
+			src={(mapTheme === "dark" ? network.darkModeLogoHref : null) ?? network.logoHref}
+			alt={network.name}
+		/>
+	);
 }
 
 type FilterModuleVehiclesCountProps = {
@@ -82,7 +91,7 @@ function FilterModuleLineAlerts({ line }: Readonly<{ line: Line }>) {
 }
 
 const subtleActionClassName =
-	"flex items-center justify-center shrink-0 rounded-md bg-branding/10 text-branding transition-colors outline-none hover:bg-branding hover:text-branding-foreground focus-visible:ring-2 focus-visible:ring-branding/50";
+	"flex items-center justify-center shrink-0 rounded-md bg-branding/10 text-branding transition-colors outline-none hover:bg-branding hover:text-branding-foreground dark:bg-branding/40 dark:text-branding-foreground dark:hover:bg-branding focus-visible:ring-2 focus-visible:ring-branding/50";
 
 type FilterModuleControlProps = {
 	filter?: MapFilter;
@@ -119,7 +128,7 @@ export function FilterModuleControl({
 		<>
 			<div className="maplibregl-ctrl max-w-[calc(100vw-6.5rem)] font-sans" ref={activatorRef}>
 				{filter ? (
-					<div className="flex items-center gap-1.5 h-9 min-w-0 pl-1 pr-1 rounded-lg bg-white text-black shadow-md ring-2 ring-white">
+					<div className="flex items-center gap-1.5 h-9 min-w-0 pl-1 pr-1 rounded-lg bg-card text-card-foreground shadow-md ring-2 ring-card">
 						<button
 							className={clsx(subtleActionClassName, "size-7")}
 							data-slot="map-filter-button"
@@ -204,7 +213,7 @@ export function FilterModuleControl({
 					</div>
 				) : (
 					<button
-						className="flex items-center gap-2 h-9 px-3.5 rounded-lg bg-white text-black text-sm shadow-md ring-2 ring-white transition-colors outline-none hover:bg-[color-mix(in_srgb,var(--color-branding)_10%,white)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-branding"
+						className="flex items-center gap-2 h-9 px-3.5 rounded-lg bg-card text-card-foreground text-sm shadow-md ring-2 ring-card transition-colors outline-none hover:bg-[color-mix(in_srgb,var(--color-branding)_10%,var(--color-card))] dark:hover:bg-[color-mix(in_srgb,var(--color-branding)_30%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-branding"
 						data-slot="map-filter-button"
 						onClick={() => setOpen(true)}
 						title={m.map_filter_vehicles()}

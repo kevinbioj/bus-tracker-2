@@ -15,6 +15,7 @@ import {
 } from "~/api/vehicle-journeys";
 import { useDisplayedCountryCodes } from "~/components/vehicles-map/displayed-countries";
 import { useDisplayedPositionTypes } from "~/components/vehicles-map/displayed-position-types";
+import { dimForDarkMap, useMapTheme } from "~/components/vehicles-map/map-style";
 import { useRealtimeMarkers } from "~/components/vehicles-map/vehicles-markers/use-realtime-markers";
 
 const hashSeed = (str: string): number => {
@@ -41,6 +42,8 @@ const noise = ([lon, lat]: [number, number], seed: string): [number, number] => 
 	return [lon + ((rand() * 2 - 1) * 2.5) / 111111, lat + ((rand() * 2 - 1) * 2.5) / 75000];
 };
 
+const keepColor = (color: string) => color;
+
 const NO_POSITION_OVERRIDES = new Map<string, { position: DisposeableVehicleJourney["position"]; at: number }>();
 
 type VehiclesMarkersDataProps = {
@@ -61,6 +64,7 @@ export function VehiclesMarkersData({
 }: VehiclesMarkersDataProps) {
 	const map = useMap();
 	const [previewVehicleNumber] = useLocalStorage("preview-vehicle-number", false);
+	const markerColor = useMapTheme() === "dark" ? dimForDarkMap : keepColor;
 	const [displayedPositionTypes] = useDisplayedPositionTypes();
 	const [displayedCountryCodes] = useDisplayedCountryCodes();
 	const [bounds] = useDebounceValue(useMapBounds(), 250);
@@ -252,8 +256,8 @@ export function VehiclesMarkersData({
 					properties: {
 						id: item.id,
 						bearing: position.bearing ?? null,
-						color: item.color ?? "#FFFFFF",
-						fillColor: item.fillColor ?? "#000000",
+						color: markerColor(item.color ?? "#FFFFFF"),
+						fillColor: markerColor(item.fillColor ?? "#000000"),
 						previewText:
 							[
 								...(item.lineNumber ? [item.lineNumber] : []),
@@ -262,7 +266,7 @@ export function VehiclesMarkersData({
 					},
 				};
 			}),
-		[data, positionOverrides, previewVehicleNumber],
+		[data, positionOverrides, previewVehicleNumber, markerColor],
 	);
 
 	return <GeojsonCircles features={features} source={source} />;

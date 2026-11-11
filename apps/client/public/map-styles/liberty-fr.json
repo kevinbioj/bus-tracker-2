@@ -1,5 +1,10 @@
 {
 	"version": 8,
+	"state": {
+		"darkMode": {
+			"default": false
+		}
+	},
 	"sources": {
 		"ne2_shaded": {
 			"maxzoom": 6,

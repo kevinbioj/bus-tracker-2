@@ -30,6 +30,7 @@ import {
 } from "~/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/ui/tooltip";
 import { useShowBikesAllowed, useShowWheelchairAccessibility } from "~/components/vehicles-map/accessibility-display";
+import { useMapTheme } from "~/components/vehicles-map/map-style";
 import { InformationChip } from "~/components/vehicles-map/vehicles-markers/popup/information-chip";
 import { InformationChipsRow } from "~/components/vehicles-map/vehicles-markers/popup/information-chips-row";
 import { useAirConditioningFeature } from "~/hooks/use-air-conditioning-feature";
@@ -139,6 +140,7 @@ type VehicleInformationProps = {
 };
 
 export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleInformationProps>) {
+	const mapTheme = useMapTheme();
 	const [displayAbsoluteTime] = useLocalStorage("display-absolute-time", false);
 	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
 	const [showBikesAllowed] = useShowBikesAllowed();
@@ -198,10 +200,11 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 			<TooltipTrigger
 				render={
 					<picture className="min-w-8 max-w-28 w-fit">
-						{network.darkModeLogoHref !== null && (
-							<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-						)}
-						<img className="h-5 object-contain m-auto" src={network.logoHref} alt="" />
+						<img
+							className="h-5 object-contain m-auto"
+							src={(mapTheme === "dark" ? network.darkModeLogoHref : null) ?? network.logoHref}
+							alt=""
+						/>
 					</picture>
 				}
 			/>

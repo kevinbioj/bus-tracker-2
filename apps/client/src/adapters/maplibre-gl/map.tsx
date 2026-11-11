@@ -20,7 +20,7 @@ setWorkerUrl(maplibreWorkerUrl);
 setWorkerCount(3);
 
 type MapComponentProps = PropsWithChildren & {
-	containerProps?: ComponentPropsWithoutRef<"div">;
+	containerProps?: ComponentPropsWithoutRef<"div"> & { [attribute: `data-${string}`]: string | undefined };
 	mapOptions?: Omit<MapOptions, "container">;
 	ref?: Ref<MaplibreMap>;
 };

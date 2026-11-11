@@ -8,6 +8,7 @@ import { DisplayedCountriesSetting } from "~/routes/_app/-components/settings/di
 import { DisplayedVehiclesSetting } from "~/routes/_app/-components/settings/displayed-vehicles";
 import { EditorTokenInput } from "~/routes/_app/-components/settings/editor-token-input";
 import { GeolocateOnStartSetting } from "~/routes/_app/-components/settings/geolocate-on-start";
+import { MapThemeSetting } from "~/routes/_app/-components/settings/map-theme";
 import { OnlyNetworksWithHistorySetting } from "~/routes/_app/-components/settings/only-networks-with-history";
 import { PreviewVehicleNumberSetting } from "~/routes/_app/-components/settings/preview-vehicle-number";
 import { ShowBikesAllowedSetting } from "~/routes/_app/-components/settings/show-bikes-allowed";
@@ -56,6 +57,7 @@ export function Settings() {
 								{m.settings_map_section()}
 							</h3>
 							<div className="flex flex-col gap-4">
+								<MapThemeSetting />
 								<DisplayedVehiclesSetting />
 								<ShowStopsSetting />
 								<StopLinesDisplayModeSetting />

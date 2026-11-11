@@ -70,6 +70,8 @@ const LABEL_LINE_HEIGHT = 1.2;
 
 const NETWORK_FONT_SCALE = 0.85;
 
+const darkMode: ExpressionSpecification = ["to-boolean", ["global-state", "darkMode"]];
+
 /**
  * Nom de l'arrêt, suivi du réseau sur une seconde ligne, plus discrète, lorsqu'un homonyme d'un autre
  * réseau est affiché.
@@ -79,7 +81,7 @@ const labelText: ExpressionSpecification = [
 	["get", "label"],
 	{},
 	["case", ["has", "network"], ["concat", "\n", ["get", "network"]], ""],
-	{ "font-scale": NETWORK_FONT_SCALE, "text-color": "#3A4458" },
+	{ "font-scale": NETWORK_FONT_SCALE, "text-color": ["case", darkMode, "#B8C0D0", "#3A4458"] },
 ];
 
 const LABEL_OFFSET_X = (STOP_ICON_WIDTH / 2 + 3) / LABEL_TEXT_SIZE;
@@ -132,8 +134,8 @@ const labelLayout: SymbolLayerSpecification["layout"] = {
 const pointLabelMaxWidth: ExpressionSpecification = ["case", ["has", "badges"], 100, 10];
 
 const labelPaint: SymbolLayerSpecification["paint"] = {
-	"text-color": "#1E2A4A",
-	"text-halo-color": "#FFFFFF",
+	"text-color": ["case", darkMode, "#F1F4FA", "#1E2A4A"],
+	"text-halo-color": ["case", darkMode, "#1E2A4A", "#FFFFFF"],
 	"text-halo-width": 1.5,
 };
 

@@ -124,7 +124,7 @@ function LineVehiclesControl({ lineId, timezone }: Readonly<LineVehiclesPanelPro
 
 	useEffect(() => {
 		const container = containerRef.current;
-		container.className = "maplibregl-ctrl maplibregl-ctrl-group font-sans";
+		container.className = "maplibregl-ctrl maplibregl-ctrl-group font-sans line-vehicles-control";
 
 		const control = {
 			onAdd: () => container,

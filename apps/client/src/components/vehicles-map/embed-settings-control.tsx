@@ -167,7 +167,7 @@ export function EmbedSettingsControl() {
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger
 					render={
-						<button className="text-black" title={m.settings_aria_label()} type="button">
+						<button className="text-card-foreground" title={m.settings_aria_label()} type="button">
 							<SettingsIcon className="m-auto p-0.5" strokeWidth={2.5} />
 						</button>
 					}
