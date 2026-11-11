@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAttributionsRouteImport } from './routes/_app/attributions'
-import { Route as AppHelpRouteImport } from './routes/_app/help'
 import { Route as AppLegalRouteImport } from './routes/_app/legal'
 import { Route as EmbedNetworkIdRouteImport } from './routes/embed/$networkId'
 import { Route as AppDataIndexRouteImport } from './routes/_app/data/index'
@@ -36,11 +35,6 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppAttributionsRoute = AppAttributionsRouteImport.update({
   id: '/attributions',
   path: '/attributions',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHelpRoute = AppHelpRouteImport.update({
-  id: '/help',
-  path: '/help',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLegalRoute = AppLegalRouteImport.update({
@@ -103,7 +97,6 @@ const AppDataLinesLineIdGirouettesGirouetteIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/attributions': typeof AppAttributionsRoute
-  '/help': typeof AppHelpRoute
   '/legal': typeof AppLegalRoute
   '/embed/$networkId': typeof EmbedNetworkIdRoute
   '/data/': typeof AppDataIndexRoute
@@ -117,7 +110,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/attributions': typeof AppAttributionsRoute
-  '/help': typeof AppHelpRoute
   '/legal': typeof AppLegalRoute
   '/embed/$networkId': typeof EmbedNetworkIdRoute
   '/': typeof AppIndexRoute
@@ -134,7 +126,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/_app/attributions': typeof AppAttributionsRoute
-  '/_app/help': typeof AppHelpRoute
   '/_app/legal': typeof AppLegalRoute
   '/embed/$networkId': typeof EmbedNetworkIdRoute
   '/_app/': typeof AppIndexRoute
@@ -152,7 +143,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/attributions'
-    | '/help'
     | '/legal'
     | '/embed/$networkId'
     | '/data/'
@@ -166,7 +156,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/attributions'
-    | '/help'
     | '/legal'
     | '/embed/$networkId'
     | '/'
@@ -182,7 +171,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/_app/attributions'
-    | '/_app/help'
     | '/_app/legal'
     | '/embed/$networkId'
     | '/_app/'
@@ -222,13 +210,6 @@ declare module '@tanstack/react-router' {
       path: '/attributions'
       fullPath: '/attributions'
       preLoaderRoute: typeof AppAttributionsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/help': {
-      id: '/_app/help'
-      path: '/help'
-      fullPath: '/help'
-      preLoaderRoute: typeof AppHelpRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/legal': {
@@ -306,7 +287,6 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAttributionsRoute: typeof AppAttributionsRoute
-  AppHelpRoute: typeof AppHelpRoute
   AppLegalRoute: typeof AppLegalRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDataIndexRoute: typeof AppDataIndexRoute
@@ -321,7 +301,6 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAttributionsRoute: AppAttributionsRoute,
-  AppHelpRoute: AppHelpRoute,
   AppLegalRoute: AppLegalRoute,
   AppIndexRoute: AppIndexRoute,
   AppDataIndexRoute: AppDataIndexRoute,
