@@ -170,3 +170,22 @@ button:is(
 .maplibregl-map > [data-base-ui-portal] {
 	font: 1rem / 1.5 var(--font-sans);
 }
+
+.maplibregl-map[data-map-theme="dark"] {
+	& .maplibregl-ctrl.maplibregl-ctrl-attrib {
+		background-color: color-mix(in srgb, var(--color-card) 50%, transparent);
+		color: var(--color-card-foreground);
+	}
+
+	& .maplibregl-ctrl-attrib.maplibregl-compact {
+		background-color: var(--color-card);
+	}
+
+	& .maplibregl-ctrl-attrib a {
+		color: color-mix(in srgb, var(--color-card-foreground) 75%, transparent);
+	}
+
+	& .maplibregl-ctrl-attrib-button {
+		filter: invert(1);
+	}
+}

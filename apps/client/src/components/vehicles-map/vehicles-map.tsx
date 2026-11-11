@@ -22,6 +22,7 @@ import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-p
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { StopsMarkers } from "~/components/vehicles-map/stops-markers/stops-markers-layer";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
+import { notifyPseudoFullscreen } from "~/hooks/use-portal-container";
 
 type VehiclesMapProps = ComponentPropsWithoutRef<"div">;
 
@@ -105,7 +106,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 				const navigationControl = new NavigationControl();
 				map.addControl(navigationControl, "top-left");
 
-				const fullscreenControl = new FullscreenControl();
+				const fullscreenControl = notifyPseudoFullscreen(new FullscreenControl());
 				map.addControl(fullscreenControl, "top-right");
 
 				const geolocateControl = new GeolocateControl({

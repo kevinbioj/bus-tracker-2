@@ -17,6 +17,7 @@ import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-p
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { StopsMarkers } from "~/components/vehicles-map/stops-markers/stops-markers-layer";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
+import { notifyPseudoFullscreen } from "~/hooks/use-portal-container";
 import * as m from "~/paraglide/messages";
 
 export default function EmbeddableMapPage() {
@@ -72,7 +73,7 @@ export default function EmbeddableMapPage() {
 				map.addControl(navigationControl, "top-left");
 
 				if (withFullscreen !== null) {
-					const fullscreenControl = new FullscreenControl();
+					const fullscreenControl = notifyPseudoFullscreen(new FullscreenControl());
 					map.addControl(fullscreenControl, "top-right");
 				}
 

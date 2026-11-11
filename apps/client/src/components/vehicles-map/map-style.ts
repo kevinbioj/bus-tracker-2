@@ -8,7 +8,7 @@ export type MapThemeSetting = "auto" | "light" | "dark";
 export type MapTheme = "light" | "dark";
 
 const DARK_MAP_BACKGROUND = [0x31, 0x35, 0x3e] as const;
-const DARK_MAP_DIMMING = 0.25;
+const DARK_MAP_DIMMING = 0.125;
 
 export function useMapThemeSetting() {
 	return useLocalStorage<MapThemeSetting>("map-theme", "auto");

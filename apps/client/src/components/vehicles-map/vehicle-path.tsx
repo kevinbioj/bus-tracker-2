@@ -11,6 +11,7 @@ import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
 import { GetLinePathQuery, GetLineQuery } from "~/api/lines";
 import { useRealtimeAvailable } from "~/api/realtime";
 import { GetJourneyPathsQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import { dimForDarkMap, useMapTheme } from "~/components/vehicles-map/map-style";
 import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
 
@@ -326,6 +327,7 @@ type VehiclePathProps = {
 export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	const map = useMap();
 	const [pathDisplayMode] = usePathDisplayMode();
+	const darkMap = useMapTheme() === "dark";
 	const [stopLabelsStyle] = useLocalStorage<StopLabelsStyle>("stop-labels-style", "with-background");
 	const showJourneyPath = pathDisplayMode !== "disabled" && journeyId !== undefined;
 
@@ -441,11 +443,12 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 			return { type: "FeatureCollection", features: [] };
 		}
 
+		const adaptColor = darkMap ? dimForDarkMap : (value: string) => value;
 		const color = line?.color ?? journey?.line?.color ?? "000000";
 		const textColor = line?.textColor ?? journey?.line?.textColor ?? "FFFFFF";
 
-		const pathColor = color.startsWith("#") ? color : `#${color}`;
-		const pathStrokeColor = textColor.startsWith("#") ? textColor : `#${textColor}`;
+		const pathColor = adaptColor(color.startsWith("#") ? color : `#${color}`);
+		const pathStrokeColor = adaptColor(textColor.startsWith("#") ? textColor : `#${textColor}`);
 
 		const features: GeoJSON.Feature[] = [];
 
@@ -604,7 +607,18 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 		}
 
 		return { type: "FeatureCollection", features };
-	}, [awaitingLineColors, cancelledPath, journey, journeyId, path, line, linePath, pathDisplayMode, showLinePath]);
+	}, [
+		awaitingLineColors,
+		cancelledPath,
+		darkMap,
+		journey,
+		journeyId,
+		path,
+		line,
+		linePath,
+		pathDisplayMode,
+		showLinePath,
+	]);
 
 	const source = useMapSource<GeoJSONSource>("vehicle-path", initialSource);
 	// Ajoutées avant les autres : chaque couche s'empile au-dessus de la précédente, le tracé
