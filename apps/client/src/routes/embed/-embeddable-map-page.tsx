@@ -2,7 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { FullscreenControl, GeolocateControl, type Map as MaplibreMap, NavigationControl } from "maplibre-gl";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
@@ -10,7 +10,7 @@ import { useRealtimeConnection } from "~/api/realtime";
 import { EmbedDisplaySettingsProvider } from "~/components/vehicles-map/embed-display-settings";
 import { EmbedSettingsControl } from "~/components/vehicles-map/embed-settings-control";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
-import { getMapStyleUrl, MapThemeStyle, useMapTheme } from "~/components/vehicles-map/map-style";
+import { getMapStyleUrl } from "~/components/vehicles-map/map-style";
 import { nextCallsDisplayModes } from "~/components/vehicles-map/next-calls-display-mode";
 import { Signature } from "~/components/vehicles-map/signature";
 import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-panel";
@@ -51,8 +51,13 @@ export default function EmbeddableMapPage() {
 		[nextCallsDisplayMode, withAbsoluteRecordedTime, withAccessibility, withBikes],
 	);
 
-	const mapTheme = useMapTheme();
-	const [initialMapTheme] = useState(mapTheme);
+	useEffect(() => {
+		const root = document.body;
+		root.dataset.mapTheme = "light";
+		return () => {
+			delete root.dataset.mapTheme;
+		};
+	}, []);
 
 	const mapOptions = useMemo(
 		() => ({
@@ -60,10 +65,10 @@ export default function EmbeddableMapPage() {
 				? ([network.embedMapCenter[0], network.embedMapCenter[1]] as [number, number])
 				: undefined,
 			// style: "https://tiles.openfreemap.org/styles/liberty",
-			style: getMapStyleUrl(initialMapTheme),
+			style: getMapStyleUrl("light"),
 			zoom: network.embedMapCenter ? network.embedMapCenter[2] : undefined,
 		}),
-		[network.embedMapCenter, initialMapTheme],
+		[network.embedMapCenter],
 	);
 
 	const onMap = useCallback(
@@ -95,11 +100,10 @@ export default function EmbeddableMapPage() {
 			{/* Isolée : la signature reste au-dessus de la carte, mais sous le drawer des prochains passages. */}
 			<EmbedDisplaySettingsProvider initialSettings={initialDisplaySettings} networkId={+networkId}>
 				<MapComponent
-					containerProps={{ className: "h-dvh relative isolate", "data-map-theme": mapTheme }}
+					containerProps={{ className: "h-dvh relative isolate", "data-map-theme": "light" }}
 					mapOptions={mapOptions}
 					ref={onMap}
 				>
-					<MapThemeStyle initialTheme={initialMapTheme} theme={mapTheme} />
 					<FilterModuleControl
 						filter={filteredLine ? { kind: "line", network, line: filteredLine } : undefined}
 						fixedNetworkId={+networkId}

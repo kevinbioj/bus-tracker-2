@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { useLocalStorage, useMediaQuery } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
+import { useEmbedDisplaySettings } from "~/components/vehicles-map/embed-display-settings";
 
 export type MapThemeSetting = "auto" | "light" | "dark";
 export type MapTheme = "light" | "dark";
@@ -15,8 +16,10 @@ export function useMapThemeSetting() {
 }
 
 export function useMapTheme(): MapTheme {
+	const embedded = useEmbedDisplaySettings() !== null;
 	const [setting] = useMapThemeSetting();
 	const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
+	if (embedded) return "light";
 	if (setting === "auto") return prefersDark ? "dark" : "light";
 	return setting;
 }
