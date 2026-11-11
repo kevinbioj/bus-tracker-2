@@ -166,3 +166,7 @@ button:is(
 		}
 	}
 }
+
+.maplibregl-map > [data-base-ui-portal] {
+	font: 1rem / 1.5 var(--font-sans);
+}

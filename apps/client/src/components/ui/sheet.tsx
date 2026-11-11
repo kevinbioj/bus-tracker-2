@@ -2,6 +2,7 @@ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 
 import * as m from "~/paraglide/messages";
+import { usePortalContainer } from "~/hooks/use-portal-container";
 import { cn } from "~/utils/cn";
 
 import { Button } from "./button";
@@ -19,7 +20,8 @@ export function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
 }
 
 export function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
-	return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
+	const container = usePortalContainer();
+	return <SheetPrimitive.Portal container={container} data-slot="sheet-portal" {...props} />;
 }
 
 export function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
