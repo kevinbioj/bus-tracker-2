@@ -12,7 +12,7 @@ import { match } from "ts-pattern";
 import type { Vehicle } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
 import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
-import tcInfosIcon from "~/icons/tc-infos.png";
+import tcInfosIcon from "~/icons/tc-infos.svg";
 import * as m from "~/paraglide/messages";
 import { VehicleCharacteristicsActions } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-action-menu";
 
@@ -79,7 +79,7 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 							nativeButton={false}
 							render={
 								<a target="_blank" rel="noreferrer" href={getTcInfosLink(vehicle.tcId)}>
-									<img className="rounded-sm" src={tcInfosIcon} alt={m.vehicle_details_tc_infos_alt()} />
+									<img src={tcInfosIcon} alt={m.vehicle_details_tc_infos_alt()} />
 								</a>
 							}
 						/>
