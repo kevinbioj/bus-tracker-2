@@ -29,8 +29,8 @@
 	border-bottom-left-radius: 8px;
 	border-bottom-right-radius: 8px;
 	padding: 0;
-	background-color: var(--color-background);
-	color: var(--color-foreground);
+	background-color: var(--background);
+	color: var(--foreground);
 }
 
 /*
@@ -133,14 +133,14 @@ button:is(
 	}
 
 	[data-map-theme="dark"] & {
-		background-color: var(--color-card);
+		background-color: var(--card);
 		box-shadow:
-			0 0 0 2px var(--color-card),
+			0 0 0 2px var(--card),
 			0 4px 6px -1px rgb(0 0 0 / 0.3),
 			0 2px 4px -2px rgb(0 0 0 / 0.3);
 
 		& button + button {
-			border-top-color: var(--color-border);
+			border-top-color: var(--border);
 		}
 
 		& .maplibregl-ctrl-icon {
@@ -173,16 +173,16 @@ button:is(
 
 .maplibregl-map[data-map-theme="dark"] {
 	& .maplibregl-ctrl.maplibregl-ctrl-attrib {
-		background-color: color-mix(in srgb, var(--color-card) 50%, transparent);
-		color: var(--color-card-foreground);
+		background-color: color-mix(in srgb, var(--card) 50%, transparent);
+		color: var(--card-foreground);
 	}
 
 	& .maplibregl-ctrl-attrib.maplibregl-compact {
-		background-color: var(--color-card);
+		background-color: var(--card);
 	}
 
 	& .maplibregl-ctrl-attrib a {
-		color: color-mix(in srgb, var(--color-card-foreground) 75%, transparent);
+		color: color-mix(in srgb, var(--card-foreground) 75%, transparent);
 	}
 
 	& .maplibregl-ctrl-attrib-button {

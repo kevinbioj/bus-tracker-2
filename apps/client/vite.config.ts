@@ -106,8 +106,7 @@ export default defineConfig({
 			"/api": {
 				changeOrigin: true,
 				ws: true,
-				target: "http://localhost:8080",
-				rewrite: (path) => path.replace(/^\/api/, ""),
+				target: "https://bus-tracker.fr",
 			},
 		},
 	},

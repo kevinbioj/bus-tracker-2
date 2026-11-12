@@ -213,7 +213,7 @@ export function FilterModuleControl({
 					</div>
 				) : (
 					<button
-						className="flex items-center gap-2 h-9 px-3.5 rounded-lg bg-card text-card-foreground text-sm shadow-md ring-2 ring-card transition-colors outline-none hover:bg-[color-mix(in_srgb,var(--color-branding)_10%,var(--color-card))] dark:hover:bg-[color-mix(in_srgb,var(--color-branding)_30%,var(--color-card))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-branding"
+						className="flex items-center gap-2 h-9 px-3.5 rounded-lg bg-card text-card-foreground text-sm shadow-md ring-2 ring-card transition-colors outline-none hover:bg-[color-mix(in_srgb,var(--color-branding)_10%,var(--card))] dark:hover:bg-[color-mix(in_srgb,var(--color-branding)_30%,var(--card))] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-branding"
 						data-slot="map-filter-button"
 						onClick={() => setOpen(true)}
 						title={m.map_filter_vehicles()}
