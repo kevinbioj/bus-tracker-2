@@ -35,7 +35,7 @@ function NetworkBadge({ network }: Readonly<NetworkBadgeProps>) {
 
 	return (
 		<img
-			className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
+			className="h-5 min-w-0 max-w-16 sm:max-w-32 object-contain shrink-[4]"
 			src={(mapTheme === "dark" ? network.darkModeLogoHref : null) ?? network.logoHref}
 			alt={network.name}
 		/>
@@ -128,7 +128,7 @@ export function FilterModuleControl({
 		<>
 			<div className="maplibregl-ctrl max-w-[calc(100vw-6.5rem)] font-sans" ref={activatorRef}>
 				{filter ? (
-					<div className="flex items-center gap-1.5 h-9 min-w-0 pl-1 pr-1 rounded-lg bg-card text-card-foreground shadow-md ring-2 ring-card">
+					<div className="flex items-center gap-1.5 h-9 min-w-0 overflow-hidden pl-1 pr-1 rounded-lg bg-card text-card-foreground shadow-md ring-2 ring-card">
 						<button
 							className={clsx(subtleActionClassName, "size-7")}
 							data-slot="map-filter-button"
@@ -188,7 +188,7 @@ export function FilterModuleControl({
 						{withDataLink &&
 							(filter.kind === "network" ? (
 								<Link
-									className={clsx(subtleActionClassName, "gap-1.5 h-7 px-2.5 text-sm")}
+									className={clsx(subtleActionClassName, "gap-1.5 h-7 px-1.5 sm:px-2.5 text-sm")}
 									params={{ networkId: `${filter.network.id}` }}
 									title={m.map_filter_network_data()}
 									to="/data/networks/$networkId"
@@ -196,18 +196,16 @@ export function FilterModuleControl({
 									{/* La page réseau liste le parc et les lignes : un inventaire, pas un historique. */}
 									<TableIcon className="shrink-0 size-4" />
 									<span className="hidden sm:inline">{m.map_filter_network_data()}</span>
-									<span className="sm:hidden">{m.map_filter_data_short()}</span>
 								</Link>
 							) : (
 								<Link
-									className={clsx(subtleActionClassName, "gap-1.5 h-7 px-2.5 text-sm")}
+									className={clsx(subtleActionClassName, "gap-1.5 h-7 px-1.5 sm:px-2.5 text-sm")}
 									params={{ lineId: `${filter.line.id}` }}
 									title={m.map_filter_line_data()}
 									to="/data/lines/$lineId"
 								>
 									<HistoryIcon className="shrink-0 size-4" />
 									<span className="hidden sm:inline">{m.map_filter_line_data()}</span>
-									<span className="sm:hidden">{m.map_filter_data_short()}</span>
 								</Link>
 							))}
 					</div>
