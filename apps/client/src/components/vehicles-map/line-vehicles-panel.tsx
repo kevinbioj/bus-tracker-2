@@ -2,7 +2,7 @@ import type { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { clsx } from "clsx";
-import { ChevronUpIcon, HistoryIcon, LocateIcon } from "lucide-react";
+import { ChevronUpIcon, HistoryIcon, InfoIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -11,7 +11,6 @@ import { useMediaQuery } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
 import { GetLineOnlineVehiclesQuery } from "~/api/lines";
-import { Button } from "~/components/ui/button";
 import { Drawer, DrawerContent, DrawerTitle } from "~/components/ui/drawer";
 import { registerMapBottomOverlay } from "~/components/vehicles-map/map-bottom-overlay";
 import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
@@ -43,77 +42,87 @@ type LineVehiclesListProps = {
 	className?: string;
 };
 
+function VehicleTypeIcon({ type }: Readonly<{ type: LineVehicles[number]["type"] }>) {
+	const className = "size-5";
+	return match(type)
+		.with("SUBWAY", "TRAMWAY", "RAIL", () => <TramwayIcon className={className} />)
+		.with("TROLLEY", () => <TrolleybusIcon className={className} />)
+		.with("COACH", () => <CoachIcon className={className} />)
+		.with("FERRY", () => <ShipIcon className={className} />)
+		.with("GONDOLA", () => <GondolaIcon className={className} />)
+		.otherwise(() => <BusIcon className={className} />);
+}
+
 function LineVehiclesList({ vehicles, timezone, touch = false, className }: Readonly<LineVehiclesListProps>) {
 	const [, setMarkerId] = useQueryState("marker-id");
-	const buttonClassName = clsx("shrink-0", touch ? "size-8" : "size-7");
 
 	if (vehicles.length === 0) {
 		return (
-			<p className={clsx("px-2 py-3 text-center text-sm text-muted-foreground", className)}>
-				{m.map_vehicles_online_empty()}
-			</p>
+			<div className={clsx("p-3", className)}>
+				<p className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+					<InfoIcon className="size-4 shrink-0" />
+					{m.map_vehicles_online_empty()}
+				</p>
+			</div>
 		);
 	}
 
 	return (
-		<ul className={clsx("overflow-y-auto overscroll-contain divide-y", className)}>
-			{vehicles.map((vehicle) => {
-				const vehicleIcon = match(vehicle.type)
-					.with("SUBWAY", "TRAMWAY", "RAIL", () => <TramwayIcon className="align-top inline size-4" />)
-					.with("TROLLEY", () => <TrolleybusIcon className="align-top inline size-4" />)
-					.with("COACH", () => <CoachIcon className="align-top inline size-4" />)
-					.with("FERRY", () => <ShipIcon className="align-top inline size-4" />)
-					.with("GONDOLA", () => <GondolaIcon className="align-top inline size-4" />)
-					.otherwise(() => <BusIcon className="align-top inline size-4" />);
-
-				return (
-					<li key={vehicle.id} className={clsx("flex items-center gap-1 py-1", touch ? "px-3" : "px-2")}>
-						<div className="flex-1 min-w-0">
-							<div className="text-sm font-medium truncate">
-								<span className="font-bold">
-									<span aria-hidden="true">{vehicleIcon}</span> n°{vehicle.number}
-								</span>
-								{vehicle.activity.since && " "}
+		<ul className={clsx("overflow-y-auto overscroll-contain py-1", className)}>
+			{vehicles.map((vehicle) => (
+				<li key={vehicle.id} className="flex items-center gap-1.5 px-2 py-0.5">
+					<button
+						aria-label={m.map_vehicle_locate_label({ number: vehicle.number })}
+						className={clsx(
+							"flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 text-left transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-branding/50",
+							touch ? "min-h-13 py-1.5" : "min-h-12 py-1",
+						)}
+						data-slot="map-panel-row"
+						title={m.map_vehicle_locate()}
+						type="button"
+						onClick={() => setMarkerId(vehicle.activity.markerId!)}
+					>
+						<span
+							aria-hidden="true"
+							className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground"
+						>
+							<VehicleTypeIcon type={vehicle.type} />
+						</span>
+						<span aria-hidden="true" className="grid min-w-0 flex-1 gap-0.5">
+							<span className="flex min-w-0 items-baseline gap-1.5">
+								<span className="truncate text-sm font-semibold leading-tight">n°{vehicle.number}</span>
 								{vehicle.activity.since && (
-									<span className="ml-1.5 text-xs text-muted-foreground tabular-nums">
+									<span className="shrink-0 text-xs leading-tight text-muted-foreground tabular-nums">
 										{m.map_vehicle_since()} {dayjsTz(vehicle.activity.since, timezone).format("HH:mm")}
 									</span>
 								)}
-							</div>
-							{vehicle.designation && <div className="text-wrap">{vehicle.designation}</div>}
-						</div>
-						<Button
-							aria-label={m.map_vehicle_locate_label({ number: vehicle.number })}
-							className={buttonClassName}
-							size="icon"
-							title={m.map_vehicle_locate()}
-							type="button"
-							variant="ghost"
-							onClick={() => setMarkerId(vehicle.activity.markerId!)}
-						>
-							<LocateIcon className="size-4 m-auto" />
-						</Button>
-						<Button
-							className={buttonClassName}
-							size="icon"
-							variant="ghost"
-							nativeButton={false}
-							render={
-								<Link
-									aria-label={m.map_vehicle_history_label({ number: vehicle.number })}
-									title={m.map_vehicle_history()}
-									to="/data/vehicles/$vehicleId"
-									params={{ vehicleId: String(vehicle.id) }}
-								>
-									<HistoryIcon className="size-4 m-auto" />
-								</Link>
-							}
-						/>
-					</li>
-				);
-			})}
+							</span>
+							{vehicle.designation && (
+								<span className="truncate text-xs leading-tight text-muted-foreground">{vehicle.designation}</span>
+							)}
+						</span>
+					</button>
+					<span aria-hidden="true" className="h-7 w-px shrink-0 bg-border" />
+					<Link
+						aria-label={m.map_vehicle_history_label({ number: vehicle.number })}
+						className={clsx(
+							"flex shrink-0 items-center justify-center rounded-md bg-branding/10 text-branding transition-colors outline-none hover:bg-branding hover:text-branding-foreground focus-visible:ring-2 focus-visible:ring-branding/50 dark:bg-branding/40 dark:text-branding-foreground dark:hover:bg-branding",
+							touch ? "size-9" : "size-8",
+						)}
+						params={{ vehicleId: String(vehicle.id) }}
+						title={m.map_vehicle_history()}
+						to="/data/vehicles/$vehicleId"
+					>
+						<HistoryIcon className="size-4" />
+					</Link>
+				</li>
+			))}
 		</ul>
 	);
+}
+
+function LiveDot() {
+	return <span aria-hidden="true" className="size-2 shrink-0 animate-pulse rounded-full bg-green-500" />;
 }
 
 /** Sur grand écran : panneau en surimpression de la carte, en bas à droite. */
@@ -133,18 +142,24 @@ function LineVehiclesControl({ lineId, timezone }: Readonly<LineVehiclesPanelPro
 
 		map.addControl(control, "bottom-right");
 		const parent = container.parentElement;
-		if (parent) parent.style.zIndex = "10";
+		if (parent) {
+			parent.style.zIndex = "10";
+			parent.insertBefore(container, parent.querySelector(":scope > .maplibregl-ctrl-attrib"));
+		}
 		return () => {
 			map.removeControl(control);
 		};
 	}, [map]);
 
 	return createPortal(
-		<div className="bg-background/95 rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
-			<h2 className="px-2 py-2 border-b text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-				{m.map_vehicles_online({ count: vehicles.length })}
-			</h2>
-			<LineVehiclesList className="max-h-52" timezone={timezone} vehicles={vehicles} />
+		<div className="w-96 max-w-[calc(100dvw-20px)] overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10">
+			<div className="flex h-10 items-center gap-2.5 border-b px-3">
+				<LiveDot />
+				<h2 className="min-w-0 flex-1 truncate text-sm font-semibold">
+					{m.map_vehicles_online({ count: vehicles.length })}
+				</h2>
+			</div>
+			<LineVehiclesList className="max-h-60" timezone={timezone} vehicles={vehicles} />
 		</div>,
 		containerRef.current,
 	);
@@ -198,10 +213,11 @@ function LineVehiclesDrawer({ lineId, timezone }: Readonly<LineVehiclesPanelProp
 			>
 				<button
 					aria-expanded={expanded}
-					className="flex h-10 shrink-0 items-center gap-2 border-b px-3 text-left"
+					className="flex h-10 shrink-0 items-center gap-2.5 border-b px-3 text-left"
 					type="button"
 					onClick={() => setSnapPoint(expanded ? COLLAPSED_SNAP_POINT : EXPANDED_SNAP_POINT)}
 				>
+					<LiveDot />
 					<DrawerTitle className="min-w-0 flex-1 truncate text-sm font-semibold">
 						{m.map_vehicles_online({ count: vehicles.length })}
 					</DrawerTitle>
@@ -209,7 +225,12 @@ function LineVehiclesDrawer({ lineId, timezone }: Readonly<LineVehiclesPanelProp
 						className={clsx("size-5 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-180")}
 					/>
 				</button>
-				<LineVehiclesList className="min-h-0 flex-1 pb-2" timezone={timezone} touch vehicles={vehicles} />
+				<LineVehiclesList
+					className="min-h-0 flex-1 pb-6 mask-b-from-[calc(100%-1.5rem)]"
+					timezone={timezone}
+					touch
+					vehicles={vehicles}
+				/>
 			</DrawerContent>
 		</Drawer>
 	);
