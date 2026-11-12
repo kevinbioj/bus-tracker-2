@@ -12,8 +12,20 @@ packages:
   - providers/rtm
 
 allowBuilds:
-  '@posthog/cli': true
+  "@posthog/cli": true
   core-js: false
   esbuild: false
   protobufjs: false
   sharp: false
+
+permissions:
+  "@tanstack/react-router":
+    skills: [router-query, migrate-from-react-router, react-router]
+  "@tanstack/router-plugin":
+    skills: true
+  arktype:
+    skills: true
+
+skills:
+  dirs:
+    - .claude/skills

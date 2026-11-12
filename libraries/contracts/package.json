@@ -19,7 +19,7 @@
 		"typescript": "^7.0.2"
 	},
 	"dependencies": {
-		"arktype": "^2.2.8",
+		"arktype": "^2.2.9",
 		"zod": "^4.6.7"
 	}
 }

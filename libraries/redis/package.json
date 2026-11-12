@@ -13,7 +13,7 @@
 		"dev": "tsc --watch"
 	},
 	"devDependencies": {
-		"@types/node": "^26.6.5",
+		"@types/node": "^26.6.6",
 		"typescript": "^7.0.2"
 	},
 	"peerDependencies": {
@@ -21,6 +21,6 @@
 	},
 	"dependencies": {
 		"@bus-tracker/monitoring": "workspace:*",
-		"redis": "^6.3.0"
+		"redis": "^6.3.1"
 	}
 }

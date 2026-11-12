@@ -13,13 +13,13 @@
 		"dev": "tsc --watch"
 	},
 	"devDependencies": {
-		"@types/node": "^26.6.5",
+		"@types/node": "^26.6.6",
 		"typescript": "^7.0.2"
 	},
 	"peerDependencies": {
 		"@types/node": "*"
 	},
 	"dependencies": {
-		"posthog-node": "^5.56.2"
+		"posthog-node": "^5.68.2"
 	}
 }
