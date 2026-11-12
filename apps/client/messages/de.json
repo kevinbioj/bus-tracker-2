@@ -645,6 +645,7 @@
 	"service_alerts_title_line": "Störungen auf dieser Linie",
 	"service_alerts_title_stop": "Störungen an dieser Haltestelle",
 	"service_alerts_count": "Verkehrsinfo ({count})",
+	"service_alerts_label": "Verkehrsinfo",
 	"service_alerts_show": "Verkehrsinfo anzeigen",
 	"service_alerts_since": "Seit {date}",
 	"service_alerts_starting": "Ab {date}",

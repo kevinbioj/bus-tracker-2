@@ -15,6 +15,7 @@ type ServiceAlertsButtonProps = {
 	size?: "sm" | "md";
 	/** Dimensions ajustées à ses voisins. */
 	className?: string;
+	withLabel?: boolean;
 };
 
 /**
@@ -22,7 +23,13 @@ type ServiceAlertsButtonProps = {
  * l'habillage des puces de la pop-up véhicule, type de position en tête — qui ouvre le détail des
  * alertes. Rien sans alerte.
  */
-export function ServiceAlertsButton({ alerts, scope, size = "md", className }: Readonly<ServiceAlertsButtonProps>) {
+export function ServiceAlertsButton({
+	alerts,
+	scope,
+	size = "md",
+	className,
+	withLabel = false,
+}: Readonly<ServiceAlertsButtonProps>) {
 	const [open, setOpen] = useState(false);
 	if (alerts.length === 0) return null;
 
@@ -32,11 +39,12 @@ export function ServiceAlertsButton({ alerts, scope, size = "md", className }: R
 			<InformationChip
 				aria-label={m.service_alerts_count({ count: alerts.length })}
 				className={cn(
-					"shrink-0 justify-center px-0 bg-orange-600 text-white dark:bg-orange-500",
-					size === "md" ? "w-6" : "w-5",
+					"shrink-0 justify-center bg-orange-600 text-white dark:bg-orange-500",
+					!withLabel && ["px-0", size === "md" ? "w-6" : "w-5"],
 					className,
 				)}
 				icon={<TrafficConeIcon className="size-full" />}
+				label={withLabel ? m.service_alerts_label() : undefined}
 				size={size}
 				title={m.service_alerts_show()}
 				onClick={() => setOpen(true)}

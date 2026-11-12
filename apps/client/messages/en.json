@@ -666,6 +666,7 @@
 	"service_alerts_title_line": "Disruptions on this line",
 	"service_alerts_title_stop": "Disruptions at this stop",
 	"service_alerts_count": "Service alerts ({count})",
+	"service_alerts_label": "Service alerts",
 	"service_alerts_show": "Show service alerts",
 	"service_alerts_since": "Since {date}",
 	"service_alerts_starting": "Starting {date}",

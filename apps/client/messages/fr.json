@@ -666,6 +666,7 @@
 	"service_alerts_title_line": "Perturbations sur la ligne",
 	"service_alerts_title_stop": "Perturbations à l'arrêt",
 	"service_alerts_count": "Info trafic ({count})",
+	"service_alerts_label": "Info trafic",
 	"service_alerts_show": "Voir l'info trafic",
 	"service_alerts_since": "Depuis le {date}",
 	"service_alerts_starting": "À partir du {date}",

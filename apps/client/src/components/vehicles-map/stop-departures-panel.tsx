@@ -2,7 +2,7 @@ import type { StopCallDirection } from "@bus-tracker/contracts";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { clsx } from "clsx";
 import dayjs from "dayjs";
-import { ArrowRightLeftIcon, LocateIcon, Rss, XIcon } from "lucide-react";
+import { ArrowRightLeftIcon, InfoIcon, LocateIcon, Rss, XIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -49,7 +49,7 @@ function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDi
 function LinePictogram({ line }: Readonly<{ line?: Line }>) {
 	if (line?.cartridgeHref) {
 		return (
-			<img alt={line.number} className="h-6 max-w-20 object-contain object-left shrink-0" src={line.cartridgeHref} />
+			<img alt={line.number} className="h-7 max-w-22 object-contain object-left shrink-0" src={line.cartridgeHref} />
 		);
 	}
 
@@ -58,7 +58,7 @@ function LinePictogram({ line }: Readonly<{ line?: Line }>) {
 	// au lieu d'être tronqué proprement.
 	return (
 		<span
-			className="block shrink-0 min-w-7 max-w-20 truncate rounded-sm px-1 text-center text-base font-bold leading-6"
+			className="block shrink-0 min-w-8 max-w-22 truncate rounded-md px-1.5 text-center text-base font-bold leading-7"
 			style={{
 				backgroundColor: line?.color ?? "#18181B",
 				color: line?.textColor ?? "#FFFFFF",
@@ -83,7 +83,7 @@ type DepartureRowProps = {
 	 * quai habituel.
 	 */
 	relocated?: boolean;
-	/** Ligne plus haute et bouton plus large, pour le doigt plutôt que le pointeur. */
+	/** Ligne plus haute, pour le doigt plutôt que le pointeur. */
 	touch?: boolean;
 	onLocate: (journeyId: string) => void;
 };
@@ -138,131 +138,143 @@ function DepartureRow({
 				: "text-foreground";
 
 	// Pictogramme puis destination ; le quai, collé à l'heure, est rejeté avec elle à l'autre bout de la
-	// ligne. La case de localisation, qui la suit, est tenue même sur un passage qui n'est pas joignable :
-	// les heures s'alignent ainsi d'une ligne à l'autre. La hauteur est fixe : une ligne ne grandit pas
-	// quand l'heure théorique s'affiche sous l'heure prévue.
+	// ligne. La hauteur est fixe : une ligne ne grandit pas quand l'heure théorique s'affiche sous l'heure
+	// prévue.
+	const locatable = isLocatable(departure);
 	return (
-		<li className={clsx("flex items-center gap-1", touch ? "h-11" : "h-10")}>
-			<LinePictogram line={line} />
-			{/*
-			 * Le code mission surmonte la destination. Celle-ci, seule, passe sur deux lignes avant d'être
-			 * tronquée — « Hôpital Européen Georges Pompidou » se lit en entier — ce que la hauteur fixe de
-			 * la ligne permet sans rien décaler ; sous un code mission, elle n'a plus la place que d'une.
-			 * C'est elle qui rétrécit : le pictogramme d'accessibilité et le numéro de train qui la suivent
-			 * restent entiers.
-			 */}
-			<div className="flex min-w-0 flex-1 flex-col justify-center">
-				{departure.missionCode !== undefined && (
-					// En petit : il partage la hauteur fixe de la ligne avec la destination.
-					<span
-						className={clsx(
-							"mb-0.5 max-w-full self-start truncate pt-px font-mono text-[10px] leading-3.5",
-							journeyChipClasses,
-						)}
-					>
-						{departure.missionCode}
-					</span>
+		<li className="group relative">
+			{locatable && (
+				<button
+					aria-label={`${m.stop_departures_locate()} : ${line?.number ?? ""} ${headline}`}
+					className="absolute inset-0 rounded-md transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-branding/50"
+					data-slot="map-panel-row"
+					title={m.stop_departures_locate()}
+					type="button"
+					onClick={() => onLocate(departure.journeyId!)}
+				/>
+			)}
+			<div
+				className={clsx(
+					"relative flex items-center gap-1 px-1",
+					locatable && "pointer-events-none",
+					touch ? "h-11" : "h-10",
 				)}
-				<div className="flex min-w-0 items-center gap-1">
-					<p
-						className={clsx(
-							"min-w-0 break-words text-sm leading-tight",
-							departure.missionCode !== undefined ? "line-clamp-1" : "line-clamp-2",
+			>
+				<LinePictogram line={line} />
+				{/*
+				 * Le code mission surmonte la destination. Celle-ci, seule, passe sur deux lignes avant d'être
+				 * tronquée — « Hôpital Européen Georges Pompidou » se lit en entier — ce que la hauteur fixe de
+				 * la ligne permet sans rien décaler ; sous un code mission, elle n'a plus la place que d'une.
+				 * C'est elle qui rétrécit : le pictogramme d'accessibilité et le numéro de train qui la suivent
+				 * restent entiers.
+				 */}
+				<div className="flex min-w-0 flex-1 flex-col justify-center">
+					{departure.missionCode !== undefined && (
+						// En petit : il partage la hauteur fixe de la ligne avec la destination.
+						<span
+							className={clsx(
+								"mb-0.5 max-w-full self-start truncate pt-px font-mono text-[10px] leading-3.5",
+								journeyChipClasses,
+							)}
+						>
+							{departure.missionCode}
+						</span>
+					)}
+					<div className="flex min-w-0 items-center gap-1">
+						<p
+							className={clsx(
+								"min-w-0 break-words text-sm leading-tight",
+								departure.missionCode !== undefined ? "line-clamp-1" : "line-clamp-2",
+							)}
+							title={headline}
+							ref={headlineRef}
+						>
+							{headline}
+						</p>
+						{departure.onDemand !== undefined && (
+							<TapTooltip
+								content={onDemandLabels[departure.onDemand]()}
+								render={
+									<button
+										aria-label={onDemandLabels[departure.onDemand]()}
+										data-slot="on-demand-badge"
+										className="pointer-events-auto inline-flex size-4 shrink-0 cursor-default text-muted-foreground"
+										type="button"
+									>
+										<OnDemandIcon className="size-full" kind={departure.onDemand} />
+									</button>
+								}
+							/>
 						)}
-						title={headline}
-						ref={headlineRef}
-					>
-						{headline}
-					</p>
-					{departure.onDemand !== undefined && (
-						<TapTooltip
-							content={onDemandLabels[departure.onDemand]()}
-							render={
-								<button
-									aria-label={onDemandLabels[departure.onDemand]()}
-									data-slot="on-demand-badge"
-									className="inline-flex size-4 shrink-0 cursor-default text-muted-foreground"
-									type="button"
-								>
-									<OnDemandIcon className="size-full" kind={departure.onDemand} />
-								</button>
-							}
+						{wheelchairStatus !== undefined && (
+							// Info-bulle portée hors du panneau : celui-ci rogne ce qui déborde de ses bords.
+							<TapTooltip
+								content={wheelchairIconDetails[wheelchairStatus].label()}
+								render={
+									<button
+										aria-label={wheelchairIconDetails[wheelchairStatus].label()}
+										// Rend au bouton ses utilitaires face aux styles des boutons de MapLibre (`maplibregl.css`).
+										data-slot="wheelchair-badge"
+										className="pointer-events-auto inline-flex size-4 shrink-0 cursor-default"
+										type="button"
+									>
+										<WheelchairIcon className="size-full" status={wheelchairStatus} />
+									</button>
+								}
+							/>
+						)}
+						{departure.journeyNumber !== undefined && (
+							<span className={clsx("shrink-0 text-xs leading-4.5 tabular-nums", journeyChipClasses)}>
+								{departure.journeyNumber}
+							</span>
+						)}
+					</div>
+				</div>
+				<div className="flex shrink-0 items-center gap-1 ml-2">
+					{departure.platformName !== undefined && (
+						<span
+							className="rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4.5 text-center text-[13px] font-bold leading-4 text-background"
+							title={departure.stopName}
+						>
+							{departure.platformName}
+						</span>
+					)}
+					<div className="flex flex-col items-end leading-tight">
+						<span className={clsx("flex items-start text-sm font-bold tabular-nums whitespace-nowrap", accentColor)}>
+							{realtime ? <Rss aria-label={m.stop_call_realtime()} className="-rotate-90 mr-[0.5px]" size={8} /> : null}
+							<span className={clsx(skipped && "line-through")}>{label}</span>
+						</span>
+						{showAimedTime && (
+							<span className="text-[10px] text-muted-foreground line-through tabular-nums">
+								{formatLocalTime(departure.aimedTime)}
+							</span>
+						)}
+						{/* Sous l'heure barrée, ce qui est supprimé : la course entière, ou le seul arrêt. */}
+						{skipped && (
+							<span className="text-xs font-semibold text-red-700 dark:text-red-500 whitespace-nowrap">
+								{departure.canceled ? m.stop_departures_trip_cancelled() : m.stop_call_skipped()}
+							</span>
+						)}
+						{/*
+						 * Sous l'heure, l'arrêt provisoire qui remplace pour cette course un quai de la station : au
+						 * tableau de la station, c'est l'arrêt qui est déplacé ; à celui du quai, c'est un arrêt provisoire.
+						 */}
+						{temporary && (
+							<span className="flex items-center gap-0.5 text-xs font-semibold text-yellow-700 dark:text-yellow-500 whitespace-nowrap">
+								{relocated && <TriangleAlertFilledIcon className="shrink-0" size={12} />}
+								{relocated ? m.stop_call_relocated() : m.stop_call_temporary()}
+							</span>
+						)}
+					</div>
+				</div>
+				<span className="flex w-4 shrink-0 justify-end">
+					{locatable && (
+						<LocateIcon
+							aria-hidden="true"
+							className="size-3.5 text-muted-foreground transition-colors group-has-[button:hover]:text-foreground"
 						/>
 					)}
-					{wheelchairStatus !== undefined && (
-						// Info-bulle portée hors du panneau : celui-ci rogne ce qui déborde de ses bords.
-						<TapTooltip
-							content={wheelchairIconDetails[wheelchairStatus].label()}
-							render={
-								<button
-									aria-label={wheelchairIconDetails[wheelchairStatus].label()}
-									// Rend au bouton ses utilitaires face aux styles des boutons de MapLibre (`maplibregl.css`).
-									data-slot="wheelchair-badge"
-									className="inline-flex size-4 shrink-0 cursor-default"
-									type="button"
-								>
-									<WheelchairIcon className="size-full" status={wheelchairStatus} />
-								</button>
-							}
-						/>
-					)}
-					{departure.journeyNumber !== undefined && (
-						<span className={clsx("shrink-0 text-xs leading-4.5 tabular-nums", journeyChipClasses)}>
-							{departure.journeyNumber}
-						</span>
-					)}
-				</div>
-			</div>
-			<div className="flex shrink-0 items-center gap-1 ml-2">
-				{departure.platformName !== undefined && (
-					<span
-						className="rounded-xs bg-foreground/80 dark:bg-foreground px-1 min-w-4.5 text-center text-[13px] font-bold leading-4 text-background"
-						title={departure.stopName}
-					>
-						{departure.platformName}
-					</span>
-				)}
-				<div className="flex flex-col items-end leading-tight">
-					<span className={clsx("flex items-start text-sm font-bold tabular-nums whitespace-nowrap", accentColor)}>
-						{realtime ? <Rss aria-label={m.stop_call_realtime()} className="-rotate-90 mr-[0.5px]" size={8} /> : null}
-						<span className={clsx(skipped && "line-through")}>{label}</span>
-					</span>
-					{showAimedTime && (
-						<span className="text-[10px] text-muted-foreground line-through tabular-nums">
-							{formatLocalTime(departure.aimedTime)}
-						</span>
-					)}
-					{/* Sous l'heure barrée, ce qui est supprimé : la course entière, ou le seul arrêt. */}
-					{skipped && (
-						<span className="text-xs font-semibold text-red-700 dark:text-red-500 whitespace-nowrap">
-							{departure.canceled ? m.stop_departures_trip_cancelled() : m.stop_call_skipped()}
-						</span>
-					)}
-					{/*
-					 * Sous l'heure, l'arrêt provisoire qui remplace pour cette course un quai de la station : au
-					 * tableau de la station, c'est l'arrêt qui est déplacé ; à celui du quai, c'est un arrêt provisoire.
-					 */}
-					{temporary && (
-						<span className="flex items-center gap-0.5 text-xs font-semibold text-yellow-700 dark:text-yellow-500 whitespace-nowrap">
-							{relocated && <TriangleAlertFilledIcon className="shrink-0" size={12} />}
-							{relocated ? m.stop_call_relocated() : m.stop_call_temporary()}
-						</span>
-					)}
-				</div>
-			</div>
-			<div className={clsx("shrink-0", touch ? "size-8" : "size-6")}>
-				{isLocatable(departure) && (
-					<Button
-						className={touch ? "size-8" : "size-6"}
-						size="icon"
-						title={m.stop_departures_locate()}
-						type="button"
-						variant="ghost"
-						onClick={() => onLocate(departure.journeyId!)}
-					>
-						<LocateIcon className={clsx("m-auto", touch ? "size-5" : "size-4")} />
-					</Button>
-				)}
+				</span>
 			</div>
 		</li>
 	);
@@ -493,14 +505,24 @@ function StopDeparturesList({
 				: undefined;
 
 	if (message !== undefined) {
-		return <p className="m-auto px-2 py-3 text-center text-sm text-muted-foreground">{message}</p>;
+		if (isLoading && !isError) {
+			return <p className="m-auto px-3 py-3 text-center text-sm text-muted-foreground">{message}</p>;
+		}
+		return (
+			<div className="p-3">
+				<p className="flex items-center gap-2 rounded-lg border border-dashed bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+					<InfoIcon className="size-4 shrink-0" />
+					{message}
+				</p>
+			</div>
+		);
 	}
 
 	// La zone défilante ne porte pas la marge intérieure : posée sur la liste qu'elle contient, elle
 	// reste entre le contenu et la barre de défilement, contre laquelle l'heure viendrait sinon se coller.
 	return (
 		<div className={clsx("overflow-y-auto overscroll-contain", scrollClassName)}>
-			<ul className={clsx("divide-y", touch ? "px-3" : "px-2")}>
+			<ul className={clsx("divide-y py-0.5", touch ? "px-2" : "px-1")}>
 				{rows.map(({ departure, line, label, wheelchairStatus, relocated, key }) => (
 					<DepartureRow
 						departure={departure}
@@ -534,7 +556,10 @@ function ReverseDirectionButton({
 			<Button
 				aria-label={m.stop_departures_reverse()}
 				aria-pressed={direction === "arrivals"}
-				className={touch ? "size-9" : "size-6"}
+				className={clsx(
+					"aria-pressed:bg-branding/10 aria-pressed:text-branding dark:aria-pressed:bg-branding/40 dark:aria-pressed:text-branding-foreground",
+					touch ? "size-9" : "size-7",
+				)}
 				size="icon"
 				title={m.stop_departures_reverse()}
 				type="button"
@@ -596,10 +621,12 @@ function StopDeparturesControl(props: Readonly<StopDeparturesPanelProps>) {
 	}, [map]);
 
 	return createPortal(
-		<div className="bg-background/95 rounded-sm shadow-lg border overflow-hidden w-96 max-w-[calc(100dvw-20px)]">
-			<div className="flex items-center gap-1 border-b px-1 py-0.5">
-				<div className="flex-1 min-w-0">
-					<p className="text-[10px] font-thin uppercase tracking-wide leading-tight">{directionTitle(direction)}</p>
+		<div className="w-96 max-w-[calc(100dvw-20px)] overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10">
+			<div className="flex items-center gap-1 border-b py-1.5 pr-1.5 pl-3">
+				<div className="mr-1 min-w-0 flex-1">
+					<p className="text-[11px] font-semibold uppercase leading-tight tracking-wider text-muted-foreground">
+						{directionTitle(direction)}
+					</p>
 					<StopName
 						className="text-base"
 						stopName={stopName}
@@ -607,10 +634,10 @@ function StopDeparturesControl(props: Readonly<StopDeparturesPanelProps>) {
 						wheelchairStatus={wheelchairStatus}
 					/>
 				</div>
-				<ServiceAlertsButton alerts={alerts} scope="stop" />
+				<ServiceAlertsButton alerts={alerts} scope="stop" withLabel />
 				{reversible && <ReverseDirectionButton direction={direction} toggleDirection={toggleDirection} />}
 				<Button
-					className="size-6 shrink-0"
+					className="size-7 shrink-0"
 					size="icon"
 					title={m.stop_departures_close()}
 					type="button"
@@ -712,12 +739,14 @@ function StopDeparturesDrawer(props: Readonly<StopDeparturesPanelProps>) {
 			>
 				<div className="flex items-start gap-2 border-b px-3 pt-1 pb-2">
 					<div className="min-w-0 flex-1">
-						<p className="text-xs uppercase tracking-wide text-muted-foreground">{directionTitle(direction)}</p>
+						<p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+							{directionTitle(direction)}
+						</p>
 						<DrawerTitle className="text-lg">
 							<StopName stopName={stopName} stopPoint={stopPoint} wheelchairStatus={wheelchairStatus} />
 						</DrawerTitle>
 					</div>
-					<ServiceAlertsButton alerts={alerts} className="mt-1.5" scope="stop" />
+					<ServiceAlertsButton alerts={alerts} className="mt-1.5" scope="stop" withLabel />
 					{reversible && <ReverseDirectionButton direction={direction} toggleDirection={toggleDirection} touch />}
 					<DrawerClose
 						render={
