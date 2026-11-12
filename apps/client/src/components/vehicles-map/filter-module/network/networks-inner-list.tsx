@@ -1,35 +1,37 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { StarIcon } from "lucide-react";
 import { type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { Network } from "~/api/networks";
-import { TitleSeparator } from "~/components/title-separator";
+import { FavoritesSectionIcon, FilterModuleSectionLabel } from "~/components/vehicles-map/filter-module/list-row";
 import { FilterModuleNetworkCard } from "~/components/vehicles-map/filter-module/network/network-card";
+import { FilterModuleRegionCard, type RegionGroup } from "~/components/vehicles-map/filter-module/network/region-card";
 import * as m from "~/paraglide/messages";
-import { cn } from "~/utils/cn";
+
+export type NetworkListView =
+	| { kind: "search"; results: Network[] }
+	| { kind: "overview"; favorites: Network[]; regions: RegionGroup[]; others: Network[] }
+	| { kind: "region"; region: RegionGroup };
 
 type VirtualRow =
 	| { kind: "separator"; key: string; title: ReactNode; first: boolean }
 	| { kind: "network"; key: string; network: Network; isFavorite: boolean }
+	| { kind: "region"; key: string; region: RegionGroup }
 	| { kind: "no-result"; key: string };
 
 type NetworkInnerListProps = {
-	favoriteNetworks: Network[];
-	networksByRegion: { title: string; networks: Network[] }[];
-	/** Lorsqu'une recherche est en cours, remplace les groupes par les résultats classés par pertinence. */
-	searchResults?: Network[] | null;
+	view: NetworkListView;
 	favoriteNetworkIds: Set<number>;
 	onNetworkSelect: (network: Network) => void;
+	onRegionSelect: (region: RegionGroup) => void;
 	toggleFavoriteNetworkId: (network: Network) => void;
-	scrollRef: RefObject<HTMLDivElement | null>; // points to SheetContent (the scroll container)
+	scrollRef: RefObject<HTMLDivElement | null>;
 };
 
 export function NetworkInnerList({
-	favoriteNetworks,
-	networksByRegion,
-	searchResults,
+	view,
 	favoriteNetworkIds,
 	onNetworkSelect,
+	onRegionSelect,
 	toggleFavoriteNetworkId,
 	scrollRef,
 }: NetworkInnerListProps) {
@@ -42,15 +44,8 @@ export function NetworkInnerList({
 
 	const virtualRows = useMemo<VirtualRow[]>(() => {
 		const rows: VirtualRow[] = [];
-		let first = true;
-
-		if (searchResults != null) {
-			if (searchResults.length === 0) {
-				return [{ kind: "no-result", key: "no-result" }];
-			}
-
-			rows.push({ kind: "separator", key: "sep-search", title: m.map_network_search_results(), first: true });
-			for (const network of searchResults) {
+		const pushNetworks = (networks: Network[]) => {
+			for (const network of networks) {
 				rows.push({
 					kind: "network",
 					key: `net-${network.id}`,
@@ -58,34 +53,56 @@ export function NetworkInnerList({
 					isFavorite: favoriteNetworkIds.has(network.id),
 				});
 			}
+		};
+
+		if (view.kind === "search") {
+			if (view.results.length === 0) return [{ kind: "no-result", key: "no-result" }];
+			rows.push({ kind: "separator", key: "sep-search", title: m.map_network_search_results(), first: true });
+			pushNetworks(view.results);
 			return rows;
 		}
 
-		if (favoriteNetworks.length > 0) {
+		if (view.kind === "region") {
+			rows.push({ kind: "separator", key: `sep-${view.region.key}`, title: view.region.title, first: true });
+			pushNetworks(view.region.networks);
+			return rows;
+		}
+
+		let first = true;
+		if (view.favorites.length > 0) {
 			rows.push({
 				kind: "separator",
 				key: "sep-favorites",
 				title: (
 					<>
-						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> {m.map_network_favorites()}
+						<FavoritesSectionIcon />
+						{m.map_network_favorites()}
 					</>
 				),
 				first,
 			});
 			first = false;
-			for (const network of favoriteNetworks)
-				rows.push({ kind: "network", key: `net-${network.id}`, network, isFavorite: true });
+			pushNetworks(view.favorites);
 		}
 
-		for (const { title, networks } of networksByRegion) {
-			rows.push({ kind: "separator", key: `sep-${title}`, title, first });
+		if (view.regions.length === 1) {
+			const [region] = view.regions;
+			rows.push({ kind: "separator", key: `sep-${region.key}`, title: region.title, first });
 			first = false;
-			for (const network of networks)
-				rows.push({ kind: "network", key: `net-${network.id}`, network, isFavorite: false });
+			pushNetworks(region.networks);
+		} else if (view.regions.length > 1) {
+			rows.push({ kind: "separator", key: "sep-regions", title: m.map_network_regions(), first });
+			first = false;
+			for (const region of view.regions) rows.push({ kind: "region", key: `region-${region.key}`, region });
+		}
+
+		if (view.others.length > 0) {
+			rows.push({ kind: "separator", key: "sep-others", title: m.map_network_other(), first });
+			pushNetworks(view.others);
 		}
 
 		return rows;
-	}, [favoriteNetworks, networksByRegion, searchResults, favoriteNetworkIds]);
+	}, [view, favoriteNetworkIds]);
 
 	const virtualizer = useVirtualizer({
 		count: virtualRows.length,
@@ -93,16 +110,16 @@ export function NetworkInnerList({
 		getItemKey: (index) => virtualRows[index].key,
 		estimateSize: (index) => {
 			const row = virtualRows[index];
-			if (row.kind === "separator") return row.first ? 32 : 44;
+			if (row.kind === "separator") return row.first ? 28 : 40;
 			if (row.kind === "no-result") return 80;
-			return 72; // py-1 (8px) + h-16 (64px)
+			return 56;
 		},
 		overscan: 5,
 		scrollMargin,
 	});
 
 	return (
-		<div ref={containerRef} className="pb-1">
+		<div ref={containerRef} className="pb-3">
 			<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
 					const row = virtualRows[virtualItem.index];
@@ -119,15 +136,12 @@ export function NetworkInnerList({
 								transform: `translateY(${virtualItem.start - scrollMargin}px)`,
 							}}
 						>
-							{row.kind === "separator" && (
-								<div className={cn("px-3", !row.first && "pt-3")}>
-									<TitleSeparator TitleComponent="h3" className="flex items-center gap-2 text-base">
-										{row.title}
-									</TitleSeparator>
-								</div>
-							)}
+							{row.kind === "separator" && <FilterModuleSectionLabel>{row.title}</FilterModuleSectionLabel>}
 							{row.kind === "no-result" && (
 								<p className="text-muted-foreground text-sm text-center px-6 py-6">{m.map_network_search_empty()}</p>
+							)}
+							{row.kind === "region" && (
+								<FilterModuleRegionCard region={row.region} onClick={() => onRegionSelect(row.region)} />
 							)}
 							{row.kind === "network" && (
 								<FilterModuleNetworkCard

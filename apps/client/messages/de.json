@@ -175,6 +175,19 @@
 	"map_network_search_placeholder": "Verkehrsnetz oder Stadt suchen...",
 	"map_network_search_results": "Suchergebnisse",
 	"map_network_search_empty": "Kein Verkehrsnetz entspricht dieser Suche.",
+	"map_search_clear": "Suche löschen",
+	"map_network_regions": "Regionen",
+	"map_region_list_back": "Zurück zu den Regionen",
+	"map_region_network_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Verkehrsnetz",
+				"countPlural=other": "{count} Verkehrsnetze"
+			}
+		}
+	],
 	"map_vehicles_online": "Fahrzeuge online ({count})",
 	"maplibre_map_title": "Karte",
 	"maplibre_zoom_in": "Vergrößern",

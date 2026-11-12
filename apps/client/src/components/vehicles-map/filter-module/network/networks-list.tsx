@@ -1,26 +1,37 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeftIcon, FilterIcon, XIcon } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
+import { Button } from "~/components/ui/button";
+import { SheetClose, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { useIsCountryDisplayed } from "~/components/vehicles-map/displayed-countries";
-import { NetworkInnerList } from "~/components/vehicles-map/filter-module/network/networks-inner-list";
+import {
+	NetworkInnerList,
+	type NetworkListView,
+} from "~/components/vehicles-map/filter-module/network/networks-inner-list";
+import type { RegionGroup } from "~/components/vehicles-map/filter-module/network/region-card";
 import { FilterModuleSearchBar } from "~/components/vehicles-map/filter-module/search-bar";
 import * as m from "~/paraglide/messages";
+import { cn } from "~/utils/cn";
 import { searchNetworks } from "~/utils/network-search";
 import { getRegionName } from "~/utils/region-name";
 
 type FilterModuleNetworkListProps = {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
+	regionKey?: string;
+	onRegionKeyChange: (regionKey?: string) => void;
+	searchQuery: string;
+	onSearchQueryChange: (searchQuery: string) => void;
 	onNetworkSelect: (network: Network) => void;
 };
 
 export function FilterModuleNetworkList({
-	open,
-	onOpenChange,
+	regionKey,
+	onRegionKeyChange,
+	searchQuery,
+	onSearchQueryChange,
 	onNetworkSelect,
 }: Readonly<FilterModuleNetworkListProps>) {
 	const { data: regions } = useQuery(GetRegionsQuery);
@@ -35,7 +46,6 @@ export function FilterModuleNetworkList({
 	);
 
 	const scrollRef = useRef<HTMLDivElement>(null);
-	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearchQuery] = useDebounceValue(searchQuery, 300);
 
 	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage("favorite-networks", new Set<number>(), {
@@ -47,6 +57,11 @@ export function FilterModuleNetworkList({
 	useEffect(() => {
 		scrollRef.current?.scrollTo({ behavior: "smooth", top: 0 });
 	}, [searchQuery]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on region updates
+	useEffect(() => {
+		scrollRef.current?.scrollTo({ top: 0 });
+	}, [regionKey]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: setters are not dependencies
 	const toggleFavoriteNetworkId = useCallback(
@@ -64,14 +79,10 @@ export function FilterModuleNetworkList({
 		[favoriteNetworkIds],
 	);
 
-	const [favoriteNetworks, otherNetworks] = useMemo<[Network[], Network[]]>(() => {
-		if (networks === undefined) {
-			return [[], []];
-		}
-
-		const groups = Map.groupBy(networks, (network) => (favoriteNetworkIds.has(network.id) ? "favorite" : "other"));
-		return [groups.get("favorite") ?? [], groups.get("other") ?? []];
-	}, [favoriteNetworkIds, networks]);
+	const favoriteNetworks = useMemo(
+		() => networks?.filter((network) => favoriteNetworkIds.has(network.id)) ?? [],
+		[favoriteNetworkIds, networks],
+	);
 
 	// Une recherche active remplace le classement par région par un classement par pertinence.
 	const searchResults = useMemo(() => {
@@ -82,51 +93,83 @@ export function FilterModuleNetworkList({
 		return searchNetworks(networks, debouncedSearchQuery);
 	}, [debouncedSearchQuery, networks]);
 
-	const networksByRegion = useMemo(() => {
-		if (regions === undefined) {
-			return [];
+	const [regionGroups, otherNetworks] = useMemo<[RegionGroup[], Network[]]>(() => {
+		if (regions === undefined || networks === undefined) {
+			return [[], []];
 		}
 
-		const groups = Map.groupBy(otherNetworks, (network) => network.regionId ?? -1);
-		const orphanNetworks = groups.get(-1);
-		return [
-			...regions.flatMap((region) => {
-				const networks = groups.get(region.id);
-				if (networks === undefined) {
-					return [];
-				}
+		const groups = Map.groupBy(networks, (network) => network.regionId ?? -1);
+		const regionGroups = regions.flatMap((region) => {
+			const networks = groups.get(region.id);
+			if (networks === undefined) {
+				return [];
+			}
 
-				return { title: getRegionName(region), networks };
-			}),
-			...(orphanNetworks !== undefined ? [{ title: m.map_network_other(), networks: orphanNetworks }] : []),
-		];
-	}, [regions, otherNetworks]);
+			return { key: `${region.id}`, title: getRegionName(region), networks };
+		});
+		return [regionGroups, groups.get(-1) ?? []];
+	}, [regions, networks]);
+
+	const selectedRegion = regionGroups.length > 1 ? regionGroups.find((region) => region.key === regionKey) : undefined;
+
+	const view = useMemo<NetworkListView>(() => {
+		if (searchResults !== null) return { kind: "search", results: searchResults };
+		if (selectedRegion !== undefined) return { kind: "region", region: selectedRegion };
+		return { kind: "overview", favorites: favoriteNetworks, regions: regionGroups, others: otherNetworks };
+	}, [searchResults, selectedRegion, favoriteNetworks, regionGroups, otherNetworks]);
+
+	const goBackToRegions = () => {
+		onRegionKeyChange(undefined);
+		onSearchQueryChange("");
+	};
 
 	return (
-		<Sheet open={open} onOpenChange={onOpenChange}>
-			<SheetContent
-				ref={scrollRef}
-				className="gap-0 z-999 overflow-y-auto overscroll-none"
-				initialFocus={() => (window.matchMedia("(pointer: coarse)").matches ? scrollRef.current : true)}
-			>
-				<SheetHeader className="bg-popover text-popover-foreground shrink-0 sticky top-0 z-9999">
-					<SheetTitle>{m.map_network_list_title()}</SheetTitle>
+		<div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto overscroll-none">
+			<SheetHeader className="sticky top-0 z-10 shrink-0 gap-0 border-b bg-popover p-0 text-popover-foreground">
+				<div className={cn("flex items-center gap-2 py-1.5 pr-1.5", selectedRegion ? "pl-1.5" : "pl-3")}>
+					{selectedRegion ? (
+						<Button
+							aria-label={m.map_region_list_back()}
+							className="size-7"
+							onClick={goBackToRegions}
+							size="icon"
+							title={m.map_region_list_back()}
+							variant="ghost"
+						>
+							<ArrowLeftIcon className="size-4" />
+						</Button>
+					) : (
+						<FilterIcon className="size-4 shrink-0 text-muted-foreground" />
+					)}
+					<SheetTitle className="min-w-0 flex-1 truncate text-sm font-semibold">
+						{selectedRegion?.title ?? m.map_network_list_title()}
+					</SheetTitle>
+					<SheetClose
+						render={
+							<Button className="size-7" size="icon" title={m.common_close()} variant="ghost">
+								<XIcon className="size-4" />
+							</Button>
+						}
+					/>
+				</div>
+				<div className="px-3 pb-3">
 					<FilterModuleSearchBar
 						placeholder={m.map_network_search_placeholder()}
 						query={searchQuery}
-						onQueryChange={setSearchQuery}
+						onQueryChange={onSearchQueryChange}
 					/>
-				</SheetHeader>
+				</div>
+			</SheetHeader>
+			<div className="pt-1">
 				<NetworkInnerList
-					favoriteNetworks={favoriteNetworks}
-					networksByRegion={networksByRegion}
-					searchResults={searchResults}
+					view={view}
 					favoriteNetworkIds={favoriteNetworkIds}
 					onNetworkSelect={onNetworkSelect}
+					onRegionSelect={(region) => onRegionKeyChange(region.key)}
 					toggleFavoriteNetworkId={toggleFavoriteNetworkId}
 					scrollRef={scrollRef}
 				/>
-			</SheetContent>
-		</Sheet>
+			</div>
+		</div>
 	);
 }

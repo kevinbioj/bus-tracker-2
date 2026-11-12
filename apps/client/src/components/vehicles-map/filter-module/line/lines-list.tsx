@@ -1,21 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { ArrowLeft, ChevronRight, WaypointsIcon } from "lucide-react";
+import { ArrowLeftIcon, ChevronRightIcon, WaypointsIcon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import type { Line } from "~/api/networks";
 import { GetNetworkQuery, type Network } from "~/api/networks";
 import { Button } from "~/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "~/components/ui/sheet";
+import { SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Skeleton } from "~/components/ui/skeleton";
+import { OnlineVehiclesCount } from "~/components/vehicles-map/filter-module/line/line-card";
 import { LinesInnerList } from "~/components/vehicles-map/filter-module/line/lines-inner-list";
+import { NetworkLogoTile } from "~/components/vehicles-map/filter-module/network/network-logo";
 import { FilterModuleSearchBar } from "~/components/vehicles-map/filter-module/search-bar";
 import * as m from "~/paraglide/messages";
+import { cn } from "~/utils/cn";
 import { searchLines } from "~/utils/line-search";
 
 type FilterModuleLinesList = {
-	network?: Network;
+	network: Network;
+	open: boolean;
+	onBack?: () => void;
 	onClose: () => void;
 	onLineChange: (line?: Line) => void;
 	/** Absent lorsque filtrer le réseau entier n'a pas de sens (mode embarqué). */
@@ -24,17 +29,13 @@ type FilterModuleLinesList = {
 
 export function FilterModuleLinesList({
 	network,
+	open,
+	onBack,
 	onClose,
 	onLineChange,
 	onNetworkChange,
 }: Readonly<FilterModuleLinesList>) {
-	const { data: networkWithLines, isLoading, isPlaceholderData } = useQuery(GetNetworkQuery(network?.id, true, true));
-
-	const currentNetwork = useRef(network);
-
-	if (network !== undefined) {
-		currentNetwork.current = network;
-	}
+	const { data: networkWithLines, isLoading, isPlaceholderData } = useQuery(GetNetworkQuery(network.id, true, open));
 
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -50,7 +51,7 @@ export function FilterModuleLinesList({
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on network updates
 	useEffect(() => {
 		setSearchQuery("");
-	}, [network?.id]);
+	}, [network.id]);
 
 	const [favoriteLineIds, setFavoriteLineIds] = useLocalStorage("favorite-lines", new Set<number>(), {
 		deserializer: (value) => new Set(JSON.parse(value)),
@@ -103,55 +104,71 @@ export function FilterModuleLinesList({
 		return searchLines(activeLines, debouncedSearchQuery);
 	}, [debouncedSearchQuery, networkWithLines]);
 
+	const onlineVehicleCount = useMemo(
+		() => networkWithLines?.lines?.reduce((total, line) => total + (line.onlineMarkerCount ?? 0), 0) ?? 0,
+		[networkWithLines],
+	);
+
+	const loading = isLoading || isPlaceholderData;
+
 	return (
-		<Sheet open={network !== undefined} onOpenChange={(open) => !open && onClose()}>
-			<SheetContent ref={scrollRef} className="z-999 gap-0 overflow-y-auto overscroll-none" showCloseButton={false}>
-				<SheetHeader className="pt-4 pb-1.5 shrink-0 sticky top-0 z-9999 bg-popover text-popover-foreground">
-					<div className="flex items-start gap-2">
+		<div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto overscroll-none">
+			<SheetHeader className="sticky top-0 z-10 shrink-0 gap-0 border-b bg-popover p-0 text-popover-foreground">
+				<div className={cn("flex items-center gap-2 py-1.5 pr-1.5", onBack ? "pl-1.5" : "pl-3")}>
+					{onBack && (
 						<Button
 							aria-label={m.map_network_list_back()}
-							className="size-6"
-							onClick={onClose}
+							className="size-7"
+							onClick={onBack}
 							size="icon"
-							variant="branding-default"
+							title={m.map_network_list_back()}
+							variant="ghost"
 						>
-							<ArrowLeft className="size-full" />
+							<ArrowLeftIcon className="size-4" />
 						</Button>
-						<SheetTitle className="flex flex-col">
-							<span className="font-bold leading-tight text-lg">{currentNetwork.current?.name}</span>
-							{currentNetwork.current?.authority && (
-								<span className="leading-none text-sm uppercase">{currentNetwork.current.authority}</span>
-							)}
-						</SheetTitle>
-					</div>
-					{onNetworkChange && currentNetwork.current && (
-						<Button
-							className="h-11 justify-between mt-2.5 px-3.5 text-[0.9375rem] w-full"
-							onClick={() => onNetworkChange(currentNetwork.current!)}
-							size="lg"
-							variant="branding-default"
-						>
-							<span className="flex items-center gap-2.5">
-								<WaypointsIcon />
-								{m.map_filter_whole_network()}
+					)}
+					<NetworkLogoTile className="h-8 w-12" network={network} />
+					<SheetTitle className="grid min-w-0 flex-1 gap-0.5">
+						<span className="truncate text-sm font-semibold leading-tight">{network.name}</span>
+						{network.authority && (
+							<span className="truncate text-xs font-normal leading-tight text-muted-foreground">
+								{network.authority}
 							</span>
-							<ChevronRight className="size-4 opacity-70" />
-						</Button>
+						)}
+					</SheetTitle>
+					<Button className="size-7" onClick={onClose} size="icon" title={m.common_close()} variant="ghost">
+						<XIcon className="size-4" />
+					</Button>
+				</div>
+				<div className="flex flex-col gap-2 px-3 pb-3">
+					{onNetworkChange && (
+						<button
+							className="flex h-10 w-full items-center gap-2.5 rounded-lg bg-branding/10 px-3 text-sm font-medium text-branding transition-colors outline-none hover:bg-branding hover:text-branding-foreground focus-visible:ring-2 focus-visible:ring-branding/50 dark:bg-branding/40 dark:text-branding-foreground dark:hover:bg-branding"
+							onClick={() => onNetworkChange(network)}
+							type="button"
+						>
+							<WaypointsIcon className="size-4 shrink-0" />
+							<span className="flex-1 text-left">{m.map_filter_whole_network()}</span>
+							{!loading && onlineVehicleCount > 0 && <OnlineVehiclesCount count={onlineVehicleCount} />}
+							<ChevronRightIcon className="size-4 shrink-0 opacity-70" />
+						</button>
 					)}
 					<FilterModuleSearchBar
 						placeholder={m.map_lines_search_placeholder()}
 						query={searchQuery}
 						onQueryChange={setSearchQuery}
 					/>
-				</SheetHeader>
-				{isLoading || isPlaceholderData ? (
-					<div className="flex flex-col gap-1">
-						{Array.from({ length: 10 }).map((_, index) => (
-							// biome-ignore lint/suspicious/noArrayIndexKey: safe here
-							<Skeleton className="bg-accent h-16 w-full shrink-0" key={index} />
-						))}
-					</div>
-				) : (
+				</div>
+			</SheetHeader>
+			{loading ? (
+				<div className="flex flex-col gap-1 px-2 pt-8">
+					{Array.from({ length: 10 }).map((_, index) => (
+						// biome-ignore lint/suspicious/noArrayIndexKey: safe here
+						<Skeleton className="h-12 w-full shrink-0 rounded-lg" key={index} />
+					))}
+				</div>
+			) : (
+				<div className="pt-1">
 					<LinesInnerList
 						favoriteLines={favoriteLines}
 						runningLines={runningLines}
@@ -162,8 +179,8 @@ export function FilterModuleLinesList({
 						toggleFavoriteLineId={toggleFavoriteLineId}
 						scrollRef={scrollRef}
 					/>
-				)}
-			</SheetContent>
-		</Sheet>
+				</div>
+			)}
+		</div>
 	);
 }

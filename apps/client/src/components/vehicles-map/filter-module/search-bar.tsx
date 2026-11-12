@@ -1,6 +1,7 @@
-import { SearchIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 
 import { Input } from "~/components/ui/input";
+import * as m from "~/paraglide/messages";
 
 type FilterModuleSearchBarProperties = {
 	placeholder: string;
@@ -10,14 +11,25 @@ type FilterModuleSearchBarProperties = {
 
 export function FilterModuleSearchBar({ placeholder, query, onQueryChange }: FilterModuleSearchBarProperties) {
 	return (
-		<div className="mt-2 relative shrink-0 drop-shadow-sm">
-			<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+		<div className="relative shrink-0">
+			<SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
 			<Input
-				className="pl-9 focus-visible:ring-0"
+				aria-label={placeholder}
+				className="h-9 pr-9 pl-9"
 				placeholder={placeholder}
 				value={query}
 				onChange={(e) => onQueryChange(e.target.value)}
 			/>
+			{query.length > 0 && (
+				<button
+					aria-label={m.map_search_clear()}
+					className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-branding/50"
+					onClick={() => onQueryChange("")}
+					type="button"
+				>
+					<XIcon className="size-4" />
+				</button>
+			)}
 		</div>
 	);
 }

@@ -1,17 +1,25 @@
-import { ArrowRight, StarIcon } from "lucide-react";
+import { ChevronRightIcon, StarIcon } from "lucide-react";
 import type React from "react";
 import { memo } from "react";
 
 import type { Line } from "~/api/networks";
-import { Button } from "~/components/ui/button";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 
+export function OnlineVehiclesCount({ count, className }: Readonly<{ count: number; className?: string }>) {
+	return (
+		<span className={cn("flex shrink-0 items-center gap-1 text-sm font-semibold tabular-nums", className)}>
+			{count}
+			<span className="size-1.5 animate-pulse rounded-full bg-green-500 ring-1 ring-current" />
+		</span>
+	);
+}
+
 function lineNumberTextSize(number: string) {
-	if (number.length > 40) return "text-sm";
 	if (number.length > 28) return "text-base";
-	if (number.length > 18) return "text-lg";
-	return "text-xl";
+	if (number.length > 14) return "text-lg";
+	if (number.length > 6) return "text-xl";
+	return "text-2xl";
 }
 
 export type FilterModuleLineCardProps = {
@@ -28,62 +36,49 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 	onSelect,
 }: FilterModuleLineCardProps) {
 	const lineLabel = line.girouetteNumber ? line.number : m.network_lines_label({ lineNumber: line.number });
+	const onlineCount = line.onlineMarkerCount ?? 0;
+	const textColor = line.textColor ?? "#FFFFFF";
 
 	return (
 		<div
-			className="card-item px-3 py-0.5 relative w-full"
-			style={line.textColor ? ({ "--line-text-color": line.textColor } as React.CSSProperties) : undefined}
+			className="relative h-full px-3 py-[3px]"
+			style={{ "--line-text": textColor, color: textColor } as React.CSSProperties}
 		>
-			<Button
-				aria-label={m.map_favorite_toggle({ name: lineLabel })}
-				aria-pressed={isFavorite}
-				className="absolute top-4 left-4.5 z-10 hover:bg-inherit hover:opacity-75 favorite-line-background"
-				onClick={() => onToggleFavorite(line)}
-				size="icon"
-				variant="ghost"
-				style={{ color: line.textColor ?? undefined }}
-			>
-				{isFavorite ? <StarIcon className="fill-yellow-400 stroke-yellow-600" /> : <StarIcon />}
-			</Button>
-			<Button
-				aria-label={`${lineLabel}, ${m.network_online_vehicle_count({ count: line.onlineMarkerCount ?? 0 })}`}
+			<button
+				aria-label={`${lineLabel}, ${m.network_online_vehicle_count({ count: onlineCount })}`}
 				className={cn(
-					"border border-border flex justify-between items-center h-16 min-h-16 px-2 py-1 pl-12 rounded-lg transition text-primary-foreground w-full drop-shadow-xs",
-					!line.onlineMarkerCount && "brightness-90 cursor-not-allowed",
+					"flex h-full w-full items-center gap-3 rounded-lg border border-black/10 pr-3 text-left shadow-xs transition outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-branding/60 focus-visible:ring-offset-1 focus-visible:ring-offset-popover dark:border-white/10",
+					line.cartridgeHref === null ? "pl-3" : "py-0.5 pl-0.5",
+					onlineCount === 0 && "brightness-90 saturate-[.85] hover:brightness-100",
 				)}
 				onClick={() => onSelect?.(line)}
-				style={{
-					backgroundColor: line.color ?? undefined,
-					color: line.textColor ?? undefined,
-				}}
+				style={{ backgroundColor: line.color ?? "#18181B" }}
+				type="button"
 			>
-				<div aria-hidden="true" className="flex flex-1 items-center h-full gap-2 min-w-0">
+				<span aria-hidden="true" className="flex h-full min-w-0 flex-1 items-center">
 					{line.cartridgeHref === null ? (
-						<p
-							className={cn(
-								"align-middle font-bold flex-1 min-w-12 leading-tight text-left text-balance whitespace-normal break-words line-clamp-2",
-								lineNumberTextSize(line.number),
-							)}
-						>
+						<span className={cn("line-clamp-2 font-bold leading-tight break-words", lineNumberTextSize(line.number))}>
 							{line.number}
-						</p>
+						</span>
 					) : (
-						<img className="h-full max-w-24" src={line.cartridgeHref} alt={line.number} />
+						<img alt="" className="h-full max-w-28 object-contain object-left" src={line.cartridgeHref} />
 					)}
-					{typeof line.onlineMarkerCount === "number" && line.onlineMarkerCount > 0 ? (
-						<p className="align-middle font-bold text-xl text-end shrink-0 ml-auto relative">
-							{line.onlineMarkerCount}
-							<span
-								className="absolute animate-pulse border top-0 -right-1.5 bg-green-600 rounded-full size-1.5"
-								style={{
-									borderColor: line.textColor ?? undefined,
-								}}
-							/>
-						</p>
-					) : null}
-				</div>
-				<ArrowRight />
-			</Button>
+				</span>
+				<span className="flex shrink-0 items-center gap-0.5">
+					{onlineCount > 0 && <OnlineVehiclesCount className="text-base font-bold" count={onlineCount} />}
+					<span aria-hidden="true" className="size-8 shrink-0" />
+					<ChevronRightIcon aria-hidden="true" className="size-4 shrink-0 opacity-70" />
+				</span>
+			</button>
+			<button
+				aria-label={m.map_favorite_toggle({ name: lineLabel })}
+				aria-pressed={isFavorite}
+				className="absolute top-1/2 right-[42px] flex size-8 -translate-y-1/2 items-center justify-center rounded-md transition-colors outline-none hover:bg-[color-mix(in_srgb,var(--line-text)_15%,transparent)] focus-visible:ring-2 focus-visible:ring-branding/60"
+				onClick={() => onToggleFavorite(line)}
+				type="button"
+			>
+				<StarIcon className={cn("size-4", isFavorite ? "fill-yellow-400 stroke-yellow-600" : "opacity-70")} />
+			</button>
 		</div>
 	);
 });

@@ -1,12 +1,11 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { InfoIcon, StarIcon } from "lucide-react";
+import { InfoIcon } from "lucide-react";
 import { type ReactNode, type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { Line } from "~/api/networks";
-import { TitleSeparator } from "~/components/title-separator";
 import { FilterModuleLineCard } from "~/components/vehicles-map/filter-module/line/line-card";
+import { FavoritesSectionIcon, FilterModuleSectionLabel } from "~/components/vehicles-map/filter-module/list-row";
 import * as m from "~/paraglide/messages";
-import { cn } from "~/utils/cn";
 
 type VirtualRow =
 	| { kind: "separator"; key: string; title: ReactNode; first: boolean }
@@ -65,7 +64,8 @@ export function LinesInnerList({
 				key: "sep-favorites",
 				title: (
 					<>
-						<StarIcon className="fill-yellow-400 stroke-yellow-600 size-5" /> {m.map_lines_favorites()}
+						<FavoritesSectionIcon />
+						{m.map_lines_favorites()}
 					</>
 				),
 				first,
@@ -101,10 +101,10 @@ export function LinesInnerList({
 		getItemKey: (index) => virtualRows[index].key,
 		estimateSize: (index) => {
 			const row = virtualRows[index];
-			if (row.kind === "separator") return row.first ? 32 : 44;
-			if (row.kind === "info-banner") return 48;
+			if (row.kind === "separator") return row.first ? 28 : 40;
+			if (row.kind === "info-banner") return 52;
 			if (row.kind === "no-result") return 80;
-			return 68; // h-16 (64px) + py-0.5 (4px)
+			return 62;
 		},
 		overscan: 5,
 		enabled: virtualRows.length > 0,
@@ -112,7 +112,7 @@ export function LinesInnerList({
 	});
 
 	return (
-		<div ref={containerRef} className="pb-2">
+		<div ref={containerRef} className="pb-3">
 			<div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
 				{virtualizer.getVirtualItems().map((virtualItem) => {
 					const row = virtualRows[virtualItem.index];
@@ -129,13 +129,7 @@ export function LinesInnerList({
 								transform: `translateY(${virtualItem.start - scrollMargin}px)`,
 							}}
 						>
-							{row.kind === "separator" && (
-								<div className={cn("px-3", !row.first && "pt-3")}>
-									<TitleSeparator TitleComponent="h3" className="flex items-center gap-2">
-										{row.title}
-									</TitleSeparator>
-								</div>
-							)}
+							{row.kind === "separator" && <FilterModuleSectionLabel>{row.title}</FilterModuleSectionLabel>}
 							{row.kind === "line" && (
 								<FilterModuleLineCard
 									line={row.line}
@@ -148,13 +142,15 @@ export function LinesInnerList({
 								<p className="text-muted-foreground text-sm text-center px-6 py-6">{m.map_lines_search_empty()}</p>
 							)}
 							{row.kind === "info-banner" && (
-								<div className="bg-neutral-200 dark:bg-neutral-700 text-muted-foreground text-xs text-center p-2 rounded-md my-1.5 mx-3">
-									<InfoIcon className="inline size-4 align-text-bottom mr-1" />
-									{row.runningCount > 0
-										? m.map_lines_no_vehicle_these()
-										: row.favoriteCount > 0
-											? m.map_lines_no_vehicle_rest()
-											: m.map_lines_no_vehicle_network()}
+								<div className="flex h-full items-end px-3 pb-1.5">
+									<p className="flex w-full items-center gap-2 rounded-lg border border-dashed bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+										<InfoIcon className="size-4 shrink-0" />
+										{row.runningCount > 0
+											? m.map_lines_no_vehicle_these()
+											: row.favoriteCount > 0
+												? m.map_lines_no_vehicle_rest()
+												: m.map_lines_no_vehicle_network()}
+									</p>
 								</div>
 							)}
 						</div>

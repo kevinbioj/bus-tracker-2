@@ -166,6 +166,19 @@
 	"map_network_search_placeholder": "Rechercher un réseau ou une ville...",
 	"map_network_search_results": "Résultats de recherche",
 	"map_network_search_empty": "Aucun réseau ne correspond à cette recherche.",
+	"map_search_clear": "Effacer la recherche",
+	"map_network_regions": "Régions",
+	"map_region_list_back": "Retour aux régions",
+	"map_region_network_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} réseau",
+				"countPlural=other": "{count} réseaux"
+			}
+		}
+	],
 	"map_vehicles_online": "Véhicules en ligne ({count})",
 	"maplibre_map_title": "Carte",
 	"maplibre_zoom_in": "Zoom avant",
