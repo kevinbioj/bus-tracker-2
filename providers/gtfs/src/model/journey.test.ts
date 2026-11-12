@@ -24,15 +24,16 @@ function at(time: string) {
  *
  * A (0 m, 8:00 → 8:00) ── B (1000 m, 8:10 → 8:12) ── C (2000 m, 8:20)
  */
-function makeShapedGtfs(options?: { withDistances?: boolean; withShapeDistances?: boolean }) {
+function makeShapedGtfs(options?: { withDistances?: boolean; withShapeDistances?: boolean; shape?: Shape }) {
 	const agency = new Agency("agency", "Agency", "UTC");
 	const route = new Route("route", agency, "1", "BUS");
 	const service = new Service("service");
 	// `shape_dist_traveled` est absent de nombreux shapes.txt : les distances valent alors NaN.
 	const shape =
-		options?.withShapeDistances === false
+		options?.shape ??
+		(options?.withShapeDistances === false
 			? new Shape("shape", new Float64Array([0, 0, Number.NaN, 0, 0.01, Number.NaN, 0, 0.02, Number.NaN]))
-			: new Shape("shape", new Float64Array([0, 0, 0, 0, 0.01, 1000, 0, 0.02, 2000]));
+			: new Shape("shape", new Float64Array([0, 0, 0, 0, 0.01, 1000, 0, 0.02, 2000])));
 	const stops = [new Stop("A", "A", 0, 0), new Stop("B", "B", 0, 0.01), new Stop("C", "C", 0, 0.02)];
 	const store = StopTimeStore.fromStops(
 		stops,
@@ -702,6 +703,33 @@ describe("Journey#cancelledPath", () => {
 		const segment = journey.cancelledPath!.segments[0]!;
 		expect(segment.every(([latitude]) => latitude === 0)).toBe(true);
 		expect(segment.at(-1)).toEqual([0, 0.02]);
+	});
+
+	it("fait suivre au ruban le tracé théorique jusqu'au point où il quitte le tracé de remplacement", () => {
+		const bumpShape = new Shape(
+			"shape:bump",
+			new Float64Array([
+				0, 0, 0, 0, 0.008, 800, 0.00003, 0.0085, 850, 0.00006, 0.0088, 880, 0.0005, 0.01, 1000, 0.00006, 0.0112, 1120,
+				0.00003, 0.0115, 1150, 0, 0.012, 1200, 0, 0.02, 2000,
+			]),
+		);
+		const { trip } = makeShapedGtfs({ shape: bumpShape });
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		const straightShape = new Shape("shape:straight", new Float64Array([0, 0, 0, 0, 0.02, 2000]));
+		journey.applyModifications({ ...detourPlan(straightShape), modifications: [] });
+
+		expect(journey.cancelledPath?.segments).toEqual([
+			[
+				[0, 0.008],
+				[0.00003, 0.0085],
+				[0.00006, 0.0088],
+				[0.0005, 0.01],
+				[0.00006, 0.0112],
+				[0.00003, 0.0115],
+				[0, 0.012],
+			],
+		]);
 	});
 
 	it("n'abandonne aucune portion là où le tracé de remplacement longe celui de la course", () => {

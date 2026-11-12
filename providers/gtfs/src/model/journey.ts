@@ -129,32 +129,45 @@ function joinToShape(
  * autant de fois qu'il le faut : une déviation ne quitte souvent l'itinéraire que sur une fraction
  * de la portion qu'elle prive de desserte, et emprunte le reste à l'identique.
  *
- * Chaque portion retenue est étendue d'un point de part et d'autre, puis raccordée au tracé de
- * remplacement par {@link joinToShape}.
+ * Chaque portion retenue est prolongée de part et d'autre le long du tracé, tant qu'il continue de se
+ * rapprocher du tracé de remplacement, puis raccordée à celui-ci par {@link joinToShape}.
  */
 function splitAwayFromShape(points: [number, number][], detourShape: Shape, joins: ShapeJoins = {}) {
 	const { joinStart = true, joinEnd = true } = joins;
+	const distances = points.map(([latitude, longitude]) => detourShape.distanceToPosition(latitude, longitude));
 	const ranges: [number, number][] = [];
 	let awaySince: number | undefined;
 	let awayCount = 0;
 
-	for (let index = 0; index < points.length; index++) {
-		const [latitude, longitude] = points[index]!;
+	const converges = (from: number, to: number) =>
+		distances[from]! > JOIN_MIN_DISTANCE_M && distances[to]! < distances[from]!;
 
-		if (detourShape.distanceToPosition(latitude, longitude) > DETOUR_OVERLAP_TOLERANCE_M) {
+	const pushRange = (firstAway: number, lastAway: number) => {
+		const floor = ranges.at(-1)?.[1] ?? 0;
+		let from = Math.max(floor, firstAway - 1);
+		while (from > floor && converges(from, from - 1)) from -= 1;
+
+		let to = Math.min(points.length - 1, lastAway + 1);
+		while (to < points.length - 1 && converges(to, to + 1)) to += 1;
+
+		ranges.push([from, to]);
+	};
+
+	for (let index = 0; index < points.length; index++) {
+		if (distances[index]! > DETOUR_OVERLAP_TOLERANCE_M) {
 			awaySince ??= index;
 			awayCount += 1;
 			continue;
 		}
 
 		if (awaySince !== undefined) {
-			ranges.push([Math.max(0, awaySince - 1), index]);
+			pushRange(awaySince, index - 1);
 			awaySince = undefined;
 		}
 	}
 
 	if (awaySince !== undefined) {
-		ranges.push([Math.max(0, awaySince - 1), points.length - 1]);
+		pushRange(awaySince, points.length - 1);
 	}
 
 	return {
