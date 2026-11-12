@@ -23,7 +23,8 @@
 			"!**/.git",
 			"!**/paraglide/*",
 			"!**/project.inlang/*",
-			"!apps/client/src/routeTree.gen.ts"
+			"!apps/client/src/routeTree.gen.ts",
+			"!apps/client/public/map-styles/liberty-*.json"
 		]
 	},
 	"formatter": {

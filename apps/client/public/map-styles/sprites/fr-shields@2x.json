@@ -1,0 +1,32 @@
+{
+	"shield-red": {
+		"x": 0,
+		"y": 0,
+		"width": 40,
+		"height": 40,
+		"pixelRatio": 2,
+		"stretchX": [[10, 30]],
+		"stretchY": [[10, 30]],
+		"content": [0, 0, 40, 40]
+	},
+	"shield-yellow": {
+		"x": 40,
+		"y": 0,
+		"width": 40,
+		"height": 40,
+		"pixelRatio": 2,
+		"stretchX": [[10, 30]],
+		"stretchY": [[10, 30]],
+		"content": [0, 0, 40, 40]
+	},
+	"shield-blue": {
+		"x": 80,
+		"y": 0,
+		"width": 40,
+		"height": 40,
+		"pixelRatio": 2,
+		"stretchX": [[10, 30]],
+		"stretchY": [[10, 30]],
+		"content": [0, 0, 40, 40]
+	}
+}

@@ -10,7 +10,7 @@ import { useRealtimeConnection } from "~/api/realtime";
 import { EmbedDisplaySettingsProvider } from "~/components/vehicles-map/embed-display-settings";
 import { EmbedSettingsControl } from "~/components/vehicles-map/embed-settings-control";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
-import { getMapStyleUrl } from "~/components/vehicles-map/map-style";
+import { getMapStyleUrl, withAbsoluteSpriteUrls } from "~/components/vehicles-map/map-style";
 import { nextCallsDisplayModes } from "~/components/vehicles-map/next-calls-display-mode";
 import { Signature } from "~/components/vehicles-map/signature";
 import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-panel";
@@ -66,6 +66,7 @@ export default function EmbeddableMapPage() {
 				: undefined,
 			// style: "https://tiles.openfreemap.org/styles/liberty",
 			style: getMapStyleUrl("light"),
+			transformStyle: withAbsoluteSpriteUrls,
 			zoom: network.embedMapCenter ? network.embedMapCenter[2] : undefined,
 		}),
 		[network.embedMapCenter],

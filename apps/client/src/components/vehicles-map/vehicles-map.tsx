@@ -15,7 +15,12 @@ import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filt
 import { triggerGeolocateWhenReady, useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
 import { LineVehiclesPanel } from "~/components/vehicles-map/line-vehicles-panel";
 import { MapSettingsControl } from "~/components/vehicles-map/map-settings-control";
-import { getMapStyleUrl, MapThemeStyle, useMapTheme } from "~/components/vehicles-map/map-style";
+import {
+	getMapStyleUrl,
+	MapThemeStyle,
+	useMapTheme,
+	withAbsoluteSpriteUrls,
+} from "~/components/vehicles-map/map-style";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { useShowStops } from "~/components/vehicles-map/show-stops";
 import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-panel";
@@ -89,6 +94,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 			center: initialLocation.position,
 			// style: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 			style: getMapStyleUrl(initialMapTheme),
+			transformStyle: withAbsoluteSpriteUrls,
 			zoom: initialLocation.zoom,
 		}),
 		[initialLocation, initialMapTheme],

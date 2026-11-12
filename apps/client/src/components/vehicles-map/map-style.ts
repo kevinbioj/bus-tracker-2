@@ -28,12 +28,21 @@ export function getMapStyleUrl(theme: MapTheme) {
 	return theme === "dark" ? "/map-styles/liberty-fr-dark.json" : "/map-styles/liberty-fr.json";
 }
 
+export function withAbsoluteSpriteUrls(_previous: StyleSpecification | undefined, next: StyleSpecification) {
+	if (!Array.isArray(next.sprite)) return next;
+	return {
+		...next,
+		sprite: next.sprite.map(({ id, url }) => ({ id, url: new URL(url, location.href).href })),
+	};
+}
+
 /**
  * Les deux styles partagent sources et couches : on reprend les couches du style courant dans leur
  * ordre, celles du fond de carte remplacées par leur pendant, celles de l'application conservées. Le
  * changement se résume alors à des couleurs, appliquées sans recharger la carte.
  */
-function keepApplicationLayers(previous: StyleSpecification | undefined, next: StyleSpecification) {
+function keepApplicationLayers(previous: StyleSpecification | undefined, style: StyleSpecification) {
+	const next = withAbsoluteSpriteUrls(previous, style);
 	if (previous === undefined) return next;
 
 	const nextLayers = new Map(next.layers.map((layer) => [layer.id, layer]));
