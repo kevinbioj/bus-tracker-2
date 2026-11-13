@@ -796,3 +796,63 @@ describe("Journey#cancelledPath", () => {
 		expect(journey.cancelledPath).toBeUndefined();
 	});
 });
+
+describe("Journey#releaseUnmodifiedCalls", () => {
+	it("libère les arrêts d'une course qui part dans plus d'une heure", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		const before = journey.calls;
+		journey.releaseUnmodifiedCalls(at("06:30:00").epochMilliseconds);
+
+		expect(journey.calls).not.toBe(before);
+		expect(journey.calls).toEqual(before);
+	});
+
+	it("garde les arrêts d'une course qui part dans moins d'une heure", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		const before = journey.calls;
+		journey.releaseUnmodifiedCalls(at("07:30:00").epochMilliseconds);
+
+		expect(journey.calls).toBe(before);
+	});
+
+	it("garde les arrêts d'une course qui a reçu un TripUpdate", () => {
+		const { gtfs, trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.updateJourney(gtfs, [delayFrom("B", 2, 120)]);
+		journey.lastTripUpdateAtMs = at("06:30:00").epochMilliseconds;
+		const before = journey.calls;
+		journey.releaseUnmodifiedCalls(at("06:30:00").epochMilliseconds);
+
+		expect(journey.calls).toBe(before);
+	});
+
+	it("garde les arrêts d'une course déviée", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.applyModifications({
+			modificationsIds: ["detour:1"],
+			tripId: "trip",
+			date: DATE,
+			shape: new Shape("shape:detour", new Float64Array([0, 0, 0, 0.01, 0.005, 1300, 0, 0.01, 2700, 0, 0.02, 3700])),
+			revision: "rev:1",
+			modifications: [
+				{
+					startStopSelector: { stopSequence: 2 },
+					endStopSelector: { stopSequence: 3 },
+					propagatedModificationDelayMs: 0,
+					replacementStops: [{ stop: new Stop("X", "Déviation", 0.01, 0.005), travelTimeToStopMs: 5 * 60 * 1000 }],
+				},
+			],
+		});
+		const before = journey.calls;
+		journey.releaseUnmodifiedCalls(at("06:30:00").epochMilliseconds);
+
+		expect(journey.calls).toBe(before);
+	});
+});

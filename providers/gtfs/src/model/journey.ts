@@ -44,6 +44,7 @@ export type JourneyPosition = {
 };
 
 const VEHICLE_DESCRIPTOR_TTL_MS = 5 * 60 * 1000;
+const DISTANT_JOURNEY_CALLS_RELEASE_MS = 60 * 60 * 1000;
 
 /**
  * Écart au-delà duquel un point du tracé théorique est tenu pour réellement abandonné. En deçà, le
@@ -520,10 +521,9 @@ export class Journey {
 	}
 
 	/**
-	 * Libère l'état accumulé par les voyages terminés : le guard de position systématiquement,
-	 * et le cache des calls s'ils n'ont pas de données temps réel. À appeler après chaque cycle de
-	 * calcul. Les voyages encore actifs ou futurs conservent leur cache pour éviter de re-calculer
-	 * computeCallsForDate() à chaque cycle.
+	 * Libère, après chaque cycle, le guard de position des voyages terminés, ainsi que le cache des
+	 * calls des voyages terminés sans temps réel et des voyages lointains sans état temps réel ni
+	 * déviation.
 	 */
 	releaseUnmodifiedCalls(nowMs: number) {
 		if (nowMs > this.lastCallDepartureMs) {
@@ -531,6 +531,16 @@ export class Journey {
 			if (!this._hasRealtime) {
 				this._calls = null;
 			}
+			return;
+		}
+
+		if (
+			this.firstCallArrivalMs - nowMs > DISTANT_JOURNEY_CALLS_RELEASE_MS &&
+			!this._hasRealtime &&
+			this.lastTripUpdateAtMs === undefined &&
+			this._modificationPlan === undefined
+		) {
+			this._calls = null;
 		}
 	}
 
