@@ -1,5 +1,13 @@
 import type { Stop } from "./stop.js";
 
+export type SequenceArray = Uint8Array | Uint16Array | Uint32Array;
+
+export function createSequenceArray(maxSequence: number, length: number): SequenceArray {
+	if (maxSequence <= 0xff) return new Uint8Array(length);
+	if (maxSequence <= 0xffff) return new Uint16Array(length);
+	return new Uint32Array(length);
+}
+
 /**
  * Stockage columnar des stop_times et des données par trip d'un GTFS.
  *
@@ -16,7 +24,7 @@ export class StopTimeStore {
 		public stopList: Stop[],
 		// --- Tableaux par stop_time (length = totalStopTimes)
 		public stopIdx: Uint32Array,
-		public sequence: Uint8Array,
+		public sequence: SequenceArray,
 		public flagsBitmask: Uint8Array,
 		public arrivalSecs: Uint32Array,
 		public departureSecs: Uint32Array,
@@ -40,7 +48,7 @@ export class StopTimeStore {
 	 */
 	static fromStops(
 		stops: Stop[],
-		sequence: Uint8Array,
+		sequence: SequenceArray,
 		flagsBitmask: Uint8Array,
 		arrivalSecs: Uint32Array,
 		departureSecs: Uint32Array,

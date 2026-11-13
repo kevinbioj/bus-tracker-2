@@ -4,7 +4,7 @@ import type { Route } from "../../model/route.js";
 import { Service } from "../../model/service.js";
 import type { Shape } from "../../model/shape.js";
 import type { Stop } from "../../model/stop.js";
-import { StopTimeStore } from "../../model/stop-time-store.js";
+import { createSequenceArray, StopTimeStore } from "../../model/stop-time-store.js";
 import { Trip } from "../../model/trip.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 import { getDistance } from "../../utils/get-distance.js";
@@ -135,6 +135,7 @@ export async function importTrips(
 
 	// Pass 1: compter les stop_times par trip pour dimensionner les tableaux par stop_time.
 	let totalRows = 0;
+	let maxSequence = 0;
 	await readCsv<StopTimeRecord>(stopTimesFile, (stopTimeRecord) => {
 		// Entrée GTFS-Flex (location_group_id ou location_id au lieu de stop_id, horaires
 		// remplacés par une fenêtre de réservation) : non exploitable en temps réel.
@@ -144,6 +145,8 @@ export async function importTrips(
 		if (trip === undefined) return;
 		tripCount[trip.idx]! += 1;
 		totalRows += 1;
+		const stopSequence = +stopTimeRecord.stop_sequence;
+		if (stopSequence > maxSequence) maxSequence = stopSequence;
 	});
 
 	// Calcul des offsets (prefix sum).
@@ -166,7 +169,7 @@ export async function importTrips(
 
 	// Allocation des tableaux par stop_time.
 	const stopIdx = new Uint32Array(totalRows);
-	const sequence = new Uint8Array(totalRows);
+	const sequence = createSequenceArray(maxSequence, totalRows);
 	const flagsBitmask = new Uint8Array(totalRows);
 	const arrivalSecs = new Uint32Array(totalRows);
 	const departureSecs = new Uint32Array(totalRows);
@@ -237,7 +240,7 @@ export async function importTrips(
 	const idxBuf = new Uint32Array(maxCount);
 	const tmpStops = new Uint32Array(maxCount);
 	const tmpHeadsigns = new Uint32Array(maxCount);
-	const tmpSeq = new Uint8Array(maxCount);
+	const tmpSeq = createSequenceArray(maxSequence, maxCount);
 	const tmpFlags = new Uint8Array(maxCount);
 	const tmpArr = new Uint32Array(maxCount);
 	const tmpDep = new Uint32Array(maxCount);

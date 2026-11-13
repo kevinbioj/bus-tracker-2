@@ -138,4 +138,72 @@ describe("importTrips", () => {
 		// Mêmes arrêts sur le même tracé : la projection mémorisée pour t1 vaut pour t2.
 		expect(distances("t2")).toEqual([2000, 0]);
 	});
+	it("range les arrêts dont la séquence dépasse 255", async () => {
+		const directory = await writeGtfs({
+			"trips.txt": TRIPS,
+			"stop_times.txt": [
+				"trip_id,arrival_time,departure_time,stop_id,stop_sequence",
+				"t1,08:20:00,08:20:00,c,300",
+				"t1,08:00:00,08:00:00,a,100",
+				"t1,08:10:00,08:10:00,b,200",
+				"t2,09:00:00,09:00:00,c,1",
+				"t2,09:10:00,09:10:00,a,2",
+			],
+		});
+		const { routes, services, shapes, stops } = makeResources();
+
+		const { trips, stopTimeStore } = await importTrips(directory, {}, routes, services, shapes, stops);
+
+		const t1 = trips.get("t1")!;
+		const ids = (start: number, count: number) =>
+			Array.from({ length: count }, (_, i) => stopTimeStore.getStop(start + i).id);
+		expect(ids(t1.stopTimeStart, 3)).toEqual(["a", "b", "c"]);
+		expect(t1.computeCallsForDate(Temporal.PlainDate.from("2026-06-01")).map((call) => call.sequence)).toEqual([
+			100, 200, 300,
+		]);
+	});
+
+	it("accepte des séquences au-delà de 65 535", async () => {
+		const directory = await writeGtfs({
+			"trips.txt": TRIPS,
+			"stop_times.txt": [
+				"trip_id,arrival_time,departure_time,stop_id,stop_sequence",
+				"t1,08:20:00,08:20:00,c,70002",
+				"t1,08:00:00,08:00:00,a,70000",
+				"t1,08:10:00,08:10:00,b,70001",
+				"t2,09:00:00,09:00:00,c,1",
+				"t2,09:10:00,09:10:00,a,2",
+			],
+		});
+		const { routes, services, shapes, stops } = makeResources();
+
+		const { trips, stopTimeStore } = await importTrips(directory, {}, routes, services, shapes, stops);
+
+		const t1 = trips.get("t1")!;
+		const ids = (start: number, count: number) =>
+			Array.from({ length: count }, (_, i) => stopTimeStore.getStop(start + i).id);
+		expect(ids(t1.stopTimeStart, 3)).toEqual(["a", "b", "c"]);
+		expect(t1.computeCallsForDate(Temporal.PlainDate.from("2026-06-01")).map((call) => call.sequence)).toEqual([
+			70000, 70001, 70002,
+		]);
+	});
+
+	it("garde un octet par séquence quand elles tiennent sur un octet", async () => {
+		const directory = await writeGtfs({
+			"trips.txt": TRIPS,
+			"stop_times.txt": [
+				"trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign",
+				"t1,08:10:00,08:10:00,b,2,Vers C",
+				"t1,08:00:00,08:00:00,a,1,Vers C",
+				"t1,08:20:00,08:20:00,c,3,",
+				"t2,09:00:00,09:00:00,c,1,",
+				"t2,09:10:00,09:12:00,a,2,Retour",
+			],
+		});
+		const { routes, services, shapes, stops } = makeResources();
+
+		const { stopTimeStore } = await importTrips(directory, {}, routes, services, shapes, stops);
+
+		expect(stopTimeStore.sequence).toBeInstanceOf(Uint8Array);
+	});
 });
