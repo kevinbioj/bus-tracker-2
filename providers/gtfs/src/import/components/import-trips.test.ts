@@ -206,4 +206,41 @@ describe("importTrips", () => {
 
 		expect(stopTimeStore.sequence).toBeInstanceOf(Uint8Array);
 	});
+
+	it("écarte les courses qui ne circulent pas dans la fenêtre", async () => {
+		const directory = await writeGtfs({
+			"trips.txt": ["route_id,service_id,trip_id", "line,in,t1", "line,out,t2"],
+			"stop_times.txt": [
+				"trip_id,arrival_time,departure_time,stop_id,stop_sequence",
+				"t1,08:00:00,08:00:00,a,1",
+				"t1,08:10:00,08:10:00,b,2",
+				"t2,09:00:00,09:00:00,b,1",
+				"t2,09:10:00,09:10:00,c,2",
+			],
+		});
+		const { routes, shapes, stops } = makeResources();
+		const onlyOn = (id: string, date: string) =>
+			new Service(id, undefined, undefined, undefined, [], [Temporal.PlainDate.from(date)]);
+		const services = new Map([
+			["in", onlyOn("in", "2026-06-10")],
+			["out", onlyOn("out", "2026-07-01")],
+		]);
+
+		const { trips, stopTimeStore } = await importTrips(
+			directory,
+			{
+				serviceWindow: {
+					from: Temporal.PlainDate.from("2026-06-09"),
+					to: Temporal.PlainDate.from("2026-06-17"),
+				},
+			},
+			routes,
+			services,
+			shapes,
+			stops,
+		);
+
+		expect([...trips.keys()]).toEqual(["t1"]);
+		expect(stopTimeStore.size).toBe(2);
+	});
 });

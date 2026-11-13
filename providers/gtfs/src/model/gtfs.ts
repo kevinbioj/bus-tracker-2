@@ -1,5 +1,6 @@
 import type { Journey } from "./journey.js";
 import type { Route } from "./route.js";
+import type { ServiceWindow } from "./service-window.js";
 import type { Shape } from "./shape.js";
 import type { Stop } from "./stop.js";
 import type { StopArea } from "./stop-area.js";
@@ -20,6 +21,7 @@ export type Gtfs = {
 	shapes: Map<string, Shape>;
 	journeys: Map<string, Journey>;
 	stopTimeStore: StopTimeStore;
+	serviceWindow?: ServiceWindow;
 	// ---
 	importedAt: Temporal.Instant;
 	lastModified: string | null;

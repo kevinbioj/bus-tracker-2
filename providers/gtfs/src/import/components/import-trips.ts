@@ -2,6 +2,7 @@ import { join } from "node:path";
 
 import type { Route } from "../../model/route.js";
 import { Service } from "../../model/service.js";
+import { createServiceWindowFilter } from "../../model/service-window.js";
 import type { Shape } from "../../model/shape.js";
 import type { Stop } from "../../model/stop.js";
 import { createSequenceArray, StopTimeStore } from "../../model/stop-time-store.js";
@@ -48,7 +49,16 @@ function parseTimeToSecs(time: string): number {
 
 export async function importTrips(
 	gtfsDirectory: string,
-	{ filterTrips, mapTripId, mapRouteId, mapStopId, mapTime, ignoreBlocks, computeShapeDistTraveled }: ImportGtfsOptions,
+	{
+		filterTrips,
+		mapTripId,
+		mapRouteId,
+		mapStopId,
+		mapTime,
+		ignoreBlocks,
+		computeShapeDistTraveled,
+		serviceWindow,
+	}: ImportGtfsOptions,
 	routes: Map<string, Route>,
 	services: Map<string, Service>,
 	shapes: Map<string, Shape>,
@@ -75,6 +85,7 @@ export async function importTrips(
 	);
 
 	const stopTimesFile = join(gtfsDirectory, "stop_times.txt");
+	const runsInWindow = serviceWindow !== undefined ? createServiceWindowFilter(serviceWindow) : undefined;
 
 	await readCsv<TripRecord>(join(gtfsDirectory, "trips.txt"), (tripRecord) => {
 		const tripId = mapTripId?.(tripRecord.trip_id) ?? tripRecord.trip_id;
@@ -116,7 +127,7 @@ export async function importTrips(
 			tripRecord.trip_short_name ? internText(tripRecord.trip_short_name) : undefined,
 		);
 
-		if (filterTrips === undefined || filterTrips(trip)) {
+		if ((filterTrips === undefined || filterTrips(trip)) && (runsInWindow?.(service) ?? true)) {
 			trips.set(trip.id, trip);
 		} else {
 			excludedTripIds.add(trip.id);

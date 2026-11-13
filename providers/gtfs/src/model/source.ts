@@ -21,6 +21,7 @@ import type {
 import type { Journey } from "./journey.js";
 import { buildEncodedLinePaths } from "./line-path.js";
 import type { Route } from "./route.js";
+import { createServiceWindow, isServiceWindowExpiring } from "./service-window.js";
 import type { StopArea } from "./stop-area.js";
 import type { Trip } from "./trip.js";
 
@@ -223,12 +224,14 @@ export class Source {
 		const resourceDirectory = await mkdtemp(join(tmpdir(), `bt-gtfs_${this.id}_`));
 
 		try {
+			const serviceWindow = createServiceWindow(Temporal.Now.plainDateISO());
+
 			updateLog("%s 1/3 ► Downloading GTFS resource into temporary directory...", sourceId);
 			await downloadGtfs(this, resourceDirectory);
 
 			updateLog("%s 2/3 ► Loading GTFS resource contents into memory...", sourceId);
 			const gtfs: Gtfs = {
-				...(await importGtfs(resourceDirectory, this.options.gtfsOptions)),
+				...(await importGtfs(resourceDirectory, { ...this.options.gtfsOptions, serviceWindow })),
 				importedAt: Temporal.Now.instant(),
 				...(await getStaleness(this.options.staticResourceHref, this.options.staticAuth ?? this.options.auth).catch(
 					() => ({
@@ -258,10 +261,12 @@ export class Source {
 			}
 
 			updateLog(
-				"%s     ✓ Resource %s in %dms - %d journeys and %d line paths were pre-computed.\n",
+				"%s     ✓ Resource %s in %dms (service window %s → %s) - %d journeys and %d line paths were pre-computed.\n",
 				sourceId,
 				updating ? "updated" : "imported",
 				watch.total(),
+				serviceWindow.from,
+				serviceWindow.to,
 				gtfs.journeys.size,
 				this.linePaths.size,
 			);
@@ -293,6 +298,12 @@ export class Source {
 		if (this.gtfs === undefined) {
 			updateLog("%s ℹ Resource has not loaded yet (error?), performing a load attempt.", sourceId);
 			return this.importGtfs();
+		}
+
+		const serviceWindow = this.gtfs.serviceWindow;
+		if (serviceWindow !== undefined && isServiceWindowExpiring(serviceWindow, Temporal.Now.plainDateISO())) {
+			updateLog("%s ℹ Current resource service window ends on %s: updating resource.", sourceId, serviceWindow.to);
+			return this.importGtfs(true);
 		}
 
 		if (this.gtfs.lastModified === null && this.gtfs.etag === null) {

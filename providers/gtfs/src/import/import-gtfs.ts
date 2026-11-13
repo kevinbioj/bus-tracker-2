@@ -1,4 +1,5 @@
 import type { Gtfs } from "../model/gtfs.js";
+import type { ServiceWindow } from "../model/service-window.js";
 import type { StationRecord } from "../model/stop.js";
 import { buildStopIndex, filterServedStopAreas } from "../model/stop-index.js";
 import type { StopTimeStore } from "../model/stop-time-store.js";
@@ -25,6 +26,7 @@ export type ImportGtfsOptions = {
 	shapesStrategy?: LoadShapesStrategy;
 	computeShapeDistTraveled?: ComputeShapeDistTraveledStrategy;
 	ignoreBlocks?: boolean;
+	serviceWindow?: ServiceWindow;
 	postLoad?: (resource: Awaited<ReturnType<typeof importGtfs>>) => unknown;
 };
 
@@ -70,6 +72,7 @@ export async function importGtfs(gtfsDirectory: string, options: ImportGtfsOptio
 		journeys: new Map(),
 		stopTimeStore,
 		...indexStopAreas(stopTimeStore, trips.values(), stations),
+		serviceWindow: options.serviceWindow,
 	};
 	options.postLoad?.(gtfs);
 	return gtfs;
