@@ -153,7 +153,7 @@ while (true) {
 async function computeCurrentJourneys() {
 	const watch = createStopWatch();
 
-	const computeLimit = 6;
+	const computeLimit = configuration.computeConcurrency ?? 6;
 	const computeLimitFn = pLimit(computeLimit);
 	const updateLog = console.draft("%s ► Computing vehicle journeys to publish.", Temporal.Now.instant());
 

@@ -5,6 +5,7 @@ import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 import { USER_AGENT } from "../constants.js";
 import type {
 	GtfsRt,
+	GtfsRtEntity,
 	IdentifiedAlert,
 	IdentifiedTripModifications,
 	TripUpdate,
@@ -20,6 +21,9 @@ import type { RealtimeEntityType, Source } from "../model/source.js";
 import { getAuthHeaders } from "../utils/auth.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
+const feedHeader = GtfsRealtimeBindings.transit_realtime.FeedHeader;
+const feedEntity = GtfsRealtimeBindings.transit_realtime.FeedEntity;
+const CONVERSION_OPTIONS = { enums: String, longs: Number };
 
 /** Ce qu'un flux a livré au cours d'un cycle, tel que mis en cache pour les flux à polling. */
 export type RealtimeFeedContents = {
@@ -114,23 +118,30 @@ export async function downloadGtfsRt(source: Source) {
 				if (!response.ok)
 					throw new Error(`Failed to download feed at '${realtimeFeedHref}' (status ${response.status}).`);
 
-				const buffer = Buffer.from(await response.arrayBuffer());
-				const gtfsRt = feedMessage.toObject(feedMessage.decode(buffer), {
-					enums: String,
-					longs: Number,
-				}) as GtfsRt;
-				const entities = gtfsRt.entity ?? [];
+				const message = feedMessage.decode(Buffer.from(await response.arrayBuffer()));
+				const header = feedHeader.toObject(
+					message.header as GtfsRealtimeBindings.transit_realtime.FeedHeader,
+					CONVERSION_OPTIONS,
+				) as GtfsRt["header"];
+				const decodedEntities: (GtfsRealtimeBindings.transit_realtime.IFeedEntity | undefined)[] = message.entity;
+				message.entity = [];
 
 				const contents = createFeedContents();
 
-				for (const entity of entities) {
+				for (let index = 0; index < decodedEntities.length; index += 1) {
+					const entity = feedEntity.toObject(
+						decodedEntities[index] as GtfsRealtimeBindings.transit_realtime.FeedEntity,
+						CONVERSION_OPTIONS,
+					) as GtfsRtEntity;
+					decodedEntities[index] = undefined;
+
 					if (entity.tripUpdate) {
 						const tripUpdate =
 							typeof source.options.mapTripUpdate === "function"
 								? source.options.mapTripUpdate(entity.tripUpdate, source.gtfs!)
 								: entity.tripUpdate;
 						if (tripUpdate === undefined) continue;
-						tripUpdate.timestamp ||= gtfsRt.header.timestamp;
+						tripUpdate.timestamp ||= header.timestamp;
 						contents.tripUpdates.push(tripUpdate);
 					}
 
@@ -140,7 +151,7 @@ export async function downloadGtfsRt(source: Source) {
 								? source.options.mapVehiclePosition(entity.vehicle, source.gtfs!)
 								: entity.vehicle;
 						if (vehiclePosition === undefined) continue;
-						vehiclePosition.timestamp ||= gtfsRt.header.timestamp;
+						vehiclePosition.timestamp ||= header.timestamp;
 						contents.vehiclePositions.push(vehiclePosition);
 					}
 

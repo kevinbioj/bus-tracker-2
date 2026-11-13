@@ -166,4 +166,25 @@ describe("downloadGtfsRt", () => {
 
 		expect(resources.stops.size).toBe(0);
 	});
+
+	it("conserve l'ordre et le contenu des entités", async () => {
+		const bytes = encodeFeed([
+			{ id: "trip-update:1", tripUpdate: { trip: { tripId: "t1" } } },
+			{
+				id: "vehicle:1",
+				vehicle: { trip: { tripId: "t1" }, position: { latitude: 48.85, longitude: 2.35 }, timestamp: 1_779_000_100 },
+			},
+			{ id: "trip-update:2", tripUpdate: { trip: { tripId: "t2" }, timestamp: 1_779_000_200 } },
+		]);
+		vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(bytes, { status: 200 })));
+
+		const { tripUpdates, vehiclePositions } = await downloadGtfsRt(makeSource());
+
+		expect(tripUpdates.map(({ trip, timestamp }) => [trip.tripId, timestamp])).toEqual([
+			["t1", 1_779_000_000],
+			["t2", 1_779_000_200],
+		]);
+		expect(vehiclePositions).toHaveLength(1);
+		expect(vehiclePositions[0]?.timestamp).toBe(1_779_000_100);
+	});
 });
