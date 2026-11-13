@@ -9,6 +9,7 @@ import { getEpochMsFromSecs } from "../cache/temporal-cache.js";
 import { getJourneyKey } from "../model/gtfs.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
 import type { Source } from "../model/source.js";
+import type { StopIndex } from "../model/stop-index.js";
 import { bitmaskToFlags, type Trip } from "../model/trip.js";
 import { formatCallTime } from "../utils/format-call-time.js";
 import { getWheelchairAccessible } from "../utils/get-wheelchair-accessible.js";
@@ -37,13 +38,18 @@ const NO_DROP_OFF_FLAG = 2;
  */
 const WINDOW_SLACK_SECS = 2 * 60 * 60;
 
-/** Premier index de `entries` dont l'heure de départ atteint `secs`. Les entrées y sont triées. */
-function lowerBound(entries: [number, number][], departureSecs: Uint32Array, secs: number) {
-	let low = 0;
-	let high = entries.length;
+/** Première position de `range` dont l'heure de départ atteint `secs`. Les entrées y sont triées. */
+function lowerBound(
+	stopIndex: StopIndex,
+	range: { start: number; end: number },
+	departureSecs: Uint32Array,
+	secs: number,
+) {
+	let low = range.start;
+	let high = range.end;
 	while (low < high) {
 		const middle = (low + high) >>> 1;
-		if (departureSecs[entries[middle]![0]]! < secs) {
+		if (departureSecs[stopIndex.stopTimeAt(middle)]! < secs) {
 			low = middle + 1;
 		} else {
 			high = middle;
@@ -137,14 +143,16 @@ export function computeStopDepartures(
 	const stopArea = source.realtimeStopAreas.get(areaId) ?? gtfs.stopAreas.get(areaId);
 	if (stopArea === undefined) return { departures: [], excludedJourneys: [] };
 
-	const entries = Array.from(gtfs.stopIndex.entriesOf(areaId));
+	const range = gtfs.stopIndex.rangeOf(areaId) ?? { start: 0, end: 0 };
 
 	const arrivals = direction === "arrivals";
 	const { stopTimeStore } = gtfs;
 	const { arrivalSecs, departureSecs, flagsBitmask, sequence } = stopTimeStore;
 
 	const referenceTimeZone =
-		(entries.length > 0 ? gtfs.tripsByIdx[entries[0]![1]]?.route.agency.timeZone : undefined) ??
+		(range.end > range.start
+			? gtfs.tripsByIdx[gtfs.stopIndex.tripOf(gtfs.stopIndex.stopTimeAt(range.start))]?.route.agency.timeZone
+			: undefined) ??
 		gtfs.routes.values().next().value?.agency.timeZone ??
 		"UTC";
 	const nowMs = at.epochMilliseconds;
@@ -221,11 +229,15 @@ export function computeStopDepartures(
 		const untilSecs = (untilMs - midnightMs) / 1000 + WINDOW_SLACK_SECS;
 		if (untilSecs < 0) continue;
 
-		for (let index = lowerBound(entries, departureSecs, fromSecs); index < entries.length; index += 1) {
-			const [stopTimeIdx, tripIdx] = entries[index]!;
+		for (
+			let position = lowerBound(gtfs.stopIndex, range, departureSecs, fromSecs);
+			position < range.end;
+			position += 1
+		) {
+			const stopTimeIdx = gtfs.stopIndex.stopTimeAt(position);
 			if (departureSecs[stopTimeIdx]! > untilSecs) break;
 
-			const trip = gtfs.tripsByIdx[tripIdx];
+			const trip = gtfs.tripsByIdx[gtfs.stopIndex.tripOf(stopTimeIdx)];
 			if (trip === undefined) continue;
 
 			// L'index tient tous les stop_times : on ne part pas du dernier, on n'arrive pas au premier.

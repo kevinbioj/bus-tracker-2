@@ -5,7 +5,7 @@ import type { Trip } from "./trip.js";
 /**
  * Index inverse station → stop_times, en stockage columnar (CSR) comme {@link StopTimeStore} : le
  * GTFS n'est indexé que par course, et balayer toutes les courses d'un réseau pour répondre sur un
- * arrêt coûterait bien plus que les huit octets par stop_time que cet index demande.
+ * arrêt coûterait bien plus que les quatre octets par stop_time que cet index demande.
  *
  * Y figurent tous les stop_times, terminus et arrêts interdits à la montée ou à la descente compris :
  * c'est le sens du tableau demandé — départs ou arrivées — qui décide à la lecture lesquels écarter.
@@ -18,19 +18,39 @@ export class StopIndex {
 		readonly areaCount: Uint32Array,
 		/** Indices de stop_time, groupés par station et triés par heure de départ. */
 		readonly stopTimeIdx: Uint32Array,
-		/** Course porteuse de chaque entrée, à l'index correspondant de {@link stopTimeIdx}. */
-		readonly tripIdx: Uint32Array,
+		readonly tripStart: Uint32Array,
+		readonly tripOrder: Uint32Array,
 	) {}
 
-	/** Entrées de la station, sous la forme de couples `[stopTimeIdx, tripIdx]`. Vide si inconnue. */
-	*entriesOf(areaId: string): Generator<[number, number]> {
+	rangeOf(areaId: string) {
 		const slot = this.areaSlots.get(areaId);
-		if (slot === undefined) return;
-
+		if (slot === undefined) return undefined;
 		const start = this.areaStart[slot]!;
-		const end = start + this.areaCount[slot]!;
-		for (let index = start; index < end; index += 1) {
-			yield [this.stopTimeIdx[index]!, this.tripIdx[index]!];
+		return { start, end: start + this.areaCount[slot]! };
+	}
+
+	stopTimeAt(position: number) {
+		return this.stopTimeIdx[position]!;
+	}
+
+	tripOf(stopTimeIdx: number) {
+		let low = 0;
+		let high = this.tripOrder.length - 1;
+		while (low < high) {
+			const middle = (low + high + 1) >>> 1;
+			if (this.tripStart[this.tripOrder[middle]!]! <= stopTimeIdx) low = middle;
+			else high = middle - 1;
+		}
+		return this.tripOrder[low]!;
+	}
+
+	*entriesOf(areaId: string): Generator<[number, number]> {
+		const range = this.rangeOf(areaId);
+		if (range === undefined) return;
+
+		for (let position = range.start; position < range.end; position += 1) {
+			const stopTimeIdx = this.stopTimeAt(position);
+			yield [stopTimeIdx, this.tripOf(stopTimeIdx)];
 		}
 	}
 }
@@ -47,9 +67,11 @@ export function buildStopIndex(
 	const { stopList, stopIdx, departureSecs, tripStart, tripCount } = stopTimeStore;
 
 	const tripOfStopTime = new Int32Array(stopTimeStore.size).fill(-1);
+	const servedTrips: number[] = [];
 	for (const trip of trips) {
 		const start = tripStart[trip.idx]!;
 		const end = start + tripCount[trip.idx]!;
+		if (end > start) servedTrips.push(trip.idx);
 		for (let index = start; index < end; index += 1) {
 			tripOfStopTime[index] = trip.idx;
 		}
@@ -97,7 +119,6 @@ export function buildStopIndex(
 	}
 
 	const stopTimeIdx = new Uint32Array(offset);
-	const tripIdx = new Uint32Array(offset);
 	const writeCursor = Uint32Array.from(areaStart);
 
 	for (let index = 0; index < stopTimeStore.size; index += 1) {
@@ -106,7 +127,6 @@ export function buildStopIndex(
 
 		const cursor = writeCursor[slot]!;
 		stopTimeIdx[cursor] = index;
-		tripIdx[cursor] = tripOfStopTime[index]!;
 		writeCursor[slot] = cursor + 1;
 	}
 
@@ -122,14 +142,14 @@ export function buildStopIndex(
 		);
 
 		const sortedStopTimes = order.map((index) => stopTimeIdx[index]!);
-		const sortedTrips = order.map((index) => tripIdx[index]!);
 		for (let offset = 0; offset < count; offset += 1) {
 			stopTimeIdx[start + offset] = sortedStopTimes[offset]!;
-			tripIdx[start + offset] = sortedTrips[offset]!;
 		}
 	}
 
-	return new StopIndex(areaSlots, areaStart, areaCount, stopTimeIdx, tripIdx);
+	const tripOrder = Uint32Array.from(servedTrips.sort((a, b) => tripStart[a]! - tripStart[b]!));
+
+	return new StopIndex(areaSlots, areaStart, areaCount, stopTimeIdx, tripStart, tripOrder);
 }
 
 /**
