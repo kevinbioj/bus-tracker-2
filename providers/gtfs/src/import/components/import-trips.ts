@@ -8,6 +8,7 @@ import { createSequenceArray, StopTimeStore } from "../../model/stop-time-store.
 import { Trip } from "../../model/trip.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 import { getDistance } from "../../utils/get-distance.js";
+import { copyString, createInterner } from "../../utils/strings.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
 
@@ -53,6 +54,7 @@ export async function importTrips(
 	shapes: Map<string, Shape>,
 	stops: Map<string, Stop>,
 ): Promise<{ trips: Map<string, Trip>; stopTimeStore: StopTimeStore }> {
+	const internText = createInterner();
 	const trips = new Map<string, Trip>();
 	const excludedTripIds = new Set<string>();
 
@@ -90,7 +92,7 @@ export async function importTrips(
 
 		let service = services.get(tripRecord.service_id);
 		if (service === undefined) {
-			service = new Service(tripRecord.service_id);
+			service = new Service(copyString(tripRecord.service_id));
 			services.set(service.id, service);
 		}
 
@@ -99,19 +101,19 @@ export async function importTrips(
 		const tripIdx = trips.size;
 		const trip = new Trip(
 			tripIdx,
-			tripId,
+			copyString(tripId),
 			route,
 			service,
 			placeholderStore,
 			+(tripRecord.direction_id ?? 0) as 0 | 1,
-			tripRecord.trip_headsign || undefined,
+			tripRecord.trip_headsign ? internText(tripRecord.trip_headsign) : undefined,
 			tripRecord.block_id !== undefined && tripRecord.block_id.length > 0 && !ignoreBlocks
-				? tripRecord.block_id
+				? internText(tripRecord.block_id)
 				: undefined,
 			tripRecord.shape_id !== undefined ? shapes.get(tripRecord.shape_id) : undefined,
 			parseTripAvailability(tripRecord.wheelchair_accessible),
 			parseTripAvailability(tripRecord.bikes_allowed),
-			tripRecord.trip_short_name || undefined,
+			tripRecord.trip_short_name ? internText(tripRecord.trip_short_name) : undefined,
 		);
 
 		if (filterTrips === undefined || filterTrips(trip)) {
@@ -213,11 +215,12 @@ export async function importTrips(
 
 		stopIdx[idx] = stopIndex;
 		if (stopTimeRecord.stop_headsign) {
-			let headsignIndex = headsignIndexByValue.get(stopTimeRecord.stop_headsign);
+			const stopHeadsign = internText(stopTimeRecord.stop_headsign);
+			let headsignIndex = headsignIndexByValue.get(stopHeadsign);
 			if (headsignIndex === undefined) {
 				headsignIndex = headsignList.length;
-				headsignList.push(stopTimeRecord.stop_headsign);
-				headsignIndexByValue.set(stopTimeRecord.stop_headsign, headsignIndex);
+				headsignList.push(stopHeadsign);
+				headsignIndexByValue.set(stopHeadsign, headsignIndex);
 			}
 			headsignIdx ??= new Uint32Array(totalRows);
 			headsignIdx[idx] = headsignIndex;

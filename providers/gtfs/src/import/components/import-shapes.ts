@@ -4,6 +4,7 @@ import { Shape } from "../../model/shape.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 import { fileExists } from "../../utils/file-exists.js";
 import { getDistance } from "../../utils/get-distance.js";
+import { copyString } from "../../utils/strings.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
 
@@ -26,7 +27,7 @@ export async function importShapes(gtfsDirectory: string, options: ImportGtfsOpt
 			let data = rawShapes.get(shapeRecord.shape_id);
 			if (data === undefined) {
 				data = { lats: [], lons: [], seqs: [], dists: [] };
-				rawShapes.set(shapeRecord.shape_id, data);
+				rawShapes.set(copyString(shapeRecord.shape_id), data);
 			}
 
 			data.lats.push(+shapeRecord.shape_pt_lat);

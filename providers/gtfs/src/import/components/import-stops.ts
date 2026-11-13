@@ -2,6 +2,7 @@ import { join } from "node:path";
 
 import { type StationRecord, Stop } from "../../model/stop.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
+import { copyString, createInterner } from "../../utils/strings.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
 
@@ -24,13 +25,8 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 
 	// Les chaînes de fuseau sont internées : des milliers d'arrêts d'un même pays partagent
 	// ainsi une seule instance au lieu d'une copie par ligne CSV.
-	const timeZones = new Map<string, string>();
-	const internTimeZone = (timeZone: string) => {
-		const interned = timeZones.get(timeZone);
-		if (interned !== undefined) return interned;
-		timeZones.set(timeZone, timeZone);
-		return timeZone;
-	};
+	const internTimeZone = createInterner();
+	const internText = createInterner();
 
 	// Indexées par identifiant *brut* : `parent_station` référence les identifiants d'origine,
 	// avant application de `mapStopId`.
@@ -57,9 +53,10 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 		}
 
 		if (stopRecord.location_type === "1") {
-			stations.set(stopRecord.stop_id, {
-				id: stopRecord.stop_id,
-				name: stopRecord.stop_name,
+			const stationId = copyString(stopRecord.stop_id);
+			stations.set(stationId, {
+				id: stationId,
+				name: internText(stopRecord.stop_name),
 				latitude: +stopRecord.stop_lat,
 				longitude: +stopRecord.stop_lon,
 			});
@@ -73,13 +70,13 @@ export async function importStops(gtfsDirectory: string, { importAllStops, mapSt
 		}
 
 		const stop = new Stop(
-			mapStopId?.(stopRecord.stop_id) ?? stopRecord.stop_id,
-			stopRecord.stop_name,
+			copyString(mapStopId?.(stopRecord.stop_id) ?? stopRecord.stop_id),
+			internText(stopRecord.stop_name),
 			+stopRecord.stop_lat,
 			+stopRecord.stop_lon,
-			stopRecord.platform_code || undefined,
+			stopRecord.platform_code ? internText(stopRecord.platform_code) : undefined,
 			timeZone,
-			stopRecord.parent_station || undefined,
+			stopRecord.parent_station ? internText(stopRecord.parent_station) : undefined,
 			wheelchairBoarding,
 		);
 

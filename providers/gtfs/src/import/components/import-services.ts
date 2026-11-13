@@ -4,6 +4,7 @@ import { createPlainDate } from "../../cache/temporal-cache.js";
 import { Service } from "../../model/service.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 import { fileExists } from "../../utils/file-exists.js";
+import { copyString } from "../../utils/strings.js";
 
 type ServiceRecord = CsvRecord<
 	| "service_id"
@@ -27,7 +28,7 @@ export async function importServices(gtfsDirectory: string) {
 	if (await fileExists(calendarFile)) {
 		await readCsv<ServiceRecord>(calendarFile, (serviceRecord) => {
 			const service = new Service(
-				serviceRecord.service_id,
+				copyString(serviceRecord.service_id),
 				[
 					!!+serviceRecord.monday,
 					!!+serviceRecord.tuesday,
@@ -50,7 +51,7 @@ export async function importServices(gtfsDirectory: string) {
 		await readCsv<ExceptionRecord>(calendarDatesFile, (exceptionRecord) => {
 			let service = services.get(exceptionRecord.service_id);
 			if (service === undefined) {
-				service = new Service(exceptionRecord.service_id);
+				service = new Service(copyString(exceptionRecord.service_id));
 				services.set(service.id, service);
 			}
 
