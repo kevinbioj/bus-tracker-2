@@ -1,13 +1,13 @@
 import { Buffer } from "node:buffer";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { crc32 } from "node:zlib";
 
-import decompress from "@xhmikosr/decompress";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { trimZipTrailingBytes } from "./trim-zip-trailing-bytes.js";
+import { extractGtfsArchive } from "../download/extract-gtfs-archive.js";
+import { trimZipFileTrailingBytes, trimZipTrailingBytes } from "./trim-zip-trailing-bytes.js";
 
 /** Builds a minimal single-entry zip archive using the "stored" method. */
 function createZip(fileName: string, contents: string, comment = "") {
@@ -49,10 +49,19 @@ function createZip(fileName: string, contents: string, comment = "") {
 
 const directories: string[] = [];
 
-const extractInto = async (buffer: Buffer) => {
+const writeArchive = async (buffer: Buffer) => {
 	const directory = await mkdtemp(join(tmpdir(), "trim-zip-"));
 	directories.push(directory);
-	await decompress(buffer, directory);
+	const path = join(directory, "archive.zip");
+	await writeFile(path, buffer);
+	return path;
+};
+
+const extractInto = async (buffer: Buffer) => {
+	const archivePath = await writeArchive(buffer);
+	const directory = await mkdtemp(join(tmpdir(), "trim-zip-"));
+	directories.push(directory);
+	await extractGtfsArchive(archivePath, directory);
 	return directory;
 };
 
@@ -94,5 +103,26 @@ describe("trimZipTrailingBytes", () => {
 
 		const directory = await extractInto(trimZipTrailingBytes(padded));
 		await expect(readFile(join(directory, "agency.txt"), "utf8")).resolves.toBe(contents);
+	});
+});
+
+describe("trimZipFileTrailingBytes", () => {
+	it("tronque un fichier des octets parasites qui suivent la fin du répertoire central", async () => {
+		const zip = createZip("agency.txt", "agency_id,agency_name\n1,Palm Bus\n");
+		const path = await writeArchive(Buffer.concat([zip, Buffer.alloc(10)]));
+
+		await trimZipFileTrailingBytes(path);
+
+		expect((await stat(path)).size).toBe(zip.length);
+		await expect(readFile(path)).resolves.toStrictEqual(zip);
+	});
+
+	it("garde la taille d'un fichier sans octets parasites", async () => {
+		const zip = createZip("agency.txt", "agency_id,agency_name\n1,Palm Bus\n", "produced by palm bus");
+		const path = await writeArchive(zip);
+
+		await trimZipFileTrailingBytes(path);
+
+		expect((await stat(path)).size).toBe(zip.length);
 	});
 });

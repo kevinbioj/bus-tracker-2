@@ -11,9 +11,9 @@
 		"test:watch": "vitest --exclude dist"
 	},
 	"devDependencies": {
-		"@types/decompress": "^4.2.7",
 		"@types/node": "^26.6.6",
 		"@types/papaparse": "^5.5.2",
+		"@types/yauzl": "^3.4.0",
 		"tsx": "^4.23.15",
 		"typescript": "^7.0.2",
 		"vitest": "^5.1.0"
@@ -22,7 +22,6 @@
 		"@bus-tracker/contracts": "workspace:*",
 		"@bus-tracker/monitoring": "workspace:*",
 		"@bus-tracker/redis": "workspace:*",
-		"@xhmikosr/decompress": "^11.1.4",
 		"croner": "^11.0.0",
 		"dotenv": "^18.0.10",
 		"draftlog": "^1.0.13",
@@ -31,6 +30,7 @@
 		"p-limit": "^7.3.3",
 		"papaparse": "^5.7.0",
 		"redis": "^6.3.1",
-		"ts-pattern": "^5.9.2"
+		"ts-pattern": "^5.9.2",
+		"yauzl": "^3.4.0"
 	}
 }
