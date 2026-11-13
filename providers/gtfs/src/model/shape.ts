@@ -1,9 +1,7 @@
-import type { VehicleJourneyPath } from "@bus-tracker/contracts";
-
 import { getDirection } from "../utils/get-direction.js";
 import { getDistance } from "../utils/get-distance.js";
 
-const pathCache = new WeakMap<Shape, VehicleJourneyPath>();
+const toJsonNumber = (value: number) => (Number.isFinite(value) ? String(value) : "null");
 
 /**
  * Écart, en mètres au-delà du passage le plus proche, en deçà duquel un autre passage du tracé est
@@ -415,24 +413,15 @@ export class Shape {
 		return points;
 	}
 
-	asPath(): VehicleJourneyPath {
-		const cached = pathCache.get(this);
-		if (cached) return cached;
-
-		const p: [number, number, number | undefined][] = [];
+	toPathJson(): string {
+		const points = new Array<string>(this.length);
 		for (let i = 0; i < this.length; i++) {
-			const longitude = this.getPointLongitude(i);
-			const latitude = this.getPointLatitude(i);
+			const latitude = Math.round(this.getPointLatitude(i) * 1000000) / 1000000;
+			const longitude = Math.round(this.getPointLongitude(i) * 1000000) / 1000000;
 			const distanceTraveled = this.getPointDistanceTraveled(i);
-			p.push([
-				Math.round(latitude * 1000000) / 1000000,
-				Math.round(longitude * 1000000) / 1000000,
-				distanceTraveled ? Math.round(distanceTraveled * 10) / 10 : undefined,
-			]);
+			const distance = distanceTraveled ? toJsonNumber(Math.round(distanceTraveled * 10) / 10) : "null";
+			points[i] = `[${toJsonNumber(latitude)},${toJsonNumber(longitude)},${distance}]`;
 		}
-
-		const result = { p };
-		pathCache.set(this, result);
-		return result;
+		return `{"p":[${points.join(",")}]}`;
 	}
 }

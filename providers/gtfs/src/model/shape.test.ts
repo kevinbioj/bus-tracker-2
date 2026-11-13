@@ -163,3 +163,31 @@ describe("Shape#locateStop", () => {
 		expect(point?.distanceTraveled).toBeUndefined();
 	});
 });
+
+function legacyPathJson(shape: Shape) {
+	const p: [number, number, number | undefined][] = [];
+	for (let i = 0; i < shape.length; i++) {
+		const longitude = shape.getPointLongitude(i);
+		const latitude = shape.getPointLatitude(i);
+		const distanceTraveled = shape.getPointDistanceTraveled(i);
+		p.push([
+			Math.round(latitude * 1000000) / 1000000,
+			Math.round(longitude * 1000000) / 1000000,
+			distanceTraveled ? Math.round(distanceTraveled * 10) / 10 : undefined,
+		]);
+	}
+	return JSON.stringify({ p });
+}
+
+describe("Shape#toPathJson", () => {
+	it("sérialise le tracé comme l'ancien format des tracés de course", () => {
+		const withDistances = new Shape("d", new Float64Array([49.44, 1.09, 0, 49.45, 1.1, 120.54, 49.46, 1.11, 250]));
+		const rounded = new Shape("r", new Float64Array([49.12345678, -1.0000004, 12.345, -0.0000001, 179.9999999, 1e-7]));
+		const empty = new Shape("empty", new Float64Array(0));
+
+		for (const s of [withDistances, shape, rounded, empty]) {
+			expect(s.toPathJson()).toBe(legacyPathJson(s));
+		}
+		expect(empty.toPathJson()).toBe('{"p":[]}');
+	});
+});

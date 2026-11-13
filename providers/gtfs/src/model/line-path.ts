@@ -5,7 +5,7 @@ import type { Journey } from "./journey.js";
 import type { Shape } from "./shape.js";
 import type { Source } from "./source.js";
 
-/** Précision à laquelle les sommets sont aimantés : celle des tracés de course (cf. `Shape.asPath`),
+/** Précision à laquelle les sommets sont aimantés : celle des tracés de course (cf. `Shape.toPathJson`),
  * pour confondre les sommets partagés par plusieurs tracés sans créneler le dessin. */
 const SNAP_PRECISION = 1000000;
 

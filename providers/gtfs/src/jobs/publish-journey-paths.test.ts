@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+import { Shape } from "../model/shape.js";
 
 import { createJourneyPathPublisher } from "./publish-journey-paths.js";
 
@@ -75,5 +77,37 @@ describe("createJourneyPathPublisher", () => {
 		const retry = createRedis();
 		await publisher.publish(retry, { "N:RoutePath:a": routePath }, 1_000);
 		expect(retry.writes).toHaveLength(1);
+	});
+
+	it("publie un tracé de course tel que Shape#toPathJson le sérialise", async () => {
+		const redis = createRedis();
+		const publisher = createJourneyPathPublisher(900, 300_000);
+		const shape = new Shape("s", new Float64Array([49.44, 1.09, 0, 49.45, 1.1, 120.5]));
+
+		await publisher.publish(redis, { "N:RoutePath:s": shape }, 0);
+
+		expect(redis.writes[0]?.value).toBe(shape.toPathJson());
+	});
+
+	it("ne réécrit pas un tracé identique porté par un autre objet", async () => {
+		const redis = createRedis();
+		const publisher = createJourneyPathPublisher(900, 300_000);
+
+		await publisher.publish(redis, { "N:RoutePath:a": { p: [[1, 2, 3]] } }, 0);
+		await publisher.publish(redis, { "N:RoutePath:a": { p: [[1, 2, 3]] } }, 30_000);
+
+		expect(redis.writes).toHaveLength(1);
+	});
+
+	it("ne resérialise pas le même objet tant qu'il est frais", async () => {
+		const redis = createRedis();
+		const publisher = createJourneyPathPublisher(900, 300_000);
+		const shape = new Shape("s", new Float64Array([49.44, 1.09, 0, 49.45, 1.1, 120.5]));
+		const toPathJson = vi.spyOn(shape, "toPathJson");
+
+		await publisher.publish(redis, { "N:RoutePath:s": shape }, 0);
+		await publisher.publish(redis, { "N:RoutePath:s": shape }, 30_000);
+
+		expect(toPathJson).toHaveBeenCalledTimes(1);
 	});
 });

@@ -1,4 +1,4 @@
-import type { LinePath, VehicleJourney, VehicleJourneyPath } from "@bus-tracker/contracts";
+import type { LinePath, VehicleJourney } from "@bus-tracker/contracts";
 import { match, P } from "ts-pattern";
 import { createPlainDate, createPlainTime, createZonedDateTime } from "../cache/temporal-cache.js";
 import { downloadGtfsRt } from "../download/download-gtfs-rt.js";
@@ -458,7 +458,7 @@ function resolveCancelledPathRef(
 	journey: Journey | undefined,
 	source: Source,
 	networkRef: string,
-	paths: Map<string, VehicleJourneyPath | LinePath>,
+	paths: Map<string, Shape | LinePath>,
 ) {
 	if (journey === undefined || source.options.disableRoutePaths) return undefined;
 
@@ -484,7 +484,7 @@ type AddedTripPublication = {
 /** Résultat d'un cycle de calcul : les courses à publier et les tracés auxquels elles renvoient. */
 type ComputeResult = {
 	journeys: VehicleJourney[];
-	paths: Record<string, VehicleJourneyPath | LinePath>;
+	paths: Record<string, Shape | LinePath>;
 };
 
 export async function computeVehicleJourneys(source: Source): Promise<ComputeResult> {
@@ -510,7 +510,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 		updateLog("%s 2/2 ► Computing active journeys.", sourceId);
 		const activeJourneys = new Map<string, VehicleJourney>();
-		const paths = new Map<string, VehicleJourneyPath | LinePath>();
+		const paths = new Map<string, Shape | LinePath>();
 		// Tracé sur lequel chaque position calculée a été placée, pour la mise en file des véhicules à l'arrêt.
 		const positionShapes = new WeakMap<VehicleJourney, Shape>();
 		const handledJourneyIds = new Set<string>();
@@ -732,7 +732,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 					: undefined;
 
 			if (pathRef !== undefined && !paths.has(pathRef)) {
-				paths.set(pathRef, journey!.shape!.asPath());
+				paths.set(pathRef, journey!.shape!);
 			}
 
 			const cancelledPathRef = resolveCancelledPathRef(journey, source, networkRef, paths);
@@ -879,7 +879,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 						: undefined;
 
 				if (pathRef !== undefined && !paths.has(pathRef)) {
-					paths.set(pathRef, shape!.asPath());
+					paths.set(pathRef, shape!);
 				}
 
 				const directionId = tripUpdate.trip.directionId ?? candidate?.trip.direction;
@@ -1016,7 +1016,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 						: undefined;
 
 				if (pathRef !== undefined && !paths.has(pathRef)) {
-					paths.set(pathRef, journey!.shape!.asPath());
+					paths.set(pathRef, journey!.shape!);
 				}
 
 				const cancelledPathRef = resolveCancelledPathRef(journey, source, networkRef, paths);

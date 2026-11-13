@@ -1,3 +1,7 @@
+import { createHash } from "node:crypto";
+
+import { Shape } from "../model/shape.js";
+
 /** Seule l'écriture est requise : évite d'exposer la variance des types du client Redis. */
 type RedisWriter = { set: (key: string, value: string, options: { EX: number }) => Promise<unknown> };
 
@@ -18,19 +22,10 @@ export type JourneyPathPublisher = {
  * qu'il reste référencé. Doit laisser, sous la durée de vie, la marge de plusieurs cycles.
  */
 export function createJourneyPathPublisher(ttlSeconds: number, refreshMs: number): JourneyPathPublisher {
-	// Les tracés de course (`Shape.asPath`) et les tracés abandonnés (`Journey.cancelledPath`) sont
-	// mis en cache par leur producteur : un même objet d'un cycle à l'autre n'est sérialisé qu'une fois.
-	const serialized = new WeakMap<object, string>();
-	const published = new Map<string, { payload: string; atMs: number }>();
+	const published = new Map<string, { source: object; digest: string; atMs: number }>();
 
-	const serialize = (path: object) => {
-		let payload = serialized.get(path);
-		if (payload === undefined) {
-			payload = JSON.stringify(path);
-			serialized.set(path, payload);
-		}
-		return payload;
-	};
+	const serializePath = (path: object) => (path instanceof Shape ? path.toPathJson() : JSON.stringify(path));
+	const digestOf = (payload: string) => createHash("sha1").update(payload).digest("base64");
 
 	return {
 		async publish(redis, paths, nowMs) {
@@ -41,14 +36,21 @@ export function createJourneyPathPublisher(ttlSeconds: number, refreshMs: number
 
 			const writes: Promise<unknown>[] = [];
 			for (const [ref, path] of Object.entries(paths)) {
-				const payload = serialize(path);
 				const previous = published.get(ref);
-				if (previous !== undefined && previous.payload === payload && nowMs - previous.atMs < refreshMs) continue;
+				const fresh = previous !== undefined && nowMs - previous.atMs < refreshMs;
+				if (fresh && previous.source === path) continue;
+
+				const payload = serializePath(path);
+				const digest = digestOf(payload);
+				if (fresh && previous.digest === digest) {
+					published.set(ref, { source: path, digest, atMs: previous.atMs });
+					continue;
+				}
 
 				// Émises sans s'attendre les unes les autres : le client Redis les envoie d'un seul tenant.
 				writes.push(
 					redis.set(ref, payload, { EX: ttlSeconds }).then(() => {
-						published.set(ref, { payload, atMs: nowMs });
+						published.set(ref, { source: path, digest, atMs: nowMs });
 					}),
 				);
 			}
