@@ -36,20 +36,19 @@ export function encodeLinePath(linePath: LinePath): EncodedLinePath {
 		segments: linePath.segments.map((segment) => {
 			let previousLat = 0;
 			let previousLon = 0;
-			let output = "";
+			const parts: string[] = [];
 
 			for (const [lat, lon] of segment) {
 				const currentLat = Math.round(lat * PRECISION);
 				const currentLon = Math.round(lon * PRECISION);
 
-				output += encodeSigned(currentLat - previousLat);
-				output += encodeSigned(currentLon - previousLon);
+				parts.push(encodeSigned(currentLat - previousLat), encodeSigned(currentLon - previousLon));
 
 				previousLat = currentLat;
 				previousLon = currentLon;
 			}
 
-			return output;
+			return parts.join("");
 		}),
 	};
 }
@@ -146,35 +145,35 @@ function createSignedNumberReader(encoded: string) {
 }
 
 export function encodeJourneyPath(path: VehicleJourneyPath): EncodedJourneyPath {
-	let points = "";
+	const pointParts: string[] = [];
 	let previousLat = 0;
 	let previousLon = 0;
 
 	for (const [lat, lon] of path.p) {
 		const currentLat = Math.round(lat * JOURNEY_PATH_COORDINATE_PRECISION);
 		const currentLon = Math.round(lon * JOURNEY_PATH_COORDINATE_PRECISION);
-		points += encodeSignedNumber(currentLat - previousLat) + encodeSignedNumber(currentLon - previousLon);
+		pointParts.push(encodeSignedNumber(currentLat - previousLat), encodeSignedNumber(currentLon - previousLon));
 		previousLat = currentLat;
 		previousLon = currentLon;
 	}
 
-	if (!path.p.some((point) => point[2] !== undefined)) return { v: 1, points };
+	if (!path.p.some((point) => point[2] !== undefined)) return { v: 1, points: pointParts.join("") };
 
-	let distances = "";
+	const distanceParts: string[] = [];
 	let previousDistance = 0;
 
 	for (const [, , distance] of path.p) {
 		if (distance === undefined) {
-			distances += MISSING_DISTANCE;
+			distanceParts.push(MISSING_DISTANCE);
 			continue;
 		}
 
 		const currentDistance = Math.round(distance * JOURNEY_PATH_DISTANCE_PRECISION);
-		distances += encodeSignedNumber(currentDistance - previousDistance);
+		distanceParts.push(encodeSignedNumber(currentDistance - previousDistance));
 		previousDistance = currentDistance;
 	}
 
-	return { v: 1, points, distances };
+	return { v: 1, points: pointParts.join(""), distances: distanceParts.join("") };
 }
 
 export function decodeJourneyPath(encodedPath: EncodedJourneyPath): VehicleJourneyPath {
