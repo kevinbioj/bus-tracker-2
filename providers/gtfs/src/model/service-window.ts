@@ -4,7 +4,6 @@ export type ServiceWindow = { from: Temporal.PlainDate; to: Temporal.PlainDate }
 
 export const SERVICE_WINDOW_DAYS_BEFORE = 1;
 export const SERVICE_WINDOW_DAYS_AFTER = 7;
-export const SERVICE_WINDOW_REFRESH_MARGIN_DAYS = 2;
 
 export function createServiceWindow(today: Temporal.PlainDate): ServiceWindow {
 	return {
@@ -31,6 +30,6 @@ export function createServiceWindowFilter(window: ServiceWindow) {
 	};
 }
 
-export function isServiceWindowExpiring(window: ServiceWindow, today: Temporal.PlainDate) {
-	return Temporal.PlainDate.compare(today.add({ days: SERVICE_WINDOW_REFRESH_MARGIN_DAYS }), window.to) > 0;
+export function isServiceWindowOutdated(window: ServiceWindow, today: Temporal.PlainDate) {
+	return Temporal.PlainDate.compare(window.to, createServiceWindow(today).to) < 0;
 }

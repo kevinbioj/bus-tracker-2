@@ -21,7 +21,7 @@ import type {
 import type { Journey } from "./journey.js";
 import { buildEncodedLinePaths } from "./line-path.js";
 import type { Route } from "./route.js";
-import { createServiceWindow, isServiceWindowExpiring } from "./service-window.js";
+import { createServiceWindow, isServiceWindowOutdated } from "./service-window.js";
 import type { StopArea } from "./stop-area.js";
 import type { Trip } from "./trip.js";
 
@@ -301,8 +301,12 @@ export class Source {
 		}
 
 		const serviceWindow = this.gtfs.serviceWindow;
-		if (serviceWindow !== undefined && isServiceWindowExpiring(serviceWindow, Temporal.Now.plainDateISO())) {
-			updateLog("%s ℹ Current resource service window ends on %s: updating resource.", sourceId, serviceWindow.to);
+		if (serviceWindow !== undefined && isServiceWindowOutdated(serviceWindow, Temporal.Now.plainDateISO())) {
+			updateLog(
+				"%s ℹ Current resource service window ends on %s, a day behind: updating resource.",
+				sourceId,
+				serviceWindow.to,
+			);
 			return this.importGtfs(true);
 		}
 

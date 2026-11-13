@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { Service } from "./service.js";
-import { createServiceWindow, createServiceWindowFilter, isServiceWindowExpiring } from "./service-window.js";
+import { createServiceWindow, createServiceWindowFilter, isServiceWindowOutdated } from "./service-window.js";
 
 const date = (value: string) => Temporal.PlainDate.from(value);
 const onlyOn = (id: string, value: string) => new Service(id, undefined, undefined, undefined, [], [date(value)]);
@@ -39,14 +39,18 @@ describe("createServiceWindowFilter", () => {
 	});
 });
 
-describe("isServiceWindowExpiring", () => {
+describe("isServiceWindowOutdated", () => {
 	const window = createServiceWindow(date("2026-06-10"));
 
-	it("ne demande pas de réimport tant qu'il reste deux jours de marge", () => {
-		expect(isServiceWindowExpiring(window, date("2026-06-15"))).toBe(false);
+	it("ne demande pas de réimport le jour même de l'import", () => {
+		expect(isServiceWindowOutdated(window, date("2026-06-10"))).toBe(false);
 	});
 
-	it("demande un réimport quand la marge est entamée", () => {
-		expect(isServiceWindowExpiring(window, date("2026-06-16"))).toBe(true);
+	it("demande un réimport dès le lendemain de l'import", () => {
+		expect(isServiceWindowOutdated(window, date("2026-06-11"))).toBe(true);
+	});
+
+	it("ne demande pas de réimport si l'horloge recule d'un jour", () => {
+		expect(isServiceWindowOutdated(window, date("2026-06-09"))).toBe(false);
 	});
 });
