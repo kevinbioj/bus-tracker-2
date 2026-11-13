@@ -6,6 +6,10 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
+import { appleSplashScreens } from "./plugins/apple-splash-screens.ts";
+
+const BRANDING_COLOR = "#8B1A4B";
+
 // https://vite.dev/config/
 export default defineConfig({
 	build: {
@@ -31,13 +35,14 @@ export default defineConfig({
 		// aucun paquet supplémentaire n'est nécessaire côté application.
 		babel({ presets: [reactCompilerPreset()] }),
 		tailwindcss(),
+		appleSplashScreens({ color: BRANDING_COLOR }),
 		VitePWA({
 			manifest: {
 				name: "Bus Tracker",
 				short_name: "Bus Tracker",
 				description: "Localisez vos trains, bus, tramways, métros et bateaux dans toute la France grâce à Bus Tracker",
-				background_color: "#8B1A4B",
-				theme_color: "#8B1A4B",
+				background_color: BRANDING_COLOR,
+				theme_color: BRANDING_COLOR,
 				display: "fullscreen",
 				start_url: "/",
 				icons: [
@@ -59,6 +64,7 @@ export default defineConfig({
 			includeAssets: ["logo.svg", "favicon.svg", "favicon.ico", "apple-touch-icon.png", "map-styles/*.json"],
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2,woff}"],
+				globIgnores: ["splash/**"],
 				cleanupOutdatedCaches: true,
 				// Le paramètre `v` des icônes sert à contourner le cache HTTP des navigateurs : on l'ignore
 				// pour que ces URLs correspondent toujours au precache, déjà révisionné par Workbox.

@@ -1,11 +1,11 @@
 import { useLocation } from "@tanstack/react-router";
 import { Copy, FrownIcon } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
 import { useEffect } from "react";
 
 import { Button } from "~/components/ui/button";
 import { Link } from "~/components/ui/link";
 import * as m from "~/paraglide/messages";
+import { posthog } from "~/utils/posthog";
 
 const isWebGLError = (error: unknown) => {
 	const msg = String(error);
@@ -22,14 +22,12 @@ export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 	const pathname = useLocation({ select: (state) => state.pathname });
 	const embeddedNetworkId = pathname.startsWith("/embed/") ? pathname.split("/")[2] : undefined;
 
-	const posthog = usePostHog();
-
 	useEffect(() => {
 		if (error) {
 			console.error(error);
 			posthog.captureException(error);
 		}
-	}, [error, posthog]);
+	}, [error]);
 
 	const resetApp = () => {
 		localStorage.clear();

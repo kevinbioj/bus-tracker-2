@@ -32,6 +32,8 @@
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Bus Tracker" />
     <meta name="language" content="French" />
     <meta name="theme-color" content="#8B1A4B" />
@@ -60,29 +62,26 @@
       content="Localisez vos trains, bus, tramways, métros et bateaux dans toute la France grâce à Bus Tracker"
     />
     <title>Bus Tracker</title>
-    <style>
-      .embed-hidden {
-        display: none;
-      }
-    </style>
+    <link rel="preload" href="/src/fonts/achemine-regular-webfont.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/src/fonts/achemine-bold-webfont.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body class="scheme-light-dark">
-    <div id="root">
-      <header
-        class="bg-branding text-branding-foreground flex gap-4 h-15 p-3 sticky top-0 z-450"
-        id="header"
-      >
-        <img class="h-full" src="/logo-header.svg?v=2" alt="" />
-        <span
-          class="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default"
-        >
-          Bus Tracker
-        </span>
-      </header>
+    <div class="bg-branding text-branding-foreground fixed inset-x-0 top-0 z-450" id="app-shell">
+      <div class="h-14 px-3 py-1 flex gap-3 lg:gap-6 items-center">
+        <div class="h-full flex gap-2 items-center">
+          <img class="h-full" src="/logo-header.svg?v=2" alt="" />
+          <span class="hidden text-center font-bold text-3xl text-white lg:block select-none hover:cursor-default">
+            Bus Tracker
+          </span>
+        </div>
+      </div>
     </div>
+    <div id="root"></div>
     <script>
       if (location.pathname.startsWith('/embed')) {
-        document.getElementById('header').classList.add("embed-hidden");
+        document.getElementById('app-shell').remove();
+      } else if (location.pathname === '/') {
+        document.getElementById('app-shell').classList.add('bottom-0');
       }
 
       // Pages avec carte : ce que maplibre demande en cascade (style, puis TileJSON et sprite, puis

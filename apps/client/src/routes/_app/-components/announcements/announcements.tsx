@@ -1,7 +1,6 @@
 import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { CheckCheckIcon, MegaphoneIcon, XIcon } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
 import { useLocalStorage } from "usehooks-ts";
 
 import { type Announcement, GetAnnouncementsQuery } from "~/api/announcements";
@@ -10,6 +9,7 @@ import { Button } from "~/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import * as m from "~/paraglide/messages";
 import { AnnouncementItem, getAnnouncementDate } from "~/routes/_app/-components/announcements/announcement";
+import { posthog } from "~/utils/posthog";
 
 function groupByMonth(announcements: Announcement[]) {
 	const groups = new Map<string, Announcement[]>();
@@ -25,8 +25,6 @@ function groupByMonth(announcements: Announcement[]) {
 export function Announcements() {
 	const { data: announcements } = useQuery(GetAnnouncementsQuery);
 	const [announcementsRead, setAnnouncementsRead] = useLocalStorage<number[]>("announcements-read", []);
-
-	const posthog = usePostHog();
 
 	if (announcements === undefined) return null;
 

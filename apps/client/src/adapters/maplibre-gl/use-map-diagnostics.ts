@@ -1,8 +1,8 @@
 import type { Map as MaplibreMap, StyleSpecification } from "maplibre-gl";
-import { posthog } from "posthog-js";
 import { useEffect } from "react";
 
 import { hasStyle, isStyleLoaded } from "~/adapters/maplibre-gl/style";
+import { posthog } from "~/utils/posthog";
 
 // The style's `background` layer paints without a single network request, so a map still showing
 // nothing after this long never got its style JSON: `loadURL()` swallows that failure into an

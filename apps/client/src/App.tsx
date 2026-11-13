@@ -15,13 +15,20 @@ declare module "@tanstack/react-router" {
 }
 
 function buildRouter(queryClient: QueryClient) {
-	return createRouter({
+	const router = createRouter({
 		routeTree,
 		context: { queryClient },
 		defaultPreload: "intent",
 		defaultPendingMs: Number.POSITIVE_INFINITY,
 		scrollRestoration: false,
 	});
+
+	const unsubscribe = router.subscribe("onRendered", () => {
+		document.getElementById("app-shell")?.remove();
+		unsubscribe();
+	});
+
+	return router;
 }
 
 function EditorSessionBootstrap() {
