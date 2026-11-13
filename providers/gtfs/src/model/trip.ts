@@ -79,31 +79,34 @@ export class Trip {
 		// l'instant obtenu en heure locale de l'arrêt, à la sérialisation.
 		const tz = this.route.agency.timeZone;
 		const { store } = this;
-		const { stopList, stopIdx, sequence, flagsBitmask, arrivalSecs, departureSecs, distanceTraveled } = store;
+		const { stopList, arrivalSecs, departureSecs, patternStopIdx, patternSequence, patternFlags, patternDistance } =
+			store;
+		const patternStart = store.positionOf(start, this.idx);
 
 		const calls = new Array(count);
 		for (let i = 0; i < count; i++) {
 			const idx = start + i;
 			const aSecs = arrivalSecs[idx]!;
 			const dSecs = departureSecs[idx]!;
-			const stop = stopList[stopIdx[idx]!]!;
+			const position = patternStart + i;
+			const stop = stopList[patternStopIdx[position]!]!;
 
 			const aimedArrivalTimeMs = getEpochMsFromSecs(date, aSecs, tz);
 			const aimedDepartureTimeMs = dSecs === aSecs ? aimedArrivalTimeMs : getEpochMsFromSecs(date, dSecs, tz);
 
-			const dist = distanceTraveled[idx]!;
+			const dist = patternDistance[position]!;
 			calls[i] = {
 				aimedArrivalTime: aimedArrivalTimeMs,
 				expectedArrivalTime: undefined as number | undefined,
 				aimedDepartureTime: aimedDepartureTimeMs,
 				expectedDepartureTime: undefined as number | undefined,
 				stop,
-				sequence: sequence[idx]!,
+				sequence: patternSequence[position]!,
 				platform: stop.platformCode,
 				distanceTraveled: Number.isNaN(dist) ? undefined : dist,
 				status: "SCHEDULED" as const,
-				flags: bitmaskToFlags(flagsBitmask[idx]!),
-				headsign: store.getStopHeadsign(idx),
+				flags: bitmaskToFlags(patternFlags[position]!),
+				headsign: store.getStopHeadsign(idx, this.idx),
 			};
 		}
 		return calls;

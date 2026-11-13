@@ -669,7 +669,7 @@ describe("computeStopDepartures", () => {
 			]);
 
 			// B interdit à la descente.
-			gtfs.stopTimeStore.flagsBitmask[1] = 2;
+			gtfs.stopTimeStore.patternFlags[gtfs.stopTimeStore.positionOf(1)] = 2;
 			expect(arrivalsAt("B")).toEqual([]);
 			// Il reste un départ.
 			expect(computeStopDepartures(source, "B", MONDAY_MORNING).departures).toHaveLength(1);

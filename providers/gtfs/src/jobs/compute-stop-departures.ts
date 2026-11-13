@@ -26,7 +26,7 @@ const DEFAULT_LIMIT = 15;
  */
 const LATE_DEPARTURE_MAX_MS = 30 * 60 * 1000;
 
-/** Bits de `StopTimeStore.flagsBitmask` marquant un arrêt interdit à la montée, à la descente. */
+/** Bits de `StopTimeStore.getFlags` marquant un arrêt interdit à la montée, à la descente. */
 const NO_PICKUP_FLAG = 1;
 const NO_DROP_OFF_FLAG = 2;
 
@@ -100,8 +100,8 @@ function isReplacedByRelocatedCall(call: JourneyCall, calls: JourneyCall[], area
 
 function resolveDestination(trip: Trip, stopTimeIdx: number, call?: JourneyCall) {
 	const { store } = trip;
-	const lastStop = store.getStop(store.tripStart[trip.idx]! + store.tripCount[trip.idx]! - 1);
-	return call?.headsign ?? store.getStopHeadsign(stopTimeIdx) ?? trip.headsign ?? lastStop?.name;
+	const lastStop = store.getStop(store.tripStart[trip.idx]! + store.tripCount[trip.idx]! - 1, trip.idx);
+	return call?.headsign ?? store.getStopHeadsign(stopTimeIdx, trip.idx) ?? trip.headsign ?? lastStop?.name;
 }
 
 export type ComputeStopDeparturesOptions = {
@@ -147,7 +147,7 @@ export function computeStopDepartures(
 
 	const arrivals = direction === "arrivals";
 	const { stopTimeStore } = gtfs;
-	const { arrivalSecs, departureSecs, flagsBitmask, sequence } = stopTimeStore;
+	const { arrivalSecs, departureSecs } = stopTimeStore;
 
 	const referenceTimeZone =
 		(range.end > range.start
@@ -241,14 +241,15 @@ export function computeStopDepartures(
 			if (trip === undefined) continue;
 
 			// L'index tient tous les stop_times : on ne part pas du dernier, on n'arrive pas au premier.
-			if ((flagsBitmask[stopTimeIdx]! & (arrivals ? NO_DROP_OFF_FLAG : NO_PICKUP_FLAG)) !== 0) continue;
+			if ((stopTimeStore.getFlags(stopTimeIdx, trip.idx) & (arrivals ? NO_DROP_OFF_FLAG : NO_PICKUP_FLAG)) !== 0)
+				continue;
 			const atTheoreticalTerminus =
 				stopTimeIdx === (arrivals ? trip.stopTimeStart : trip.stopTimeStart + trip.stopTimeCount - 1);
 			if (atTheoreticalTerminus && !arrivals) continue;
 
 			if (!trip.service.runsOn(date)) continue;
 
-			const stop = stopTimeStore.getStop(stopTimeIdx);
+			const stop = stopTimeStore.getStop(stopTimeIdx, trip.idx);
 
 			const timeZone = trip.route.agency.timeZone;
 			const aimedMs = getEpochMsFromSecs(date, (arrivals ? arrivalSecs : departureSecs)[stopTimeIdx]!, timeZone);
@@ -266,7 +267,7 @@ export function computeStopDepartures(
 			const call =
 				journey !== undefined &&
 				(journey.hasRealtime() || journey.hasModifications() || journey.lastTripUpdateAtMs !== undefined)
-					? findCallForStop(journey.calls, stop.id, sequence[stopTimeIdx]!)
+					? findCallForStop(journey.calls, stop.id, stopTimeStore.getSequence(stopTimeIdx, trip.idx))
 					: undefined;
 
 			// Une déviation peut avoir retiré la desserte : la course ne passe plus là.
@@ -333,7 +334,7 @@ export function computeStopDepartures(
 					) ?? resolveDestination(trip, stopTimeIdx, call),
 				resolveOriginName: () =>
 					(journey !== undefined ? findOriginCall(journey.calls)?.stop.name : undefined) ??
-					stopTimeStore.getStop(trip.stopTimeStart)?.name,
+					stopTimeStore.getStop(trip.stopTimeStart, trip.idx)?.name,
 				resolveJourney: () => journey ?? trip.getScheduledJourney(date, true),
 				wheelchairAccessible: getWheelchairAccessible(trip, journey?.vehicleDescriptor),
 				aimedTime: formatCallTime(aimedMs, stop.timeZone, timeZone),
@@ -342,7 +343,9 @@ export function computeStopDepartures(
 				canceled: canceled ? true : undefined,
 				temporary: call !== undefined && isTemporaryCall(call, journey!.calls) ? true : undefined,
 				relocated: call !== undefined && isRelocatedCall(call, journey!.calls, areaStopIds) ? true : undefined,
-				onDemand: arrivals ? undefined : getCallOnDemand(call?.flags ?? bitmaskToFlags(flagsBitmask[stopTimeIdx]!)),
+				onDemand: arrivals
+					? undefined
+					: getCallOnDemand(call?.flags ?? bitmaskToFlags(stopTimeStore.getFlags(stopTimeIdx, trip.idx))),
 				realtime: journey?.hasRealtime() ? true : undefined,
 				origin,
 				terminus,

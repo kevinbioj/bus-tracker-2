@@ -377,14 +377,10 @@ export async function importTrips(
 
 	// Finalise les arrays per-stop_time du store.
 	placeholderStore.stopList = stopList;
-	placeholderStore.stopIdx = stopIdx;
-	placeholderStore.sequence = sequence;
-	placeholderStore.flagsBitmask = flagsBitmask;
 	placeholderStore.arrivalSecs = arrivalSecs;
 	placeholderStore.departureSecs = departureSecs;
-	placeholderStore.distanceTraveled = distanceTraveled;
 	placeholderStore.headsignList = headsignList;
-	placeholderStore.headsignIdx = headsignIdx;
+	placeholderStore.setStopTimeColumns({ stopIdx, sequence, flagsBitmask, distanceTraveled, headsignIdx });
 
 	return { trips, stopTimeStore: placeholderStore };
 }

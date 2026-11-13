@@ -24,7 +24,7 @@ import { padSourceId } from "../utils/pad-source-id.js";
 import { getStopAreaId } from "../utils/stop-area-id.js";
 import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
 
-/** Bit de `StopTimeStore.flagsBitmask` marquant un arrêt où la montée est interdite. */
+/** Bit de `StopTimeStore.getFlags` marquant un arrêt où la montée est interdite. */
 const NO_PICKUP_FLAG = 1;
 
 /** Taille des transactions d'écriture, pour ne pas bloquer Redis sur un réseau de plusieurs milliers de stations. */
@@ -188,7 +188,8 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 		if (ongoing) lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
 	};
 
-	const { flagsBitmask, stopList, stopIdx, tripStart, tripCount } = gtfs.stopTimeStore;
+	const { stopTimeStore } = gtfs;
+	const { tripStart, tripCount } = stopTimeStore;
 	for (const trip of gtfs.tripsByIdx) {
 		if (trip === undefined) continue;
 		const networkRef = networkOf(trip);
@@ -197,7 +198,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 		const start = tripStart[trip.idx]!;
 		const end = start + tripCount[trip.idx]!;
 		for (let index = start; index < end; index += 1) {
-			recordStop(stopList[stopIdx[index]!]!.id, networkRef, trip.route, ongoing);
+			recordStop(stopTimeStore.getStop(index, trip.idx).id, networkRef, trip.route, ongoing);
 		}
 	}
 
@@ -219,7 +220,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 
 			const departs =
 				stopTimeIdx !== trip.stopTimeStart + trip.stopTimeCount - 1 &&
-				(flagsBitmask[stopTimeIdx]! & NO_PICKUP_FLAG) === 0;
+				(stopTimeStore.getFlags(stopTimeIdx, tripIdx) & NO_PICKUP_FLAG) === 0;
 			if (departs) departingAreaIds.add(stopArea.id);
 			if (offersArrivals(trip.route)) arrivalAreaIds.add(stopArea.id);
 		}

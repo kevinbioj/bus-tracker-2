@@ -18,8 +18,7 @@ export class StopIndex {
 		readonly areaCount: Uint32Array,
 		/** Indices de stop_time, groupés par station et triés par heure de départ. */
 		readonly stopTimeIdx: Uint32Array,
-		readonly tripStart: Uint32Array,
-		readonly tripOrder: Uint32Array,
+		readonly stopTimeStore: StopTimeStore,
 	) {}
 
 	rangeOf(areaId: string) {
@@ -34,14 +33,7 @@ export class StopIndex {
 	}
 
 	tripOf(stopTimeIdx: number) {
-		let low = 0;
-		let high = this.tripOrder.length - 1;
-		while (low < high) {
-			const middle = (low + high + 1) >>> 1;
-			if (this.tripStart[this.tripOrder[middle]!]! <= stopTimeIdx) low = middle;
-			else high = middle - 1;
-		}
-		return this.tripOrder[low]!;
+		return this.stopTimeStore.tripOf(stopTimeIdx);
 	}
 
 	*entriesOf(areaId: string): Generator<[number, number]> {
@@ -64,14 +56,12 @@ export function buildStopIndex(
 	trips: Iterable<Trip>,
 	stopAreaByStopId: Map<string, string>,
 ): StopIndex {
-	const { stopList, stopIdx, departureSecs, tripStart, tripCount } = stopTimeStore;
+	const { stopList, departureSecs, tripStart, tripCount } = stopTimeStore;
 
 	const tripOfStopTime = new Int32Array(stopTimeStore.size).fill(-1);
-	const servedTrips: number[] = [];
 	for (const trip of trips) {
 		const start = tripStart[trip.idx]!;
 		const end = start + tripCount[trip.idx]!;
-		if (end > start) servedTrips.push(trip.idx);
 		for (let index = start; index < end; index += 1) {
 			tripOfStopTime[index] = trip.idx;
 		}
@@ -89,7 +79,7 @@ export function buildStopIndex(
 	for (let index = 0; index < stopTimeStore.size; index += 1) {
 		if (tripOfStopTime[index] === -1) continue;
 
-		const stopIndex = stopIdx[index]!;
+		const stopIndex = stopTimeStore.getStopIndex(index, tripOfStopTime[index]!);
 		let slot = slotOfStop[stopIndex]!;
 		if (slot === UNRESOLVED) {
 			const areaId = stopAreaByStopId.get(stopList[stopIndex]!.id);
@@ -147,9 +137,7 @@ export function buildStopIndex(
 		}
 	}
 
-	const tripOrder = Uint32Array.from(servedTrips.sort((a, b) => tripStart[a]! - tripStart[b]!));
-
-	return new StopIndex(areaSlots, areaStart, areaCount, stopTimeIdx, tripStart, tripOrder);
+	return new StopIndex(areaSlots, areaStart, areaCount, stopTimeIdx, stopTimeStore);
 }
 
 /**

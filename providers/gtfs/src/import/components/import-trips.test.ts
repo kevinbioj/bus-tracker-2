@@ -101,7 +101,7 @@ describe("importTrips", () => {
 
 		const { stopTimeStore } = await importTrips(directory, {}, routes, services, shapes, stops);
 
-		expect(stopTimeStore.headsignIdx).toBeUndefined();
+		expect(stopTimeStore.patternHeadsignIdx).toBeUndefined();
 		expect(stopTimeStore.getStopHeadsign(0)).toBeUndefined();
 	});
 
@@ -130,8 +130,8 @@ describe("importTrips", () => {
 
 		const distances = (tripId: string) => {
 			const trip = trips.get(tripId)!;
-			return Array.from(
-				stopTimeStore.distanceTraveled.subarray(trip.stopTimeStart, trip.stopTimeStart + trip.stopTimeCount),
+			return Array.from({ length: trip.stopTimeCount }, (_, i) =>
+				stopTimeStore.getDistance(trip.stopTimeStart + i, trip.idx),
 			);
 		};
 		expect(distances("t1")).toEqual([0, 1000, 2000]);
@@ -204,7 +204,7 @@ describe("importTrips", () => {
 
 		const { stopTimeStore } = await importTrips(directory, {}, routes, services, shapes, stops);
 
-		expect(stopTimeStore.sequence).toBeInstanceOf(Uint8Array);
+		expect(stopTimeStore.patternSequence).toBeInstanceOf(Uint8Array);
 	});
 
 	it("écarte les courses qui ne circulent pas dans la fenêtre", async () => {
