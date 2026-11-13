@@ -1,5 +1,6 @@
 import type { LinePath, VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-tracker/contracts";
 
+import { getEpochMsFromSecs } from "../cache/temporal-cache.js";
 import { groupBy } from "../utils/group-by.js";
 import type { Gtfs } from "./gtfs.js";
 import type { StopTimeUpdate, TripDescriptor, VehicleDescriptor } from "./gtfs-rt.js";
@@ -319,44 +320,120 @@ function diffShapes(tripShape: Shape, detourShape: Shape) {
 	return segments;
 }
 
-export class Journey {
-	private bearing: number | undefined;
-	private _vehicleDescriptor: VehicleDescriptor | undefined;
-	private _vehicleDescriptorUpdatedAt: number | undefined;
-	private _tripDescriptor: TripDescriptor | undefined;
-	private _tripDescriptorUpdatedAt: number | undefined;
-	private _calls: JourneyCall[] | null = null;
-	private _hasRealtime = false;
-	private _positionGuard: PositionGuardState | undefined;
-	private _modificationPlan: TripModificationPlan | undefined;
+type JourneyState = {
+	bearing: number | undefined;
+	vehicleDescriptor: VehicleDescriptor | undefined;
+	vehicleDescriptorUpdatedAt: number | undefined;
+	tripDescriptor: TripDescriptor | undefined;
+	tripDescriptorUpdatedAt: number | undefined;
+	hasRealtime: boolean;
+	positionGuard: PositionGuardState | undefined;
+	modificationPlan: TripModificationPlan | undefined;
 	/** Faux lorsqu'un sélecteur de la déviation n'a rien désigné : les arrêts sont restés théoriques. */
-	private _modificationsApplied = false;
+	modificationsApplied: boolean;
 	/** Cache du tracé suivi, rogné sur la desserte de la course déviée. */
-	private _detourShape: Shape | undefined;
+	detourShape: Shape | undefined;
 	/** Cache du tracé abandonné : `null` signifie « calculé, la déviation n'en abandonne aucun ». */
-	private _cancelledPath: LinePath | null | undefined;
-	/** Bornes théoriques, mémorisées pour restaurer l'état initial quand le temps réel expire. */
-	private readonly aimedFirstCallArrivalMs: number;
-	private readonly aimedLastCallDepartureMs: number;
+	cancelledPath: LinePath | null | undefined;
 	/** Instant (epoch ms) du dernier VehiclePosition reçu pour cette course. */
 	lastVehiclePositionAtMs: number | undefined;
 	/** Instant (epoch ms) du dernier cycle ayant appliqué un TripUpdate à cette course. */
 	lastTripUpdateAtMs: number | undefined;
 	/** Clé sous laquelle la course a été publiée pour la dernière fois depuis son horaire (théorique ou TripUpdate). */
 	lastPublishedKey: string | undefined;
-	createdFromRealtime = false;
+	createdFromRealtime: boolean;
+};
+
+function createJourneyState(): JourneyState {
+	return {
+		bearing: undefined,
+		vehicleDescriptor: undefined,
+		vehicleDescriptorUpdatedAt: undefined,
+		tripDescriptor: undefined,
+		tripDescriptorUpdatedAt: undefined,
+		hasRealtime: false,
+		positionGuard: undefined,
+		modificationPlan: undefined,
+		modificationsApplied: false,
+		detourShape: undefined,
+		cancelledPath: undefined,
+		lastVehiclePositionAtMs: undefined,
+		lastTripUpdateAtMs: undefined,
+		lastPublishedKey: undefined,
+		createdFromRealtime: false,
+	};
+}
+
+export class Journey {
+	private _calls: JourneyCall[] | null = null;
+	private _state: JourneyState | undefined;
 
 	constructor(
-		readonly id: string,
 		readonly trip: Trip,
 		readonly date: Temporal.PlainDate,
 		/** Heure d'arrivée au premier arrêt (epoch ms). Initialisé sur l'heure théorique, mis à jour par updateJourney avec l'heure temps réel. */
 		public firstCallArrivalMs: number,
 		/** Heure de départ au dernier arrêt (epoch ms). Initialisé sur l'heure théorique, mis à jour par updateJourney avec l'heure temps réel. */
 		public lastCallDepartureMs: number,
-	) {
-		this.aimedFirstCallArrivalMs = firstCallArrivalMs;
-		this.aimedLastCallDepartureMs = lastCallDepartureMs;
+	) {}
+
+	get id() {
+		return `${this.trip.id}:${this.date}`;
+	}
+
+	/** Bornes théoriques, recalculées pour restaurer l'état initial quand le temps réel expire. */
+	private get aimedFirstCallArrivalMs() {
+		return getEpochMsFromSecs(this.date, this.trip.firstArrivalSecs, this.trip.route.agency.timeZone);
+	}
+
+	private get aimedLastCallDepartureMs() {
+		return getEpochMsFromSecs(this.date, this.trip.lastDepartureSecs, this.trip.route.agency.timeZone);
+	}
+
+	private get state() {
+		this._state ??= createJourneyState();
+		return this._state;
+	}
+
+	get lastVehiclePositionAtMs() {
+		return this._state?.lastVehiclePositionAtMs;
+	}
+
+	set lastVehiclePositionAtMs(value: number | undefined) {
+		if (value === undefined && this._state === undefined) return;
+		this.state.lastVehiclePositionAtMs = value;
+	}
+
+	get lastTripUpdateAtMs() {
+		return this._state?.lastTripUpdateAtMs;
+	}
+
+	set lastTripUpdateAtMs(value: number | undefined) {
+		if (value === undefined && this._state === undefined) return;
+		this.state.lastTripUpdateAtMs = value;
+	}
+
+	get lastPublishedKey() {
+		return this._state?.lastPublishedKey;
+	}
+
+	set lastPublishedKey(value: string | undefined) {
+		if (value === undefined && this._state === undefined) return;
+		this.state.lastPublishedKey = value;
+	}
+
+	get createdFromRealtime() {
+		return this._state?.createdFromRealtime ?? false;
+	}
+
+	set createdFromRealtime(value: boolean) {
+		if (!value && this._state === undefined) return;
+		this.state.createdFromRealtime = value;
+	}
+
+	private setHasRealtime(value: boolean) {
+		if (!value && this._state === undefined) return;
+		this.state.hasRealtime = value;
 	}
 
 	/**
@@ -366,9 +443,10 @@ export class Journey {
 	get calls(): JourneyCall[] {
 		if (this._calls === null) {
 			const scheduledCalls = this.trip.computeCallsForDate(this.date);
+			const modificationPlan = this._state?.modificationPlan;
 			const modifiedCalls =
-				this._modificationPlan !== undefined ? buildModifiedCalls(scheduledCalls, this._modificationPlan) : undefined;
-			this._modificationsApplied = modifiedCalls !== undefined;
+				modificationPlan !== undefined ? buildModifiedCalls(scheduledCalls, modificationPlan) : undefined;
+			if (this._state !== undefined) this._state.modificationsApplied = modifiedCalls !== undefined;
 			this._calls = modifiedCalls ?? scheduledCalls;
 		}
 		return this._calls;
@@ -376,11 +454,11 @@ export class Journey {
 
 	/** Tracé effectivement suivi : celui de la déviation en cours, à défaut celui de la course. */
 	get shape(): Shape | undefined {
-		const detourShape = this._modificationPlan?.shape;
+		const detourShape = this._state?.modificationPlan?.shape;
 		if (detourShape === undefined) return this.trip.shape;
 
-		this._detourShape ??= this.trimToServedCalls(detourShape);
-		return this._detourShape;
+		this.state.detourShape ??= this.trimToServedCalls(detourShape);
+		return this.state.detourShape;
 	}
 
 	/**
@@ -396,7 +474,7 @@ export class Journey {
 		const calls = this.calls;
 		// Sélecteurs introuvables : les arrêts sont ceux de l'horaire théorique, et leurs distances se
 		// rapportent au tracé de la course, pas à celui de la déviation.
-		if (!this._modificationsApplied) return detourShape;
+		if (!this._state?.modificationsApplied) return detourShape;
 
 		const firstCall = calls.find((call) => call.modification !== "REMOVED");
 		const lastCall = calls.findLast((call) => call.modification !== "REMOVED");
@@ -424,14 +502,15 @@ export class Journey {
 	 * suivre l'itinéraire d'origine, dont aucune portion n'est donc abandonnée.
 	 */
 	get cancelledPath(): LinePath | undefined {
-		if (this._cancelledPath === undefined) {
-			this._cancelledPath = this.computeCancelledPath() ?? null;
+		if (this._state?.modificationPlan === undefined) return undefined;
+		if (this.state.cancelledPath === undefined) {
+			this.state.cancelledPath = this.computeCancelledPath() ?? null;
 		}
-		return this._cancelledPath ?? undefined;
+		return this.state.cancelledPath ?? undefined;
 	}
 
 	private computeCancelledPath(): LinePath | undefined {
-		const plan = this._modificationPlan;
+		const plan = this._state?.modificationPlan;
 		const tripShape = this.trip.shape;
 		if (plan === undefined || plan.shape === undefined || tripShape === undefined) return;
 
@@ -461,7 +540,7 @@ export class Journey {
 
 	/** Vrai si une déviation est appliquée à la course. */
 	hasModifications() {
-		return this._modificationPlan !== undefined;
+		return this._state?.modificationPlan !== undefined;
 	}
 
 	/**
@@ -470,17 +549,18 @@ export class Journey {
 	 * le temps réel appliqué au cycle précédent.
 	 */
 	applyModifications(plan: TripModificationPlan) {
-		if (this._modificationPlan?.revision !== plan.revision) {
+		if (this._state?.modificationPlan?.revision !== plan.revision) {
+			const state = this.state;
 			// Le tracé d'une déviation publié par le flux temps réel est une polyligne arrondie à 1e-5 :
 			// là où il suit celui de la course, il en reprend les sommets à pleine précision. Remplacé
 			// avant que les arrêts y soient reprojetés, pour que leurs distances s'y rapportent.
-			this._modificationPlan =
+			state.modificationPlan =
 				plan.shape?.approximateCoordinates && this.trip.shape !== undefined
 					? { ...plan, shape: restoreShapePrecision(plan.shape, this.trip.shape) }
 					: plan;
 			this._calls = null;
-			this._detourShape = undefined;
-			this._cancelledPath = undefined;
+			state.detourShape = undefined;
+			state.cancelledPath = undefined;
 			this.refreshBounds();
 		}
 	}
@@ -492,14 +572,15 @@ export class Journey {
 	 * @returns true si une déviation a été abandonnée.
 	 */
 	clearModifications() {
-		if (this._modificationPlan === undefined) return false;
+		const state = this._state;
+		if (state?.modificationPlan === undefined) return false;
 
-		this._modificationPlan = undefined;
-		this._modificationsApplied = false;
+		state.modificationPlan = undefined;
+		state.modificationsApplied = false;
 		this._calls = null;
-		this._detourShape = undefined;
-		this._cancelledPath = undefined;
-		this._hasRealtime = false;
+		state.detourShape = undefined;
+		state.cancelledPath = undefined;
+		state.hasRealtime = false;
 		this.firstCallArrivalMs = this.aimedFirstCallArrivalMs;
 		this.lastCallDepartureMs = this.aimedLastCallDepartureMs;
 		return true;
@@ -526,9 +607,10 @@ export class Journey {
 	 * déviation.
 	 */
 	releaseUnmodifiedCalls(nowMs: number) {
+		const state = this._state;
 		if (nowMs > this.lastCallDepartureMs) {
-			this._positionGuard = undefined;
-			if (!this._hasRealtime) {
+			if (state !== undefined) state.positionGuard = undefined;
+			if (!state?.hasRealtime) {
 				this._calls = null;
 			}
 			return;
@@ -536,9 +618,9 @@ export class Journey {
 
 		if (
 			this.firstCallArrivalMs - nowMs > DISTANT_JOURNEY_CALLS_RELEASE_MS &&
-			!this._hasRealtime &&
-			this.lastTripUpdateAtMs === undefined &&
-			this._modificationPlan === undefined
+			!state?.hasRealtime &&
+			state?.lastTripUpdateAtMs === undefined &&
+			state?.modificationPlan === undefined
 		) {
 			this._calls = null;
 		}
@@ -570,13 +652,13 @@ export class Journey {
 	 */
 	dropRealtime() {
 		this.lastTripUpdateAtMs = undefined;
-		this._hasRealtime = false;
+		this.setHasRealtime(false);
 		// Les calls sont re-calculés à la demande depuis l'horaire théorique.
 		this._calls = null;
 
 		// Une déviation n'est pas une prédiction : elle ne périme pas avec le TripUpdate qui la
 		// traversait, et les bornes restent celles de la desserte déviée.
-		if (this._modificationPlan !== undefined) {
+		if (this._state?.modificationPlan !== undefined) {
 			this.refreshBounds();
 			return;
 		}
@@ -586,26 +668,30 @@ export class Journey {
 	}
 
 	get vehicleDescriptor(): VehicleDescriptor | undefined {
-		if (this._vehicleDescriptorUpdatedAt === undefined) return undefined;
-		if (Date.now() - this._vehicleDescriptorUpdatedAt > VEHICLE_DESCRIPTOR_TTL_MS) return undefined;
-		return this._vehicleDescriptor;
+		const updatedAt = this._state?.vehicleDescriptorUpdatedAt;
+		if (updatedAt === undefined) return undefined;
+		if (Date.now() - updatedAt > VEHICLE_DESCRIPTOR_TTL_MS) return undefined;
+		return this._state?.vehicleDescriptor;
 	}
 
 	setVehicleDescriptor(descriptor: VehicleDescriptor | undefined, updatedAt: number) {
-		this._vehicleDescriptor = descriptor;
-		this._vehicleDescriptorUpdatedAt = updatedAt;
+		const state = this.state;
+		state.vehicleDescriptor = descriptor;
+		state.vehicleDescriptorUpdatedAt = updatedAt;
 	}
 
 	/** Descripteur de course du dernier TripUpdate reçu, périmé comme celui du véhicule. */
 	get tripDescriptor(): TripDescriptor | undefined {
-		if (this._tripDescriptorUpdatedAt === undefined) return undefined;
-		if (Date.now() - this._tripDescriptorUpdatedAt > VEHICLE_DESCRIPTOR_TTL_MS) return undefined;
-		return this._tripDescriptor;
+		const updatedAt = this._state?.tripDescriptorUpdatedAt;
+		if (updatedAt === undefined) return undefined;
+		if (Date.now() - updatedAt > VEHICLE_DESCRIPTOR_TTL_MS) return undefined;
+		return this._state?.tripDescriptor;
 	}
 
 	setTripDescriptor(descriptor: TripDescriptor | undefined, updatedAt: number) {
-		this._tripDescriptor = descriptor;
-		this._tripDescriptorUpdatedAt = updatedAt;
+		const state = this.state;
+		state.tripDescriptor = descriptor;
+		state.tripDescriptorUpdatedAt = updatedAt;
 	}
 
 	guessPosition(at: Temporal.Instant): VehicleJourneyPosition {
@@ -667,7 +753,7 @@ export class Journey {
 			return this.getJourneyPositionAt(currentCall);
 		}
 
-		this.bearing = point.bearing;
+		this.state.bearing = point.bearing;
 
 		return {
 			latitude: point.latitude,
@@ -696,12 +782,12 @@ export class Journey {
 		atMs: number,
 	): VehicleJourneyPosition {
 		const distanceTraveled = position.distanceTraveled;
-		const guard = this._positionGuard;
+		const guard = this._state?.positionGuard;
 
 		// Pas de distance curviligne exploitable (course sans shape ou sans shape_dist_traveled) :
 		// deux positions ne sont pas comparables, le guard est inopérant.
 		if (distanceTraveled === undefined || !Number.isFinite(distanceTraveled)) {
-			this._positionGuard = undefined;
+			if (this._state !== undefined) this._state.positionGuard = undefined;
 			return position;
 		}
 
@@ -711,7 +797,7 @@ export class Journey {
 			atMs - guard.updatedAtMs > POSITION_GUARD_TTL_MS ||
 			distanceTraveled >= guard.distanceTraveled
 		) {
-			this._positionGuard = { distanceTraveled, position, updatedAtMs: atMs, frozenSinceMs: undefined };
+			this.state.positionGuard = { distanceTraveled, position, updatedAtMs: atMs, frozenSinceMs: undefined };
 			return position;
 		}
 
@@ -720,13 +806,13 @@ export class Journey {
 		const frozenSinceMs = guard.frozenSinceMs ?? atMs;
 
 		if (lagMs >= POSITION_GUARD_MAX_LAG_MS || atMs - frozenSinceMs >= POSITION_GUARD_MAX_FREEZE_MS) {
-			this._positionGuard = { distanceTraveled, position, updatedAtMs: atMs, frozenSinceMs: undefined };
+			this.state.positionGuard = { distanceTraveled, position, updatedAtMs: atMs, frozenSinceMs: undefined };
 			return position;
 		}
 
 		// Le calcul vient d'écraser le cap avec celui de la position refusée : on restaure celui du gel.
-		this.bearing = guard.position.bearing;
-		this._positionGuard = { ...guard, updatedAtMs: atMs, frozenSinceMs };
+		this.state.bearing = guard.position.bearing;
+		this.state.positionGuard = { ...guard, updatedAtMs: atMs, frozenSinceMs };
 		return guard.position;
 	}
 
@@ -735,7 +821,7 @@ export class Journey {
 		if (this._calls !== null) {
 			return this._calls.some(callHasRealtime);
 		}
-		return this._hasRealtime;
+		return this._state?.hasRealtime ?? false;
 	}
 
 	/**
@@ -848,7 +934,7 @@ export class Journey {
 		}
 
 		// Mise à jour du flag RT basée sur l'état réel des calls.
-		this._hasRealtime = this._calls!.some(callHasRealtime);
+		this.setHasRealtime(this._calls!.some(callHasRealtime));
 
 		// Mettre à jour les bornes avec les heures temps réel.
 		// Utilisé par le sweep et le fast-rejection de getCalls.
@@ -868,13 +954,13 @@ export class Journey {
 		// Le véhicule stationne sur son tracé, au droit de l'arrêt, plutôt que sur l'arrêt lui-même.
 		const point = this.shape?.locateStop(call.stop, call.distanceTraveled);
 		if (point?.bearing !== undefined) {
-			this.bearing = point.bearing;
+			this.state.bearing = point.bearing;
 		}
 
 		return {
 			latitude: point?.latitude ?? call.stop.latitude,
 			longitude: point?.longitude ?? call.stop.longitude,
-			bearing: this.bearing,
+			bearing: this._state?.bearing,
 			atStop: true,
 			type: "COMPUTED",
 			distanceTraveled: point?.distanceTraveled ?? call.distanceTraveled,

@@ -513,9 +513,8 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		const paths = new Map<string, Shape | LinePath>();
 		// Tracé sur lequel chaque position calculée a été placée, pour la mise en file des véhicules à l'arrêt.
 		const positionShapes = new WeakMap<VehicleJourney, Shape>();
-		const handledJourneyIds = new Set<string>();
+		const handledJourneys = new Set<Journey>();
 		const handledBlockIds = new Set<string>();
-		const canceledJourneyIds = new Set<string>();
 		const canceledJourneyKeys = new Set<string>();
 		const canceledTripCandidates: TripShapeMatchCandidate[] = [];
 		const addedTrips: AddedTripPublication[] = [];
@@ -564,7 +563,6 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 				const startDate = getStartDateFromTripDescriptor(trip, tripUpdate.trip, updatedAt);
 
 				if (isCanceledTrip(tripUpdate.trip)) {
-					canceledJourneyIds.add(`${trip.id}:${startDate}`);
 					canceledJourneyKeys.add(getJourneyKey(startDate, trip.id));
 					if (source.options.addedTripShapeMatching === true && trip.shape !== undefined) {
 						canceledTripCandidates.push({
@@ -593,7 +591,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 				if (trip.stopTimeCount < 2) continue;
 				const startDate = getStartDateFromTripDescriptor(trip, tripUpdate.trip, updatedAt);
-				if (canceledJourneyIds.has(`${trip.id}:${startDate}`)) continue;
+				if (canceledJourneyKeys.has(getJourneyKey(startDate, trip.id))) continue;
 
 				const journey = getOrCreateRealtimeJourney(source.gtfs, trip, startDate);
 				// Un producteur qui décrit une course déviée sans passer par `modified_trip` numérote
@@ -661,7 +659,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 								? guessStartDate(trip.firstArrivalSecs, updatedAt.toZonedDateTimeISO(trip.route.agency.timeZone))
 								: Temporal.Now.plainDateISO();
 
-					if (canceledJourneyIds.has(`${trip.id}:${startDate}`)) continue;
+					if (canceledJourneyKeys.has(getJourneyKey(startDate, trip.id))) continue;
 
 					// La course n'est pas marquée comme suivie : elle retombe sur son traitement plus bas —
 					// ou disparaît si la source ne le publie pas (`mode: "VP-ONLY"`, `excludeScheduled`).
@@ -681,7 +679,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 							continue;
 						}
 					}
-					handledJourneyIds.add(journey.id);
+					handledJourneys.add(journey);
 					journey.lastVehiclePositionAtMs = nowMs;
 					if (journey.trip.block !== undefined) {
 						handledBlockIds.add(journey.trip.block);
@@ -824,7 +822,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 		for (const [journeyKey, journey] of source.gtfs.journeys) {
 			if (!journey.createdFromRealtime) continue;
-			if (handledJourneyIds.has(journey.id)) continue;
+			if (handledJourneys.has(journey)) continue;
 			if (journey.lastTripUpdateAtMs !== undefined || journey.hasModifications()) continue;
 			source.gtfs.journeys.delete(journeyKey);
 		}
@@ -947,9 +945,9 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			// disparaître alors qu'elle est bien en service.
 			const endedJourneys: { key: string; block: string | undefined; vehicleJourney: VehicleJourney }[] = [];
 
-			for (const journey of source.gtfs.journeys.values()) {
-				if (handledJourneyIds.has(journey.id)) continue;
-				if (canceledJourneyIds.has(journey.id)) continue;
+			for (const [journeyKey, journey] of source.gtfs.journeys) {
+				if (handledJourneys.has(journey)) continue;
+				if (canceledJourneyKeys.has(journeyKey)) continue;
 				if (journey.trip.block !== undefined && handledBlockIds.has(journey.trip.block)) continue;
 				// Avant tout le reste : réseau, clé et filtres de la configuration ne valent d'être calculés
 				// que pour les courses en circulation, une poignée parmi celles de la journée.

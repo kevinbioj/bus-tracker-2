@@ -118,6 +118,6 @@ export class Trip {
 		const firstCallArrivalMs = getEpochMsFromSecs(date, this.firstArrivalSecs, tz);
 		const lastCallDepartureMs = getEpochMsFromSecs(date, this.lastDepartureSecs, tz);
 
-		return new Journey(`${this.id}:${date}`, this, date, firstCallArrivalMs, lastCallDepartureMs);
+		return new Journey(this, date, firstCallArrivalMs, lastCallDepartureMs);
 	}
 }

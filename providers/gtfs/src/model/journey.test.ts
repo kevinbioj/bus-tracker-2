@@ -856,3 +856,43 @@ describe("Journey#releaseUnmodifiedCalls", () => {
 		expect(journey.calls).toBe(before);
 	});
 });
+
+describe("Journey (état paresseux)", () => {
+	it("dérive son identifiant de la course et de la date", () => {
+		const { trip } = makeShapedGtfs();
+
+		expect(trip.getScheduledJourney(DATE, true).id).toBe("trip:2026-06-01");
+	});
+
+	it("expose un état vide sur une course neuve, puis relit ce qui lui est affecté", () => {
+		const { trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		expect(journey.lastTripUpdateAtMs).toBeUndefined();
+		expect(journey.lastVehiclePositionAtMs).toBeUndefined();
+		expect(journey.lastPublishedKey).toBeUndefined();
+		expect(journey.createdFromRealtime).toBe(false);
+
+		journey.lastTripUpdateAtMs = 1;
+		journey.lastVehiclePositionAtMs = 2;
+		journey.lastPublishedKey = "key";
+		journey.createdFromRealtime = true;
+
+		expect(journey.lastTripUpdateAtMs).toBe(1);
+		expect(journey.lastVehiclePositionAtMs).toBe(2);
+		expect(journey.lastPublishedKey).toBe("key");
+		expect(journey.createdFromRealtime).toBe(true);
+	});
+
+	it("restaure les bornes théoriques quand le temps réel est abandonné", () => {
+		const { gtfs, trip } = makeShapedGtfs();
+		const journey = trip.getScheduledJourney(DATE, true);
+
+		journey.updateJourney(gtfs, [delayFrom("A", 1, 120)]);
+		expect(journey.firstCallArrivalMs).toBe(at("08:02:00").epochMilliseconds);
+		journey.dropRealtime();
+
+		expect(journey.firstCallArrivalMs).toBe(at("08:00:00").epochMilliseconds);
+		expect(journey.lastCallDepartureMs).toBe(at("08:20:00").epochMilliseconds);
+	});
+});
