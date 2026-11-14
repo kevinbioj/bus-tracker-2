@@ -104,18 +104,9 @@ const sources = [
 					trip.route.agency.id = "IDFM:1051";
 				}
 
-				if (trip.route.agency.id === "IDFM:Operator_1044") {
-					trip.route.agency.id = "IDFM:Operator_100";
-				}
-
 				if (trip.route.agency.id === "IDFM:Operator_1039") {
 					// TàD Luzarches - Goussainville appartient à la DSP Haut Val d'Oise
 					trip.route.agency.id = "IDFM:1083";
-				}
-
-				if (trip.route.agency.id === "IDFM:Operator_1057") {
-					// Ligne EOLIEN : RATP
-					trip.route.agency.id = "IDFM:Operator_100";
 				}
 
 				if (trip.route.agency.id === "IDFM:Operator_334") {
@@ -154,7 +145,7 @@ const sources = [
 				journey.trip.route.type === "RAIL"
 			) {
 				// RER A + RER B ont le code mission précis en shortName
-				if (['IDFM:C01742', 'IDFM:C01743'].includes(journey.trip.route.id)) {
+				if (["IDFM:C01742", "IDFM:C01743"].includes(journey.trip.route.id)) {
 					return journey.trip.shortName ?? journey.trip.headsign;
 				}
 
