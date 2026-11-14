@@ -153,6 +153,11 @@ const sources = [
 				["IDFM:71", "IDFM:1046"].includes(journey.trip.route.agency.id) &&
 				journey.trip.route.type === "RAIL"
 			) {
+				// RER A + RER B ont le code mission précis en shortName
+				if (['IDFM:C01742', 'IDFM:C01743'].includes(journey.trip.route.id)) {
+					return journey.trip.shortName ?? journey.trip.headsign;
+				}
+
 				return journey.trip.headsign;
 			}
 		},
