@@ -108,6 +108,17 @@ const sources = [
 		getVehicleRef: (vehicle) => vehicle?.label,
 	},
 	{
+		id: "mende",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=MAX",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=MAX"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
+		mode: "NO-TU",
+		getNetworkRef: () => "MENDE",
+		getVehicleRef: () => undefined,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+	},
+	{
 		id: "menton",
 		staticResourceHref: "https://www.data.gouv.fr/fr/datasets/r/72609821-2459-47fb-a63b-3dbbc0d96c92",
 		realtimeResourceHrefs: [
