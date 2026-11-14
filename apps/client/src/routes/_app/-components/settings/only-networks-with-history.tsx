@@ -1,11 +1,11 @@
 import { HistoryIcon, ListFilterIcon, ListIcon } from "lucide-react";
-import { useLocalStorage } from "usehooks-ts";
 
 import { SettingChoice, settingIconClasses } from "~/components/setting-blocks";
+import { useOnlyNetworksWithHistory } from "~/hooks/use-only-networks-with-history";
 import * as m from "~/paraglide/messages";
 
 export function OnlyNetworksWithHistorySetting() {
-	const [onlyNetworksWithHistory, setOnlyNetworksWithHistory] = useLocalStorage("only-networks-with-history", true);
+	const [onlyNetworksWithHistory, setOnlyNetworksWithHistory] = useOnlyNetworksWithHistory();
 
 	return (
 		<SettingChoice<"all" | "history">

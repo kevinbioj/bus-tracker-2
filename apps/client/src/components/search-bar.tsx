@@ -3,13 +3,13 @@ import { SearchIcon, XIcon } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import * as m from "~/paraglide/messages";
 
-type FilterModuleSearchBarProperties = {
+type SearchBarProperties = {
 	placeholder: string;
 	query: string;
 	onQueryChange: (search: string) => unknown;
 };
 
-export function FilterModuleSearchBar({ placeholder, query, onQueryChange }: FilterModuleSearchBarProperties) {
+export function SearchBar({ placeholder, query, onQueryChange }: Readonly<SearchBarProperties>) {
 	return (
 		<div className="relative shrink-0">
 			<SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />

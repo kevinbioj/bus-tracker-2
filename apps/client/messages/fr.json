@@ -50,7 +50,6 @@
 	"language_system": "Système",
 	"nav_data": "Données",
 	"nav_map": "Carte",
-	"networks_list_description": "Sélectionnez un réseau pour consulter ses véhicules et lignes.",
 	"networks_list_empty": "Aucun réseau ne correspond à ces critères.",
 	"networks_list_count": [
 		{
@@ -62,8 +61,21 @@
 			}
 		}
 	],
-	"networks_list_region_all": "Toutes les régions",
-	"networks_list_region_filter_label": "Filtrer par région",
+	"networks_list_all_notice": "Les réseaux sans historique des véhicules apparaissent en grisé.",
+	"networks_list_hidden_matches": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} réseau sans historique des véhicules correspond aussi à cette recherche.",
+				"countPlural=other": "{count} réseaux sans historique des véhicules correspondent aussi à cette recherche."
+			}
+		}
+	],
+	"networks_list_hide_without_history": "Les masquer",
+	"networks_list_history_only_notice": "Seuls les réseaux avec historique des véhicules sont affichés.",
+	"networks_list_show_all": "Tout afficher",
+	"networks_list_without_history": "sans historique des véhicules",
 	"networks_list_search_placeholder": "Rechercher un réseau ou une ville…",
 	"networks_list_search_results": "Résultats de recherche",
 	"networks_list_title": "Données des réseaux",

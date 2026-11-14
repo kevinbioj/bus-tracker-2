@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon, FilterIcon, XIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { useDebounceValue, useLocalStorage } from "usehooks-ts";
+import { useEffect, useMemo, useRef } from "react";
+import { useDebounceValue } from "usehooks-ts";
 
 import { GetNetworksQuery, type Network } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
+import { SearchBar } from "~/components/search-bar";
 import { Button } from "~/components/ui/button";
 import { SheetClose, SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { useIsCountryDisplayed } from "~/components/vehicles-map/displayed-countries";
@@ -13,7 +14,7 @@ import {
 	type NetworkListView,
 } from "~/components/vehicles-map/filter-module/network/networks-inner-list";
 import type { RegionGroup } from "~/components/vehicles-map/filter-module/network/region-card";
-import { FilterModuleSearchBar } from "~/components/vehicles-map/filter-module/search-bar";
+import { useFavoriteNetworkIds } from "~/hooks/use-favorite-networks";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 import { searchNetworks } from "~/utils/network-search";
@@ -48,10 +49,7 @@ export function FilterModuleNetworkList({
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [debouncedSearchQuery] = useDebounceValue(searchQuery, 300);
 
-	const [favoriteNetworkIds, setFavoriteNetworkIds] = useLocalStorage("favorite-networks", new Set<number>(), {
-		deserializer: (value) => new Set(JSON.parse(value)),
-		serializer: (value) => JSON.stringify(Array.from(value.values())),
-	});
+	const [favoriteNetworkIds, toggleFavoriteNetworkId] = useFavoriteNetworkIds();
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
 	useEffect(() => {
@@ -62,22 +60,6 @@ export function FilterModuleNetworkList({
 	useEffect(() => {
 		scrollRef.current?.scrollTo({ top: 0 });
 	}, [regionKey]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: setters are not dependencies
-	const toggleFavoriteNetworkId = useCallback(
-		(network: Network) => {
-			const updatedSet = new Set(favoriteNetworkIds);
-
-			if (updatedSet.has(network.id)) {
-				updatedSet.delete(network.id);
-			} else {
-				updatedSet.add(network.id);
-			}
-
-			setFavoriteNetworkIds(updatedSet);
-		},
-		[favoriteNetworkIds],
-	);
 
 	const favoriteNetworks = useMemo(
 		() => networks?.filter((network) => favoriteNetworkIds.has(network.id)) ?? [],
@@ -153,7 +135,7 @@ export function FilterModuleNetworkList({
 					/>
 				</div>
 				<div className="px-3 pb-3">
-					<FilterModuleSearchBar
+					<SearchBar
 						placeholder={m.map_network_search_placeholder()}
 						query={searchQuery}
 						onQueryChange={onSearchQueryChange}
@@ -166,7 +148,7 @@ export function FilterModuleNetworkList({
 					favoriteNetworkIds={favoriteNetworkIds}
 					onNetworkSelect={onNetworkSelect}
 					onRegionSelect={(region) => onRegionKeyChange(region.key)}
-					toggleFavoriteNetworkId={toggleFavoriteNetworkId}
+					toggleFavoriteNetworkId={(network) => toggleFavoriteNetworkId(network.id)}
 					scrollRef={scrollRef}
 				/>
 			</div>

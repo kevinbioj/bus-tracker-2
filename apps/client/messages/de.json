@@ -50,7 +50,6 @@
 	"language_system": "System",
 	"nav_data": "Daten",
 	"nav_map": "Karte",
-	"networks_list_description": "Wählen Sie ein Verkehrsnetz aus, um die Fahrzeuge und Linien anzuzeigen.",
 	"networks_list_empty": "Kein Verkehrsnetz entspricht diesen Kriterien.",
 	"networks_list_count": [
 		{
@@ -62,8 +61,21 @@
 			}
 		}
 	],
-	"networks_list_region_all": "Alle Regionen",
-	"networks_list_region_filter_label": "Nach Region filtern",
+	"networks_list_all_notice": "Verkehrsnetze ohne Fahrzeugverlauf sind ausgegraut.",
+	"networks_list_hidden_matches": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} Verkehrsnetz ohne Fahrzeugverlauf entspricht ebenfalls dieser Suche.",
+				"countPlural=other": "{count} Verkehrsnetze ohne Fahrzeugverlauf entsprechen ebenfalls dieser Suche."
+			}
+		}
+	],
+	"networks_list_hide_without_history": "Ausblenden",
+	"networks_list_history_only_notice": "Es werden nur Verkehrsnetze mit Fahrzeugverlauf angezeigt.",
+	"networks_list_show_all": "Alle anzeigen",
+	"networks_list_without_history": "ohne Fahrzeugverlauf",
 	"networks_list_search_placeholder": "Verkehrsnetz oder Stadt suchen...",
 	"networks_list_search_results": "Suchergebnisse",
 	"networks_list_title": "Netzdaten",

@@ -6,13 +6,13 @@ import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import type { Line } from "~/api/networks";
 import { GetNetworkQuery, type Network } from "~/api/networks";
+import { SearchBar } from "~/components/search-bar";
 import { Button } from "~/components/ui/button";
 import { SheetHeader, SheetTitle } from "~/components/ui/sheet";
 import { Skeleton } from "~/components/ui/skeleton";
 import { OnlineVehiclesCount } from "~/components/vehicles-map/filter-module/line/line-card";
 import { LinesInnerList } from "~/components/vehicles-map/filter-module/line/lines-inner-list";
 import { NetworkLogoTile } from "~/components/vehicles-map/filter-module/network/network-logo";
-import { FilterModuleSearchBar } from "~/components/vehicles-map/filter-module/search-bar";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 import { searchLines } from "~/utils/line-search";
@@ -153,7 +153,7 @@ export function FilterModuleLinesList({
 							<ChevronRightIcon className="size-4 shrink-0 opacity-70" />
 						</button>
 					)}
-					<FilterModuleSearchBar
+					<SearchBar
 						placeholder={m.map_lines_search_placeholder()}
 						query={searchQuery}
 						onQueryChange={setSearchQuery}
