@@ -25,7 +25,7 @@ export function NetworkDataSourcesDialog({ networkId }: Readonly<NetworkDataSour
 		<Dialog>
 			<DialogTrigger
 				render={
-					<Button size="icon-sm" variant="outline" title={m.network_data_sources_title()}>
+					<Button size="icon" variant="outline" title={m.network_data_sources_title()}>
 						<LucideInfo aria-label={m.network_data_sources_title()} />
 					</Button>
 				}

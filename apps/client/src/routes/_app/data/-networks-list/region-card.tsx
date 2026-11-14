@@ -3,8 +3,8 @@ import { ChevronRightIcon } from "lucide-react";
 
 import type { Network } from "~/api/networks";
 import * as m from "~/paraglide/messages";
+import { NetworkLogo } from "~/routes/_app/data/-components/network-logo";
 import { cardClassName } from "~/routes/_app/data/-networks-list/card-list";
-import { NetworkLogo } from "~/routes/_app/data/-networks-list/network-logo";
 import type { RegionGroup } from "~/routes/_app/data/-networks-list/use-networks-list-view";
 import { cn } from "~/utils/cn";
 

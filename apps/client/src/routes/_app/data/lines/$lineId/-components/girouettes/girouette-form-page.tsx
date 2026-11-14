@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import {
 	ArrowDownIcon,
 	ArrowLeftRightIcon,
@@ -53,7 +53,8 @@ import {
 	resizeBitmap,
 } from "~/components/vehicles-map/vehicles-markers/popup/girouette-bitmap";
 import * as m from "~/paraglide/messages";
-import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
+import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
+import { LineMedia, LineSubtitle } from "~/routes/_app/data/-components/lines/line-identity";
 import { cn } from "~/utils/cn";
 import { BitmapEditorDialog } from "./bitmap-editor";
 import {
@@ -620,24 +621,16 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 
 	return (
 		<DataPageLayout
-			current={title}
-			breadcrumbMiddle={[
-				{
-					label: <LineBreadcrumbLabel line={line} />,
-					to: "/data/lines/$lineId",
-					params: { lineId: String(lineId) },
-				},
-				{
-					label: m.line_girouettes_breadcrumb(),
-					to: "/data/lines/$lineId/girouettes",
-					params: { lineId: String(lineId) },
-				},
-			]}
-			network={network}
-			networkSearch={{ tab: "lines" }}
+			back={{
+				label: m.data_back_to_girouettes(),
+				link: <Link params={{ lineId: String(lineId) }} to="/data/lines/$lineId/girouettes" />,
+			}}
+			heading={title}
+			media={<LineMedia line={line} />}
+			subtitle={<LineSubtitle line={line} network={network} />}
 			title={m.line_girouettes_page_title({ lineNumber: line.number, networkName: network.name })}
 		>
-			<div className="sticky top-14 z-10 bg-background mt-4 pb-3 border-b flex flex-col gap-2">
+			<div className="sticky top-14 z-10 bg-background pb-3 border-b flex flex-col gap-2">
 				<p className="text-sm font-semibold pt-1">{m.line_girouettes_form_preview_title()}</p>
 				<div className="flex items-center gap-1.5 overflow-x-auto">
 					<GirouettePreview

@@ -11,18 +11,29 @@ import { match } from "ts-pattern";
 
 import type { Vehicle } from "~/api/vehicles";
 import { Button } from "~/components/ui/button";
-import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
+import { useEditor } from "~/hooks/use-editor";
 import tcInfosIcon from "~/icons/tc-infos.svg";
 import * as m from "~/paraglide/messages";
 import { VehicleCharacteristicsActions } from "~/routes/_app/data/-components/vehicles/actions/vehicle-characteristics-action-menu";
-
-const getTcInfosLink = (tcId: number) => `https://tc-infos.fr/vehicule/${tcId}`;
+import { cn } from "~/utils/cn";
 
 type VehicleCharacteristicsProps = {
 	vehicle: Vehicle;
 };
 
 export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacteristicsProps>) {
+	const { editor } = useEditor();
+	const editable = editor?.allowedNetworks.includes(vehicle.networkId) ?? false;
+
+	if (
+		vehicle.designation === null &&
+		vehicle.operator === null &&
+		vehicle.archivedAt === null &&
+		vehicle.tcId === null &&
+		!editable
+	)
+		return null;
+
 	const archivedReason = match(vehicle.archivedFor)
 		.with("FAILURE", () => m.vehicle_details_archive_reason_failure())
 		.with("FIRE", () => m.vehicle_details_archive_reason_fire())
@@ -31,22 +42,13 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 		.with("TRANSFER", () => m.vehicle_details_archive_reason_transfer())
 		.otherwise(() => m.vehicle_details_archive_reason_archived());
 
-	const vehicleIcon = match(vehicle.type)
-		.with("SUBWAY", "TRAMWAY", "RAIL", () => <TramwayIcon className="align-baseline inline size-4" />)
-		.with("TROLLEY", () => <TrolleybusIcon className="align-baseline inline size-4" />)
-		.with("COACH", () => <CoachIcon className="align-baseline inline size-4" />)
-		.with("FERRY", () => <ShipIcon className="align-baseline inline size-4" />)
-		.with("GONDOLA", () => <GondolaIcon className="align-baseline inline size-4" />)
-		.otherwise(() => <BusIcon className="align-baseline inline size-4" />);
-
 	return (
-		<div className="border border-border px-3 py-2 rounded-md shadow-lg lg:w-80 w-full relative">
+		<div className="border border-border px-3 py-2 rounded-md shadow-lg lg:w-80 w-full">
 			<div className="flex justify-between gap-2">
-				<div>
-					<h2 className="font-bold text-lg">
-						{vehicleIcon} {m.vehicle_details_number({ vehicleNumber: vehicle.number })}
-					</h2>
-					{vehicle.designation !== null && <div>{vehicle.designation}</div>}
+				<div className="min-w-0">
+					<div className={cn("font-semibold", vehicle.designation === null && "text-muted-foreground")}>
+						{vehicle.designation ?? m.vehicle_default_designation()}
+					</div>
 					{vehicle.operator !== null && (
 						<div className="mt-0.5 text-xs text-muted-foreground">
 							{m.vehicle_details_operated_by()} <span className="font-bold">{vehicle.operator.name}</span>
@@ -71,14 +73,14 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 						</div>
 					)}
 				</div>
-				<div className="flex gap-2">
+				<div className="flex shrink-0 gap-2">
 					{vehicle.tcId !== null && (
 						<Button
 							className="border-none"
 							size="icon"
 							nativeButton={false}
 							render={
-								<a target="_blank" rel="noreferrer" href={getTcInfosLink(vehicle.tcId)}>
+								<a target="_blank" rel="noreferrer" href={`https://tc-infos.fr/vehicule/${vehicle.tcId}`}>
 									<img src={tcInfosIcon} alt={m.vehicle_details_tc_infos_alt()} />
 								</a>
 							}

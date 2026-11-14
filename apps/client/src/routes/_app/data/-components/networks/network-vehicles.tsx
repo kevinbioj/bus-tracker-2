@@ -192,11 +192,17 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 	const filterSortKey = `${type}|${operatorIds.join(",")}|${debouncedFilter}|${sort}|${showArchived}`;
 	const prevFilterSortKey = useRef(filterSortKey);
+	const stickyRef = useRef<HTMLDivElement>(null);
 	useEffect(() => {
 		if (prevFilterSortKey.current === filterSortKey) return;
 		prevFilterSortKey.current = filterSortKey;
 		setResultsAnnouncement(activeVehiclesLabel);
-		const stickyY = window.innerWidth >= 640 ? 134 : 76;
+		const sticky = stickyRef.current;
+		if (sticky?.parentElement == null) return;
+		const stickyY =
+			sticky.parentElement.getBoundingClientRect().top +
+			window.scrollY -
+			Number.parseFloat(getComputedStyle(sticky).top);
 		if (window.scrollY > stickyY) {
 			window.scrollTo({ top: stickyY, behavior: "instant" });
 		}
@@ -204,7 +210,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 
 	return (
 		<div>
-			<div className="sticky top-14 bg-background z-10 pt-2">
+			<div className="sticky top-14 bg-background z-10 pt-2" ref={stickyRef}>
 				<div
 					className={cn(
 						"hidden gap-2 sm:grid sm:gap-1",

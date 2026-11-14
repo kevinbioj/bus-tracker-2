@@ -10,6 +10,7 @@ export type Line = {
 	networkId: number;
 	references: string[];
 	number: string;
+	girouetteNumber: string | null;
 	cartridgeHref: string;
 	color: string;
 	textColor: string;

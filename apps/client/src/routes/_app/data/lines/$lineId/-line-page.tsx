@@ -1,15 +1,17 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearch } from "@tanstack/react-router";
 import dayjs, { type Dayjs } from "dayjs";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, RectangleEllipsisIcon } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
-import { Button, buttonVariants } from "~/components/ui/button";
+import { buttonVariants } from "~/components/ui/button";
 import { useEditor } from "~/hooks/use-editor";
 import * as m from "~/paraglide/messages";
-import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
+import { DataPageAction, subtitleLinkClassName } from "~/routes/_app/data/-components/data-page-header";
+import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
+import { getLineLabel, LineMedia } from "~/routes/_app/data/-components/lines/line-identity";
 import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-vehicles-timeline";
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
 import { ViewOnMapButton } from "~/routes/_app/data/-components/view-on-map-button";
@@ -63,31 +65,39 @@ export function LinePage() {
 
 	return (
 		<DataPageLayout
-			current={
+			actions={
 				<>
-					<LineBreadcrumbLabel line={line} />
 					<ViewOnMapButton search={{ "line-id": line.id }} />
 					{isNetworkEditor && (
-						<Button
-							size="sm"
-							variant="outline"
-							className="border-[0.5px] h-5 my-0 py-0 px-2"
-							nativeButton={false}
-							render={
-								<Link to="/data/lines/$lineId/girouettes" params={{ lineId }}>
-									{m.network_lines_girouettes_action()}
-								</Link>
-							}
+						<DataPageAction
+							icon={RectangleEllipsisIcon}
+							label={m.network_lines_girouettes_action()}
+							link={<Link params={{ lineId }} to="/data/lines/$lineId/girouettes" />}
 						/>
 					)}
 				</>
 			}
-			currentClassName="flex items-center gap-1"
-			network={network}
-			networkSearch={{ tab: "lines" }}
+			back={{
+				label: m.data_back_to_network({ networkName: network.name }),
+				link: (
+					<Link params={{ networkId: String(network.id) }} search={{ tab: "lines" }} to="/data/networks/$networkId" />
+				),
+			}}
+			heading={getLineLabel(line)}
+			media={<LineMedia line={line} />}
+			subtitle={
+				<Link
+					className={subtitleLinkClassName}
+					params={{ networkId: String(network.id) }}
+					search={{ tab: "lines" }}
+					to="/data/networks/$networkId"
+				>
+					{network.name}
+				</Link>
+			}
 			title={m.page_title_line_data({ lineNumber: line.number, networkName: network.name })}
 		>
-			<section className="mt-4">
+			<section>
 				<PeriodNavigator
 					className="mb-2"
 					previous={

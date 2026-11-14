@@ -3,8 +3,8 @@ import { ChevronRightIcon, StarIcon } from "lucide-react";
 
 import type { Network } from "~/api/networks";
 import * as m from "~/paraglide/messages";
+import { NetworkLogo } from "~/routes/_app/data/-components/network-logo";
 import { cardClassName } from "~/routes/_app/data/-networks-list/card-list";
-import { NetworkLogo } from "~/routes/_app/data/-networks-list/network-logo";
 import { cn } from "~/utils/cn";
 
 type NetworksListCardProps = {

@@ -1,9 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 
 import { GetNetworkQuery } from "~/api/networks";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
+import { NetworkLogo } from "~/routes/_app/data/-components/network-logo";
 import { NetworkDataSourcesDialog } from "~/routes/_app/data/-components/networks/network-data-sources-dialog";
 import { NetworkPage } from "~/routes/_app/data/-components/networks/network-page";
 import { ViewOnMapButton } from "~/routes/_app/data/-components/view-on-map-button";
@@ -15,12 +16,22 @@ export function NetworkDetails() {
 
 	return (
 		<DataPageLayout
-			action={<NetworkDataSourcesDialog networkId={network.id} />}
-			network={network}
-			networkAction={<ViewOnMapButton search={{ "network-id": network.id }} />}
+			actions={
+				<>
+					<ViewOnMapButton search={{ "network-id": network.id }} />
+					<NetworkDataSourcesDialog networkId={network.id} />
+				</>
+			}
+			back={{
+				label: m.map_network_list_back(),
+				link: <Link search={{ region: network.regionId ?? undefined }} to="/data" />,
+			}}
+			heading={network.name}
+			media={<NetworkLogo className="h-10 w-16 sm:h-12 sm:w-24" network={network} />}
+			subtitle={network.authority}
 			title={m.page_title_network_data({ networkName: network.name })}
 		>
-			<NetworkPage hasVehiclesFeature={network.hasVehiclesFeature} networkId={network.id} />
+			<NetworkPage network={network} />
 		</DataPageLayout>
 	);
 }

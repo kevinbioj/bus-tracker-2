@@ -1,138 +1,20 @@
-import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-import type { Line } from "~/api/lines";
-import type { Network } from "~/api/networks";
-import {
-	Breadcrumb,
-	BreadcrumbItem,
-	BreadcrumbLink,
-	BreadcrumbList,
-	BreadcrumbPage,
-	BreadcrumbSeparator,
-} from "~/components/ui/breadcrumb";
-import * as m from "~/paraglide/messages";
+import { DataPageHeader, type DataPageHeaderProps } from "./data-page-header";
 
-import { NetworkHeader } from "./network-header";
-
-type BreadcrumbEntry = {
-	label: ReactNode;
-	to: string;
-	params?: Record<string, string>;
-	search?: Record<string, string>;
-};
-
-type DataPageLayoutProps = {
+type DataPageLayoutProps = DataPageHeaderProps & {
 	children: ReactNode;
-	current?: ReactNode;
-	/** Action alignée à droite du fil d'Ariane, visible à toutes les tailles d'écran. */
-	action?: ReactNode;
-	/** Action affichée à côté du réseau lorsque celui-ci est lui-même la page courante. */
-	networkAction?: ReactNode;
-	currentClassName?: string;
-	/** Extra breadcrumb levels inserted between the network and the current page */
-	breadcrumbMiddle?: BreadcrumbEntry[];
-	network: Network;
-	networkSearch?: { tab?: string };
 	title: string;
 };
 
-export function DataPageLayout({
-	action,
-	children,
-	current,
-	networkAction,
-	currentClassName,
-	breadcrumbMiddle,
-	network,
-	networkSearch,
-	title,
-}: Readonly<DataPageLayoutProps>) {
+export function DataPageLayout({ children, title, ...header }: Readonly<DataPageLayoutProps>) {
 	return (
 		<>
 			<title>{title}</title>
-			<main className="max-w-(--breakpoint-xl) p-3 w-full mx-auto">
-				<NetworkHeader network={network} />
-				<div className="flex items-center gap-2">
-					<Breadcrumb className="grow min-w-0">
-						<BreadcrumbList>
-							<BreadcrumbItem>
-								<BreadcrumbLink render={<Link to="/data">{m.data_breadcrumb()}</Link>} />
-							</BreadcrumbItem>
-							<BreadcrumbSeparator />
-							{current === undefined && (breadcrumbMiddle === undefined || breadcrumbMiddle.length === 0) ? (
-								<BreadcrumbItem>
-									<BreadcrumbPage className={networkAction ? "flex items-center gap-1" : undefined}>
-										<NetworkBreadcrumbLabel network={network} />
-										{networkAction}
-									</BreadcrumbPage>
-								</BreadcrumbItem>
-							) : (
-								<>
-									<BreadcrumbItem>
-										<BreadcrumbLink
-											render={
-												<Link
-													to="/data/networks/$networkId"
-													params={{ networkId: String(network.id) }}
-													search={networkSearch}
-												>
-													<NetworkBreadcrumbLabel network={network} />
-												</Link>
-											}
-										/>
-									</BreadcrumbItem>
-									{breadcrumbMiddle?.map((entry) => (
-										<>
-											<BreadcrumbSeparator key={`sep-${entry.to}`} />
-											<BreadcrumbItem key={entry.to}>
-												<BreadcrumbLink
-													render={
-														<Link to={entry.to} params={entry.params ?? {}} search={entry.search ?? {}}>
-															{entry.label}
-														</Link>
-													}
-												/>
-											</BreadcrumbItem>
-										</>
-									))}
-									{current !== undefined && (
-										<>
-											<BreadcrumbSeparator />
-											<BreadcrumbItem>
-												<BreadcrumbPage className={currentClassName}>{current}</BreadcrumbPage>
-											</BreadcrumbItem>
-										</>
-									)}
-								</>
-							)}
-						</BreadcrumbList>
-					</Breadcrumb>
-					{action !== undefined && <div className="shrink-0">{action}</div>}
-				</div>
+			<main className="mx-auto w-full max-w-(--breakpoint-xl) p-3">
+				<DataPageHeader {...header} />
 				{children}
 			</main>
 		</>
-	);
-}
-
-function NetworkBreadcrumbLabel({ network }: Readonly<{ network: Network }>) {
-	return network.logoHref ? (
-		<picture className="min-w-12 w-fit">
-			{network.darkModeLogoHref !== null && (
-				<source srcSet={network.darkModeLogoHref} media="(prefers-color-scheme: dark)" />
-			)}
-			<img className="h-5 object-contain m-auto" src={network.logoHref} alt={network.name} />
-		</picture>
-	) : (
-		network.name
-	);
-}
-
-export function LineBreadcrumbLabel({ line }: Readonly<{ line: Pick<Line, "number" | "cartridgeHref"> }>) {
-	return line.cartridgeHref ? (
-		<img className="h-5 object-contain" src={line.cartridgeHref} alt={line.number} />
-	) : (
-		line.number
 	);
 }

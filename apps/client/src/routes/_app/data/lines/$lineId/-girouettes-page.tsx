@@ -7,7 +7,8 @@ import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { Button } from "~/components/ui/button";
 import * as m from "~/paraglide/messages";
-import { DataPageLayout, LineBreadcrumbLabel } from "~/routes/_app/data/-components/data-page-layout";
+import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
+import { LineMedia, LineSubtitle } from "~/routes/_app/data/-components/lines/line-identity";
 import { GirouettesTable } from "./-components/girouettes/girouettes-table";
 
 type GirouettesPageProps = {
@@ -21,16 +22,13 @@ export function GirouettesPage({ lineId }: Readonly<GirouettesPageProps>) {
 
 	return (
 		<DataPageLayout
-			current={m.line_girouettes_breadcrumb()}
-			breadcrumbMiddle={[
-				{
-					label: <LineBreadcrumbLabel line={line} />,
-					to: "/data/lines/$lineId",
-					params: { lineId: String(lineId) },
-				},
-			]}
-			network={network}
-			networkSearch={{ tab: "lines" }}
+			back={{
+				label: m.data_back_to_line({ lineNumber: line.number }),
+				link: <Link params={{ lineId: String(lineId) }} to="/data/lines/$lineId" />,
+			}}
+			heading={m.line_girouettes_breadcrumb()}
+			media={<LineMedia line={line} />}
+			subtitle={<LineSubtitle line={line} network={network} />}
 			title={m.line_girouettes_page_title({ lineNumber: line.number, networkName: network.name })}
 		>
 			<GirouettesTable girouettes={girouettes} lineId={lineId} />

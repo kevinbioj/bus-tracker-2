@@ -8,6 +8,7 @@ import { GetNetworkQuery } from "~/api/networks";
 
 import { Input } from "~/components/ui/input";
 import * as m from "~/paraglide/messages";
+import { getLineLabel } from "~/routes/_app/data/-components/lines/line-identity";
 import { searchLines } from "~/utils/line-search";
 
 type NetworkLinesProps = {
@@ -61,7 +62,7 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 			) : (
 				<ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mt-2">
 					{displayedLines.map((line) => {
-						const lineLabel = line.girouetteNumber ? line.number : m.network_lines_label({ lineNumber: line.number });
+						const lineLabel = getLineLabel(line);
 						const vehicleCount = m.network_online_vehicle_count({ count: line.onlineVehicleCount ?? 0 });
 
 						return (
