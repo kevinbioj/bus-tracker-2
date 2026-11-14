@@ -307,6 +307,19 @@ describe("computeStopDepartures", () => {
 		expect(departures[0]!.aimedTime).toBe("2026-05-18T08:30:00+00:00");
 	});
 
+	it("restreint le tableau à tous les arrêts que mapStopRef confond en un quai", () => {
+		const source = makeSource({ mapStopRef: (stopRef) => (stopRef.startsWith("mairie-") ? "mairie" : stopRef) });
+
+		const { departures } = computeStopDepartures(source, "mairie-a", MONDAY_MORNING, {
+			stopRef: "network:StopPoint:mairie",
+		});
+
+		expect(departures.map((departure) => departure.journeyRef)).toEqual([
+			"network:ServiceJourney:aller",
+			"network:ServiceJourney:retour",
+		]);
+	});
+
 	it("restreint le tableau aux lignes demandées", () => {
 		const onLines = (lineRefs: string[]) =>
 			computeStopDepartures(makeSource(), "mairie-a", MONDAY_MORNING, { lineRefs }).departures;

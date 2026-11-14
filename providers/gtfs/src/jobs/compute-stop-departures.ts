@@ -182,11 +182,15 @@ export function computeStopDepartures(
 
 	// Quai demandé, quel que soit le réseau qui préfixe sa référence : la même borne porte une
 	// référence par réseau qui la dessert.
-	const onlyStopId =
+	const onlyStopIds =
 		onlyStopRef !== undefined
-			? stopArea.stops.find((stop) => onlyStopRef.endsWith(`:StopPoint:${mapStopRef?.(stop.id) ?? stop.id}`))?.id
+			? new Set(
+					stopArea.stops
+						.filter((stop) => onlyStopRef.endsWith(`:StopPoint:${mapStopRef?.(stop.id) ?? stop.id}`))
+						.map((stop) => stop.id),
+				)
 			: undefined;
-	if (onlyStopRef !== undefined && onlyStopId === undefined) return { departures: [], excludedJourneys: [] };
+	if (onlyStopIds !== undefined && onlyStopIds.size === 0) return { departures: [], excludedJourneys: [] };
 
 	const areaStopIds = new Set(stopArea.stops.map(({ id }) => id));
 	/**
@@ -195,7 +199,7 @@ export function computeStopDepartures(
 	 * qu'à son propre tableau.
 	 */
 	const isHiddenSkippedCall = (call: JourneyCall, calls: JourneyCall[]) =>
-		onlyStopId === undefined && isReplacedByRelocatedCall(call, calls, areaStopIds);
+		onlyStopIds === undefined && isReplacedByRelocatedCall(call, calls, areaStopIds);
 
 	/** Dessertes déjà rendues par l'index, pour ne pas les redoubler depuis les courses déviées. */
 	const emittedCalls = new Set<string>();
@@ -282,7 +286,7 @@ export function computeStopDepartures(
 
 			// Le quai désigné par le temps réel remplace celui de l'horaire : c'est là que la course passe.
 			const servedStop = call?.assignedStop ?? stop;
-			if (onlyStopId !== undefined && servedStop.id !== onlyStopId) continue;
+			if (onlyStopIds !== undefined && !onlyStopIds.has(servedStop.id)) continue;
 
 			// Le terminus théorique est déjà écarté, pas celui qu'avancent une déviation ou le temps réel en
 			// retirant les premiers ou derniers arrêts : la course en part ou s'y achève désormais.
@@ -386,7 +390,7 @@ export function computeStopDepartures(
 			if (emittedCalls.has(`${journeyKey}|${call.stop.id}`) || isHiddenSkippedCall(call, calls)) continue;
 
 			const servedStop = call.assignedStop ?? call.stop;
-			if (onlyStopId !== undefined && servedStop.id !== onlyStopId) continue;
+			if (onlyStopIds !== undefined && !onlyStopIds.has(servedStop.id)) continue;
 
 			const networkRef = networkOf(trip, journey);
 			if (networkRef === undefined) continue;
