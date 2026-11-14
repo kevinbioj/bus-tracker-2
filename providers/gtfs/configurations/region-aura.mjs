@@ -237,6 +237,17 @@ const sources = [
 		},
 	},
 	{
+		id: "issoire",
+		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=agglopaysdissoire",
+		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=agglopaysdissoire"],
+		maxVehiclePositionAgeMs: 10 * 60_000,
+		mode: "NO-TU",
+		getNetworkRef: () => "ISSOIRE",
+		getVehicleRef: () => undefined,
+		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
+		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+	},
+	{
 		id: "montlucon",
 		staticResourceHref: "https://saeiv-p01.navocap.com/NvpGTFS/72/api/static/getzip",
 		realtimeResourceHrefs: [
