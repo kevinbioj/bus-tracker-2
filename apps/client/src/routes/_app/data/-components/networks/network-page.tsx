@@ -67,7 +67,8 @@ const tabTriggerClassName =
 function TabCount({ children }: Readonly<{ children: ReactNode }>) {
 	return (
 		<span className="rounded-full bg-muted px-1.5 py-px text-xs font-medium text-muted-foreground tabular-nums">
-			{children}
+			<span aria-hidden="true">{children}</span>
+			<span className="sr-only">({children})</span>
 		</span>
 	);
 }

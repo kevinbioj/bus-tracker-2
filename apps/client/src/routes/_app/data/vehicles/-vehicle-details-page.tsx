@@ -43,7 +43,7 @@ export function VehicleDetails() {
 			})}
 		>
 			<div className="flex flex-col lg:flex-row lg:items-start gap-3 w-full">
-				<div className="flex flex-col gap-3 lg:sticky lg:top-16">
+				<div className="flex flex-col gap-3 empty:hidden lg:sticky lg:top-16">
 					<VehicleCharacteristics vehicle={vehicle} />
 					<VehicleLive vehicle={vehicle} />
 				</div>

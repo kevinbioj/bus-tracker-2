@@ -56,6 +56,7 @@ export function NetworksListContent({
 				)}
 				{view.hiddenMatchCount > 0 && (
 					<NetworksListNotice
+						actionContext={m.networks_list_show_all_context()}
 						actionLabel={m.networks_list_show_all()}
 						icon={HistoryIcon}
 						onAction={() => setOnlyNetworksWithHistory(false)}

@@ -8,10 +8,17 @@ type NetworksListNoticeProps = {
 	icon: LucideIcon;
 	children: ReactNode;
 	actionLabel: string;
+	actionContext: string;
 	onAction: () => void;
 };
 
-export function NetworksListNotice({ icon: Icon, children, actionLabel, onAction }: Readonly<NetworksListNoticeProps>) {
+export function NetworksListNotice({
+	icon: Icon,
+	children,
+	actionLabel,
+	actionContext,
+	onAction,
+}: Readonly<NetworksListNoticeProps>) {
 	return (
 		<p className="flex items-start gap-2 rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground sm:text-sm">
 			<Icon aria-hidden="true" className="mt-px size-3.5 shrink-0 sm:size-4" />
@@ -23,6 +30,7 @@ export function NetworksListNotice({ icon: Icon, children, actionLabel, onAction
 					type="button"
 				>
 					{actionLabel}
+					<span className="sr-only"> {actionContext}</span>
 				</button>
 			</span>
 		</p>
@@ -34,6 +42,7 @@ export function NetworksListHistoryNotice() {
 
 	return onlyNetworksWithHistory ? (
 		<NetworksListNotice
+			actionContext={m.networks_list_show_all_context()}
 			actionLabel={m.networks_list_show_all()}
 			icon={HistoryIcon}
 			onAction={() => setOnlyNetworksWithHistory(false)}
@@ -42,6 +51,7 @@ export function NetworksListHistoryNotice() {
 		</NetworksListNotice>
 	) : (
 		<NetworksListNotice
+			actionContext={m.networks_list_hide_context()}
 			actionLabel={m.networks_list_hide_without_history()}
 			icon={ListIcon}
 			onAction={() => setOnlyNetworksWithHistory(true)}

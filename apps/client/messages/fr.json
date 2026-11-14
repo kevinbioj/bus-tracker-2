@@ -75,8 +75,10 @@
 		}
 	],
 	"networks_list_hide_without_history": "Les masquer",
+	"networks_list_hide_context": "(les réseaux sans historique)",
 	"networks_list_history_only_notice": "Seuls les réseaux avec historique des véhicules sont affichés.",
 	"networks_list_show_all": "Tout afficher",
+	"networks_list_show_all_context": "(y compris les réseaux sans historique)",
 	"networks_list_without_history": "sans historique des véhicules",
 	"networks_list_search_placeholder": "Rechercher un réseau ou une ville…",
 	"networks_list_search_results": "Résultats de recherche",
@@ -337,6 +339,7 @@
 	"stop_arrivals_empty": "Aucune arrivée dans les deux prochaines heures.",
 	"stop_arrivals_error": "Les prochaines arrivées de cet arrêt sont indisponibles.",
 	"page_title_data": "Données des réseaux - Bus-Tracker",
+	"page_title_data_region": "{regionName} - Données des réseaux - Bus-Tracker",
 	"page_title_embed_map": "Carte du réseau {networkName}",
 	"page_title_line_data": "{lineNumber} – {networkName} – Données – Bus Tracker",
 	"page_title_map": "Carte – Bus Tracker",

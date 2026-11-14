@@ -2,13 +2,14 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { SearchIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GetNetworkQuery } from "~/api/networks";
 
 import { Input } from "~/components/ui/input";
 import * as m from "~/paraglide/messages";
 import { getLineLabel } from "~/routes/_app/data/-components/lines/line-identity";
+import { scrollBackToStickyToolbar } from "~/routes/_app/data/-components/networks/sticky-toolbar";
 import { searchLines } from "~/utils/line-search";
 
 type NetworkLinesProps = {
@@ -38,17 +39,27 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 		[sortedLines, debouncedSearchQuery],
 	);
 
+	const stickyRef = useRef<HTMLDivElement>(null);
+	const previousSearchQuery = useRef(debouncedSearchQuery);
+	useEffect(() => {
+		if (previousSearchQuery.current === debouncedSearchQuery) return;
+		previousSearchQuery.current = debouncedSearchQuery;
+		scrollBackToStickyToolbar(stickyRef.current);
+	}, [debouncedSearchQuery]);
+
 	return (
-		<>
-			<div className="relative mt-2">
-				<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-				<Input
-					aria-label={m.network_lines_search_placeholder()}
-					className="pl-9"
-					placeholder={m.network_lines_search_placeholder()}
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-				/>
+		<div>
+			<div className="sticky top-14 z-10 bg-background py-2" ref={stickyRef}>
+				<div className="relative">
+					<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+					<Input
+						aria-label={m.network_lines_search_placeholder()}
+						className="pl-9"
+						placeholder={m.network_lines_search_placeholder()}
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+				</div>
 			</div>
 			<p aria-live="polite" className="sr-only">
 				{debouncedSearchQuery.trim() === ""
@@ -60,7 +71,7 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 			{displayedLines.length === 0 ? (
 				<p className="text-muted-foreground text-sm text-center py-8">{m.network_lines_search_empty()}</p>
 			) : (
-				<ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mt-2">
+				<ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
 					{displayedLines.map((line) => {
 						const lineLabel = getLineLabel(line);
 						const vehicleCount = m.network_online_vehicle_count({ count: line.onlineVehicleCount ?? 0 });
@@ -96,6 +107,6 @@ export function NetworkLines({ networkId }: Readonly<NetworkLinesProps>) {
 					})}
 				</ul>
 			)}
-		</>
+		</div>
 	);
 }

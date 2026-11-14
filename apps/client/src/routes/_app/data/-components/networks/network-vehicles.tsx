@@ -12,6 +12,7 @@ import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { BusIcon, CoachIcon, GondolaIcon, ShipIcon, TramwayIcon, TrolleybusIcon } from "~/icons/means-of-transport";
 import * as m from "~/paraglide/messages";
+import { scrollBackToStickyToolbar } from "~/routes/_app/data/-components/networks/sticky-toolbar";
 import { VehiclesTable } from "~/routes/_app/data/-components/vehicles/vehicles-table";
 import { cn } from "~/utils/cn";
 import { filterVehicles } from "~/utils/vehicle-search";
@@ -197,15 +198,7 @@ export function NetworkVehicles({ networkId }: NetworkVehiclesProps) {
 		if (prevFilterSortKey.current === filterSortKey) return;
 		prevFilterSortKey.current = filterSortKey;
 		setResultsAnnouncement(activeVehiclesLabel);
-		const sticky = stickyRef.current;
-		if (sticky?.parentElement == null) return;
-		const stickyY =
-			sticky.parentElement.getBoundingClientRect().top +
-			window.scrollY -
-			Number.parseFloat(getComputedStyle(sticky).top);
-		if (window.scrollY > stickyY) {
-			window.scrollTo({ top: stickyY, behavior: "instant" });
-		}
+		scrollBackToStickyToolbar(stickyRef.current);
 	}, [filterSortKey, activeVehiclesLabel]);
 
 	return (
