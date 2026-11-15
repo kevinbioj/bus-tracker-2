@@ -26,11 +26,13 @@ const makeResource = (overrides: Partial<LoadedResource> = {}): LoadedResource =
 });
 
 describe("isStaleByFreshness", () => {
+	const href = "https://example.com/gtfs.zip";
+
 	it("relies on the last check when the loaded resource has no freshness headers", async () => {
 		const fetchFreshness = vi.fn();
 
-		expect(await isStaleByFreshness(makeResource({ checkedAt: minutesAgo(30) }), { fetchFreshness })).toBe(false);
-		expect(await isStaleByFreshness(makeResource({ checkedAt: minutesAgo(61) }), { fetchFreshness })).toBe(true);
+		expect(await isStaleByFreshness(makeResource({ checkedAt: minutesAgo(30) }), { href, fetchFreshness })).toBe(false);
+		expect(await isStaleByFreshness(makeResource({ checkedAt: minutesAgo(61) }), { href, fetchFreshness })).toBe(true);
 		expect(fetchFreshness).not.toHaveBeenCalled();
 	});
 
@@ -38,10 +40,10 @@ describe("isStaleByFreshness", () => {
 		const resource = makeResource({ lastModified: "Thu, 01 Jan 2026 03:00:00 GMT", etag: '"a"' });
 
 		const unchanged = vi.fn().mockResolvedValue({ lastModified: resource.lastModified, etag: resource.etag });
-		expect(await isStaleByFreshness(resource, { fetchFreshness: unchanged })).toBe(false);
+		expect(await isStaleByFreshness(resource, { href, fetchFreshness: unchanged })).toBe(false);
 
 		const changed = vi.fn().mockResolvedValue({ lastModified: resource.lastModified, etag: '"b"' });
-		expect(await isStaleByFreshness(resource, { fetchFreshness: changed })).toBe(true);
+		expect(await isStaleByFreshness(resource, { href, fetchFreshness: changed })).toBe(true);
 	});
 });
 
@@ -78,7 +80,7 @@ describe("Source.updateGtfs", () => {
 		expect(await source.updateGtfs()).toBe(false);
 		expect(isStaticResourceStale).toHaveBeenCalledWith(
 			source.resource,
-			expect.objectContaining({ fetchFreshness: expect.any(Function) }),
+			expect.objectContaining({ href: "https://example.com/gtfs.zip", fetchFreshness: expect.any(Function) }),
 		);
 		expect(downloadGtfsArchive).toHaveBeenCalledTimes(1);
 	});

@@ -43,6 +43,7 @@ export type LoadedResource = ResourceFreshness & {
 };
 
 export type StalenessProbe = {
+	href: string;
 	fetchFreshness: (method?: "HEAD" | "GET") => Promise<ResourceFreshness>;
 };
 
@@ -342,6 +343,7 @@ export class Source {
 		const resource = this.resource;
 		const isStaticResourceStale = this.options.isStaticResourceStale ?? isStaleByFreshness;
 		const probe: StalenessProbe = {
+			href: this.options.staticResourceHref,
 			fetchFreshness: (method) =>
 				fetchFreshness(this.options.staticResourceHref, this.options.staticAuth ?? this.options.auth, method),
 		};
