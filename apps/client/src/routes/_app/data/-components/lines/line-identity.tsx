@@ -42,9 +42,7 @@ type LineMediaProps = {
 export function LineMedia({ line }: Readonly<LineMediaProps>) {
 	if (line.cartridgeHref) {
 		return (
-			<span aria-hidden="true" className="flex h-10 w-16 shrink-0 items-center justify-center sm:h-12 sm:w-24">
-				<img alt="" className="max-h-full max-w-full object-contain" src={line.cartridgeHref} />
-			</span>
+			<img alt="" className="h-10 max-w-16 shrink-0 object-contain sm:h-12 sm:max-w-24" src={line.cartridgeHref} />
 		);
 	}
 

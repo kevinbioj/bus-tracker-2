@@ -27,7 +27,7 @@ export function NetworkDetails() {
 				link: <Link search={{ region: network.regionId ?? undefined }} to="/data" />,
 			}}
 			heading={network.name}
-			media={<NetworkLogo className="h-10 w-16 sm:h-12 sm:w-24" network={network} />}
+			media={<NetworkLogo className="h-10 min-w-10 max-w-22 sm:h-12 sm:min-w-12 sm:max-w-27" network={network} />}
 			subtitle={network.authority}
 			title={m.page_title_network_data({ networkName: network.name })}
 		>

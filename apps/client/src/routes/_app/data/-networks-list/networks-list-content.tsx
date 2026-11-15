@@ -70,11 +70,11 @@ export function NetworksListContent({
 
 	if (view.kind === "region") {
 		return (
-			<>
+			<div className="flex flex-col gap-3">
 				<NetworksListRegionHeader group={view.group} />
 				{historyNotice}
 				{renderGrid(view.group.networks)}
-			</>
+			</div>
 		);
 	}
 

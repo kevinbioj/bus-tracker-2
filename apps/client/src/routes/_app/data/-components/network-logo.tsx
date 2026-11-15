@@ -14,7 +14,7 @@ export function NetworkLogo({ network, className }: Readonly<NetworkLogoProps>) 
 			<span
 				aria-hidden="true"
 				className={cn(
-					"flex shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground",
+					"flex aspect-8/5 shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground",
 					className,
 				)}
 				style={
@@ -47,7 +47,7 @@ export function NetworkLogo({ network, className }: Readonly<NetworkLogoProps>) 
 				)}
 				<img
 					alt=""
-					className="max-h-full max-w-full object-contain"
+					className="h-full max-w-full object-contain"
 					decoding="async"
 					loading="lazy"
 					src={network.logoHref}
