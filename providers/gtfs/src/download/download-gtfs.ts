@@ -1,16 +1,17 @@
+import { createHash } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { rm } from "node:fs/promises";
-import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import { USER_AGENT } from "../constants.js";
 import type { Source } from "../model/source.js";
 import { getAuthHeaders } from "../utils/auth.js";
+import { readFreshness } from "../utils/fetch-freshness.js";
 import { trimZipFileTrailingBytes } from "../utils/trim-zip-trailing-bytes.js";
 import { extractGtfsArchive } from "./extract-gtfs-archive.js";
 
-export async function downloadGtfs(source: Source, outputDirectory: string) {
+export async function downloadGtfsArchive(source: Source, archivePath: string) {
 	const response = await fetch(source.options.staticResourceHref, {
 		headers: {
 			"User-Agent": USER_AGENT,
@@ -23,9 +24,22 @@ export async function downloadGtfs(source: Source, outputDirectory: string) {
 		throw new Error(`Download from '${source.options.staticResourceHref}' failed (${response.status}).`);
 	}
 
-	const archivePath = join(outputDirectory, "resource.zip");
-	await pipeline(Readable.fromWeb(response.body), createWriteStream(archivePath));
+	const hash = createHash("sha256");
+	await pipeline(
+		Readable.fromWeb(response.body),
+		async function* (chunks: AsyncIterable<Uint8Array>) {
+			for await (const chunk of chunks) {
+				hash.update(chunk);
+				yield chunk;
+			}
+		},
+		createWriteStream(archivePath),
+	);
 
+	return { ...readFreshness(response.headers), hash: hash.digest("base64") };
+}
+
+export async function extractGtfs(archivePath: string, outputDirectory: string) {
 	try {
 		await trimZipFileTrailingBytes(archivePath);
 		await extractGtfsArchive(archivePath, outputDirectory);

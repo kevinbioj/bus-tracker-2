@@ -1,3 +1,5 @@
+import { isPysaeStale, isZenbusStale } from "./shared/staleness.mjs";
+
 const semoPositions = new Map();
 
 function nthIndexOf(input, pattern, n) {
@@ -81,6 +83,7 @@ const sources = [
 	{
 		id: "cap-cotentin",
 		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-cotentin/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-cotentin/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -234,6 +237,7 @@ const sources = [
 	{
 		id: "sngo-giverny",
 		staticResourceHref: "https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/SNGO-Giverny/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -244,6 +248,7 @@ const sources = [
 	{
 		id: "astrobus",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=astrobus",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=astrobus"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "VP-ONLY",
@@ -258,6 +263,7 @@ const sources = [
 	{
 		id: "rezobus",
 		staticResourceHref: "https://pysae.com/api/v2/groups/caux-seine-agglo/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/caux-seine-agglo/gtfs-rt"],
 		gtfsOptions: { computeShapeDistTraveled: "if-missing" },
 		mode: "NO-TU",
@@ -270,6 +276,7 @@ const sources = [
 	{
 		id: "neva",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=granville",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=granville"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -310,6 +317,7 @@ const sources = [
 	{
 		id: "moca",
 		staticResourceHref: "https://pysae.com/api/v2/groups/moca/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/moca/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -320,6 +328,7 @@ const sources = [
 	{
 		id: "hobus",
 		staticResourceHref: "https://pysae.com/api/v2/groups/hobus/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/hobus/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -330,6 +339,7 @@ const sources = [
 	{
 		id: "bybus",
 		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-bayeux/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-bayeux/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -340,6 +350,7 @@ const sources = [
 	{
 		id: "ibus",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=bernay",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=bernay"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -491,6 +502,7 @@ const sources = [
 	{
 		id: "paluel-navettes",
 		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-navettes-paluel/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-navettes-paluel/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,

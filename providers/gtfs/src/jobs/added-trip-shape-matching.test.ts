@@ -66,8 +66,6 @@ function makeGtfs() {
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 		...indexStopAreas(store, [trip]),
 	};
 

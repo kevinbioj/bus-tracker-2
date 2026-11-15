@@ -1,3 +1,5 @@
+import { isZenbusStale } from "./shared/staleness.mjs";
+
 function nthIndexOf(input, pattern, n) {
 	const length = input.length;
 	let i = -1;
@@ -159,6 +161,7 @@ const sources = [
 	{
 		id: "nantes-zenbus",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=tan",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=tan"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",

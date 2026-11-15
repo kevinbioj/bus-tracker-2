@@ -1,3 +1,5 @@
+import { isPysaeStale } from "./shared/staleness.mjs";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -31,6 +33,7 @@ const sources = [
 	{
 		id: "coeur-de-loire",
 		staticResourceHref: "https://pysae.com/api/v2/groups/coeur-de-loire/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/coeur-de-loire/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,

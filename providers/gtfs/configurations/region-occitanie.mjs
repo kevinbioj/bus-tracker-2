@@ -1,3 +1,5 @@
+import { isPysaeStale, isZenbusStale } from "./shared/staleness.mjs";
+
 function nthIndexOf(input, pattern, n) {
 	const length = input.length;
 	let i = -1;
@@ -28,6 +30,7 @@ const sources = [
 	{
 		id: "airbus-tlz",
 		staticResourceHref: "https://pysae.com/api/v2/groups/airbus-toulouse/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/airbus-toulouse/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -37,6 +40,7 @@ const sources = [
 	{
 		id: "agde",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=agdecapbus68429531",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=agdecapbus68429531"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "VP-ONLY",
@@ -72,6 +76,7 @@ const sources = [
 	{
 		id: "auch",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=auch-alliance",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=auch-alliance"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -112,6 +117,7 @@ const sources = [
 	{
 		id: "castres",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=castreslignesurbaines",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=castreslignesurbaines"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",

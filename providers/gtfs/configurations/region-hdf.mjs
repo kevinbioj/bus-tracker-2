@@ -1,3 +1,5 @@
+import { isZenbusStale } from "./shared/staleness.mjs";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -48,6 +50,7 @@ const sources = [
 	{
 		id: "calais",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=sitac-calais-rt",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=sitac-calais-rt"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		excludeScheduled: true,

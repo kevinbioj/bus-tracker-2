@@ -1,3 +1,5 @@
+import { isPysaeStale, isZenbusStale } from "./shared/staleness.mjs";
+
 const clermontInterurbainLines = [
 	"36", // E5
 	"27", // E6
@@ -87,6 +89,7 @@ const sources = [
 	{
 		id: "aura-express-x73",
 		staticResourceHref: "https://pysae.com/api/v2/groups/x73/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/x73/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "AURA-EXPRESS",
@@ -146,6 +149,7 @@ const sources = [
 	{
 		id: "chamonix",
 		staticResourceHref: "https://pysae.com/api/v2/groups/chamonix-bus/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/chamonix-bus/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -239,6 +243,7 @@ const sources = [
 	{
 		id: "issoire",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=agglopaysdissoire",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=agglopaysdissoire"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -290,6 +295,7 @@ const sources = [
 	{
 		id: "morzine-avoriaz",
 		staticResourceHref: "https://pysae.com/api/v2/groups/skibus_morzine-avoriaz/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/skibus_morzine-avoriaz/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "MORZINE-AVORIAZ",
@@ -299,6 +305,7 @@ const sources = [
 	{
 		id: "moulins",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/moulins/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/moulins/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -309,6 +316,7 @@ const sources = [
 	{
 		id: "porte-isere",
 		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-9cc4/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-9cc4/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -356,6 +364,7 @@ const sources = [
 	{
 		id: "st-die-des-vosges",
 		staticResourceHref: "https://pysae.com/api/v2/groups/saint-die-des-vosges/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/saint-die-des-vosges/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -400,6 +409,7 @@ const sources = [
 	{
 		id: "valloire",
 		staticResourceHref: "https://pysae.com/api/v2/groups/valloire/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/valloire/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",

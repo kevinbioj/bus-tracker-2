@@ -61,8 +61,6 @@ function makeGtfs() {
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 
 	return gtfs;
@@ -215,8 +213,6 @@ function blockSource(options?: Partial<SourceOptions>) {
 		]),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 	return source;
 }
@@ -684,8 +680,6 @@ function crossBorderSource() {
 		journeys: new Map([[`${DATE}-original`, trip.getScheduledJourney(DATE, true)]]),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 	return source;
 }
@@ -729,8 +723,6 @@ function flixbusLikeSource() {
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 	return source;
 }
@@ -768,8 +760,6 @@ function dwellingSource(options?: Partial<SourceOptions>) {
 		journeys: new Map([[`${DATE}-original`, trip.getScheduledJourney(DATE, true)]]),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 	return source;
 }

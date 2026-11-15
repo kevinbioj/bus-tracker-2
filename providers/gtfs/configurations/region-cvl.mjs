@@ -1,3 +1,5 @@
+import { isPysaeStale } from "./shared/staleness.mjs";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -102,6 +104,7 @@ const sources = [
 	{
 		id: "remi-28",
 		staticResourceHref: "https://pysae.com/api/v2/groups/eure-et-loir-mobilite/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/eure-et-loir-mobilite/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "REMI-28",
@@ -110,6 +113,7 @@ const sources = [
 	{
 		id: "remi-37",
 		staticResourceHref: "https://pysae.com/api/v2/groups/remi-37/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-37/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "REMI-37",
@@ -118,6 +122,7 @@ const sources = [
 	{
 		id: "remi-41",
 		staticResourceHref: "https://pysae.com/api/v2/groups/remi-41/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-41/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "REMI-41",
@@ -126,6 +131,7 @@ const sources = [
 	{
 		id: "remi-45",
 		staticResourceHref: "https://pysae.com/api/v2/groups/remi-45/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/remi-45/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "REMI-45",
@@ -149,6 +155,7 @@ const sources = [
 	{
 		id: "vendome",
 		staticResourceHref: "https://pysae.com/api/v2/groups/vendome/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/vendome/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",

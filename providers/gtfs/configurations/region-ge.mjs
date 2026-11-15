@@ -1,3 +1,5 @@
+import { isPysaeStale } from "./shared/staleness.mjs";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -34,6 +36,7 @@ const sources = [
 	{
 		id: "fluo68",
 		staticResourceHref: "https://pysae.com/api/v2/groups/fluo68-transdev/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/fluo68-transdev/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -43,6 +46,7 @@ const sources = [
 	{
 		id: "luneville",
 		staticResourceHref: "https://pysae.com/api/v2/groups/luneo/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/luneo/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -52,6 +56,7 @@ const sources = [
 	{
 		id: "thionville",
 		staticResourceHref: "https://pysae.com/api/v2/groups/smitu/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/smitu/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -101,6 +106,7 @@ const sources = [
 	{
 		id: "reims-express",
 		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-4k4N/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-4k4N/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",

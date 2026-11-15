@@ -24,8 +24,6 @@ export type Gtfs = {
 	serviceWindow?: ServiceWindow;
 	// ---
 	importedAt: Temporal.Instant;
-	lastModified: string | null;
-	etag: string | null;
 };
 
 /**

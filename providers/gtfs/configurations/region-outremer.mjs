@@ -1,3 +1,5 @@
+import { isPysaeStale } from "./shared/staleness.mjs";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -53,6 +55,7 @@ const sources = [
 	{
 		id: "974-car-jaune",
 		staticResourceHref: "https://pysae.com/api/v2/groups/car-jaune/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/car-jaune/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -68,6 +71,7 @@ const sources = [
 	{
 		id: "974-karouest",
 		staticResourceHref: "https://pysae.com/api/v2/groups/semto-2/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/semto-2/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "KAROUEST",

@@ -60,8 +60,6 @@ function makeShapedGtfs(options?: { withDistances?: boolean; withShapeDistances?
 		stopTimeStore: store,
 		...indexStopAreas(store, [trip]),
 		importedAt: Temporal.Instant.from("2026-06-01T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 
 	return { gtfs, trip };
@@ -109,8 +107,6 @@ function makeGtfs() {
 		stopTimeStore: store,
 		...indexStopAreas(store, [trip]),
 		importedAt: Temporal.Instant.from("2026-06-01T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 
 	return { gtfs, trip };

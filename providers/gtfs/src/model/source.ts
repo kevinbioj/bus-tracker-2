@@ -2,10 +2,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { EncodedLinePath, PassedCallDetection, StopDeparture, VehicleJourney } from "@bus-tracker/contracts";
-import { downloadGtfs } from "../download/download-gtfs.js";
+import { downloadGtfsArchive, extractGtfs } from "../download/download-gtfs.js";
 import type { RealtimeFeedContents } from "../download/download-gtfs-rt.js";
 import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";
-import { getStaleness } from "../utils/get-staleness.js";
+import { fetchFreshness, type ResourceFreshness } from "../utils/fetch-freshness.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 import type { Gtfs } from "./gtfs.js";
@@ -37,6 +37,15 @@ export type SourceAuth =
 			value: string;
 	  };
 
+export type LoadedResource = ResourceFreshness & {
+	hash: string;
+	checkedAt: Temporal.Instant;
+};
+
+export type StalenessProbe = {
+	fetchFreshness: (method?: "HEAD" | "GET") => Promise<ResourceFreshness>;
+};
+
 export type RealtimeResource = {
 	href: string;
 	/** Intervalle de polling minimal en ms. Si absent, le flux est re-téléchargé à chaque cycle. */
@@ -50,6 +59,7 @@ export type SourceOptions = {
 	auth?: SourceAuth;
 	staticAuth?: SourceAuth;
 	realtimeAuth?: SourceAuth;
+	isStaticResourceStale?: (resource: LoadedResource, probe: StalenessProbe) => Promise<boolean>;
 	gtfsOptions?: ImportGtfsOptions;
 	appendTripUpdateInformation?: boolean;
 	/**
@@ -154,10 +164,23 @@ export const MAX_TERMINUS_GRACE_MS = 120_000;
  */
 export const DEFAULT_TRIP_UPDATE_TTL_MS = 10 * 60 * 1000;
 
+const RESOURCE_RECHECK_MINUTES = 60;
+
+function isResourceCheckExpired(resource: LoadedResource) {
+	return Temporal.Now.instant().since(resource.checkedAt).total("minutes") >= RESOURCE_RECHECK_MINUTES;
+}
+
+export async function isStaleByFreshness(resource: LoadedResource, probe: StalenessProbe) {
+	if (resource.lastModified === null && resource.etag === null) return isResourceCheckExpired(resource);
+	const published = await probe.fetchFreshness();
+	return published.lastModified !== resource.lastModified || published.etag !== resource.etag;
+}
+
 export type RealtimeEntityType = "TRIP_UPDATES" | "VEHICLE_POSITIONS" | "TRIP_MODIFICATIONS" | "SERVICE_ALERTS";
 
 export class Source {
 	gtfs?: Gtfs;
+	resource?: LoadedResource;
 	linePaths = new Map<string, EncodedLinePath>();
 	realtimeFeedCache = new Map<string, { at: number; contents: RealtimeFeedContents }>();
 	/** Instant (epoch ms) du dernier cycle de calcul réussi. Undefined avant le premier. */
@@ -216,7 +239,7 @@ export class Source {
 	 * current resource if exists.
 	 * @param updating Whether this is an update or an initial import (log-only).
 	 */
-	async importGtfs(updating = false) {
+	async importGtfs({ updating = false, keepIfUnchanged = false } = {}) {
 		const watch = createStopWatch();
 		const sourceId = padSourceId(this.id);
 		const updateLog = console.draft("%s     ► %s GTFS resource...", updating ? "Updating" : "Importing", sourceId);
@@ -227,18 +250,23 @@ export class Source {
 			const serviceWindow = createServiceWindow(Temporal.Now.plainDateISO());
 
 			updateLog("%s 1/3 ► Downloading GTFS resource into temporary directory...", sourceId);
-			await downloadGtfs(this, resourceDirectory);
+			const archivePath = join(resourceDirectory, "resource.zip");
+			const archive = await downloadGtfsArchive(this, archivePath);
+			if (keepIfUnchanged && archive.hash === this.resource?.hash) {
+				this.resource = { ...archive, checkedAt: Temporal.Now.instant() };
+				updateLog(
+					"%s     ✓ Resource is unchanged, keeping the loaded one (checked in %dms).\n",
+					sourceId,
+					watch.total(),
+				);
+				return false;
+			}
+			await extractGtfs(archivePath, resourceDirectory);
 
 			updateLog("%s 2/3 ► Loading GTFS resource contents into memory...", sourceId);
 			const gtfs: Gtfs = {
 				...(await importGtfs(resourceDirectory, { ...this.options.gtfsOptions, serviceWindow })),
 				importedAt: Temporal.Now.instant(),
-				...(await getStaleness(this.options.staticResourceHref, this.options.staticAuth ?? this.options.auth).catch(
-					() => ({
-						lastModified: null,
-						etag: null,
-					}),
-				)),
 			};
 
 			this.linePaths = buildEncodedLinePaths(this, gtfs);
@@ -271,6 +299,7 @@ export class Source {
 				this.linePaths.size,
 			);
 			this.gtfs = gtfs;
+			this.resource = { ...archive, checkedAt: gtfs.importedAt };
 			return true;
 		} catch (cause) {
 			updateLog(
@@ -295,7 +324,7 @@ export class Source {
 		const sourceId = padSourceId(this.id);
 		const updateLog = console.draft("%s ► Checking GTFS resource staleness.", sourceId);
 
-		if (this.gtfs === undefined) {
+		if (this.gtfs === undefined || this.resource === undefined) {
 			updateLog("%s ℹ Resource has not loaded yet (error?), performing a load attempt.", sourceId);
 			return this.importGtfs();
 		}
@@ -307,46 +336,27 @@ export class Source {
 				sourceId,
 				serviceWindow.to,
 			);
-			return this.importGtfs(true);
+			return this.importGtfs({ updating: true });
 		}
 
-		if (this.gtfs.lastModified === null && this.gtfs.etag === null) {
-			const delta = Temporal.Now.instant().since(this.gtfs.importedAt).total("minutes");
-			if (delta >= 60) {
-				updateLog("%s ℹ Current resource is older than 60 minutes (no staleness data): updating resource.", sourceId);
-				return this.importGtfs(true);
-			}
-			updateLog("%s ℹ Current resource is fresh enough (no staleness data).", sourceId);
+		const resource = this.resource;
+		const isStaticResourceStale = this.options.isStaticResourceStale ?? isStaleByFreshness;
+		const probe: StalenessProbe = {
+			fetchFreshness: (method) =>
+				fetchFreshness(this.options.staticResourceHref, this.options.staticAuth ?? this.options.auth, method),
+		};
+
+		const stale = await isStaticResourceStale(resource, probe).catch(() => {
+			updateLog("%s ⚠ Failed to check resource staleness, relying on its last check.", sourceId);
+			return isResourceCheckExpired(resource);
+		});
+		if (!stale) {
+			updateLog("%s ℹ Resource is up to date: keeping current resource.", sourceId);
 			return false;
 		}
 
-		try {
-			updateLog("%s ► Fetching resource staleness at '%s'.", sourceId, this.options.staticResourceHref);
-			const staleness = await getStaleness(
-				this.options.staticResourceHref,
-				this.options.staticAuth ?? this.options.auth,
-			);
-
-			if (this.gtfs.lastModified !== staleness.lastModified || this.gtfs.etag !== staleness.etag) {
-				updateLog("%s ℹ Fetched staleness is different than current: updating resource.", sourceId);
-				return this.importGtfs(true);
-			}
-			updateLog("%s ℹ Fetched staleness matches current staleness: keeping current resource.", sourceId);
-			return false;
-		} catch {
-			const delta = Temporal.Now.instant().since(this.gtfs.importedAt).total("minutes");
-			if (delta >= 60) {
-				updateLog(
-					"%s ⚠ Failed to fetch resource staleness, and current resource is older than 60 minutes: updating resource.",
-					sourceId,
-				);
-				return this.importGtfs(true);
-			}
-			updateLog("%s ⚠ Failed to fetch resource staleness, but current resource looks fresh enough.", sourceId);
-			return false;
-		} finally {
-			console.log();
-		}
+		updateLog("%s ℹ Resource is stale: updating resource.", sourceId);
+		return this.importGtfs({ updating: true, keepIfUnchanged: true });
 	}
 
 	computeNextJourneys() {

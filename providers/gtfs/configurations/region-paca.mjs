@@ -1,3 +1,5 @@
+import { isPysaeStale, isZenbusStale } from "./shared/staleness.mjs";
+
 function nthIndexOf(input, pattern, n) {
 	const length = input.length;
 	let i = -1;
@@ -42,6 +44,7 @@ const sources = [
 	{
 		id: "cavaillon",
 		staticResourceHref: "https://pysae.com/api/v2/groups/cavaillon/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/cavaillon/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -52,6 +55,7 @@ const sources = [
 	{
 		id: "coeur-var",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/lr-coeurduvar/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/lr-coeurduvar/gtfs-rt"],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		mode: "NO-TU",
@@ -69,6 +73,7 @@ const sources = [
 	{
 		id: "draguignan",
 		staticResourceHref: "https://pysae.com/api/v2/groups/draguignan/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/draguignan/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -85,6 +90,7 @@ const sources = [
 	{
 		id: "esterel",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/agglobus-cavem/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/agglobus-cavem/gtfs-rt"],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		mode: "NO-TU",
@@ -110,6 +116,7 @@ const sources = [
 	{
 		id: "mende",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=MAX",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=MAX"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -157,6 +164,7 @@ const sources = [
 	{
 		id: "pays-ecrins",
 		staticResourceHref: "https://pysae.com/api/v4/groups/pays-des-ecrins/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v4/groups/pays-des-ecrins/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",

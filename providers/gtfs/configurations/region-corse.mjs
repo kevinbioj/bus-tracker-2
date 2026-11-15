@@ -1,3 +1,5 @@
+import { isPysaeStale } from "./shared/staleness.mjs";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -15,6 +17,7 @@ const sources = [
 	{
 		id: "porto-vecchio",
 		staticResourceHref: "https://pysae.com/api/v2/groups/porto-vecchio/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/porto-vecchio/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,

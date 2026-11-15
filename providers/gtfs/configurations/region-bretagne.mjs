@@ -1,3 +1,5 @@
+import { isPysaeStale } from "./shared/staleness.mjs";
+
 const bibusLastRecordedPositions = new Map();
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
@@ -37,6 +39,7 @@ const sources = [
 	{
 		id: "breizhgo-rp",
 		staticResourceHref: "https://pysae.com/api/v2/groups/breizhgo-lrr/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/breizhgo-lrr/gtfs-rt"],
 		getNetworkRef: () => "BREIZHGO",
 		getVehicleRef: (vehicle) => vehicle?.label ?? undefined,
@@ -113,6 +116,7 @@ const sources = [
 	{
 		id: "landerneau",
 		staticResourceHref: "https://pysae.com/api/v4/groups/ar-bus/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v4/groups/ar-bus/gtfs-rt"],
 		mode: "NO-TU",
 		getNetworkRef: () => "LANDERNEAU",
@@ -144,6 +148,7 @@ const sources = [
 	{
 		id: "pontivy",
 		staticResourceHref: "https://pysae.com/api/v2/groups/pondibus/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/pondibus/gtfs-rt"],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		mode: "NO-TU",
@@ -154,6 +159,7 @@ const sources = [
 	{
 		id: "quiberon",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/glazgo/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/glazgo/gtfs-rt"],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		mode: "NO-TU",
@@ -180,6 +186,7 @@ const sources = [
 	{
 		id: "quimperle",
 		staticResourceHref: "https://pysae.com/api/v2/groups/quimperle/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: [
 			"https://pysae.com/api/v2/groups/quimperle/gtfs-rt",
 			{

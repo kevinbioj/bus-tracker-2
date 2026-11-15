@@ -1,3 +1,5 @@
+import { isPysaeStale, isZenbusStale } from "./shared/staleness.mjs";
+
 function nthIndexOf(input, pattern, n) {
 	const length = input.length;
 	let i = -1;
@@ -163,6 +165,7 @@ const sources = [
 	{
 		id: "gpso",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=gpso-rt",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=gpso-rt"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -180,6 +183,7 @@ const sources = [
 	{
 		id: "saclay",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=caee",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=caee"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -197,6 +201,7 @@ const sources = [
 	{
 		id: "clichy",
 		staticResourceHref: "https://pysae.com/api/v2/groups/clichy/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/clichy/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -206,6 +211,7 @@ const sources = [
 	{
 		id: "houilles",
 		staticResourceHref: "https://pysae.com/api/v2/groups/keolis-ph48/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/keolis-ph48/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -217,6 +223,7 @@ const sources = [
 	{
 		id: "keolis-seine-oise-est",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/keolis-seine-oise-est-8Bw7/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/keolis-seine-oise-est-8Bw7/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -228,6 +235,7 @@ const sources = [
 	{
 		id: "transdev-vallee-sud",
 		staticResourceHref: "https://pysae.com/api/v2/groups/Transdev-Cr92/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/Transdev-Cr92/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,

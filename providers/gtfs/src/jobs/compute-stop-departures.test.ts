@@ -62,8 +62,6 @@ function makeGtfs(): Gtfs {
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 }
 
@@ -121,8 +119,6 @@ function makeLinearSource(stations?: Map<string, StationRecord>) {
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 	source.gtfs = gtfs;
 
@@ -368,8 +364,6 @@ describe("computeStopDepartures", () => {
 			journeys: new Map(),
 			stopTimeStore: store,
 			importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-			lastModified: null,
-			etag: null,
 		};
 		source.gtfs = gtfs;
 

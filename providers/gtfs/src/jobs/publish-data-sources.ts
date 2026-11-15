@@ -44,7 +44,7 @@ export function buildDataSourceManifest(providerId: string, source: Source): Dat
 		networkRefs: resolveSourceNetworkRefs(source),
 		staticFeed: {
 			href: staticFeed.href,
-			lastModified: source.gtfs?.lastModified ?? null,
+			lastModified: source.resource?.lastModified ?? null,
 			...(source.gtfs !== undefined ? { importedAt: source.gtfs.importedAt.toString() } : {}),
 		},
 		realtimeFeeds: realtimeFeeds.map(({ feed }) => feed),

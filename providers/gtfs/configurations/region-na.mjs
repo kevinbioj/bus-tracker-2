@@ -1,3 +1,5 @@
+import { isPysaeStale, isZenbusStale } from "./shared/staleness.mjs";
+
 function nthIndexOf(input, pattern, n) {
 	const length = input.length;
 	let i = -1;
@@ -21,6 +23,7 @@ const sources = [
 	{
 		id: "30direct-bordeaux",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=bordeaux-navettes-aeroport",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=bordeaux-navettes-aeroport"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		excludeScheduled: true,
@@ -40,6 +43,7 @@ const sources = [
 	{
 		id: "agen",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/agen/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/agen/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -78,6 +82,7 @@ const sources = [
 	{
 		id: "calibus",
 		staticResourceHref: "https://api.pysae.com/api/v4/groups/calibus/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://api.pysae.com/api/v4/groups/calibus/gtfs-rt"],
 		gtfsOptions: { computeShapeDistTraveled: "always" },
 		mode: "NO-TU",
@@ -112,6 +117,7 @@ const sources = [
 	{
 		id: "na-19-transdevlr19",
 		staticResourceHref: "https://pysae.com/api/v2/groups/transdev-lignes-regulieres-correze/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/transdev-lignes-regulieres-correze/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -121,6 +127,7 @@ const sources = [
 	{
 		id: "na-79",
 		staticResourceHref: "https://pysae.com/api/v2/groups/deux-sevres/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/deux-sevres/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -147,6 +154,7 @@ const sources = [
 	{
 		id: "niort-int",
 		staticResourceHref: "https://pysae.com/api/v2/groups/tanlib/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/tanlib/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -166,6 +174,7 @@ const sources = [
 	{
 		id: "respire",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=iledere75923021",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=iledere75923021"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -178,6 +187,7 @@ const sources = [
 	{
 		id: "saintes",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=buss-cdasaintes",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=buss-cdasaintes"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		excludeScheduled: true,

@@ -63,8 +63,6 @@ function makeGtfs(): Gtfs {
 		journeys: new Map(),
 		stopTimeStore: store,
 		importedAt: NOW,
-		lastModified: null,
-		etag: null,
 	};
 }
 

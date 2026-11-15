@@ -1,8 +1,11 @@
+import { isPysaeStale, isZenbusStale } from "./shared/staleness.mjs";
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
 		id: "airbus-nantes",
 		staticResourceHref: "https://pysae.com/api/v2/groups/airbus-nantes/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/airbus-nantes/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -12,6 +15,7 @@ const sources = [
 	{
 		id: "airbus-st-nazaire",
 		staticResourceHref: "https://pysae.com/api/v2/groups/airbus-st-nazaire/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/airbus-st-nazaire/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -107,6 +111,7 @@ const sources = [
 	{
 		id: "angers-sub",
 		staticResourceHref: "https://pysae.com/api/v2/groups/irigo/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/irigo/gtfs-rt"],
 		excludeScheduled: true,
 		mode: "NO-TU",
@@ -119,6 +124,7 @@ const sources = [
 	{
 		id: "brevibus",
 		staticResourceHref: "https://pysae.com/api/v2/groups/brevibus/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/brevibus/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -157,6 +163,7 @@ const sources = [
 	{
 		id: "fontelys",
 		staticResourceHref: "https://pysae.com/api/v2/groups/sovetours-navettes-fontelys/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/sovetours-navettes-fontelys/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -176,6 +183,7 @@ const sources = [
 	{
 		id: "heoh",
 		staticResourceHref: "https://pysae.com/api/v2/groups/heoh/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/heoh/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -185,6 +193,7 @@ const sources = [
 	{
 		id: "illygo",
 		staticResourceHref: "https://pysae.com/api/v2/groups/illygo/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/illygo/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -201,6 +210,7 @@ const sources = [
 	{
 		id: "maybus",
 		staticResourceHref: "https://zenbus.net/gtfs/static/download.zip?dataset=maybus",
+		isStaticResourceStale: isZenbusStale,
 		realtimeResourceHrefs: ["https://zenbus.net/gtfs/rt/poll.proto?dataset=maybus"],
 		maxVehiclePositionAgeMs: 10 * 60_000,
 		mode: "NO-TU",
@@ -211,6 +221,7 @@ const sources = [
 	{
 		id: "pornic-agglo",
 		staticResourceHref: "https://pysae.com/api/v2/groups/navettes_pornicagglo/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/navettes_pornicagglo/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,
@@ -269,6 +280,7 @@ const sources = [
 	{
 		id: "yole",
 		staticResourceHref: "https://pysae.com/api/v2/groups/challans/gtfs/pub",
+		isStaticResourceStale: isPysaeStale,
 		realtimeResourceHrefs: ["https://pysae.com/api/v2/groups/challans/gtfs-rt"],
 		mode: "NO-TU",
 		excludeScheduled: true,

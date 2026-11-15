@@ -44,8 +44,6 @@ function makeGtfs(): Gtfs {
 		stopTimeStore: store,
 		...indexStopAreas(store, [trip]),
 		importedAt: Temporal.Instant.from("2026-05-18T00:00:00Z"),
-		lastModified: null,
-		etag: null,
 	};
 }
 
