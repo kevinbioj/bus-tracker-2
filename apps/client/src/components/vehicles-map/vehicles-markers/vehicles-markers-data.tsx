@@ -42,6 +42,10 @@ const noise = ([lon, lat]: [number, number], seed: string): [number, number] => 
 	return [lon + ((rand() * 2 - 1) * 2.5) / 111111, lat + ((rand() * 2 - 1) * 2.5) / 75000];
 };
 
+const STACK_LEVELS = 32;
+
+const stackLevel = (id: string) => Math.floor(mulberry32(hashSeed(id))() * STACK_LEVELS);
+
 const keepColor = (color: string) => color;
 
 const NO_POSITION_OVERRIDES = new Map<string, { position: DisposeableVehicleJourney["position"]; at: number }>();
@@ -256,6 +260,7 @@ export function VehiclesMarkersData({
 					properties: {
 						id: item.id,
 						bearing: position.bearing ?? null,
+						stackLevel: stackLevel(item.id),
 						color: markerColor(item.color ?? "#FFFFFF"),
 						fillColor: markerColor(item.fillColor ?? "#000000"),
 						previewText:

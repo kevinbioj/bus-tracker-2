@@ -81,6 +81,9 @@ const vehiclesLayerObject: AddLayerObject = {
 	id: "vehicles",
 	source: "vehicles",
 	type: "circle",
+	layout: {
+		"circle-sort-key": ["get", "stackLevel"],
+	},
 	paint: {
 		"circle-color": ["get", "fillColor"],
 		"circle-radius": 6,
