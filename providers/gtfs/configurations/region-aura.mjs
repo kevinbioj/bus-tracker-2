@@ -123,6 +123,19 @@ const sources = [
 		mapTripRef: (tripRef) => tripRef.split(":")[2],
 	},
 	{
+		id: "aura-73",
+		staticResourceHref: "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=SAVOIE&dataFormat=GTFS",
+		realtimeResourceHrefs: [
+			"https://api.oura3.cityway.fr/dataflow/horaire-tr/download?provider=SAVOIE&dataFormat=GTFS-RT",
+			"https://api.oura3.cityway.fr/dataflow/info-transport/download?provider=SAVOIE&dataFormat=GTFS-RT",
+		],
+		getNetworkRef: () => "AURA-73",
+		getAheadTime: () => 5 * 60,
+		mapLineRef: (lineRef) => lineRef.split(":")[2],
+		mapStopRef: (stopRef) => stopRef.split(":")[3],
+		mapTripRef: (tripRef) => tripRef.split(":")[2],
+	},
+	{
 		id: "bourg-en-bresse",
 		staticResourceHref:
 			"https://transport.data.gouv.fr/resources/84267/download?token=KZL1tb49w8EZODCIq8b3RpI8DKoUB6iV27Cfw_KBoWY",
