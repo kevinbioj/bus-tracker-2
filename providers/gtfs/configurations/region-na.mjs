@@ -18,6 +18,21 @@ const d30bdxZenbusVehiclesMap = new Map([
 	["zenbus:Vehicle:4810821377982464:LOC", "256002"],
 ]);
 
+const rrtlAgenciesToNetwork = new Map([
+	["10", "COURALIN"],
+	["11", "VITENVILLE"],
+	["12", "ZEN-EN-BUS"],
+	["13", "MAREMNE-ADOUR"],
+	["14", "NA-40"],
+	["15", "NA-47"],
+	["16", "BISCAROSSE"],
+	["17", "COTE-LANDES"],
+	["18", "TARUSATE"],
+	["31", "MAREMNE-ADOUR"], // Scolaires
+	["32", "NA-40"], // Scolaires
+	["34", "BISCAROSSE"], // Scolaires
+]);
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -183,6 +198,18 @@ const sources = [
 		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 		mapLineRef: (lineRef) => lineRef.slice(nthIndexOf(lineRef, ":", 2) + 1, nthIndexOf(lineRef, ":", 3)),
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
+	},
+	{
+		id: "rrtl",
+		staticResourceHref: "https://gtfs-rt.infra-hubup.fr/rrtl/current/gtfs",
+		realtimeResourceHrefs: ["https://gtfs-rt.infra-hubup.fr/rrtl/realtime"],
+		gtfsOptions: {
+			filterTrips: (trip) => rrtlAgenciesToNetwork.has(trip.route.agency.id),
+		},
+		mode: "NO-TU",
+		getNetworkRef: (journey) => rrtlAgenciesToNetwork.get(journey?.trip.route.agency.id),
+		getVehicleRef: (vehicle) => vehicle?.label,
+		getDestination: (journey) => journey?.calls.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 	},
 	{
 		id: "saintes",
