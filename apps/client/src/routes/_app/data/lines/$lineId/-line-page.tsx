@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { Canonical, NoIndex } from "~/components/seo";
 import { buttonVariants } from "~/components/ui/button";
 import { useEditor } from "~/hooks/use-editor";
 import * as m from "~/paraglide/messages";
@@ -16,6 +17,7 @@ import { LineVehiclesTimeline } from "~/routes/_app/data/-components/lines/line-
 import { PeriodNavigator } from "~/routes/_app/data/-components/period-navigator";
 import { ViewOnMapButton } from "~/routes/_app/data/-components/view-on-map-button";
 import { cn } from "~/utils/cn";
+import { getNetworkLabel } from "~/utils/network-seo";
 import { getLineVehicleAssignmentsDate } from "./-vehicle-assignments-date";
 
 const parseMonth = (input: Dayjs, validMonths: string[]) => {
@@ -35,6 +37,8 @@ export function LinePage() {
 	const { editor } = useEditor();
 
 	const isNetworkEditor = editor?.allowedNetworks.includes(line.networkId);
+	const lineLabel = getLineLabel(line);
+	const networkLabel = getNetworkLabel(network);
 
 	const selectedDate = getLineVehicleAssignmentsDate(line, date);
 	const currentDate = dayjs(selectedDate);
@@ -95,8 +99,10 @@ export function LinePage() {
 					{network.name}
 				</Link>
 			}
-			title={m.page_title_line_data({ lineNumber: line.number, networkName: network.name })}
+			description={m.page_description_line({ lineLabel, network: networkLabel })}
+			title={m.page_title_line_data({ lineLabel, network: networkLabel })}
 		>
+			{date === undefined && line.activeMonths.length > 0 ? <Canonical path={`/data/lines/${line.id}`} /> : <NoIndex />}
 			<section>
 				<PeriodNavigator
 					className="mb-2"

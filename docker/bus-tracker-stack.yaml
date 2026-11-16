@@ -69,6 +69,9 @@ services:
         - "traefik.http.routers.server.entrypoints=web"
         - "traefik.http.routers.server.middlewares=api-strip"
         - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api/"
+        - "traefik.http.routers.sitemap.rule=Path(`/sitemap.xml`) || PathPrefix(`/sitemaps/`)"
+        - "traefik.http.routers.sitemap.entrypoints=web"
+        - "traefik.http.routers.sitemap.service=server"
         - "traefik.http.services.server.loadbalancer.server.port=8080"
       resources:
         limits:

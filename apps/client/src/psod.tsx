@@ -2,6 +2,7 @@ import { useLocation } from "@tanstack/react-router";
 import { Copy, FrownIcon } from "lucide-react";
 import { useEffect } from "react";
 
+import { NoIndex } from "~/components/seo";
 import { Button } from "~/components/ui/button";
 import { Link } from "~/components/ui/link";
 import * as m from "~/paraglide/messages";
@@ -38,6 +39,7 @@ export function PurpleScreenOfDeath({ error }: { error?: unknown }) {
 
 	return (
 		<div className="bg-branding text-branding-foreground h-dvh">
+			<NoIndex />
 			<header className="h-16 p-3 flex justify-center items-center gap-3">
 				<img className="h-full" src="/logo-header.svg?v=2" alt="" />
 				<span className="text-center font-bold text-3xl select-none hover:cursor-default">Bus Tracker</span>

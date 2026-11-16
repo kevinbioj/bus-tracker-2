@@ -11,6 +11,9 @@ import {
 
 const localePreferenceKey = "bus-tracker-locale-preference";
 
+const isCrawler =
+	typeof navigator !== "undefined" && /bot\/|crawler|spider|Google-InspectionTool/i.test(navigator.userAgent);
+
 export type LocalePreference = Locale | "system";
 
 export const getLocalePreference = (): LocalePreference => {
@@ -39,11 +42,16 @@ const resolveLocale = (): Locale => {
 
 	const storedPreference = localStorage.getItem(localePreferenceKey);
 	if (isLocale(storedPreference)) return storedPreference;
+	if (isCrawler) return baseLocale;
 
 	return extractLocaleFromNavigator() ?? baseLocale;
 };
 
 overwriteGetLocale(resolveLocale);
+
+if (typeof document !== "undefined") {
+	document.documentElement.lang = getLocale();
+}
 
 overwriteSetLocale((newLocale, options) => {
 	if (typeof window === "undefined") return;

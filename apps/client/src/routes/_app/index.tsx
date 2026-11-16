@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+import { Canonical } from "~/components/seo";
 import { VehiclesMap } from "~/components/vehicles-map/vehicles-map";
 import * as m from "~/paraglide/messages";
 
@@ -20,8 +21,11 @@ function MapPage() {
 	return (
 		<>
 			<title>{m.page_title_map()}</title>
+			<meta content={m.page_description_map()} name="description" />
+			<Canonical path="/" />
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			<main>
+				<h1 className="sr-only">{m.map_page_heading()}</h1>
 				<VehiclesMap className="h-[calc(100dvh-56px)]" />
 			</main>
 		</>

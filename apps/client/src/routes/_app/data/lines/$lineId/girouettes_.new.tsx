@@ -4,6 +4,7 @@ import { z } from "zod";
 import { GetLineGirouettesQuery } from "~/api/girouettes";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { notFoundOnHttp404 } from "~/api/not-found";
 import { GirouetteFormPage } from "./-components/girouettes/girouette-form-page";
 
 const searchSchema = z.object({
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/_app/data/lines/$lineId/girouettes_/new")
 			queryClient.ensureQueryData(GetLineGirouettesQuery(+lineId)),
 		]);
 	},
+	onError: notFoundOnHttp404,
 });
 
 function NewGirouettePage() {

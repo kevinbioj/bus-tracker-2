@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { GetNetworkDataSourcesQuery } from "~/api/data-sources";
 import { GetNetworkQuery } from "~/api/networks";
+import { notFoundOnHttp404 } from "~/api/not-found";
 import { GetVehiclesQuery } from "~/api/vehicles";
 import { NetworkDetails } from "./-network-details-page";
 
@@ -31,4 +32,5 @@ export const Route = createFileRoute("/_app/data/networks/$networkId")({
 
 		await dataSources;
 	},
+	onError: notFoundOnHttp404,
 });

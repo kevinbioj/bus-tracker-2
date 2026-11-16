@@ -11,6 +11,10 @@ const { values } = parseArgs({
 			type: "string",
 			default: process.env.REDIS_URL ?? "redis://127.0.0.1:6379",
 		},
+		"site-url": {
+			type: "string",
+			default: process.env.SITE_URL ?? "https://bus-tracker.fr",
+		},
 	},
 	strict: true,
 });
@@ -22,5 +26,6 @@ if (Number.isNaN(port) || port < 0 || port > 65535) {
 }
 
 const redisUrl = values["redis-url"];
+const siteUrl = values["site-url"].replace(/\/+$/, "");
 
-export { port, redisUrl };
+export { port, redisUrl, siteUrl };

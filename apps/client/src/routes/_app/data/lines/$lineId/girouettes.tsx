@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { GetLineGirouettesQuery } from "~/api/girouettes";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { notFoundOnHttp404 } from "~/api/not-found";
 import { GirouettesPage } from "./-girouettes-page";
 
 export const Route = createFileRoute("/_app/data/lines/$lineId/girouettes")({
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/_app/data/lines/$lineId/girouettes")({
 			queryClient.ensureQueryData(GetLineGirouettesQuery(+lineId)),
 		]);
 	},
+	onError: notFoundOnHttp404,
 });
 
 function GirouettesPageRoute() {

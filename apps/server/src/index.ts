@@ -29,6 +29,7 @@ import "./controllers/networks.js";
 import "./controllers/ping.js";
 import { closeRealtimeConnections } from "./controllers/realtime.js";
 import "./controllers/regions.js";
+import "./controllers/sitemap.js";
 import { invalidateStopAreaCaches } from "./controllers/stops.js";
 import "./controllers/vehicle-journeys.js";
 import "./controllers/vehicles.js";

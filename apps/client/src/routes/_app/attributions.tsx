@@ -7,6 +7,7 @@ import { useDebounceValue } from "usehooks-ts";
 
 import { GetDataSourcesQuery, type NetworkDataSources } from "~/api/data-sources";
 import { GetRegionsQuery } from "~/api/regions";
+import { Canonical } from "~/components/seo";
 import { TitleSeparator } from "~/components/title-separator";
 import { Input } from "~/components/ui/input";
 import { Separator } from "~/components/ui/separator";
@@ -72,6 +73,8 @@ function AttributionsPage() {
 	return (
 		<>
 			<title>{m.attributions_page_title()}</title>
+			<meta content={m.page_description_attributions()} name="description" />
+			<Canonical path="/attributions" />
 			<main className="p-3 max-w-(--breakpoint-xl) w-full mx-auto space-y-4">
 				<div>
 					<h1 className="font-bold text-2xl">{m.attributions_title()}</h1>

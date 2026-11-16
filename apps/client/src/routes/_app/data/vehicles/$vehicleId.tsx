@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { GetNetworkQuery } from "~/api/networks";
+import { notFoundOnHttp404 } from "~/api/not-found";
 import { GetVehicleQuery } from "~/api/vehicles";
 import { VehicleDetails } from "./-vehicle-details-page";
 
@@ -16,4 +17,5 @@ export const Route = createFileRoute("/_app/data/vehicles/$vehicleId")({
 		const vehicle = await queryClient.ensureQueryData(GetVehicleQuery(+vehicleId));
 		await queryClient.ensureQueryData(GetNetworkQuery(vehicle.networkId));
 	},
+	onError: notFoundOnHttp404,
 });

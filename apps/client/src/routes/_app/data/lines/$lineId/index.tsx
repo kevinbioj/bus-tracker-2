@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { notFoundOnHttp404 } from "~/api/not-found";
 import { LinePage } from "./-line-page";
 import { getLineVehicleAssignmentsDate } from "./-vehicle-assignments-date";
 
@@ -29,4 +30,5 @@ export const Route = createFileRoute("/_app/data/lines/$lineId/")({
 			queryClient.ensureQueryData(GetLineVehicleAssignmentsQuery(+lineId, effectiveDate)),
 		]);
 	},
+	onError: notFoundOnHttp404,
 });

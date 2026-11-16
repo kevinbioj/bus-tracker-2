@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { MapComponent } from "~/adapters/maplibre-gl/map";
 import { GetNetworkQuery } from "~/api/networks";
 import { useRealtimeConnection } from "~/api/realtime";
+import { NoIndex } from "~/components/seo";
 import { EmbedDisplaySettingsProvider } from "~/components/vehicles-map/embed-display-settings";
 import { EmbedSettingsControl } from "~/components/vehicles-map/embed-settings-control";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
@@ -97,6 +98,7 @@ export default function EmbeddableMapPage() {
 	return (
 		<>
 			<title>{m.page_title_embed_map({ networkName: network.name })}</title>
+			<NoIndex />
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			{/* Isolée : la signature reste au-dessus de la carte, mais sous le drawer des prochains passages. */}
 			<EmbedDisplaySettingsProvider initialSettings={initialDisplaySettings} networkId={+networkId}>

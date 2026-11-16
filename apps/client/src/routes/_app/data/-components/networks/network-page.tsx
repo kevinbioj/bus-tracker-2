@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import dayjs from "dayjs";
 import { RouteIcon } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
@@ -11,6 +10,7 @@ import { BusIcon } from "~/icons/means-of-transport";
 import * as m from "~/paraglide/messages";
 import { NetworkLines } from "~/routes/_app/data/-components/networks/network-lines";
 import { NetworkVehicles } from "~/routes/_app/data/-components/networks/network-vehicles";
+import { isActiveLine } from "~/utils/network-seo";
 
 type NetworkPageProps = { network: NetworkWithDetails };
 
@@ -27,9 +27,7 @@ export function NetworkPage({ network }: Readonly<NetworkPageProps>) {
 	const activeTab = hasVehiclesFeature ? tab : "lines";
 
 	const vehicleCount = vehicles?.filter((vehicle) => vehicle.archivedAt === null).length;
-	const lineCount = network.lines.filter(
-		(line) => line.archivedAt === null || dayjs().isBefore(line.archivedAt),
-	).length;
+	const lineCount = network.lines.filter(isActiveLine).length;
 
 	return (
 		<Tabs className="gap-0" value={activeTab} onValueChange={(value) => setTab(value as typeof tab)}>

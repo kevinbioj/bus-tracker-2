@@ -34,6 +34,7 @@ import {
 } from "~/api/girouettes";
 import { GetLineQuery, GetLineRecentDestinationsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { NoIndex } from "~/components/seo";
 import { Button } from "~/components/ui/button";
 import { ColorPicker } from "~/components/ui/color-picker";
 import { Input } from "~/components/ui/input";
@@ -630,6 +631,7 @@ export function GirouetteFormPage({ lineId, girouetteId, duplicateFromId }: Read
 			subtitle={<LineSubtitle line={line} network={network} />}
 			title={m.line_girouettes_page_title({ lineNumber: line.number, networkName: network.name })}
 		>
+			<NoIndex />
 			<div className="sticky top-14 z-10 bg-background pb-3 border-b flex flex-col gap-2">
 				<p className="text-sm font-semibold pt-1">{m.line_girouettes_form_preview_title()}</p>
 				<div className="flex items-center gap-1.5 overflow-x-auto">

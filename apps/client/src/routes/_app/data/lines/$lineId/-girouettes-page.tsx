@@ -5,6 +5,7 @@ import { PlusIcon } from "lucide-react";
 import { GetLineGirouettesQuery } from "~/api/girouettes";
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
+import { NoIndex } from "~/components/seo";
 import { Button } from "~/components/ui/button";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
@@ -31,6 +32,7 @@ export function GirouettesPage({ lineId }: Readonly<GirouettesPageProps>) {
 			subtitle={<LineSubtitle line={line} network={network} />}
 			title={m.line_girouettes_page_title({ lineNumber: line.number, networkName: network.name })}
 		>
+			<NoIndex />
 			<GirouettesTable girouettes={girouettes} lineId={lineId} />
 			<div className="flex justify-end mt-3">
 				<Button

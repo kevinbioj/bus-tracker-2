@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Canonical } from "~/components/seo";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Link } from "~/components/ui/link";
 import { Separator } from "~/components/ui/separator";
@@ -13,6 +14,7 @@ function LegalPage() {
 	return (
 		<>
 			<title>{m.legal_page_title()}</title>
+			<Canonical path="/legal" />
 			<main className="p-3 max-w-(--breakpoint-xl) w-full mx-auto space-y-4">
 				<div className="flex flex-col gap-2">
 					<h2 className="font-bold text-2xl">{m.legal_title()}</h2>

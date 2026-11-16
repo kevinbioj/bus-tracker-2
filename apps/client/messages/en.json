@@ -341,15 +341,58 @@
 	"stop_arrivals_loading": "Loading upcoming arrivals…",
 	"stop_arrivals_empty": "No arrival within the next two hours.",
 	"stop_arrivals_error": "Upcoming arrivals are unavailable for this stop.",
-	"page_title_data": "Network data - Bus-Tracker",
-	"page_title_data_region": "{regionName} - Network data - Bus-Tracker",
+	"page_title_data": "Live public transport networks – Bus Tracker",
+	"page_title_data_region": "{regionName}: live public transport networks – Bus Tracker",
 	"page_title_embed_map": "{networkName} network map",
-	"page_title_line_data": "{lineNumber} – {networkName} – Data – Bus Tracker",
-	"page_title_map": "Map – Bus Tracker",
-	"page_title_network_data": "{networkName} – Data – Bus Tracker",
-	"page_title_vehicle_data": "{designation} no. {vehicleNumber} – {networkName} – Data – Bus Tracker",
+	"page_title_line_data": "{lineLabel} – {network}: vehicles in service – Bus Tracker",
+	"page_title_map": "Bus Tracker: live buses, trams, metros and trains",
+	"page_title_network_data": "{network}: live {modes} – Bus Tracker",
+	"page_title_vehicle_data": "{designation} no. {vehicleNumber} – {networkName} – Bus Tracker",
+	"map_page_heading": "Bus Tracker: live map of buses, trams, metros and trains",
+	"page_description_attributions": "Open data sources, timetables and real-time feeds, used by Bus Tracker for each transport network.",
+	"page_description_data": "The {networkCount} of public transport tracked by Bus Tracker: vehicles in service, lines and activity history of each network.",
+	"page_description_data_region": "{regionName}: public transport networks tracked live by Bus Tracker ({networkNames}).",
+	"page_description_line": "{lineLabel} of the {network} network: vehicles in service day by day and live position on the map.",
+	"page_description_map": "Live map of buses, trams, metros, trains and ferries from hundreds of public transport networks in France and Europe.",
+	"page_description_network": "Track the {vehicleCount} and {lineCount} of the {network} network live: position on the map, activity history and characteristics of each vehicle.",
+	"page_description_network_without_vehicles": "The {lineCount} of the {network} network and the live position of their vehicles on the map.",
+	"page_description_vehicle": "{designation} no. {vehicleNumber} of the {network} network: characteristics, live position and day-by-day history of the lines it ran on.",
+	"seo_line_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} line",
+				"countPlural=other": "{count} lines"
+			}
+		}
+	],
+	"seo_vehicle_count": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} vehicle",
+				"countPlural=other": "{count} vehicles"
+			}
+		}
+	],
+	"network_modes_bus": "buses",
+	"network_modes_coach": "coaches",
+	"network_modes_fallback": "public transport",
+	"network_modes_ferry": "ferries",
+	"network_modes_funicular": "funiculars",
+	"network_modes_gondola": "gondola lifts",
+	"network_modes_rail": "trains",
+	"network_modes_subway": "metros",
+	"network_modes_tramway": "trams",
+	"network_modes_trolley": "trolleybuses",
 	"period_next": "Next period",
 	"period_previous": "Previous period",
+	"not_found_back_home": "Back to the map",
+	"not_found_description": "This page does not exist or no longer exists.",
+	"not_found_page_title": "Page not found – Bus Tracker",
+	"not_found_title": "Page not found",
 	"psod_copy": "Copy",
 	"psod_error_report": "Error report",
 	"psod_intro": "Information about the error has been sent for analysis.",
