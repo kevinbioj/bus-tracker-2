@@ -180,17 +180,15 @@ function TrainRoute({ monitored, running, atStop }: Readonly<TrainRouteProps>) {
 		<span className="flex h-2.5 items-center">
 			{monitored ? (
 				<>
+					{running && (
+						<span className={clsx("relative w-9 shrink-0 self-center border-t-2 border-dotted", traveledClassName)}>
+							{!atStop && <TrainPositionMarker className="left-1/2" />}
+						</span>
+					)}
 					<span
-						className={clsx(
-							"relative shrink-0 self-center border-t-2 border-dotted",
-							running ? "w-9" : "w-5",
-							traveledClassName,
-						)}
+						className={clsx("relative size-2 shrink-0 rounded-full border-2 border-foreground", !running && "ml-0.75")}
 					>
-						{!atStop && <TrainPositionMarker className="left-1/2" />}
-					</span>
-					<span className="relative size-2 shrink-0 rounded-full border-2 border-foreground">
-						{atStop && <TrainPositionMarker className="left-1/2" />}
+						{(atStop || !running) && <TrainPositionMarker className="left-1/2" />}
 					</span>
 					<span className="h-0.5 flex-1 bg-foreground" />
 					<span className="size-2 shrink-0 rounded-full bg-foreground" />
@@ -262,7 +260,7 @@ function LineTrainsList({ journeys, timezone, touch = false, className }: Readon
 									className="flex items-center self-stretch border-r pr-2.5 text-base leading-none font-bold tracking-tight tabular-nums"
 								>
 									{journey.number ? (
-										<span className="truncate">{journey.number}</span>
+										<span className="whitespace-nowrap">{journey.number}</span>
 									) : (
 										<span className="text-muted-foreground/60">
 											<VehicleTypeIcon type="RAIL" />
@@ -270,7 +268,7 @@ function LineTrainsList({ journeys, timezone, touch = false, className }: Readon
 									)}
 								</span>
 								<span aria-hidden="true" className="grid min-w-0 gap-y-1 text-sm leading-tight">
-									<span className={clsx("grid grid-cols-2 gap-x-3", journey.running ? "pl-9" : "pl-5")}>
+									<span className={clsx("grid grid-cols-2 gap-x-3", journey.running ? "pl-9" : "pl-0.75")}>
 										{journey.monitoredStop ? (
 											<TrainCallTime time={journey.departureTime} timezone={timezone} />
 										) : (
@@ -283,7 +281,7 @@ function LineTrainsList({ journeys, timezone, touch = false, className }: Readon
 										monitored={journey.monitoredStop !== undefined}
 										running={journey.running}
 									/>
-									<span className={clsx("grid grid-cols-2 gap-x-3", journey.running ? "pl-9" : "pl-5")}>
+									<span className={clsx("grid grid-cols-2 gap-x-3", journey.running ? "pl-9" : "pl-0.75")}>
 										<span className="truncate text-muted-foreground">{journey.monitoredStop}</span>
 										<span
 											className={clsx(
