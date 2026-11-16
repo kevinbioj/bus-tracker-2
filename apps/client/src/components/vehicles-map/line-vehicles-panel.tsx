@@ -32,7 +32,7 @@ function useLineVehicles(lineId: number | undefined) {
 	return (
 		vehicles
 			?.filter((v) => v.activity.status === "online" && v.activity.markerId !== undefined)
-			.sort((a, b) => a.number.localeCompare(b.number)) ?? []
+			.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })) ?? []
 	);
 }
 
