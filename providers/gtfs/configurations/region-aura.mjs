@@ -264,6 +264,13 @@ const sources = [
 		mapStopRef: (stopRef) => stopRef.slice(nthIndexOf(stopRef, ":", 3) + 1, nthIndexOf(stopRef, ":", 4)),
 	},
 	{
+		id: "montbrison",
+		staticResourceHref: "https://www.data.gouv.fr/api/1/datasets/r/4536fa0a-b880-47ba-9f94-42a6303e584b",
+		realtimeResourceHrefs: [],
+		getNetworkRef: () => "MONTBRISON",
+		getDestination: (journey) => journey?.calls.at(-1)?.stop.name,
+	},
+	{
 		id: "montlucon",
 		staticResourceHref: "https://saeiv-p01.navocap.com/NvpGTFS/72/api/static/getzip",
 		realtimeResourceHrefs: [
