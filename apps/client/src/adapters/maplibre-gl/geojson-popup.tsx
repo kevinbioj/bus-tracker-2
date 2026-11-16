@@ -8,7 +8,7 @@ import {
 	type SourceSpecification,
 	type StyleLayer,
 } from "maplibre-gl";
-import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMediaQuery } from "usehooks-ts";
 
@@ -50,13 +50,14 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 				className: cn(popupOptions?.className, "transition-opacity duration-250 opacity-0 data-open:opacity-100"),
 			}),
 	);
-	const [activeFeature, setActiveFeature] = useState<ActiveFeature | null>(null);
+	const [activeFeature, setActiveFeatureState] = useState<ActiveFeature | null>(null);
 	// Lue par les écouteurs de la carte, qui restent ainsi abonnés une fois pour toutes au lieu d'être
 	// retirés puis remis à chaque changement de marqueur actif.
 	const activeFeatureRef = useRef(activeFeature);
-	useLayoutEffect(() => {
-		activeFeatureRef.current = activeFeature;
-	}, [activeFeature]);
+	const setActiveFeature = useCallback((feature: ActiveFeature | null) => {
+		activeFeatureRef.current = feature;
+		setActiveFeatureState(feature);
+	}, []);
 
 	const adjustPan = useCallback(() => {
 		// do not force if user is dragging the map
@@ -105,7 +106,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 		popup.getElement()?.removeAttribute("data-open");
 		popup.remove();
 		setActiveFeature(null);
-	}, [popup]);
+	}, [popup, setActiveFeature]);
 
 	useEffect(() => {
 		const onOpen = () => {
@@ -278,7 +279,7 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 			map.off("click", onClick);
 			map.off("sourcedata", onSourceData);
 		};
-	}, [adjustPan, closePopup, hitPadding, layer, map, openPopup, popup]);
+	}, [adjustPan, closePopup, hitPadding, layer, map, openPopup, popup, setActiveFeature]);
 
 	return createPortal(
 		children({

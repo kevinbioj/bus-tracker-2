@@ -1,6 +1,6 @@
 import type { SourceSpecification } from "maplibre-gl";
 import { useQueryState } from "nuqs";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import type { CircleMarkerFeature, CircleMarkerSource } from "~/adapters/maplibre-gl/geojson-circles";
 import { useMap } from "~/adapters/maplibre-gl/map";
@@ -25,15 +25,27 @@ type JumpToProps = {
 export function JumpTo({ openPopup }: JumpToProps) {
 	const map = useMap();
 	const [markerId, setMarkerId] = useQueryState("marker-id");
+	const openPopupRef = useRef(openPopup);
+	useLayoutEffect(() => {
+		openPopupRef.current = openPopup;
+	}, [openPopup]);
 
 	useEffect(() => {
 		if (markerId === null) return;
 
 		let abort = false;
+		let timeout: ReturnType<typeof setTimeout> | undefined;
+		let onSourceData:
+			| ((e: { sourceId: string; source: SourceSpecification; sourceDataType: "content" | string }) => void)
+			| undefined;
+
+		const release = () => {
+			if (onSourceData !== undefined) map.off("sourcedata", onSourceData);
+			clearTimeout(timeout);
+			setMarkerId((current) => (current === markerId ? null : current));
+		};
 
 		async function jumpTo() {
-			if (abort) return;
-
 			try {
 				const journey = await client
 					.get(`vehicle-journeys/${markerId}`)
@@ -58,27 +70,29 @@ export function JumpTo({ openPopup }: JumpToProps) {
 					duration: 0,
 				});
 
-				let done = false;
-				const onSourceData = (e: { source: SourceSpecification; sourceDataType: "content" | string }) => {
-					const source = e.source as CircleMarkerSource;
-					const feature = source.data?.features?.find((feature) => feature.properties.id === journey.id);
-					if (feature === undefined) return;
+				const tryOpen = (source: SourceSpecification | undefined) => {
+					const feature = (source as CircleMarkerSource | undefined)?.data?.features?.find(
+						(feature) => feature.properties.id === journey.id,
+					);
+					if (feature === undefined) return false;
 
-					openPopup(feature, "selected");
-					map.off("sourcedata", onSourceData);
-					setMarkerId(null);
-					done = true;
+					openPopupRef.current(feature, "selected");
+					release();
+					return true;
+				};
+
+				if (tryOpen(map.getSource("vehicles")?.serialize())) return;
+
+				onSourceData = (e) => {
+					if (e.sourceId !== "vehicles" || e.sourceDataType !== "content") return;
+					tryOpen(e.source);
 				};
 
 				map.on("sourcedata", onSourceData);
-				setTimeout(() => {
-					if (done) return;
-					map.off("sourcedata", onSourceData);
-					setMarkerId(null);
-				}, 5000);
+				timeout = setTimeout(release, 5000);
 			} catch (e) {
 				console.error(e);
-			} finally {
+				if (!abort) release();
 			}
 		}
 
@@ -86,8 +100,10 @@ export function JumpTo({ openPopup }: JumpToProps) {
 
 		return () => {
 			abort = true;
+			if (onSourceData !== undefined) map.off("sourcedata", onSourceData);
+			clearTimeout(timeout);
 		};
-	}, [map, markerId, openPopup, setMarkerId]);
+	}, [map, markerId, setMarkerId]);
 
 	return null;
 }
