@@ -1,5 +1,16 @@
 import { isPysaeStale, isZenbusStale } from "./shared/staleness.mjs";
 
+function nthIndexOf(input, pattern, n) {
+	const length = input.length;
+	let i = -1;
+	let j = n;
+	while (j-- && i++ < length) {
+		i = input.indexOf(pattern, i);
+		if (i < 0) break;
+	}
+	return i;
+}
+
 const clermontInterurbainLines = [
 	"36", // E5
 	"27", // E6
