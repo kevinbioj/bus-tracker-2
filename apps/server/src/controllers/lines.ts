@@ -1,3 +1,4 @@
+import { getVehicleJourneyPositionType, vehicleJourneyPositionTypes } from "@bus-tracker/contracts";
 import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
 import * as z from "zod";
 import { database } from "../core/database/database.js";
@@ -88,6 +89,59 @@ hono.get("/lines/:id/online-vehicles", createParamValidator(getLineByIdParamSche
 		}),
 	);
 });
+
+const getLineOnlineJourneysQuerySchema = z.object({
+	positionTypes: z
+		.string()
+		.optional()
+		.transform((value) => (value !== undefined ? value.split(",") : undefined))
+		.pipe(z.array(z.enum(vehicleJourneyPositionTypes)).optional()),
+});
+
+hono.get(
+	"/lines/:id/online-journeys",
+	createParamValidator(getLineByIdParamSchema),
+	createQueryValidator(getLineOnlineJourneysQuerySchema),
+	async (c) => {
+		const { id } = c.req.valid("param");
+		const { positionTypes } = c.req.valid("query");
+
+		const [line] = await database.select({ id: linesTable.id }).from(linesTable).where(eq(linesTable.id, id));
+		if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
+
+		const journeys = journeyStore
+			.values()
+			.filter(
+				(journey) =>
+					journey.lineId === line.id &&
+					(positionTypes === undefined || positionTypes.includes(getVehicleJourneyPositionType(journey))),
+			)
+			.map((journey) => {
+				const calls = journey.calls ?? [];
+				const monitoredCall = calls.length > 1 ? calls[0] : undefined;
+				return {
+					id: journey.id,
+					number: journey.vehicle?.number,
+					direction: journey.direction,
+					monitoredStop: monitoredCall?.stopName,
+					running: (calls[0]?.distanceTraveled ?? 0) > 0,
+					atStop: journey.position.atStop,
+					destination: journey.destination,
+					departureTime: monitoredCall?.aimedTime,
+					arrivalTime: calls.at(-1)?.aimedTime,
+				};
+			})
+			.toArray()
+			.sort((a, b) => {
+				if (a.number === undefined || b.number === undefined) {
+					return (a.number === undefined ? 1 : 0) - (b.number === undefined ? 1 : 0);
+				}
+				return a.number.localeCompare(b.number, undefined, { numeric: true });
+			});
+
+		return c.json(journeys);
+	},
+);
 
 hono.get("/lines/:id/recent-destinations", createParamValidator(getLineByIdParamSchema), async (c) => {
 	const { id } = c.req.valid("param");

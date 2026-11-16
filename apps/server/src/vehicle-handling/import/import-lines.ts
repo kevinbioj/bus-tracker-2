@@ -36,9 +36,9 @@ export async function importLines(
 
 	// Un seul paramètre, quelle que soit la taille du lot : le texte de la requête ne varie pas, et la
 	// limite de paramètres d'une requête PostgreSQL ne peut pas être atteinte.
-	// Clés attendues par `import_lines(integer, jsonb, timestamp)` (migration 0030).
+	// Clés attendues par `import_lines(integer, jsonb, timestamp)` (migration 0046).
 	const input = JSON.stringify(
-		unknownLines.map((l) => ({ ref: l.ref, number: l.number, color: l.color, textColor: l.textColor })),
+		unknownLines.map((l) => ({ ref: l.ref, number: l.number, color: l.color, textColor: l.textColor, type: l.type })),
 	);
 	const rows = await database.execute(
 		sql`SELECT * FROM public.import_lines(${network.id}::integer, ${input}::jsonb, ${recordedAt.toString()}::timestamp)`,

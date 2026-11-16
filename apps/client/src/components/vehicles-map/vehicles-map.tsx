@@ -152,8 +152,12 @@ export function VehiclesMap(props: VehiclesMapProps) {
 					<StopsMarkers lineId={lineId ?? undefined} networkId={lineId === null ? filteredNetwork?.id : undefined} />
 				)}
 				{showStops && selectedStopRef !== null && <StopDeparturesPanel lineId={lineId ?? undefined} />}
-				{showIdentifiedVehiclesPanel && filteredLine !== undefined && (
-					<LineVehiclesPanel lineId={filteredLine.id} timezone={filteredNetwork?.timezone} />
+				{filteredLine !== undefined && (showIdentifiedVehiclesPanel || filteredLine.type === "RAIL") && (
+					<LineVehiclesPanel
+						lineId={filteredLine.id}
+						rail={filteredLine.type === "RAIL"}
+						timezone={filteredNetwork?.timezone}
+					/>
 				)}
 				<FilterModuleControl filter={filter} onFilterChange={onFilterChange} />
 				<MapSettingsControl />

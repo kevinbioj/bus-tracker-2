@@ -1,4 +1,4 @@
-import type { LinePath } from "@bus-tracker/contracts";
+import type { LinePath, VehicleJourneyLineType } from "@bus-tracker/contracts";
 import { queryOptions } from "@tanstack/react-query";
 import { HTTPError } from "ky";
 
@@ -14,6 +14,7 @@ export type Line = {
 	cartridgeHref: string;
 	color: string;
 	textColor: string;
+	type: VehicleJourneyLineType | null;
 	archivedAt: string;
 	activeMonths: string[];
 	latestServiceDate: string | null;
@@ -46,6 +47,30 @@ export const GetLineOnlineVehiclesQuery = (lineId?: number) =>
 		refetchInterval: 5_000,
 		queryKey: ["lines", lineId, "online"],
 		queryFn: () => client.get(`/lines/${lineId}/online-vehicles`).then((response) => response.json<Vehicle[]>()),
+	});
+
+export type LineOnlineJourney = {
+	id: string;
+	number?: string;
+	direction?: "OUTBOUND" | "INBOUND";
+	monitoredStop?: string;
+	running: boolean;
+	atStop: boolean;
+	destination?: string;
+	departureTime?: string;
+	arrivalTime?: string;
+};
+
+export const GetLineOnlineJourneysQuery = (lineId: number | undefined, positionTypes: readonly string[]) =>
+	queryOptions({
+		enabled: lineId !== undefined && positionTypes.length > 0,
+		staleTime: 15_000,
+		refetchInterval: 5_000,
+		queryKey: ["lines", lineId, "online-journeys", positionTypes],
+		queryFn: () =>
+			client
+				.get(`/lines/${lineId}/online-journeys`, { searchParams: { positionTypes: positionTypes.join(",") } })
+				.then((response) => response.json<LineOnlineJourney[]>()),
 	});
 
 export const GetLineRecentDestinationsQuery = (lineId?: number) =>

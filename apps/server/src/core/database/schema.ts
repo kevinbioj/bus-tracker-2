@@ -88,6 +88,7 @@ export const linesTable = pgTable(
 		cartridgeHref: varchar("cartridge_href"),
 		color: char("color", { length: 6 }),
 		textColor: char("text_color", { length: 6 }),
+		type: varchar("type", { enum: vehicleJourneyLineTypes, length: 32 }),
 		sortOrder: integer("sort_order"),
 		archivedAt: timestamp("archived_at"),
 	},

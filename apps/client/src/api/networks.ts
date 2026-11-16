@@ -1,3 +1,4 @@
+import type { VehicleJourneyLineType } from "@bus-tracker/contracts";
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import { client } from "~/api/client";
@@ -33,6 +34,7 @@ export type Line = {
 	cartridgeHref: string | null;
 	color: string | null;
 	textColor: string | null;
+	type: VehicleJourneyLineType | null;
 	sortOrder: number | null;
 	archivedAt: string | null;
 	onlineMarkerCount: number;

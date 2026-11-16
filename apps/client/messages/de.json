@@ -235,6 +235,9 @@
 		}
 	],
 	"map_vehicles_online_empty": "Auf dieser Linie ist kein identifizierbares Fahrzeug unterwegs.",
+	"map_trains_running": "Fahrende Züge ({count})",
+	"map_trains_running_empty": "Auf dieser Linie ist kein Zug unterwegs.",
+	"map_train_locate_label": "Zug {number} auf der Karte anzeigen",
 	"map_vehicle_locate": "Fahrzeugposition anzeigen",
 	"map_vehicle_history": "Fahrzeugverlauf anzeigen",
 	"map_vehicle_since": "seit",

@@ -226,6 +226,9 @@
 		}
 	],
 	"map_vehicles_online_empty": "Aucun véhicule identifiable ne circule sur la ligne.",
+	"map_trains_running": "Trains en circulation ({count})",
+	"map_trains_running_empty": "Aucun train ne circule sur la ligne.",
+	"map_train_locate_label": "Localiser le train {number} sur la carte",
 	"map_vehicle_locate": "Localiser sur la carte",
 	"map_vehicle_history": "Voir l'historique",
 	"map_vehicle_since": "depuis",
