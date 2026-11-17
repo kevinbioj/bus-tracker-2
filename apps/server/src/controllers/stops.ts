@@ -21,7 +21,13 @@ import { requestStopDepartures, type StopDeparturesResult } from "../core/servic
 import { journeyStore } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
 import { useCache } from "../utils/use-cache.js";
-import { createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
+import {
+	BOUNDS_ERROR,
+	createParamValidator,
+	createQueryValidator,
+	isOrderedBounds,
+	MAX_NETWORK_IDS,
+} from "../utils/validator-helpers.js";
 
 /** Plafond de stations servies en une fois : au-delà, l'emprise est trop large pour être lisible. */
 const MARKERS_LIMIT = 1_500;
@@ -71,25 +77,27 @@ const sourceKeyOf = ({ providerId, sourceId }: { providerId: string; sourceId: s
  * L'inventaire ne bouge qu'au rythme des ressources GTFS : une minute de cache est sans risque. Chaque
  * entrée retient les sources de ses stations, pour n'être oubliée qu'à la republication de l'une d'elles.
  */
-const markersCache = useCache<{ items: StopMarker[]; sourceKeys: Set<string> }>(60_000);
+const markersCache = useCache<{ items: StopMarker[]; sourceKeys: Set<string> }>(60_000, 64);
 
-const getStopMarkersQuery = z.object({
-	swLat: z.coerce.number().min(-90).max(90),
-	swLon: z.coerce.number().min(-180).max(180),
-	neLat: z.coerce.number().min(-90).max(90),
-	neLon: z.coerce.number().min(-180).max(180),
-	networkId: z
-		.union([z.coerce.number(), z.array(z.coerce.number())])
-		.optional()
-		.transform((values) => (typeof values === "number" ? [values] : values)),
-	// Ligne filtrée sur la carte : seules les stations qu'elle dessert.
-	lineId: z.coerce.number().optional(),
-	// Les quais ne servent qu'aux zooms les plus forts : inutile de les transporter en deçà.
-	withStopPoints: z
-		.enum(["true", "false"])
-		.default("false")
-		.transform((value) => value === "true"),
-});
+const getStopMarkersQuery = z
+	.object({
+		swLat: z.coerce.number().min(-90).max(90),
+		swLon: z.coerce.number().min(-180).max(180),
+		neLat: z.coerce.number().min(-90).max(90),
+		neLon: z.coerce.number().min(-180).max(180),
+		networkId: z
+			.union([z.coerce.number(), z.array(z.coerce.number()).max(MAX_NETWORK_IDS)])
+			.optional()
+			.transform((values) => (typeof values === "number" ? [values] : values)),
+		// Ligne filtrée sur la carte : seules les stations qu'elle dessert.
+		lineId: z.coerce.number().optional(),
+		// Les quais ne servent qu'aux zooms les plus forts : inutile de les transporter en deçà.
+		withStopPoints: z
+			.enum(["true", "false"])
+			.default("false")
+			.transform((value) => value === "true"),
+	})
+	.refine(isOrderedBounds, BOUNDS_ERROR);
 
 export type StopMarkersFilter = {
 	swLat: number;
@@ -431,10 +439,10 @@ const getStopDeparturesQuery = z.object({
  * Le client sonde le tableau toutes les 5 s : le cache, plus court, ne fait que mutualiser les
  * demandes simultanées de plusieurs visiteurs sur une même station sans rendre de réponse périmée.
  */
-const departuresCache = useCache<StopDeparturesPayload>(4_000);
+const departuresCache = useCache<StopDeparturesPayload>(4_000, 1_024);
 
 /** La station elle-même ne change qu'avec la ressource GTFS. */
-const stopAreasCache = useCache<StopArea | null>(300_000);
+const stopAreasCache = useCache<StopArea | null>(300_000, 4_096);
 
 /**
  * Oublie stations, marqueurs et tableaux en cache : appelé dès qu'un provider republie l'inventaire
@@ -476,6 +484,8 @@ export function invalidateStopAreaCaches(source?: { providerId: string; sourceId
  */
 const isStopPointRef = (ref: string) => ref.includes(":StopPoint:");
 
+const isStopRef = (ref: string) => isStopPointRef(ref) || ref.includes(":StopArea:");
+
 /**
  * Références des quais sur lesquels porte le tableau. Un quai n'est publié que sous le réseau
  * principal de sa station, alors que chaque course désigne ses dessertes sous le sien : il est
@@ -490,6 +500,7 @@ function stopRefsOf(stopArea: StopArea, stopPointRef?: string) {
 /** Station désignée par `ref`, et le quai sur lequel se restreindre si `ref` en désigne un. */
 async function resolveStopArea(ref: string) {
 	const stopPointRef = isStopPointRef(ref) ? ref : undefined;
+	if (!isStopRef(ref)) return { stopArea: null, stopPointRef };
 
 	let stopArea = stopAreasCache.get(ref);
 	if (stopArea === undefined) {

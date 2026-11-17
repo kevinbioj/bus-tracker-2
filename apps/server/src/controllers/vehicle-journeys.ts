@@ -11,35 +11,43 @@ import { journeyStore } from "../core/store/journey-store.js";
 import { redis } from "../index.js";
 import { hono } from "../server.js";
 import { keyBy } from "../utils/key-by.js";
-import { createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
+import {
+	BOUNDS_ERROR,
+	createParamValidator,
+	createQueryValidator,
+	isOrderedBounds,
+	MAX_NETWORK_IDS,
+} from "../utils/validator-helpers.js";
 
-const getVehicleJourneyMarkersQuery = z.object({
-	swLat: z.coerce.number().min(-90).max(90),
-	swLon: z.coerce.number().min(-180).max(180),
-	neLat: z.coerce.number().min(-90).max(90),
-	neLon: z.coerce.number().min(-180).max(180),
-	includeMarker: z.string().optional(),
-	excludeScheduled: z.coerce.boolean().optional(),
-	// Absent = aucun filtrage pays, pour rester compatible avec les clients existants.
-	countryCodes: z
-		.string()
-		.optional()
-		.transform((value) => (value !== undefined ? value.split(",").filter((code) => code.length > 0) : undefined))
-		.transform((codes) => (codes !== undefined && codes.length > 0 ? new Set(codes) : undefined)),
-	positionTypes: z
-		.string()
-		.optional()
-		.transform((value) => (value !== undefined ? value.split(",") : undefined))
-		.pipe(z.array(z.enum(["GPS", "ESTIMATED", "SCHEDULED"])).optional()),
-	networkId: z
-		.union([z.coerce.number(), z.array(z.coerce.number())])
-		.optional()
-		.transform((values) => (typeof values === "number" ? [values] : values)),
-	lineId: z
-		.union([z.coerce.number(), z.array(z.coerce.number())])
-		.optional()
-		.transform((values) => (typeof values === "number" ? [values] : values)),
-});
+const getVehicleJourneyMarkersQuery = z
+	.object({
+		swLat: z.coerce.number().min(-90).max(90),
+		swLon: z.coerce.number().min(-180).max(180),
+		neLat: z.coerce.number().min(-90).max(90),
+		neLon: z.coerce.number().min(-180).max(180),
+		includeMarker: z.string().optional(),
+		excludeScheduled: z.coerce.boolean().optional(),
+		// Absent = aucun filtrage pays, pour rester compatible avec les clients existants.
+		countryCodes: z
+			.string()
+			.optional()
+			.transform((value) => (value !== undefined ? value.split(",").filter((code) => code.length > 0) : undefined))
+			.transform((codes) => (codes !== undefined && codes.length > 0 ? new Set(codes) : undefined)),
+		positionTypes: z
+			.string()
+			.optional()
+			.transform((value) => (value !== undefined ? value.split(",") : undefined))
+			.pipe(z.array(z.enum(["GPS", "ESTIMATED", "SCHEDULED"])).optional()),
+		networkId: z
+			.union([z.coerce.number(), z.array(z.coerce.number()).max(MAX_NETWORK_IDS)])
+			.optional()
+			.transform((values) => (typeof values === "number" ? [values] : values)),
+		lineId: z
+			.union([z.coerce.number(), z.array(z.coerce.number())])
+			.optional()
+			.transform((values) => (typeof values === "number" ? [values] : values)),
+	})
+	.refine(isOrderedBounds, BOUNDS_ERROR);
 
 hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMarkersQuery), async (c) => {
 	const {

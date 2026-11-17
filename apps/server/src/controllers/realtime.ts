@@ -196,8 +196,8 @@ async function buildWatchedJourneyUpdates(journeyIds: Set<string>) {
 	return new Map(updates.map((update) => [update.id, update]));
 }
 
-const lineDetailsCache = useCache<LineDetails | null>(60_000);
-const linePathsCache = useCache<EncodedLinePath | null>(60_000);
+const lineDetailsCache = useCache<LineDetails | null>(60_000, 1_024);
+const linePathsCache = useCache<EncodedLinePath | null>(60_000, 1_024);
 const journeyPathsCache = useCache<EncodedVehicleJourneyPaths | null>(60_000);
 
 async function cachedLineDetails(lineId: number) {

@@ -1,4 +1,4 @@
-export function useCache<T>(ttl: number) {
+export function useCache<T>(ttl: number, maxEntries = Number.POSITIVE_INFINITY) {
 	const cache = new Map<string, { data: T; recordedAt: number }>();
 	let lastSweepAt = Date.now();
 
@@ -25,6 +25,11 @@ export function useCache<T>(ttl: number) {
 		set: (key: string, value: T) => {
 			const now = Date.now();
 			sweep(now);
+			cache.delete(key);
+			if (cache.size >= maxEntries) {
+				const oldestKey = cache.keys().next().value;
+				if (oldestKey !== undefined) cache.delete(oldestKey);
+			}
 			cache.set(key, {
 				data: value,
 				recordedAt: now,

@@ -84,7 +84,7 @@ export async function findLineRefs(lineId: number) {
 			.from(linesTable)
 			.where(eq(linesTable.id, lineId));
 		refs = line?.references ?? [];
-		refsByLineId.set(lineId, refs);
+		if (refs.length > 0) refsByLineId.set(lineId, refs);
 	}
 	return refs;
 }

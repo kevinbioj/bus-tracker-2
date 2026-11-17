@@ -1,6 +1,13 @@
 import { validator } from "hono/validator";
 import type { core, ZodObject } from "zod";
 
+export const MAX_NETWORK_IDS = 10;
+
+export const BOUNDS_ERROR = { message: "South-west bounds must not exceed north-east bounds." };
+
+export const isOrderedBounds = (bounds: { swLat: number; swLon: number; neLat: number; neLon: number }) =>
+	bounds.swLat <= bounds.neLat && bounds.swLon <= bounds.neLon;
+
 export const createJsonValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(
 	schema: ZodObject<Shape, Config>,
 ) =>
