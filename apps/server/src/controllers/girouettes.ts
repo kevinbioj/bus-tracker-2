@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { database } from "../core/database/database.js";
 import { editionLogsTable, girouettesTable, linesTable } from "../core/database/schema.js";
-import { hono } from "../server.js";
+import { girouetteBodyLimit, hono } from "../server.js";
 import { createJsonValidator, createParamValidator } from "../utils/validator-helpers.js";
 import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
@@ -55,6 +55,7 @@ hono.get(
 hono.post(
 	"/lines/:lineId/girouettes",
 	editorMiddleware({ required: true }),
+	girouetteBodyLimit,
 	createParamValidator(lineIdParamSchema),
 	createJsonValidator(girouetteInputSchema),
 	async (c) => {
@@ -86,6 +87,7 @@ hono.post(
 hono.put(
 	"/girouettes/:id",
 	editorMiddleware({ required: true }),
+	girouetteBodyLimit,
 	createParamValidator(girouetteIdParamSchema),
 	createJsonValidator(girouetteInputSchema),
 	async (c) => {
