@@ -22,6 +22,7 @@
 		"@bus-tracker/contracts": "workspace:*",
 		"@bus-tracker/redis": "workspace:*",
 		"@hono/node-server": "^2.1.7",
+		"@modelcontextprotocol/sdk": "^1.32.2",
 		"arktype": "^2.2.9",
 		"drizzle-orm": "^0.45.4",
 		"hono": "^4.13.18",

@@ -25,6 +25,7 @@ import "./controllers/data-sources.js";
 import "./controllers/editors.js";
 import "./controllers/girouettes.js";
 import "./controllers/lines.js";
+import "./controllers/mcp.js";
 import "./controllers/networks.js";
 import "./controllers/ping.js";
 import { closeRealtimeConnections } from "./controllers/realtime.js";
