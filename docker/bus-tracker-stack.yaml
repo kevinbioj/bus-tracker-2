@@ -8,6 +8,9 @@ services:
       - "--providers.swarm.exposedByDefault=false"
       - "--entrypoints.web.address=:3000"
       - "--accesslog=true"
+      - "--accesslog.format=json"
+      - "--accesslog.fields.headers.defaultmode=drop"
+      - "--accesslog.fields.headers.names.Cf-Connecting-Ip=keep"
     ports:
       - target: 3000
         published: 3000
@@ -67,25 +70,19 @@ services:
         - "traefik.docker.lbswarm=true"
         - "traefik.http.routers.server.rule=PathPrefix(`/api/`)"
         - "traefik.http.routers.server.entrypoints=web"
-        - "traefik.http.routers.server.middlewares=api-ratelimit,api-inflight,api-strip"
+        - "traefik.http.routers.server.middlewares=api-strip"
         - "traefik.http.routers.server-ws.rule=Path(`/api/ws`)"
         - "traefik.http.routers.server-ws.priority=100"
         - "traefik.http.routers.server-ws.entrypoints=web"
         - "traefik.http.routers.server-ws.service=server"
         - "traefik.http.routers.server-ws.middlewares=ws-ratelimit,api-strip"
         - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api/"
-        - "traefik.http.middlewares.api-ratelimit.ratelimit.average=20"
-        - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=100"
-        - "traefik.http.middlewares.api-ratelimit.ratelimit.sourcecriterion.requestheadername=Cf-Connecting-Ip"
-        - "traefik.http.middlewares.api-inflight.inflightreq.amount=50"
-        - "traefik.http.middlewares.api-inflight.inflightreq.sourcecriterion.requestheadername=Cf-Connecting-Ip"
         - "traefik.http.middlewares.ws-ratelimit.ratelimit.average=5"
         - "traefik.http.middlewares.ws-ratelimit.ratelimit.burst=20"
         - "traefik.http.middlewares.ws-ratelimit.ratelimit.sourcecriterion.requestheadername=Cf-Connecting-Ip"
         - "traefik.http.routers.sitemap.rule=Path(`/sitemap.xml`) || PathPrefix(`/sitemaps/`)"
         - "traefik.http.routers.sitemap.entrypoints=web"
         - "traefik.http.routers.sitemap.service=server"
-        - "traefik.http.routers.sitemap.middlewares=api-ratelimit,api-inflight"
         - "traefik.http.services.server.loadbalancer.server.port=8080"
       resources:
         limits:
