@@ -16,7 +16,7 @@ import { upgradeWebSocket } from "@hono/node-server";
 import { createMiddleware } from "hono/factory";
 import type { WebSocket } from "ws";
 
-import { type LineDetails, loadLineDetails, loadLinePath } from "../core/services/line-details-service.js";
+import { findLineDetails, findLinePath, type LineDetails } from "../core/services/line-details-service.js";
 import { type ExposedServiceAlert, findJourneyAlerts, findLineAlerts } from "../core/services/service-alert-service.js";
 import { buildJourneyDetails, type JourneyDetails } from "../core/services/vehicle-journey-details.js";
 import {
@@ -209,18 +209,11 @@ async function buildWatchedJourneyUpdates(journeyIds: Set<string>) {
 	return new Map(updates.map((update) => [update.id, update]));
 }
 
-const lineDetailsCache = useCache<LineDetails | null>(60_000, 1_024);
 const linePathsCache = useCache<EncodedLinePath | null>(60_000, 1_024);
 const journeyPathsCache = useCache<EncodedVehicleJourneyPaths | null>(60_000);
 
 async function cachedLineDetails(lineId: number) {
-	const key = String(lineId);
-	let line = lineDetailsCache.get(key);
-	if (line === undefined) {
-		line = (await loadLineDetails(lineId)) ?? null;
-		lineDetailsCache.set(key, line);
-	}
-	return line;
+	return (await findLineDetails(lineId)) ?? null;
 }
 
 async function cachedLinePath(line: LineDetails) {
@@ -228,7 +221,7 @@ async function cachedLinePath(line: LineDetails) {
 	let path = linePathsCache.get(key);
 	if (path === undefined) {
 		if (!redis.isReady) return undefined;
-		const linePath = await loadLinePath(line);
+		const linePath = await findLinePath(line);
 		path = linePath !== undefined ? encodeLinePath(linePath) : null;
 		linePathsCache.set(key, path);
 	}

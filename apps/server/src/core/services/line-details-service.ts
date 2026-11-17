@@ -2,8 +2,35 @@ import { decodeLinePath, type EncodedLinePath, type LinePath } from "@bus-tracke
 import { desc, eq, sql } from "drizzle-orm";
 
 import { redis } from "../../index.js";
+import { useCache } from "../../utils/use-cache.js";
 import { database } from "../database/database.js";
 import { lineActivitiesTable, linesTable } from "../database/schema.js";
+
+const lineDetailsCache = useCache<LineDetails | null>(60_000, 1_024);
+const linePathCache = useCache<LinePath | null>(60_000, 1_024);
+
+/** Ligne et ses mois d'activité, partagés entre l'API et le temps réel pendant une minute. */
+export async function findLineDetails(lineId: number) {
+	const key = String(lineId);
+	let line = lineDetailsCache.get(key);
+	if (line === undefined) {
+		line = (await loadLineDetails(lineId)) ?? null;
+		lineDetailsCache.set(key, line);
+	}
+	return line ?? undefined;
+}
+
+/** Tracé de la ligne, partagé de même. Redis indisponible, rien n'est retenu. */
+export async function findLinePath(line: { id: number; references: string[] | null }) {
+	const key = String(line.id);
+	let path = linePathCache.get(key);
+	if (path === undefined) {
+		if (!redis.isReady) return undefined;
+		path = (await loadLinePath(line)) ?? null;
+		linePathCache.set(key, path);
+	}
+	return path ?? undefined;
+}
 
 export async function loadLineDetails(lineId: number) {
 	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, lineId));

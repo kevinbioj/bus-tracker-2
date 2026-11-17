@@ -34,10 +34,10 @@ hono.get(
 		if (network === undefined) return c.json({ error: `No network found with id '${id}'.` }, 404);
 
 		if (withDetails) {
-			const onlineNetworkVehicles = journeyStore
-				.values()
-				.filter((journey) => journey.networkId === network.id)
-				.toArray();
+			const onlineJourneysByLineId = Map.groupBy(
+				journeyStore.values().filter((journey) => journey.networkId === network.id),
+				(journey) => journey.lineId,
+			);
 
 			const operatorList = await database.select().from(operatorsTable).where(eq(operatorsTable.networkId, network.id));
 			const lineList = await database.select().from(linesTable).where(eq(linesTable.networkId, network.id));
@@ -50,7 +50,7 @@ hono.get(
 						return sortOrderDiff || Number.parseInt(a.number, 10) - Number.parseInt(b.number, 10);
 					})
 					.map(({ networkId, ...line }) => {
-						const onlineMarkers = onlineNetworkVehicles.filter((journey) => journey.lineId === line.id);
+						const onlineMarkers = onlineJourneysByLineId.get(line.id) ?? [];
 
 						return {
 							...line,

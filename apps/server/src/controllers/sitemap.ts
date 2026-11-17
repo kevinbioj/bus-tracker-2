@@ -18,10 +18,19 @@ type SitemapEntry = { path: string; lastModified?: string };
 
 const sectionsCache = useCache<Record<SitemapSection, SitemapEntry[]>>(SITEMAP_TTL);
 
+let sectionsInFlight: Promise<Record<SitemapSection, SitemapEntry[]>> | undefined;
+
 async function loadSections() {
 	const cached = sectionsCache.get("sections");
 	if (cached !== undefined) return cached;
 
+	sectionsInFlight ??= computeSections().finally(() => {
+		sectionsInFlight = undefined;
+	});
+	return sectionsInFlight;
+}
+
+async function computeSections() {
 	const [regions, networks, lines, vehicles] = await Promise.all([
 		database
 			.selectDistinct({ id: networksTable.regionId })

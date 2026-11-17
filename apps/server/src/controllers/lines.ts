@@ -4,7 +4,7 @@ import * as z from "zod";
 import { database } from "../core/database/database.js";
 import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
 import { findRecentLineDestinations } from "../core/services/line-destination-service.js";
-import { loadLineDetails, loadLinePath } from "../core/services/line-details-service.js";
+import { findLineDetails, findLinePath } from "../core/services/line-details-service.js";
 import { findLineAlerts } from "../core/services/service-alert-service.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import { redis } from "../index.js";
@@ -23,7 +23,7 @@ const getLineVehicleAssignmentsQuerySchema = z.object({
 hono.get("/lines/:id", createParamValidator(getLineByIdParamSchema), async (c) => {
 	const { id } = c.req.valid("param");
 
-	const line = await loadLineDetails(id);
+	const line = await findLineDetails(id);
 	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
 	return c.json(line);
@@ -155,13 +155,13 @@ hono.get("/lines/:id/recent-destinations", createParamValidator(getLineByIdParam
 hono.get("/lines/:id/path", createParamValidator(getLineByIdParamSchema), async (c) => {
 	const { id } = c.req.valid("param");
 
-	const [line] = await database.select().from(linesTable).where(eq(linesTable.id, id));
+	const line = await findLineDetails(id);
 	if (line === undefined) return c.json({ error: `No line found with id '${id}'.` }, 404);
 
 	if ((line.references ?? []).length === 0) return c.json({ error: `No path was found for line '${id}'.` }, 404);
 	if (!redis.isReady) return c.json({ error: "Paths are temporarily unavailable." }, 503);
 
-	const path = await loadLinePath(line);
+	const path = await findLinePath(line);
 	if (path === undefined) return c.json({ error: `No path was found for line '${id}'.` }, 404);
 
 	return c.json(path);
