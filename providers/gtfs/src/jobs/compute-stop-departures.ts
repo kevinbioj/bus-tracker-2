@@ -176,6 +176,14 @@ export function computeStopDepartures(
 	})[] = [];
 
 	const { mapLineRef, mapStopRef, mapTripRef } = source.options;
+	// Identifiants de ligne demandés, sans leur réseau : un passage d'une autre ligne est écarté avant
+	// tout calcul. La référence complète est vérifiée ensuite, une fois le réseau de la course connu.
+	const onlyRouteRefs =
+		lineRefs?.every((lineRef) => lineRef.includes(":Line:")) === true
+			? new Set(lineRefs.map((lineRef) => lineRef.slice(lineRef.indexOf(":Line:") + ":Line:".length)))
+			: undefined;
+	const isOtherLine = (trip: Trip) =>
+		onlyRouteRefs !== undefined && !onlyRouteRefs.has(mapLineRef?.(trip.route.id) ?? trip.route.id);
 	// Le réseau est celui de chaque course : une station peut être desservie par plusieurs.
 	const networkOf = createTripNetworkResolver(source);
 	const stopRefOf = (networkRef: string, stopId: string) => `${networkRef}:StopPoint:${mapStopRef?.(stopId) ?? stopId}`;
@@ -242,7 +250,7 @@ export function computeStopDepartures(
 			if (departureSecs[stopTimeIdx]! > untilSecs) break;
 
 			const trip = gtfs.tripsByIdx[gtfs.stopIndex.tripOf(stopTimeIdx)];
-			if (trip === undefined) continue;
+			if (trip === undefined || isOtherLine(trip)) continue;
 
 			// L'index tient tous les stop_times : on ne part pas du dernier, on n'arrive pas au premier.
 			if ((stopTimeStore.getFlags(stopTimeIdx, trip.idx) & (arrivals ? NO_DROP_OFF_FLAG : NO_PICKUP_FLAG)) !== 0)
@@ -370,6 +378,7 @@ export function computeStopDepartures(
 		if (journey === undefined) continue;
 
 		const { calls, trip, date } = journey;
+		if (isOtherLine(trip)) continue;
 		const timeZone = trip.route.agency.timeZone;
 		const originCall = findOriginCall(calls);
 		const terminusCall = findTerminusCall(calls);

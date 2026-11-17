@@ -117,7 +117,15 @@ export async function requestStopDepartures({
 	try {
 		await publisher.publish(
 			stopDeparturesRequestChannel(providerId),
-			JSON.stringify({ requestId, stopAreaRef, sourceId, stopRef, lineRefs, direction }),
+			JSON.stringify({
+				requestId,
+				stopAreaRef,
+				sourceId,
+				stopRef,
+				lineRefs,
+				direction,
+				expiresAt: Date.now() + REPLY_TIMEOUT_MS,
+			}),
 		);
 	} catch (error) {
 		console.error("✘ Failed to publish a stop departures request:", error);

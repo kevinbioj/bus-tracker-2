@@ -147,6 +147,8 @@ export const stopDeparturesRequestSchema = type({
 	"lineRefs?": "string[]",
 	/** Absent : les départs. */
 	"direction?": stopCallDirectionEnum,
+	/** Instant (epoch ms) au-delà duquel le serveur n'attend plus la réponse : le provider l'abandonne. */
+	"expiresAt?": "number",
 });
 
 export type StopDeparturesRequest = typeof stopDeparturesRequestSchema.infer;

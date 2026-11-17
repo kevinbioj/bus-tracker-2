@@ -549,10 +549,33 @@ export type StopDeparturesPayload = ReturnType<typeof toStopDeparturesPayload>;
 
 export type StopCallDirectionQuery = z.infer<typeof getStopDeparturesQuery>["direction"];
 
+const departuresInFlight = new Map<string, ReturnType<typeof computeStopDeparturesPayload>>();
+
 export async function buildStopDepartures(ref: string, direction: StopCallDirectionQuery, lineId?: number) {
 	const cacheKey = `${ref}|${direction}|${lineId ?? ""}`;
 	const cached = departuresCache.get(cacheKey);
 	if (cached !== undefined) return { payload: cached };
+
+	let inFlight = departuresInFlight.get(cacheKey);
+	if (inFlight === undefined) {
+		inFlight = computeStopDeparturesPayload(cacheKey, ref, direction, lineId).finally(() =>
+			departuresInFlight.delete(cacheKey),
+		);
+		departuresInFlight.set(cacheKey, inFlight);
+	}
+	return inFlight;
+}
+
+async function computeStopDeparturesPayload(
+	cacheKey: string,
+	ref: string,
+	direction: StopCallDirectionQuery,
+	lineId: number | undefined,
+) {
+	const lineRefs = lineId !== undefined ? await findLineRefs(lineId) : undefined;
+	if (lineRefs !== undefined && lineRefs.length === 0) {
+		return { status: 400, error: `No line was found with id '${lineId}'.` } as const;
+	}
 
 	const { stopArea, stopPointRef } = await resolveStopArea(ref);
 	if (stopArea === null) {
@@ -572,7 +595,7 @@ export async function buildStopDepartures(ref: string, direction: StopCallDirect
 			stopAreaRef: stopArea.ref,
 			stopRef: stopPointRef,
 			// Le provider écarte les autres lignes avant sa limite : le tableau reste plein.
-			lineRefs: lineId !== undefined ? await findLineRefs(lineId) : undefined,
+			lineRefs,
 			direction,
 		}),
 		nowMs,
