@@ -80,7 +80,7 @@ export function VehicleCharacteristics({ vehicle }: Readonly<VehicleCharacterist
 							size="icon"
 							nativeButton={false}
 							render={
-								<a target="_blank" rel="noreferrer" href={`https://tc-infos.fr/vehicule/${vehicle.tcId}`}>
+								<a target="_blank" rel="noopener" href={`https://tc-infos.fr/vehicule/${vehicle.tcId}`}>
 									<img src={tcInfosIcon} alt={m.vehicle_details_tc_infos_alt()} />
 								</a>
 							}
