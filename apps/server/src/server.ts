@@ -1,9 +1,23 @@
+import { DrizzleQueryError } from "drizzle-orm/errors";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { createMiddleware } from "hono/factory";
 
 export const hono = new Hono();
+
+export function redactError(error: unknown) {
+	if (!(error instanceof DrizzleQueryError)) return error;
+	const redacted = new Error(`Failed query: ${error.query}`, { cause: error.cause });
+	redacted.stack = error.stack?.replace(error.message, redacted.message);
+	return redacted;
+}
+
+hono.onError((error, c) => {
+	if ("getResponse" in error) return error.getResponse();
+	console.error(redactError(error));
+	return c.text("Internal Server Error", 500);
+});
 
 const DEFAULT_BODY_LIMIT = 16 * 1024;
 const GIROUETTE_WRITE_PATH = /^\/(?:lines\/[^/]+\/girouettes|girouettes\/[^/]+)$/;
@@ -34,7 +48,7 @@ hono.use(
 			c.req.path,
 			c.res.status,
 			Math.round(performance.now() - startedAt),
-			c.error ?? "",
+			c.error !== undefined ? redactError(c.error) : "",
 		);
 	}),
 );

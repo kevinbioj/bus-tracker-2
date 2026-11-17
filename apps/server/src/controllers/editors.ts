@@ -2,12 +2,15 @@ import { deleteCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
 
 import { hono } from "../server.js";
+import { getClientIp } from "../utils/client-ip.js";
 import { createJsonValidator } from "../utils/validator-helpers.js";
 import {
 	authenticateEditor,
 	EDITOR_AUTH_COOKIE_NAME,
 	editorCookieOptions,
 	editorMiddleware,
+	isAuthenticationBlocked,
+	recordFailedAuthentication,
 } from "./middlewares/editor-middleware.js";
 
 const editorSessionBodySchema = z.object({
@@ -25,10 +28,14 @@ function editorToJson({
 }
 
 hono.post("/editors/session", createJsonValidator(editorSessionBodySchema), async (c) => {
+	const ip = getClientIp(c);
+	if (isAuthenticationBlocked(ip)) return c.json({ error: "Too many failed authentication attempts." }, 429);
+
 	const { token } = c.req.valid("json");
 	const editor = await authenticateEditor(token);
 
 	if (editor === undefined) {
+		recordFailedAuthentication(ip);
 		return c.json({ error: "No editor was found using the supplied token." }, 401);
 	}
 

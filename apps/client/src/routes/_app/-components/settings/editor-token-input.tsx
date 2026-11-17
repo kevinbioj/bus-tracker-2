@@ -54,7 +54,7 @@ export function EditorTokenInput() {
 	) : (
 		<SettingField icon={<KeySquareIcon className={settingIconClasses} />} label={m.settings_editor_token_label()}>
 			<form className="flex gap-2" onSubmit={onSubmit}>
-				<Input aria-label={m.settings_editor_token_label()} name="token" required />
+				<Input aria-label={m.settings_editor_token_label()} autoComplete="off" name="token" required type="password" />
 				<Button disabled={isLoading} size="icon" title={m.settings_editor_login()} type="submit">
 					<LogIn />
 				</Button>
