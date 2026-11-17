@@ -46,6 +46,7 @@ const ALERTS_REFRESH_INTERVAL_MS = 30_000;
 const STOP_DEPARTURES_REFRESH_INTERVAL_MS = 5_000;
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const MAX_BUFFERED_BYTES = 1024 * 1024;
+const MAX_BUFFERED_BYTES_HARD = 8 * MAX_BUFFERED_BYTES;
 
 type Payloads = {
 	journey: JourneyDetails;
@@ -77,6 +78,7 @@ type Connection = {
 	queue: Promise<void>;
 	needsResync: boolean;
 	isAlive: boolean;
+	isCongested: boolean;
 };
 
 const connections = new Set<Connection>();
@@ -411,8 +413,13 @@ async function refreshStopDepartures() {
 }
 
 function send(connection: Connection, message: RealtimeServerMessage<Payloads>) {
-	if (connection.socket.readyState !== connection.socket.OPEN) return;
-	connection.socket.send(JSON.stringify(message));
+	const { socket } = connection;
+	if (socket.readyState !== socket.OPEN) return;
+	if (socket.bufferedAmount > MAX_BUFFERED_BYTES_HARD) {
+		socket.terminate();
+		return;
+	}
+	socket.send(JSON.stringify(message));
 }
 
 function enqueue(connection: Connection, message: UpdateMessage, compose?: (message: UpdateMessage) => Promise<void>) {
@@ -523,11 +530,13 @@ setInterval(() => {
 
 setInterval(() => {
 	for (const connection of connections) {
-		if (!connection.isAlive) {
+		const isCongested = connection.socket.bufferedAmount > MAX_BUFFERED_BYTES;
+		if (!connection.isAlive || (isCongested && connection.isCongested)) {
 			connection.socket.terminate();
 			continue;
 		}
 		connection.isAlive = false;
+		connection.isCongested = isCongested;
 		connection.socket.ping();
 	}
 }, HEARTBEAT_INTERVAL_MS).unref();
@@ -644,6 +653,7 @@ hono.get(
 					queue: Promise.resolve(),
 					needsResync: false,
 					isAlive: true,
+					isCongested: false,
 				};
 				socket.on("pong", () => {
 					openedConnection.isAlive = true;
