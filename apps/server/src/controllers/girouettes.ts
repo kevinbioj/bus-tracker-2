@@ -4,15 +4,15 @@ import { z } from "zod";
 import { database } from "../core/database/database.js";
 import { editionLogsTable, girouettesTable, linesTable } from "../core/database/schema.js";
 import { girouetteBodyLimit, hono } from "../server.js";
-import { createJsonValidator, createParamValidator } from "../utils/validator-helpers.js";
+import { createJsonValidator, createParamValidator, idSchema } from "../utils/validator-helpers.js";
 import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
 const lineIdParamSchema = z.object({
-	lineId: z.coerce.number().int().min(0),
+	lineId: idSchema,
 });
 
 const girouetteIdParamSchema = z.object({
-	id: z.coerce.number().int().min(0),
+	id: idSchema,
 });
 
 const girouetteInputSchema = z.object({

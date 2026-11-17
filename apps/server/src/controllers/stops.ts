@@ -25,6 +25,7 @@ import {
 	BOUNDS_ERROR,
 	createParamValidator,
 	createQueryValidator,
+	idSchema,
 	isOrderedBounds,
 	MAX_NETWORK_IDS,
 } from "../utils/validator-helpers.js";
@@ -86,11 +87,11 @@ const getStopMarkersQuery = z
 		neLat: z.coerce.number().min(-90).max(90),
 		neLon: z.coerce.number().min(-180).max(180),
 		networkId: z
-			.union([z.coerce.number(), z.array(z.coerce.number()).max(MAX_NETWORK_IDS)])
+			.union([idSchema, z.array(idSchema).max(MAX_NETWORK_IDS)])
 			.optional()
 			.transform((values) => (typeof values === "number" ? [values] : values)),
 		// Ligne filtrée sur la carte : seules les stations qu'elle dessert.
-		lineId: z.coerce.number().optional(),
+		lineId: idSchema.optional(),
 		// Les quais ne servent qu'aux zooms les plus forts : inutile de les transporter en deçà.
 		withStopPoints: z
 			.enum(["true", "false"])
@@ -432,7 +433,7 @@ const getStopDeparturesParams = z.object({
 const getStopDeparturesQuery = z.object({
 	direction: z.enum(["departures", "arrivals"]).default("departures"),
 	// Ligne filtrée sur la carte : le tableau ne présente qu'elle.
-	lineId: z.coerce.number().optional(),
+	lineId: idSchema.optional(),
 });
 
 /**

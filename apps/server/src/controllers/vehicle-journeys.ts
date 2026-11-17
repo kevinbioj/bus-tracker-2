@@ -15,6 +15,7 @@ import {
 	BOUNDS_ERROR,
 	createParamValidator,
 	createQueryValidator,
+	idSchema,
 	isOrderedBounds,
 	MAX_NETWORK_IDS,
 } from "../utils/validator-helpers.js";
@@ -39,11 +40,11 @@ const getVehicleJourneyMarkersQuery = z
 			.transform((value) => (value !== undefined ? value.split(",") : undefined))
 			.pipe(z.array(z.enum(["GPS", "ESTIMATED", "SCHEDULED"])).optional()),
 		networkId: z
-			.union([z.coerce.number(), z.array(z.coerce.number()).max(MAX_NETWORK_IDS)])
+			.union([idSchema, z.array(idSchema).max(MAX_NETWORK_IDS)])
 			.optional()
 			.transform((values) => (typeof values === "number" ? [values] : values)),
 		lineId: z
-			.union([z.coerce.number(), z.array(z.coerce.number())])
+			.union([idSchema, z.array(idSchema).max(50)])
 			.optional()
 			.transform((values) => (typeof values === "number" ? [values] : values)),
 	})
@@ -157,8 +158,11 @@ hono.get("/vehicle-journeys/:id/paths", createParamValidator(getVehicleJourneyPa
 	return c.json(paths);
 });
 
+const isPathRef = (ref: string) =>
+	ref.includes(":RoutePath:") || ref.includes(":CancelledPath:") || ref.endsWith(":LinePath");
+
 const getPathParams = z.object({
-	ref: z.string(),
+	ref: z.string().max(512).refine(isPathRef, { message: "Not a path reference." }),
 });
 
 hono.get("/paths/:ref", createParamValidator(getPathParams), async (c) => {

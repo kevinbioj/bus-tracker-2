@@ -4,10 +4,10 @@ import { database } from "../core/database/database.js";
 import { linesTable, networksTable, operatorsTable } from "../core/database/schema.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
-import { createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
+import { createParamValidator, createQueryValidator, idSchema } from "../utils/validator-helpers.js";
 
 const getNetworkByIdParamSchema = z.object({
-	id: z.coerce.number().min(0),
+	id: idSchema,
 });
 
 const getNetworkByIdQuerySchema = z.object({

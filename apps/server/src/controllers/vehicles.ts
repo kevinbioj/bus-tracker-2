@@ -20,7 +20,13 @@ import { findActivityStarts } from "../core/services/line-activity-service.js";
 import { findJourneysByVehicleId, findOnlineLineId } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
 import { getClientIp } from "../utils/client-ip.js";
-import { createJsonValidator, createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
+import {
+	createJsonValidator,
+	createParamValidator,
+	createQueryValidator,
+	idSchema,
+	jsonIdSchema,
+} from "../utils/validator-helpers.js";
 import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
@@ -33,10 +39,15 @@ const searchVehiclesSchema = z.object({
 	limit: z.coerce
 		.number()
 		.int("Limit must be an integer")
-		.min(10, "Limit must be within [10; 100000]")
-		.max(100000, "Limit must be within [10; 100000]")
+		.min(10, "Limit must be within [10; 10000]")
+		.max(10000, "Limit must be within [10; 10000]")
 		.default(10000),
-	page: z.coerce.number().int("Page must be an integer").min(0, "Page must be a positive integer").default(0),
+	page: z.coerce
+		.number()
+		.int("Page must be an integer")
+		.min(0, "Page must be a positive integer")
+		.max(1000, "Page must be at most 1000")
+		.default(0),
 	networkId: z.coerce
 		.number()
 		.int("Network id must be an integer")
@@ -58,7 +69,7 @@ const searchVehiclesSchema = z.object({
 });
 
 const getVehicleByIdParamSchema = z.object({
-	id: z.coerce.number().min(0),
+	id: idSchema,
 });
 
 const getVehicleActivitiesQuerySchema = z.object({
@@ -76,9 +87,9 @@ const getVehicleActivitiesQuerySchema = z.object({
 const updateVehicleBodySchema = z.object({
 	number: z.string().min(1, "Expected 'number' to be non-empty."),
 	designation: z.string().nullable(),
-	tcId: z.number().min(1, "Expected 'tcId' to be a valid identifier.").nullable(),
+	tcId: z.number().int().min(1, "Expected 'tcId' to be a valid identifier.").max(2_147_483_647).nullable(),
 	type: vehicleJourneyLineTypeZodEnum,
-	operatorId: z.number().nullable(),
+	operatorId: jsonIdSchema.nullable(),
 	airConditioning: z.enum(vehicleAirConditioningStatuses).nullable(),
 	usbPorts: z.boolean().nullable(),
 });

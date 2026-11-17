@@ -5,7 +5,7 @@ import { type DataSourceEntity, type NetworkEntity, networksTable } from "../cor
 import { getFreshDataSources } from "../core/services/data-source-service.js";
 import { hono } from "../server.js";
 import { useCache } from "../utils/use-cache.js";
-import { createParamValidator } from "../utils/validator-helpers.js";
+import { createParamValidator, idSchema } from "../utils/validator-helpers.js";
 
 type NetworkDataSources = {
 	network: NetworkEntity;
@@ -13,7 +13,7 @@ type NetworkDataSources = {
 };
 
 const getNetworkDataSourcesParamSchema = z.object({
-	id: z.coerce.number().min(0),
+	id: idSchema,
 });
 
 /** L'inventaire ne bouge qu'au rythme des publications des providers : un cache court suffit. */

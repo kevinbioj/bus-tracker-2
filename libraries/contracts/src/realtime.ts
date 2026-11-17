@@ -22,8 +22,8 @@ export const realtimeClientMessageSchema = z.discriminatedUnion("type", [
 		swLon: z.number().min(-180).max(180),
 		neLat: z.number().min(-90).max(90),
 		neLon: z.number().min(-180).max(180),
-		networkIds: z.array(z.number().int()).max(50).optional(),
-		lineIds: z.array(z.number().int()).max(50).optional(),
+		networkIds: z.array(z.number().int().nonnegative().max(2_147_483_647)).max(50).optional(),
+		lineIds: z.array(z.number().int().nonnegative().max(2_147_483_647)).max(50).optional(),
 		positionTypes: z.array(z.enum(vehicleJourneyPositionTypes)).optional(),
 		countryCodes: z.array(z.string().max(8)).max(50).optional(),
 		includeMarker: z.string().max(512).optional(),
@@ -41,8 +41,8 @@ export const realtimeClientMessageSchema = z.discriminatedUnion("type", [
 				swLon: z.number().min(-180).max(180),
 				neLat: z.number().min(-90).max(90),
 				neLon: z.number().min(-180).max(180),
-				networkIds: z.array(z.number().int()).max(50).optional(),
-				lineId: z.number().int().optional(),
+				networkIds: z.array(z.number().int().nonnegative().max(2_147_483_647)).max(50).optional(),
+				lineId: z.number().int().nonnegative().max(2_147_483_647).optional(),
 				withStopPoints: z.boolean(),
 			})
 			.nullable(),
@@ -53,7 +53,7 @@ export const realtimeClientMessageSchema = z.discriminatedUnion("type", [
 			.object({
 				ref: z.string().max(512),
 				direction: z.enum(["departures", "arrivals"]),
-				lineId: z.number().int().optional(),
+				lineId: z.number().int().nonnegative().max(2_147_483_647).optional(),
 			})
 			.nullable(),
 	}),

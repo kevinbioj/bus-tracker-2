@@ -10,10 +10,10 @@ import { journeyStore } from "../core/store/journey-store.js";
 import { redis } from "../index.js";
 import { hono } from "../server.js";
 import { keyBy } from "../utils/key-by.js";
-import { createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
+import { createParamValidator, createQueryValidator, idSchema } from "../utils/validator-helpers.js";
 
 const getLineByIdParamSchema = z.object({
-	id: z.coerce.number().min(0),
+	id: idSchema,
 });
 
 const getLineVehicleAssignmentsQuerySchema = z.object({

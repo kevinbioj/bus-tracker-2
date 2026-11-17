@@ -1,7 +1,13 @@
 import { validator } from "hono/validator";
-import type { core, ZodObject } from "zod";
+import { type core, type ZodObject, z } from "zod";
 
 export const MAX_NETWORK_IDS = 10;
+
+const MAX_DATABASE_ID = 2_147_483_647;
+
+export const idSchema = z.coerce.number().int().min(0).max(MAX_DATABASE_ID);
+
+export const jsonIdSchema = z.number().int().min(0).max(MAX_DATABASE_ID);
 
 export const BOUNDS_ERROR = { message: "South-west bounds must not exceed north-east bounds." };
 
