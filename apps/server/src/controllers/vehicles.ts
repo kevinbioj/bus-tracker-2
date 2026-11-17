@@ -1,7 +1,6 @@
-import { createHash, randomUUID } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { vehicleJourneyLineTypeZodEnum } from "@bus-tracker/contracts";
 import { and, asc, between, desc, eq, gt, ilike, isNotNull, isNull, ne, sql } from "drizzle-orm";
-import { getCookie, setCookie } from "hono/cookie";
 import { match } from "ts-pattern";
 import { z } from "zod";
 
@@ -20,14 +19,15 @@ import { isFeatureEnabled } from "../core/services/feature-flag-service.js";
 import { findActivityStarts } from "../core/services/line-activity-service.js";
 import { findJourneysByVehicleId, findOnlineLineId } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
+import { getClientIp } from "../utils/client-ip.js";
 import { createJsonValidator, createParamValidator, createQueryValidator } from "../utils/validator-helpers.js";
 import { editorMiddleware } from "./middlewares/editor-middleware.js";
 
 const currentMonth = () => Temporal.Now.plainDateISO().toPlainYearMonth();
 const vehicleReportWindow = sql`NOW() - INTERVAL '7 days'`;
 const vehicleReportThreshold = 2;
-const vehicleReporterCookieName = "bt_reporter_id";
-const reportHashSecret = process.env.REPORT_HASH_SECRET || "bus-tracker-report-fallback";
+const reportHashSecret = process.env.REPORT_HASH_SECRET ?? "";
+if (reportHashSecret === "") throw new Error("REPORT_HASH_SECRET must be set.");
 
 const searchVehiclesSchema = z.object({
 	limit: z.coerce
@@ -98,8 +98,8 @@ const createVehicleReportBodySchema = z.object({
 	value: z.enum(["PRESENT", "OUT_OF_SERVICE"]),
 });
 
-function getReporterHash(reporterId: string) {
-	return createHash("sha256").update(reportHashSecret).update(reporterId).digest("hex");
+function getReporterHash(clientIp: string) {
+	return createHmac("sha256", reportHashSecret).update(clientIp).digest("hex");
 }
 
 hono.get("/vehicles", createQueryValidator(searchVehiclesSchema), async (c) => {
@@ -291,16 +291,7 @@ hono.post(
 			return c.json({ error: "This vehicle is not eligible for air conditioning reports." }, 400);
 		}
 
-		const reporterId = getCookie(c, vehicleReporterCookieName) ?? randomUUID();
-		setCookie(c, vehicleReporterCookieName, reporterId, {
-			httpOnly: true,
-			maxAge: 60 * 60 * 24 * 365,
-			path: "/",
-			sameSite: "Lax",
-			secure: true,
-		});
-
-		const reporterHash = getReporterHash(reporterId);
+		const reporterHash = getReporterHash(getClientIp(c));
 
 		const recentReport = await database
 			.select({ id: vehicleReportsTable.id })

@@ -12,7 +12,7 @@ const posthog = posthogKey
 	: undefined;
 
 export async function isFeatureEnabled(flag: string) {
-	if (posthog === undefined) return true;
+	if (posthog === undefined) return false;
 
 	try {
 		const flags = await posthog.evaluateFlags("bus-tracker-server", { flagKeys: [flag], onlyEvaluateLocally: true });
