@@ -24,6 +24,12 @@ const RING_STEP_METERS = 5;
 
 const METERS_PER_DEGREE_LATITUDE = 111_320;
 
+/**
+ * Taille au-delà de laquelle une grappe n'est plus écartée : des dizaines de véhicules au même point
+ * trahissent un flux défaillant, et les répartir dessinerait des anneaux sans aucun sens sur la carte.
+ */
+const MAX_CLUSTER_SIZE = 64;
+
 /** Hash FNV-1a 32 bits, utilisé pour orienter une grappe de façon stable dans le temps. */
 function hashString(value: string) {
 	let hash = 0x811c9dc5;
@@ -63,15 +69,22 @@ export function scatterOverlappingPositions(vehicleJourneys: Iterable<VehicleJou
 	const clusters = groupByProximity(candidates, (candidate) => candidate.position, OVERLAP_THRESHOLD_METERS);
 
 	let scatteredCount = 0;
+	let oversizedCount = 0;
 
 	for (const cluster of clusters) {
 		if (cluster.length < 2) continue;
+		if (cluster.length > MAX_CLUSTER_SIZE) {
+			oversizedCount += cluster.length;
+			continue;
+		}
 
 		// Le tri par identifiant fixe l'ordre d'attribution des secteurs indépendamment de l'ordre
 		// d'itération du flux temps réel, qui n'est pas garanti stable.
 		cluster.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
 		const takenSlots = new Set<number>();
+		// Anneaux pleins, toujours les premiers : un véhicule les saute sans y chercher de place.
+		let firstOpenRing = 0;
 
 		for (const vehicleJourney of cluster) {
 			// Le secteur ne dépend que de l'identifiant du véhicule : l'arrivée ou le départ d'un
@@ -79,12 +92,15 @@ export function scatterOverlappingPositions(vehicleJourneys: Iterable<VehicleJou
 			// véhicule, et uniquement celui qui la subit — jamais celui déjà installé.
 			const preferredSector = hashString(vehicleJourney.id) % SECTOR_COUNT;
 
-			let slot = preferredSector;
+			// Sondage linéaire sur l'anneau, puis passage à l'anneau suivant une fois saturé.
+			let slot = firstOpenRing * SECTOR_COUNT + preferredSector;
 			for (let attempt = 1; takenSlots.has(slot); attempt++) {
-				// Sondage linéaire sur l'anneau, puis passage à l'anneau suivant une fois saturé.
-				slot = Math.floor(attempt / SECTOR_COUNT) * SECTOR_COUNT + ((preferredSector + attempt) % SECTOR_COUNT);
+				slot =
+					(firstOpenRing + Math.floor(attempt / SECTOR_COUNT)) * SECTOR_COUNT +
+					((preferredSector + attempt) % SECTOR_COUNT);
 			}
 			takenSlots.add(slot);
+			while (takenSlots.size >= (firstOpenRing + 1) * SECTOR_COUNT) firstOpenRing += 1;
 
 			const ring = Math.floor(slot / SECTOR_COUNT);
 			const angle = (2 * Math.PI * (slot % SECTOR_COUNT)) / SECTOR_COUNT;
@@ -103,6 +119,12 @@ export function scatterOverlappingPositions(vehicleJourneys: Iterable<VehicleJou
 			};
 			scatteredCount += 1;
 		}
+	}
+
+	if (oversizedCount > 0) {
+		console.warn(
+			`⚠ ${oversizedCount} vehicles share a point with more than ${MAX_CLUSTER_SIZE} others, left in place.`,
+		);
 	}
 
 	return scatteredCount;

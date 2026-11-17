@@ -141,6 +141,23 @@ describe("scatterOverlappingPositions", () => {
 		}
 	});
 
+	it("leaves in place a cluster too large to be meaningful, without quadratic cost", () => {
+		const journeys = Array.from({ length: 10_000 }, (_, index) => createJourney(`vehicle-${index}`, 45.764, 4.8357));
+
+		const startedAt = performance.now();
+		expect(scatterOverlappingPositions(journeys)).toBe(0);
+		expect(performance.now() - startedAt).toBeLessThan(100);
+		expect(journeys[0]!.position).toMatchObject({ latitude: 45.764, longitude: 4.8357 });
+	});
+
+	it("still scatters a cluster of 64 vehicles, all apart", () => {
+		const journeys = Array.from({ length: 64 }, (_, index) => createJourney(`vehicle-${index}`, 45.764, 4.8357));
+
+		expect(scatterOverlappingPositions(journeys)).toBe(64);
+		const keys = new Set(journeys.map(({ position }) => `${position!.latitude}:${position!.longitude}`));
+		expect(keys.size).toBe(64);
+	});
+
 	it("ignores computed positions", () => {
 		const journeys = [createJourney("a", 48.8566, 2.3522, "COMPUTED"), createJourney("b", 48.8566, 2.3522, "COMPUTED")];
 

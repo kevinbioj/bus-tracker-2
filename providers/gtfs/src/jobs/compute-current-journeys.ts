@@ -11,6 +11,7 @@ import { DEFAULT_TRIP_UPDATE_TTL_MS, type Source, type SourceOptions } from "../
 import { StopArea } from "../model/stop-area.js";
 import { fastFormatISO, formatCallTime, getTimeZoneOffsetMs } from "../utils/format-call-time.js";
 import { getWheelchairAccessible } from "../utils/get-wheelchair-accessible.js";
+import { isValidCoordinates } from "../utils/group-by-proximity.js";
 import { guessStartDate } from "../utils/guess-start-date.js";
 import { padSourceId } from "../utils/pad-source-id.js";
 import { scatterOverlappingPositions } from "../utils/scatter-overlapping-positions.js";
@@ -636,6 +637,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		for (const vehiclePosition of vehiclePositions) {
 			// 👏 https://transport.data.gouv.fr/resources/81925
 			if (vehiclePosition.position === undefined) continue;
+			if (!isValidCoordinates(vehiclePosition.position)) continue;
 
 			// Position figée : le terminal embarqué a cessé d'émettre alors que la course reste ouverte
 			// dans le flux. Un timestamp nul signale un producteur qui n'en fournit aucun (même pas dans
