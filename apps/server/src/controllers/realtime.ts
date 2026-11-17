@@ -30,6 +30,8 @@ import { journeyStore, onJourneysChanged } from "../core/store/journey-store.js"
 import { redis } from "../index.js";
 import { allowedOrigins, hono } from "../server.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
+import { getClientIp } from "../utils/client-ip.js";
+import { createTokenBucket } from "../utils/token-bucket.js";
 import { useCache } from "../utils/use-cache.js";
 import {
 	buildStopAlerts,
@@ -47,6 +49,13 @@ const STOP_DEPARTURES_REFRESH_INTERVAL_MS = 5_000;
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const MAX_BUFFERED_BYTES = 1024 * 1024;
 const MAX_BUFFERED_BYTES_HARD = 8 * MAX_BUFFERED_BYTES;
+const MAX_CONNECTIONS = 5_000;
+const MAX_CONNECTIONS_PER_IP = 20;
+const HEAVY_MESSAGE_TYPES = new Set<RealtimeClientMessage["type"]>([
+	"subscribe-markers",
+	"subscribe-stops",
+	"watch-stop",
+]);
 
 type Payloads = {
 	journey: JourneyDetails;
@@ -79,9 +88,13 @@ type Connection = {
 	needsResync: boolean;
 	isAlive: boolean;
 	isCongested: boolean;
+	ip: string;
+	messageBucket: ReturnType<typeof createTokenBucket>;
+	heavyMessageBucket: ReturnType<typeof createTokenBucket>;
 };
 
 const connections = new Set<Connection>();
+const connectionsByIp = new Map<string, number>();
 
 const markers = new Map<string, { marker: VehicleJourneyMarker; version: number }>();
 let nextMarkerVersion = 1;
@@ -634,9 +647,14 @@ hono.get(
 	createMiddleware(async (c, next) => {
 		const origin = c.req.header("origin");
 		if (origin !== undefined && !allowedOrigins.includes(origin)) return c.text("Origin not allowed.", 403);
+		if (connections.size >= MAX_CONNECTIONS) return c.text("Too many connections.", 503);
+		if ((connectionsByIp.get(getClientIp(c)) ?? 0) >= MAX_CONNECTIONS_PER_IP) {
+			return c.text("Too many connections.", 429);
+		}
 		await next();
 	}),
-	upgradeWebSocket(() => {
+	upgradeWebSocket((c) => {
+		const ip = getClientIp(c);
 		let connection: Connection | undefined;
 
 		return {
@@ -654,12 +672,16 @@ hono.get(
 					needsResync: false,
 					isAlive: true,
 					isCongested: false,
+					ip,
+					messageBucket: createTokenBucket(30, 10),
+					heavyMessageBucket: createTokenBucket(10, 2),
 				};
 				socket.on("pong", () => {
 					openedConnection.isAlive = true;
 				});
 				connection = openedConnection;
 				connections.add(openedConnection);
+				connectionsByIp.set(ip, (connectionsByIp.get(ip) ?? 0) + 1);
 				send(openedConnection, { type: "hello", version: REALTIME_PROTOCOL_VERSION });
 			},
 			onMessage(event) {
@@ -679,10 +701,19 @@ hono.get(
 					return;
 				}
 
+				const isHeavy = HEAVY_MESSAGE_TYPES.has(result.data.type);
+				if (!connection.messageBucket.take() || (isHeavy && !connection.heavyMessageBucket.take())) {
+					connection.socket.close(1008, "Rate limit exceeded.");
+					return;
+				}
+
 				handleMessage(connection, result.data);
 			},
 			onClose() {
-				if (connection !== undefined) connections.delete(connection);
+				if (connection === undefined || !connections.delete(connection)) return;
+				const count = (connectionsByIp.get(ip) ?? 1) - 1;
+				if (count > 0) connectionsByIp.set(ip, count);
+				else connectionsByIp.delete(ip);
 			},
 		};
 	}),
