@@ -20,6 +20,8 @@ async function start() {
 			const messages = messageQueue.splice(0);
 			let didWarn = false;
 			const vehicleJourneys: VehicleJourney[] = [];
+			const now = Temporal.Now.instant();
+			const nowIso = now.toString();
 
 			for (const message of messages) {
 				try {
@@ -35,6 +37,8 @@ async function start() {
 							}
 							continue;
 						}
+						if (Temporal.Instant.compare(result.position.recordedAt, now) > 0) result.position.recordedAt = nowIso;
+						if (Temporal.Instant.compare(result.updatedAt, now) > 0) result.updatedAt = nowIso;
 						vehicleJourneys.push(result);
 					}
 				} catch (error) {

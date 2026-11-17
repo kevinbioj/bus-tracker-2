@@ -330,6 +330,13 @@
 			"when": 1794766391690,
 			"tag": "0046_line_type",
 			"breakpoints": true
+		},
+		{
+			"idx": 47,
+			"version": "7",
+			"when": 1794943756224,
+			"tag": "0047_clamp_future_timestamps",
+			"breakpoints": true
 		}
 	]
 }
