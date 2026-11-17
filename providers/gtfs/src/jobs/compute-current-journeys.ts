@@ -524,7 +524,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		// laquelle les TripUpdate viendront ensuite rattacher leurs horaires.
 		const seenModifiedJourneyKeys = new Set<string>();
 		if (tripModifications.length > 0) {
-			for (const [journeyKey, plan] of indexTripModifications(source.gtfs, tripModifications, resources)) {
+			for (const [journeyKey, plan] of indexTripModifications(source.gtfs, tripModifications, resources, nowMs)) {
 				const trip = source.gtfs.trips.get(plan.tripId);
 				if (trip === undefined) continue;
 

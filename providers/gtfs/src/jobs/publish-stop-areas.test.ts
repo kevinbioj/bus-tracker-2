@@ -15,6 +15,8 @@ import { indexTripModifications } from "./apply-trip-modifications.js";
 import { collectRealtimeStopAreas } from "./compute-current-journeys.js";
 import { buildStopAreaManifests, getRealtimeServiceFingerprint } from "./publish-stop-areas.js";
 
+const NOW_MS = Temporal.Instant.from("2026-05-18T08:00:00Z").epochMilliseconds;
+
 const HOUR = 3600;
 const DATE = Temporal.PlainDate.from("2026-05-18");
 const NOW = Temporal.Instant.from("2026-05-18T07:30:00Z");
@@ -95,6 +97,7 @@ function detour(source: Source, gtfs: Gtfs, trip: Trip, stopId: string, resource
 			},
 		],
 		resources,
+		NOW_MS,
 	).get("2026-05-18-original")!;
 
 	const journeyKey = getJourneyKey(DATE, trip.id);

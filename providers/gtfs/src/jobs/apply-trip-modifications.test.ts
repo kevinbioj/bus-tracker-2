@@ -14,6 +14,8 @@ import { Trip } from "../model/trip.js";
 import { createShapeFromPolyline } from "../utils/decode-polyline.js";
 import { indexTripModifications } from "./apply-trip-modifications.js";
 
+const NOW_MS = Temporal.Instant.from("2026-05-18T08:00:00Z").epochMilliseconds;
+
 function makeGtfs(): Gtfs {
 	const agency = new Agency("agency", "Agency", "UTC");
 	const route = new Route("line:1", agency, "1", "BUS");
@@ -66,7 +68,7 @@ function makeEntity(overrides?: Partial<IdentifiedTripModifications>): Identifie
 
 describe("indexTripModifications", () => {
 	it("indexe la déviation sous la clé de la course et de sa date de service", () => {
-		const plans = indexTripModifications(makeGtfs(), [makeEntity()], createRealtimeResources());
+		const plans = indexTripModifications(makeGtfs(), [makeEntity()], createRealtimeResources(), NOW_MS);
 
 		expect([...plans.keys()]).toEqual(["2026-05-18-original"]);
 		expect(plans.get("2026-05-18-original")).toMatchObject({
@@ -87,7 +89,7 @@ describe("indexTripModifications", () => {
 			],
 		});
 
-		const plan = indexTripModifications(makeGtfs(), [makeEntity(), second], createRealtimeResources()).get(
+		const plan = indexTripModifications(makeGtfs(), [makeEntity(), second], createRealtimeResources(), NOW_MS).get(
 			"2026-05-18-original",
 		)!;
 
@@ -111,6 +113,7 @@ describe("indexTripModifications", () => {
 				makeEntity({ id: "detour:2", selectedTrips: [{ tripIds: ["original"], shapeId: "shape:detour" }] }),
 			],
 			resources,
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		expect(plan.shape).toBeUndefined();
@@ -127,13 +130,14 @@ describe("indexTripModifications", () => {
 				makeEntity({ id: "detour:2" }),
 			],
 			createRealtimeResources(),
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		expect(plan.shape).toBe(gtfs.shapes.get("shape:static"));
 	});
 
 	it("résout les arrêts et convertit les durées en millisecondes", () => {
-		const plan = indexTripModifications(makeGtfs(), [makeEntity()], createRealtimeResources()).get(
+		const plan = indexTripModifications(makeGtfs(), [makeEntity()], createRealtimeResources(), NOW_MS).get(
 			"2026-05-18-original",
 		)!;
 
@@ -144,23 +148,39 @@ describe("indexTripModifications", () => {
 		]);
 	});
 
-	it("indexe une déviation portant sur plusieurs dates et plusieurs courses", () => {
+	it("n'indexe que les courses en cours ou partant dans les deux heures, une fois par date", () => {
 		const gtfs = makeGtfs();
 		const other = new Trip(0, "other", gtfs.routes.get("line:1")!, new Service("service"), gtfs.stopTimeStore, 0);
 		gtfs.trips.set(other.id, other);
 
 		const plans = indexTripModifications(
 			gtfs,
-			[makeEntity({ serviceDates: ["20260518", "20260519"], selectedTrips: [{ tripIds: ["original", "other"] }] })],
+			[
+				makeEntity({
+					serviceDates: ["20260517", "20260518", "2026-05-18", "20260519"],
+					selectedTrips: [{ tripIds: ["original", "other"] }],
+				}),
+			],
 			createRealtimeResources(),
+			Temporal.Instant.from("2026-05-18T06:30:00Z").epochMilliseconds,
 		);
 
-		expect([...plans.keys()].sort()).toEqual([
-			"2026-05-18-original",
-			"2026-05-18-other",
-			"2026-05-19-original",
-			"2026-05-19-other",
-		]);
+		expect([...plans.keys()].sort()).toEqual(["2026-05-18-original", "2026-05-18-other"]);
+		expect(plans.get("2026-05-18-original")?.modificationsIds).toEqual(["detour:1"]);
+	});
+
+	it("garde une course terminée depuis moins d'une heure, pour un véhicule en retard", () => {
+		const indexAt = (instant: string) =>
+			indexTripModifications(
+				makeGtfs(),
+				[makeEntity()],
+				createRealtimeResources(),
+				Temporal.Instant.from(instant).epochMilliseconds,
+			);
+
+		expect([...indexAt("2026-05-18T09:00:00Z").keys()]).toEqual(["2026-05-18-original"]);
+		expect([...indexAt("2026-05-18T09:20:00Z").keys()]).toEqual([]);
+		expect([...indexAt("2026-05-18T05:50:00Z").keys()]).toEqual([]);
 	});
 
 	it("résout un tracé de remplacement publié par le flux temps réel", () => {
@@ -172,6 +192,7 @@ describe("indexTripModifications", () => {
 			makeGtfs(),
 			[makeEntity({ selectedTrips: [{ tripIds: ["original"], shapeId: "shape:rt" }] })],
 			resources,
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		expect(plan.shape).toBe(shape);
@@ -184,6 +205,7 @@ describe("indexTripModifications", () => {
 			gtfs,
 			[makeEntity({ selectedTrips: [{ tripIds: ["original"], shapeId: "shape:static" }] })],
 			createRealtimeResources(),
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		expect(plan.shape).toBe(gtfs.shapes.get("shape:static"));
@@ -204,6 +226,7 @@ describe("indexTripModifications", () => {
 				}),
 			],
 			resources,
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		expect(plan.modifications[0]?.replacementStops[0]?.stop).toBe(rtStop);
@@ -224,6 +247,7 @@ describe("indexTripModifications", () => {
 				}),
 			],
 			createRealtimeResources(),
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		expect(plan.modifications[0]?.replacementStops.map(({ stop }) => stop.id)).toEqual(["X"]);
@@ -238,6 +262,7 @@ describe("indexTripModifications", () => {
 			makeGtfs(),
 			[makeEntity({ modifications: [], selectedTrips: [{ tripIds: ["original"], shapeId: "shape:detour" }] })],
 			resources,
+			NOW_MS,
 		).get("2026-05-18-original");
 
 		expect(plan?.shape).toBe(shape);
@@ -246,7 +271,7 @@ describe("indexTripModifications", () => {
 
 	it("écarte une déviation sans modification ni tracé de remplacement", () => {
 		expect(
-			indexTripModifications(makeGtfs(), [makeEntity({ modifications: [] })], createRealtimeResources()).size,
+			indexTripModifications(makeGtfs(), [makeEntity({ modifications: [] })], createRealtimeResources(), NOW_MS).size,
 		).toBe(0);
 	});
 
@@ -255,24 +280,27 @@ describe("indexTripModifications", () => {
 		const gtfs = makeGtfs();
 
 		expect(
-			indexTripModifications(gtfs, [makeEntity({ selectedTrips: [{ tripIds: ["absente"] }] })], resources).size,
+			indexTripModifications(gtfs, [makeEntity({ selectedTrips: [{ tripIds: ["absente"] }] })], resources, NOW_MS).size,
 		).toBe(0);
-		expect(indexTripModifications(gtfs, [makeEntity({ serviceDates: ["pas-une-date"] })], resources).size).toBe(0);
-		expect(indexTripModifications(gtfs, [makeEntity({ serviceDates: [] })], resources).size).toBe(0);
-		expect(indexTripModifications(gtfs, [makeEntity({ modifications: [] })], resources).size).toBe(0);
-		expect(indexTripModifications(gtfs, [makeEntity({ selectedTrips: [] })], resources).size).toBe(0);
+		expect(indexTripModifications(gtfs, [makeEntity({ serviceDates: ["pas-une-date"] })], resources, NOW_MS).size).toBe(
+			0,
+		);
+		expect(indexTripModifications(gtfs, [makeEntity({ serviceDates: [] })], resources, NOW_MS).size).toBe(0);
+		expect(indexTripModifications(gtfs, [makeEntity({ modifications: [] })], resources, NOW_MS).size).toBe(0);
+		expect(indexTripModifications(gtfs, [makeEntity({ selectedTrips: [] })], resources, NOW_MS).size).toBe(0);
 	});
 
 	it("donne la même empreinte à deux lectures d'une déviation inchangée", () => {
 		const gtfs = makeGtfs();
 		const resources = createRealtimeResources();
 
-		const first = indexTripModifications(gtfs, [makeEntity()], resources).get("2026-05-18-original")!;
-		const second = indexTripModifications(gtfs, [makeEntity()], resources).get("2026-05-18-original")!;
+		const first = indexTripModifications(gtfs, [makeEntity()], resources, NOW_MS).get("2026-05-18-original")!;
+		const second = indexTripModifications(gtfs, [makeEntity()], resources, NOW_MS).get("2026-05-18-original")!;
 		const changed = indexTripModifications(
 			gtfs,
 			[makeEntity({ modifications: [{ startStopSelector: { stopSequence: 2 } }] })],
 			resources,
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		expect(second.revision).toBe(first.revision);

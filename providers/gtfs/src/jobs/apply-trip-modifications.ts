@@ -1,8 +1,12 @@
+import { getEpochMsFromSecs } from "../cache/temporal-cache.js";
 import type { Gtfs } from "../model/gtfs.js";
 import { getJourneyKey } from "../model/gtfs.js";
 import type { IdentifiedTripModifications } from "../model/gtfs-rt.js";
 import { type RealtimeResources, resolveShape, resolveStop } from "../model/realtime-lookup.js";
 import type { ResolvedModification, TripModificationPlan } from "../model/trip-modification.js";
+
+const LOOKAHEAD_MS = 2 * 60 * 60_000;
+const ENDED_GRACE_MS = 60 * 60_000;
 
 /**
  * Indexe les déviations du cycle par course et par date de service, sous la même clé que
@@ -13,6 +17,7 @@ export function indexTripModifications(
 	gtfs: Gtfs,
 	tripModifications: IdentifiedTripModifications[],
 	resources: RealtimeResources,
+	nowMs: number,
 ) {
 	const plans = new Map<string, TripModificationPlan>();
 	/** Courses dont deux entités publient des tracés concurrents : aucun ne vaut pour l'ensemble. */
@@ -21,15 +26,17 @@ export function indexTripModifications(
 	for (const entity of tripModifications) {
 		const modifications = entity.modifications ?? [];
 
-		const dates: Temporal.PlainDate[] = [];
+		const datesByKey = new Map<string, Temporal.PlainDate>();
 		for (const serviceDate of entity.serviceDates ?? []) {
 			try {
 				// La spec impose YYYYMMDD ; Temporal accepte aussi la forme étendue des producteurs laxistes.
-				dates.push(Temporal.PlainDate.from(serviceDate));
+				const date = Temporal.PlainDate.from(serviceDate);
+				datesByKey.set(date.toString(), date);
 			} catch {
 				// Date illisible : les autres dates de l'entité restent exploitables.
 			}
 		}
+		const dates = [...datesByKey.values()];
 		if (dates.length === 0) continue;
 
 		for (const selectedTrips of entity.selectedTrips ?? []) {
@@ -58,9 +65,14 @@ export function indexTripModifications(
 			const revision = `${entity.id}|${selectedTrips.shapeId ?? ""}|${JSON.stringify(modifications)}`;
 
 			for (const tripId of tripIds) {
-				if (!gtfs.trips.has(tripId)) continue;
+				const trip = gtfs.trips.get(tripId);
+				if (trip === undefined) continue;
+				const timeZone = trip.route.agency.timeZone;
 
 				for (const date of dates) {
+					if (getEpochMsFromSecs(date, trip.lastDepartureSecs, timeZone) < nowMs - ENDED_GRACE_MS) continue;
+					if (getEpochMsFromSecs(date, trip.firstArrivalSecs, timeZone) > nowMs + LOOKAHEAD_MS) continue;
+
 					const journeyKey = getJourneyKey(date, tripId);
 					const existing = plans.get(journeyKey);
 

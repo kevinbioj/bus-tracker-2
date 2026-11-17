@@ -17,6 +17,8 @@ import { indexTripModifications } from "./apply-trip-modifications.js";
 import { collectRealtimeStopAreas } from "./compute-current-journeys.js";
 import { computeStopDepartures } from "./compute-stop-departures.js";
 
+const NOW_MS = Temporal.Instant.from("2026-05-18T08:00:00Z").epochMilliseconds;
+
 const HOUR = 3600;
 
 /**
@@ -437,6 +439,7 @@ describe("computeStopDepartures", () => {
 				},
 			],
 			resources,
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		const date = Temporal.PlainDate.from("2026-05-18");
@@ -483,6 +486,7 @@ describe("computeStopDepartures", () => {
 				},
 			],
 			resources,
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		const date = Temporal.PlainDate.from("2026-05-18");
@@ -540,6 +544,7 @@ describe("computeStopDepartures", () => {
 				},
 			],
 			resources,
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		const date = Temporal.PlainDate.from("2026-05-18");
@@ -585,6 +590,7 @@ describe("computeStopDepartures", () => {
 				},
 			],
 			createRealtimeResources(),
+			NOW_MS,
 		).get("2026-05-18-original")!;
 
 		const date = Temporal.PlainDate.from("2026-05-18");
