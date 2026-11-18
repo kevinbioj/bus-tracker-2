@@ -1,7 +1,10 @@
 import GtfsRealtimeBindings from "gtfs-realtime-bindings";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import type { VehiclePosition } from "../model/gtfs-rt.js";
+import { createRealtimeResources } from "../model/realtime-lookup.js";
 import { Source } from "../model/source.js";
+import { createDeadline, DeadlineExceededError } from "../utils/deadline.js";
 import { downloadGtfsRt } from "./download-gtfs-rt.js";
 
 const { transit_realtime } = GtfsRealtimeBindings;
@@ -186,5 +189,48 @@ describe("downloadGtfsRt", () => {
 		]);
 		expect(vehiclePositions).toHaveLength(1);
 		expect(vehiclePositions[0]?.timestamp).toBe(1_779_000_100);
+	});
+});
+
+describe("downloadGtfsRt (volumes et échéance)", () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+		vi.restoreAllMocks();
+	});
+
+	function makePolledSource() {
+		return new Source("test", {
+			staticResourceHref: "https://example.com/gtfs.zip",
+			realtimeResourceHrefs: [{ href: FEED_HREF, pollMs: 60_000 }],
+			getNetworkRef: () => "network",
+		});
+	}
+
+	it("rassemble un flux de plusieurs centaines de milliers de positions", async () => {
+		const source = makePolledSource();
+		const vehiclePositions = Array.from(
+			{ length: 200_000 },
+			(_, index): VehiclePosition => ({
+				timestamp: 0,
+				position: { latitude: 0, longitude: 0 },
+				vehicle: { id: `${index}` },
+			}),
+		);
+		source.realtimeFeedCache.set(FEED_HREF, {
+			at: Date.now(),
+			contents: { tripUpdates: [], vehiclePositions, tripModifications: [], alerts: [], ...createRealtimeResources() },
+		});
+
+		const result = await downloadGtfsRt(source);
+
+		expect(result.vehiclePositions).toHaveLength(200_000);
+	});
+
+	it("lève l'échéance plutôt que de compter le flux en échec", async () => {
+		vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("aborted")));
+
+		await expect(downloadGtfsRt(makeSource(), createDeadline(Date.now() - 1))).rejects.toBeInstanceOf(
+			DeadlineExceededError,
+		);
 	});
 });

@@ -19,6 +19,7 @@ import {
 } from "../model/realtime-lookup.js";
 import type { Source } from "../model/source.js";
 import { getAuthHeaders } from "../utils/auth.js";
+import { createDeadline, type Deadline } from "../utils/deadline.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
 const feedHeader = GtfsRealtimeBindings.transit_realtime.FeedHeader;
@@ -65,7 +66,7 @@ function createFeedContents(): RealtimeFeedContents {
 	return { tripUpdates: [], vehiclePositions: [], tripModifications: [], alerts: [], shapes, stops };
 }
 
-export async function downloadGtfsRt(source: Source) {
+export async function downloadGtfsRt(source: Source, deadline: Deadline = createDeadline(Number.POSITIVE_INFINITY)) {
 	const tripUpdates: TripUpdate[] = [];
 	const vehiclePositions: VehiclePosition[] = [];
 	const tripModifications: IdentifiedTripModifications[] = [];
@@ -75,10 +76,10 @@ export async function downloadGtfsRt(source: Source) {
 	let failedFeedCount = 0;
 
 	const collect = (contents: RealtimeFeedContents) => {
-		tripUpdates.push(...contents.tripUpdates);
-		vehiclePositions.push(...contents.vehiclePositions);
-		tripModifications.push(...contents.tripModifications);
-		alerts.push(...contents.alerts);
+		for (const tripUpdate of contents.tripUpdates) tripUpdates.push(tripUpdate);
+		for (const vehiclePosition of contents.vehiclePositions) vehiclePositions.push(vehiclePosition);
+		for (const tripModification of contents.tripModifications) tripModifications.push(tripModification);
+		for (const alert of contents.alerts) alerts.push(alert);
 		for (const [id, shape] of contents.shapes) resources.shapes.set(id, shape);
 		for (const [id, stop] of contents.stops) resources.stops.set(id, stop);
 	};
@@ -98,7 +99,7 @@ export async function downloadGtfsRt(source: Source) {
 						"User-Agent": USER_AGENT,
 						...getAuthHeaders(source.realtimeAuth),
 					},
-					signal: AbortSignal.timeout(15_000),
+					signal: AbortSignal.timeout(Math.max(0, Math.min(15_000, deadline.remainingMs()))),
 				});
 
 				// 204 : le producteur signale explicitement un flux vide, la donnée lue est à jour.
@@ -124,6 +125,7 @@ export async function downloadGtfsRt(source: Source) {
 				const contents = createFeedContents();
 
 				for (let index = 0; index < decodedEntities.length; index += 1) {
+					if (deadline.due()) await deadline.pause();
 					const entity = feedEntity.toObject(
 						decodedEntities[index] as GtfsRealtimeBindings.transit_realtime.FeedEntity,
 						CONVERSION_OPTIONS,
@@ -189,6 +191,8 @@ export async function downloadGtfsRt(source: Source) {
 
 				collect(contents);
 			} catch (cause) {
+				if (deadline.remainingMs() <= 0) throw cause;
+
 				// Sur un flux à polling, en cas d'échec on préfère servir la dernière donnée connue
 				// plutôt que de perdre tous les véhicules du flux.
 				if (pollMs !== undefined && cached !== undefined) {
@@ -206,6 +210,8 @@ export async function downloadGtfsRt(source: Source) {
 			}
 		}),
 	);
+
+	await deadline.pause();
 
 	return { tripUpdates, vehiclePositions, tripModifications, alerts, resources, failedFeedCount };
 }

@@ -19,7 +19,12 @@ import { serveStopDepartures } from "./jobs/serve-stop-departures.js";
 import { updateResources } from "./jobs/update-resources.js";
 import type { Source } from "./model/source.js";
 import { configurationPath } from "./options.js";
+import { createDeadline, DeadlineExceededError } from "./utils/deadline.js";
 import { createStopWatch } from "./utils/stop-watch.js";
+
+const COMPUTE_CYCLE_BUDGET_MS = 30_000;
+const DEFAULT_SOURCE_COMPUTE_BUDGET_MS = 20_000;
+const STUCK_COMPUTE_CYCLE_MS = 60_000;
 
 DraftLog(console, true)?.addLineListener(process.stdin);
 
@@ -121,14 +126,14 @@ while (true) {
 		await Promise.race([
 			computeCurrentJourneys(),
 			(async () => {
-				await setTimeout(30_000);
+				await setTimeout(STUCK_COMPUTE_CYCLE_MS);
 				timedOut = true;
 			})(),
 		]);
 
 		if (timedOut) {
-			console.error("Time out when computing journeys, restarting processor.");
-			captureException(new Error("Timeout computing journeys"));
+			console.error("Computing journeys is stuck, restarting processor.");
+			captureException(new Error("Stuck computing journeys"));
 			await shutdownMonitoring();
 			process.exit(1);
 		}
@@ -151,6 +156,8 @@ async function computeCurrentJourneys() {
 
 	const computeLimit = configuration.computeConcurrency ?? 6;
 	const computeLimitFn = pLimit(computeLimit);
+	const sourceBudgetMs = configuration.computeTimeoutMs ?? DEFAULT_SOURCE_COMPUTE_BUDGET_MS;
+	const cycleDeadlineAt = Date.now() + COMPUTE_CYCLE_BUDGET_MS;
 	const updateLog = console.draft("%s ► Computing vehicle journeys to publish.", Temporal.Now.instant());
 
 	try {
@@ -158,7 +165,8 @@ async function computeCurrentJourneys() {
 			configuration.sources.map((source) =>
 				computeLimitFn(async () => {
 					if (source.gtfs === undefined) return 0;
-					const { journeys, paths } = await computeVehicleJourneys(source);
+					const deadline = createDeadline(Math.min(Date.now() + sourceBudgetMs, cycleDeadlineAt));
+					const { journeys, paths } = await computeVehicleJourneys(source, deadline);
 
 					for (const journey of journeys) {
 						source.observedNetworkRefs.add(journey.networkRef);
@@ -187,8 +195,17 @@ async function computeCurrentJourneys() {
 		);
 
 		let computedJourneyCount = 0;
-		for (const computationResult of computationResults) {
+		for (const [index, computationResult] of computationResults.entries()) {
 			if (computationResult.status === "rejected") {
+				if (computationResult.reason instanceof DeadlineExceededError) {
+					const source = configuration.sources[index]!;
+					console.warn("%s ⚠ Computation exceeded its time budget, skipped for this cycle.", source.logId);
+					captureException(computationResult.reason, {
+						sourceId: source.id,
+						$exception_fingerprint: ["gtfs-compute-timeout", source.id],
+					});
+					continue;
+				}
 				console.error(computationResult.reason);
 				captureException(computationResult.reason);
 				continue;

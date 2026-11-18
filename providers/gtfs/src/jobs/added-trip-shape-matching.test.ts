@@ -14,6 +14,7 @@ import {
 	findAddedTripShapeMatch,
 	findAddedTripShapeMatchWithFallback,
 	guessPositionFromCalls,
+	MAX_ADDED_TRIP_STOP_TIME_UPDATES,
 } from "./added-trip-shape-matching.js";
 
 function epochSeconds(value: string) {
@@ -310,6 +311,22 @@ describe("findAddedTripShapeMatch", () => {
 		];
 
 		expect(createCallsFromTripUpdate(gtfs, tripUpdate)).toBeUndefined();
+	});
+
+	it("ignores ADDED trip updates with too many stop time updates", () => {
+		const { gtfs } = makeGtfs();
+		const tripUpdate = addedTripUpdate();
+		const departure = epochSeconds("2026-05-18T08:00:00Z");
+		tripUpdate.stopTimeUpdate = Array.from({ length: MAX_ADDED_TRIP_STOP_TIME_UPDATES + 1 }, (_, index) => ({
+			stopId: "A",
+			stopSequence: index + 1,
+			arrival: { time: departure + index },
+		}));
+
+		expect(createCallsFromTripUpdate(gtfs, tripUpdate)).toBeUndefined();
+
+		tripUpdate.stopTimeUpdate.pop();
+		expect(createCallsFromTripUpdate(gtfs, tripUpdate)).toHaveLength(MAX_ADDED_TRIP_STOP_TIME_UPDATES);
 	});
 
 	it("prefers priority candidates over fallback candidates", () => {

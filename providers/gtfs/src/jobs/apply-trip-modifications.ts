@@ -82,7 +82,7 @@ export function indexTripModifications(
 					// l'affectation directe, revenait à ignorer silencieusement toutes les autres.
 					if (existing !== undefined) {
 						existing.modificationsIds.push(entity.id);
-						existing.modifications.push(...resolvedModifications);
+						for (const modification of resolvedModifications) existing.modifications.push(modification);
 						existing.revision = `${existing.revision}&${revision}`;
 
 						// Chaque entité publie le tracé de la course telle qu'elle seule la dévie : celui-ci

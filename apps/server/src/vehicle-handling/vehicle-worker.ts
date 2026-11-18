@@ -7,6 +7,9 @@ import { handleVehicleBatch } from "./handle-vehicle-batch.js";
 
 const redisSubscriber = createRedisClient({ name: "worker subscriber" });
 
+const MAX_QUEUED_BYTES = 64 * 1024 * 1024;
+const DROP_WARNING_INTERVAL_MS = 60_000;
+
 async function start() {
 	console.log("► [Worker] Connecting to Redis.");
 	await redisSubscriber.connect();
@@ -14,10 +17,14 @@ async function start() {
 	console.log("► [Worker] Subscribing to journeys channel.");
 	let processingPromise: Promise<void> | null = null;
 	const messageQueue: string[] = [];
+	let queuedBytes = 0;
+	let droppedMessages = 0;
+	let lastDropWarningAt = 0;
 
 	const processQueue = async () => {
 		while (messageQueue.length > 0) {
 			const messages = messageQueue.splice(0);
+			queuedBytes = 0;
 			let didWarn = false;
 			const vehicleJourneys: VehicleJourney[] = [];
 			const now = Temporal.Now.instant();
@@ -55,6 +62,18 @@ async function start() {
 
 	await redisSubscriber.subscribe(VEHICLE_JOURNEYS_CHANNEL, (message) => {
 		messageQueue.push(message);
+		queuedBytes += message.length;
+
+		while (queuedBytes > MAX_QUEUED_BYTES && messageQueue.length > 1) {
+			queuedBytes -= messageQueue.shift()!.length;
+			droppedMessages += 1;
+		}
+
+		if (droppedMessages > 0 && Date.now() - lastDropWarningAt > DROP_WARNING_INTERVAL_MS) {
+			console.warn(`⚠ [Worker] Journeys queue is full, dropped ${droppedMessages} oldest message(s).`);
+			droppedMessages = 0;
+			lastDropWarningAt = Date.now();
+		}
 
 		if (processingPromise !== null) return;
 

@@ -13,6 +13,7 @@ import { Source, type SourceOptions } from "../model/source.js";
 import { Stop } from "../model/stop.js";
 import { StopTimeStore } from "../model/stop-time-store.js";
 import { Trip } from "../model/trip.js";
+import { createDeadline, type Deadline, DeadlineExceededError } from "../utils/deadline.js";
 import { computeVehicleJourneys } from "./compute-current-journeys.js";
 
 vi.mock("../download/download-gtfs-rt.js", () => ({
@@ -1376,5 +1377,52 @@ describe("computeVehicleJourneys (courses supplémentaires)", () => {
 
 		expect(journeys).toHaveLength(1);
 		expect(callsOf({ journeys, paths: {} })).toEqual(["B:SCHEDULED", "C:SCHEDULED"]);
+	});
+});
+
+describe("computeVehicleJourneys (budget de temps)", () => {
+	beforeEach(() => {
+		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:05:00Z"));
+		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.mocked(downloadGtfsRt).mockReset();
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		Reflect.deleteProperty(console, "draft");
+	});
+
+	it("n'interroge aucun flux quand l'échéance est déjà passée", async () => {
+		const source = scheduledSource();
+
+		await expect(computeVehicleJourneys(source, createDeadline(Date.now() - 1))).rejects.toBeInstanceOf(
+			DeadlineExceededError,
+		);
+		expect(downloadGtfsRt).not.toHaveBeenCalled();
+		expect(source.lastComputeAtMs).toBeUndefined();
+	});
+
+	it("abandonne le cycle en cours de calcul sans le tenir pour publié", async () => {
+		const source = scheduledSource();
+		vi.mocked(downloadGtfsRt).mockResolvedValue({
+			tripUpdates: [delayedTripUpdate(120)],
+			vehiclePositions: [],
+			tripModifications: [],
+			alerts: [],
+			resources: createRealtimeResources(),
+			failedFeedCount: 0,
+		});
+		let pauses = 0;
+		const deadline: Deadline = {
+			remainingMs: () => 1_000,
+			due: () => true,
+			pause: async () => {
+				pauses += 1;
+				if (pauses > 1) throw new DeadlineExceededError();
+			},
+		};
+
+		await expect(computeVehicleJourneys(source, deadline)).rejects.toBeInstanceOf(DeadlineExceededError);
+		expect(source.lastComputeAtMs).toBeUndefined();
 	});
 });

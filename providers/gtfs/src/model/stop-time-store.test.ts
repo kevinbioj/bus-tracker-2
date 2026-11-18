@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { Stop } from "./stop.js";
-import { StopTimeStore } from "./stop-time-store.js";
+import { assignTripPatterns, MAX_PATTERN_CANDIDATES, StopTimeStore } from "./stop-time-store.js";
 
 const A = new Stop("a", "A", 0, 0);
 const B = new Stop("b", "B", 0, 0.01);
@@ -136,5 +136,43 @@ describe("StopTimeStore (schémas de desserte)", () => {
 		expect(store.patternStart).toHaveLength(2);
 		expect([0, 1, 2].map((index) => store.getStop(index).id)).toEqual(["a", "b", "c"]);
 		expect(store.tripOf(1)).toBe(2);
+	});
+});
+
+describe("assignTripPatterns", () => {
+	it("borne les comparaisons quand toutes les empreintes collisionnent", () => {
+		const tripTotal = 50_000;
+		const tripStart = Uint32Array.from({ length: tripTotal }, (_, trip) => trip);
+		const tripCount = new Uint32Array(tripTotal).fill(1);
+		let comparisons = 0;
+
+		const { tripPattern, representativeStarts } = assignTripPatterns(
+			tripStart,
+			tripCount,
+			() => 0,
+			(a, b) => {
+				comparisons += 1;
+				return a === b;
+			},
+		);
+
+		expect(comparisons).toBeLessThanOrEqual(tripTotal * MAX_PATTERN_CANDIDATES);
+		expect(representativeStarts).toHaveLength(tripTotal);
+		for (let trip = 0; trip < tripTotal; trip += 1) {
+			expect(representativeStarts[tripPattern[trip]!]).toBe(trip);
+		}
+	});
+
+	it("partage encore un parcours entre courses identiques malgré les collisions", () => {
+		const slices = [0, 1, 0, 2, 1, 0];
+		const { tripPattern, representativeStarts } = assignTripPatterns(
+			Uint32Array.from(slices.keys()),
+			new Uint32Array(slices.length).fill(1),
+			() => 0,
+			(a, b) => slices[a] === slices[b],
+		);
+
+		expect(representativeStarts).toHaveLength(3);
+		expect(Array.from(tripPattern)).toEqual([0, 1, 0, 2, 1, 0]);
 	});
 });

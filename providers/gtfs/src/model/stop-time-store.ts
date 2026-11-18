@@ -18,6 +18,55 @@ export type StopTimeColumns = {
 
 const FNV_OFFSET_BASIS = 0x811c9dc5;
 const FNV_PRIME = 0x01000193;
+const HASH_SEED = crypto.getRandomValues(new Uint32Array(1))[0]!;
+export const MAX_PATTERN_CANDIDATES = 8;
+
+export type TripPatternAssignment = {
+	tripPattern: Uint32Array<ArrayBuffer>;
+	representativeStarts: number[];
+	patternCounts: number[];
+	servedTrips: number[];
+};
+
+export function assignTripPatterns(
+	tripStart: Uint32Array,
+	tripCount: Uint32Array,
+	hashSlice: (start: number, count: number) => number,
+	sameSlice: (a: number, b: number, count: number) => boolean,
+): TripPatternAssignment {
+	const tripPattern = new Uint32Array(tripStart.length);
+	const patternsByHash = new Map<number, number[]>();
+	const representativeStarts: number[] = [];
+	const patternCounts: number[] = [];
+	const servedTrips: number[] = [];
+
+	for (let trip = 0; trip < tripStart.length; trip += 1) {
+		const count = tripCount[trip]!;
+		if (count === 0) continue;
+		servedTrips.push(trip);
+
+		const start = tripStart[trip]!;
+		const hash = hashSlice(start, count);
+		let candidates = patternsByHash.get(hash);
+		if (candidates === undefined) {
+			candidates = [];
+			patternsByHash.set(hash, candidates);
+		}
+
+		let pattern = candidates.find(
+			(candidate) => patternCounts[candidate] === count && sameSlice(representativeStarts[candidate]!, start, count),
+		);
+		if (pattern === undefined) {
+			pattern = representativeStarts.length;
+			representativeStarts.push(start);
+			patternCounts.push(count);
+			if (candidates.length < MAX_PATTERN_CANDIDATES) candidates.push(pattern);
+		}
+		tripPattern[trip] = pattern;
+	}
+
+	return { tripPattern, representativeStarts, patternCounts, servedTrips };
+}
 
 /**
  * Stockage columnar des stop_times et des données par trip d'un GTFS.
@@ -135,7 +184,7 @@ export class StopTimeStore {
 		};
 
 		const hashSlice = (start: number, count: number) => {
-			let hash = FNV_OFFSET_BASIS ^ count;
+			let hash = FNV_OFFSET_BASIS ^ HASH_SEED ^ count;
 			const mix = (value: number) => {
 				hash = Math.imul(hash ^ value, FNV_PRIME);
 			};
@@ -149,36 +198,12 @@ export class StopTimeStore {
 			return hash >>> 0;
 		};
 
-		const tripPattern = new Uint32Array(tripStart.length);
-		const patternsByHash = new Map<number, number[]>();
-		const representativeStarts: number[] = [];
-		const patternCounts: number[] = [];
-		const servedTrips: number[] = [];
-
-		for (let trip = 0; trip < tripStart.length; trip += 1) {
-			const count = tripCount[trip]!;
-			if (count === 0) continue;
-			servedTrips.push(trip);
-
-			const start = tripStart[trip]!;
-			const hash = hashSlice(start, count);
-			let candidates = patternsByHash.get(hash);
-			if (candidates === undefined) {
-				candidates = [];
-				patternsByHash.set(hash, candidates);
-			}
-
-			let pattern = candidates.find(
-				(candidate) => patternCounts[candidate] === count && sameSlice(representativeStarts[candidate]!, start, count),
-			);
-			if (pattern === undefined) {
-				pattern = representativeStarts.length;
-				representativeStarts.push(start);
-				patternCounts.push(count);
-				candidates.push(pattern);
-			}
-			tripPattern[trip] = pattern;
-		}
+		const { tripPattern, representativeStarts, patternCounts, servedTrips } = assignTripPatterns(
+			tripStart,
+			tripCount,
+			hashSlice,
+			sameSlice,
+		);
 
 		const patternStart = new Uint32Array(representativeStarts.length);
 		let totalLength = 0;

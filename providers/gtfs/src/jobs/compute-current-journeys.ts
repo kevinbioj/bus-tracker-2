@@ -21,6 +21,7 @@ import type { Shape } from "../model/shape.js";
 import { DEFAULT_TRIP_UPDATE_TTL_MS, type Source, type SourceOptions } from "../model/source.js";
 import { StopArea } from "../model/stop-area.js";
 import { getWheelchairAccessible } from "../model/wheelchair-accessible.js";
+import { createDeadline, type Deadline, DeadlineExceededError } from "../utils/deadline.js";
 import { fastFormatISO, formatCallTime, getTimeZoneOffsetMs } from "../utils/format-call-time.js";
 import { isValidCoordinates } from "../utils/group-by-proximity.js";
 import { parseGtfsTime } from "../utils/gtfs-time.js";
@@ -33,6 +34,7 @@ import {
 	createCallsFromTripUpdate,
 	findAddedTripShapeMatchWithFallback,
 	guessPositionFromCalls,
+	MAX_ADDED_TRIP_STOP_TIME_UPDATES,
 	type TripShapeMatchCandidate,
 } from "./added-trip-shape-matching.js";
 import { indexTripModifications } from "./apply-trip-modifications.js";
@@ -498,7 +500,10 @@ type ComputeResult = {
 	paths: Record<string, Shape | LinePath>;
 };
 
-export async function computeVehicleJourneys(source: Source): Promise<ComputeResult> {
+export async function computeVehicleJourneys(
+	source: Source,
+	deadline: Deadline = createDeadline(Number.POSITIVE_INFINITY),
+): Promise<ComputeResult> {
 	if (source.gtfs === undefined) return { journeys: [], paths: {} };
 
 	const now = Temporal.Now.instant();
@@ -508,9 +513,11 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 	const updateLog = console.draft("%s     ► Generating active journeys list.", sourceId);
 
 	try {
+		await deadline.pause();
+
 		updateLog("%s 1/2 ► Downloading real-time data from feeds.", sourceId);
 		const { tripUpdates, vehiclePositions, tripModifications, alerts, resources, failedFeedCount } =
-			await downloadGtfsRt(source);
+			await downloadGtfsRt(source, deadline);
 		const downloadTime = watch.step();
 
 		// Sous la même réserve d'un cycle complet que les déviations : un flux en échec ne vide pas
@@ -537,6 +544,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		const seenModifiedJourneyKeys = new Set<string>();
 		if (tripModifications.length > 0) {
 			for (const [journeyKey, plan] of indexTripModifications(source.gtfs, tripModifications, resources, nowMs)) {
+				if (deadline.due()) await deadline.pause();
 				const trip = source.gtfs.trips.get(plan.tripId);
 				if (trip === undefined) continue;
 
@@ -565,8 +573,10 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 
 		source.realtimeStopAreas = collectRealtimeStopAreas(source);
 
+		let oversizedAddedTripCount = 0;
 		if (tripUpdates.length > 0) {
 			for (const tripUpdate of tripUpdates) {
+				if (deadline.due()) await deadline.pause();
 				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
@@ -587,11 +597,16 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			}
 
 			for (const tripUpdate of tripUpdates) {
+				if (deadline.due()) await deadline.pause();
 				const updatedAt = Temporal.Instant.fromEpochMilliseconds(tripUpdate.timestamp * 1000);
 
 				const trip = getTripFromDescriptor(source.gtfs, tripUpdate.trip, source.options.allowTripGuessing);
 				if (trip === undefined) {
 					if (isAddedTrip(tripUpdate.trip)) {
+						if ((tripUpdate.stopTimeUpdate?.length ?? 0) > MAX_ADDED_TRIP_STOP_TIME_UPDATES) {
+							oversizedAddedTripCount += 1;
+							continue;
+						}
 						collectAddedTrip(source.gtfs, source.options, tripUpdate, resources, canceledTripCandidates, addedTrips);
 					}
 					continue;
@@ -618,6 +633,15 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			}
 		}
 
+		if (oversizedAddedTripCount > 0) {
+			console.warn(
+				"%s     ⚠ Ignored %d added trip(s) with more than %d stop time updates.",
+				sourceId,
+				oversizedAddedTripCount,
+				MAX_ADDED_TRIP_STOP_TIME_UPDATES,
+			);
+		}
+
 		// Un cycle où un flux n'a pas répondu ne prouve pas qu'une suppression a été levée : les
 		// précédentes sont conservées jusqu'au prochain cycle complet.
 		source.canceledJourneyKeys =
@@ -631,13 +655,22 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		// répondu sont ignorés : l'absence d'une course n'y prouve rien.
 		if (failedFeedCount === 0) {
 			for (const journey of source.gtfs.journeys.values()) {
+				if (deadline.due()) await deadline.pause();
 				journey.expireStaleRealtime(nowMs, tripUpdateTtlMs);
 			}
 		}
 
 		const maxVehiclePositionAgeMs = source.options.maxVehiclePositionAgeMs;
 
+		const activeTripUpdatesByTripId = new Map<string, TripUpdate>();
+		for (const tripUpdate of tripUpdates) {
+			const tripId = tripUpdate.trip.tripId;
+			if (tripId === undefined || isCanceledTrip(tripUpdate.trip) || activeTripUpdatesByTripId.has(tripId)) continue;
+			activeTripUpdatesByTripId.set(tripId, tripUpdate);
+		}
+
 		for (const vehiclePosition of vehiclePositions) {
+			if (deadline.due()) await deadline.pause();
 			// 👏 https://transport.data.gouv.fr/resources/81925
 			if (vehiclePosition.position === undefined) continue;
 			if (!isValidCoordinates(vehiclePosition.position)) continue;
@@ -706,10 +739,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			// Course inconnue du GTFS statique : sa desserte n'est connue que de son TripUpdate.
 			const unknownTripUpdate =
 				journey === undefined && vehiclePosition.trip?.tripId !== undefined
-					? tripUpdates.find(
-							(tripUpdate) =>
-								tripUpdate.trip.tripId === vehiclePosition.trip!.tripId && !isCanceledTrip(tripUpdate.trip),
-						)
+					? activeTripUpdatesByTripId.get(vehiclePosition.trip.tripId)
 					: undefined;
 			const unknownTripCalls = createCallsFromTripUpdate(source.gtfs, unknownTripUpdate, resources);
 
@@ -801,6 +831,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			);
 
 			for (const { tripUpdate, calls: addedCalls, startDate, shape, candidate } of orderedAddedTrips) {
+				if (deadline.due()) await deadline.pause();
 				const candidateJourney = candidate?.trip.getScheduledJourney(candidate.date, true);
 				const vehicleDescriptor = tripUpdate.vehicle;
 				const route =
@@ -880,6 +911,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			const endedJourneys: { key: string; block: string | undefined; vehicleJourney: VehicleJourney }[] = [];
 
 			for (const [journeyKey, journey] of source.gtfs.journeys) {
+				if (deadline.due()) await deadline.pause();
 				if (handledJourneys.has(journey)) continue;
 				if (canceledJourneyKeys.has(journeyKey)) continue;
 				if (journey.trip.block !== undefined && handledBlockIds.has(journey.trip.block)) continue;
@@ -989,6 +1021,7 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 		}
 
 		for (const journey of source.gtfs!.journeys.values()) {
+			if (deadline.due()) await deadline.pause();
 			journey.releaseUnmodifiedCalls(nowMs);
 		}
 
@@ -1033,6 +1066,10 @@ export async function computeVehicleJourneys(source: Source): Promise<ComputeRes
 			paths: Object.fromEntries(paths),
 		};
 	} catch (cause) {
+		if (cause instanceof DeadlineExceededError) {
+			updateLog("%s     ✘ Computation exceeded its time budget after %dms.", sourceId, watch.total());
+			throw cause;
+		}
 		updateLog("%s     ✘ Something wrong occurred during computation.", sourceId);
 		throw new Error(`Failed to compute vehicle journeys for '${source.id}'.`, {
 			cause,

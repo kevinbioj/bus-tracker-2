@@ -10,6 +10,7 @@ import type { Trip } from "../model/trip.js";
 const DEFAULT_MAX_STOP_TIME_DELTA_SECONDS = 15 * 60;
 const DEFAULT_MIN_MATCHED_STOPS = 2;
 const DEFAULT_MIN_MATCHED_STOP_RATIO = 0.6;
+export const MAX_ADDED_TRIP_STOP_TIME_UPDATES = 250;
 
 export type TripShapeMatchCandidate = {
 	date: Temporal.PlainDate;
@@ -49,6 +50,7 @@ export function createCallsFromTripUpdate(
 	resources: RealtimeResources = createRealtimeResources(),
 ): JourneyCall[] | undefined {
 	if (tripUpdate?.stopTimeUpdate === undefined) return;
+	if (tripUpdate.stopTimeUpdate.length > MAX_ADDED_TRIP_STOP_TIME_UPDATES) return;
 
 	const calls = tripUpdate.stopTimeUpdate.flatMap((stopTimeUpdate, index) => {
 		const arrivalTimeMs = getStopTimeMs(stopTimeUpdate);
