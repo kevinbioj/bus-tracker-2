@@ -25,7 +25,6 @@
 		"arktype": "^2.2.9",
 		"croner": "^11.0.0",
 		"dotenv": "^18.0.10",
-		"draftlog": "^1.0.13",
 		"fast-xml-parser": "^5.12.0",
 		"gtfs-realtime-bindings": "^2.2.0",
 		"p-limit": "^7.3.3",

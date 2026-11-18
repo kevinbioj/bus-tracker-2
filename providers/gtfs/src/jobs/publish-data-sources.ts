@@ -2,6 +2,7 @@ import { DATA_SOURCES_CHANNEL, type DataSourceManifest, type DataSourceRealtimeF
 import { captureException } from "@bus-tracker/monitoring";
 
 import type { Source } from "../model/source.js";
+import { providerLog } from "../utils/logger.js";
 import { redactHref } from "../utils/redact-href.js";
 
 /** Seule la publication est requise : évite d'exposer la variance des types du client Redis. */
@@ -76,7 +77,7 @@ export async function publishDataSourceManifests(
 		await redis.publish(DATA_SOURCES_CHANNEL, JSON.stringify(manifests));
 		lastPublishedPayload = fingerprint;
 	} catch (cause) {
-		console.error(new Error("Failed to publish data source manifests.", { cause }));
+		providerLog.error("Failed to publish data source manifests", cause);
 		captureException(cause);
 	}
 }

@@ -292,10 +292,10 @@ export async function publishServiceAlerts(redis: RedisHashWriter, providerId: s
 			lastPublished.set(field, { fingerprint, atMs: now.epochMilliseconds });
 
 			if (previous?.fingerprint !== fingerprint) {
-				console.log("%s ✓ Published %d service alerts.", source.logId, alerts.length);
+				source.log.info(`Published ${alerts.length} service alerts`);
 			}
 		} catch (cause) {
-			console.error(new Error(`Failed to publish service alerts for '${source.id}'.`, { cause }));
+			source.log.error("Failed to publish service alerts", cause);
 			captureException(cause);
 		}
 	}

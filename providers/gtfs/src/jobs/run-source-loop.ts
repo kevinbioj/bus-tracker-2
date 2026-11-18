@@ -55,14 +55,14 @@ export async function runSourceLoop(source: Source, context: SourceLoopContext):
 		publishedRealtimeStopAreas: "",
 	};
 
-	await runSafely(source, async () => {
+	await runSafely(source, context, "GTFS import", async () => {
 		if (await context.resourceLimit(() => source.importGtfs())) {
 			await publishInventory(source, context, state);
 		}
 	});
 
 	while (true) {
-		await runSafely(source, () => refreshResource(source, context, state));
+		await runSafely(source, context, "GTFS update", () => refreshResource(source, context, state));
 
 		if (source.gtfs !== undefined && Date.now() - state.lastSweepAt > SWEEP_INTERVAL_MS) {
 			source.sweepJourneys();
@@ -75,7 +75,7 @@ export async function runSourceLoop(source: Source, context: SourceLoopContext):
 		}
 
 		const startedAt = Date.now();
-		await runSafely(source, () =>
+		await runSafely(source, context, "Cycle", () =>
 			context.computeLimit(() => guardStuck(source, context, () => runIteration(source, context, state))),
 		);
 		const duration = Date.now() - startedAt;
@@ -84,16 +84,16 @@ export async function runSourceLoop(source: Source, context: SourceLoopContext):
 	}
 }
 
-async function runSafely(source: Source, task: () => Promise<unknown>) {
+async function runSafely(source: Source, context: SourceLoopContext, label: string, task: () => Promise<unknown>) {
 	try {
 		await task();
 	} catch (error) {
 		if (error instanceof DeadlineExceededError) {
-			console.warn("%s ⚠ Computation exceeded its time budget, skipped for this cycle.", source.logId);
+			source.log.warn(`Computation exceeded its ${context.sourceBudgetMs}ms budget, skipped this cycle`);
 			captureException(error, { sourceId: source.id, $exception_fingerprint: ["gtfs-compute-timeout", source.id] });
 			return;
 		}
-		console.error(error);
+		source.log.error(`${label} failed`, error);
 		captureException(error, { sourceId: source.id });
 	}
 }
@@ -185,7 +185,7 @@ async function publishLinePaths(source: Source, context: SourceLoopContext, stat
 		);
 		state.lastLinePathTtlRefreshAt = Date.now();
 	} catch (error) {
-		console.error(new Error(`Failed to publish line paths for '${source.id}'.`, { cause: error }));
+		source.log.error("Failed to publish line paths", error);
 		captureException(error, { sourceId: source.id });
 		context.resync.add(source.id);
 	}

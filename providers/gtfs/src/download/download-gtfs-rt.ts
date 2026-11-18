@@ -20,6 +20,7 @@ import {
 import type { Source } from "../model/source.js";
 import { getAuthHeaders } from "../utils/auth.js";
 import { createDeadline, type Deadline } from "../utils/deadline.js";
+import { redactHref } from "../utils/redact-href.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
 const feedHeader = GtfsRealtimeBindings.transit_realtime.FeedHeader;
@@ -111,8 +112,7 @@ export async function downloadGtfsRt(source: Source, deadline: Deadline = create
 					return;
 				}
 
-				if (!response.ok)
-					throw new Error(`Failed to download feed at '${realtimeFeedHref}' (status ${response.status}).`);
+				if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
 				const message = feedMessage.decode(Buffer.from(await response.arrayBuffer()));
 				const header = feedHeader.toObject(
@@ -195,13 +195,15 @@ export async function downloadGtfsRt(source: Source, deadline: Deadline = create
 
 				// Sur un flux à polling, en cas d'échec on préfère servir la dernière donnée connue
 				// plutôt que de perdre tous les véhicules du flux.
+				const feed = redactHref(realtimeFeedHref).href;
 				if (pollMs !== undefined && cached !== undefined) {
 					collect(cached.contents);
+					source.log.warn(`Failed to download real-time feed ${feed}, serving the last known data`, cause);
 				} else {
 					failedFeedCount += 1;
+					source.log.error(`Failed to download real-time feed ${feed}`, cause);
 				}
 
-				console.error(new Error(`Failed to download entities at '${realtimeFeedHref}'`, { cause }));
 				captureException(cause, {
 					sourceId: source.id,
 					realtimeFeedHref,

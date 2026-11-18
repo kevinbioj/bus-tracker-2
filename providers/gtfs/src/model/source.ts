@@ -16,6 +16,7 @@ import type { RealtimeFeedContents } from "../download/download-gtfs-rt.js";
 import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";
 import type { SourceAuth } from "../utils/auth.js";
 import { fetchFreshness, type ResourceFreshness } from "../utils/fetch-freshness.js";
+import { createLogger, type Logger } from "../utils/logger.js";
 import { createStopWatch } from "../utils/stop-watch.js";
 import { type Gtfs, getJourneyKey } from "./gtfs.js";
 import type {
@@ -220,8 +221,7 @@ export class Source {
 	readonly realtimeResources: RealtimeResource[];
 	readonly staticAuth: SourceAuth | undefined;
 	readonly realtimeAuth: SourceAuth | undefined;
-	/** Identifiant aligné pour les journaux. */
-	readonly logId: string;
+	readonly log: Logger;
 
 	constructor(
 		readonly id: string,
@@ -232,7 +232,7 @@ export class Source {
 		);
 		this.staticAuth = options.staticAuth ?? options.auth;
 		this.realtimeAuth = options.realtimeAuth ?? options.auth;
-		this.logId = id.padStart(16, " ");
+		this.log = createLogger(id);
 	}
 
 	get isAuthenticated() {
@@ -336,29 +336,21 @@ export class Source {
 
 	async importGtfs({ updating = false, keepIfUnchanged = false } = {}) {
 		const watch = createStopWatch();
-		const sourceId = this.logId;
-		const updateLog = console.draft("%s     ► %s GTFS resource...", updating ? "Updating" : "Importing", sourceId);
 
 		const resourceDirectory = await mkdtemp(join(tmpdir(), `bt-gtfs_${this.id}_`));
 
 		try {
 			const serviceWindow = createServiceWindow(Temporal.Now.plainDateISO());
 
-			updateLog("%s 1/3 ► Downloading GTFS resource into temporary directory...", sourceId);
 			const archivePath = join(resourceDirectory, "resource.zip");
 			const archive = await downloadGtfsArchive(this, archivePath);
 			if (keepIfUnchanged && archive.hash === this.resource?.hash) {
 				this.resource = { ...archive, checkedAt: Temporal.Now.instant() };
-				updateLog(
-					"%s     ✓ Resource is unchanged, keeping the loaded one (checked in %dms).\n",
-					sourceId,
-					watch.total(),
-				);
+				this.log.info(`GTFS unchanged upstream, kept the loaded one (checked in ${watch.total()}ms)`);
 				return false;
 			}
 			await extractGtfs(archivePath, resourceDirectory);
 
-			updateLog("%s 2/3 ► Loading GTFS resource contents into memory...", sourceId);
 			const gtfs: Gtfs = {
 				...(await importGtfs(resourceDirectory, { ...this.options.gtfsOptions, serviceWindow })),
 				importedAt: Temporal.Now.instant(),
@@ -366,54 +358,30 @@ export class Source {
 
 			this.linePaths = buildEncodedLinePaths(this, gtfs);
 
-			updateLog("%s 3/3 ► Pre-computing scheduled journeys...", sourceId);
 			const now = Temporal.Now.zonedDateTimeISO();
 			const dates = [...(now.hour < 6 ? [now.subtract({ days: 1 }).toPlainDate()] : []), now.toPlainDate()];
 			this.scheduleJourneys(gtfs, dates, now.epochMilliseconds);
 
-			updateLog(
-				"%s     ✓ Resource %s in %dms (service window %s → %s) - %d journeys and %d line paths were pre-computed.\n",
-				sourceId,
-				updating ? "updated" : "imported",
-				watch.total(),
-				serviceWindow.from,
-				serviceWindow.to,
-				gtfs.journeys.size,
-				this.linePaths.size,
+			this.log.info(
+				`GTFS ${updating ? "updated" : "imported"} in ${watch.total()}ms: ${gtfs.journeys.size} journeys, ${this.linePaths.size} line paths (window ${serviceWindow.from} → ${serviceWindow.to})`,
 			);
 			this.gtfs = gtfs;
 			this.resource = { ...archive, checkedAt: gtfs.importedAt };
 			return true;
-		} catch (cause) {
-			updateLog(
-				"%s     ✘ Something wrong occurred while %s the resource.",
-				sourceId,
-				updating ? "updating" : "importing",
-			);
-			throw new Error(`Failed to load GTFS resource for '${this.id}'.`, {
-				cause,
-			});
 		} finally {
 			await rm(resourceDirectory, { recursive: true, force: true });
 		}
 	}
 
 	async updateGtfs() {
-		const sourceId = this.logId;
-		const updateLog = console.draft("%s ► Checking GTFS resource staleness.", sourceId);
-
 		if (this.gtfs === undefined || this.resource === undefined) {
-			updateLog("%s ℹ Resource has not loaded yet (error?), performing a load attempt.", sourceId);
+			this.log.info("GTFS not loaded yet, importing");
 			return this.importGtfs();
 		}
 
 		const serviceWindow = this.gtfs.serviceWindow;
 		if (serviceWindow !== undefined && isServiceWindowOutdated(serviceWindow, Temporal.Now.plainDateISO())) {
-			updateLog(
-				"%s ℹ Current resource service window ends on %s, a day behind: updating resource.",
-				sourceId,
-				serviceWindow.to,
-			);
+			this.log.info(`GTFS service window ended on ${serviceWindow.to}, updating`);
 			return this.importGtfs({ updating: true });
 		}
 
@@ -424,16 +392,13 @@ export class Source {
 			fetchFreshness: (method) => fetchFreshness(this.options.staticResourceHref, this.staticAuth, method),
 		};
 
-		const stale = await isStaticResourceStale(resource, probe).catch(() => {
-			updateLog("%s ⚠ Failed to check resource staleness, relying on its last check.", sourceId);
+		const stale = await isStaticResourceStale(resource, probe).catch((error: unknown) => {
+			this.log.warn("Failed to check GTFS staleness, relying on the last check", error);
 			return isResourceCheckExpired(resource);
 		});
-		if (!stale) {
-			updateLog("%s ℹ Resource is up to date: keeping current resource.", sourceId);
-			return false;
-		}
+		if (!stale) return false;
 
-		updateLog("%s ℹ Resource is stale: updating resource.", sourceId);
+		this.log.info("GTFS changed upstream, updating");
 		return this.importGtfs({ updating: true, keepIfUnchanged: true });
 	}
 
@@ -464,15 +429,14 @@ export class Source {
 
 	computeNextJourneys() {
 		if (this.gtfs === undefined) {
-			console.warn("%s ⚠ Source has no loaded GTFS data, ignoring.", this.logId);
+			this.log.warn("No GTFS loaded, skipped scheduling the next day");
 			return;
 		}
 
 		const date = Temporal.Now.plainDateISO();
-		const updateLog = console.draft("%s ► Computing journeys for date '%s'.", this.logId, date);
 		const watch = createStopWatch();
 		const computedJourneys = this.scheduleJourneys(this.gtfs, [date], Date.now());
-		updateLog("%s ✓ Computed %d journeys for date '%s' in %dms.", this.logId, computedJourneys, date, watch.total());
+		this.log.info(`Scheduled ${computedJourneys} journeys for ${date} in ${watch.total()}ms`);
 	}
 
 	sweepJourneys() {
@@ -489,6 +453,7 @@ export class Source {
 			}
 		}
 
-		console.log("%s ✓ Swept %d outdated vehicle journeys", this.logId, oldJourneyCount - this.gtfs.journeys.size);
+		const sweptCount = oldJourneyCount - this.gtfs.journeys.size;
+		if (sweptCount > 0) this.log.info(`Swept ${sweptCount} outdated journeys`);
 	}
 }

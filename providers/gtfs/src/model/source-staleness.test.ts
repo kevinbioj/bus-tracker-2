@@ -13,8 +13,6 @@ vi.mock("../import/import-gtfs.js", () => ({
 	importGtfs: vi.fn(),
 }));
 
-type DraftConsole = Console & { draft?: (...args: unknown[]) => (...args: unknown[]) => void };
-
 const minutesAgo = (minutes: number) => Temporal.Now.instant().subtract({ minutes });
 
 const makeResource = (overrides: Partial<LoadedResource> = {}): LoadedResource => ({
@@ -64,12 +62,11 @@ describe("Source.updateGtfs", () => {
 	};
 
 	beforeEach(() => {
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 		vi.mocked(importGtfs).mockImplementation(async () => ({ trips: new Map(), journeys: new Map() }) as never);
 	});
 
 	afterEach(() => {
-		Reflect.deleteProperty(console, "draft");
 		vi.clearAllMocks();
 	});
 

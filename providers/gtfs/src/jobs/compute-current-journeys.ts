@@ -509,13 +509,10 @@ export async function computeVehicleJourneys(
 	const now = Temporal.Now.instant();
 	const nowMs = now.epochMilliseconds;
 	const watch = createStopWatch();
-	const sourceId = source.logId;
-	const updateLog = console.draft("%s     ► Generating active journeys list.", sourceId);
 
 	try {
 		await deadline.pause();
 
-		updateLog("%s 1/2 ► Downloading real-time data from feeds.", sourceId);
 		const { tripUpdates, vehiclePositions, tripModifications, alerts, resources, failedFeedCount } =
 			await downloadGtfsRt(source, deadline);
 		const downloadTime = watch.step();
@@ -526,7 +523,6 @@ export async function computeVehicleJourneys(
 			source.serviceAlerts = alerts;
 		}
 
-		updateLog("%s 2/2 ► Computing active journeys.", sourceId);
 		const activeJourneys = new Map<string, VehicleJourney>();
 		const paths = new Map<string, Shape | LinePath>();
 		const publication = createPublication(source, paths);
@@ -634,11 +630,8 @@ export async function computeVehicleJourneys(
 		}
 
 		if (oversizedAddedTripCount > 0) {
-			console.warn(
-				"%s     ⚠ Ignored %d added trip(s) with more than %d stop time updates.",
-				sourceId,
-				oversizedAddedTripCount,
-				MAX_ADDED_TRIP_STOP_TIME_UPDATES,
+			source.log.warn(
+				`Ignored ${oversizedAddedTripCount} added trips with more than ${MAX_ADDED_TRIP_STOP_TIME_UPDATES} stop time updates`,
 			);
 		}
 
@@ -1033,19 +1026,11 @@ export async function computeVehicleJourneys(
 
 		// Certains SAE recalent plusieurs véhicules sur un point identique du tracé : on les écarte
 		// juste avant publication pour qu'ils restent tous visibles et sélectionnables sur la carte.
-		const scatteredCount = scatterOverlappingPositions(activeJourneys.values());
+		const scatteredCount = scatterOverlappingPositions(activeJourneys.values(), source.log);
 
 		const computeTime = watch.step();
-		updateLog(
-			"%s     ✓ Computed %d journeys and %d paths in %dms (%dms download - %dms compute)%s%s.",
-			sourceId,
-			activeJourneys.size,
-			paths.size,
-			watch.total(),
-			downloadTime,
-			computeTime,
-			scatteredCount > 0 ? ` - ${scatteredCount} overlapping positions scattered` : "",
-			stackedCount > 0 ? ` - ${stackedCount} stopped positions queued` : "",
+		source.log.info(
+			`Computed ${activeJourneys.size} journeys, ${paths.size} paths in ${watch.total()}ms (download ${downloadTime}ms, compute ${computeTime}ms)${scatteredCount > 0 ? `, ${scatteredCount} overlapping positions scattered` : ""}${stackedCount > 0 ? `, ${stackedCount} stopped positions queued` : ""}`,
 		);
 
 		// Écrit en toute fin de bloc `try` : la fenêtre de grâce se mesure depuis le dernier cycle
@@ -1066,14 +1051,8 @@ export async function computeVehicleJourneys(
 			paths: Object.fromEntries(paths),
 		};
 	} catch (cause) {
-		if (cause instanceof DeadlineExceededError) {
-			updateLog("%s     ✘ Computation exceeded its time budget after %dms.", sourceId, watch.total());
-			throw cause;
-		}
-		updateLog("%s     ✘ Something wrong occurred during computation.", sourceId);
-		throw new Error(`Failed to compute vehicle journeys for '${source.id}'.`, {
-			cause,
-		});
+		if (cause instanceof DeadlineExceededError) throw cause;
+		throw new Error("Failed to compute vehicle journeys", { cause });
 	}
 }
 

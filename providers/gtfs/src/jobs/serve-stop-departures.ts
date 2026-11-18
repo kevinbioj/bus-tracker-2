@@ -12,7 +12,7 @@ import { createRedisClient } from "@bus-tracker/redis";
 import { ArkErrors } from "arktype";
 
 import type { Source } from "../model/source.js";
-
+import { providerLog } from "../utils/logger.js";
 import { computeStopDepartures } from "./compute-stop-departures.js";
 
 /** Seule la publication est requise : évite d'exposer la variance des types du client Redis. */
@@ -97,7 +97,7 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 				try {
 					await answer(entry);
 				} catch (cause) {
-					console.error(new Error("Failed to answer a stop departures request.", { cause }));
+					providerLog.error(`Failed to answer stop departures for ${entry.request.stopAreaRef}`, cause);
 					captureException(cause);
 				}
 			}
@@ -105,7 +105,7 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 			isDraining = false;
 		}
 		if (droppedCount > 0) {
-			console.warn("⚠ Dropped %d stop departures requests: too many pending.", droppedCount);
+			providerLog.warn(`Dropped ${droppedCount} stop departures requests: too many pending`);
 			droppedCount = 0;
 		}
 	};
@@ -117,7 +117,7 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 		} catch {}
 		const validRequest = stopDeparturesRequestSchema(payload);
 		if (validRequest instanceof ArkErrors) {
-			console.warn("⚠ Rejected a malformed stop departures request:", message);
+			providerLog.warn(`Rejected a malformed stop departures request: ${message.slice(0, 200)}`);
 			return;
 		}
 
@@ -147,5 +147,5 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 	await subscriber.connect();
 	await subscriber.subscribe(stopDeparturesRequestChannel(providerId), onRequest);
 
-	console.log("%s ► Serving stop departures requests.", Temporal.Now.instant());
+	providerLog.info("Serving stop departures requests");
 }

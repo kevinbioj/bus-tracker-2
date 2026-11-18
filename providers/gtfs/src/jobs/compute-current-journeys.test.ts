@@ -20,10 +20,6 @@ vi.mock("../download/download-gtfs-rt.js", () => ({
 	downloadGtfsRt: vi.fn(),
 }));
 
-type DraftConsole = Console & {
-	draft?: (...args: unknown[]) => (...args: unknown[]) => void;
-};
-
 function epochSeconds(value: string) {
 	return Math.floor(Temporal.Instant.from(value).epochMilliseconds / 1000);
 }
@@ -221,12 +217,11 @@ function blockSource(options?: Partial<SourceOptions>) {
 describe("computeVehicleJourneys", () => {
 	beforeEach(() => {
 		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:12:00Z"));
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	it("emits an unmatched ADDED trip without path and positions it at the last passed stop", async () => {
@@ -346,12 +341,11 @@ describe("computeVehicleJourneys", () => {
 describe("computeVehicleJourneys (arrivée au terminus)", () => {
 	beforeEach(() => {
 		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:12:00Z"));
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	it("publie une dernière fois la course qui vient d'atteindre son terminus", async () => {
@@ -443,12 +437,11 @@ describe("computeVehicleJourneys (arrivée au terminus)", () => {
 
 describe("computeVehicleJourneys (expiration des TripUpdate disparus)", () => {
 	beforeEach(() => {
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	it("rétablit un arrêt supprimé dès que le TripUpdate quitte le flux", async () => {
@@ -509,12 +502,11 @@ describe("computeVehicleJourneys (expiration des TripUpdate disparus)", () => {
 
 describe("computeVehicleJourneys (positions figées)", () => {
 	beforeEach(() => {
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	/** Position émise à `time` puis plus jamais : le terminal embarqué s'est déconnecté. */
@@ -565,12 +557,11 @@ describe("computeVehicleJourneys (positions figées)", () => {
 
 describe("computeVehicleJourneys (courses créées par le temps réel)", () => {
 	beforeEach(() => {
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	function realtimeSource(options?: Partial<SourceOptions>) {
@@ -767,12 +758,11 @@ function dwellingSource(options?: Partial<SourceOptions>) {
 
 describe("computeVehicleJourneys (temps de stationnement)", () => {
 	beforeEach(() => {
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	it("publie l'heure d'arrivée à part quand elle diffère du départ", async () => {
@@ -810,12 +800,11 @@ describe("computeVehicleJourneys (temps de stationnement)", () => {
 
 describe("computeVehicleJourneys (course multi-fuseaux)", () => {
 	beforeEach(() => {
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	it("restitue chaque arrêt en heure locale sans déplacer l'instant", async () => {
@@ -909,12 +898,11 @@ function callsOf(result: Awaited<ReturnType<typeof computeVehicleJourneys>>) {
 
 describe("computeVehicleJourneys (dessertes déviées)", () => {
 	beforeEach(() => {
-		(console as DraftConsole).draft = () => () => {};
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	it("insère l'arrêt de déviation et conserve l'arrêt remplacé", async () => {
@@ -1185,12 +1173,11 @@ function addedTripSource(options?: Partial<SourceOptions>) {
 
 describe("computeVehicleJourneys (courses supplémentaires)", () => {
 	beforeEach(() => {
-		(console as DraftConsole).draft = () => () => {};
+		vi.spyOn(console, "log").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	it("publie une course NEW sans attendre d'appariement de tracé", async () => {
@@ -1383,13 +1370,12 @@ describe("computeVehicleJourneys (courses supplémentaires)", () => {
 describe("computeVehicleJourneys (budget de temps)", () => {
 	beforeEach(() => {
 		vi.spyOn(Temporal.Now, "instant").mockReturnValue(Temporal.Instant.from("2026-05-18T08:05:00Z"));
-		(console as DraftConsole).draft = vi.fn(() => vi.fn());
+		vi.spyOn(console, "log").mockImplementation(() => {});
 		vi.mocked(downloadGtfsRt).mockReset();
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		Reflect.deleteProperty(console, "draft");
 	});
 
 	it("n'interroge aucun flux quand l'échéance est déjà passée", async () => {

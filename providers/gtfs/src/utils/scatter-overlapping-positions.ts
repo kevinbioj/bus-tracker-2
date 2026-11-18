@@ -1,6 +1,7 @@
 import type { VehicleJourney } from "@bus-tracker/contracts";
 
 import { groupByProximity } from "./group-by-proximity.js";
+import { type Logger, providerLog } from "./logger.js";
 
 /**
  * Distance (m) en deçà de laquelle deux positions GPS sont considérées superposées. Volontairement
@@ -54,7 +55,10 @@ type PositionedJourney = VehicleJourney & { position: NonNullable<VehicleJourney
  *
  * @returns Le nombre de véhicules effectivement déplacés.
  */
-export function scatterOverlappingPositions(vehicleJourneys: Iterable<VehicleJourney>) {
+export function scatterOverlappingPositions(
+	vehicleJourneys: Iterable<VehicleJourney>,
+	log: Pick<Logger, "warn"> = providerLog,
+) {
 	const candidates: PositionedJourney[] = [];
 	for (const vehicleJourney of vehicleJourneys) {
 		// Seules les positions GPS sont concernées : les positions calculées sont ancrées aux arrêts
@@ -122,9 +126,7 @@ export function scatterOverlappingPositions(vehicleJourneys: Iterable<VehicleJou
 	}
 
 	if (oversizedCount > 0) {
-		console.warn(
-			`⚠ ${oversizedCount} vehicles share a point with more than ${MAX_CLUSTER_SIZE} others, left in place.`,
-		);
+		log.warn(`${oversizedCount} vehicles share a point with more than ${MAX_CLUSTER_SIZE} others, left in place`);
 	}
 
 	return scatteredCount;

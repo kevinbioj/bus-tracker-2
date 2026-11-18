@@ -487,9 +487,6 @@ importers:
       dotenv:
         specifier: ^18.0.10
         version: 18.0.10
-      draftlog:
-        specifier: ^1.0.13
-        version: 1.0.13
       fast-xml-parser:
         specifier: ^5.12.0
         version: 5.12.0
@@ -3482,9 +3479,6 @@ packages:
     resolution: {integrity: sha512-89FAA1xchzK2mxVWdr5F/0rldwiueXs6zJM86rO66EzekR1iBdiXRthyG+m5GvkJaFH3C2LESzamTkgndmLT2A==}
     engines: {node: '>=12'}
     hasBin: true
-
-  draftlog@1.0.13:
-    resolution: {integrity: sha512-GeMWOpXERBpfVDK6v7m0x1hPg8+g8ZsZWqJl2T17wHqrm4h8fnjiZmXcnCrmwogAc6R3YTxFXax15wezfuyCUw==}
 
   drizzle-kit@0.31.11:
     resolution: {integrity: sha512-YCYqxTLIB2OCqf6w9/Vef13baBVbwQIPcbT4Y56AfO6B9ajZhDhD8Jkveg/hJvT/iuMloKD/IYYkyMMNhr7Kqg==}
@@ -7595,8 +7589,6 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   dotenv@18.0.10: {}
-
-  draftlog@1.0.13: {}
 
   drizzle-kit@0.31.11:
     dependencies:

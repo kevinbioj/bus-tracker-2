@@ -345,15 +345,11 @@ export async function publishStopAreas(redis: RedisClient, providerId: string, s
 			// Le serveur garde stations et marqueurs en cache quelques minutes : il les oublie dès maintenant.
 			await redis.publish(STOP_AREAS_INVALIDATION_CHANNEL, JSON.stringify({ providerId, sourceId: source.id }));
 
-			console.log(
-				"%s ✓ Published %d stop areas (%d areas and %d stop points removed).",
-				source.logId,
-				manifests.length,
-				staleRefs.length,
-				staleStopRefs.length,
+			source.log.info(
+				`Published ${manifests.length} stop areas (${staleRefs.length} areas and ${staleStopRefs.length} stop points removed)`,
 			);
 		} catch (cause) {
-			console.error(new Error(`Failed to publish stop areas for '${source.id}'.`, { cause }));
+			source.log.error("Failed to publish stop areas", cause);
 			captureException(cause);
 		}
 	}
