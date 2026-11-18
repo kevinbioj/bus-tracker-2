@@ -1,7 +1,6 @@
 import "dotenv";
 
-import { setTimeout } from "node:timers/promises";
-import { LINE_PATH_TTL_SECONDS, VEHICLE_JOURNEYS_CHANNEL } from "@bus-tracker/contracts";
+import { VEHICLE_JOURNEYS_CHANNEL } from "@bus-tracker/contracts";
 import { captureException, initMonitoring, shutdownMonitoring } from "@bus-tracker/monitoring";
 import { createRedisClient } from "@bus-tracker/redis";
 import { Cron } from "croner";
@@ -9,22 +8,15 @@ import DraftLog from "draftlog";
 import pLimit from "p-limit";
 
 import { loadConfiguration } from "./configuration/load-configuration.js";
-import { computeVehicleJourneys } from "./jobs/compute-current-journeys.js";
-import { initializeResources } from "./jobs/initialize-resources.js";
-import { publishDataSourceManifests } from "./jobs/publish-data-sources.js";
 import { createJourneyPathPublisher } from "./jobs/publish-journey-paths.js";
-import { publishServiceAlerts } from "./jobs/publish-service-alerts.js";
-import { getRealtimeServiceFingerprint, publishStopAreas } from "./jobs/publish-stop-areas.js";
+import { runSourceLoop } from "./jobs/run-source-loop.js";
 import { serveStopDepartures } from "./jobs/serve-stop-departures.js";
-import { updateResources } from "./jobs/update-resources.js";
 import type { Source } from "./model/source.js";
 import { configurationPath } from "./options.js";
-import { createDeadline, DeadlineExceededError } from "./utils/deadline.js";
-import { createStopWatch } from "./utils/stop-watch.js";
 
-const COMPUTE_CYCLE_BUDGET_MS = 30_000;
 const DEFAULT_SOURCE_COMPUTE_BUDGET_MS = 20_000;
-const STUCK_COMPUTE_CYCLE_MS = 60_000;
+const RESOURCE_IMPORT_CONCURRENCY = 2;
+const GC_INTERVAL_MS = 300_000;
 
 DraftLog(console, true)?.addLineListener(process.stdin);
 
@@ -40,18 +32,16 @@ initMonitoring(`processor-gtfs:${configuration.id}`);
 
 console.log("%s ► Connecting to Redis.", Temporal.Now.instant());
 // Après une coupure, Redis a pu perdre les tracés et l'inventaire : ils sont republiés au cycle suivant.
-let needsResync = false;
-const redis = createRedisClient({
-	onReconnect: () => {
-		needsResync = true;
-	},
-});
-/** Rafraîchissement de la durée de vie des tracés de ligne : très en deçà de celle-ci, qui se compte en jours. */
-const linePathTtlRefreshMs = 3_600_000;
-const lastLinePathTtlRefreshAt = new Map<string, number>();
+const resync = new Set<string>();
 // Les tracés de course vivent 15 min dans Redis ; un tracé inchangé y est réécrit toutes les 5 min,
 // ce qui laisse la marge de plusieurs cycles manqués avant son expiration.
 const journeyPaths = createJourneyPathPublisher(900, 300_000);
+const redis = createRedisClient({
+	onReconnect: () => {
+		journeyPaths.reset();
+		for (const source of configuration.sources) resync.add(source.id);
+	},
+});
 await redis.connect();
 console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), VEHICLE_JOURNEYS_CHANNEL);
 console.log();
@@ -63,203 +53,40 @@ new Cron("0 0 0 * * *", () => {
 	global.gc?.();
 });
 
-let lastUpdateAt = Date.now();
-let lastSweepAt = Date.now();
-let lastStopAreasPublishAt = Date.now();
-/** Arrêts temps réel figurant dans le dernier inventaire publié de chaque source. */
-const publishedRealtimeStopAreas = new Map<string, string>();
+setInterval(() => global.gc?.(), GC_INTERVAL_MS);
 
-await initializeResources(configuration.sources);
-await publishInventory(configuration.sources);
-await serveStopDepartures(redis, configuration.id, configuration.sources).catch((error) => {
+serveStopDepartures(redis, configuration.id, configuration.sources).catch((error) => {
 	// Les prochains passages sont un service d'appoint : leur indisponibilité ne doit pas empêcher
 	// la publication des courses.
 	console.error("✘ Failed to serve stop departures requests:", error);
 	captureException(error);
 });
-while (true) {
-	console.log("%s ► Entering loop cycle.", Temporal.Now.instant());
 
-	if (Date.now() - lastUpdateAt > 600_000) {
-		const updatedSources = await updateResources(configuration.sources);
-		if (redis.isReady) {
-			await publishInventory(updatedSources);
-		} else {
-			// Les tracés des sources mises à jour seront republiés au retour de Redis.
-			needsResync = true;
-		}
-		lastUpdateAt = Date.now();
-	}
+const resourceLimit = pLimit(RESOURCE_IMPORT_CONCURRENCY);
+const updateLimit = pLimit(1);
+const computeLimit = pLimit(configuration.computeConcurrency ?? 6);
 
-	if (Date.now() - lastSweepAt > 300_000) {
-		console.log("%s ► Sweeping outdated journey entries.", Temporal.Now.instant());
-		for (const source of configuration.sources) source.sweepJourneys();
-		console.log();
-		global.gc?.();
-		lastSweepAt = Date.now();
-	}
+await Promise.all(
+	configuration.sources.map((source) =>
+		runSourceLoop(source, {
+			providerId: configuration.id,
+			sources: configuration.sources,
+			redis,
+			computeDelayMs: configuration.computeDelayMs,
+			sourceBudgetMs: configuration.computeTimeoutMs ?? DEFAULT_SOURCE_COMPUTE_BUDGET_MS,
+			computeLimit,
+			resourceLimit,
+			updateLimit,
+			journeyPaths,
+			resync,
+			onStuck: (stuckSource) => void restartOnStuckSource(stuckSource),
+		}),
+	),
+);
 
-	// Inutile de calculer des courses qui ne pourraient pas être publiées.
-	if (!redis.isReady) {
-		console.warn("%s ✘ Redis is unavailable, skipping computation.", Temporal.Now.instant());
-		await setTimeout(configuration.computeDelayMs);
-		continue;
-	}
-
-	// Republiées périodiquement même sans nouvelle ressource : c'est ce qui maintient les fiches en vie.
-	if (Date.now() - lastStopAreasPublishAt > 3_600_000) {
-		await publishStopAreas(redis, configuration.id, configuration.sources);
-		lastStopAreasPublishAt = Date.now();
-	}
-
-	if (needsResync) {
-		needsResync = false;
-		journeyPaths.reset();
-		await publishInventory(configuration.sources);
-		lastStopAreasPublishAt = Date.now();
-	}
-
-	const startedAt = Date.now();
-	try {
-		let timedOut = false;
-
-		await Promise.race([
-			computeCurrentJourneys(),
-			(async () => {
-				await setTimeout(STUCK_COMPUTE_CYCLE_MS);
-				timedOut = true;
-			})(),
-		]);
-
-		if (timedOut) {
-			console.error("Computing journeys is stuck, restarting processor.");
-			captureException(new Error("Stuck computing journeys"));
-			await shutdownMonitoring();
-			process.exit(1);
-		}
-	} catch (e) {
-		console.error("Failed to compute current journeys", e);
-		captureException(e);
-	}
-	const computeDuration = Date.now() - startedAt;
-
-	await publishDataSourceManifests(redis, configuration.id, configuration.sources);
-	await publishServiceAlerts(redis, configuration.id, configuration.sources);
-
-	const timeToWait = Math.min(120_000, Math.max(10_000, configuration.computeDelayMs - computeDuration));
-	console.log("%s ► Done loop cycle, waiting for %dms.", Temporal.Now.instant(), timeToWait);
-	await setTimeout(timeToWait);
-}
-
-async function computeCurrentJourneys() {
-	const watch = createStopWatch();
-
-	const computeLimit = configuration.computeConcurrency ?? 6;
-	const computeLimitFn = pLimit(computeLimit);
-	const sourceBudgetMs = configuration.computeTimeoutMs ?? DEFAULT_SOURCE_COMPUTE_BUDGET_MS;
-	const cycleDeadlineAt = Date.now() + COMPUTE_CYCLE_BUDGET_MS;
-	const updateLog = console.draft("%s ► Computing vehicle journeys to publish.", Temporal.Now.instant());
-
-	try {
-		const computationResults = await Promise.allSettled(
-			configuration.sources.map((source) =>
-				computeLimitFn(async () => {
-					if (source.gtfs === undefined) return 0;
-					const deadline = createDeadline(Math.min(Date.now() + sourceBudgetMs, cycleDeadlineAt));
-					const { journeys, paths } = await computeVehicleJourneys(source, deadline);
-
-					for (const journey of journeys) {
-						source.observedNetworkRefs.add(journey.networkRef);
-					}
-
-					// Les dessertes ajoutées vont et viennent avec les déviations : l'inventaire est republié dès que
-					// leur ensemble change, sans attendre le rafraîchissement horaire.
-					const realtimeStopAreasFingerprint = getRealtimeServiceFingerprint(source);
-					if (realtimeStopAreasFingerprint !== (publishedRealtimeStopAreas.get(source.id) ?? "")) {
-						await publishStopAreas(redis, configuration.id, [source]);
-						publishedRealtimeStopAreas.set(source.id, realtimeStopAreasFingerprint);
-					}
-
-					for (let i = 0; i < journeys.length; i += 500) {
-						const chunk = journeys.slice(i, Math.min(i + 500, journeys.length));
-						await redis.publish(VEHICLE_JOURNEYS_CHANNEL, JSON.stringify(chunk));
-					}
-
-					await journeyPaths.publish(redis, paths, Date.now());
-
-					await refreshLinePathTtls(source);
-
-					return journeys.length;
-				}),
-			),
-		);
-
-		let computedJourneyCount = 0;
-		for (const [index, computationResult] of computationResults.entries()) {
-			if (computationResult.status === "rejected") {
-				if (computationResult.reason instanceof DeadlineExceededError) {
-					const source = configuration.sources[index]!;
-					console.warn("%s ⚠ Computation exceeded its time budget, skipped for this cycle.", source.logId);
-					captureException(computationResult.reason, {
-						sourceId: source.id,
-						$exception_fingerprint: ["gtfs-compute-timeout", source.id],
-					});
-					continue;
-				}
-				console.error(computationResult.reason);
-				captureException(computationResult.reason);
-				continue;
-			}
-			computedJourneyCount += computationResult.value;
-		}
-
-		updateLog(
-			"%s ✓ Published %d vehicle journey entries in %dms.",
-			Temporal.Now.instant(),
-			computedJourneyCount,
-			watch.total(),
-		);
-	} catch (e) {
-		updateLog("%s ✘ Something wrong occurred while publishing vehicle journeys.", Temporal.Now.instant());
-		console.error(e);
-		captureException(e);
-	}
-
-	console.log();
-}
-
-/**
- * Republie ce qui décrit les sources plutôt que leurs véhicules : tracés de ligne, inventaire des
- * sources et stations. Le manifeste des sources couvre toujours toutes les sources, qu'il publie en bloc.
- */
-async function publishInventory(sources: Source[]) {
-	await publishLinePaths(sources);
-	await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
-	await publishStopAreas(redis, configuration.id, sources);
-}
-
-async function publishLinePaths(sources: Source[]) {
-	try {
-		for (const source of sources) {
-			// Émises sans s'attendre les unes les autres : le client Redis les envoie d'un seul tenant.
-			await Promise.all(
-				Array.from(source.linePaths, ([ref, path]) =>
-					redis.set(ref, JSON.stringify(path), { EX: LINE_PATH_TTL_SECONDS }),
-				),
-			);
-			lastLinePathTtlRefreshAt.set(source.id, Date.now());
-		}
-	} catch (e) {
-		console.error("Failed to publish line paths", e);
-		captureException(e);
-		needsResync = true;
-	}
-}
-
-async function refreshLinePathTtls(source: Source) {
-	if (source.linePaths.size === 0) return;
-	if (Date.now() - (lastLinePathTtlRefreshAt.get(source.id) ?? 0) < linePathTtlRefreshMs) return;
-
-	await Promise.all(Array.from(source.linePaths.keys(), (ref) => redis.expire(ref, LINE_PATH_TTL_SECONDS)));
-	lastLinePathTtlRefreshAt.set(source.id, Date.now());
+async function restartOnStuckSource(source: Source) {
+	console.error("%s ✘ Source iteration is stuck, restarting processor.", source.logId);
+	captureException(new Error(`Stuck iteration for source '${source.id}'`));
+	await shutdownMonitoring();
+	process.exit(1);
 }
