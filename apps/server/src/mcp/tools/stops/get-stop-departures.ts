@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-import { buildStopDepartures } from "../../../controllers/stops.js";
+import { buildStopDepartures } from "../../../core/services/stop-board-service.js";
 import { idSchema } from "../../../utils/validator-helpers.js";
 import { defineTool, ToolFailure } from "../../define-tool.js";
 import { loadLineLabels } from "../../lookups/lines.js";

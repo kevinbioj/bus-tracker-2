@@ -5,6 +5,7 @@ import { memo } from "react";
 import type { Line } from "~/api/networks";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
+import { DEFAULT_LINE_COLOR, DEFAULT_LINE_TEXT_COLOR } from "~/utils/line-colors";
 
 export function OnlineVehiclesCount({ count, className }: Readonly<{ count: number; className?: string }>) {
 	return (
@@ -37,7 +38,7 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 }: FilterModuleLineCardProps) {
 	const lineLabel = line.girouetteNumber ? line.number : m.network_lines_label({ lineNumber: line.number });
 	const onlineCount = line.onlineMarkerCount ?? 0;
-	const textColor = line.textColor ?? "#FFFFFF";
+	const textColor = line.textColor ?? DEFAULT_LINE_TEXT_COLOR;
 
 	return (
 		<div
@@ -52,7 +53,7 @@ export const FilterModuleLineCard = memo(function FilterModuleLineCard({
 					onlineCount === 0 && "brightness-90 saturate-[.85] hover:brightness-100",
 				)}
 				onClick={() => onSelect?.(line)}
-				style={{ backgroundColor: line.color ?? "#18181B" }}
+				style={{ backgroundColor: line.color ?? DEFAULT_LINE_COLOR }}
 				type="button"
 			>
 				<span aria-hidden="true" className="flex h-full min-w-0 flex-1 items-center">

@@ -1,10 +1,10 @@
 import { STOP_AREAS_GEO_KEY, type StopAreaManifest, stopAreaKey, stopPointAreaKey } from "@bus-tracker/contracts";
 import { inArray } from "drizzle-orm";
-
-import { redis } from "../../index.js";
+import { createRefResolver } from "../../utils/create-ref-resolver.js";
 import { useCache } from "../../utils/use-cache.js";
 import { database } from "../database/database.js";
 import { networksTable } from "../database/schema.js";
+import { redis } from "../redis.js";
 
 /**
  * Station telle que servie par l'API : sa fiche Redis, rattachée aux réseaux connus de la base —
@@ -21,45 +21,14 @@ export type StopAreaBounds = {
 
 const EARTH_RADIUS_KM = 6_371;
 
-/**
- * Identifiants de réseau par référence. Les fiches ne portent que la référence — le provider ignore
- * les identifiants de la base — et un réseau ne change pas de référence : la table est gardée en
- * mémoire, et seules les références encore inconnues sont cherchées en base.
- */
-const networkIdsByRef = new Map<string, number>();
-
-const unknownNetworkRefsUntil = new Map<string, number>();
-
-const UNKNOWN_NETWORK_RETRY_MS = 60_000;
-
-setInterval(() => {
-	networkIdsByRef.clear();
-	unknownNetworkRefsUntil.clear();
-}, 30 * 60_000).unref();
-
-export async function resolveNetworkIds(networkRefs: string[]) {
-	const nowMs = Date.now();
-	const unknownRefs = [...new Set(networkRefs)].filter(
-		(ref) => !networkIdsByRef.has(ref) && (unknownNetworkRefsUntil.get(ref) ?? 0) <= nowMs,
-	);
-	if (unknownRefs.length > 0) {
-		const networks = await database
-			.select({ id: networksTable.id, ref: networksTable.ref })
-			.from(networksTable)
-			.where(inArray(networksTable.ref, unknownRefs));
-
-		for (const ref of unknownRefs) {
-			const network = networks.find((network) => network.ref === ref);
-			if (network !== undefined) {
-				networkIdsByRef.set(ref, network.id);
-				unknownNetworkRefsUntil.delete(ref);
-			} else {
-				unknownNetworkRefsUntil.set(ref, nowMs + UNKNOWN_NETWORK_RETRY_MS);
-			}
-		}
-	}
-	return networkIdsByRef;
-}
+/** Identifiants de réseau par référence : les fiches ne portent que la référence, le provider ignorant la base. */
+export const resolveNetworkIds = createRefResolver(async (refs) => {
+	const networks = await database
+		.select({ id: networksTable.id, ref: networksTable.ref })
+		.from(networksTable)
+		.where(inArray(networksTable.ref, refs));
+	return new Map(networks.map(({ id, ref }) => [ref, id]));
+});
 
 const networkRefsOf = (manifest: StopAreaManifest) => manifest.networkRefs ?? [manifest.networkRef];
 

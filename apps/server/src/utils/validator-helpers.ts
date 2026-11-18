@@ -9,58 +9,46 @@ export const idSchema = z.coerce.number().int().min(0).max(MAX_DATABASE_ID);
 
 export const jsonIdSchema = z.number().int().min(0).max(MAX_DATABASE_ID);
 
+/** Un identifiant ou une liste d'identifiants, toujours rendus en liste. */
+export const idListSchema = (max: number) =>
+	z
+		.union([idSchema, z.array(idSchema).max(max)])
+		.optional()
+		.transform((values) => (typeof values === "number" ? [values] : values));
+
+export const boundsQueryShape = {
+	swLat: z.coerce.number().min(-90).max(90),
+	swLon: z.coerce.number().min(-180).max(180),
+	neLat: z.coerce.number().min(-90).max(90),
+	neLon: z.coerce.number().min(-180).max(180),
+};
+
 export const BOUNDS_ERROR = { message: "South-west bounds must not exceed north-east bounds." };
 
 export const isOrderedBounds = (bounds: { swLat: number; swLon: number; neLat: number; neLon: number }) =>
 	bounds.swLat <= bounds.neLat && bounds.swLon <= bounds.neLon;
 
-export const createJsonValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(
-	schema: ZodObject<Shape, Config>,
-) =>
-	validator("json", (values, c) => {
-		const parsed = schema.safeParse(values);
-		if (!parsed.success) {
-			c.status(400);
-			return c.json({
-				status: 400,
-				code: "INVALID_JSON_PAYLOAD",
-				message: 'JSON payload is invalid, please check "issues" for more information.',
-				issues: parsed.error.issues,
-			});
-		}
-		return parsed.data;
-	});
+const createValidator =
+	<Target extends "json" | "param" | "query">(target: Target, code: string, invalid: string) =>
+	<Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(schema: ZodObject<Shape, Config>) =>
+		validator(target, (values, c) => {
+			const parsed = schema.safeParse(values);
+			if (!parsed.success) {
+				c.status(400);
+				return c.json({
+					status: 400,
+					code,
+					message: `${invalid}, please check "issues" for more information.`,
+					issues: parsed.error.issues,
+				});
+			}
+			return parsed.data;
+		});
 
-export const createParamValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(
-	schema: ZodObject<Shape, Config>,
-) =>
-	validator("param", (values, c) => {
-		const parsed = schema.safeParse(values);
-		if (!parsed.success) {
-			c.status(400);
-			return c.json({
-				status: 400,
-				code: "INVALID_PATH_PARAMETERS",
-				message: 'Path parameters are invalid, please check "issues" for more information.',
-				issues: parsed.error.issues,
-			});
-		}
-		return parsed.data;
-	});
-
-export const createQueryValidator = <Shape extends core.$ZodShape, Config extends core.$ZodObjectConfig>(
-	schema: ZodObject<Shape, Config>,
-) =>
-	validator("query", (values, c) => {
-		const parsed = schema.safeParse(values);
-		if (!parsed.success) {
-			c.status(400);
-			return c.json({
-				status: 400,
-				code: "INVALID_QUERY_PARAMETERS",
-				message: 'Query parameters are invalid, please check "issues" for more information.',
-				issues: parsed.error.issues,
-			});
-		}
-		return parsed.data;
-	});
+export const createJsonValidator = createValidator("json", "INVALID_JSON_PAYLOAD", "JSON payload is invalid");
+export const createParamValidator = createValidator("param", "INVALID_PATH_PARAMETERS", "Path parameters are invalid");
+export const createQueryValidator = createValidator(
+	"query",
+	"INVALID_QUERY_PARAMETERS",
+	"Query parameters are invalid",
+);

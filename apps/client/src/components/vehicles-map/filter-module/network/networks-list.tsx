@@ -14,7 +14,7 @@ import {
 	type NetworkListView,
 } from "~/components/vehicles-map/filter-module/network/networks-inner-list";
 import type { RegionGroup } from "~/components/vehicles-map/filter-module/network/region-card";
-import { useFavoriteNetworkIds } from "~/hooks/use-favorite-networks";
+import { useFavoriteNetworkIds } from "~/hooks/use-favorite-ids";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 import { searchNetworks } from "~/utils/network-search";

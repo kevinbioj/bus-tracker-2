@@ -29,6 +29,7 @@ import { OnDemandIcon, onDemandLabels } from "~/icons/on-demand";
 import { TriangleAlertFilledIcon } from "~/icons/triangle-alert-filled";
 import { getWheelchairStatus, WheelchairIcon, type WheelchairStatus, wheelchairIconDetails } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
+import { DEFAULT_LINE_COLOR, DEFAULT_LINE_TEXT_COLOR } from "~/utils/line-colors";
 
 function formatDepartureLabel(departure: StopDeparture, displayMode: NextCallsDisplayMode, now: dayjs.Dayjs) {
 	const time = departure.expectedTime ?? departure.aimedTime;
@@ -60,8 +61,8 @@ function LinePictogram({ line }: Readonly<{ line?: Line }>) {
 		<span
 			className="block shrink-0 min-w-8 max-w-22 truncate rounded-md px-1.5 text-center text-base font-bold leading-7"
 			style={{
-				backgroundColor: line?.color ?? "#18181B",
-				color: line?.textColor ?? "#FFFFFF",
+				backgroundColor: line?.color ?? DEFAULT_LINE_COLOR,
+				color: line?.textColor ?? DEFAULT_LINE_TEXT_COLOR,
 			}}
 			title={line?.number}
 		>

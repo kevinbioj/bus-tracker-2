@@ -100,8 +100,6 @@ export function resolveColor(entry: string, ledColor: LedColor): string {
 	return entry === LED_PALETTE_ENTRY ? ledColors[ledColor] : entry;
 }
 
-// ---
-
 type BitmapCanvasProps = Omit<ComponentPropsWithoutRef<"canvas">, "height" | "width"> & {
 	bitmap: GirouetteBitmap;
 	ledColor: LedColor;

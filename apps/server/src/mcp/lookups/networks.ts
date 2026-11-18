@@ -22,16 +22,17 @@ export type NetworkSummary = {
 
 const networksCache = useCache<Map<number, NetworkSummary>>(60_000, 1);
 
-export async function loadNetworks() {
-	const cached = networksCache.get("all");
-	if (cached !== undefined) return cached;
+export function loadNetworks() {
+	return networksCache.getOrLoad("all", readNetworks);
+}
 
+async function readNetworks() {
 	const rows = await database
 		.select({ network: networksTable, regionName: regionsTable.name })
 		.from(networksTable)
 		.leftJoin(regionsTable, eq(regionsTable.id, networksTable.regionId));
 
-	const networks = new Map<number, NetworkSummary>(
+	return new Map<number, NetworkSummary>(
 		rows.map(({ network, regionName }) => [
 			network.id,
 			{
@@ -48,8 +49,6 @@ export async function loadNetworks() {
 			},
 		]),
 	);
-	networksCache.set("all", networks);
-	return networks;
 }
 
 export async function getNetwork(networkId: number) {

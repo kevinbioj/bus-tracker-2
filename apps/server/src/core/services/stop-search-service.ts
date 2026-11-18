@@ -1,8 +1,7 @@
 import { STOP_AREAS_GEO_KEY, type StopAreaManifest, type StopAreaMode, stopAreaKey } from "@bus-tracker/contracts";
-
-import { redis } from "../../index.js";
 import { normalizeSearchText } from "../../utils/search-text.js";
 import { createStringPool } from "../../utils/string-pool.js";
+import { redis } from "../redis.js";
 import { resolveNetworkIds } from "./stop-area-service.js";
 
 const READ_BATCH_SIZE = 1_000;

@@ -1,14 +1,23 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { EncodedLinePath, PassedCallDetection, StopDeparture, VehicleJourney } from "@bus-tracker/contracts";
+import {
+	type DataSourceRealtimeEntityType,
+	type EncodedLinePath,
+	type PassedCallDetection,
+	type StopDeparture,
+	toLineRef,
+	toServiceJourneyRef,
+	toStopPointRef,
+	type VehicleJourney,
+} from "@bus-tracker/contracts";
 import { downloadGtfsArchive, extractGtfs } from "../download/download-gtfs.js";
 import type { RealtimeFeedContents } from "../download/download-gtfs-rt.js";
 import { type ImportGtfsOptions, importGtfs } from "../import/import-gtfs.js";
+import type { SourceAuth } from "../utils/auth.js";
 import { fetchFreshness, type ResourceFreshness } from "../utils/fetch-freshness.js";
-import { padSourceId } from "../utils/pad-source-id.js";
 import { createStopWatch } from "../utils/stop-watch.js";
-import type { Gtfs } from "./gtfs.js";
+import { type Gtfs, getJourneyKey } from "./gtfs.js";
 import type {
 	Alert,
 	IdentifiedAlert,
@@ -24,18 +33,6 @@ import type { Route } from "./route.js";
 import { createServiceWindow, isServiceWindowOutdated } from "./service-window.js";
 import type { StopArea } from "./stop-area.js";
 import type { Trip } from "./trip.js";
-
-export type SourceAuth =
-	| {
-			type: "basic";
-			username?: string;
-			password?: string;
-	  }
-	| {
-			type: "header";
-			name: string;
-			value: string;
-	  };
 
 export type LoadedResource = ResourceFreshness & {
 	hash: string;
@@ -177,7 +174,7 @@ export async function isStaleByFreshness(resource: LoadedResource, probe: Stalen
 	return published.lastModified !== resource.lastModified || published.etag !== resource.etag;
 }
 
-export type RealtimeEntityType = "TRIP_UPDATES" | "VEHICLE_POSITIONS" | "TRIP_MODIFICATIONS" | "SERVICE_ALERTS";
+const staticStopAreaIds = new WeakMap<Gtfs, Map<string, string>>();
 
 export class Source {
 	gtfs?: Gtfs;
@@ -193,7 +190,7 @@ export class Source {
 	 */
 	observedNetworkRefs = new Set<string>();
 	/** Types d'entités observés dans chaque flux temps réel, indexés par href. */
-	observedRealtimeEntityTypes = new Map<string, Set<RealtimeEntityType>>();
+	observedRealtimeEntityTypes = new Map<string, Set<DataSourceRealtimeEntityType>>();
 	/**
 	 * Clés des courses portant une déviation, dans {@link Gtfs.journeys}. Elles ne sont qu'une poignée
 	 * parmi des dizaines de milliers : les suivre évite de balayer toutes les courses à chaque cycle
@@ -220,10 +217,112 @@ export class Source {
 	 */
 	serviceAlerts: IdentifiedAlert[] = [];
 
+	readonly realtimeResources: RealtimeResource[];
+	readonly staticAuth: SourceAuth | undefined;
+	readonly realtimeAuth: SourceAuth | undefined;
+	/** Identifiant aligné pour les journaux. */
+	readonly logId: string;
+
 	constructor(
 		readonly id: string,
 		readonly options: SourceOptions,
-	) {}
+	) {
+		this.realtimeResources = (options.realtimeResourceHrefs ?? []).map((resource) =>
+			typeof resource === "string" ? { href: resource } : resource,
+		);
+		this.staticAuth = options.staticAuth ?? options.auth;
+		this.realtimeAuth = options.realtimeAuth ?? options.auth;
+		this.logId = id.padStart(16, " ");
+	}
+
+	get isAuthenticated() {
+		return this.staticAuth !== undefined || this.realtimeAuth !== undefined;
+	}
+
+	tripRefOf(tripId: string) {
+		return this.options.mapTripRef?.(tripId) ?? tripId;
+	}
+
+	stopRefIdOf(stopId: string) {
+		return this.options.mapStopRef?.(stopId) ?? stopId;
+	}
+
+	lineRefIdOf(routeId: string) {
+		return this.options.mapLineRef?.(routeId) ?? routeId;
+	}
+
+	lineRefOf(networkRef: string, routeId: string) {
+		return toLineRef(networkRef, this.lineRefIdOf(routeId));
+	}
+
+	stopRefOf(networkRef: string, stopId: string) {
+		return toStopPointRef(networkRef, this.stopRefIdOf(stopId));
+	}
+
+	journeyRefOf(networkRef: string, tripId: string) {
+		return toServiceJourneyRef(networkRef, this.tripRefOf(tripId));
+	}
+
+	/**
+	 * Réseau d'une course, tel que la configuration le détermine. Une source peut en alimenter plusieurs
+	 * (`getNetworkRef` dépendant de la course — la SNCF, par exploitant), si bien qu'un arrêt n'a de
+	 * réseau qu'à travers les courses qui le desservent.
+	 *
+	 * `getNetworkRef` attend une course datée : à défaut, une course théorique est fabriquée pour la
+	 * question, et la réponse est gardée par le résolveur — elle dépend de la course, pas de sa date.
+	 * Une course que la configuration écarte n'a pas de réseau : `undefined`.
+	 */
+	createNetworkResolver() {
+		const cache = new Map<Trip, string | undefined>();
+		const today = Temporal.Now.plainDateISO();
+
+		return (trip: Trip, journey?: Journey): string | undefined => {
+			if (journey !== undefined)
+				return this.options.getNetworkRef(journey, journey.vehicleDescriptor, journey.tripDescriptor) ?? undefined;
+
+			if (cache.has(trip)) return cache.get(trip);
+			const networkRef = this.options.getNetworkRef(trip.getScheduledJourney(today, true)) ?? undefined;
+			cache.set(trip, networkRef);
+			return networkRef;
+		};
+	}
+
+	/**
+	 * Réseaux connus de la source. Les refs observées priment ; à défaut, une configuration dont
+	 * `getNetworkRef` est constante répond sans course et permet d'annoncer la source dès le démarrage.
+	 * Une configuration dépendant de la course renvoie `undefined` ou lève : la source attend alors sa
+	 * première publication de véhicule.
+	 */
+	networkRefs() {
+		const networkRefs = new Set(this.observedNetworkRefs);
+
+		if (networkRefs.size === 0) {
+			try {
+				const networkRef = this.options.getNetworkRef();
+				if (typeof networkRef === "string" && networkRef.length > 0) networkRefs.add(networkRef);
+			} catch {}
+		}
+
+		return [...networkRefs].sort();
+	}
+
+	stopAreaIdOf(stopId: string) {
+		for (const stopArea of this.realtimeStopAreas.values()) {
+			if (stopArea.stops.some(({ id }) => id === stopId)) return stopArea.id;
+		}
+
+		const gtfs = this.gtfs;
+		if (gtfs === undefined) return undefined;
+
+		let stopAreaIds = staticStopAreaIds.get(gtfs);
+		if (stopAreaIds === undefined) {
+			stopAreaIds = new Map(
+				gtfs.stopAreas.values().flatMap((stopArea) => stopArea.stops.map(({ id }) => [id, stopArea.id] as const)),
+			);
+			staticStopAreaIds.set(gtfs, stopAreaIds);
+		}
+		return stopAreaIds.get(stopId);
+	}
 
 	/**
 	 * Durée écoulée depuis le dernier calcul réussi, plafonnée. Une course dont le terminus a été
@@ -235,14 +334,9 @@ export class Source {
 		return Math.min(Math.max(0, nowMs - this.lastComputeAtMs), MAX_TERMINUS_GRACE_MS);
 	}
 
-	/**
-	 * Imports the latest GTFS resource available for this source. Overwrites the
-	 * current resource if exists.
-	 * @param updating Whether this is an update or an initial import (log-only).
-	 */
 	async importGtfs({ updating = false, keepIfUnchanged = false } = {}) {
 		const watch = createStopWatch();
-		const sourceId = padSourceId(this.id);
+		const sourceId = this.logId;
 		const updateLog = console.draft("%s     ► %s GTFS resource...", updating ? "Updating" : "Importing", sourceId);
 
 		const resourceDirectory = await mkdtemp(join(tmpdir(), `bt-gtfs_${this.id}_`));
@@ -273,21 +367,9 @@ export class Source {
 			this.linePaths = buildEncodedLinePaths(this, gtfs);
 
 			updateLog("%s 3/3 ► Pre-computing scheduled journeys...", sourceId);
-			if (typeof this.options.excludeScheduled !== "boolean") {
-				const now = Temporal.Now.zonedDateTimeISO();
-				const dates = [...(now.hour < 6 ? [now.subtract({ days: 1 }).toPlainDate()] : []), now.toPlainDate()];
-
-				for (const trip of gtfs.trips.values()) {
-					if (this.options.excludeScheduled?.(trip)) continue;
-
-					const journeys = dates.map((date) => trip.getScheduledJourney(date));
-					for (const journey of journeys) {
-						if (journey === undefined) continue;
-						if (now.epochMilliseconds > journey.lastCallDepartureMs) continue;
-						gtfs.journeys.set(`${journey.date.toString()}-${journey.trip.id}`, journey);
-					}
-				}
-			}
+			const now = Temporal.Now.zonedDateTimeISO();
+			const dates = [...(now.hour < 6 ? [now.subtract({ days: 1 }).toPlainDate()] : []), now.toPlainDate()];
+			this.scheduleJourneys(gtfs, dates, now.epochMilliseconds);
 
 			updateLog(
 				"%s     ✓ Resource %s in %dms (service window %s → %s) - %d journeys and %d line paths were pre-computed.\n",
@@ -316,13 +398,8 @@ export class Source {
 		}
 	}
 
-	/**
-	 * Checks whether the current GTFS resource needs to be updated (either based
-	 * on its import age, or actual freshness indicators). If so, the resource is
-	 * automatically updated.
-	 */
 	async updateGtfs() {
-		const sourceId = padSourceId(this.id);
+		const sourceId = this.logId;
 		const updateLog = console.draft("%s ► Checking GTFS resource staleness.", sourceId);
 
 		if (this.gtfs === undefined || this.resource === undefined) {
@@ -344,8 +421,7 @@ export class Source {
 		const isStaticResourceStale = this.options.isStaticResourceStale ?? isStaleByFreshness;
 		const probe: StalenessProbe = {
 			href: this.options.staticResourceHref,
-			fetchFreshness: (method) =>
-				fetchFreshness(this.options.staticResourceHref, this.options.staticAuth ?? this.options.auth, method),
+			fetchFreshness: (method) => fetchFreshness(this.options.staticResourceHref, this.staticAuth, method),
 		};
 
 		const stale = await isStaticResourceStale(resource, probe).catch(() => {
@@ -361,37 +437,42 @@ export class Source {
 		return this.importGtfs({ updating: true, keepIfUnchanged: true });
 	}
 
+	/**
+	 * Pré-calcule les courses théoriques des dates données, hormis celles déjà achevées et celles que
+	 * la source tient déjà (une course rattachée au temps réel garde son état).
+	 */
+	private scheduleJourneys(gtfs: Gtfs, dates: Temporal.PlainDate[], nowMs: number) {
+		if (this.options.excludeScheduled === true) return 0;
+
+		let scheduledJourneys = 0;
+		for (const trip of gtfs.trips.values()) {
+			if (typeof this.options.excludeScheduled === "function" && this.options.excludeScheduled(trip)) continue;
+
+			for (const date of dates) {
+				const key = getJourneyKey(date, trip.id);
+				if (gtfs.journeys.has(key)) continue;
+
+				const journey = trip.getScheduledJourney(date);
+				if (journey === undefined || nowMs > journey.lastCallDepartureMs) continue;
+
+				gtfs.journeys.set(key, journey);
+				scheduledJourneys += 1;
+			}
+		}
+		return scheduledJourneys;
+	}
+
 	computeNextJourneys() {
-		const sourceId = padSourceId(this.id);
 		if (this.gtfs === undefined) {
-			console.warn("%s ⚠ Source has no loaded GTFS data, ignoring.", sourceId);
+			console.warn("%s ⚠ Source has no loaded GTFS data, ignoring.", this.logId);
 			return;
 		}
 
 		const date = Temporal.Now.plainDateISO();
-
-		const updateLog = console.draft("%s ► Computing journeys for date '%s'.", sourceId, date);
+		const updateLog = console.draft("%s ► Computing journeys for date '%s'.", this.logId, date);
 		const watch = createStopWatch();
-
-		let computedJourneys = 0;
-
-		if (typeof this.options.excludeScheduled !== "boolean") {
-			for (const trip of this.gtfs.trips.values()) {
-				if (this.options.excludeScheduled?.(trip)) continue;
-
-				const journey = trip.getScheduledJourney(date);
-				if (journey === undefined) continue;
-
-				this.gtfs.journeys.set(`${date.toString()}-${trip.id}`, journey);
-				computedJourneys += 1;
-			}
-
-			// this.gtfs.journeys.sort((a, b) =>
-			// 	Temporal.ZonedDateTime.compare(a.calls[0]!.aimedArrivalTime, b.calls[0]!.aimedArrivalTime),
-			// );
-		}
-
-		updateLog("%s ✓ Computed %d journeys for date '%s' in %dms.", sourceId, computedJourneys, date, watch.total());
+		const computedJourneys = this.scheduleJourneys(this.gtfs, [date], Date.now());
+		updateLog("%s ✓ Computed %d journeys for date '%s' in %dms.", this.logId, computedJourneys, date, watch.total());
 	}
 
 	sweepJourneys() {
@@ -401,23 +482,13 @@ export class Source {
 		const oldJourneyCount = this.gtfs.journeys.size;
 
 		for (const [id, journey] of this.gtfs.journeys) {
-			// Utilise lastCallDepartureMs pour éviter de matérialiser les calls.
-			// Si un voyage a des données RT, on vérifie la dernière heure attendue.
-			// lastCallDepartureMs est précalculé et évite de matérialiser les calls.
-			// Pour les courses RT très en avance, on pourrait sweeper légèrement trop tôt,
-			// mais l'écart est négligeable (quelques minutes max) et le gain en perf vaut la peine.
-			// La marge vaut le plafond de la fenêtre de grâce : une course dont le terminus vient
-			// d'être franchi doit survivre jusqu'au cycle suivant pour y être publiée une dernière fois.
-			const lastDepartureMs = journey.lastCallDepartureMs;
-			if (now - MAX_TERMINUS_GRACE_MS > lastDepartureMs) {
+			// La marge vaut le plafond de la fenêtre de grâce : une course dont le terminus vient d'être
+			// franchi doit survivre jusqu'au cycle suivant pour y être publiée une dernière fois.
+			if (now - MAX_TERMINUS_GRACE_MS > journey.lastCallDepartureMs) {
 				this.gtfs.journeys.delete(id);
 			}
 		}
 
-		console.log(
-			"%s ✓ Swept %d outdated vehicle journeys",
-			padSourceId(this.id),
-			oldJourneyCount - this.gtfs.journeys.size,
-		);
+		console.log("%s ✓ Swept %d outdated vehicle journeys", this.logId, oldJourneyCount - this.gtfs.journeys.size);
 	}
 }

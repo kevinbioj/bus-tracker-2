@@ -47,7 +47,6 @@ const parse = (raw: string | null): CountryCode[] | undefined => {
 		const codes = parsed.filter(isCountryCode);
 		return codes.length > 0 ? codes : undefined;
 	} catch {
-		// valeur corrompue : on retombe sur le comportement par défaut
 		return undefined;
 	}
 };

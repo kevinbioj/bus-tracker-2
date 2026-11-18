@@ -1,4 +1,5 @@
 import type { Line } from "~/api/networks";
+import { DEFAULT_LINE_COLOR, DEFAULT_LINE_TEXT_COLOR } from "~/utils/line-colors";
 
 export const LINE_BADGES_FONT = "bold 13px Achemine";
 
@@ -13,8 +14,6 @@ const OUTLINE_WIDTH = 0.5;
 
 const LINE_BADGES_HEIGHT = LINE_BADGE_HEIGHT + OUTLINE_WIDTH * 2;
 
-const DEFAULT_COLOR = "#18181B";
-const DEFAULT_TEXT_COLOR = "#FFFFFF";
 const OUTLINE_COLOR = "#FFFFFF";
 const MORE_COLOR = "#E4E4E7";
 const MORE_TEXT_COLOR = "#1E2A4A";
@@ -69,8 +68,8 @@ export function createLineBadges(lineBadges: LineBadges) {
 		if (index % MAX_LINE_BADGES === 0) rows.push([]);
 		rows.at(-1)!.push({
 			label: line.number,
-			color: line.color ?? DEFAULT_COLOR,
-			textColor: line.textColor ?? DEFAULT_TEXT_COLOR,
+			color: line.color ?? DEFAULT_LINE_COLOR,
+			textColor: line.textColor ?? DEFAULT_LINE_TEXT_COLOR,
 		});
 	});
 	if (more > 0) rows[0]!.push({ label: `+${more}`, color: MORE_COLOR, textColor: MORE_TEXT_COLOR, more: true });

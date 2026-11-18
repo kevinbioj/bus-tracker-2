@@ -213,7 +213,6 @@ function splitPathAtNearestPoint(
 ): { pastPoints: number[][]; futurePoints: number[][] } {
 	const { segment: bestSegment, t: bestT } = findNearestPointOnPath(points, latitude, longitude);
 
-	// Point de jonction interpolé sur le segment le plus proche.
 	const [segStartLat, segStartLon] = points[bestSegment]!;
 	const [segEndLat, segEndLon] = points[bestSegment + 1]!;
 	const junctionLat = segStartLat + bestT * (segEndLat - segStartLat);
@@ -552,14 +551,12 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 							futurePoints.push(coords);
 						}
 					} else {
-						// Fallback if no distanceTraveled
 						futurePoints.push(coords);
 					}
 					lastPoint = point;
 				}
 			}
 
-			// If no split was possible, we just show everything as future
 			if (futurePoints.length === 0 && pastPoints.length === 0 && points.length > 0) {
 				for (const [latitude, longitude] of points) {
 					futurePoints.push([longitude, latitude]);

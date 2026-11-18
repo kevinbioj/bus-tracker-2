@@ -1,7 +1,6 @@
-import { type EncodedLinePath, encodeLinePath, type LinePath } from "@bus-tracker/contracts";
+import { type EncodedLinePath, encodeLinePath, type LinePath, toLinePathRef } from "@bus-tracker/contracts";
 
 import type { Gtfs } from "./gtfs.js";
-import type { Journey } from "./journey.js";
 import type { Shape } from "./shape.js";
 import type { Source } from "./source.js";
 
@@ -126,14 +125,14 @@ export function buildEncodedLinePaths(source: Source, gtfs: Gtfs): Map<string, E
 
 	if (source.options.disableRoutePaths) return new Map();
 
+	const networkOf = source.createNetworkResolver();
 	for (const trip of gtfs.trips.values()) {
 		if (trip.shape === undefined) continue;
 
-		const networkRef = source.options.getNetworkRef({ trip } as Journey);
+		const networkRef = networkOf(trip);
 		if (networkRef === undefined) continue;
 
-		const lineRef = `${networkRef}:Line:${source.options.mapLineRef?.(trip.route.id) ?? trip.route.id}`;
-		const linePathRef = `${lineRef}:LinePath`;
+		const linePathRef = toLinePathRef(source.lineRefOf(networkRef, trip.route.id));
 
 		let lineShapes = shapesByLinePathRef.get(linePathRef);
 		if (lineShapes === undefined) {

@@ -4,6 +4,7 @@ import { indexStopAreas } from "../import/import-gtfs.js";
 import { Agency } from "../model/agency.js";
 import type { Gtfs } from "../model/gtfs.js";
 import type { IdentifiedTripModifications } from "../model/gtfs-rt.js";
+import { createShapeFromPolyline } from "../model/polyline-shape.js";
 import { createRealtimeResources } from "../model/realtime-lookup.js";
 import { Route } from "../model/route.js";
 import { Service } from "../model/service.js";
@@ -11,7 +12,6 @@ import { Shape } from "../model/shape.js";
 import { Stop } from "../model/stop.js";
 import { StopTimeStore } from "../model/stop-time-store.js";
 import { Trip } from "../model/trip.js";
-import { createShapeFromPolyline } from "../utils/decode-polyline.js";
 import { indexTripModifications } from "./apply-trip-modifications.js";
 
 const NOW_MS = Temporal.Instant.from("2026-05-18T08:00:00Z").epochMilliseconds;

@@ -12,6 +12,8 @@ import {
 import { createRedisClient } from "@bus-tracker/redis";
 import { ArkErrors } from "arktype";
 
+import { redis } from "../redis.js";
+
 /**
  * Délai au-delà duquel on cesse d'attendre un provider. Il calcule la réponse en mémoire : au-delà,
  * c'est qu'il est arrêté, saturé, ou qu'il ne connaît plus la station. Le repli sur les courses
@@ -36,8 +38,6 @@ type PendingRequest = {
 
 const pendingRequests = new Map<string, PendingRequest>();
 
-let publisher: ReturnType<typeof createRedisClient> | undefined;
-
 function settle(reply: StopDeparturesReply) {
 	const pending = pendingRequests.get(reply.requestId);
 	if (pending === undefined) return;
@@ -55,9 +55,7 @@ function settle(reply: StopDeparturesReply) {
  * Ouvre le canal de réponse. Un seul abonnement permanent sert toutes les demandes : chaque réponse
  * porte l'identifiant de la sienne, s'abonner et se désabonner à chaque clic coûterait bien plus.
  */
-export async function startStopDeparturesService(redis: ReturnType<typeof createRedisClient>) {
-	publisher = redis;
-
+export async function startStopDeparturesService() {
 	const subscriber = createRedisClient({ name: "stop departures subscriber" });
 	await subscriber.connect();
 	await subscriber.subscribe(STOP_DEPARTURES_REPLY_CHANNEL, (message) => {
@@ -99,7 +97,7 @@ export async function requestStopDepartures({
 	/** Absent : les départs. */
 	direction?: StopCallDirection;
 }): Promise<StopDeparturesResult> {
-	if (publisher === undefined || !publisher.isReady) return EMPTY_RESULT;
+	if (!redis.isReady) return EMPTY_RESULT;
 
 	const requestId = randomUUID();
 
@@ -115,7 +113,7 @@ export async function requestStopDepartures({
 	});
 
 	try {
-		await publisher.publish(
+		await redis.publish(
 			stopDeparturesRequestChannel(providerId),
 			JSON.stringify({
 				requestId,

@@ -18,16 +18,8 @@ type SitemapEntry = { path: string; lastModified?: string };
 
 const sectionsCache = useCache<Record<SitemapSection, SitemapEntry[]>>(SITEMAP_TTL);
 
-let sectionsInFlight: Promise<Record<SitemapSection, SitemapEntry[]>> | undefined;
-
-async function loadSections() {
-	const cached = sectionsCache.get("sections");
-	if (cached !== undefined) return cached;
-
-	sectionsInFlight ??= computeSections().finally(() => {
-		sectionsInFlight = undefined;
-	});
-	return sectionsInFlight;
+function loadSections() {
+	return sectionsCache.getOrLoad("sections", computeSections);
 }
 
 async function computeSections() {
@@ -95,7 +87,6 @@ async function computeSections() {
 		})),
 	};
 
-	sectionsCache.set("sections", sections);
 	return sections;
 }
 

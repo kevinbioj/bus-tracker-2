@@ -17,7 +17,7 @@ import {
 	createStopFromRtStop,
 	type RealtimeResources,
 } from "../model/realtime-lookup.js";
-import type { RealtimeEntityType, Source } from "../model/source.js";
+import type { Source } from "../model/source.js";
 import { getAuthHeaders } from "../utils/auth.js";
 
 const feedMessage = GtfsRealtimeBindings.transit_realtime.FeedMessage;
@@ -50,7 +50,7 @@ function recordObservedEntityTypes(source: Source, href: string, contents: Realt
 
 	let entityTypes = source.observedRealtimeEntityTypes.get(href);
 	if (entityTypes === undefined) {
-		entityTypes = new Set<RealtimeEntityType>();
+		entityTypes = new Set();
 		source.observedRealtimeEntityTypes.set(href, entityTypes);
 	}
 
@@ -66,10 +66,6 @@ function createFeedContents(): RealtimeFeedContents {
 }
 
 export async function downloadGtfsRt(source: Source) {
-	const realtimeResources = (source.options.realtimeResourceHrefs ?? []).map((resource) =>
-		typeof resource === "string" ? { href: resource } : resource,
-	);
-
 	const tripUpdates: TripUpdate[] = [];
 	const vehiclePositions: VehiclePosition[] = [];
 	const tripModifications: IdentifiedTripModifications[] = [];
@@ -88,10 +84,9 @@ export async function downloadGtfsRt(source: Source) {
 	};
 
 	await Promise.allSettled(
-		realtimeResources.map(async ({ href: realtimeFeedHref, pollMs }) => {
+		source.realtimeResources.map(async ({ href: realtimeFeedHref, pollMs }) => {
 			const cached = source.realtimeFeedCache.get(realtimeFeedHref);
 
-			// Réutilise la donnée en cache tant qu'elle est plus fraîche que l'intervalle de polling.
 			if (pollMs !== undefined && cached !== undefined && Date.now() - cached.at < pollMs) {
 				collect(cached.contents);
 				return;
@@ -101,7 +96,7 @@ export async function downloadGtfsRt(source: Source) {
 				const response = await fetch(realtimeFeedHref, {
 					headers: {
 						"User-Agent": USER_AGENT,
-						...getAuthHeaders(source.options.realtimeAuth ?? source.options.auth),
+						...getAuthHeaders(source.realtimeAuth),
 					},
 					signal: AbortSignal.timeout(15_000),
 				});

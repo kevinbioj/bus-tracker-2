@@ -1,7 +1,7 @@
 import { match } from "ts-pattern";
 
-import type { VehicleDescriptor } from "../model/gtfs-rt.js";
-import type { Trip } from "../model/trip.js";
+import type { VehicleDescriptor } from "./gtfs-rt.js";
+import type { Trip } from "./trip.js";
 
 /**
  * Accessibilité de la course en fauteuil roulant : celle annoncée par un descripteur de véhicule

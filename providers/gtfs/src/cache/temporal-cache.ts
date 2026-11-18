@@ -1,3 +1,5 @@
+import { formatGtfsTime } from "../utils/gtfs-time.js";
+
 class WeakValueMap<K, V extends object> {
 	private map = new Map<K, WeakRef<V>>();
 	private registry = new FinalizationRegistry<K>((key) => {
@@ -37,7 +39,7 @@ export function createPlainDate(item: string) {
 
 const plainTimeCache = new WeakValueMap<string, Temporal.PlainTime>();
 
-export function createPlainTime(item: string) {
+function createPlainTime(item: string) {
 	let plainTime = plainTimeCache.get(item);
 	if (plainTime === undefined) {
 		plainTime = Temporal.PlainTime.from(item);
@@ -48,7 +50,7 @@ export function createPlainTime(item: string) {
 
 const zonedDateTimeCache = new WeakValueMap<string, Temporal.ZonedDateTime>();
 
-export function createZonedDateTime(date: Temporal.PlainDate, time: Temporal.PlainTime, timeZone: string) {
+function createZonedDateTime(date: Temporal.PlainDate, time: Temporal.PlainTime, timeZone: string) {
 	const key = `${date}_${time}_${timeZone}`;
 	let zonedDateTime = zonedDateTimeCache.get(key);
 	if (zonedDateTime === undefined) {
@@ -65,14 +67,7 @@ export function createZonedDateTime(date: Temporal.PlainDate, time: Temporal.Pla
 export function createZonedDateTimeFromSecs(date0: Temporal.PlainDate, secs: number, timeZone: string) {
 	const days = Math.floor(secs / 86400);
 	const dayOfTrip = days === 0 ? date0 : date0.add({ days });
-	const remain = secs - days * 86400;
-	const h = Math.floor(remain / 3600);
-	const m = Math.floor((remain % 3600) / 60);
-	const s = remain % 60;
-	const time = createPlainTime(
-		`${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`,
-	);
-	return createZonedDateTime(dayOfTrip, time, timeZone);
+	return createZonedDateTime(dayOfTrip, createPlainTime(formatGtfsTime(secs - days * 86400)), timeZone);
 }
 
 type ServiceDay = {

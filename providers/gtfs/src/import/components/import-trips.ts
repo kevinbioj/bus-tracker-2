@@ -6,9 +6,10 @@ import { createServiceWindowFilter } from "../../model/service-window.js";
 import type { Shape } from "../../model/shape.js";
 import type { Stop } from "../../model/stop.js";
 import { createSequenceArray, StopTimeStore } from "../../model/stop-time-store.js";
-import { Trip } from "../../model/trip.js";
+import { StopTimeFlag, Trip } from "../../model/trip.js";
 import { type CsvRecord, readCsv } from "../../utils/csv-reader.js";
 import { getDistance } from "../../utils/get-distance.js";
+import { parseGtfsTime } from "../../utils/gtfs-time.js";
 import { copyString, createInterner } from "../../utils/strings.js";
 
 import type { ImportGtfsOptions } from "../import-gtfs.js";
@@ -28,23 +29,17 @@ type StopTimeRecord = CsvRecord<
 	"shape_dist_traveled" | "pickup_type" | "drop_off_type" | "stop_headsign"
 >;
 
-const PICKUP_TYPE_BITS: Record<string, number> = { "1": 1, "2": 4, "3": 8 };
+const PICKUP_TYPE_BITS: Record<string, number> = {
+	"1": StopTimeFlag.NO_PICKUP,
+	"2": StopTimeFlag.PHONE_PICKUP,
+	"3": StopTimeFlag.DRIVER_PICKUP,
+};
 
 /** `wheelchair_accessible`, `bikes_allowed` : 1 oui, 2 non, vide ou 0 inconnu. */
 function parseTripAvailability(value: string | undefined) {
 	if (value === "1") return true;
 	if (value === "2") return false;
 	return undefined;
-}
-
-/** Convertit "HH:MM:SS" (HH peut dépasser 24) en secondes depuis minuit du jour 0. */
-function parseTimeToSecs(time: string): number {
-	const c1 = time.indexOf(":");
-	const c2 = time.indexOf(":", c1 + 1);
-	const h = +time.slice(0, c1);
-	const m = +time.slice(c1 + 1, c2);
-	const s = +time.slice(c2 + 1);
-	return h * 3600 + m * 60 + s;
 }
 
 export async function importTrips(
@@ -136,7 +131,6 @@ export async function importTrips(
 
 	const totalTrips = trips.size;
 
-	// Allocation des tableaux par-trip — accessibles via les getters de Trip dès maintenant.
 	placeholderStore.tripStart = new Uint32Array(totalTrips);
 	placeholderStore.tripCount = new Uint32Array(totalTrips);
 	placeholderStore.tripFirstArrivalSecs = new Uint32Array(totalTrips);
@@ -146,7 +140,6 @@ export async function importTrips(
 	const tripCount = placeholderStore.tripCount;
 	const tripStart = placeholderStore.tripStart;
 
-	// Pass 1: compter les stop_times par trip pour dimensionner les tableaux par stop_time.
 	let totalRows = 0;
 	let maxSequence = 0;
 	await readCsv<StopTimeRecord>(stopTimesFile, (stopTimeRecord) => {
@@ -162,14 +155,12 @@ export async function importTrips(
 		if (stopSequence > maxSequence) maxSequence = stopSequence;
 	});
 
-	// Calcul des offsets (prefix sum).
 	let cursor = 0;
 	for (const trip of trips.values()) {
 		tripStart[trip.idx] = cursor;
 		cursor += tripCount[trip.idx]!;
 	}
 
-	// Table des arrêts, que les stop_times désignent par leur indice.
 	const stopList = Array.from(stops.values());
 	const stopIndexById = new Map<string, number>();
 	for (let index = 0; index < stopList.length; index++) {
@@ -180,7 +171,6 @@ export async function importTrips(
 	const headsignList = [""];
 	const headsignIndexByValue = new Map<string, number>();
 
-	// Allocation des tableaux par stop_time.
 	const stopIdx = new Uint32Array(totalRows);
 	const sequence = createSequenceArray(maxSequence, totalRows);
 	const flagsBitmask = new Uint8Array(totalRows);
@@ -190,10 +180,8 @@ export async function importTrips(
 	// Alloué à la première girouette rencontrée : un GTFS sans `stop_headsign` n'en paie rien.
 	let headsignIdx: Uint32Array | undefined;
 
-	// Curseur d'écriture par trip (relatif au trip, pas absolu).
 	const writeCursor = new Uint32Array(totalTrips);
 
-	// Pass 2: remplissage.
 	await readCsv<StopTimeRecord>(stopTimesFile, (stopTimeRecord) => {
 		// Idem pass 1 : les entrées flex sont ignorées, les trips qui n'en contiennent
 		// que sont éliminés plus bas par le drop des trips à moins de deux arrêts.
@@ -218,11 +206,11 @@ export async function importTrips(
 		const idx = tripStart[trip.idx]! + writeCursor[trip.idx]!;
 		writeCursor[trip.idx]! += 1;
 
-		const aSecs = parseTimeToSecs(mapTime?.(stopTimeRecord.arrival_time) ?? stopTimeRecord.arrival_time);
+		const aSecs = parseGtfsTime(mapTime?.(stopTimeRecord.arrival_time) ?? stopTimeRecord.arrival_time);
 		const dSecs =
 			stopTimeRecord.arrival_time === stopTimeRecord.departure_time
 				? aSecs
-				: parseTimeToSecs(mapTime?.(stopTimeRecord.departure_time) ?? stopTimeRecord.departure_time);
+				: parseGtfsTime(mapTime?.(stopTimeRecord.departure_time) ?? stopTimeRecord.departure_time);
 
 		stopIdx[idx] = stopIndex;
 		if (stopTimeRecord.stop_headsign) {
@@ -238,14 +226,14 @@ export async function importTrips(
 		}
 		sequence[idx] = +stopTimeRecord.stop_sequence;
 		flagsBitmask[idx] =
-			(PICKUP_TYPE_BITS[stopTimeRecord.pickup_type ?? ""] ?? 0) | (stopTimeRecord.drop_off_type === "1" ? 2 : 0);
+			(PICKUP_TYPE_BITS[stopTimeRecord.pickup_type ?? ""] ?? 0) |
+			(stopTimeRecord.drop_off_type === "1" ? StopTimeFlag.NO_DROP_OFF : 0);
 		arrivalSecs[idx] = aSecs;
 		departureSecs[idx] = dSecs;
 		distanceTraveled[idx] =
 			stopTimeRecord.shape_dist_traveled !== undefined ? +stopTimeRecord.shape_dist_traveled : Number.NaN;
 	});
 
-	// Tri par sequence à l'intérieur de chaque slice de trip (fast-path "déjà trié").
 	let maxCount = 0;
 	for (const trip of trips.values()) {
 		const c = tripCount[trip.idx]!;
@@ -358,7 +346,6 @@ export async function importTrips(
 		}
 	}
 
-	// Pré-calcul des bornes first/last secs et drop des trips < 2 stops.
 	const tripFirstArrivalSecs = placeholderStore.tripFirstArrivalSecs;
 	const tripLastArrivalSecs = placeholderStore.tripLastArrivalSecs;
 	const tripLastDepartureSecs = placeholderStore.tripLastDepartureSecs;
@@ -375,7 +362,6 @@ export async function importTrips(
 		tripLastDepartureSecs[trip.idx] = departureSecs[lastIdx]!;
 	}
 
-	// Finalise les arrays per-stop_time du store.
 	placeholderStore.stopList = stopList;
 	placeholderStore.arrivalSecs = arrivalSecs;
 	placeholderStore.departureSecs = departureSecs;

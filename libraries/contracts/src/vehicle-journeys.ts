@@ -3,6 +3,9 @@ import { z } from "zod";
 
 import type { LinePath } from "./line-paths.js";
 
+/** Canal Redis sur lequel les providers publient leurs courses, par lots. */
+export const VEHICLE_JOURNEYS_CHANNEL = "journeys";
+
 export const vehicleJourneyLineTypes = [
 	"TRAMWAY",
 	"SUBWAY",
@@ -18,9 +21,7 @@ export const vehicleJourneyLineTypes = [
 
 export const vehicleJourneyLineTypeZodEnum = z.enum(vehicleJourneyLineTypes);
 
-export const vehicleJourneyLineTypeEnum = type(
-	"'TRAMWAY'|'SUBWAY'|'RAIL'|'TROLLEY'|'FUNICULAR'|'GONDOLA'|'BUS'|'FERRY'|'COACH'|'UNKNOWN'",
-);
+export const vehicleJourneyLineTypeEnum = type.enumerated(...vehicleJourneyLineTypes);
 
 export type VehicleJourneyLineType = typeof vehicleJourneyLineTypeEnum.infer;
 
@@ -85,7 +86,7 @@ export type VehicleJourneyPosition = typeof vehicleJourneyPositionSchema.infer;
 
 export const vehicleJourneyOccupancy = ["LOW", "MEDIUM", "HIGH", "NO_PASSENGERS"] as const;
 
-export const vehicleJourneyOccupancyEnum = type("'LOW'|'MEDIUM'|'HIGH'|'NO_PASSENGERS'");
+export const vehicleJourneyOccupancyEnum = type.enumerated(...vehicleJourneyOccupancy);
 
 export const vehicleJourneyPathSchema = type({
 	p: type(["number", "number", "number?"]).array(),

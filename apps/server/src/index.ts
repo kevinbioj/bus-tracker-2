@@ -5,11 +5,13 @@ import { serve } from "@hono/node-server";
 import { WebSocketServer } from "ws";
 
 import { migrateDatabase } from "./core/database/migrate.js";
+import { redis } from "./core/redis.js";
 import { parseDataSourceManifests, upsertDataSources } from "./core/services/data-source-service.js";
 import {
 	startLineDestinationCleanupService,
 	sweepExpiredLineDestinations,
 } from "./core/services/line-destination-service.js";
+import { invalidateStopAreaCaches, onStopAreasInvalidated } from "./core/services/stop-board-service.js";
 import { startStopDeparturesService } from "./core/services/stop-departures-service.js";
 import { markStopSearchIndexStale } from "./core/services/stop-search-service.js";
 import {
@@ -31,7 +33,7 @@ import "./controllers/ping.js";
 import { closeRealtimeConnections } from "./controllers/realtime.js";
 import "./controllers/regions.js";
 import "./controllers/sitemap.js";
-import { invalidateStopAreaCaches, onStopAreasInvalidated } from "./controllers/stops.js";
+import "./controllers/stops.js";
 import "./controllers/vehicle-journeys.js";
 import "./controllers/vehicles.js";
 import { shutdownMcpAnalytics } from "./mcp/analytics.js";
@@ -75,7 +77,6 @@ startVehicleWorker();
 
 // La connexion à Redis est établie en arrière-plan : l'API reste disponible pendant une coupure.
 console.log("► Connecting to Redis.");
-export const redis = createRedisClient({ name: "server" });
 redis.connect().catch((error) => {
 	console.error("✘ Failed to connect to Redis:", error);
 });
@@ -121,7 +122,7 @@ function parseStopAreasInvalidation(message: string) {
 
 onStopAreasInvalidated(markStopSearchIndexStale);
 
-startStopDeparturesService(redis).catch((error) => {
+startStopDeparturesService().catch((error) => {
 	console.error("✘ Failed to start the stop departures service:", error);
 });
 

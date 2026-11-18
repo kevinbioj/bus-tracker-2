@@ -1,6 +1,9 @@
+import { decodePolyline as decodeWithFactor } from "@bus-tracker/contracts";
 import { describe, expect, it } from "vitest";
 
-import { createShapeFromPolyline, decodePolyline } from "./decode-polyline.js";
+import { createShapeFromPolyline } from "./polyline-shape.js";
+
+const decodePolyline = (encoded: string) => decodeWithFactor(encoded, 1e5);
 
 /** Exemple de référence de l'algorithme Google : (38.5, -120.2), (40.7, -120.95), (43.252, -126.453). */
 const REFERENCE_POLYLINE = "_p~iF~ps|U_ulLnnqC_mqNvxq`@";

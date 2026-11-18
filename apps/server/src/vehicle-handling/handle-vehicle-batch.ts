@@ -1,8 +1,12 @@
-import type { VehicleJourney, VehicleJourneyLine } from "@bus-tracker/contracts";
+import {
+	toPublishedJourneyId,
+	type VehicleJourney,
+	type VehicleJourneyLine,
+	vehicleNumberOf,
+} from "@bus-tracker/contracts";
 
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { mapWithConcurrency } from "../utils/map-with-concurrency.js";
-import { nthIndexOf } from "../utils/nth-index-of.js";
 
 import { importLines } from "./import/import-lines.js";
 import { importNetwork } from "./import/import-network.js";
@@ -83,7 +87,7 @@ async function handleNetworkJourneys(networkRef: string, vehicleJourneys: Vehicl
 		const line = vehicleJourney.line ? lines.get(vehicleJourney.line.ref) : undefined;
 
 		const disposeableJourney: DisposeableVehicleJourney = {
-			id: vehicleJourney.id.replaceAll("/", "_"),
+			id: toPublishedJourneyId(vehicleJourney.id),
 			countryCode: network.countryCode,
 			lineId: line?.id,
 			direction: vehicleJourney.direction,
@@ -96,7 +100,6 @@ async function handleNetworkJourneys(networkRef: string, vehicleJourneys: Vehicl
 			occupancy: vehicleJourney.occupancy,
 			networkId: network.id,
 			journeyRef: vehicleJourney.journeyRef,
-			operatorId: undefined,
 			vehicle: undefined,
 			missionCode: vehicleJourney.missionCode,
 			wheelchairAccessible: vehicleJourney.wheelchairAccessible,
@@ -118,7 +121,7 @@ async function handleNetworkJourneys(networkRef: string, vehicleJourneys: Vehicl
 				registerableActivities.push(disposeableJourney);
 			} else {
 				disposeableJourney.vehicle = {
-					number: vehicleJourney.vehicleRef.slice(nthIndexOf(vehicleJourney.vehicleRef, ":", 3) + 1),
+					number: vehicleNumberOf(vehicleJourney.vehicleRef),
 				};
 			}
 		}

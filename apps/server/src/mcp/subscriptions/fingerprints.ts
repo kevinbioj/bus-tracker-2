@@ -1,6 +1,6 @@
-import { buildStopDepartures } from "../../controllers/stops.js";
 import { findLineDetails } from "../../core/services/line-details-service.js";
 import { findLineAlerts } from "../../core/services/service-alert-service.js";
+import { buildStopDepartures } from "../../core/services/stop-board-service.js";
 import type { Fingerprinter } from "./poll-watcher.js";
 
 export const stopDeparturesFingerprint: Fingerprinter = async (stopRef) => {

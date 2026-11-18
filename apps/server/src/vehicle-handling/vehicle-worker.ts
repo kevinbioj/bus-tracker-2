@@ -1,5 +1,5 @@
 import { parentPort } from "node:worker_threads";
-import { type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
+import { VEHICLE_JOURNEYS_CHANNEL, type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
 import { createRedisClient } from "@bus-tracker/redis";
 import { ArkErrors } from "arktype";
 
@@ -53,7 +53,7 @@ async function start() {
 		}
 	};
 
-	await redisSubscriber.subscribe("journeys", (message) => {
+	await redisSubscriber.subscribe(VEHICLE_JOURNEYS_CHANNEL, (message) => {
 		messageQueue.push(message);
 
 		if (processingPromise !== null) return;

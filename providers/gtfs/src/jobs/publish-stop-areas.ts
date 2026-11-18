@@ -10,27 +10,20 @@ import {
 	stopAreasSourceKey,
 	stopPointAreaKey,
 	stopPointsSourceKey,
+	toStopAreaRef,
 } from "@bus-tracker/contracts";
 import { captureException } from "@bus-tracker/monitoring";
-import type { createRedisClient } from "@bus-tracker/redis";
+import type { RedisClient } from "@bus-tracker/redis";
 
 import type { Gtfs } from "../model/gtfs.js";
 import type { Route, RouteType } from "../model/route.js";
 import type { Service } from "../model/service.js";
 import type { Source } from "../model/source.js";
 import type { Stop } from "../model/stop.js";
-import type { Trip } from "../model/trip.js";
-import { padSourceId } from "../utils/pad-source-id.js";
-import { getStopAreaId } from "../utils/stop-area-id.js";
-import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
-
-/** Bit de `StopTimeStore.getFlags` marquant un arrêt où la montée est interdite. */
-const NO_PICKUP_FLAG = 1;
+import { StopTimeFlag, type Trip } from "../model/trip.js";
 
 /** Taille des transactions d'écriture, pour ne pas bloquer Redis sur un réseau de plusieurs milliers de stations. */
 const CHUNK_SIZE = 500;
-
-type RedisClient = ReturnType<typeof createRedisClient>;
 
 /** Mode d'une station pour un type de route : hors des modes retenus, un bus. */
 const modeOf = (routeType: RouteType): StopAreaMode =>
@@ -101,7 +94,7 @@ function* realtimeServedCalls(source: Source, gtfs: Gtfs, nowMs: number) {
 		if (journey === undefined) continue;
 		for (const call of journey.calls) {
 			if (call.modification !== "ADDED" || call.status === "SKIPPED") continue;
-			const areaId = getStopAreaId(source, gtfs, call.stop.id);
+			const areaId = source.stopAreaIdOf(call.stop.id);
 			if (areaId === undefined) continue;
 			const delayMs = (call.expectedDepartureTime ?? call.aimedDepartureTime) - nowMs;
 			yield { journey, call, areaId, imminent: delayMs >= 0 && delayMs <= REALTIME_LINE_HORIZON_MS };
@@ -130,9 +123,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 	const gtfs = source.gtfs;
 	if (gtfs === undefined) return [];
 
-	const { mapLineRef, mapStopRef } = source.options;
-	const networkOf = createTripNetworkResolver(source);
-	const stopRefOf = (networkRef: string, stopId: string) => `${networkRef}:StopPoint:${mapStopRef?.(stopId) ?? stopId}`;
+	const networkOf = source.createNetworkResolver();
 
 	const publishedAt = Temporal.Instant.from(updatedAt);
 	const todayByTimeZone = new Map<string, Temporal.PlainDate>();
@@ -166,7 +157,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 			services.set(areaId, service);
 		}
 		service.courseCountByNetwork.set(networkRef, (service.courseCountByNetwork.get(networkRef) ?? 0) + 1);
-		if (ongoing) service.lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
+		if (ongoing) service.lineRefs.add(source.lineRefOf(networkRef, route.id));
 		service.mode = heaviestMode(service.mode, mode);
 	};
 
@@ -185,7 +176,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 			lineRefs = new Set();
 			stopLineRefs.set(stopId, lineRefs);
 		}
-		if (ongoing) lineRefs.add(`${networkRef}:Line:${mapLineRef?.(route.id) ?? route.id}`);
+		if (ongoing) lineRefs.add(source.lineRefOf(networkRef, route.id));
 	};
 
 	const { stopTimeStore } = gtfs;
@@ -220,7 +211,7 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 
 			const departs =
 				stopTimeIdx !== trip.stopTimeStart + trip.stopTimeCount - 1 &&
-				(stopTimeStore.getFlags(stopTimeIdx, tripIdx) & NO_PICKUP_FLAG) === 0;
+				(stopTimeStore.getFlags(stopTimeIdx, tripIdx) & StopTimeFlag.NO_PICKUP) === 0;
 			if (departs) departingAreaIds.add(stopArea.id);
 			if (offersArrivals(trip.route)) arrivalAreaIds.add(stopArea.id);
 		}
@@ -253,19 +244,21 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 
 		return [
 			{
-				ref: `${networkRef}:StopArea:${stopArea.id}`,
+				ref: toStopAreaRef(networkRef, stopArea.id),
 				name: stopArea.name,
 				latitude: stopArea.latitude,
 				longitude: stopArea.longitude,
 				networkRef,
 				networkRefs,
 				stopRefs: [
-					...new Set(networkRefs.flatMap((network) => stopArea.stops.map((stop) => stopRefOf(network, stop.id)))),
+					...new Set(
+						networkRefs.flatMap((network) => stopArea.stops.map((stop) => source.stopRefOf(network, stop.id))),
+					),
 				],
 				stopPoints: buildStopPoints(
 					stopArea.name,
 					stopArea.stops,
-					(stop) => stopRefOf(networkRef, stop.id),
+					(stop) => source.stopRefOf(networkRef, stop.id),
 					// Sans desserte, un quai déclaré reprend le mode de sa station ; un arrêt du seul flux temps réel est un bus.
 					(stop) => stopModes.get(stop.id) ?? (gtfs.stops.has(stop.id) ? service.mode : "BUS"),
 					(stop) => stopLineRefs.get(stop.id) ?? [],
@@ -354,7 +347,7 @@ export async function publishStopAreas(redis: RedisClient, providerId: string, s
 
 			console.log(
 				"%s ✓ Published %d stop areas (%d areas and %d stop points removed).",
-				padSourceId(source.id),
+				source.logId,
 				manifests.length,
 				staleRefs.length,
 				staleStopRefs.length,

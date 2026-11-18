@@ -13,6 +13,7 @@ import {
 	serviceAlertsSnapshotField,
 	type TranslatedImage,
 	type TranslatedText,
+	toStopAreaRef,
 } from "@bus-tracker/contracts";
 import { captureException } from "@bus-tracker/monitoring";
 
@@ -26,9 +27,7 @@ import type {
 import type { Route } from "../model/route.js";
 import type { Source } from "../model/source.js";
 import type { Trip } from "../model/trip.js";
-import { padSourceId } from "../utils/pad-source-id.js";
-import { resolveSourceNetworkRefs } from "../utils/source-network-refs.js";
-import { createTripNetworkResolver } from "../utils/trip-network-ref.js";
+import { toJourneyDirection } from "../utils/journey-direction.js";
 
 /** Seule l'écriture du hash est requise : évite d'exposer la variance des types du client Redis. */
 type RedisHashWriter = { hSet: (key: string, field: string, value: string) => Promise<unknown> };
@@ -94,9 +93,6 @@ const toServiceDate = (startDate?: string) =>
 const knownValue = <T extends string>(values: readonly T[], value: unknown) =>
 	(values as readonly unknown[]).includes(value) ? (value as T) : undefined;
 
-const toDirection = (directionId?: number) =>
-	directionId === 0 ? ("OUTBOUND" as const) : directionId === 1 ? ("INBOUND" as const) : undefined;
-
 /**
  * Traduit les alertes lues dans le flux en alertes publiables : chaque identifiant GTFS y devient la
  * référence sous laquelle lignes, quais, stations et courses sont publiés par ailleurs, pour que le
@@ -107,9 +103,8 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 	const gtfs = source.gtfs;
 	if (gtfs === undefined || alerts.length === 0) return [];
 
-	const { mapLineRef, mapStopRef, mapTripRef } = source.options;
-	const networkOf = createTripNetworkResolver(source);
-	const sourceNetworkRefs = resolveSourceNetworkRefs(source);
+	const networkOf = source.createNetworkResolver();
+	const sourceNetworkRefs = source.networkRefs();
 	const nowMs = now.epochMilliseconds;
 
 	// Une route n'a de réseau qu'à travers ses courses : l'index n'est construit que si une alerte en vise une.
@@ -131,8 +126,6 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 		const trip = tripOfRoute(routeId);
 		return trip !== undefined ? networkRefsOfTrip(trip) : sourceNetworkRefs;
 	};
-
-	const lineRefOf = (networkRef: string, routeId: string) => `${networkRef}:Line:${mapLineRef?.(routeId) ?? routeId}`;
 
 	/** Routes exploitées de chaque réseau : une route sans course n'est publiée sur aucun. */
 	let routesByNetworkRef: Map<string, Route[]> | undefined;
@@ -161,9 +154,8 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 			const agencyRoutes = routes.filter((route) => route.agency.id === agencyId);
 			if (agencyRoutes.length === 0) return [];
 			if (agencyRoutes.length === routes.length) return [{ networkRef }];
-			return agencyRoutes.map((route) => ({ networkRef, lineRef: lineRefOf(networkRef, route.id) }));
+			return agencyRoutes.map((route) => ({ networkRef, lineRef: source.lineRefOf(networkRef, route.id) }));
 		});
-	const stopRefOf = (networkRef: string, stopId: string) => `${networkRef}:StopPoint:${mapStopRef?.(stopId) ?? stopId}`;
 
 	/** Désignation d'un arrêt : un quai, ou une station et chacun de ses quais. */
 	const stopTargetsOf = (networkRef: string, stopId: string): Partial<ServiceAlertInformedEntity>[] => {
@@ -171,12 +163,12 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 			const stopArea = gtfs.stopAreas.get(stopId);
 			if (stopArea !== undefined) {
 				return [
-					{ stopAreaRef: `${networkRef}:StopArea:${stopArea.id}` },
-					...stopArea.stops.map((stop) => ({ stopRef: stopRefOf(networkRef, stop.id) })),
+					{ stopAreaRef: toStopAreaRef(networkRef, stopArea.id) },
+					...stopArea.stops.map((stop) => ({ stopRef: source.stopRefOf(networkRef, stop.id) })),
 				];
 			}
 		}
-		return [{ stopRef: stopRefOf(networkRef, stopId) }];
+		return [{ stopRef: source.stopRefOf(networkRef, stopId) }];
 	};
 
 	const resolveSelector = (selector: EntitySelector): ServiceAlertInformedEntity[] => {
@@ -205,14 +197,14 @@ export function buildServiceAlerts(source: Source, alerts: IdentifiedAlert[], no
 			const base: ServiceAlertInformedEntity = { networkRef };
 
 			if (trip !== undefined) {
-				base.journeyRef = `${networkRef}:ServiceJourney:${mapTripRef?.(trip.id) ?? trip.id}`;
+				base.journeyRef = source.journeyRefOf(networkRef, trip.id);
 				const serviceDate = toServiceDate(selector.trip?.startDate);
 				if (serviceDate !== undefined) base.serviceDate = serviceDate;
 			}
 
 			if (routeId !== undefined) {
-				base.lineRef = lineRefOf(networkRef, routeId);
-				const direction = toDirection(directionId);
+				base.lineRef = source.lineRefOf(networkRef, routeId);
+				const direction = toJourneyDirection(directionId);
 				if (direction !== undefined) base.direction = direction;
 			}
 
@@ -300,7 +292,7 @@ export async function publishServiceAlerts(redis: RedisHashWriter, providerId: s
 			lastPublished.set(field, { fingerprint, atMs: now.epochMilliseconds });
 
 			if (previous?.fingerprint !== fingerprint) {
-				console.log("%s ✓ Published %d service alerts.", padSourceId(source), alerts.length);
+				console.log("%s ✓ Published %d service alerts.", source.logId, alerts.length);
 			}
 		} catch (cause) {
 			console.error(new Error(`Failed to publish service alerts for '${source.id}'.`, { cause }));

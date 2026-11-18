@@ -197,7 +197,6 @@ export function buildModifiedCalls(scheduledCalls: JourneyCall[], plan: TripModi
 				: undefined;
 		if (modification.endStopSelector !== undefined && endIndex === undefined) return;
 
-		// Les arrêts que la modification ne touche pas sont repris tels quels.
 		for (let index = cursor; index < startIndex; index++) {
 			calls.push(shiftCall(scheduledCalls[index]!, delayMs));
 		}

@@ -9,7 +9,7 @@ import { GetNetworksQuery } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import { SearchBar } from "~/components/search-bar";
 import { Canonical } from "~/components/seo";
-import { useFavoriteNetworkIds } from "~/hooks/use-favorite-networks";
+import { useFavoriteNetworkIds } from "~/hooks/use-favorite-ids";
 import * as m from "~/paraglide/messages";
 import { formatNetworkNames } from "~/utils/network-seo";
 import { NetworksListContent } from "./-networks-list/networks-list-content";

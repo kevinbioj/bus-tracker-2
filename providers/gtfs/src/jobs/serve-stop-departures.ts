@@ -1,12 +1,15 @@
 import { setImmediate } from "node:timers/promises";
 import {
+	localIdOf,
 	STOP_DEPARTURES_REPLY_CHANNEL,
 	type StopDeparturesReply,
 	type StopDeparturesRequest,
 	stopDeparturesRequestChannel,
+	stopDeparturesRequestSchema,
 } from "@bus-tracker/contracts";
 import { captureException } from "@bus-tracker/monitoring";
 import { createRedisClient } from "@bus-tracker/redis";
+import { ArkErrors } from "arktype";
 
 import type { Source } from "../model/source.js";
 
@@ -15,17 +18,13 @@ import { computeStopDepartures } from "./compute-stop-departures.js";
 /** Seule la publication est requise : évite d'exposer la variance des types du client Redis. */
 type RedisPublisher = { publish: (channel: string, message: string) => Promise<unknown> };
 
-const STOP_AREA_INFIX = ":StopArea:";
-
 /** Demandes distinctes en attente au-delà desquelles les nouvelles sont ignorées : le serveur se replie alors sur ses courses suivies. */
 const MAX_PENDING_REQUESTS = 100;
 
 /** Échéance d'une demande d'un serveur qui n'en transmet pas encore : son propre délai d'attente. */
 const DEFAULT_REQUEST_TTL_MS = 2_000;
 
-type ValidRequest = StopDeparturesRequest & { requestId: string; stopAreaRef: string };
-
-type PendingRequest = { request: ValidRequest; requestIds: string[]; expiresAt: number };
+type PendingRequest = { request: StopDeparturesRequest; requestIds: string[]; expiresAt: number };
 
 /**
  * Retrouve la source qui détient une station et l'identifiant de celle-ci. La référence publiée est
@@ -34,10 +33,9 @@ type PendingRequest = { request: ValidRequest; requestIds: string[]; expiresAt: 
  * connaît la station répond.
  */
 function locateStopArea(sources: Source[], stopAreaRef: string, sourceId?: string) {
-	const infixIndex = stopAreaRef.indexOf(STOP_AREA_INFIX);
-	if (infixIndex === -1) return;
+	const areaId = localIdOf(stopAreaRef, "StopArea");
+	if (areaId === undefined) return;
 
-	const areaId = stopAreaRef.slice(infixIndex + STOP_AREA_INFIX.length);
 	const knows = (source: Source) => source.gtfs?.stopAreas.has(areaId) === true || source.realtimeStopAreas.has(areaId);
 
 	const source =
@@ -113,28 +111,16 @@ export async function serveStopDepartures(redis: RedisPublisher, providerId: str
 	};
 
 	const onRequest = (message: string) => {
-		let request: Partial<StopDeparturesRequest>;
+		let payload: unknown;
 		try {
-			request = JSON.parse(message);
-		} catch {
-			console.warn("⚠ Rejected a malformed stop departures request:", message);
-			return;
-		}
-		if (
-			typeof request.requestId !== "string" ||
-			typeof request.stopAreaRef !== "string" ||
-			(request.stopRef !== undefined && typeof request.stopRef !== "string") ||
-			(request.sourceId !== undefined && typeof request.sourceId !== "string") ||
-			(request.lineRefs !== undefined &&
-				(!Array.isArray(request.lineRefs) || request.lineRefs.some((lineRef) => typeof lineRef !== "string"))) ||
-			(request.direction !== undefined && request.direction !== "departures" && request.direction !== "arrivals") ||
-			(request.expiresAt !== undefined && typeof request.expiresAt !== "number")
-		) {
+			payload = JSON.parse(message);
+		} catch {}
+		const validRequest = stopDeparturesRequestSchema(payload);
+		if (validRequest instanceof ArkErrors) {
 			console.warn("⚠ Rejected a malformed stop departures request:", message);
 			return;
 		}
 
-		const validRequest = request as ValidRequest;
 		const key = JSON.stringify([
 			validRequest.stopAreaRef,
 			validRequest.sourceId,

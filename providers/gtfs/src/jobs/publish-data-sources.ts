@@ -3,7 +3,6 @@ import { captureException } from "@bus-tracker/monitoring";
 
 import type { Source } from "../model/source.js";
 import { redactHref } from "../utils/redact-href.js";
-import { resolveSourceNetworkRefs } from "../utils/source-network-refs.js";
 
 /** Seule la publication est requise : évite d'exposer la variance des types du client Redis. */
 type RedisPublisher = { publish: (channel: string, message: string) => Promise<unknown> };
@@ -12,8 +11,7 @@ type RedisPublisher = { publish: (channel: string, message: string) => Promise<u
 let lastPublishedPayload: string | undefined;
 
 function buildRealtimeFeeds(source: Source): { feed: DataSourceRealtimeFeed; redacted: boolean }[] {
-	return (source.options.realtimeResourceHrefs ?? []).map((resource) => {
-		const rawHref = typeof resource === "string" ? resource : resource.href;
+	return source.realtimeResources.map(({ href: rawHref }) => {
 		const entityTypes = source.observedRealtimeEntityTypes.get(rawHref);
 		const { href, redacted } = redactHref(rawHref);
 
@@ -41,14 +39,14 @@ export function buildDataSourceManifest(providerId: string, source: Source): Dat
 		kind: "GTFS",
 		providerId,
 		sourceId: source.id,
-		networkRefs: resolveSourceNetworkRefs(source),
+		networkRefs: source.networkRefs(),
 		staticFeed: {
 			href: staticFeed.href,
 			lastModified: source.resource?.lastModified ?? null,
 			...(source.gtfs !== undefined ? { importedAt: source.gtfs.importedAt.toString() } : {}),
 		},
 		realtimeFeeds: realtimeFeeds.map(({ feed }) => feed),
-		authenticated: Boolean(options.auth ?? options.staticAuth ?? options.realtimeAuth) || carriesUrlCredential,
+		authenticated: source.isAuthenticated || carriesUrlCredential,
 		updatedAt: Temporal.Now.instant().toString(),
 	};
 }

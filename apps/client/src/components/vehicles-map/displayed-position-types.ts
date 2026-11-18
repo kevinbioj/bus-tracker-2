@@ -20,9 +20,7 @@ export function readDisplayedPositionTypes(): PositionType[] {
 			if (Array.isArray(parsedTypes)) {
 				return parsedTypes.filter((type): type is PositionType => positionTypes.includes(type));
 			}
-		} catch {
-			// valeur corrompue : on retombe sur le comportement par défaut
-		}
+		} catch {}
 	}
 
 	return fallback(localStorage.getItem("hide-scheduled-trips") === "true");

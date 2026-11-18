@@ -60,7 +60,6 @@ export function GeojsonPopup({ children, layer, popupOptions }: MapCircleMarkers
 	}, []);
 
 	const adjustPan = useCallback(() => {
-		// do not force if user is dragging the map
 		if (isMapDragged.current) return;
 
 		const mapCanvas = map.getCanvas();

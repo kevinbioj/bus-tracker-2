@@ -1,7 +1,6 @@
 import type { LinePath, VehicleJourneyCallFlags, VehicleJourneyPosition } from "@bus-tracker/contracts";
 
 import { getEpochMsFromSecs } from "../cache/temporal-cache.js";
-import { groupBy } from "../utils/group-by.js";
 import type { Gtfs } from "./gtfs.js";
 import type { StopTimeUpdate, TripDescriptor, VehicleDescriptor } from "./gtfs-rt.js";
 import { restoreShapePrecision } from "./restore-shape-precision.js";
@@ -34,14 +33,6 @@ export type JourneyCall = {
 	modification?: "ADDED" | "REMOVED";
 	flags: VehicleJourneyCallFlags[];
 	headsign?: string;
-};
-
-export type JourneyPosition = {
-	latitude: number;
-	longitude: number;
-	atStop: boolean;
-	type: "GPS" | "COMPUTED";
-	recordedAt: Temporal.Instant;
 };
 
 const VEHICLE_DESCRIPTOR_TTL_MS = 5 * 60 * 1000;
@@ -186,6 +177,16 @@ function splitAwayFromShape(points: [number, number][], detourShape: Shape, join
 		/** Nombre de points écartés du tracé de remplacement, avant raccord et mise en portions. */
 		awayCount,
 	};
+}
+
+/** Dernier élément de chaque clé ; les éléments sans clé sont ignorés. */
+function indexBy<T, K>(items: T[], keyOf: (item: T) => K | undefined) {
+	const index = new Map<K, T>();
+	for (const item of items) {
+		const key = keyOf(item);
+		if (key !== undefined) index.set(key, item);
+	}
+	return index;
 }
 
 /**
@@ -538,9 +539,45 @@ export class Journey {
 		return segments.length > 0 ? { segments } : undefined;
 	}
 
-	/** Vrai si une déviation est appliquée à la course. */
 	hasModifications() {
 		return this._state?.modificationPlan !== undefined;
+	}
+
+	/**
+	 * Vrai si les `stop_sequence` que le flux associe à cette course ne désignent plus ses arrêts : un
+	 * producteur qui décrit une course déviée sans passer par `modified_trip` numérote encore ses arrêts
+	 * comme le GTFS statique, alors que la déviation les a renumérotés. Seul l'identifiant d'arrêt reste
+	 * alors fiable.
+	 */
+	hasStaleSequences(tripDescriptor: TripDescriptor | undefined) {
+		return this.hasModifications() && tripDescriptor?.modifiedTrip === undefined;
+	}
+
+	/**
+	 * Arrêts provisoires de la course : ajoutés par une déviation, à un arrêt qu'elle ne dessert pas
+	 * d'ordinaire. Un arrêt provisoire est dit déplacé lorsqu'il remplace un arrêt supprimé de la même
+	 * station (`areaIdOf`).
+	 */
+	findTemporaryCalls(areaIdOf: (stopId: string) => string | undefined) {
+		const temporaryCalls = new Map<JourneyCall, { relocated: boolean }>();
+		if (!this.hasModifications()) return temporaryCalls;
+
+		const calls = this.calls;
+		const scheduledStopIds = new Set(calls.flatMap((call) => (call.modification !== "ADDED" ? [call.stop.id] : [])));
+		const addedCalls = calls.filter((call) => call.modification === "ADDED" && !scheduledStopIds.has(call.stop.id));
+		if (addedCalls.length === 0) return temporaryCalls;
+
+		const skippedAreaIds = new Set(
+			calls.flatMap((call) => {
+				const areaId = call.status === "SKIPPED" ? areaIdOf(call.stop.id) : undefined;
+				return areaId !== undefined ? [areaId] : [];
+			}),
+		);
+		for (const call of addedCalls) {
+			const areaId = areaIdOf(call.stop.id);
+			temporaryCalls.set(call, { relocated: areaId !== undefined && skippedAreaIds.has(areaId) });
+		}
+		return temporaryCalls;
 	}
 
 	/**
@@ -581,9 +618,13 @@ export class Journey {
 		state.detourShape = undefined;
 		state.cancelledPath = undefined;
 		state.hasRealtime = false;
+		this.restoreAimedBounds();
+		return true;
+	}
+
+	private restoreAimedBounds() {
 		this.firstCallArrivalMs = this.aimedFirstCallArrivalMs;
 		this.lastCallDepartureMs = this.aimedLastCallDepartureMs;
-		return true;
 	}
 
 	/**
@@ -653,7 +694,6 @@ export class Journey {
 	dropRealtime() {
 		this.lastTripUpdateAtMs = undefined;
 		this.setHasRealtime(false);
-		// Les calls sont re-calculés à la demande depuis l'horaire théorique.
 		this._calls = null;
 
 		// Une déviation n'est pas une prédiction : elle ne périme pas avec le TripUpdate qui la
@@ -663,8 +703,7 @@ export class Journey {
 			return;
 		}
 
-		this.firstCallArrivalMs = this.aimedFirstCallArrivalMs;
-		this.lastCallDepartureMs = this.aimedLastCallDepartureMs;
+		this.restoreAimedBounds();
 	}
 
 	get vehicleDescriptor(): VehicleDescriptor | undefined {
@@ -709,19 +748,16 @@ export class Journey {
 		const firstCall = calls[0]!;
 		const lastCall = calls[calls.length - 1]!;
 
-		// 1. Before the journey starts
 		const firstDepartureMs = firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime;
 		if (atMs <= firstDepartureMs) {
 			return this.getJourneyPositionAt(firstCall);
 		}
 
-		// 2. After the journey ends
 		const lastArrivalMs = lastCall.expectedArrivalTime ?? lastCall.aimedArrivalTime;
 		if (atMs >= lastArrivalMs) {
 			return this.getJourneyPositionAt(lastCall);
 		}
 
-		// 3. During the journey
 		const currentCallIndex = calls.findLastIndex((call) => {
 			const arrivalMs = call.expectedArrivalTime ?? call.aimedArrivalTime;
 			return atMs >= arrivalMs;
@@ -730,12 +766,10 @@ export class Journey {
 		const currentCall = calls[currentCallIndex]!;
 		const departureMs = currentCall.expectedDepartureTime ?? currentCall.aimedDepartureTime;
 
-		// At a stop
 		if (atMs <= departureMs) {
 			return this.getJourneyPositionAt(currentCall);
 		}
 
-		// Between stops
 		const nextCall = calls[currentCallIndex + 1];
 
 		const shape = this.shape;
@@ -791,7 +825,6 @@ export class Journey {
 			return position;
 		}
 
-		// Premier passage, état périmé, ou progression normale.
 		if (
 			guard === undefined ||
 			atMs - guard.updatedAtMs > POSITION_GUARD_TTL_MS ||
@@ -817,7 +850,6 @@ export class Journey {
 	}
 
 	hasRealtime() {
-		// Si les calls sont en mémoire, vérification précise. Sinon, on utilise le flag.
 		if (this._calls !== null) {
 			return this._calls.some(callHasRealtime);
 		}
@@ -839,10 +871,10 @@ export class Journey {
 		let arrivalDelay: number | undefined;
 		let departureDelay: number | undefined;
 
-		const stopTimeUpdatesByStopSequence = groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopSequence);
-		const useStopId = matchByStopId || Object.keys(stopTimeUpdatesByStopSequence).length === 0;
+		const stopTimeUpdatesByStopSequence = indexBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopSequence);
+		const useStopId = matchByStopId || stopTimeUpdatesByStopSequence.size === 0;
 		const stopTimeUpdatesByStopId = useStopId
-			? groupBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopId)
+			? indexBy(stopTimeUpdates, (stopTimeUpdate) => stopTimeUpdate.stopId)
 			: undefined;
 		const sequenceOffset = useStopId ? 0 : getStopSequenceOffset(this.calls, stopTimeUpdates);
 
@@ -864,8 +896,8 @@ export class Journey {
 			if (call.modification === "REMOVED") continue;
 
 			let timeUpdate = useStopId
-				? stopTimeUpdatesByStopId![call.stop.id]
-				: stopTimeUpdatesByStopSequence[call.sequence - sequenceOffset];
+				? stopTimeUpdatesByStopId!.get(call.stop.id)
+				: stopTimeUpdatesByStopSequence.get(call.sequence - sequenceOffset);
 
 			// Prevent wrong time assignation on circular lines when all stop events aren't provided
 			if (
@@ -933,19 +965,8 @@ export class Journey {
 			call.status = getBaseCallStatus(call);
 		}
 
-		// Mise à jour du flag RT basée sur l'état réel des calls.
 		this.setHasRealtime(this._calls!.some(callHasRealtime));
-
-		// Mettre à jour les bornes avec les heures temps réel.
-		// Utilisé par le sweep et le fast-rejection de getCalls.
-		const firstCall = this._calls![0];
-		if (firstCall !== undefined) {
-			this.firstCallArrivalMs = firstCall.expectedArrivalTime ?? firstCall.aimedArrivalTime;
-		}
-		const lastCall = this._calls![this._calls!.length - 1];
-		if (lastCall !== undefined) {
-			this.lastCallDepartureMs = lastCall.expectedDepartureTime ?? lastCall.aimedDepartureTime;
-		}
+		this.refreshBounds();
 	}
 
 	private getJourneyPositionAt(call: JourneyCall): VehicleJourneyPosition {

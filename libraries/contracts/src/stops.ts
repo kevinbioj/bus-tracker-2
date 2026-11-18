@@ -1,5 +1,6 @@
 import { type } from "arktype";
 
+import { LINE_PATH_TTL_SECONDS } from "./line-paths.js";
 import { callOnDemandEnum, vehicleJourneyCallStatusEnum } from "./vehicle-journeys.js";
 
 /*
@@ -38,8 +39,7 @@ export const STOP_AREAS_INVALIDATION_CHANNEL = "stop-areas:invalidated";
  */
 export const stopPointAreaKey = (stopPointRef: string) => `${stopPointRef}:StopArea`;
 
-/** Durée de vie des fiches, alignée sur celle des tracés de ligne : largement au-delà de leur rafraîchissement. */
-export const STOP_AREA_TTL_SECONDS = 172_800;
+export const STOP_AREA_TTL_SECONDS = LINE_PATH_TTL_SECONDS;
 
 /**
  * Canal de demande de prochains passages, propre à chaque provider : le serveur sait quel provider
@@ -56,7 +56,7 @@ export const STOP_DEPARTURES_REPLY_CHANNEL = "stop-departures:reply";
  */
 export const stopAreaModes = ["RAIL", "SUBWAY", "TRAMWAY", "BUS", "FUNICULAR"] as const;
 
-export const stopAreaModeEnum = type("'RAIL'|'SUBWAY'|'TRAMWAY'|'BUS'|'FUNICULAR'");
+export const stopAreaModeEnum = type.enumerated(...stopAreaModes);
 export type StopAreaMode = typeof stopAreaModeEnum.infer;
 
 /** Quai d'une station : un arrêt physique, avec sa position propre. */

@@ -32,8 +32,6 @@ export type VehiclePosition = {
 	vehicle: VehicleDescriptor;
 };
 
-// ---
-
 export type OccupancyStatus =
 	| "EMPTY"
 	| "MANY_SEATS_AVAILABLE"

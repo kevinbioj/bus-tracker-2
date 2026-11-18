@@ -1,7 +1,6 @@
-import { createShapeFromPolyline } from "../utils/decode-polyline.js";
-
 import type { Gtfs } from "./gtfs.js";
 import type { RtShape, RtStop, TranslatedString } from "./gtfs-rt.js";
+import { createShapeFromPolyline } from "./polyline-shape.js";
 import type { Shape } from "./shape.js";
 import { Stop } from "./stop.js";
 

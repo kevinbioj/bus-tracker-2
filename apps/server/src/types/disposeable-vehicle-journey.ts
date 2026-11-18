@@ -1,50 +1,27 @@
-import type { VehicleJourneyCallFlags } from "@bus-tracker/contracts";
+import type { VehicleJourney } from "@bus-tracker/contracts";
 
-export type DisposeableVehicleJourney = {
-	id: string;
+/** Course telle que le serveur la garde en mémoire : celle du provider, rattachée aux entités de la base. */
+export type DisposeableVehicleJourney = Pick<
+	VehicleJourney,
+	| "id"
+	| "direction"
+	| "destination"
+	| "calls"
+	| "position"
+	| "occupancy"
+	| "pathRef"
+	| "cancelledPathRef"
+	| "isAdded"
+	| "journeyRef"
+	| "missionCode"
+	| "wheelchairAccessible"
+	| "bikesAllowed"
+	| "serviceDate"
+	| "updatedAt"
+> & {
 	/** Code pays ISO 3166-1 alpha-2 hérité du réseau (défaut "FR" en base). */
 	countryCode: string;
 	lineId?: number;
-	direction?: "OUTBOUND" | "INBOUND";
-	destination?: string;
-	calls?: Array<{
-		aimedTime: string;
-		expectedTime?: string;
-		stopRef: string;
-		stopName: string;
-		stopOrder: number;
-		platformName?: string;
-		distanceTraveled?: number;
-		callStatus: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
-		temporary?: boolean;
-		relocated?: boolean;
-		flags?: VehicleJourneyCallFlags[];
-	}>;
-	position: {
-		latitude: number;
-		longitude: number;
-		bearing?: number;
-		atStop: boolean;
-		type: "GPS" | "COMPUTED";
-		distanceTraveled?: number;
-		recordedAt: string;
-	};
-	occupancy?: "LOW" | "MEDIUM" | "HIGH" | "NO_PASSENGERS";
-	pathRef?: string;
-	/** Portions du tracé théorique que la course, déviée, n'emprunte plus. */
-	cancelledPathRef?: string;
-	/** Course absente du GTFS statique : ses arrêts n'ont pas d'horaire théorique de référence. */
-	isAdded?: boolean;
 	networkId: number;
-	/** Course théorique dont la publication est issue, lorsqu'elle en a une. */
-	journeyRef?: string;
-	operatorId?: number;
 	vehicle?: { id?: number; number: string };
-	missionCode?: string;
-	/** Accessibilité de la course en fauteuil roulant. Absent : inconnue. */
-	wheelchairAccessible?: boolean;
-	/** Acceptation des vélos à bord. Absent : inconnue. */
-	bikesAllowed?: boolean;
-	serviceDate?: string;
-	updatedAt: string;
 };

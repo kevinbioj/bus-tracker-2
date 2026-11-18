@@ -1,31 +1,30 @@
+import { isPathRef } from "@bus-tracker/contracts";
 import { inArray } from "drizzle-orm";
 import * as z from "zod";
 
 import { database } from "../core/database/database.js";
 import { linesTable } from "../core/database/schema.js";
+import { redis } from "../core/redis.js";
 import { findJourneyAlerts } from "../core/services/service-alert-service.js";
 import { buildJourneyDetails } from "../core/services/vehicle-journey-details.js";
 import { type MarkersFilter, matchesMarkersFilter, toMarker } from "../core/services/vehicle-journey-markers.js";
 import { loadJourneyPaths } from "../core/services/vehicle-journey-paths.js";
 import { journeyStore } from "../core/store/journey-store.js";
-import { redis } from "../index.js";
 import { hono } from "../server.js";
 import { keyBy } from "../utils/key-by.js";
 import {
 	BOUNDS_ERROR,
+	boundsQueryShape,
 	createParamValidator,
 	createQueryValidator,
-	idSchema,
+	idListSchema,
 	isOrderedBounds,
 	MAX_NETWORK_IDS,
 } from "../utils/validator-helpers.js";
 
 const getVehicleJourneyMarkersQuery = z
 	.object({
-		swLat: z.coerce.number().min(-90).max(90),
-		swLon: z.coerce.number().min(-180).max(180),
-		neLat: z.coerce.number().min(-90).max(90),
-		neLon: z.coerce.number().min(-180).max(180),
+		...boundsQueryShape,
 		includeMarker: z.string().optional(),
 		excludeScheduled: z.coerce.boolean().optional(),
 		// Absent = aucun filtrage pays, pour rester compatible avec les clients existants.
@@ -39,14 +38,8 @@ const getVehicleJourneyMarkersQuery = z
 			.optional()
 			.transform((value) => (value !== undefined ? value.split(",") : undefined))
 			.pipe(z.array(z.enum(["GPS", "ESTIMATED", "SCHEDULED"])).optional()),
-		networkId: z
-			.union([idSchema, z.array(idSchema).max(MAX_NETWORK_IDS)])
-			.optional()
-			.transform((values) => (typeof values === "number" ? [values] : values)),
-		lineId: z
-			.union([idSchema, z.array(idSchema).max(50)])
-			.optional()
-			.transform((values) => (typeof values === "number" ? [values] : values)),
+		networkId: idListSchema(MAX_NETWORK_IDS),
+		lineId: idListSchema(50),
 	})
 	.refine(isOrderedBounds, BOUNDS_ERROR);
 
@@ -157,9 +150,6 @@ hono.get("/vehicle-journeys/:id/paths", createParamValidator(getVehicleJourneyPa
 
 	return c.json(paths);
 });
-
-const isPathRef = (ref: string) =>
-	ref.includes(":RoutePath:") || ref.includes(":CancelledPath:") || ref.endsWith(":LinePath");
 
 const getPathParams = z.object({
 	ref: z.string().max(512).refine(isPathRef, { message: "Not a path reference." }),

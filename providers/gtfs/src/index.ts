@@ -1,6 +1,7 @@
 import "dotenv";
 
 import { setTimeout } from "node:timers/promises";
+import { LINE_PATH_TTL_SECONDS, VEHICLE_JOURNEYS_CHANNEL } from "@bus-tracker/contracts";
 import { captureException, initMonitoring, shutdownMonitoring } from "@bus-tracker/monitoring";
 import { createRedisClient } from "@bus-tracker/redis";
 import { Cron } from "croner";
@@ -9,15 +10,14 @@ import pLimit from "p-limit";
 
 import { loadConfiguration } from "./configuration/load-configuration.js";
 import { computeVehicleJourneys } from "./jobs/compute-current-journeys.js";
-import { computeNextJourneys } from "./jobs/compute-next-journeys.js";
 import { initializeResources } from "./jobs/initialize-resources.js";
 import { publishDataSourceManifests } from "./jobs/publish-data-sources.js";
 import { createJourneyPathPublisher } from "./jobs/publish-journey-paths.js";
 import { publishServiceAlerts } from "./jobs/publish-service-alerts.js";
 import { getRealtimeServiceFingerprint, publishStopAreas } from "./jobs/publish-stop-areas.js";
 import { serveStopDepartures } from "./jobs/serve-stop-departures.js";
-import { sweepJourneys } from "./jobs/sweep-journeys.js";
 import { updateResources } from "./jobs/update-resources.js";
+import type { Source } from "./model/source.js";
 import { configurationPath } from "./options.js";
 import { createStopWatch } from "./utils/stop-watch.js";
 
@@ -41,8 +41,6 @@ const redis = createRedisClient({
 		needsResync = true;
 	},
 });
-const channel = process.env.REDIS_CHANNEL ?? "journeys";
-const linePathTtlSeconds = 172_800;
 /** Rafraîchissement de la durée de vie des tracés de ligne : très en deçà de celle-ci, qui se compte en jours. */
 const linePathTtlRefreshMs = 3_600_000;
 const lastLinePathTtlRefreshAt = new Map<string, number>();
@@ -50,10 +48,15 @@ const lastLinePathTtlRefreshAt = new Map<string, number>();
 // ce qui laisse la marge de plusieurs cycles manqués avant son expiration.
 const journeyPaths = createJourneyPathPublisher(900, 300_000);
 await redis.connect();
-console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), channel);
+console.log("%s ► Connected! Journeys will be published into '%s'.", Temporal.Now.instant(), VEHICLE_JOURNEYS_CHANNEL);
 console.log();
 
-new Cron("0 0 0 * * *", () => computeNextJourneys(configuration.sources));
+new Cron("0 0 0 * * *", () => {
+	console.log("%s ► Computing journeys for the next day.", Temporal.Now.instant());
+	for (const source of configuration.sources) source.computeNextJourneys();
+	console.log();
+	global.gc?.();
+});
 
 let lastUpdateAt = Date.now();
 let lastSweepAt = Date.now();
@@ -62,9 +65,7 @@ let lastStopAreasPublishAt = Date.now();
 const publishedRealtimeStopAreas = new Map<string, string>();
 
 await initializeResources(configuration.sources);
-await publishLinePaths(configuration.sources);
-await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
-await publishStopAreas(redis, configuration.id, configuration.sources);
+await publishInventory(configuration.sources);
 await serveStopDepartures(redis, configuration.id, configuration.sources).catch((error) => {
 	// Les prochains passages sont un service d'appoint : leur indisponibilité ne doit pas empêcher
 	// la publication des courses.
@@ -77,10 +78,7 @@ while (true) {
 	if (Date.now() - lastUpdateAt > 600_000) {
 		const updatedSources = await updateResources(configuration.sources);
 		if (redis.isReady) {
-			await publishLinePaths(updatedSources);
-			await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
-			// Seules les sources mises à jour : les autres restent rafraîchies à leur rythme.
-			await publishStopAreas(redis, configuration.id, updatedSources);
+			await publishInventory(updatedSources);
 		} else {
 			// Les tracés des sources mises à jour seront republiés au retour de Redis.
 			needsResync = true;
@@ -89,7 +87,10 @@ while (true) {
 	}
 
 	if (Date.now() - lastSweepAt > 300_000) {
-		sweepJourneys(configuration.sources);
+		console.log("%s ► Sweeping outdated journey entries.", Temporal.Now.instant());
+		for (const source of configuration.sources) source.sweepJourneys();
+		console.log();
+		global.gc?.();
 		lastSweepAt = Date.now();
 	}
 
@@ -109,9 +110,7 @@ while (true) {
 	if (needsResync) {
 		needsResync = false;
 		journeyPaths.reset();
-		await publishLinePaths(configuration.sources);
-		await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
-		await publishStopAreas(redis, configuration.id, configuration.sources);
+		await publishInventory(configuration.sources);
 		lastStopAreasPublishAt = Date.now();
 	}
 
@@ -142,12 +141,9 @@ while (true) {
 	await publishDataSourceManifests(redis, configuration.id, configuration.sources);
 	await publishServiceAlerts(redis, configuration.id, configuration.sources);
 
-	// Wait at least 10s and at most 120s between each computation
 	const timeToWait = Math.min(120_000, Math.max(10_000, configuration.computeDelayMs - computeDuration));
 	console.log("%s ► Done loop cycle, waiting for %dms.", Temporal.Now.instant(), timeToWait);
-	try {
-		await setTimeout(timeToWait);
-	} catch {}
+	await setTimeout(timeToWait);
 }
 
 async function computeCurrentJourneys() {
@@ -178,7 +174,7 @@ async function computeCurrentJourneys() {
 
 					for (let i = 0; i < journeys.length; i += 500) {
 						const chunk = journeys.slice(i, Math.min(i + 500, journeys.length));
-						await redis.publish(channel, JSON.stringify(chunk));
+						await redis.publish(VEHICLE_JOURNEYS_CHANNEL, JSON.stringify(chunk));
 					}
 
 					await journeyPaths.publish(redis, paths, Date.now());
@@ -215,12 +211,24 @@ async function computeCurrentJourneys() {
 	console.log();
 }
 
-async function publishLinePaths(sources: typeof configuration.sources) {
+/**
+ * Republie ce qui décrit les sources plutôt que leurs véhicules : tracés de ligne, inventaire des
+ * sources et stations. Le manifeste des sources couvre toujours toutes les sources, qu'il publie en bloc.
+ */
+async function publishInventory(sources: Source[]) {
+	await publishLinePaths(sources);
+	await publishDataSourceManifests(redis, configuration.id, configuration.sources, { force: true });
+	await publishStopAreas(redis, configuration.id, sources);
+}
+
+async function publishLinePaths(sources: Source[]) {
 	try {
 		for (const source of sources) {
 			// Émises sans s'attendre les unes les autres : le client Redis les envoie d'un seul tenant.
 			await Promise.all(
-				Array.from(source.linePaths, ([ref, path]) => redis.set(ref, JSON.stringify(path), { EX: linePathTtlSeconds })),
+				Array.from(source.linePaths, ([ref, path]) =>
+					redis.set(ref, JSON.stringify(path), { EX: LINE_PATH_TTL_SECONDS }),
+				),
 			);
 			lastLinePathTtlRefreshAt.set(source.id, Date.now());
 		}
@@ -231,10 +239,10 @@ async function publishLinePaths(sources: typeof configuration.sources) {
 	}
 }
 
-async function refreshLinePathTtls(source: (typeof configuration.sources)[number]) {
+async function refreshLinePathTtls(source: Source) {
 	if (source.linePaths.size === 0) return;
 	if (Date.now() - (lastLinePathTtlRefreshAt.get(source.id) ?? 0) < linePathTtlRefreshMs) return;
 
-	await Promise.all(Array.from(source.linePaths.keys(), (ref) => redis.expire(ref, linePathTtlSeconds)));
+	await Promise.all(Array.from(source.linePaths.keys(), (ref) => redis.expire(ref, LINE_PATH_TTL_SECONDS)));
 	lastLinePathTtlRefreshAt.set(source.id, Date.now());
 }

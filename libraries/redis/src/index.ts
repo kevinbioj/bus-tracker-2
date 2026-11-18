@@ -49,3 +49,5 @@ export function createRedisClient({ name, onReconnect }: CreateRedisClientOption
 
 	return client;
 }
+
+export type RedisClient = ReturnType<typeof createRedisClient>;

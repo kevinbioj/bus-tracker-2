@@ -6,6 +6,7 @@ import {
 } from "@bus-tracker/contracts";
 import { useEffect, useSyncExternalStore } from "react";
 
+import { API_URL_PREFIX } from "./client";
 import type { Line } from "./lines";
 import type { ServiceAlert } from "./service-alerts";
 import type { StopDepartures, StopMarker } from "./stops";
@@ -49,7 +50,7 @@ function setStatus(nextStatus: RealtimeStatus) {
 }
 
 function realtimeUrl() {
-	const prefix = (import.meta.env.VITE_APP_API_URL ?? "/api").replace(/\/$/, "");
+	const prefix = API_URL_PREFIX.replace(/\/$/, "");
 	const url = new URL(`${prefix}/ws`, window.location.href);
 	url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
 	return url;

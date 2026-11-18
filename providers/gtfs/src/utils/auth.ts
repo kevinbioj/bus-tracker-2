@@ -1,5 +1,16 @@
 import { Buffer } from "node:buffer";
-import type { SourceAuth } from "../model/source.js";
+
+export type SourceAuth =
+	| {
+			type: "basic";
+			username?: string;
+			password?: string;
+	  }
+	| {
+			type: "header";
+			name: string;
+			value: string;
+	  };
 
 export function getAuthHeaders(auth?: SourceAuth): Record<string, string> {
 	if (auth === undefined) return {};
@@ -11,11 +22,7 @@ export function getAuthHeaders(auth?: SourceAuth): Record<string, string> {
 		};
 	}
 
-	if (auth.type === "header") {
-		return {
-			[auth.name]: auth.value,
-		};
-	}
-
-	return {};
+	return {
+		[auth.name]: auth.value,
+	};
 }

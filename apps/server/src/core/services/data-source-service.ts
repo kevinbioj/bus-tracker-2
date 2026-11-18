@@ -90,10 +90,11 @@ export type NetworkDataSources = {
 const networkDataSourcesCache = useCache<NetworkDataSources[]>(60_000, 1);
 
 /** Sources de chaque réseau. Une source alimentant plusieurs réseaux est créditée sous chacun d'eux. */
-export async function getNetworkDataSources() {
-	const cached = networkDataSourcesCache.get("all");
-	if (cached !== undefined) return cached;
+export function getNetworkDataSources() {
+	return networkDataSourcesCache.getOrLoad("all", loadNetworkDataSources);
+}
 
+async function loadNetworkDataSources() {
 	const [networkList, dataSourceList] = await Promise.all([
 		database.select().from(networksTable),
 		getFreshDataSources(),
@@ -116,13 +117,10 @@ export async function getNetworkDataSources() {
 		}
 	}
 
-	const networkDataSources = networkList
+	return networkList
 		.flatMap((network) => {
 			const sources = sourcesByNetworkId.get(network.id);
 			return sources === undefined ? [] : [{ network, sources }];
 		})
 		.sort((a, b) => a.network.name.localeCompare(b.network.name));
-
-	networkDataSourcesCache.set("all", networkDataSources);
-	return networkDataSources;
 }

@@ -8,10 +8,9 @@ import {
 	serviceAlertsSnapshotEnvelopeSchema,
 } from "@bus-tracker/contracts";
 import { ArkErrors } from "arktype";
-
-import { redis } from "../../index.js";
 import type { DisposeableVehicleJourney } from "../../types/disposeable-vehicle-journey.js";
 import { useCache } from "../../utils/use-cache.js";
+import { redis } from "../redis.js";
 import { resolveLineRefs } from "./line-ref-service.js";
 import type { StopArea } from "./stop-area-service.js";
 import { resolveNetworkIds } from "./stop-area-service.js";
@@ -43,11 +42,12 @@ type LoadedServiceAlert = {
  */
 const alertsCache = useCache<LoadedServiceAlert[]>(30_000);
 
-async function loadServiceAlerts(): Promise<LoadedServiceAlert[]> {
-	const cached = alertsCache.get("all");
-	if (cached !== undefined) return cached;
-	if (!redis.isReady) return [];
+async function loadServiceAlerts() {
+	if (!redis.isReady) return alertsCache.get("all") ?? [];
+	return alertsCache.getOrLoad("all", readServiceAlerts);
+}
 
+async function readServiceAlerts(): Promise<LoadedServiceAlert[]> {
 	const rawSnapshots = await redis.hGetAll(SERVICE_ALERTS_KEY);
 	const nowMs = Date.now();
 
@@ -92,7 +92,7 @@ async function loadServiceAlerts(): Promise<LoadedServiceAlert[]> {
 		resolveLineRefs(entities.flatMap(({ lineRef }) => (lineRef !== undefined ? [lineRef] : []))),
 	]);
 
-	const loaded = alerts.map(({ informedEntities, ...alert }) => ({
+	return alerts.map(({ informedEntities, ...alert }) => ({
 		alert,
 		entities: informedEntities.map((entity) => ({
 			...entity,
@@ -100,9 +100,6 @@ async function loadServiceAlerts(): Promise<LoadedServiceAlert[]> {
 			lineId: entity.lineRef !== undefined ? lines.get(entity.lineRef)?.id : undefined,
 		})),
 	}));
-
-	alertsCache.set("all", loaded);
-	return loaded;
 }
 
 const targetsStop = (entity: ResolvedInformedEntity) =>

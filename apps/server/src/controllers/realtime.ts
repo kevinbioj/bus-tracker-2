@@ -15,9 +15,18 @@ import {
 import { upgradeWebSocket } from "@hono/node-server";
 import { createMiddleware } from "hono/factory";
 import type { WebSocket } from "ws";
-
+import { redis } from "../core/redis.js";
 import { findLineDetails, findLinePath, type LineDetails } from "../core/services/line-details-service.js";
 import { type ExposedServiceAlert, findJourneyAlerts, findLineAlerts } from "../core/services/service-alert-service.js";
+import {
+	buildStopAlerts,
+	buildStopDepartures,
+	buildStopMarkers,
+	onStopAreasInvalidated,
+	type StopDeparturesPayload,
+	type StopMarker,
+	type StopMarkersFilter,
+} from "../core/services/stop-board-service.js";
 import { buildJourneyDetails, type JourneyDetails } from "../core/services/vehicle-journey-details.js";
 import {
 	loadLineStyles,
@@ -27,19 +36,9 @@ import {
 } from "../core/services/vehicle-journey-markers.js";
 import { loadJourneyPaths } from "../core/services/vehicle-journey-paths.js";
 import { journeyStore, onJourneysChanged } from "../core/store/journey-store.js";
-import { redis } from "../index.js";
 import { allowedOrigins, hono } from "../server.js";
 import type { DisposeableVehicleJourney } from "../types/disposeable-vehicle-journey.js";
 import { useCache } from "../utils/use-cache.js";
-import {
-	buildStopAlerts,
-	buildStopDepartures,
-	buildStopMarkers,
-	onStopAreasInvalidated,
-	type StopDeparturesPayload,
-	type StopMarker,
-	type StopMarkersFilter,
-} from "./stops.js";
 
 const FLUSH_INTERVAL_MS = 1_000;
 const ALERTS_REFRESH_INTERVAL_MS = 30_000;

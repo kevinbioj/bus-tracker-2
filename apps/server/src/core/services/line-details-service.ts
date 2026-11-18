@@ -1,34 +1,24 @@
-import { decodeLinePath, type EncodedLinePath, type LinePath } from "@bus-tracker/contracts";
+import { decodeLinePath, type EncodedLinePath, type LinePath, toLinePathRef } from "@bus-tracker/contracts";
 import { desc, eq, sql } from "drizzle-orm";
-
-import { redis } from "../../index.js";
 import { useCache } from "../../utils/use-cache.js";
 import { database } from "../database/database.js";
 import { lineActivitiesTable, linesTable } from "../database/schema.js";
+import { redis } from "../redis.js";
 
 const lineDetailsCache = useCache<LineDetails | null>(60_000, 1_024);
 const linePathCache = useCache<LinePath | null>(60_000, 1_024);
 
 /** Ligne et ses mois d'activité, partagés entre l'API et le temps réel pendant une minute. */
 export async function findLineDetails(lineId: number) {
-	const key = String(lineId);
-	let line = lineDetailsCache.get(key);
-	if (line === undefined) {
-		line = (await loadLineDetails(lineId)) ?? null;
-		lineDetailsCache.set(key, line);
-	}
+	const line = await lineDetailsCache.getOrLoad(String(lineId), async () => (await loadLineDetails(lineId)) ?? null);
 	return line ?? undefined;
 }
 
 /** Tracé de la ligne, partagé de même. Redis indisponible, rien n'est retenu. */
 export async function findLinePath(line: { id: number; references: string[] | null }) {
 	const key = String(line.id);
-	let path = linePathCache.get(key);
-	if (path === undefined) {
-		if (!redis.isReady) return undefined;
-		path = (await loadLinePath(line)) ?? null;
-		linePathCache.set(key, path);
-	}
+	if (!redis.isReady) return linePathCache.get(key) ?? undefined;
+	const path = await linePathCache.getOrLoad(key, async () => (await loadLinePath(line)) ?? null);
 	return path ?? undefined;
 }
 
@@ -61,7 +51,7 @@ export async function loadLinePath(line: { references: string[] | null }) {
 	const refs = line.references ?? [];
 	if (refs.length === 0) return undefined;
 
-	const rawPaths = await redis.mGet(refs.map((ref) => `${ref}:LinePath`));
+	const rawPaths = await redis.mGet(refs.map(toLinePathRef));
 	// Chaque version d'encodage a sa propre précision : les segments ne sont dédoublonnés qu'entre
 	// tracés de même version.
 	const encodedSegments = new Map<EncodedLinePath["v"], Set<string>>();

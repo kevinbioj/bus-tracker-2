@@ -15,7 +15,7 @@ export async function downloadGtfsArchive(source: Source, archivePath: string) {
 	const response = await fetch(source.options.staticResourceHref, {
 		headers: {
 			"User-Agent": USER_AGENT,
-			...getAuthHeaders(source.options.staticAuth ?? source.options.auth),
+			...getAuthHeaders(source.staticAuth),
 		},
 		signal: AbortSignal.timeout(30_000),
 	});

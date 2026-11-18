@@ -39,13 +39,10 @@ export function fastFormatISO(epochMs: number, offsetMs: number): string {
 	);
 }
 
-/**
- * Get the timezone offset in milliseconds for a given timezone at a specific epoch.
- * We cache this per journey to avoid repeated calculations.
- */
 const offsetCache = new Map<string, number>();
 export function getTimeZoneOffsetMs(timeZone: string, epochMs: number): number {
-	const cacheKey = `${timeZone}_${Math.floor(epochMs / 3600000)}`; // Cache hourly to handle DST transitions
+	// Une clé par heure : un changement d'heure ne peut survenir qu'entre deux.
+	const cacheKey = `${timeZone}_${Math.floor(epochMs / 3600000)}`;
 	let offset = offsetCache.get(cacheKey);
 	if (offset === undefined) {
 		const dt = new Date(epochMs);

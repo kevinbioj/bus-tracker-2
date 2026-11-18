@@ -1,6 +1,8 @@
 import ky from "ky";
 
+export const API_URL_PREFIX = import.meta.env.VITE_APP_API_URL ?? "/api";
+
 export const client = ky.create({
 	credentials: "include",
-	prefix: import.meta.env.VITE_APP_API_URL ?? "/api",
+	prefix: API_URL_PREFIX,
 });

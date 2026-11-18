@@ -22,7 +22,6 @@ export type Gtfs = {
 	journeys: Map<string, Journey>;
 	stopTimeStore: StopTimeStore;
 	serviceWindow?: ServiceWindow;
-	// ---
 	importedAt: Temporal.Instant;
 };
 

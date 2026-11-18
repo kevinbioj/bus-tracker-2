@@ -1,7 +1,5 @@
 import { USER_AGENT } from "../constants.js";
-import type { SourceAuth } from "../model/source.js";
-
-import { getAuthHeaders } from "./auth.js";
+import { getAuthHeaders, type SourceAuth } from "./auth.js";
 
 export type ResourceFreshness = {
 	lastModified: string | null;

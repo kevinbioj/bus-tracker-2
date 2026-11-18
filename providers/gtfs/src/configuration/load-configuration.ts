@@ -10,26 +10,16 @@ export async function loadConfiguration(path: string) {
 	try {
 		console.log("► Loading configuration '%s'.", resolvedPath);
 		const module = await import(resolvedPath);
-		const {
-			id,
-			computeDelayMs,
-			computeConcurrency,
-			redisOptions,
-			sources: sourcesOptions,
-		} = module.default as Configuration;
+		const { id, computeDelayMs, computeConcurrency, sources: sourcesOptions } = module.default as Configuration;
 
 		const sources = sourcesOptions.map(({ id, ...sourceOptions }) => {
 			const source = new Source(id, sourceOptions);
-			console.log(
-				`\tⓘ Loaded source '%s' with %d real-time feed(s).`,
-				id,
-				sourceOptions.realtimeResourceHrefs?.length ?? 0,
-			);
+			console.log(`\tⓘ Loaded source '%s' with %d real-time feed(s).`, id, source.realtimeResources.length);
 			return source;
 		});
 
 		console.log();
-		return { id, computeDelayMs, computeConcurrency, redisOptions, sources };
+		return { id, computeDelayMs, computeConcurrency, sources };
 	} catch (cause) {
 		throw new Error(`Unable to load configuration at '${resolvedPath}'.`, {
 			cause,

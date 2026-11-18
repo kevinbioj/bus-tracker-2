@@ -1,7 +1,6 @@
 import type { VehicleJourneyPaths } from "@bus-tracker/contracts";
-
-import { redis } from "../../index.js";
 import type { DisposeableVehicleJourney } from "../../types/disposeable-vehicle-journey.js";
+import { redis } from "../redis.js";
 
 export async function loadJourneyPaths(journey: DisposeableVehicleJourney) {
 	if (journey.pathRef === undefined) return undefined;

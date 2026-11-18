@@ -219,8 +219,6 @@ export function Girouette({
 	);
 }
 
-// ---
-
 type ScrollingTextProps = {
 	className?: string;
 	/** Blinks the text on and off, independently of its scrolling. */
@@ -329,8 +327,6 @@ function ScrollingText({
 		</span>
 	);
 }
-
-// ---
 
 type RouteNumberProps = {
 	dimensions: GirouetteDimensions;
@@ -453,8 +449,6 @@ function RouteNumber({ dimensions, label, ledColor, onClick, routeNumber, width 
 		</button>
 	);
 }
-
-// ---
 
 type PagesProps = {
 	/** When set, that page is displayed and the automatic cycling is suspended. */

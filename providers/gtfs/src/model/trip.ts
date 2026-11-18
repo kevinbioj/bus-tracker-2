@@ -6,33 +6,24 @@ import { Journey } from "./journey.js";
 import type { Route } from "./route.js";
 import type { Service } from "./service.js";
 import type { Shape } from "./shape.js";
-import type { Stop } from "./stop.js";
 import type { StopTimeStore } from "./stop-time-store.js";
+
+/** Bits de `StopTimeStore.getFlags`. */
+export const StopTimeFlag = {
+	NO_PICKUP: 1,
+	NO_DROP_OFF: 2,
+	PHONE_PICKUP: 4,
+	DRIVER_PICKUP: 8,
+} as const satisfies Record<VehicleJourneyCallFlags, number>;
 
 const EMPTY_FLAGS: VehicleJourneyCallFlags[] = [];
 
-const FLAG_BITS: [number, VehicleJourneyCallFlags][] = [
-	[1, "NO_PICKUP"],
-	[2, "NO_DROP_OFF"],
-	[4, "PHONE_PICKUP"],
-	[8, "DRIVER_PICKUP"],
-];
+const FLAG_BITS = Object.entries(StopTimeFlag) as [VehicleJourneyCallFlags, number][];
 
 export function bitmaskToFlags(bitmask: number): VehicleJourneyCallFlags[] {
 	if (bitmask === 0) return EMPTY_FLAGS;
-	return FLAG_BITS.flatMap(([bit, flag]) => (bitmask & bit ? [flag] : []));
+	return FLAG_BITS.flatMap(([flag, bit]) => (bitmask & bit ? [flag] : []));
 }
-
-export type StopTimeCall = {
-	aimedArrivalTime: number;
-	aimedDepartureTime: number;
-	expectedArrivalTime?: number;
-	expectedDepartureTime?: number;
-	stop: Stop;
-	sequence: number;
-	status: "SCHEDULED" | "UNSCHEDULED" | "SKIPPED";
-	headsign?: string;
-};
 
 export class Trip {
 	constructor(

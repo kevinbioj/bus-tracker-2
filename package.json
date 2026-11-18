@@ -10,7 +10,6 @@
 		"dev:gtfs": "pnpm -C providers/gtfs dev",
 		"dev:hawk": "pnpm -C providers/hawk dev",
 		"dev:twisto": "pnpm -C providers/twisto dev",
-		"dev:tcl": "pnpm -C providers/tcl dev",
 		"dev:rtm": "pnpm -C providers/rtm dev",
 		"check": "biome check",
 		"check:fix": "biome check --write"

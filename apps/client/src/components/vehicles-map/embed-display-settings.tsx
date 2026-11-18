@@ -10,15 +10,24 @@ type DisplaySettingsValues = {
 	showBikesAllowed: boolean;
 };
 
+type DisplaySettingKey = keyof DisplaySettingsValues;
+
+type Setters = { [K in DisplaySettingKey]: Dispatch<SetStateAction<DisplaySettingsValues[K]>> };
+
 /**
  * Réglages d'affichage de la carte embarquée. Ils l'emportent sur les préférences de l'application :
  * l'intégrateur fixe leur valeur de départ, que le visiteur ajuste depuis la carte.
  */
-export type EmbedDisplaySettings = DisplaySettingsValues & {
-	setNextCallsDisplayMode: Dispatch<SetStateAction<NextCallsDisplayMode>>;
-	setDisplayAbsoluteRecordedTime: Dispatch<SetStateAction<boolean>>;
-	setShowWheelchairAccessibility: Dispatch<SetStateAction<boolean>>;
-	setShowBikesAllowed: Dispatch<SetStateAction<boolean>>;
+type EmbedDisplaySettings = { values: DisplaySettingsValues; setters: Setters };
+
+/** Préférences de l'application, hors de la carte embarquée. */
+const applicationSettings: {
+	[K in DisplaySettingKey]: { storageKey: string; defaultValue: DisplaySettingsValues[K] };
+} = {
+	nextCallsDisplayMode: { storageKey: "next-calls-display-mode", defaultValue: "absolute" },
+	displayAbsoluteRecordedTime: { storageKey: "display-absolute-time", defaultValue: false },
+	showWheelchairAccessibility: { storageKey: "show-wheelchair-accessibility", defaultValue: false },
+	showBikesAllowed: { storageKey: "show-bikes-allowed", defaultValue: false },
 };
 
 const EmbedDisplaySettingsContext = createContext<EmbedDisplaySettings | null>(null);
@@ -44,7 +53,7 @@ export function EmbedDisplaySettingsProvider({
 		{},
 	);
 
-	const settings = useMemo(() => {
+	const settings = useMemo((): EmbedDisplaySettings => {
 		const values = { ...initialSettings, ...changedSettings };
 
 		const setterOf =
@@ -60,18 +69,28 @@ export function EmbedDisplaySettingsProvider({
 				});
 
 		return {
-			...values,
-			setNextCallsDisplayMode: setterOf("nextCallsDisplayMode"),
-			setDisplayAbsoluteRecordedTime: setterOf("displayAbsoluteRecordedTime"),
-			setShowWheelchairAccessibility: setterOf("showWheelchairAccessibility"),
-			setShowBikesAllowed: setterOf("showBikesAllowed"),
+			values,
+			setters: {
+				nextCallsDisplayMode: setterOf("nextCallsDisplayMode"),
+				displayAbsoluteRecordedTime: setterOf("displayAbsoluteRecordedTime"),
+				showWheelchairAccessibility: setterOf("showWheelchairAccessibility"),
+				showBikesAllowed: setterOf("showBikesAllowed"),
+			},
 		};
 	}, [changedSettings, initialSettings, setChangedSettings]);
 
 	return <EmbedDisplaySettingsContext.Provider value={settings}>{children}</EmbedDisplaySettingsContext.Provider>;
 }
 
-/** Réglages de la carte embarquée, `null` hors de celle-ci. */
-export function useEmbedDisplaySettings() {
-	return useContext(EmbedDisplaySettingsContext);
+export function useIsEmbedded() {
+	return useContext(EmbedDisplaySettingsContext) !== null;
+}
+
+/** Réglage d'affichage : celui de la carte embarquée, à défaut la préférence de l'application. */
+export function useDisplaySetting<K extends DisplaySettingKey>(key: K) {
+	const embedSettings = useContext(EmbedDisplaySettingsContext);
+	const { storageKey, defaultValue } = applicationSettings[key];
+	const [value, setValue] = useLocalStorage<DisplaySettingsValues[K]>(storageKey, defaultValue);
+	if (embedSettings !== null) return [embedSettings.values[key], embedSettings.setters[key]] as const;
+	return [value, setValue] as const;
 }

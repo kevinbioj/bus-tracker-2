@@ -1,7 +1,7 @@
-import clsx from "clsx";
 import { type ComponentPropsWithoutRef, useMemo, useState } from "react";
 import { match } from "ts-pattern";
-import { twMerge } from "tw-merge";
+
+import { cn } from "~/utils/cn";
 
 export type TooltipProps = ComponentPropsWithoutRef<"span"> & {
 	content: React.ReactNode;
@@ -43,12 +43,10 @@ export function CustomTooltip({ children, content, place, spacing = 5, ...toolti
 		<div className="relative inline-block" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
 			{children}
 			<span
-				className={twMerge(
-					clsx(
-						"z-[999] absolute whitespace-nowrap rounded-md bg-neutral-300 px-1 py-0.5 text-black text-xs shadow-lg dark:bg-neutral-700 dark:text-white",
-						!open && "hidden",
-						className,
-					),
+				className={cn(
+					"z-[999] absolute whitespace-nowrap rounded-md bg-neutral-300 px-1 py-0.5 text-black text-xs shadow-lg dark:bg-neutral-700 dark:text-white",
+					!open && "hidden",
+					className,
 				)}
 				role="tooltip"
 				style={{ ...style, ...tooltipStyles }}

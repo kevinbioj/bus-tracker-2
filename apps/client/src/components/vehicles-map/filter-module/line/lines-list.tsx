@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { ArrowLeftIcon, ChevronRightIcon, WaypointsIcon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDebounceValue, useLocalStorage } from "usehooks-ts";
+import { useDebounceValue } from "usehooks-ts";
 
 import type { Line } from "~/api/networks";
 import { GetNetworkQuery, type Network } from "~/api/networks";
@@ -13,6 +13,7 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { OnlineVehiclesCount } from "~/components/vehicles-map/filter-module/line/line-card";
 import { LinesInnerList } from "~/components/vehicles-map/filter-module/line/lines-inner-list";
 import { NetworkLogoTile } from "~/components/vehicles-map/filter-module/network/network-logo";
+import { useFavoriteIds } from "~/hooks/use-favorite-ids";
 import * as m from "~/paraglide/messages";
 import { cn } from "~/utils/cn";
 import { searchLines } from "~/utils/line-search";
@@ -41,38 +42,18 @@ export function FilterModuleLinesList({
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearchQuery] = useDebounceValue(searchQuery, 200);
 
-	// Repartir du haut de la liste dès que les résultats changent.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on query updates
 	useEffect(() => {
 		scrollRef.current?.scrollTo({ behavior: "smooth", top: 0 });
 	}, [searchQuery]);
 
-	// Une nouvelle sélection de réseau repart d'une recherche vierge.
 	// biome-ignore lint/correctness/useExhaustiveDependencies: effect runs on network updates
 	useEffect(() => {
 		setSearchQuery("");
 	}, [network.id]);
 
-	const [favoriteLineIds, setFavoriteLineIds] = useLocalStorage("favorite-lines", new Set<number>(), {
-		deserializer: (value) => new Set(JSON.parse(value)),
-		serializer: (value) => JSON.stringify(Array.from(value.values())),
-	});
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: setters are not dependencies
-	const toggleFavoriteLineId = useCallback(
-		(line: Line) => {
-			const updatedSet = new Set(favoriteLineIds);
-
-			if (updatedSet.has(line.id)) {
-				updatedSet.delete(line.id);
-			} else {
-				updatedSet.add(line.id);
-			}
-
-			setFavoriteLineIds(updatedSet);
-		},
-		[favoriteLineIds],
-	);
+	const [favoriteLineIds, toggleFavoriteLineId] = useFavoriteIds("favorite-lines");
+	const toggleFavoriteLine = useCallback((line: Line) => toggleFavoriteLineId(line.id), [toggleFavoriteLineId]);
 
 	const [favoriteLines, runningLines, nonRunningLines] = useMemo<[Line[], Line[], Line[]]>(() => {
 		if (networkWithLines?.lines === undefined) {
@@ -176,7 +157,7 @@ export function FilterModuleLinesList({
 						searchResults={searchResults}
 						favoriteLineIds={favoriteLineIds}
 						onLineSelect={onLineChange}
-						toggleFavoriteLineId={toggleFavoriteLineId}
+						toggleFavoriteLineId={toggleFavoriteLine}
 						scrollRef={scrollRef}
 					/>
 				</div>
