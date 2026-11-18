@@ -1,5 +1,6 @@
 import { setImmediate } from "node:timers/promises";
 import type { VehicleJourney } from "@bus-tracker/contracts";
+import { captureException } from "@bus-tracker/monitoring";
 import type { RedisClient } from "@bus-tracker/redis";
 import pLimit from "p-limit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -91,6 +92,7 @@ describe("runSourceLoop", () => {
 
 	afterEach(() => {
 		stopped = true;
+		vi.useRealTimers();
 		vi.restoreAllMocks();
 	});
 
@@ -104,6 +106,54 @@ describe("runSourceLoop", () => {
 
 		await waitFor(() => countOf(published, "fast") >= 3);
 		expect(countOf(published, "slow")).toBe(0);
+	});
+
+	it("remonte l'échec d'import au démarrage sans bloquer les autres sources", async () => {
+		const error = new Error("Download from 'https://example.com/gtfs.zip' failed (503).");
+		const broken = makeSource("broken", async () => {
+			throw error;
+		});
+		const healthy = makeSource("healthy");
+		const { context, published } = makeContext([broken, healthy]);
+		vi.mocked(captureException).mockClear();
+
+		void runSourceLoop(broken, context);
+		void runSourceLoop(healthy, context);
+
+		await waitFor(() => countOf(published, "healthy") >= 3);
+		expect(captureException).toHaveBeenCalledWith(error, { sourceId: "broken" });
+		expect(countOf(published, "broken")).toBe(0);
+	});
+
+	it("revérifie une ressource en échec toutes les 15 minutes", async () => {
+		vi.useFakeTimers({ toFake: ["Date"] });
+		const startedAt = Date.now();
+		const source = makeSource("source");
+		const updateGtfs = vi
+			.spyOn(source, "updateGtfs")
+			.mockImplementationOnce(async () => {
+				source.failedResource = { lastModified: null, etag: null, hash: "broken", checkedAt: Temporal.Now.instant() };
+				throw new Error("broken archive");
+			})
+			.mockResolvedValue(false);
+		vi.spyOn(source, "sweepJourneys").mockReturnValue(undefined);
+		const { context, published } = makeContext([source]);
+
+		const expectUpdateCallsAt = async (minutes: number, calls: number) => {
+			vi.setSystemTime(startedAt + minutes * 60_000);
+			const publishedBefore = countOf(published, "source");
+			await waitFor(() => countOf(published, "source") >= publishedBefore + 3);
+			expect(updateGtfs).toHaveBeenCalledTimes(calls);
+		};
+
+		void runSourceLoop(source, context);
+		await waitFor(() => countOf(published, "source") >= 1);
+
+		await expectUpdateCallsAt(11, 1);
+		await expectUpdateCallsAt(25, 1);
+		await expectUpdateCallsAt(27, 2);
+		await expectUpdateCallsAt(41, 2);
+		await expectUpdateCallsAt(43, 3);
 	});
 
 	it("poursuit les boucles quand le calcul d'une source échoue ou dépasse son budget", async () => {

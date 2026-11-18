@@ -119,4 +119,67 @@ describe("Source.updateGtfs", () => {
 		expect(source.resource?.hash).toBe("hash-b");
 		expect(importGtfs).toHaveBeenCalledTimes(2);
 	});
+
+	it("skips a failed resource until it changes upstream", async () => {
+		const isStaticResourceStale = vi.fn().mockResolvedValue(true);
+		const source = await makeSource(isStaticResourceStale);
+		const gtfs = source.gtfs;
+
+		vi.mocked(downloadGtfsArchive).mockResolvedValueOnce(archive("hash-b"));
+		vi.mocked(importGtfs).mockRejectedValueOnce(new Error("broken archive"));
+		await expect(source.updateGtfs()).rejects.toThrow("broken archive");
+		expect(source.gtfs).toBe(gtfs);
+		expect(source.failedResource?.hash).toBe("hash-b");
+
+		isStaticResourceStale.mockResolvedValueOnce(false);
+		expect(await source.updateGtfs()).toBe(false);
+		expect(isStaticResourceStale).toHaveBeenLastCalledWith(source.failedResource, expect.anything());
+		expect(downloadGtfsArchive).toHaveBeenCalledTimes(2);
+
+		vi.mocked(downloadGtfsArchive).mockResolvedValueOnce({ ...archive("hash-b"), etag: '"b2"' });
+		expect(await source.updateGtfs()).toBe(false);
+		expect(extractGtfs).toHaveBeenCalledTimes(2);
+		expect(importGtfs).toHaveBeenCalledTimes(2);
+		expect(source.failedResource?.etag).toBe('"b2"');
+
+		vi.mocked(downloadGtfsArchive).mockResolvedValueOnce(archive("hash-c"));
+		expect(await source.updateGtfs()).toBe(true);
+		expect(source.gtfs).not.toBe(gtfs);
+		expect(source.resource?.hash).toBe("hash-c");
+		expect(source.failedResource).toBeUndefined();
+	});
+
+	it("skips a failed initial import until it changes upstream", async () => {
+		const isStaticResourceStale = vi.fn().mockResolvedValue(false);
+		const source = new Source("test", {
+			staticResourceHref: "https://example.com/gtfs.zip",
+			excludeScheduled: true,
+			disableRoutePaths: true,
+			getNetworkRef: () => "TEST",
+			isStaticResourceStale,
+		});
+
+		vi.mocked(downloadGtfsArchive).mockResolvedValueOnce(archive("hash-a"));
+		vi.mocked(importGtfs).mockRejectedValueOnce(new Error("broken archive"));
+		await expect(source.importGtfs()).rejects.toThrow("broken archive");
+
+		expect(await source.updateGtfs()).toBe(false);
+		expect(downloadGtfsArchive).toHaveBeenCalledTimes(1);
+		expect(source.gtfs).toBeUndefined();
+	});
+
+	it("drops a failed resource when upstream reverts to the loaded one", async () => {
+		const source = await makeSource(vi.fn().mockResolvedValue(true));
+		const gtfs = source.gtfs;
+
+		vi.mocked(downloadGtfsArchive).mockResolvedValueOnce(archive("hash-b"));
+		vi.mocked(importGtfs).mockRejectedValueOnce(new Error("broken archive"));
+		await expect(source.updateGtfs()).rejects.toThrow("broken archive");
+
+		vi.mocked(downloadGtfsArchive).mockResolvedValueOnce(archive("hash-a"));
+		expect(await source.updateGtfs()).toBe(false);
+		expect(source.gtfs).toBe(gtfs);
+		expect(source.failedResource).toBeUndefined();
+		expect(importGtfs).toHaveBeenCalledTimes(2);
+	});
 });

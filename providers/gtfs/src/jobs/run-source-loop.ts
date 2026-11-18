@@ -13,10 +13,11 @@ import { publishServiceAlerts } from "./publish-service-alerts.js";
 import { getRealtimeServiceFingerprint, publishStopAreas } from "./publish-stop-areas.js";
 
 const UPDATE_INTERVAL_MS = 600_000;
+const FAILED_RESOURCE_CHECK_MS = 900_000;
 const SWEEP_INTERVAL_MS = 300_000;
 const STOP_AREAS_REFRESH_MS = 3_600_000;
 const LINE_PATH_TTL_REFRESH_MS = 3_600_000;
-const MIN_WAIT_MS = 10_000;
+const MIN_WAIT_MS = 5_000;
 const MAX_WAIT_MS = 120_000;
 const JOURNEYS_CHUNK_SIZE = 500;
 export const STUCK_SOURCE_ITERATION_MS = 60_000;
@@ -38,7 +39,7 @@ export type SourceLoopContext = {
 };
 
 type SourceLoopState = {
-	lastUpdateAt: number;
+	nextUpdateAt: number;
 	lastSweepAt: number;
 	lastStopAreasPublishAt: number;
 	lastLinePathTtlRefreshAt: number;
@@ -48,7 +49,7 @@ type SourceLoopState = {
 export async function runSourceLoop(source: Source, context: SourceLoopContext): Promise<never> {
 	const sleep = context.sleep ?? setTimeout;
 	const state: SourceLoopState = {
-		lastUpdateAt: Date.now(),
+		nextUpdateAt: Date.now() + UPDATE_INTERVAL_MS,
 		lastSweepAt: Date.now(),
 		lastStopAreasPublishAt: Date.now(),
 		lastLinePathTtlRefreshAt: 0,
@@ -56,7 +57,7 @@ export async function runSourceLoop(source: Source, context: SourceLoopContext):
 	};
 
 	await runSafely(source, context, "GTFS import", async () => {
-		if (await context.resourceLimit(() => source.importGtfs())) {
+		if (await loadGtfs(source, state, () => context.resourceLimit(() => source.importGtfs()))) {
 			await publishInventory(source, context, state);
 		}
 	});
@@ -114,10 +115,12 @@ async function guardStuck<T>(source: Source, context: SourceLoopContext, task: (
 }
 
 async function refreshResource(source: Source, context: SourceLoopContext, state: SourceLoopState) {
-	if (Date.now() - state.lastUpdateAt <= UPDATE_INTERVAL_MS) return;
-	state.lastUpdateAt = Date.now();
+	if (Date.now() < state.nextUpdateAt) return;
+	state.nextUpdateAt = Date.now() + UPDATE_INTERVAL_MS;
 
-	const updated = await context.updateLimit(() => context.resourceLimit(() => source.updateGtfs()));
+	const updated = await loadGtfs(source, state, () =>
+		context.updateLimit(() => context.resourceLimit(() => source.updateGtfs())),
+	);
 	if (!updated) return;
 
 	if (context.redis.isReady) {
@@ -125,6 +128,15 @@ async function refreshResource(source: Source, context: SourceLoopContext, state
 	} else {
 		context.resync.add(source.id);
 	}
+}
+
+async function loadGtfs(source: Source, state: SourceLoopState, load: () => Promise<boolean>) {
+	const loaded = await load().catch((error: unknown) => {
+		state.nextUpdateAt = Date.now() + FAILED_RESOURCE_CHECK_MS;
+		throw error;
+	});
+	if (source.failedResource !== undefined) state.nextUpdateAt = Date.now() + FAILED_RESOURCE_CHECK_MS;
+	return loaded;
 }
 
 async function runIteration(source: Source, context: SourceLoopContext, state: SourceLoopState) {

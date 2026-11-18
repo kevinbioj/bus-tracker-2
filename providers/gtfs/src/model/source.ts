@@ -180,6 +180,7 @@ const staticStopAreaIds = new WeakMap<Gtfs, Map<string, string>>();
 export class Source {
 	gtfs?: Gtfs;
 	resource?: LoadedResource;
+	failedResource?: LoadedResource;
 	linePaths = new Map<string, EncodedLinePath>();
 	realtimeFeedCache = new Map<string, { at: number; contents: RealtimeFeedContents }>();
 	/** Instant (epoch ms) du dernier cycle de calcul réussi. Undefined avant le premier. */
@@ -344,36 +345,56 @@ export class Source {
 
 			const archivePath = join(resourceDirectory, "resource.zip");
 			const archive = await downloadGtfsArchive(this, archivePath);
+			const checkedAt = Temporal.Now.instant();
+			if (archive.hash === this.failedResource?.hash) {
+				this.failedResource = { ...archive, checkedAt };
+				this.log.info(`GTFS unchanged since its failed import, skipped (checked in ${watch.total()}ms)`);
+				return false;
+			}
 			if (keepIfUnchanged && archive.hash === this.resource?.hash) {
-				this.resource = { ...archive, checkedAt: Temporal.Now.instant() };
+				this.resource = { ...archive, checkedAt };
+				this.failedResource = undefined;
 				this.log.info(`GTFS unchanged upstream, kept the loaded one (checked in ${watch.total()}ms)`);
 				return false;
 			}
-			await extractGtfs(archivePath, resourceDirectory);
 
-			const gtfs: Gtfs = {
-				...(await importGtfs(resourceDirectory, { ...this.options.gtfsOptions, serviceWindow })),
-				importedAt: Temporal.Now.instant(),
-			};
+			try {
+				await extractGtfs(archivePath, resourceDirectory);
 
-			this.linePaths = buildEncodedLinePaths(this, gtfs);
+				const gtfs: Gtfs = {
+					...(await importGtfs(resourceDirectory, { ...this.options.gtfsOptions, serviceWindow })),
+					importedAt: Temporal.Now.instant(),
+				};
 
-			const now = Temporal.Now.zonedDateTimeISO();
-			const dates = [...(now.hour < 6 ? [now.subtract({ days: 1 }).toPlainDate()] : []), now.toPlainDate()];
-			this.scheduleJourneys(gtfs, dates, now.epochMilliseconds);
+				this.linePaths = buildEncodedLinePaths(this, gtfs);
 
-			this.log.info(
-				`GTFS ${updating ? "updated" : "imported"} in ${watch.total()}ms: ${gtfs.journeys.size} journeys, ${this.linePaths.size} line paths (window ${serviceWindow.from} → ${serviceWindow.to})`,
-			);
-			this.gtfs = gtfs;
-			this.resource = { ...archive, checkedAt: gtfs.importedAt };
-			return true;
+				const now = Temporal.Now.zonedDateTimeISO();
+				const dates = [...(now.hour < 6 ? [now.subtract({ days: 1 }).toPlainDate()] : []), now.toPlainDate()];
+				this.scheduleJourneys(gtfs, dates, now.epochMilliseconds);
+
+				this.log.info(
+					`GTFS ${updating ? "updated" : "imported"} in ${watch.total()}ms: ${gtfs.journeys.size} journeys, ${this.linePaths.size} line paths (window ${serviceWindow.from} → ${serviceWindow.to})`,
+				);
+				this.gtfs = gtfs;
+				this.resource = { ...archive, checkedAt: gtfs.importedAt };
+				this.failedResource = undefined;
+				return true;
+			} catch (error) {
+				this.failedResource = { ...archive, checkedAt };
+				throw error;
+			}
 		} finally {
 			await rm(resourceDirectory, { recursive: true, force: true });
 		}
 	}
 
 	async updateGtfs() {
+		if (this.failedResource !== undefined) {
+			if (!(await this.isResourceStale(this.failedResource))) return false;
+			this.log.info("GTFS changed upstream since its failed import, retrying");
+			return this.importGtfs({ updating: this.gtfs !== undefined, keepIfUnchanged: true });
+		}
+
 		if (this.gtfs === undefined || this.resource === undefined) {
 			this.log.info("GTFS not loaded yet, importing");
 			return this.importGtfs();
@@ -385,21 +406,23 @@ export class Source {
 			return this.importGtfs({ updating: true });
 		}
 
-		const resource = this.resource;
+		if (!(await this.isResourceStale(this.resource))) return false;
+
+		this.log.info("GTFS changed upstream, updating");
+		return this.importGtfs({ updating: true, keepIfUnchanged: true });
+	}
+
+	private async isResourceStale(resource: LoadedResource) {
 		const isStaticResourceStale = this.options.isStaticResourceStale ?? isStaleByFreshness;
 		const probe: StalenessProbe = {
 			href: this.options.staticResourceHref,
 			fetchFreshness: (method) => fetchFreshness(this.options.staticResourceHref, this.staticAuth, method),
 		};
 
-		const stale = await isStaticResourceStale(resource, probe).catch((error: unknown) => {
+		return isStaticResourceStale(resource, probe).catch((error: unknown) => {
 			this.log.warn("Failed to check GTFS staleness, relying on the last check", error);
 			return isResourceCheckExpired(resource);
 		});
-		if (!stale) return false;
-
-		this.log.info("GTFS changed upstream, updating");
-		return this.importGtfs({ updating: true, keepIfUnchanged: true });
 	}
 
 	/**
