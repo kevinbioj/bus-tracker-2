@@ -128,8 +128,8 @@ hono.get(
 					running: (calls[0]?.distanceTraveled ?? 0) > 0,
 					atStop: journey.position.atStop,
 					destination: journey.destination,
-					departureTime: monitoredCall?.aimedTime,
-					arrivalTime: calls.at(-1)?.aimedTime,
+					departureTime: monitoredCall?.expectedTime ?? monitoredCall?.aimedTime,
+					arrivalTime: calls.at(-1)?.expectedTime ?? calls.at(-1)?.aimedTime,
 				};
 			})
 			.toArray()
