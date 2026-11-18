@@ -152,7 +152,8 @@ const sources = [
 	},
 	{
 		id: "nimes",
-		staticResourceHref: "https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/82911/82911.20260915.041545.105896.zip",
+		staticResourceHref:
+			"https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/82911/82911.20260915.041545.105896.zip",
 		realtimeResourceHrefs: [
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tango/trip-updates",
 			"https://gtfs.bus-tracker.fr/gtfs-rt/tango/vehicle-positions",
