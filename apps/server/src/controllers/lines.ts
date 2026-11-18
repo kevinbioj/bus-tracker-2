@@ -1,8 +1,9 @@
 import { getVehicleJourneyPositionType, vehicleJourneyPositionTypes } from "@bus-tracker/contracts";
-import { and, asc, desc, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 import { database } from "../core/database/database.js";
 import { lineActivitiesTable, linesTable, vehiclesTable } from "../core/database/schema.js";
+import { findLineVehicleAssignments } from "../core/services/line-assignment-service.js";
 import { findRecentLineDestinations } from "../core/services/line-destination-service.js";
 import { findLineDetails, findLinePath } from "../core/services/line-details-service.js";
 import { findLineAlerts } from "../core/services/service-alert-service.js";
@@ -179,60 +180,6 @@ hono.get(
 
 		const { date } = c.req.valid("query");
 
-		const lineActivities = await database
-			.select({
-				vehicleId: lineActivitiesTable.vehicleId,
-				startedAt: lineActivitiesTable.startedAt,
-				endedAt: lineActivitiesTable.updatedAt,
-			})
-			.from(lineActivitiesTable)
-			.where(and(eq(lineActivitiesTable.lineId, id), eq(lineActivitiesTable.serviceDate, date.toString())))
-			.orderBy(asc(lineActivitiesTable.startedAt));
-
-		const lineActivitiesByVehicleId = Map.groupBy(lineActivities, (lineActivity) => lineActivity.vehicleId);
-
-		let vehicles: {
-			id: number;
-			number: string;
-			designation: string | null;
-			activities: { startedAt: Temporal.Instant; endedAt: Temporal.Instant | null }[];
-		}[] = [];
-
-		if (lineActivitiesByVehicleId.size > 0) {
-			const vehicleData = await database
-				.select({ id: vehiclesTable.id, number: vehiclesTable.number, designation: vehiclesTable.designation })
-				.from(vehiclesTable)
-				.where(inArray(vehiclesTable.id, Array.from(lineActivitiesByVehicleId.keys())));
-
-			vehicles = vehicleData.map((vehicle) => ({
-				...vehicle,
-				activities: (lineActivitiesByVehicleId.get(vehicle.id) ?? []).map((lineActivity) => ({
-					startedAt: lineActivity.startedAt,
-					endedAt:
-						Temporal.Now.instant().since(lineActivity.endedAt).total("minutes") >= 10 ? lineActivity.endedAt : null,
-				})),
-			}));
-		}
-
-		const activeDays = await database
-			.select({ serviceDate: lineActivitiesTable.serviceDate })
-			.from(lineActivitiesTable)
-			.where(
-				and(
-					eq(lineActivitiesTable.lineId, id),
-					// Bornes du mois plutôt qu'un EXTRACT : l'index (line_id, service_date) peut alors servir.
-					gte(lineActivitiesTable.serviceDate, date.with({ day: 1 }).toString()),
-					lt(lineActivitiesTable.serviceDate, date.with({ day: 1 }).add({ months: 1 }).toString()),
-				),
-			)
-			.groupBy(lineActivitiesTable.serviceDate);
-
-		return c.json(
-			{
-				activeDays: activeDays.map((d) => d.serviceDate),
-				vehicles,
-			},
-			200,
-		);
+		return c.json(await findLineVehicleAssignments(id, date));
 	},
 );

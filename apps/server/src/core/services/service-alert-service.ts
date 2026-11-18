@@ -181,11 +181,34 @@ export function findJourneyAlerts(journey: DisposeableVehicleJourney) {
 	});
 }
 
-/** Info trafic d'une ligne, tous sens et tous arrêts confondus, et celle de tout son réseau. */
-export function findLineAlerts(line: { networkId: number; references: string[] | null }) {
+export type LineAlertsFilter = {
+	direction?: "OUTBOUND" | "INBOUND";
+	stop?: { stopAreaRef: string; stopRefs: Set<string> };
+};
+
+const targetsFilteredStop = (entity: ResolvedInformedEntity, stop: NonNullable<LineAlertsFilter["stop"]>) =>
+	(entity.stopRef !== undefined && stop.stopRefs.has(entity.stopRef)) || entity.stopAreaRef === stop.stopAreaRef;
+
+/**
+ * Info trafic d'une ligne et celle de tout son réseau. Restreinte à un sens, elle écarte ce qui ne vise
+ * que l'autre ; restreinte à un arrêt, elle écarte ce qui vise d'autres arrêts de la ligne et ajoute ce
+ * qui vise l'arrêt lui-même.
+ */
+export function findLineAlerts(
+	line: { networkId: number; references: string[] | null },
+	{ direction, stop }: LineAlertsFilter = {},
+) {
 	const references = new Set(line.references ?? []);
 	return findServiceAlerts((entity) => {
-		if (entity.lineRef !== undefined) return references.has(entity.lineRef);
+		if (entity.lineRef !== undefined) {
+			if (!references.has(entity.lineRef)) return false;
+			if (direction !== undefined && entity.direction !== undefined && entity.direction !== direction) return false;
+			if (stop !== undefined && targetsStop(entity)) return targetsFilteredStop(entity, stop);
+			return true;
+		}
+		if (stop !== undefined && targetsStop(entity) && entity.journeyRef === undefined) {
+			return targetsFilteredStop(entity, stop);
+		}
 		return targetsWholeNetwork(entity) && entity.networkId === line.networkId;
 	});
 }

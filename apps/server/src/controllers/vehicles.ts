@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { vehicleJourneyLineTypeZodEnum } from "@bus-tracker/contracts";
-import { and, asc, between, desc, eq, gt, ilike, isNotNull, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { match } from "ts-pattern";
 import { z } from "zod";
 
@@ -17,6 +17,7 @@ import {
 } from "../core/database/schema.js";
 import { isFeatureEnabled } from "../core/services/feature-flag-service.js";
 import { findActivityStarts } from "../core/services/line-activity-service.js";
+import { findVehicleActivityTimeline } from "../core/services/vehicle-activity-service.js";
 import { findJourneysByVehicleId, findOnlineLineId } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
 import { getClientIp } from "../utils/client-ip.js";
@@ -222,46 +223,7 @@ hono.get(
 
 		const { vehicle, network } = data;
 
-		const lineActivityList = await database
-			.select()
-			.from(lineActivitiesTable)
-			.where(
-				and(
-					eq(lineActivitiesTable.vehicleId, vehicle.id),
-					between(
-						lineActivitiesTable.serviceDate,
-						month.toPlainDate({ day: 1 }).toString(),
-						month.toPlainDate({ day: month.daysInMonth }).toString(),
-					),
-				),
-			);
-
-		const lineActivitiesByDay = Map.groupBy(lineActivityList, (lineActivity) => lineActivity.serviceDate);
-
-		const dates = [...new Set(lineActivitiesByDay.keys())]
-			.map((date) => Temporal.PlainDate.from(date))
-			.toSorted((a, b) => Temporal.PlainYearMonth.compare(b, a));
-
-		return c.json({
-			timeline: dates.map((date) => {
-				const lineActivitiesThatDay =
-					lineActivitiesByDay.get(date.toString())?.map((lineActivity) => ({
-						type: "LINE_ACTIVITY" as const,
-						lineId: lineActivity.lineId,
-						startedAt: Temporal.Instant.from(lineActivity.startedAt)
-							.toZonedDateTimeISO(network.timezone)
-							.toString({ timeZoneName: "never" }),
-						updatedAt: Temporal.Instant.from(lineActivity.updatedAt)
-							.toZonedDateTimeISO(network.timezone)
-							.toString({ timeZoneName: "never" }),
-					})) ?? [];
-
-				const activities = [...lineActivitiesThatDay].sort((a, b) =>
-					Temporal.Instant.compare(b.startedAt, a.startedAt),
-				);
-				return { date, activities };
-			}),
-		});
+		return c.json({ timeline: await findVehicleActivityTimeline(vehicle.id, month, network.timezone) });
 	},
 );
 

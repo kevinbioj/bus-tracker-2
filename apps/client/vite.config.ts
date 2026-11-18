@@ -64,13 +64,13 @@ export default defineConfig({
 			includeAssets: ["logo.svg", "favicon.svg", "favicon.ico", "apple-touch-icon.png", "map-styles/*.json"],
 			workbox: {
 				globPatterns: ["**/*.{js,css,html,ico,png,svg,json,woff2,woff}"],
-				globIgnores: ["splash/**"],
+				globIgnores: ["splash/**", "mcp/**"],
 				cleanupOutdatedCaches: true,
 				// Le paramètre `v` des icônes sert à contourner le cache HTTP des navigateurs : on l'ignore
 				// pour que ces URLs correspondent toujours au precache, déjà révisionné par Workbox.
 				ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
 				maximumFileSizeToCacheInBytes: 16_777_216,
-				navigateFallbackDenylist: [/^\/api/],
+				navigateFallbackDenylist: [/^\/api/, /^\/llms\.txt$/],
 				runtimeCaching: [
 					{
 						urlPattern: /^https:\/\/(?:tiles\.openfreemap\.org|tiles\.bus-tracker\.fr)\/.*/i,

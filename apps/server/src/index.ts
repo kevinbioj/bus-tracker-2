@@ -11,6 +11,7 @@ import {
 	sweepExpiredLineDestinations,
 } from "./core/services/line-destination-service.js";
 import { startStopDeparturesService } from "./core/services/stop-departures-service.js";
+import { markStopSearchIndexStale } from "./core/services/stop-search-service.js";
 import {
 	startVehicleReportCleanupService,
 	sweepExpiredVehicleReports,
@@ -25,15 +26,16 @@ import "./controllers/data-sources.js";
 import "./controllers/editors.js";
 import "./controllers/girouettes.js";
 import "./controllers/lines.js";
-import "./controllers/mcp.js";
 import "./controllers/networks.js";
 import "./controllers/ping.js";
 import { closeRealtimeConnections } from "./controllers/realtime.js";
 import "./controllers/regions.js";
 import "./controllers/sitemap.js";
-import { invalidateStopAreaCaches } from "./controllers/stops.js";
+import { invalidateStopAreaCaches, onStopAreasInvalidated } from "./controllers/stops.js";
 import "./controllers/vehicle-journeys.js";
 import "./controllers/vehicles.js";
+import { shutdownMcpAnalytics } from "./mcp/analytics.js";
+import "./mcp/index.js";
 
 console.log(`,-----.                  ,--------.                   ,--.                           ,---.                                       
 |  |) /_ ,--.,--. ,---.  '--.  .--',--.--.,--,--.,---.|  |,-. ,---. ,--.--. ,-----. '   .-' ,---. ,--.--.,--.  ,--.,---. ,--.--. 
@@ -117,6 +119,8 @@ function parseStopAreasInvalidation(message: string) {
 	return undefined;
 }
 
+onStopAreasInvalidated(markStopSearchIndexStale);
+
 startStopDeparturesService(redis).catch((error) => {
 	console.error("✘ Failed to start the stop departures service:", error);
 });
@@ -128,7 +132,8 @@ serve({
 	websocket: { server: new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 }) },
 });
 
-process.once("SIGTERM", () => {
+process.once("SIGTERM", async () => {
 	closeRealtimeConnections();
-	setTimeout(() => process.exit(0), 500);
+	await Promise.allSettled([shutdownMcpAnalytics(), new Promise((resolve) => setTimeout(resolve, 500))]);
+	process.exit(0);
 });

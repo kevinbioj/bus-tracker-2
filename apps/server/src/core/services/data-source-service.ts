@@ -1,9 +1,9 @@
 import { type DataSourceManifest, dataSourceManifestSchema } from "@bus-tracker/contracts";
 import { ArkErrors } from "arktype";
 import { and, eq, gte, sql } from "drizzle-orm";
-
+import { useCache } from "../../utils/use-cache.js";
 import { database } from "../database/database.js";
-import { type DataSourceEntity, dataSourcesTable } from "../database/schema.js";
+import { type DataSourceEntity, dataSourcesTable, type NetworkEntity, networksTable } from "../database/schema.js";
 
 /**
  * Durée au-delà de laquelle une source qui n'a plus été annoncée par son provider cesse d'être
@@ -79,4 +79,50 @@ export async function getFreshDataSources(): Promise<DataSourceEntity[]> {
 	return dataSourceList.sort(
 		(a, b) => a.providerId.localeCompare(b.providerId) || a.sourceId.localeCompare(b.sourceId),
 	);
+}
+
+export type NetworkDataSources = {
+	network: NetworkEntity;
+	sources: DataSourceEntity[];
+};
+
+/** L'inventaire ne bouge qu'au rythme des publications des providers : un cache court suffit. */
+const networkDataSourcesCache = useCache<NetworkDataSources[]>(60_000, 1);
+
+/** Sources de chaque réseau. Une source alimentant plusieurs réseaux est créditée sous chacun d'eux. */
+export async function getNetworkDataSources() {
+	const cached = networkDataSourcesCache.get("all");
+	if (cached !== undefined) return cached;
+
+	const [networkList, dataSourceList] = await Promise.all([
+		database.select().from(networksTable),
+		getFreshDataSources(),
+	]);
+
+	const networksByRef = new Map(networkList.map((network) => [network.ref, network]));
+	const sourcesByNetworkId = new Map<number, DataSourceEntity[]>();
+
+	for (const dataSource of dataSourceList) {
+		for (const networkRef of dataSource.networkRefs) {
+			const network = networksByRef.get(networkRef);
+			if (network === undefined) continue;
+
+			const sources = sourcesByNetworkId.get(network.id);
+			if (sources === undefined) {
+				sourcesByNetworkId.set(network.id, [dataSource]);
+			} else if (!sources.includes(dataSource)) {
+				sources.push(dataSource);
+			}
+		}
+	}
+
+	const networkDataSources = networkList
+		.flatMap((network) => {
+			const sources = sourcesByNetworkId.get(network.id);
+			return sources === undefined ? [] : [{ network, sources }];
+		})
+		.sort((a, b) => a.network.name.localeCompare(b.network.name));
+
+	networkDataSourcesCache.set("all", networkDataSources);
+	return networkDataSources;
 }

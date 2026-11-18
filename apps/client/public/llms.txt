@@ -1,0 +1,41 @@
+# Bus Tracker
+
+> Bus Tracker (https://bus-tracker.fr) shows public transport vehicles in real time on a map: buses, coaches, trams, metros, trains and boats. It covers more than 300 networks, mostly in France (urban networks, Île-de-France, TER, TGV and overseas territories) plus a few abroad, such as Prague and FlixBus. It aggregates open data from transport authorities and operators: real-time positions, next departures at stops, traffic alerts and, for many networks, fleet records (which vehicle runs on which line).
+
+The website is a single-page application: its pages render client-side and contain almost no text without JavaScript. To answer questions with Bus Tracker data, connect to the MCP server below.
+
+## MCP server
+
+- [MCP endpoint](https://bus-tracker.fr/api/mcp): Streamable HTTP, stateless, no authentication, read-only. Add it as a custom connector in Claude or ChatGPT.
+
+Tools:
+
+- Networks: `search_networks` (by name, city, authority or region), `get_network` (operators, real-time tracking quality, open data sources), `get_fleet_overview` (fleet by model, operator, type, air conditioning).
+- Lines: `search_lines` (by number, across networks), `get_network_lines`, `get_line_status` (live journeys grouped by direction, delays, disruptions), `get_line_alerts` (full alert texts, filterable by direction and stop), `get_line_vehicle_assignments` (vehicles that ran on a given day), `get_line_stops`.
+- Stops: `search_stops` (by name), `find_stops_nearby` (by coordinates), `get_stop` (platforms, wheelchair access, alerts), `get_stop_departures` (next departures or arrivals within two hours, real time included).
+- Journeys: `get_journey` (all remaining stops with expected times, alerts), `find_nearby_vehicles`.
+- Fleet: `search_vehicles` (by fleet number, model, operator), `get_vehicle` (record and current journey), `get_vehicle_history` (lines run day by day for a month).
+- Service: `get_announcements` (Bus Tracker news and outages).
+
+Prompts: `next_departures`, `where_is_vehicle`, `line_disruptions`, with argument completion (networks, lines, stops, fleet numbers, destinations).
+
+Resources: `bus-tracker://networks`, `bus-tracker://networks/{networkId}`, `bus-tracker://lines/{lineId}`, `bus-tracker://lines/{lineId}/alerts`, `bus-tracker://vehicles/{vehicleId}`, `bus-tracker://journeys/{journeyId}` and `bus-tracker://stops/{stopRef}/departures`. Template variables support completion. Clients on the 2026-07-28 protocol revision can subscribe to these resources with `subscriptions/listen`: updates are pushed at most every 30 seconds per resource.
+
+Conventions: times are local to each network, in ISO 8601 with UTC offset. A position typed GPS comes from the vehicle itself; ESTIMATED and SCHEDULED positions are computed from timetables. Directions are OUTBOUND or INBOUND, as published by the network.
+
+## Website pages
+
+- [Live map](https://bus-tracker.fr/): real-time map of vehicles and stops.
+- [Networks and fleets](https://bus-tracker.fr/data): networks by region.
+- `https://bus-tracker.fr/data/networks/{networkId}`: a network's lines and fleet.
+- `https://bus-tracker.fr/data/lines/{lineId}`: a line's live vehicles and history.
+- `https://bus-tracker.fr/data/vehicles/{vehicleId}`: a vehicle's record and activity history.
+- [Data sources and attributions](https://bus-tracker.fr/attributions): open data feeds used, per network.
+
+## Optional
+
+- [Legal notice](https://bus-tracker.fr/legal)
+- [Source code](https://github.com/kevinbioj/bus-tracker-2)
+- [Service status](https://uptime.bus-tracker.fr/status/bus-tracker)
+- [Contact](mailto:contact@bus-tracker.fr)
+- [Author on LinkedIn](https://www.linkedin.com/in/kevinbioj/)

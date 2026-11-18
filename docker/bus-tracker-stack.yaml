@@ -76,7 +76,7 @@ services:
         - "traefik.http.routers.server-mcp.entrypoints=web"
         - "traefik.http.routers.server-mcp.service=server"
         - "traefik.http.routers.server-mcp.middlewares=mcp-inflight,mcp-ratelimit,api-strip"
-        - "traefik.http.middlewares.mcp-inflight.inflightreq.amount=20"
+        - "traefik.http.middlewares.mcp-inflight.inflightreq.amount=100"
         - "traefik.http.middlewares.mcp-inflight.inflightreq.sourcecriterion.requesthost=true"
         - "traefik.http.middlewares.mcp-ratelimit.ratelimit.average=10"
         - "traefik.http.middlewares.mcp-ratelimit.ratelimit.burst=30"
