@@ -547,6 +547,7 @@ export function MapTour() {
 					id: "stop-departures",
 					anchor: panel,
 					spotlight: panel,
+					inertSpotlight: true,
 					side: desktop ? "left" : "top",
 					align: desktop ? "end" : "center",
 					title: m.onboarding_departures_title(),

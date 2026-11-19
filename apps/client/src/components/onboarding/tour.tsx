@@ -31,6 +31,7 @@ export type TourStep = {
 	transient?: boolean;
 	highlight?: Highlightable;
 	spotlight?: Highlightable;
+	inertSpotlight?: boolean;
 };
 
 export type TourOutcome = "completed" | "skipped_at_start" | "skipped_midway";
@@ -108,6 +109,27 @@ function Backdrop({ bounds, target }: Readonly<{ bounds: Element; target: Highli
 	);
 }
 
+function Inert({ target }: Readonly<{ target: HTMLElement }>) {
+	useEffect(() => {
+		const wasInert = target.inert;
+		target.inert = true;
+		return () => {
+			target.inert = wasInert;
+		};
+	}, [target]);
+
+	return null;
+}
+
+function BusyLabel({ busy, children }: Readonly<{ busy?: boolean; children: ReactNode }>) {
+	return (
+		<>
+			<span className={clsx(busy && "invisible")}>{children}</span>
+			{busy && <LoaderCircleIcon className="absolute animate-spin" />}
+		</>
+	);
+}
+
 type TourProps = {
 	backdrop?: Element;
 	busy?: boolean;
@@ -128,10 +150,12 @@ export function Tour({ backdrop, busy, doneLabel, index, steps, onDecline, onNex
 	const isLast = index === steps.length - 1;
 	const highlight = step.highlight ?? (step.anchor instanceof Element ? step.anchor : undefined);
 	const concealed = busy === true && step.transient === true;
+	const spotlight = step.spotlight ?? highlight;
 
 	return (
 		<>
-			{backdrop !== undefined && <Backdrop bounds={backdrop} target={step.spotlight ?? highlight} />}
+			{backdrop !== undefined && <Backdrop bounds={backdrop} target={spotlight} />}
+			{step.inertSpotlight && spotlight instanceof HTMLElement && <Inert target={spotlight} />}
 			{highlight !== undefined && !concealed && <HighlightRing target={highlight} />}
 			<Popover
 				key={step.id}
@@ -156,7 +180,7 @@ export function Tour({ backdrop, busy, doneLabel, index, steps, onDecline, onNex
 						<span className="sr-only">{m.onboarding_progress({ current: index + 1, total: steps.length })}</span>
 					</div>
 					{step.content}
-					<div className="flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2">
 						<div aria-hidden className="flex flex-1 gap-1">
 							{steps.length > 1 &&
 								steps.map(({ id }, dotIndex) => (
@@ -169,31 +193,31 @@ export function Tour({ backdrop, busy, doneLabel, index, steps, onDecline, onNex
 									/>
 								))}
 						</div>
-						{step.choice !== undefined && (
-							<Button disabled={busy} size="sm" variant="ghost" onClick={onDecline}>
-								{step.choice.decline}
-							</Button>
-						)}
-						{!isLast && step.finalAction !== "later" && step.choice === undefined && (
-							<Button disabled={busy} size="sm" variant="ghost" onClick={onSkip}>
-								{m.onboarding_skip()}
-							</Button>
-						)}
-						{step.choice !== undefined ? (
-							<Button disabled={busy} ref={nextButtonRef} size="sm" variant="branding-default" onClick={onNext}>
-								{busy && <LoaderCircleIcon className="animate-spin" />}
-								{step.choice.accept}
-							</Button>
-						) : step.finalAction === "later" ? (
-							<Button ref={nextButtonRef} size="sm" variant="ghost" onClick={onNext}>
-								{m.onboarding_later()}
-							</Button>
-						) : (
-							<Button disabled={busy} ref={nextButtonRef} size="sm" variant="branding-default" onClick={onNext}>
-								{busy && <LoaderCircleIcon className="animate-spin" />}
-								{isLast ? (doneLabel ?? m.onboarding_done()) : m.onboarding_next()}
-							</Button>
-						)}
+						<div className="ml-auto flex items-center gap-2">
+							{step.choice !== undefined && (
+								<Button disabled={busy} size="sm" variant="ghost" onClick={onDecline}>
+									{step.choice.decline}
+								</Button>
+							)}
+							{!isLast && step.finalAction !== "later" && step.choice === undefined && (
+								<Button disabled={busy} size="sm" variant="ghost" onClick={onSkip}>
+									{m.onboarding_skip()}
+								</Button>
+							)}
+							{step.choice !== undefined ? (
+								<Button disabled={busy} ref={nextButtonRef} size="sm" variant="branding-default" onClick={onNext}>
+									<BusyLabel busy={busy}>{step.choice.accept}</BusyLabel>
+								</Button>
+							) : step.finalAction === "later" ? (
+								<Button ref={nextButtonRef} size="sm" variant="ghost" onClick={onNext}>
+									{m.onboarding_later()}
+								</Button>
+							) : (
+								<Button disabled={busy} ref={nextButtonRef} size="sm" variant="branding-default" onClick={onNext}>
+									<BusyLabel busy={busy}>{isLast ? (doneLabel ?? m.onboarding_done()) : m.onboarding_next()}</BusyLabel>
+								</Button>
+							)}
+						</div>
 					</div>
 				</PopoverContent>
 			</Popover>

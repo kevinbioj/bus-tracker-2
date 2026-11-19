@@ -12,11 +12,13 @@ import { getMapBottomOverlayHeight } from "~/components/vehicles-map/map-bottom-
 const JUMP_TO_VERTICAL_OFFSET_RATIO = 0.2 / 3;
 
 /**
- * Position du véhicule quand un drawer masque le bas de la carte, en part de la hauteur restée visible
- * depuis son bord supérieur : plus bas qu'au centre, la partie visible étant courte, pour laisser la
- * place à la popup au-dessus de lui.
+ * Position du véhicule sur petit écran, ou quand un drawer masque le bas de la carte, en part de la
+ * hauteur restée visible depuis son bord supérieur : plus bas qu'au centre, la partie visible étant
+ * courte, pour laisser la place à la popup au-dessus de lui.
  */
-const JUMP_TO_ABOVE_OVERLAY_POSITION_RATIO = 0.75;
+const JUMP_TO_LOW_POSITION_RATIO = 0.75;
+
+const DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
 
 type JumpToProps = {
 	openPopup: (feature: CircleMarkerFeature, type: "hover" | "selected") => void;
@@ -53,15 +55,16 @@ export function JumpTo({ openPopup }: JumpToProps) {
 				if (abort) return;
 
 				// Le véhicule est placé sous le centre de la carte : sa popup, qui s'ouvre au-dessus de lui,
-				// ne vient pas buter contre les contrôles du haut de la carte (sur mobile notamment). Un drawer
+				// ne vient pas buter contre les contrôles du haut de la carte. Sur mobile, il descend plus
+				// bas encore, la popup d'un véhicule aux nombreux arrêts à desservir étant haute. Un drawer
 				// ouvert en bas de l'écran en masque une partie : le véhicule est alors placé dans ce qu'il en
 				// reste.
 				const container = map.getContainer();
 				const hiddenHeight = getMapBottomOverlayHeight(container);
 				const visibleHeight = container.clientHeight - hiddenHeight;
 				const verticalOffset =
-					hiddenHeight > 0
-						? visibleHeight * JUMP_TO_ABOVE_OVERLAY_POSITION_RATIO - container.clientHeight / 2
+					hiddenHeight > 0 || !window.matchMedia(DESKTOP_MEDIA_QUERY).matches
+						? visibleHeight * JUMP_TO_LOW_POSITION_RATIO - container.clientHeight / 2
 						: container.clientHeight * JUMP_TO_VERTICAL_OFFSET_RATIO;
 				map.easeTo({
 					center: { lng: journey.position.longitude, lat: journey.position.latitude },
