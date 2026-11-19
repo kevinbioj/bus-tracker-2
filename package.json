@@ -5,6 +5,7 @@
 	"license": "GPL-3.0-only",
 	"scripts": {
 		"dev:client": "pnpm -C apps/client dev",
+		"dev:client:prod": "pnpm -C apps/client dev:prod",
 		"dev:server": "pnpm -C apps/server dev",
 		"dev:idelis": "pnpm -C providers/idelis dev",
 		"dev:gtfs": "pnpm -C providers/gtfs dev",

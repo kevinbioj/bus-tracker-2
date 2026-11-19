@@ -109,12 +109,14 @@ export default defineConfig({
 	server: {
 		port: 3000,
 		proxy: {
-			"/api": {
-				changeOrigin: true,
-				ws: true,
-				target: "http://localhost:8080",
-				rewrite: (path) => path.replace(/^\/api/, ""),
-			},
+			"/api": process.env.USE_PROD_API
+				? { changeOrigin: true, ws: true, target: "https://bus-tracker.fr" }
+				: {
+						changeOrigin: true,
+						ws: true,
+						target: "http://localhost:8080",
+						rewrite: (path) => path.replace(/^\/api/, ""),
+					},
 		},
 	},
 });

@@ -5,6 +5,7 @@
 	"scripts": {
 		"paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy localStorage preferredLanguage baseLocale --emit-ts-declarations",
 		"dev": "pnpm run paraglide && vite",
+		"dev:prod": "USE_PROD_API=1 pnpm run dev",
 		"build": "pnpm run paraglide && tsc -b && NODE_ENV=production vite build",
 		"preview": "vite preview"
 	},
