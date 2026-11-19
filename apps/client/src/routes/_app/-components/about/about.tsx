@@ -5,18 +5,30 @@ import {
 	ChevronRightIcon,
 	DatabaseIcon,
 	GlobeIcon,
+	GraduationCapIcon,
 	InfoIcon,
 	MailIcon,
 	ScaleIcon,
+	SmartphoneIcon,
 	XIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
-
+import { InstallInstructions } from "~/components/onboarding/install-instructions";
+import { replayOnboarding } from "~/components/onboarding/onboarding-state";
 import { SettingLabel, SettingSection, settingIconClasses } from "~/components/setting-blocks";
 import { Button } from "~/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogTitle,
+	DialogTrigger,
+} from "~/components/ui/dialog";
 import { DiscordLogo, GithubLogo, LinkedinLogo } from "~/icons/brand-logos";
 import * as m from "~/paraglide/messages";
+import { cn } from "~/utils/cn";
+import { useInstallMethod } from "~/utils/pwa-install";
 
 const buildHash = import.meta.env.VITE_BUILD_HASH ?? "dev";
 
@@ -65,12 +77,39 @@ function ExternalLinkRow({ href, ...content }: Readonly<Omit<RowContentProps, "t
 	);
 }
 
+function InstallRow() {
+	const installMethod = useInstallMethod();
+	if (installMethod === null) return null;
+
+	return (
+		<Dialog>
+			<DialogTrigger
+				render={
+					<button className={cn(rowClasses, "w-full text-left")} type="button">
+						<RowContent
+							description={m.about_install_description()}
+							icon={<SmartphoneIcon className={settingIconClasses} />}
+							label={m.about_install()}
+							trailingIcon={<ChevronRightIcon className={trailingIconClasses} />}
+						/>
+					</button>
+				}
+			/>
+			<DialogContent className="font-sans sm:max-w-sm" forceOverlay>
+				<DialogTitle>{m.onboarding_install_title()}</DialogTitle>
+				<DialogDescription>{m.onboarding_install_body()}</DialogDescription>
+				<InstallInstructions method={installMethod} />
+			</DialogContent>
+		</Dialog>
+	);
+}
+
 export function About() {
 	return (
 		<Dialog>
 			<DialogTrigger
 				render={
-					<Button size="icon-lg" variant="on-branding-outline">
+					<Button data-onboarding="about" size="icon-lg" variant="on-branding-outline">
 						<InfoIcon aria-label={m.about_aria_label()} />
 					</Button>
 				}
@@ -101,6 +140,22 @@ export function About() {
 							</span>
 						</div>
 					</div>
+					<SettingSection title={m.about_app_section()}>
+						<DialogClose
+							nativeButton={false}
+							render={
+								<RouterLink className={rowClasses} onClick={replayOnboarding} to="/">
+									<RowContent
+										description={m.about_replay_onboarding_description()}
+										icon={<GraduationCapIcon className={settingIconClasses} />}
+										label={m.about_replay_onboarding()}
+										trailingIcon={<ChevronRightIcon className={trailingIconClasses} />}
+									/>
+								</RouterLink>
+							}
+						/>
+						<InstallRow />
+					</SettingSection>
 					<SettingSection title={m.about_resources_section()}>
 						<InternalLinkRow
 							icon={<DatabaseIcon className={settingIconClasses} />}

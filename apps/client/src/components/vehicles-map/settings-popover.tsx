@@ -104,7 +104,12 @@ export function SettingsPopoverControl({ children }: Readonly<{ children: ReactN
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger
 					render={
-						<button className="text-card-foreground" title={m.settings_map_title()} type="button">
+						<button
+							className="text-card-foreground"
+							data-onboarding="settings"
+							title={m.settings_map_title()}
+							type="button"
+						>
 							<SettingsIcon className="m-auto p-0.5" strokeWidth={2.5} />
 						</button>
 					}

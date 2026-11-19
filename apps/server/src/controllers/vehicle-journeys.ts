@@ -9,6 +9,7 @@ import { findJourneyAlerts } from "../core/services/service-alert-service.js";
 import { buildJourneyDetails } from "../core/services/vehicle-journey-details.js";
 import { type MarkersFilter, matchesMarkersFilter, toMarker } from "../core/services/vehicle-journey-markers.js";
 import { loadJourneyPaths } from "../core/services/vehicle-journey-paths.js";
+import { findShowcase } from "../core/services/vehicle-journey-showcase.js";
 import { journeyStore } from "../core/store/journey-store.js";
 import { hono } from "../server.js";
 import { keyBy } from "../utils/key-by.js";
@@ -104,6 +105,26 @@ hono.get("/vehicle-journeys/markers", createQueryValidator(getVehicleJourneyMark
 	return c.json({
 		items,
 		at: Temporal.Now.instant(),
+	});
+});
+
+const getShowcaseQuery = z.object({
+	latitude: z.coerce.number().min(-90).max(90).optional(),
+	longitude: z.coerce.number().min(-180).max(180).optional(),
+});
+
+hono.get("/vehicle-journeys/showcase", createQueryValidator(getShowcaseQuery), async (c) => {
+	const { latitude, longitude } = c.req.valid("query");
+	const showcase = await findShowcase(
+		latitude !== undefined && longitude !== undefined ? { latitude, longitude } : undefined,
+	);
+	if (showcase === undefined) return c.json({ error: "No showcase journey is available." }, 404);
+
+	const { journey, stop } = showcase;
+	return c.json({
+		id: journey.id,
+		position: { latitude: journey.position.latitude, longitude: journey.position.longitude },
+		stop,
 	});
 });
 

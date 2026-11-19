@@ -45,7 +45,7 @@ import { MeansOfTransportIcon } from "~/icons/means-of-transport";
 import { getWheelchairStatus, WheelchairIcon, wheelchairIconDetails } from "~/icons/wheelchair";
 import * as m from "~/paraglide/messages";
 
-const positionIconDetails = {
+export const positionIconDetails = {
 	GPS: {
 		chipClasses: "bg-green-700 dark:bg-green-600 text-white",
 		label: m.marker_chip_position_gps,
@@ -505,6 +505,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				<InformationChip
 					aria-label={positionInformation.title()}
 					className={positionInformation.chipClasses}
+					data-onboarding="position"
 					icon={<SatelliteDishIcon className="size-full" />}
 					label={positionInformation.label()}
 					onClick={() => setOpenedDialog("position")}
@@ -515,6 +516,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 				<InformationChip
 					aria-label={positionInformation.title()}
 					className={positionInformation.chipClasses}
+					data-onboarding="position"
 					icon={<SatelliteDishIcon className="size-full" />}
 					onClick={() => setOpenedDialog("position")}
 					title={positionInformation.title()}
@@ -545,6 +547,7 @@ export function VehicleInformation({ disableLinks, journey }: Readonly<VehicleIn
 						{network !== undefined && !disableLinks ? (
 							<Button
 								className="px-1 shrink-0"
+								data-onboarding="network"
 								size="xs"
 								variant="ghost"
 								nativeButton={false}

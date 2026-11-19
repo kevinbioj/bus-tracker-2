@@ -14,7 +14,7 @@ export function Settings() {
 		<Dialog>
 			<DialogTrigger
 				render={
-					<Button size="icon-lg" variant="on-branding-outline">
+					<Button data-onboarding="app-settings" size="icon-lg" variant="on-branding-outline">
 						<SettingsIcon aria-label={m.settings_aria_label()} />
 					</Button>
 				}

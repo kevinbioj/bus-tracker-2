@@ -9,10 +9,15 @@ import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
 import { isRealtimeAvailable, useRealtimeConnection } from "~/api/realtime";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
+import { MapTour } from "~/components/onboarding/map-tour";
 import { DebugCoordinates } from "~/components/vehicles-map/debug-coordinates";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
-import { triggerGeolocateWhenReady, useGeolocateOnStart } from "~/components/vehicles-map/geolocate-on-start";
+import {
+	registerGeolocateControl,
+	triggerGeolocateWhenReady,
+	useGeolocateOnStart,
+} from "~/components/vehicles-map/geolocate-on-start";
 import { LineVehiclesPanel } from "~/components/vehicles-map/line-vehicles-panel";
 import { MapSettingsControl } from "~/components/vehicles-map/map-settings-control";
 import {
@@ -119,9 +124,10 @@ export function VehiclesMap(props: VehiclesMapProps) {
 					trackUserLocation: true,
 				});
 				map.addControl(geolocateControl, "top-right");
+				registerGeolocateControl(map, geolocateControl);
 
 				if (shouldGeolocateOnStart) {
-					triggerGeolocateWhenReady(map, geolocateControl);
+					void triggerGeolocateWhenReady(map, geolocateControl);
 				}
 			}, 100);
 		},
@@ -161,6 +167,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 				)}
 				<FilterModuleControl filter={filter} onFilterChange={onFilterChange} />
 				<MapSettingsControl />
+				<MapTour />
 			</MapComponent>
 		</PortalThemeContext>
 	);

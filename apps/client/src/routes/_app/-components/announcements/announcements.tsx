@@ -48,7 +48,7 @@ export function Announcements() {
 		<Dialog>
 			<DialogTrigger
 				render={
-					<Button className="relative" size="icon-lg" variant="on-branding-outline">
+					<Button className="relative" data-onboarding="announcements" size="icon-lg" variant="on-branding-outline">
 						<MegaphoneIcon aria-label={m.announcements_aria_label()} />
 						{unreadAnnouncementsCount > 0 && (
 							<span className="absolute animate-pulse bg-green-600 -top-2 -left-2 size-4 rounded-full text-white text-xs z-10">

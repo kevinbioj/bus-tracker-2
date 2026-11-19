@@ -183,13 +183,15 @@ const areaOpacity = (appearAt: number): ExpressionSpecification =>
 const linePointOpacity = (appearAt: number): ExpressionSpecification =>
 	["interpolate", ["linear"], ["zoom"], ...unlessSelectedFadeInFrom(appearAt)] as ExpressionSpecification;
 
+export const STOP_AREAS_LAYER_ID = "stops-areas";
+
 /**
  * Plaque et nom de la station dans une même couche : le nom se place à droite de la plaque et cède
  * sa place en cas de collision (`text-optional`), la plaque, elle, reste toujours affichée. Le clic
  * vaut ainsi pour l'une comme pour l'autre.
  */
 const areasLayerObject: AddLayerObject = {
-	id: "stops-areas",
+	id: STOP_AREAS_LAYER_ID,
 	source: "stops",
 	type: "symbol",
 	minzoom: STOPS_MIN_ZOOM,

@@ -6,6 +6,7 @@ import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import { useRealtimeAvailable } from "~/api/realtime";
 import { GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
 import { CopyToClipboard } from "~/components/copy-to-clipboard";
+import { VehiclePopupTour } from "~/components/onboarding/vehicle-popup-tour";
 import { Separator } from "~/components/ui/separator";
 import { useDisplayNextCalls } from "~/components/vehicles-map/display-next-calls";
 import { VehicleGirouette } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-girouette";
@@ -18,10 +19,17 @@ type VehicleDetailsProps = {
 	autoFocus?: boolean;
 	embedMode?: boolean;
 	journeyId: string;
+	onboarding?: boolean;
 	onClose: () => void;
 };
 
-export function VehicleMarkerPopup({ autoFocus, embedMode, journeyId, onClose }: Readonly<VehicleDetailsProps>) {
+export function VehicleMarkerPopup({
+	autoFocus,
+	embedMode,
+	journeyId,
+	onboarding,
+	onClose,
+}: Readonly<VehicleDetailsProps>) {
 	const { width } = useWindowSize();
 	const rootRef = useRef<HTMLDivElement>(null);
 	const returnFocusRef = useRef<HTMLElement | null>(null);
@@ -97,6 +105,9 @@ export function VehicleMarkerPopup({ autoFocus, embedMode, journeyId, onClose }:
 				<>
 					<VehicleGirouette journey={journey} width={popupWidth} />
 					<VehicleInformation disableLinks={embedMode} journey={journey} />
+					{onboarding && !embedMode && (
+						<VehiclePopupTour canFilterLine={journey.lineId !== undefined} rootRef={rootRef} />
+					)}
 					{displayNextCalls && journey.calls !== undefined && (
 						<VehicleNextStops addedJourney={journey.isAdded} calls={journey.calls} tooltipId={journey.id} />
 					)}

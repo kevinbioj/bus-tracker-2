@@ -379,6 +379,7 @@ function RouteNumber({ dimensions, label, ledColor, onClick, routeNumber, width 
 			<button
 				aria-label={label}
 				className="flex items-center justify-center overflow-hidden"
+				data-slot="girouette-route-number"
 				onClick={onClick}
 				type="button"
 				style={{
@@ -411,6 +412,7 @@ function RouteNumber({ dimensions, label, ledColor, onClick, routeNumber, width 
 		<button
 			aria-label={label}
 			className="flex items-center justify-center overflow-hidden whitespace-nowrap"
+			data-slot="girouette-route-number"
 			onClick={onClick}
 			type="button"
 			style={{

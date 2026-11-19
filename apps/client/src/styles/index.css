@@ -161,6 +161,38 @@
 	}
 }
 
+.onboarding-ring {
+	box-shadow:
+		0 0 0 2px var(--color-white),
+		0 0 0 5px var(--color-branding);
+	animation: onboarding-ring 1.6s ease-in-out infinite;
+}
+
+.onboarding-backdrop {
+	animation: onboarding-backdrop 300ms ease-out;
+}
+
+@keyframes onboarding-backdrop {
+	from {
+		opacity: 0;
+	}
+}
+
+@keyframes onboarding-ring {
+	50% {
+		box-shadow:
+			0 0 0 2px var(--color-white),
+			0 0 0 8px color-mix(in srgb, var(--color-branding) 60%, transparent);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.onboarding-ring,
+	.onboarding-backdrop {
+		animation: none;
+	}
+}
+
 @font-face {
 	font-family: Achemine;
 	src: url("../fonts/achemine-regular-webfont.woff2");

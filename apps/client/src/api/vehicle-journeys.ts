@@ -180,3 +180,17 @@ export const GetJourneyPathsQuery = (journeyId?: string, pathRef?: string, realt
 		queryFn: () =>
 			client.get(`/vehicle-journeys/${journeyId}/paths`).then((response) => response.json<VehicleJourneyPaths>()),
 	});
+
+export type ShowcaseJourney = {
+	id: string;
+	position: { latitude: number; longitude: number };
+	stop?: { ref: string; latitude: number; longitude: number };
+};
+
+export const fetchShowcaseJourney = (near?: { latitude: number; longitude: number }) =>
+	client
+		.get("/vehicle-journeys/showcase", {
+			searchParams: near !== undefined ? { latitude: near.latitude, longitude: near.longitude } : undefined,
+		})
+		.then((response) => response.json<ShowcaseJourney>())
+		.catch(() => undefined);

@@ -87,7 +87,7 @@ export function InformationChipsRow({ chips, leading }: Readonly<InformationChip
 				<div className="flex min-w-0 items-center gap-1 overflow-hidden" ref={leadingRef}>
 					{leading}
 				</div>
-				<div className="ml-auto flex shrink-0 items-center gap-1">
+				<div className="ml-auto flex shrink-0 items-center gap-1" data-slot="information-chips">
 					{hiddenChips.length > 0 && (
 						<Popover>
 							<PopoverTrigger

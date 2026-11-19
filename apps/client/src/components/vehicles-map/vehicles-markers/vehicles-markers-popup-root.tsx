@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import { GeojsonPopup } from "~/adapters/maplibre-gl/geojson-popup";
 import { VehiclePath } from "~/components/vehicles-map/vehicle-path";
+import { CloseVehiclePopupOnRequest } from "~/components/vehicles-map/vehicles-markers/close-vehicle-popup";
 import { VehicleMarkerPopup } from "~/components/vehicles-map/vehicles-markers/popup/vehicle-marker-popup";
 import { JumpTo } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-jump-to";
 
@@ -53,12 +54,14 @@ export function VehiclesMarkersPopupRoot({
 				return (
 					<>
 						<ActiveJourneyReporter journeyId={activeFeature?.id ?? null} onChange={onActiveJourneyChange} />
+						<CloseVehiclePopupOnRequest onClose={closePopup} />
 						{activeFeature !== null && (
 							<VehicleMarkerPopup
 								autoFocus={activeFeature.type === "selected"}
 								embedMode={embedMode}
 								key={activeFeature.id}
 								journeyId={activeFeature.id}
+								onboarding={activeFeature.type === "selected"}
 								onClose={closePopup}
 							/>
 						)}

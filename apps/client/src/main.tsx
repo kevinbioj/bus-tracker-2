@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "./polyfills.js";
 import "./setup-paraglide";
 import "./setup-dayjs";
+import "./utils/pwa-install";
 
 import { loadPostHog } from "./utils/posthog";
 
