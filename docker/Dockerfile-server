@@ -23,6 +23,7 @@ COPY scripts/ ./scripts/
 COPY libraries/contracts/ ./libraries/contracts/
 COPY libraries/monitoring/ ./libraries/monitoring/
 COPY libraries/redis/ ./libraries/redis/
+COPY apps/client/messages/ ./apps/client/messages/
 COPY apps/server/ ./apps/server/
 RUN pnpm install -r
 

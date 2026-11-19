@@ -29,6 +29,7 @@ import "./controllers/editors.js";
 import "./controllers/girouettes.js";
 import "./controllers/lines.js";
 import "./controllers/networks.js";
+import "./controllers/page-head.js";
 import "./controllers/ping.js";
 import { closeRealtimeConnections } from "./controllers/realtime.js";
 import "./controllers/regions.js";

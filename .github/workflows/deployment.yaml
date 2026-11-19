@@ -72,6 +72,7 @@ jobs:
             while IFS= read -r file; do
               [ -n "${file}" ] || continue
               case "${file}" in
+                apps/client/messages/*)                         add 'client server' ;;
                 apps/client/*)                                  add 'client' ;;
                 apps/server/*)                                  add 'server' ;;
                 docker/Dockerfile-client | docker/nginx.conf)    add 'client' ;;

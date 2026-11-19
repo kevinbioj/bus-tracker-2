@@ -17,6 +17,6 @@
 		"outDir": "dist",
 		"lib": ["ESNext", "DOM"]
 	},
-	"include": ["src/**/*.ts"],
+	"include": ["src/**/*.ts", "src/paraglide/**/*.js"],
 	"exclude": ["node_modules"]
 }

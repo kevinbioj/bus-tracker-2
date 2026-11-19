@@ -4,7 +4,8 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"build": "tsc -b",
+		"paraglide": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy baseLocale --output-structure locale-modules --is-server true --is-development false --no-emit-ts-declarations --no-emit-readme --silent",
+		"build": "pnpm run paraglide && tsc -b",
 		"dev": "pnpm build && pnpm start",
 		"package": "pkg",
 		"start": "node --env-file-if-exists=.env dist/index.js",
@@ -14,6 +15,8 @@
 		"migrations:push": "drizzle-kit push"
 	},
 	"devDependencies": {
+		"@inlang/paraglide-js": "^3.2.2",
+		"@inlang/plugin-message-format": "^4.6.0",
 		"@posthog/cli": "^0.19.3",
 		"@types/node": "^26.6.6",
 		"@types/ws": "^8.18.2",

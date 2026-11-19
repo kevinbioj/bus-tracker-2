@@ -34,30 +34,31 @@
     <meta name="apple-mobile-web-app-title" content="Bus Tracker" />
     <meta name="theme-color" content="#8B1A4B" />
 
-    <!-- OpenGraph -->
-    <meta property="og:title" content="Bus Tracker" />
-    <meta
-      property="og:image"
-      content="https://bus-tracker.fr/web-app-manifest-512x512.png?v=2"
-    />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://bus-tracker.fr/web-app-manifest-512x512.png?v=2" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:image" content="https://bus-tracker.fr/web-app-manifest-512x512.png?v=2" />
+
+    <!--# block name="static_head" -->
+    <title data-static-head>Bus Tracker</title>
+    <meta
+      name="description"
+      content="Localisez vos trains, bus, tramways, métros et bateaux dans toute la France grâce à Bus Tracker"
+      data-static-head
+    />
+    <meta property="og:title" content="Bus Tracker" />
     <meta
       property="og:description"
       content="Localisez vos trains, bus, tramways, métros et bateaux dans toute la France grâce à Bus Tracker"
     />
     <meta property="og:locale" content="fr_FR" />
-
-    <meta name="twitter:card" content="summary" />
-    <meta property="twitter:title" content="Bus Tracker" />
+    <meta name="twitter:title" content="Bus Tracker" />
     <meta
-      property="twitter:image"
-      content="https://bus-tracker.fr/web-app-manifest-512x512.png?v=2"
-    />
-    <meta
-      property="twitter:description"
+      name="twitter:description"
       content="Localisez vos trains, bus, tramways, métros et bateaux dans toute la France grâce à Bus Tracker"
     />
-    <title>Bus Tracker</title>
+    <!--# endblock -->
+    <!--# include virtual="/__page-head$request_uri" stub="static_head" -->
     <link rel="preload" href="/src/fonts/achemine-regular-webfont.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/src/fonts/achemine-bold-webfont.woff2" as="font" type="font/woff2" crossorigin />
   </head>

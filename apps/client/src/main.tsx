@@ -10,6 +10,10 @@ import { loadPostHog } from "./utils/posthog";
 
 history.scrollRestoration = "manual";
 
+for (const element of document.head.querySelectorAll("[data-static-head]")) {
+	element.remove();
+}
+
 window.addEventListener("vite:preloadError", () => {
 	window.location.reload();
 });
