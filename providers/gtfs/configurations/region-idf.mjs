@@ -138,7 +138,19 @@ const sources = [
 			},
 		},
 		getAheadTime: (journey) => (journey.trip?.route.type === "RAIL" ? 5 * 60 : 60),
-		getNetworkRef: (journey) => journey?.trip.route.agency.id,
+		getNetworkRef: (journey) => {
+			const route = journey?.trip.route;
+			if (route?.type === "RAIL" && route.agency.id === "IDFM:71") return "IDFM-RER";
+			if (route?.type === "RAIL" && route.agency.id === "IDFM:1046") return "IDFM-TRANSILIEN";
+			if (
+				route?.type === "SUBWAY" ||
+				route?.type === "FUNICULAR" ||
+				["IDFM:C01388" /* ORLYVAL */, "IDFM:C00563" /* CDG VAL */].includes(route?.id)
+			)
+				return "IDFM-METRO";
+			if (route?.type === "TRAMWAY" || route?.type === "GONDOLA") return "IDFM-TRAMWAY";
+			return route?.agency.id;
+		},
 		getVehicleRef: () => undefined,
 		getMissionCode: (journey) => {
 			if (
