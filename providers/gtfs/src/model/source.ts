@@ -126,6 +126,7 @@ export type SourceOptions = {
 	 */
 	mapTripModifications?: (tripModifications: TripModifications, gtfs: Gtfs) => TripModifications | undefined;
 	mapVehiclePosition?: (vehicle: VehiclePosition, gtfs: Gtfs) => VehiclePosition | undefined;
+	isNonCommercialTripUpdate?: (tripUpdate: TripUpdate) => boolean;
 	/**
 	 * Retouche une alerte d'info trafic avant sa publication, ou l'écarte en renvoyant `undefined`.
 	 * Sert à aligner ses identifiants (routes, arrêts, courses) sur ceux du GTFS de la source.

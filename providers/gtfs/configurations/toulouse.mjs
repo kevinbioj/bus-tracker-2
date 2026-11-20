@@ -48,6 +48,7 @@ const commonOptions = {
 
 		return tripUpdate;
 	},
+	isNonCommercialTripUpdate: (tripUpdate) => tripUpdate.tripProperties?.tripHeadsign === "Non commercial",
 	getVehicleRef: (vehicle) => vehicle?.label ?? vehicle?.id,
 	isValidJourney: (journey) =>
 		journey.line?.number === "13" ||

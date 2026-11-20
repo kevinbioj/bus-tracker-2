@@ -555,6 +555,55 @@ describe("computeVehicleJourneys (positions figées)", () => {
 	});
 });
 
+describe("computeVehicleJourneys (courses non commerciales)", () => {
+	beforeEach(() => {
+		vi.spyOn(console, "log").mockImplementation(() => {});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	const nonCommercial = {
+		tripUpdates: [
+			{
+				timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+				trip: { routeId: "line:1" },
+				vehicle: { id: "vehicle:1" },
+				tripProperties: { tripHeadsign: "Non commercial" },
+			},
+		],
+		vehiclePositions: [
+			{
+				timestamp: epochSeconds("2026-05-18T08:05:00Z"),
+				trip: { routeId: "line:1" },
+				vehicle: { id: "vehicle:1" },
+				position: { latitude: 0, longitude: 0.005 },
+			},
+		],
+	};
+
+	it("détache de sa ligne le véhicule dont la course est non commerciale", async () => {
+		const source = scheduledSource({
+			excludeScheduled: true,
+			isNonCommercialTripUpdate: (tripUpdate) => tripUpdate.tripProperties?.tripHeadsign === "Non commercial",
+		});
+
+		const result = await cycleAt(source, "08:06:00", nonCommercial);
+		expect(result.journeys).toHaveLength(1);
+		expect(result.journeys[0]?.line).toBeUndefined();
+		expect(result.journeys[0]?.destination).toBe("Non commercial");
+		expect(result.journeys[0]?.position.type).toBe("GPS");
+	});
+
+	it("garde la ligne du véhicule en l'absence de l'option", async () => {
+		const source = scheduledSource({ excludeScheduled: true });
+
+		const result = await cycleAt(source, "08:06:00", nonCommercial);
+		expect(result.journeys[0]?.line?.ref).toBeDefined();
+	});
+});
+
 describe("computeVehicleJourneys (courses créées par le temps réel)", () => {
 	beforeEach(() => {
 		vi.spyOn(console, "log").mockImplementation(() => {});

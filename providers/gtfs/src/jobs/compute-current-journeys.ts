@@ -513,9 +513,26 @@ export async function computeVehicleJourneys(
 	try {
 		await deadline.pause();
 
-		const { tripUpdates, vehiclePositions, tripModifications, alerts, resources, failedFeedCount } =
-			await downloadGtfsRt(source, deadline);
+		const {
+			tripUpdates: downloadedTripUpdates,
+			vehiclePositions,
+			tripModifications,
+			alerts,
+			resources,
+			failedFeedCount,
+		} = await downloadGtfsRt(source, deadline);
 		const downloadTime = watch.step();
+
+		const nonCommercialTripUpdates = new Map<string, TripUpdate>();
+		const isNonCommercialTripUpdate = source.options.isNonCommercialTripUpdate;
+		const tripUpdates =
+			isNonCommercialTripUpdate === undefined
+				? downloadedTripUpdates
+				: downloadedTripUpdates.filter((tripUpdate) => {
+						if (!isNonCommercialTripUpdate(tripUpdate)) return true;
+						if (tripUpdate.vehicle?.id !== undefined) nonCommercialTripUpdates.set(tripUpdate.vehicle.id, tripUpdate);
+						return false;
+					});
 
 		// Sous la même réserve d'un cycle complet que les déviations : un flux en échec ne vide pas
 		// l'info trafic déjà connue.
@@ -662,8 +679,13 @@ export async function computeVehicleJourneys(
 			activeTripUpdatesByTripId.set(tripId, tripUpdate);
 		}
 
-		for (const vehiclePosition of vehiclePositions) {
+		for (const downloadedVehiclePosition of vehiclePositions) {
 			if (deadline.due()) await deadline.pause();
+			const nonCommercialTripUpdate = nonCommercialTripUpdates.get(downloadedVehiclePosition.vehicle.id);
+			const vehiclePosition: VehiclePosition =
+				nonCommercialTripUpdate !== undefined
+					? { ...downloadedVehiclePosition, trip: undefined }
+					: downloadedVehiclePosition;
 			// 👏 https://transport.data.gouv.fr/resources/81925
 			if (vehiclePosition.position === undefined) continue;
 			if (!isValidCoordinates(vehiclePosition.position)) continue;
@@ -771,6 +793,7 @@ export async function computeVehicleJourneys(
 					journey?.trip.headsign ??
 					// Sans course théorique, le terminus annoncé par le flux est la seule girouette connue.
 					unknownTripUpdate?.tripProperties?.tripHeadsign ??
+					nonCommercialTripUpdate?.tripProperties?.tripHeadsign ??
 					(unknownTripCalls !== undefined ? getCurrentCallHeadsign(unknownTripCalls, now) : undefined) ??
 					unknownTripCalls?.findLast((call) => call.status !== "SKIPPED")?.stop.name,
 				missionCode: source.options.getMissionCode?.(journey, vehiclePosition.vehicle) ?? undefined,
