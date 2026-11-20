@@ -130,7 +130,6 @@ const sources = [
 		staticResourceHref: "https://gtfs.bus-tracker.fr/dunkerque.zip",
 		realtimeResourceHrefs: ["https://gtfs.bus-tracker.fr/gtfs-rt/dunkerque/"],
 		excludeScheduled: true,
-		mode: "NO-TU",
 		getNetworkRef: () => "DKBUS",
 	},
 	{
