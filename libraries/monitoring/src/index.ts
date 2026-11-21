@@ -22,7 +22,7 @@ export function initMonitoring(id: string): void {
 export function captureException(error: unknown, properties?: Record<string, unknown>): void {
 	if (!posthog) return;
 	const err = error instanceof Error ? error : new Error(String(error));
-	posthog.captureException(err, processorId, properties);
+	posthog.captureException(err, { distinctId: processorId, properties });
 }
 
 export async function shutdownMonitoring(): Promise<void> {
