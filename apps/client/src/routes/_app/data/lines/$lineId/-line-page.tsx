@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { GetLineQuery, GetLineVehicleAssignmentsQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
-import { Canonical, NoIndex } from "~/components/seo";
+import { NoIndex } from "~/components/seo";
 import { buttonVariants } from "~/components/ui/button";
 import { useEditor } from "~/hooks/use-editor";
 import * as m from "~/paraglide/messages";
@@ -102,7 +102,7 @@ export function LinePage() {
 			description={m.page_description_line({ lineLabel, network: networkLabel })}
 			title={m.page_title_line_data({ lineLabel, network: networkLabel })}
 		>
-			{date === undefined && line.activeMonths.length > 0 ? <Canonical path={`/data/lines/${line.id}`} /> : <NoIndex />}
+			<NoIndex />
 			<section>
 				<PeriodNavigator
 					className="mb-2"

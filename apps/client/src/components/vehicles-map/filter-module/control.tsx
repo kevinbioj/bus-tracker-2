@@ -1,9 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
-import { ChevronRight, CircleIcon, FilterIcon, FilterXIcon, HistoryIcon, TableIcon } from "lucide-react";
+import {
+	ChevronDownIcon,
+	ChevronRight,
+	CircleIcon,
+	FilterIcon,
+	FilterXIcon,
+	HistoryIcon,
+	ListIcon,
+	TableIcon,
+} from "lucide-react";
 import type { IControl } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
@@ -15,6 +24,7 @@ import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
 import { FilterModuleManager } from "~/components/vehicles-map/filter-module/manager";
 import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
+import { NetworkLinesPanel, useNetworkActiveLines } from "~/components/vehicles-map/filter-module/network-lines-links";
 import { useMapTheme } from "~/components/vehicles-map/map-style";
 import * as m from "~/paraglide/messages";
 
@@ -109,6 +119,49 @@ export function FilterModuleControl({
 	const map = useMap();
 	const activatorRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
+	const [linesOpen, setLinesOpen] = useState(false);
+	const linesPanelId = useId();
+	const lines = useNetworkActiveLines(fixedNetworkId === undefined ? filter?.network : undefined);
+
+	const linesToggleLabel = filter?.kind === "line" ? m.map_filter_change_line() : m.map_filter_choose_line();
+	const linesToggle = lines.length > 0 && (
+		<button
+			aria-controls={linesPanelId}
+			aria-expanded={linesOpen}
+			data-slot="map-filter-button"
+			className={clsx(
+				subtleActionClassName,
+				"gap-1 h-7 px-1.5 sm:px-2 text-sm aria-expanded:bg-branding aria-expanded:text-branding-foreground",
+			)}
+			onClick={() => setLinesOpen((open) => !open)}
+			title={linesToggleLabel}
+			type="button"
+		>
+			<ListIcon aria-hidden="true" className="shrink-0 size-4" />
+			<span className="hidden sm:inline">{linesToggleLabel}</span>
+			<ChevronDownIcon
+				aria-hidden="true"
+				className={clsx("shrink-0 size-3.5 transition-transform", linesOpen && "rotate-180")}
+			/>
+		</button>
+	);
+
+	useEffect(() => {
+		if (!linesOpen) return;
+
+		const onPointerDown = (event: PointerEvent) => {
+			if (!activatorRef.current?.contains(event.target as Node)) setLinesOpen(false);
+		};
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape") setLinesOpen(false);
+		};
+		document.addEventListener("pointerdown", onPointerDown);
+		document.addEventListener("keydown", onKeyDown);
+		return () => {
+			document.removeEventListener("pointerdown", onPointerDown);
+			document.removeEventListener("keydown", onKeyDown);
+		};
+	}, [linesOpen]);
 
 	useEffect(() => {
 		if (activatorRef.current === null) return;
@@ -126,88 +179,107 @@ export function FilterModuleControl({
 
 	return (
 		<>
-			<div className="maplibregl-ctrl max-w-[calc(100vw-6.5rem)] font-sans" ref={activatorRef}>
+			<div className="maplibregl-ctrl relative z-10 max-w-[calc(100vw-6.5rem)] font-sans" ref={activatorRef}>
 				{filter ? (
-					<div className="flex items-center gap-1.5 h-9 min-w-0 overflow-hidden pl-1 pr-1 rounded-lg bg-card text-card-foreground shadow-md ring-2 ring-card">
-						<button
-							className={clsx(subtleActionClassName, "size-7")}
-							data-slot="map-filter-button"
-							onClick={() => onFilterChange(undefined)}
-							title={m.map_filter_disable()}
-							type="button"
-						>
-							<FilterXIcon className="size-4.5" />
-						</button>
+					<div className="relative min-w-0 rounded-lg bg-card text-card-foreground shadow-md ring-2 ring-card">
+						<div className="flex items-center gap-1.5 h-9 min-w-0 overflow-hidden pl-1 pr-1">
+							<button
+								className={clsx(subtleActionClassName, "size-7")}
+								data-slot="map-filter-button"
+								onClick={() => {
+									setLinesOpen(false);
+									onFilterChange(undefined);
+								}}
+								title={m.map_filter_disable()}
+								type="button"
+							>
+								<FilterXIcon className="size-4.5" />
+							</button>
 
-						{filter.kind === "network" ? (
-							<NetworkBadge network={filter.network} />
-						) : (
-							<>
-								{filter.network ? (
-									<>
-										<NetworkBadge network={filter.network} />
-										<ChevronRight className="shrink-0 size-3 text-muted-foreground" />
-									</>
-								) : null}
-
-								{filter.line.cartridgeHref ? (
-									<img
-										className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
-										src={filter.line.cartridgeHref}
-										alt={filter.line.number}
-									/>
-								) : (
-									<div
-										className={clsx(
-											"flex justify-center rounded-sm",
-											filter.line.color !== null ? "min-w-6" : "min-w-0",
-										)}
-										style={{
-											backgroundColor: filter.line.color ?? undefined,
-											color: filter.line.textColor ?? undefined,
-										}}
-									>
-										<span
-											className={clsx(
-												"max-w-64 text-base leading-tight truncate",
-												filter.line.color !== null && "font-bold px-1",
-											)}
-											title={filter.line.number}
-										>
-											{filter.line.number}
-										</span>
-									</div>
-								)}
-							</>
-						)}
-
-						<FilterModuleVehiclesCount filter={filter} fixedNetworkId={fixedNetworkId} />
-
-						{filter.kind === "line" && <FilterModuleLineAlerts line={filter.line} />}
-
-						{withDataLink &&
-							(filter.kind === "network" ? (
-								<Link
-									className={clsx(subtleActionClassName, "gap-1.5 h-7 px-1.5 sm:px-2.5 text-sm")}
-									params={{ networkId: `${filter.network.id}` }}
-									title={m.map_filter_network_data()}
-									to="/data/networks/$networkId"
-								>
-									{/* La page réseau liste le parc et les lignes : un inventaire, pas un historique. */}
-									<TableIcon className="shrink-0 size-4" />
-									<span className="hidden sm:inline">{m.map_filter_network_data()}</span>
-								</Link>
+							{filter.kind === "network" ? (
+								<>
+									<NetworkBadge network={filter.network} />
+									{linesToggle}
+								</>
 							) : (
-								<Link
-									className={clsx(subtleActionClassName, "gap-1.5 h-7 px-1.5 sm:px-2.5 text-sm")}
-									params={{ lineId: `${filter.line.id}` }}
-									title={m.map_filter_line_data()}
-									to="/data/lines/$lineId"
-								>
-									<HistoryIcon className="shrink-0 size-4" />
-									<span className="hidden sm:inline">{m.map_filter_line_data()}</span>
-								</Link>
-							))}
+								<>
+									{filter.network ? (
+										<>
+											<NetworkBadge network={filter.network} />
+											{linesToggle}
+											<ChevronRight className="shrink-0 size-3 text-muted-foreground" />
+										</>
+									) : null}
+
+									{filter.line.cartridgeHref ? (
+										<img
+											className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
+											src={filter.line.cartridgeHref}
+											alt={filter.line.number}
+										/>
+									) : (
+										<div
+											className={clsx(
+												"flex justify-center rounded-sm",
+												filter.line.color !== null ? "min-w-6" : "min-w-0",
+											)}
+											style={{
+												backgroundColor: filter.line.color ?? undefined,
+												color: filter.line.textColor ?? undefined,
+											}}
+										>
+											<span
+												className={clsx(
+													"max-w-64 text-base leading-tight truncate",
+													filter.line.color !== null && "font-bold px-1",
+												)}
+												title={filter.line.number}
+											>
+												{filter.line.number}
+											</span>
+										</div>
+									)}
+								</>
+							)}
+
+							<FilterModuleVehiclesCount filter={filter} fixedNetworkId={fixedNetworkId} />
+
+							{filter.kind === "line" && <FilterModuleLineAlerts line={filter.line} />}
+
+							{withDataLink &&
+								(filter.kind === "network" ? (
+									<Link
+										className={clsx(subtleActionClassName, "gap-1.5 h-7 px-1.5 sm:px-2.5 text-sm")}
+										params={{ networkId: `${filter.network.id}` }}
+										title={m.map_filter_network_data()}
+										to="/data/networks/$networkId"
+									>
+										{/* La page réseau liste le parc et les lignes : un inventaire, pas un historique. */}
+										<TableIcon className="shrink-0 size-4" />
+										<span className="hidden sm:inline">{m.map_filter_network_data()}</span>
+									</Link>
+								) : (
+									<Link
+										className={clsx(subtleActionClassName, "gap-1.5 h-7 px-1.5 sm:px-2.5 text-sm")}
+										params={{ lineId: `${filter.line.id}` }}
+										title={m.map_filter_line_data()}
+										to="/data/lines/$lineId"
+									>
+										<HistoryIcon className="shrink-0 size-4" />
+										<span className="hidden sm:inline">{m.map_filter_line_data()}</span>
+									</Link>
+								))}
+						</div>
+						{filter.network !== undefined && lines.length > 0 && (
+							<NetworkLinesPanel
+								currentLineId={filter.kind === "line" ? filter.line.id : undefined}
+								id={linesPanelId}
+								lines={lines}
+								network={filter.network}
+								onNavigate={() => setLinesOpen(false)}
+								open={linesOpen}
+							/>
+						)}
 					</div>
 				) : (
 					<button

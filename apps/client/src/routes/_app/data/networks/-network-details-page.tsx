@@ -1,9 +1,9 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams, useSearch } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehiclesQuery } from "~/api/vehicles";
-import { Canonical } from "~/components/seo";
+import { NoIndex } from "~/components/seo";
 import * as m from "~/paraglide/messages";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
 import { NetworkLogo } from "~/routes/_app/data/-components/network-logo";
@@ -14,7 +14,6 @@ import { formatNetworkModes, getNetworkLabel, isActiveLine } from "~/utils/netwo
 
 export function NetworkDetails() {
 	const { networkId } = useParams({ from: "/_app/data/networks/$networkId" });
-	const tab = useSearch({ from: "/_app/data/networks/$networkId", select: (search) => search.tab });
 
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
 	const { data: vehicles } = useQuery({ ...GetVehiclesQuery(network.id), enabled: network.hasVehiclesFeature });
@@ -50,9 +49,7 @@ export function NetworkDetails() {
 			description={description}
 			title={m.page_title_network_data({ modes: formatNetworkModes(network.lines), network: networkLabel })}
 		>
-			<Canonical
-				path={`/data/networks/${network.id}${network.hasVehiclesFeature && tab === "lines" ? "?tab=lines" : ""}`}
-			/>
+			<NoIndex />
 			<NetworkPage network={network} />
 		</DataPageLayout>
 	);

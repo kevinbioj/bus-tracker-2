@@ -45,9 +45,13 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	const [geolocateOnStart] = useGeolocateOnStart();
 
 	const realtime = isRealtimeAvailable(useRealtimeConnection());
-	const { data: line } = useQuery(GetLineQuery(lineId ?? undefined, realtime));
+	const { data: line, isPending: isLinePending } = useQuery(GetLineQuery(lineId ?? undefined, realtime));
 	// Une ligne filtrée impose son réseau ; sinon le réseau filtré vient directement de l'URL.
-	const filteredNetworkId = line?.networkId ?? networkId ?? undefined;
+	const resolvedNetworkId = line?.networkId ?? networkId ?? undefined;
+	const isLineLoading = lineId !== null && isLinePending;
+	const [lastNetworkId, setLastNetworkId] = useState(resolvedNetworkId);
+	if (!isLineLoading && lastNetworkId !== resolvedNetworkId) setLastNetworkId(resolvedNetworkId);
+	const filteredNetworkId = isLineLoading ? lastNetworkId : resolvedNetworkId;
 	const { data: networkData } = useQuery(GetNetworkQuery(filteredNetworkId, true));
 	// La requête garde les données précédentes en attendant les suivantes, y compris une fois désactivée :
 	// sans ce garde-fou, le réseau quitté survivrait au filtre et restreindrait encore les arrêts.

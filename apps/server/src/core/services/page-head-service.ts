@@ -8,7 +8,6 @@ import { idSchema } from "../../utils/validator-helpers.js";
 import { database } from "../database/database.js";
 import {
 	type LineEntity,
-	lineActivitiesTable,
 	linesTable,
 	type NetworkEntity,
 	networksTable,
@@ -39,7 +38,6 @@ type NetworkPageData = {
 type VehiclePageData = {
 	number: string;
 	designation: string | null;
-	hasActivity: boolean;
 	network: NetworkSummary;
 };
 
@@ -67,6 +65,9 @@ const getNetworkLabel = ({ name, authority }: Pick<NetworkEntity, "name" | "auth
 	const trimmedAuthority = authority?.trim();
 	return trimmedAuthority ? `${name} (${trimmedAuthority})` : name;
 };
+
+const getLineLabel = (line: Pick<LineEntity, "girouetteNumber" | "number">, locale: Locale) =>
+	line.girouetteNumber ? line.number : m.network_lines_label({ lineNumber: line.number }, { locale });
 
 function formatNetworkModes(lines: ModeLine[], locale: Locale) {
 	const lineCountByMode = new Map<keyof typeof modeLabels, number>();
@@ -163,15 +164,7 @@ async function loadVehiclePageData(vehicleId: number): Promise<VehiclePageData |
 		.from(vehiclesTable)
 		.innerJoin(networksTable, eq(networksTable.id, vehiclesTable.networkId))
 		.where(eq(vehiclesTable.id, vehicleId));
-	if (data === undefined) return null;
-
-	const [activity] = await database
-		.select({ id: lineActivitiesTable.id })
-		.from(lineActivitiesTable)
-		.where(eq(lineActivitiesTable.vehicleId, vehicleId))
-		.limit(1);
-
-	return { ...data, hasActivity: activity !== undefined };
+	return data ?? null;
 }
 
 const findNetworkSummary = (networkId: number) =>
@@ -181,6 +174,52 @@ const notFoundHead = (locale: Locale): PageHead => ({
 	title: m.not_found_page_title({}, { locale }),
 	canonicalPath: null,
 });
+
+async function resolveMapHead(search: URLSearchParams, locale: Locale): Promise<PageHead> {
+	const rawLineId = search.get("line-id");
+	const rawNetworkId = search.get("network-id");
+
+	if (rawLineId !== null) {
+		const lineId = idSchema.safeParse(rawLineId);
+		if (!lineId.success) return notFoundHead(locale);
+
+		const line = await findLineDetails(lineId.data);
+		if (line === undefined) return notFoundHead(locale);
+
+		const network = await findNetworkSummary(line.networkId);
+		if (network === null) return notFoundHead(locale);
+
+		const lineLabel = getLineLabel(line, locale);
+		const networkLabel = getNetworkLabel(network);
+		return {
+			title: m.page_title_map_line({ lineLabel, networkName: network.name }, { locale }),
+			description: m.page_description_map_line({ lineLabel, network: networkLabel }, { locale }),
+			canonicalPath: null,
+		};
+	}
+
+	if (rawNetworkId !== null) {
+		const networkId = idSchema.safeParse(rawNetworkId);
+		if (!networkId.success) return notFoundHead(locale);
+
+		const data = await networkCache.getOrLoad(String(networkId.data), () => loadNetworkPageData(networkId.data));
+		if (data === null) return notFoundHead(locale);
+
+		const { network, lines } = data;
+		const modes = formatNetworkModes(lines, locale);
+		return {
+			title: m.page_title_map_network({ modes, networkName: network.name }, { locale }),
+			description: m.page_description_map_network({ modes, network: getNetworkLabel(network) }, { locale }),
+			canonicalPath: lines.some(isActiveLine) ? `/?network-id=${network.id}` : null,
+		};
+	}
+
+	return {
+		title: m.page_title_map({}, { locale }),
+		description: m.page_description_map({}, { locale }),
+		canonicalPath: "/",
+	};
+}
 
 async function resolveDataHead(search: URLSearchParams, locale: Locale): Promise<PageHead> {
 	const { networks, regions } = await directoryCache.getOrLoad("directory", loadDirectory);
@@ -210,7 +249,7 @@ async function resolveDataHead(search: URLSearchParams, locale: Locale): Promise
 				{ networkNames: formatNetworkNames(selectedGroup.networks, locale), regionName },
 				{ locale },
 			),
-			canonicalPath: `/data?region=${selectedGroup.region.id}`,
+			canonicalPath: null,
 		};
 	}
 
@@ -224,7 +263,7 @@ async function resolveDataHead(search: URLSearchParams, locale: Locale): Promise
 	};
 }
 
-async function resolveNetworkHead(networkId: number, search: URLSearchParams, locale: Locale) {
+async function resolveNetworkHead(networkId: number, locale: Locale) {
 	const data = await networkCache.getOrLoad(String(networkId), () => loadNetworkPageData(networkId));
 	if (data === null) return notFoundHead(locale);
 
@@ -245,11 +284,11 @@ async function resolveNetworkHead(networkId: number, search: URLSearchParams, lo
 						},
 						{ locale },
 					),
-		canonicalPath: `/data/networks/${network.id}${network.hasVehiclesFeature && search.get("tab") === "lines" ? "?tab=lines" : ""}`,
+		canonicalPath: null,
 	};
 }
 
-async function resolveVehicleHead(vehicleId: number, search: URLSearchParams, locale: Locale) {
+async function resolveVehicleHead(vehicleId: number, locale: Locale) {
 	const vehicle = await vehicleCache.getOrLoad(String(vehicleId), () => loadVehiclePageData(vehicleId));
 	if (vehicle === null) return notFoundHead(locale);
 
@@ -264,11 +303,11 @@ async function resolveVehicleHead(vehicleId: number, search: URLSearchParams, lo
 			{ designation, network: getNetworkLabel(vehicle.network), vehicleNumber: vehicle.number },
 			{ locale },
 		),
-		canonicalPath: !search.has("month") && vehicle.hasActivity ? `/data/vehicles/${vehicleId}` : null,
+		canonicalPath: null,
 	};
 }
 
-async function resolveLineHead(lineId: number, subpath: string, search: URLSearchParams, locale: Locale) {
+async function resolveLineHead(lineId: number, subpath: string, locale: Locale) {
 	const line = await findLineDetails(lineId);
 	if (line === undefined) return notFoundHead(locale);
 
@@ -276,15 +315,12 @@ async function resolveLineHead(lineId: number, subpath: string, search: URLSearc
 	if (network === null) return notFoundHead(locale);
 
 	if (subpath === "" || subpath === "/vehicle-assignments") {
-		const lineLabel = line.girouetteNumber
-			? line.number
-			: m.network_lines_label({ lineNumber: line.number }, { locale });
+		const lineLabel = getLineLabel(line, locale);
 		const networkLabel = getNetworkLabel(network);
 		return {
 			title: m.page_title_line_data({ lineLabel, network: networkLabel }, { locale }),
 			description: m.page_description_line({ lineLabel, network: networkLabel }, { locale }),
-			canonicalPath:
-				subpath === "" && !search.has("date") && line.activeMonths.length > 0 ? `/data/lines/${line.id}` : null,
+			canonicalPath: null,
 		};
 	}
 
@@ -313,13 +349,7 @@ export async function resolvePageHead(path: string, search: URLSearchParams, loc
 		return id.success ? { id: id.data, rest: match[2] ?? "" } : null;
 	};
 
-	if (normalizedPath === "/") {
-		return {
-			title: m.page_title_map({}, { locale }),
-			description: m.page_description_map({}, { locale }),
-			canonicalPath: "/",
-		};
-	}
+	if (normalizedPath === "/") return resolveMapHead(search, locale);
 
 	if (normalizedPath === "/legal") {
 		return { title: m.legal_page_title({}, { locale }), canonicalPath: "/legal" };
@@ -336,16 +366,13 @@ export async function resolvePageHead(path: string, search: URLSearchParams, loc
 	if (normalizedPath === "/data") return resolveDataHead(search, locale);
 
 	const network = matchId(/^\/data\/networks\/(\d+)$/);
-	if (network !== undefined)
-		return network === null ? notFoundHead(locale) : resolveNetworkHead(network.id, search, locale);
+	if (network !== undefined) return network === null ? notFoundHead(locale) : resolveNetworkHead(network.id, locale);
 
 	const vehicle = matchId(/^\/data\/vehicles\/(\d+)$/);
-	if (vehicle !== undefined)
-		return vehicle === null ? notFoundHead(locale) : resolveVehicleHead(vehicle.id, search, locale);
+	if (vehicle !== undefined) return vehicle === null ? notFoundHead(locale) : resolveVehicleHead(vehicle.id, locale);
 
 	const line = matchId(/^\/data\/lines\/(\d+)(\/.*)?$/);
-	if (line !== undefined)
-		return line === null ? notFoundHead(locale) : resolveLineHead(line.id, line.rest, search, locale);
+	if (line !== undefined) return line === null ? notFoundHead(locale) : resolveLineHead(line.id, line.rest, locale);
 
 	const embed = matchId(/^\/embed\/(\d+)$/);
 	if (embed !== undefined) return embed === null ? notFoundHead(locale) : resolveEmbedHead(embed.id, locale);

@@ -1,9 +1,14 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { Canonical } from "~/components/seo";
+import { GetLineQuery } from "~/api/lines";
+import { GetNetworkQuery } from "~/api/networks";
+import { Canonical, NoIndex } from "~/components/seo";
 import { VehiclesMap } from "~/components/vehicles-map/vehicles-map";
 import * as m from "~/paraglide/messages";
+import { getLineLabel } from "~/routes/_app/data/-components/lines/line-identity";
+import { formatNetworkModes, getNetworkLabel, isActiveLine } from "~/utils/network-seo";
 
 const searchSchema = z.object({
 	"line-id": z.coerce.number().optional(),
@@ -17,15 +22,73 @@ export const Route = createFileRoute("/_app/")({
 	validateSearch: searchSchema,
 });
 
+type MapPageHead = {
+	title: string;
+	description: string;
+	heading: string;
+	canonicalPath: string | null;
+};
+
+const defaultHead = (canonicalPath: string | null): MapPageHead => ({
+	title: m.page_title_map(),
+	description: m.page_description_map(),
+	heading: m.map_page_heading(),
+	canonicalPath,
+});
+
+function useMapPageHead(): MapPageHead | undefined {
+	const lineId = Route.useSearch({ select: (search) => search["line-id"] });
+	const networkId = Route.useSearch({ select: (search) => search["network-id"] });
+
+	const lineQuery = useQuery(GetLineQuery(lineId));
+	const filteredNetworkId = lineId === undefined ? networkId : lineQuery.data?.networkId;
+	const networkQuery = useQuery(GetNetworkQuery(filteredNetworkId, true));
+	const network = networkQuery.data?.id === filteredNetworkId ? networkQuery.data : undefined;
+
+	if (lineId === undefined && networkId === undefined) return defaultHead("/");
+
+	if (lineQuery.isError || networkQuery.isError) return defaultHead(null);
+	if (network === undefined) return undefined;
+
+	const networkLabel = getNetworkLabel(network);
+
+	if (lineId !== undefined) {
+		const line = lineQuery.data;
+		if (line === undefined) return undefined;
+
+		const lineLabel = getLineLabel(line);
+		return {
+			title: m.page_title_map_line({ lineLabel, networkName: network.name }),
+			description: m.page_description_map_line({ lineLabel, network: networkLabel }),
+			heading: m.map_page_heading_line({ lineLabel, network: networkLabel }),
+			canonicalPath: null,
+		};
+	}
+
+	const modes = formatNetworkModes(network.lines);
+	return {
+		title: m.page_title_map_network({ modes, networkName: network.name }),
+		description: m.page_description_map_network({ modes, network: networkLabel }),
+		heading: m.map_page_heading_network({ modes, network: networkLabel }),
+		canonicalPath: network.lines.some(isActiveLine) ? `/?network-id=${network.id}` : null,
+	};
+}
+
 function MapPage() {
+	const head = useMapPageHead();
+
 	return (
 		<>
-			<title>{m.page_title_map()}</title>
-			<meta content={m.page_description_map()} name="description" />
-			<Canonical path="/" />
+			{head !== undefined && (
+				<>
+					<title>{head.title}</title>
+					<meta content={head.description} name="description" />
+					{head.canonicalPath === null ? <NoIndex /> : <Canonical path={head.canonicalPath} />}
+				</>
+			)}
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			<main>
-				<h1 className="sr-only">{m.map_page_heading()}</h1>
+				<h1 className="sr-only">{head?.heading ?? m.map_page_heading()}</h1>
 				<VehiclesMap className="h-[calc(100dvh-56px)]" />
 			</main>
 		</>

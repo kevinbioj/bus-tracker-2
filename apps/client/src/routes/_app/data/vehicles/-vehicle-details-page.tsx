@@ -1,9 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams, useSearch } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 
 import { GetNetworkQuery } from "~/api/networks";
 import { GetVehicleQuery } from "~/api/vehicles";
-import { Canonical, NoIndex } from "~/components/seo";
+import { NoIndex } from "~/components/seo";
 import * as m from "~/paraglide/messages";
 import { subtitleLinkClassName } from "~/routes/_app/data/-components/data-page-header";
 import { DataPageLayout } from "~/routes/_app/data/-components/data-page-layout";
@@ -15,7 +15,6 @@ import { getNetworkLabel } from "~/utils/network-seo";
 
 export function VehicleDetails() {
 	const { vehicleId } = useParams({ from: "/_app/data/vehicles/$vehicleId" });
-	const month = useSearch({ from: "/_app/data/vehicles/$vehicleId", select: (search) => search.month });
 
 	const { data: vehicle } = useSuspenseQuery(GetVehicleQuery(+vehicleId));
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(vehicle.networkId));
@@ -50,11 +49,7 @@ export function VehicleDetails() {
 				vehicleNumber: vehicle.number,
 			})}
 		>
-			{month === undefined && vehicle.activeMonths.length > 0 ? (
-				<Canonical path={`/data/vehicles/${vehicle.id}`} />
-			) : (
-				<NoIndex />
-			)}
+			<NoIndex />
 			<div className="flex flex-col lg:flex-row lg:items-start gap-3 w-full">
 				<div className="flex flex-col gap-3 empty:hidden lg:sticky lg:top-16">
 					<VehicleCharacteristics vehicle={vehicle} />

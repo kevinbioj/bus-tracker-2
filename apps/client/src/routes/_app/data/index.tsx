@@ -8,7 +8,7 @@ import { z } from "zod";
 import { GetNetworksQuery } from "~/api/networks";
 import { GetRegionsQuery } from "~/api/regions";
 import { SearchBar } from "~/components/search-bar";
-import { Canonical } from "~/components/seo";
+import { Canonical, NoIndex } from "~/components/seo";
 import { useFavoriteNetworkIds } from "~/hooks/use-favorite-ids";
 import * as m from "~/paraglide/messages";
 import { formatNetworkNames } from "~/utils/network-seo";
@@ -60,7 +60,7 @@ function NetworksListPage() {
 				}
 				name="description"
 			/>
-			<Canonical path={view.kind === "region" ? `/data?region=${view.group.region.id}` : "/data"} />
+			{view.kind === "region" ? <NoIndex /> : <Canonical path="/data" />}
 			<main className="mx-auto w-full max-w-(--breakpoint-xl) px-3 pb-8">
 				<h1 className="pt-3 text-xl font-bold sm:pt-4 sm:text-2xl">{m.networks_list_title()}</h1>
 				<div className="sticky top-14 z-1 -mx-3 bg-background px-3 py-2 sm:py-3">
