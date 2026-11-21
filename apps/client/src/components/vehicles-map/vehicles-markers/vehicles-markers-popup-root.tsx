@@ -38,14 +38,14 @@ function ActiveJourneyReporter({
 type VehiclesMarkersPopupRootProps = {
 	embedMode?: boolean;
 	layer: StyleLayer;
-	lineId?: number;
+	lineIds?: number[];
 	onActiveJourneyChange: (journeyId: string | null) => void;
 };
 
 export function VehiclesMarkersPopupRoot({
 	embedMode,
 	layer,
-	lineId,
+	lineIds,
 	onActiveJourneyChange,
 }: VehiclesMarkersPopupRootProps) {
 	return (
@@ -65,7 +65,7 @@ export function VehiclesMarkersPopupRoot({
 								onClose={closePopup}
 							/>
 						)}
-						<VehiclePath journeyId={activeFeature?.id} lineId={lineId} />
+						<VehiclePath journeyId={activeFeature?.id} lineIds={lineIds} />
 						<JumpTo openPopup={openPopup} />
 					</>
 				);

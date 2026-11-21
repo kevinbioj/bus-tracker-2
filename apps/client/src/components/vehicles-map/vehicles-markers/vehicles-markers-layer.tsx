@@ -269,7 +269,7 @@ export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineIds 
 			<VehiclesMarkersPopupRoot
 				embedMode={Boolean(embeddedNetworkId)}
 				layer={vehiclesLayer}
-				lineId={lineIds?.length === 1 ? lineIds[0] : undefined}
+				lineIds={lineIds}
 				onActiveJourneyChange={setActiveJourneyId}
 			/>
 		</>

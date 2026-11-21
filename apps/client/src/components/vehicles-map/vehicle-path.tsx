@@ -1,5 +1,5 @@
 import type { VehicleJourneyPath } from "@bus-tracker/contracts";
-import { useQuery } from "@tanstack/react-query";
+import { type UseQueryResult, useQueries, useQuery } from "@tanstack/react-query";
 import type { AddLayerObject, GeoJSONSource, SourceSpecification } from "maplibre-gl";
 import { useEffect, useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
@@ -8,9 +8,10 @@ import { useMap } from "~/adapters/maplibre-gl/map";
 import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
 import { useMapLayer } from "~/adapters/maplibre-gl/use-map-layer";
 import { useMapSource } from "~/adapters/maplibre-gl/use-map-source";
-import { GetLinePathQuery, GetLineQuery } from "~/api/lines";
+import { GetLinePathQuery, GetLineQuery, type Line } from "~/api/lines";
 import { useRealtimeAvailable } from "~/api/realtime";
 import { GetJourneyPathsQuery, GetVehicleJourneyQuery } from "~/api/vehicle-journeys";
+import { bundleLinePaths } from "~/components/vehicles-map/line-paths-bundle";
 import { dimForDarkMap, useMapTheme } from "~/components/vehicles-map/map-style";
 import { usePathDisplayMode } from "~/components/vehicles-map/path-display-mode";
 import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-style";
@@ -18,6 +19,8 @@ import type { StopLabelsStyle } from "~/components/vehicles-map/stop-labels-styl
 /** Jaune des dessertes supplémentaires, repris de la pop-up (`yellow-600`, lisible sur fond clair
  * comme sur fond sombre — la carte, elle, ne suit pas le thème). */
 const EXTRA_STOP_COLOR = "#CA8A04";
+
+const LINE_PATH_SPACING = 4;
 
 const CANCELLED_PATH_WIDTH = 5;
 const CANCELLED_PATH_YELLOW = "#FACC15";
@@ -170,6 +173,7 @@ const futurePathStrokeLayer: AddLayerObject = {
 		"line-color": ["get", "strokeColor"],
 		"line-width": 6,
 		"line-opacity": 1,
+		"line-offset": ["coalesce", ["get", "offset"], 0],
 	},
 	filter: ["==", ["get", "type"], "future"],
 };
@@ -186,6 +190,7 @@ const futurePathLayer: AddLayerObject = {
 		"line-color": ["get", "color"],
 		"line-width": 4,
 		"line-opacity": 1,
+		"line-offset": ["coalesce", ["get", "offset"], 0],
 	},
 	filter: ["==", ["get", "type"], "future"],
 };
@@ -318,12 +323,27 @@ function getPathProgress(
 	return segment + t;
 }
 
+function combineLinePaths<T>(results: UseQueryResult<T>[]) {
+	return results.map(({ data }) => data);
+}
+
+function combineLines(results: UseQueryResult<Line>[]) {
+	return results.map(({ data, isError }) => (isError ? null : data));
+}
+
+function toPathColors(adaptColor: (value: string) => string, color: string, textColor: string) {
+	return {
+		color: adaptColor(color.startsWith("#") ? color : `#${color}`),
+		strokeColor: adaptColor(textColor.startsWith("#") ? textColor : `#${textColor}`),
+	};
+}
+
 type VehiclePathProps = {
 	journeyId?: string;
-	lineId?: number;
+	lineIds?: number[];
 };
 
-export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
+export function VehiclePath({ journeyId, lineIds }: VehiclePathProps) {
 	const map = useMap();
 	const [pathDisplayMode] = usePathDisplayMode();
 	const darkMap = useMapTheme() === "dark";
@@ -343,14 +363,42 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	const cancelledPath = paths?.cancelled;
 
 	const journeyPathReady = journey?.id === journeyId && journey?.pathRef !== undefined && path !== undefined;
-	const showLinePath =
-		pathDisplayMode === "journeys-and-lines" && lineId !== undefined && (journeyId === undefined || !journeyPathReady);
+	const showLinePaths =
+		pathDisplayMode === "journeys-and-lines" &&
+		lineIds !== undefined &&
+		lineIds.length > 0 &&
+		(journeyId === undefined || !journeyPathReady);
+	const displayedLineIds = useMemo(
+		() => (showLinePaths && lineIds !== undefined ? lineIds : []),
+		[showLinePaths, lineIds],
+	);
 
-	const { data: linePath } = useQuery(GetLinePathQuery(showLinePath ? lineId : undefined, realtime));
+	const linePaths = useQueries({
+		queries: displayedLineIds.map((lineId) => GetLinePathQuery(lineId, realtime)),
+		combine: combineLinePaths,
+	});
+	const lines = useQueries({
+		queries: displayedLineIds.map((lineId) => GetLineQuery(lineId, realtime)),
+		combine: combineLines,
+	});
 
-	const resolvedLineId = journey?.lineId ?? lineId;
-	const { data: line, isError: lineErrored } = useQuery(GetLineQuery(resolvedLineId, realtime));
-	const awaitingLineColors = resolvedLineId !== undefined && line === undefined && !lineErrored;
+	const bundledLinePaths = useMemo(() => {
+		const inputs = displayedLineIds.flatMap((lineId, index) => {
+			const linePath = linePaths[index];
+			return linePath !== undefined ? [{ lineId, segments: linePath.segments }] : [];
+		});
+		if (inputs.length > 1) return bundleLinePaths(inputs);
+		return inputs.flatMap(({ lineId, segments }) =>
+			segments.map((segment) => ({
+				lineId,
+				coordinates: segment.map(([latitude, longitude]) => [longitude, latitude]),
+				offset: 0,
+			})),
+		);
+	}, [displayedLineIds, linePaths]);
+
+	const { data: journeyLine, isError: journeyLineErrored } = useQuery(GetLineQuery(journey?.lineId, realtime));
+	const awaitingJourneyLineColors = journey?.lineId !== undefined && journeyLine === undefined && !journeyLineErrored;
 
 	const stopsLabelLayer = useMemo<AddLayerObject>(
 		() => ({
@@ -438,39 +486,40 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 	);
 
 	const geojson = useMemo<GeoJSON.FeatureCollection>(() => {
-		if (pathDisplayMode === "disabled" || awaitingLineColors) {
+		if (pathDisplayMode === "disabled") {
 			return { type: "FeatureCollection", features: [] };
 		}
 
 		const adaptColor = darkMap ? dimForDarkMap : (value: string) => value;
-		const color = line?.color ?? journey?.line?.color ?? "000000";
-		const textColor = line?.textColor ?? journey?.line?.textColor ?? "FFFFFF";
-
-		const pathColor = adaptColor(color.startsWith("#") ? color : `#${color}`);
-		const pathStrokeColor = adaptColor(textColor.startsWith("#") ? textColor : `#${textColor}`);
-
 		const features: GeoJSON.Feature[] = [];
 
-		if (showLinePath && linePath !== undefined) {
-			for (const segment of linePath.segments) {
-				const coordinates = segment.map(([latitude, longitude]) => [longitude, latitude]);
-				if (coordinates.length <= 1) continue;
+		const lineColors = new Map(
+			displayedLineIds.flatMap((lineId, index) => {
+				const line = lines[index];
+				if (line === undefined) return [];
+				return [[lineId, toPathColors(adaptColor, line?.color ?? "000000", line?.textColor ?? "FFFFFF")] as const];
+			}),
+		);
+		for (const { lineId, coordinates, offset } of bundledLinePaths) {
+			const colors = lineColors.get(lineId);
+			if (colors === undefined || coordinates.length <= 1) continue;
 
-				features.push({
-					type: "Feature",
-					geometry: { type: "LineString", coordinates },
-					properties: { type: "future", color: pathColor, strokeColor: pathStrokeColor },
-				});
-			}
+			features.push({
+				type: "Feature",
+				geometry: { type: "LineString", coordinates },
+				properties: { type: "future", ...colors, offset: offset * LINE_PATH_SPACING },
+			});
 		}
 
-		if (journeyId === undefined) {
+		if (journeyId === undefined || journey?.id !== journeyId || awaitingJourneyLineColors) {
 			return { type: "FeatureCollection", features };
 		}
 
-		if (journey?.id !== journeyId) {
-			return { type: "FeatureCollection", features };
-		}
+		const { color: pathColor, strokeColor: pathStrokeColor } = toPathColors(
+			adaptColor,
+			journeyLine?.color ?? journey.line?.color ?? "000000",
+			journeyLine?.textColor ?? journey.line?.textColor ?? "FFFFFF",
+		);
 
 		if (cancelledPath !== undefined) {
 			const pathPoints = path?.p;
@@ -605,16 +654,17 @@ export function VehiclePath({ journeyId, lineId }: VehiclePathProps) {
 
 		return { type: "FeatureCollection", features };
 	}, [
-		awaitingLineColors,
+		awaitingJourneyLineColors,
+		bundledLinePaths,
 		cancelledPath,
 		darkMap,
+		displayedLineIds,
 		journey,
 		journeyId,
+		journeyLine,
+		lines,
 		path,
-		line,
-		linePath,
 		pathDisplayMode,
-		showLinePath,
 	]);
 
 	const source = useMapSource<GeoJSONSource>("vehicle-path", initialSource);
