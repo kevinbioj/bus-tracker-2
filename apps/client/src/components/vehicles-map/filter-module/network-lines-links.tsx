@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useLayoutEffect, useRef, useState } from "react";
+import { type MouseEvent, useLayoutEffect, useRef, useState } from "react";
 
 import { GetNetworkQuery, type Line, type Network } from "~/api/networks";
 import * as m from "~/paraglide/messages";
@@ -18,17 +18,21 @@ type NetworkLinesPanelProps = {
 	open: boolean;
 	network: Network;
 	lines: Line[];
-	currentLineId?: number;
+	currentLineIds: number[];
 	onNavigate: () => void;
+	onToggleLine: (line: Line) => void;
 };
+
+const isApplePlatform = () => /Mac|iPhone|iPad|iPod/.test(navigator.platform);
 
 export function NetworkLinesPanel({
 	id,
 	open,
 	network,
 	lines,
-	currentLineId,
+	currentLineIds,
 	onNavigate,
+	onToggleLine,
 }: Readonly<NetworkLinesPanelProps>) {
 	const listRef = useRef<HTMLUListElement>(null);
 	const [textSpans, setTextSpans] = useState<Map<number, number>>(new Map());
@@ -74,7 +78,7 @@ export function NetworkLinesPanel({
 			)}
 			id={id}
 		>
-			{currentLineId !== undefined && (
+			{currentLineIds.length > 0 && (
 				<Link
 					className="mb-2 ml-0.5 block w- text-sm text-branding underline-offset-2 hover:underline dark:text-branding-foreground"
 					onClick={onNavigate}
@@ -84,13 +88,17 @@ export function NetworkLinesPanel({
 					{m.map_filter_whole_network()}
 				</Link>
 			)}
+			<p className="mb-2 ml-0.5 text-xs text-muted-foreground pointer-coarse:hidden">
+				{m.map_filter_multiple_lines_hint({ key: isApplePlatform() ? "⌘" : "Ctrl" })}
+			</p>
 			<ul className="grid grid-cols-[repeat(auto-fill,minmax(2.25rem,1fr))] gap-1" ref={listRef}>
 				{lines.map((line) => (
 					<LineChip
-						active={line.id === currentLineId}
+						active={currentLineIds.includes(line.id)}
 						key={line.id}
 						line={line}
 						onNavigate={onNavigate}
+						onToggle={onToggleLine}
 						textSpan={textSpans.get(line.id) ?? 1}
 					/>
 				))}
@@ -109,10 +117,11 @@ type LineChipProps = {
 	line: Line;
 	active: boolean;
 	onNavigate: () => void;
+	onToggle: (line: Line) => void;
 	textSpan: number;
 };
 
-function LineChip({ line, active, onNavigate, textSpan }: Readonly<LineChipProps>) {
+function LineChip({ line, active, onNavigate, onToggle, textSpan }: Readonly<LineChipProps>) {
 	const [cartridgeSpan, setCartridgeSpan] = useState(1);
 	const lineLabel = line.girouetteNumber ? line.number : m.network_lines_label({ lineNumber: line.number });
 	const span = line.cartridgeHref === null ? textSpan : cartridgeSpan;
@@ -120,12 +129,19 @@ function LineChip({ line, active, onNavigate, textSpan }: Readonly<LineChipProps
 	return (
 		<li className="min-w-0" style={{ gridColumn: `span ${span} / span ${span}` }}>
 			<Link
-				aria-current={active ? "page" : undefined}
+				aria-current={active ? "true" : undefined}
 				className={cn(
-					"flex h-7 w-full items-center justify-center rounded-md border border-black/10 text-sm font-bold transition outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-branding/60 aria-[current=page]:ring-2 aria-[current=page]:ring-branding aria-[current=page]:ring-offset-1 aria-[current=page]:ring-offset-card dark:border-white/10",
+					"flex h-7 w-full items-center justify-center rounded-md border border-black/10 text-sm font-bold transition outline-none hover:brightness-110 focus-visible:ring-2 focus-visible:ring-branding/60 aria-[current=true]:ring-2 aria-[current=true]:ring-branding aria-[current=true]:ring-offset-1 aria-[current=true]:ring-offset-card dark:border-white/10",
 					line.cartridgeHref === null ? "px-1" : "px-px",
 				)}
-				onClick={onNavigate}
+				onClick={(event: MouseEvent) => {
+					if (event.ctrlKey || event.metaKey) {
+						event.preventDefault();
+						onToggle(line);
+						return;
+					}
+					onNavigate();
+				}}
 				search={{ "line-id": line.id }}
 				style={{
 					backgroundColor: line.color ?? DEFAULT_LINE_COLOR,

@@ -51,7 +51,7 @@ export const getStopDeparturesTool = defineTool({
 		),
 	}),
 	handler: async ({ stopRef, lineId, direction }) => {
-		const result = await buildStopDepartures(stopRef, direction, lineId);
+		const result = await buildStopDepartures(stopRef, direction, lineId !== undefined ? [lineId] : undefined);
 		if ("error" in result) throw new ToolFailure(result.error ?? "Unable to compute departures.");
 
 		const { stop, stopPointRef, departures } = result.payload;

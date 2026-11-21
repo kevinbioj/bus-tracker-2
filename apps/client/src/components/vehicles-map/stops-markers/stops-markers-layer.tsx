@@ -315,11 +315,11 @@ const CLICKABLE_LAYERS = [
 
 type StopsMarkersProps = {
 	networkId?: number;
-	/** Ligne filtrée : seules les stations qu'elle dessert. */
-	lineId?: number;
+	/** Lignes filtrées : seules les stations qu'elles desservent. */
+	lineIds?: number[];
 };
 
-export function StopsMarkers({ networkId, lineId }: StopsMarkersProps) {
+export function StopsMarkers({ networkId, lineIds }: StopsMarkersProps) {
 	const map = useMap();
 	const { selectedRef, stopPointRef, selectStopArea, selectStopPoint, clearSelection } = useStopSelection();
 	const isCoarsePointer = useMediaQuery("(pointer: coarse)");
@@ -496,7 +496,7 @@ export function StopsMarkers({ networkId, lineId }: StopsMarkersProps) {
 	if (source === null) return null;
 	return (
 		<StopsMarkersData
-			lineId={lineId}
+			lineIds={lineIds}
 			networkId={networkId}
 			selectedRef={selectedRef}
 			selectedStopPointRef={stopPointRef}

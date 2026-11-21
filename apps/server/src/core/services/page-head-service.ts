@@ -1,5 +1,6 @@
 import type { VehicleJourneyLineType } from "@bus-tracker/contracts";
 import { and, asc, count, eq, isNotNull, isNull } from "drizzle-orm";
+import * as z from "zod";
 
 import * as m from "../../paraglide/messages.js";
 import type { Locale } from "../../paraglide/runtime.js";
@@ -184,16 +185,29 @@ async function resolveMapHead(search: URLSearchParams, locale: Locale): Promise<
 	const rawNetworkId = search.get("network-id");
 
 	if (rawLineId !== null) {
-		const lineId = idSchema.safeParse(rawLineId);
-		if (!lineId.success) return notFoundHead(locale);
+		const lineIds = z.array(idSchema).min(1).max(50).safeParse(rawLineId.split(","));
+		if (!lineIds.success) return notFoundHead(locale);
 
-		const line = await findLineDetails(lineId.data);
-		if (line === undefined) return notFoundHead(locale);
+		const lines = (await Promise.all(lineIds.data.map(findLineDetails))).filter((line) => line !== undefined);
+		const [firstLine] = lines;
+		if (
+			firstLine === undefined ||
+			lines.length !== lineIds.data.length ||
+			lines.some((line) => line.networkId !== firstLine.networkId)
+		) {
+			return notFoundHead(locale);
+		}
 
-		const network = await findNetworkSummary(line.networkId);
+		const network = await findNetworkSummary(firstLine.networkId);
 		if (network === null) return notFoundHead(locale);
 
-		const lineLabel = getLineLabel(line, locale);
+		const lineLabel = lines
+			.toSorted((a, b) => {
+				const sortOrderDiff = (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER);
+				return sortOrderDiff || Number.parseInt(a.number, 10) - Number.parseInt(b.number, 10);
+			})
+			.map((line) => getLineLabel(line, locale))
+			.join(", ");
 		const networkLabel = getNetworkLabel(network);
 		return {
 			title: m.page_title_map_line({ lineLabel, networkName: network.name }, { locale }),

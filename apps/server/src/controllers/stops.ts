@@ -8,7 +8,6 @@ import {
 	createParamValidator,
 	createQueryValidator,
 	idListSchema,
-	idSchema,
 	isOrderedBounds,
 	MAX_NETWORK_IDS,
 } from "../utils/validator-helpers.js";
@@ -17,8 +16,8 @@ const getStopMarkersQuery = z
 	.object({
 		...boundsQueryShape,
 		networkId: idListSchema(MAX_NETWORK_IDS),
-		// Ligne filtrée sur la carte : seules les stations qu'elle dessert.
-		lineId: idSchema.optional(),
+		// Lignes filtrées sur la carte : seules les stations qu'elles desservent.
+		lineId: idListSchema(50),
 		// Les quais ne servent qu'aux zooms les plus forts : inutile de les transporter en deçà.
 		withStopPoints: z
 			.enum(["true", "false"])
@@ -28,8 +27,8 @@ const getStopMarkersQuery = z
 	.refine(isOrderedBounds, BOUNDS_ERROR);
 
 hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) => {
-	const { networkId, ...filter } = c.req.valid("query");
-	const items = await findStopMarkers({ ...filter, networkIds: networkId });
+	const { networkId, lineId, ...filter } = c.req.valid("query");
+	const items = await findStopMarkers({ ...filter, networkIds: networkId, lineIds: lineId });
 	return c.json({ items, at: Temporal.Now.instant() });
 });
 
@@ -39,8 +38,8 @@ const getStopParams = z.object({
 
 const getStopDeparturesQuery = z.object({
 	direction: z.enum(["departures", "arrivals"]).default("departures"),
-	// Ligne filtrée sur la carte : le tableau ne présente qu'elle.
-	lineId: idSchema.optional(),
+	// Lignes filtrées sur la carte : le tableau ne présente qu'elles.
+	lineId: idListSchema(50),
 });
 
 hono.get(

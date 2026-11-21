@@ -46,6 +46,7 @@ export const realtimeClientMessageSchema = z.discriminatedUnion("type", [
 				...boundsShape,
 				networkIds: z.array(idSchema).max(50).optional(),
 				lineId: idSchema.optional(),
+				lineIds: z.array(idSchema).min(1).max(50).optional(),
 				withStopPoints: z.boolean(),
 			})
 			.nullable(),
@@ -57,6 +58,7 @@ export const realtimeClientMessageSchema = z.discriminatedUnion("type", [
 				ref: z.string().max(512),
 				direction: z.enum(["departures", "arrivals"]),
 				lineId: idSchema.optional(),
+				lineIds: z.array(idSchema).min(1).max(50).optional(),
 			})
 			.nullable(),
 	}),

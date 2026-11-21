@@ -14,7 +14,7 @@ import {
 	readDisplayedPositionTypes,
 } from "~/components/vehicles-map/displayed-position-types";
 import type { GirouetteData } from "~/components/vehicles-map/vehicles-markers/popup/girouette";
-import { client } from "./client";
+import { client, toSearchParams } from "./client";
 import type { VehicleAirConditioningStatus } from "./vehicles";
 
 export type { VehicleJourneyMarker };
@@ -80,7 +80,7 @@ export type VehicleJourneyMarkersFilter = {
 	embeddedNetworkId?: number;
 	/** Réseau choisi par l'utilisateur depuis le module de filtre. */
 	filteredNetworkId?: number;
-	lineId?: number;
+	lineIds?: number[];
 	/**
 	 * Course ciblée (`?marker-id=`) : elle est renvoyée quels que soient les filtres et préférences
 	 * d'affichage, sans quoi la carte ne trouverait jamais le marqueur sur lequel ouvrir la popup.
@@ -90,14 +90,14 @@ export type VehicleJourneyMarkersFilter = {
 
 export type VehicleJourneyMarkersParams = {
 	networkId?: number;
-	lineId?: number;
+	lineIds?: number[];
 	positionTypes?: PositionType[];
 	countryCodes?: string[];
 	includeMarker?: string;
 };
 
 export function getVehicleJourneyMarkersParams(
-	{ embeddedNetworkId, filteredNetworkId, lineId, targetedJourneyId }: VehicleJourneyMarkersFilter,
+	{ embeddedNetworkId, filteredNetworkId, lineIds, targetedJourneyId }: VehicleJourneyMarkersFilter,
 	activeMarkerId: string | null,
 ): VehicleJourneyMarkersParams {
 	const networkId = embeddedNetworkId ?? filteredNetworkId;
@@ -106,7 +106,7 @@ export function getVehicleJourneyMarkersParams(
 
 	return {
 		networkId,
-		lineId,
+		lineIds,
 		positionTypes: displayedPositionTypes.length < positionTypes.length ? [...displayedPositionTypes] : undefined,
 		// Le réseau étant imposé, filtrer par pays serait redondant — et masquerait tout si le pays
 		// du réseau se trouve décoché dans les préférences.
@@ -115,7 +115,7 @@ export function getVehicleJourneyMarkersParams(
 		// a été explicitement ciblé.
 		includeMarker:
 			targetedJourneyId ??
-			(lineId === undefined && filteredNetworkId === undefined ? (activeMarkerId ?? undefined) : undefined),
+			(lineIds === undefined && filteredNetworkId === undefined ? (activeMarkerId ?? undefined) : undefined),
 	};
 }
 
@@ -129,26 +129,28 @@ export const GetVehicleJourneyMarkersQuery = (
 		placeholderData: keepPreviousData,
 		refetchInterval: realtime ? false : 10_000,
 		staleTime: 20_000,
-		queryKey: ["vehicle-journeys", filter.embeddedNetworkId, filter.filteredNetworkId, filter.lineId],
+		queryKey: ["vehicle-journeys", filter.embeddedNetworkId, filter.filteredNetworkId, filter.lineIds],
 		queryFn: () => {
-			const { networkId, lineId, positionTypes, countryCodes, includeMarker } = getVehicleJourneyMarkersParams(
+			const { networkId, lineIds, positionTypes, countryCodes, includeMarker } = getVehicleJourneyMarkersParams(
 				filter,
 				localStorage.getItem("active-feature"),
 			);
 
 			return client
 				.get("/vehicle-journeys/markers", {
-					searchParams: {
-						swLat: String(Math.max(bounds.getSouthWest().lat, -90)),
-						swLon: String(Math.max(bounds.getSouthWest().lng, -180)),
-						neLat: String(Math.min(bounds.getNorthEast().lat, 90)),
-						neLon: String(Math.min(bounds.getNorthEast().lng, 180)),
-						networkId: networkId ? String(networkId) : undefined,
-						lineId: lineId ? String(lineId) : undefined,
-						positionTypes: positionTypes?.join(","),
-						countryCodes: countryCodes?.join(","),
-						includeMarker,
-					},
+					searchParams: toSearchParams(
+						{
+							swLat: String(Math.max(bounds.getSouthWest().lat, -90)),
+							swLon: String(Math.max(bounds.getSouthWest().lng, -180)),
+							neLat: String(Math.min(bounds.getNorthEast().lat, 90)),
+							neLon: String(Math.min(bounds.getNorthEast().lng, 180)),
+							networkId: networkId ? String(networkId) : undefined,
+							positionTypes: positionTypes?.join(","),
+							countryCodes: countryCodes?.join(","),
+							includeMarker,
+						},
+						{ lineId: lineIds },
+					),
 				})
 				.then((response) => response.json<{ items: VehicleJourneyMarker[] }>());
 		},

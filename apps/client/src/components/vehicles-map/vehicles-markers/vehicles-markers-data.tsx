@@ -55,7 +55,7 @@ type VehiclesMarkersDataProps = {
 	activeJourneyId: string | null;
 	embeddedNetworkId?: number;
 	filteredNetworkId?: number;
-	lineId?: number;
+	lineIds?: number[];
 	source: GeoJSONSource;
 };
 
@@ -63,7 +63,7 @@ export function VehiclesMarkersData({
 	activeJourneyId,
 	embeddedNetworkId,
 	filteredNetworkId,
-	lineId,
+	lineIds,
 	source,
 }: VehiclesMarkersDataProps) {
 	const map = useMap();
@@ -80,7 +80,7 @@ export function VehiclesMarkersData({
 	const filter = {
 		embeddedNetworkId,
 		filteredNetworkId,
-		lineId,
+		lineIds,
 		targetedJourneyId: targetedJourneyId ?? undefined,
 	};
 
@@ -168,8 +168,8 @@ export function VehiclesMarkersData({
 
 	// Clé du filtre actif, pour ne recadrer qu'une fois par filtre (ligne comme réseau).
 	const refocusKey =
-		lineId !== undefined
-			? `line:${lineId}`
+		lineIds !== undefined
+			? `line:${lineIds.join(",")}`
 			: filteredNetworkId !== undefined
 				? `network:${filteredNetworkId}`
 				: undefined;
@@ -201,7 +201,7 @@ export function VehiclesMarkersData({
 		bounds,
 		displayedPositionTypes.join(","),
 		displayedCountryCodes.join(","),
-		lineId,
+		lineIds,
 		embeddedNetworkId,
 		filteredNetworkId,
 	]);

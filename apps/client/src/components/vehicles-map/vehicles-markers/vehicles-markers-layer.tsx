@@ -167,10 +167,10 @@ const textLayerObject: AddLayerObject = {
 type VehicleMarkersProps = {
 	embeddedNetworkId?: number;
 	filteredNetworkId?: number;
-	lineId?: number;
+	lineIds?: number[];
 };
 
-export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineId }: VehicleMarkersProps) {
+export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineIds }: VehicleMarkersProps) {
 	const map = useMap();
 	// Course dont la popup est ouverte : partagée avec les marqueurs pour que le point suive
 	// le même instantané que les informations affichées.
@@ -180,11 +180,12 @@ export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineId }
 	useMapLayer(arrowsLayerObject, vehiclesLayerObject.id);
 	useMapLayer(arrowsOutlineLayerObject, arrowsLayerObject.id);
 	const textLayer = useMapLayer(textLayerObject);
+	const lineFiltered = lineIds !== undefined;
 
 	useEffect(() => {
 		if (textLayer === null) return;
 		if (!isStyleLoaded(map)) return;
-		if (lineId !== undefined) {
+		if (lineFiltered) {
 			map.setPaintProperty("vehicles-text", "icon-opacity", 0.7);
 			map.setPaintProperty("vehicles-text", "text-opacity", 1);
 			map.setLayerZoomRange("vehicles-text", 0, 24);
@@ -193,7 +194,7 @@ export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineId }
 			map.setPaintProperty("vehicles-text", "text-opacity", ["interpolate", ["linear"], ["zoom"], 13, 0, 13.1, 1]);
 			map.setLayerZoomRange("vehicles-text", 13, 24);
 		}
-	}, [textLayer, lineId, map]);
+	}, [textLayer, lineFiltered, map]);
 
 	useEffect(() => {
 		let abort = false;
@@ -251,13 +252,13 @@ export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineId }
 				activeJourneyId={activeJourneyId}
 				embeddedNetworkId={embeddedNetworkId}
 				filteredNetworkId={filteredNetworkId}
-				lineId={lineId}
+				lineIds={lineIds}
 				source={vehiclesSource}
 			/>
 			<VehiclesMarkersPopupRoot
 				embedMode={Boolean(embeddedNetworkId)}
 				layer={vehiclesLayer}
-				lineId={lineId}
+				lineId={lineIds?.length === 1 ? lineIds[0] : undefined}
 				onActiveJourneyChange={setActiveJourneyId}
 			/>
 		</>

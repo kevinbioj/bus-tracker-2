@@ -12,7 +12,7 @@ type UseRealtimeStopsOptions = {
 	bounds: LngLatBounds;
 	loaded: boolean;
 	networkId?: number;
-	lineId?: number;
+	lineIds?: number[];
 	withStopPoints: boolean;
 };
 
@@ -21,7 +21,7 @@ export function useRealtimeStops({
 	bounds,
 	loaded,
 	networkId,
-	lineId,
+	lineIds,
 	withStopPoints,
 }: UseRealtimeStopsOptions) {
 	const queryClient = useQueryClient();
@@ -65,7 +65,7 @@ export function useRealtimeStops({
 
 		queryKeysBySeq.current.set(
 			seq,
-			GetStopMarkersQuery(bounds, { enabled: loaded, networkId, lineId, withStopPoints }).queryKey,
+			GetStopMarkersQuery(bounds, { enabled: loaded, networkId, lineIds, withStopPoints }).queryKey,
 		);
 
 		const { swLat, swLon, neLat, neLon } = searchBounds(bounds, withStopPoints);
@@ -78,11 +78,11 @@ export function useRealtimeStops({
 				neLat: Math.min(neLat, 90),
 				neLon: Math.min(neLon, 180),
 				networkIds: networkId ? [networkId] : undefined,
-				lineId,
+				lineIds,
 				withStopPoints,
 			},
 		});
-	}, [connected, bounds, loaded, networkId, lineId, withStopPoints]);
+	}, [connected, bounds, loaded, networkId, lineIds, withStopPoints]);
 
 	useEffect(() => {
 		return () => {

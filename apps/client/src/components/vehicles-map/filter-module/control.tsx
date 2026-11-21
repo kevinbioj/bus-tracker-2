@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { type UseQueryResult, useQueries, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import {
@@ -19,11 +19,11 @@ import { useMap } from "~/adapters/maplibre-gl/map";
 import { useMapBounds } from "~/adapters/maplibre-gl/use-map-bounds";
 import type { Line, Network } from "~/api/networks";
 import { useRealtimeAvailable } from "~/api/realtime";
-import { GetLineAlertsQuery } from "~/api/service-alerts";
+import { GetLineAlertsQuery, type ServiceAlert } from "~/api/service-alerts";
 import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { ServiceAlertsButton } from "~/components/service-alerts/service-alerts-button";
 import { FilterModuleManager } from "~/components/vehicles-map/filter-module/manager";
-import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
+import { MAX_FILTERED_LINES, type MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
 import { NetworkLinesPanel, useNetworkActiveLines } from "~/components/vehicles-map/filter-module/network-lines-links";
 import { useMapTheme } from "~/components/vehicles-map/map-style";
 import * as m from "~/paraglide/messages";
@@ -72,7 +72,7 @@ function FilterModuleVehiclesCount({ filter, fixedNetworkId }: Readonly<FilterMo
 			{
 				embeddedNetworkId: fixedNetworkId,
 				filteredNetworkId: filter.kind === "network" ? filter.network.id : undefined,
-				lineId: filter.kind === "line" ? filter.line.id : undefined,
+				lineIds: filter.kind === "line" ? filter.lines.map((line) => line.id) : undefined,
 			},
 			realtime,
 		),
@@ -90,14 +90,77 @@ function FilterModuleVehiclesCount({ filter, fixedNetworkId }: Readonly<FilterMo
 	);
 }
 
+function combineLineAlerts(results: UseQueryResult<ServiceAlert[]>[]) {
+	const alerts = new Map<string, ServiceAlert>();
+	for (const alert of results.flatMap((result) => result.data ?? [])) alerts.set(alert.id, alert);
+	return [...alerts.values()];
+}
+
 /**
- * Info trafic de la ligne filtrée, à côté du compteur de véhicules. Indépendante du panneau des
+ * Info trafic des lignes filtrées, à côté du compteur de véhicules. Indépendante du panneau des
  * véhicules en ligne, qu'un réglage peut masquer.
  */
-function FilterModuleLineAlerts({ line }: Readonly<{ line: Line }>) {
+function FilterModuleLineAlerts({ lines }: Readonly<{ lines: Line[] }>) {
 	const realtime = useRealtimeAvailable();
-	const { data: alerts = [] } = useQuery(GetLineAlertsQuery(line.id, realtime));
+	const alerts = useQueries({
+		queries: lines.map((line) => GetLineAlertsQuery(line.id, realtime)),
+		combine: combineLineAlerts,
+	});
 	return <ServiceAlertsButton alerts={alerts} scope="line" />;
+}
+
+const MAX_DISPLAYED_LINE_BADGES = 4;
+
+function LineBadge({ line, compact }: Readonly<{ line: Line; compact: boolean }>) {
+	if (line.cartridgeHref) {
+		return (
+			<img
+				className={clsx("h-5 object-contain shrink-0", compact ? "max-w-12 sm:max-w-16" : "max-w-20 sm:max-w-32")}
+				src={line.cartridgeHref}
+				alt={line.number}
+			/>
+		);
+	}
+
+	return (
+		<div
+			className={clsx("flex justify-center rounded-sm", line.color !== null ? "min-w-6" : "min-w-0")}
+			style={{
+				backgroundColor: line.color ?? undefined,
+				color: line.textColor ?? undefined,
+			}}
+		>
+			<span
+				className={clsx(
+					"text-base leading-tight truncate",
+					compact ? "max-w-20" : "max-w-64",
+					line.color !== null && "font-bold px-1",
+				)}
+				title={line.number}
+			>
+				{line.number}
+			</span>
+		</div>
+	);
+}
+
+function LineBadges({ lines }: Readonly<{ lines: Line[] }>) {
+	const displayedLines =
+		lines.length > MAX_DISPLAYED_LINE_BADGES ? lines.slice(0, MAX_DISPLAYED_LINE_BADGES - 1) : lines;
+	const hiddenCount = lines.length - displayedLines.length;
+	const compact = lines.length > 1;
+
+	return (
+		<span
+			className="flex items-center gap-1 min-w-0"
+			title={compact ? lines.map((line) => line.number).join(", ") : undefined}
+		>
+			{displayedLines.map((line) => (
+				<LineBadge compact={compact} key={line.id} line={line} />
+			))}
+			{hiddenCount > 0 && <span className="shrink-0 text-sm text-muted-foreground tabular-nums">+{hiddenCount}</span>}
+		</span>
+	);
 }
 
 const subtleActionClassName =
@@ -122,6 +185,26 @@ export function FilterModuleControl({
 	const [linesOpen, setLinesOpen] = useState(false);
 	const linesPanelId = useId();
 	const lines = useNetworkActiveLines(fixedNetworkId === undefined ? filter?.network : undefined);
+	const filteredLines = filter?.kind === "line" ? filter.lines : [];
+	const singleLine = filteredLines.length === 1 ? filteredLines[0] : undefined;
+
+	const toggleLine = (line: Line) => {
+		if (filter?.network === undefined) return;
+		const selected = filteredLines.some(({ id }) => id === line.id);
+		if (!selected && filteredLines.length >= MAX_FILTERED_LINES) return;
+
+		const order = new Map(lines.map(({ id }, index) => [id, index]));
+		const nextLines = selected
+			? filteredLines.filter(({ id }) => id !== line.id)
+			: [...filteredLines, line].toSorted(
+					(a, b) => (order.get(a.id) ?? Number.POSITIVE_INFINITY) - (order.get(b.id) ?? Number.POSITIVE_INFINITY),
+				);
+		onFilterChange(
+			nextLines.length > 0
+				? { kind: "line", network: filter.network, lines: nextLines }
+				: { kind: "network", network: filter.network },
+		);
+	};
 
 	const linesToggleLabel = filter?.kind === "line" ? m.map_filter_change_line() : m.map_filter_choose_line();
 	const linesToggle = lines.length > 0 && (
@@ -211,40 +294,13 @@ export function FilterModuleControl({
 										</>
 									) : null}
 
-									{filter.line.cartridgeHref ? (
-										<img
-											className="h-5 max-w-20 sm:max-w-32 object-contain shrink-0"
-											src={filter.line.cartridgeHref}
-											alt={filter.line.number}
-										/>
-									) : (
-										<div
-											className={clsx(
-												"flex justify-center rounded-sm",
-												filter.line.color !== null ? "min-w-6" : "min-w-0",
-											)}
-											style={{
-												backgroundColor: filter.line.color ?? undefined,
-												color: filter.line.textColor ?? undefined,
-											}}
-										>
-											<span
-												className={clsx(
-													"max-w-64 text-base leading-tight truncate",
-													filter.line.color !== null && "font-bold px-1",
-												)}
-												title={filter.line.number}
-											>
-												{filter.line.number}
-											</span>
-										</div>
-									)}
+									<LineBadges lines={filter.lines} />
 								</>
 							)}
 
 							<FilterModuleVehiclesCount filter={filter} fixedNetworkId={fixedNetworkId} />
 
-							{filter.kind === "line" && <FilterModuleLineAlerts line={filter.line} />}
+							{filter.kind === "line" && <FilterModuleLineAlerts lines={filter.lines} />}
 
 							{withDataLink &&
 								(filter.kind === "network" ? (
@@ -259,24 +315,27 @@ export function FilterModuleControl({
 										<span className="hidden sm:inline">{m.map_filter_network_data()}</span>
 									</Link>
 								) : (
-									<Link
-										className={clsx(subtleActionClassName, "gap-1.5 h-7 px-1.5 sm:px-2.5 text-sm")}
-										params={{ lineId: `${filter.line.id}` }}
-										title={m.map_filter_line_data()}
-										to="/data/lines/$lineId"
-									>
-										<HistoryIcon className="shrink-0 size-4" />
-										<span className="hidden sm:inline">{m.map_filter_line_data()}</span>
-									</Link>
+									singleLine !== undefined && (
+										<Link
+											className={clsx(subtleActionClassName, "gap-1.5 h-7 px-1.5 sm:px-2.5 text-sm")}
+											params={{ lineId: `${singleLine.id}` }}
+											title={m.map_filter_line_data()}
+											to="/data/lines/$lineId"
+										>
+											<HistoryIcon className="shrink-0 size-4" />
+											<span className="hidden sm:inline">{m.map_filter_line_data()}</span>
+										</Link>
+									)
 								))}
 						</div>
 						{filter.network !== undefined && lines.length > 0 && (
 							<NetworkLinesPanel
-								currentLineId={filter.kind === "line" ? filter.line.id : undefined}
+								currentLineIds={filteredLines.map((line) => line.id)}
 								id={linesPanelId}
 								lines={lines}
 								network={filter.network}
 								onNavigate={() => setLinesOpen(false)}
+								onToggleLine={toggleLine}
 								open={linesOpen}
 							/>
 						)}

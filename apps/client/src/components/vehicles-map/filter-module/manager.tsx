@@ -101,7 +101,7 @@ export function FilterModuleManager({
 							onClose={() => setOpen(false)}
 							onLineChange={(line) => {
 								if (line !== undefined) {
-									onFilterChange({ kind: "line", network, line });
+									onFilterChange({ kind: "line", network, lines: [line] });
 									setOpen(false);
 								}
 							}}

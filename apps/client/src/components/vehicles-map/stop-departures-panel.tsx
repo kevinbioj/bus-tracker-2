@@ -283,10 +283,10 @@ function DepartureRow({
 
 /**
  * Prochains passages de l'arrêt sélectionné, lignes du réseau comprises, prêts à afficher — communs
- * au panneau et au drawer. Un réseau imposé (carte embarquée) restreint le tableau à ses lignes, une
- * ligne filtrée à elle seule.
+ * au panneau et au drawer. Un réseau imposé (carte embarquée) restreint le tableau à ses lignes, des
+ * lignes filtrées à elles seules.
  */
-function useStopDepartures({ networkId, lineId }: StopDeparturesPanelProps) {
+function useStopDepartures({ networkId, lineIds }: StopDeparturesPanelProps) {
 	const { selectedRef } = useStopSelection();
 	const [displayMode] = useNextCallsDisplayMode();
 	const [showWheelchairAccessibility] = useShowWheelchairAccessibility();
@@ -306,13 +306,13 @@ function useStopDepartures({ networkId, lineId }: StopDeparturesPanelProps) {
 
 	useEffect(() => {
 		if (!connected || selectedRef === null) return;
-		sendRealtimeMessage({ type: "watch-stop", stop: { ref: selectedRef, direction, lineId } });
+		sendRealtimeMessage({ type: "watch-stop", stop: { ref: selectedRef, direction, lineIds } });
 		return () => {
 			sendRealtimeMessage({ type: "watch-stop", stop: null });
 		};
-	}, [connected, selectedRef, direction, lineId]);
+	}, [connected, selectedRef, direction, lineIds]);
 
-	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef, direction, lineId, realtime));
+	const { data, isError, isPending } = useQuery(GetStopDeparturesQuery(selectedRef, direction, lineIds, realtime));
 	const { data: alerts } = useQuery(GetStopAlertsQuery(selectedRef, realtime));
 	// Les lignes des réseaux de la station, pour leur numéro, leurs couleurs et leur pictogramme : une
 	// requête au plus toutes les 5 min par réseau, souvent déjà en cache — le module de filtre fait la
@@ -781,8 +781,8 @@ function StopDeparturesDrawer(props: Readonly<StopDeparturesPanelProps>) {
 type StopDeparturesPanelProps = {
 	/** Réseau imposé par la carte embarquée : seules ses lignes figurent au tableau. */
 	networkId?: number;
-	/** Ligne filtrée sur la carte : elle seule figure au tableau. */
-	lineId?: number;
+	/** Lignes filtrées sur la carte : elles seules figurent au tableau. */
+	lineIds?: number[];
 };
 
 /** Prochains passages de l'arrêt sélectionné : panneau sur grand écran, drawer sur petit. */

@@ -11,7 +11,7 @@ import {
 
 import { useCache } from "../../utils/use-cache.js";
 import { journeyStore } from "../store/journey-store.js";
-import { findLineRefs, type ResolvedLine, resolveLineRefs } from "./line-ref-service.js";
+import { findLinesRefs, type ResolvedLine, resolveLineRefs } from "./line-ref-service.js";
 import { findStopAlerts } from "./service-alert-service.js";
 import {
 	findStopArea,
@@ -78,7 +78,7 @@ export type StopMarkersFilter = {
 	neLat: number;
 	neLon: number;
 	networkIds?: number[];
-	lineId?: number;
+	lineIds?: number[];
 	withStopPoints: boolean;
 };
 
@@ -88,10 +88,10 @@ export async function buildStopMarkers({
 	neLat,
 	neLon,
 	networkIds,
-	lineId,
+	lineIds,
 	withStopPoints,
 }: StopMarkersFilter) {
-	const lineRefs = lineId !== undefined ? new Set(await findLineRefs(lineId)) : undefined;
+	const lineRefs = lineIds !== undefined ? new Set(await findLinesRefs(lineIds)) : undefined;
 	const stopAreas = await findStopAreasWithin(
 		{ swLat, swLon, neLat, neLon },
 		{ limit: MARKERS_LIMIT, networkIds, lineRefs: lineRefs !== undefined ? [...lineRefs] : undefined },
@@ -447,7 +447,7 @@ function toStopDeparturesPayload(
 	stopArea: StopArea,
 	stopPointRef: string | undefined,
 	departures: ResolvedDeparture[],
-	lineId: number | undefined,
+	lineIds: number[] | undefined,
 ) {
 	return {
 		// La position permet au client de garder la station sélectionnée visible à tout niveau de zoom.
@@ -470,7 +470,9 @@ function toStopDeparturesPayload(
 		// Un passage dont la ligne reste inconnue n'aurait qu'un « ? » à montrer : il est écarté, avant la
 		// limite pour que le tableau reste plein — comme, sur une ligne filtrée, ceux des autres lignes.
 		departures: departures
-			.filter((departure) => departure.lineId !== undefined && (lineId === undefined || departure.lineId === lineId))
+			.filter(
+				(departure) => departure.lineId !== undefined && (lineIds === undefined || lineIds.includes(departure.lineId)),
+			)
 			.slice(0, DEPARTURES_LIMIT)
 			.map(({ lineRef, journeyRef, serviceDate, ...departure }) => departure),
 		at: Temporal.Now.instant(),
@@ -481,14 +483,14 @@ export type StopDeparturesPayload = ReturnType<typeof toStopDeparturesPayload>;
 
 const departuresInFlight = new Map<string, ReturnType<typeof computeStopDeparturesPayload>>();
 
-export async function buildStopDepartures(ref: string, direction: StopCallDirection, lineId?: number) {
-	const cacheKey = `${ref}|${direction}|${lineId ?? ""}`;
+export async function buildStopDepartures(ref: string, direction: StopCallDirection, lineIds?: number[]) {
+	const cacheKey = `${ref}|${direction}|${lineIds?.join(",") ?? ""}`;
 	const cached = departuresCache.get(cacheKey);
 	if (cached !== undefined) return { payload: cached };
 
 	let inFlight = departuresInFlight.get(cacheKey);
 	if (inFlight === undefined) {
-		inFlight = computeStopDeparturesPayload(cacheKey, ref, direction, lineId).finally(() =>
+		inFlight = computeStopDeparturesPayload(cacheKey, ref, direction, lineIds).finally(() =>
 			departuresInFlight.delete(cacheKey),
 		);
 		departuresInFlight.set(cacheKey, inFlight);
@@ -500,11 +502,11 @@ async function computeStopDeparturesPayload(
 	cacheKey: string,
 	ref: string,
 	direction: StopCallDirection,
-	lineId: number | undefined,
+	lineIds: number[] | undefined,
 ) {
-	const lineRefs = lineId !== undefined ? await findLineRefs(lineId) : undefined;
+	const lineRefs = lineIds !== undefined ? await findLinesRefs(lineIds) : undefined;
 	if (lineRefs !== undefined && lineRefs.length === 0) {
-		return { status: 400, error: `No line was found with id '${lineId}'.` } as const;
+		return { status: 400, error: `No line was found with id '${lineIds?.join("', '")}'.` } as const;
 	}
 
 	const stop = await resolveStop(ref);
@@ -536,7 +538,7 @@ async function computeStopDeparturesPayload(
 
 	departures.sort((a, b) => Date.parse(a.expectedTime ?? a.aimedTime) - Date.parse(b.expectedTime ?? b.aimedTime));
 
-	const payload = toStopDeparturesPayload(stopArea, stopPointRef, departures, lineId);
+	const payload = toStopDeparturesPayload(stopArea, stopPointRef, departures, lineIds);
 
 	departuresCache.set(cacheKey, payload);
 	return { payload };
@@ -552,10 +554,10 @@ export async function buildStopAlerts(ref: string) {
 
 /** Marqueurs de l'emprise, arrondie pour que deux cadrages voisins partagent la même entrée de cache. */
 export async function findStopMarkers(filter: StopMarkersFilter) {
-	const { swLat, swLon, neLat, neLon, networkIds, lineId, withStopPoints } = filter;
+	const { swLat, swLon, neLat, neLon, networkIds, lineIds, withStopPoints } = filter;
 	const cacheKey = [swLat, swLon, neLat, neLon]
 		.map((bound) => bound.toFixed(3))
-		.concat(networkIds?.join(",") ?? "", String(lineId ?? ""), String(withStopPoints))
+		.concat(networkIds?.join(",") ?? "", lineIds?.join(",") ?? "", String(withStopPoints))
 		.join("|");
 
 	return (await markersCache.getOrLoad(cacheKey, () => buildStopMarkers(filter))).items;

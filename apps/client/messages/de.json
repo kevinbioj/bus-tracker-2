@@ -173,6 +173,7 @@
 	"map_filter_whole_network": "Gesamtes Netz anzeigen",
 	"map_filter_change_line": "Linie wechseln",
 	"map_filter_choose_line": "Linie auswählen",
+	"map_filter_multiple_lines_hint": "{key}+Klick, um mehrere Linien anzuzeigen",
 	"map_filter_vehicles": "Fahrzeuge filtern",
 	"map_filter_by_line": "Nach Linie filtern",
 	"map_filter_by_network_or_line": "Nach Netz oder Linie filtern",

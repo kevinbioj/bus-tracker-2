@@ -12,7 +12,12 @@ import { GetVehicleJourneyMarkersQuery } from "~/api/vehicle-journeys";
 import { MapTour } from "~/components/onboarding/map-tour";
 import { DebugCoordinates } from "~/components/vehicles-map/debug-coordinates";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
-import type { MapFilter } from "~/components/vehicles-map/filter-module/map-filter";
+import {
+	lineIdsSearchParser,
+	MAX_FILTERED_LINES,
+	type MapFilter,
+	resolveFilteredLines,
+} from "~/components/vehicles-map/filter-module/map-filter";
 import {
 	registerGeolocateControl,
 	triggerGeolocateWhenReady,
@@ -37,7 +42,7 @@ import { notifyPseudoFullscreen, PortalThemeContext } from "~/hooks/use-portal-c
 type VehiclesMapProps = ComponentPropsWithoutRef<"div">;
 
 export function VehiclesMap(props: VehiclesMapProps) {
-	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
+	const [lineIds, setLineIds] = useQueryState("line-id", lineIdsSearchParser);
 	const { selectedRef: selectedStopRef } = useStopSelection();
 	const [showStops] = useShowStops();
 	const [networkId, setNetworkId] = useQueryState("network-id", parseAsInteger);
@@ -45,6 +50,11 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	const [geolocateOnStart] = useGeolocateOnStart();
 
 	const realtime = isRealtimeAvailable(useRealtimeConnection());
+	const urlLineIds = useMemo(
+		() => (lineIds !== null && lineIds.length > 0 ? [...new Set(lineIds)].slice(0, MAX_FILTERED_LINES) : undefined),
+		[lineIds],
+	);
+	const lineId = urlLineIds?.[0] ?? null;
 	const { data: line, isPending: isLinePending } = useQuery(GetLineQuery(lineId ?? undefined, realtime));
 	// Une ligne filtrée impose son réseau ; sinon le réseau filtré vient directement de l'URL.
 	const resolvedNetworkId = line?.networkId ?? networkId ?? undefined;
@@ -56,14 +66,22 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	// La requête garde les données précédentes en attendant les suivantes, y compris une fois désactivée :
 	// sans ce garde-fou, le réseau quitté survivrait au filtre et restreindrait encore les arrêts.
 	const filteredNetwork = networkData?.id === filteredNetworkId ? networkData : undefined;
-	const filteredLine = filteredNetwork?.lines.find((line) => line.id === lineId);
+	const filteredLines = useMemo(
+		() => resolveFilteredLines(filteredNetwork?.lines ?? [], urlLineIds ?? null),
+		[filteredNetwork, urlLineIds],
+	);
+	const filteredLineIds = useMemo(
+		() => (filteredLines.length > 0 ? filteredLines.map((line) => line.id) : undefined),
+		[filteredLines],
+	);
+	const filteredLine = filteredLines.length === 1 ? filteredLines[0] : undefined;
 	const filteredNetworkOnly = lineId === null && networkId !== null ? filteredNetwork : undefined;
 
 	const filter = useMemo<MapFilter | undefined>(() => {
-		if (filteredLine !== undefined) return { kind: "line", network: filteredNetwork, line: filteredLine };
+		if (filteredLines.length > 0) return { kind: "line", network: filteredNetwork, lines: filteredLines };
 		if (filteredNetworkOnly !== undefined) return { kind: "network", network: filteredNetworkOnly };
 		return undefined;
-	}, [filteredLine, filteredNetwork, filteredNetworkOnly]);
+	}, [filteredLines, filteredNetwork, filteredNetworkOnly]);
 
 	const [initialLocation] = useState(() => {
 		// location in url has priority over local storage location. Read once rather than subscribed
@@ -141,10 +159,10 @@ export function VehiclesMap(props: VehiclesMapProps) {
 	// Les deux filtres sont mutuellement exclusifs : en poser un efface toujours l'autre.
 	const onFilterChange = useCallback(
 		(filter?: MapFilter) => {
-			setLineId(filter?.kind === "line" ? filter.line.id : null);
+			setLineIds(filter?.kind === "line" ? filter.lines.map((line) => line.id) : null);
 			setNetworkId(filter?.kind === "network" ? filter.network.id : null);
 		},
-		[setLineId, setNetworkId],
+		[setLineIds, setNetworkId],
 	);
 
 	return (
@@ -153,15 +171,15 @@ export function VehiclesMap(props: VehiclesMapProps) {
 				<MapThemeStyle initialTheme={initialMapTheme} theme={mapTheme} />
 				<PositionSave />
 				<DebugCoordinates />
-				<VehiclesMarkers filteredNetworkId={filteredNetworkOnly?.id} lineId={filteredLine?.id} />
+				<VehiclesMarkers filteredNetworkId={filteredNetworkOnly?.id} lineIds={filteredLineIds} />
 				{/*
-				 * Arrêts du réseau filtré, ou de la ligne filtrée : celle-ci est lue dans l'URL, pour que les
-				 * arrêts des autres lignes ne s'affichent pas le temps de la charger. Elle impose son réseau.
+				 * Arrêts du réseau filtré, ou des lignes filtrées : celles-ci sont lues dans l'URL, pour que les
+				 * arrêts des autres lignes ne s'affichent pas le temps de les charger. Elles imposent leur réseau.
 				 */}
 				{showStops && (
-					<StopsMarkers lineId={lineId ?? undefined} networkId={lineId === null ? filteredNetwork?.id : undefined} />
+					<StopsMarkers lineIds={urlLineIds} networkId={lineId === null ? filteredNetwork?.id : undefined} />
 				)}
-				{showStops && selectedStopRef !== null && <StopDeparturesPanel lineId={lineId ?? undefined} />}
+				{showStops && selectedStopRef !== null && <StopDeparturesPanel lineIds={urlLineIds} />}
 				{filteredLine !== undefined && (showIdentifiedVehiclesPanel || filteredLine.type === "RAIL") && (
 					<LineVehiclesPanel
 						lineId={filteredLine.id}

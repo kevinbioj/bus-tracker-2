@@ -339,13 +339,17 @@ onStopAreasInvalidated(() => {
 	}
 });
 
-function stopKeyOf({ ref, direction, lineId }: RealtimeStopWatch) {
-	return `${ref}|${direction}|${lineId ?? ""}`;
+function lineIdsOf({ lineId, lineIds }: { lineId?: number; lineIds?: number[] }) {
+	return lineIds ?? (lineId !== undefined ? [lineId] : undefined);
+}
+
+function stopKeyOf(watch: RealtimeStopWatch) {
+	return `${watch.ref}|${watch.direction}|${lineIdsOf(watch)?.join(",") ?? ""}`;
 }
 
 async function loadStopDepartures(watch: RealtimeStopWatch): Promise<StopDeparturesResult | undefined> {
 	try {
-		return await buildStopDepartures(watch.ref, watch.direction, watch.lineId);
+		return await buildStopDepartures(watch.ref, watch.direction, lineIdsOf(watch));
 	} catch (error) {
 		console.error(`✘ Failed to build departures of stop '${watch.ref}':`, error);
 		return undefined;
@@ -356,11 +360,10 @@ async function composeStopDepartures(message: UpdateMessage, context: StopContex
 	const result = prebuilt ?? (await loadStopDepartures(context.watch));
 	if (result === undefined) return;
 
-	const { ref, direction, lineId } = context.watch;
 	if ("error" in result) {
 		if (context.departuresKey === "unavailable") return;
 		context.departuresKey = "unavailable";
-		message.stopDepartures = { ref, direction, lineId, unavailable: true };
+		message.stopDepartures = { ...context.watch, unavailable: true };
 		return;
 	}
 
@@ -368,7 +371,7 @@ async function composeStopDepartures(message: UpdateMessage, context: StopContex
 	if (departuresKey === context.departuresKey) return;
 
 	context.departuresKey = departuresKey;
-	message.stopDepartures = { ref, direction, lineId, departures: result.payload };
+	message.stopDepartures = { ...context.watch, departures: result.payload };
 }
 
 async function composeStopAlerts(message: UpdateMessage, context: StopContext) {
@@ -594,7 +597,8 @@ function handleMessage(connection: Connection, message: RealtimeClientMessage) {
 			return;
 		}
 
-		connection.stops = { seq, filter: subscription };
+		const { lineId, lineIds, ...filter } = subscription;
+		connection.stops = { seq, filter: { ...filter, lineIds: lineIdsOf({ lineId, lineIds }) } };
 		enqueue(connection, createUpdateMessage(), (update) => composeStops(update, connection, seq));
 		return;
 	}

@@ -2,7 +2,7 @@ import type { CallOnDemand, StopAreaMode, StopCallDirection } from "@bus-tracker
 import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import type { LngLatBounds } from "react-map-gl/maplibre";
 
-import { client } from "./client";
+import { client, toSearchParams } from "./client";
 
 /** Quai d'une station : un arrêt physique, avec sa position propre. */
 export type StopPoint = {
@@ -131,9 +131,9 @@ export const GetStopMarkersQuery = (
 	{
 		enabled,
 		networkId,
-		lineId,
+		lineIds,
 		withStopPoints,
-	}: { enabled: boolean; networkId?: number; lineId?: number; withStopPoints: boolean },
+	}: { enabled: boolean; networkId?: number; lineIds?: number[]; withStopPoints: boolean },
 	realtime = false,
 ) =>
 	queryOptions({
@@ -141,33 +141,35 @@ export const GetStopMarkersQuery = (
 		placeholderData: keepPreviousData,
 		// L'inventaire ne bouge qu'au rythme des ressources GTFS : inutile de le sonder.
 		staleTime: 300_000,
-		queryKey: ["stops", networkId, lineId, withStopPoints],
+		queryKey: ["stops", networkId, lineIds, withStopPoints],
 		queryFn: () => {
 			const { swLat, swLon, neLat, neLon } = searchBounds(bounds, withStopPoints);
 			return client
 				.get("/stops/markers", {
-					searchParams: {
-						swLat: String(Math.max(swLat, -90)),
-						swLon: String(Math.max(swLon, -180)),
-						neLat: String(Math.min(neLat, 90)),
-						neLon: String(Math.min(neLon, 180)),
-						networkId: networkId ? String(networkId) : undefined,
-						lineId: lineId !== undefined ? String(lineId) : undefined,
-						withStopPoints: String(withStopPoints),
-					},
+					searchParams: toSearchParams(
+						{
+							swLat: String(Math.max(swLat, -90)),
+							swLon: String(Math.max(swLon, -180)),
+							neLat: String(Math.min(neLat, 90)),
+							neLon: String(Math.min(neLon, 180)),
+							networkId: networkId ? String(networkId) : undefined,
+							withStopPoints: String(withStopPoints),
+						},
+						{ lineId: lineIds },
+					),
 				})
 				.then((response) => response.json<{ items: StopMarker[] }>());
 		},
 	});
 
 /**
- * Prochains départs de l'arrêt, ou, à l'inverse, ses prochaines arrivées — ceux de la seule ligne
- * filtrée sur la carte, s'il y en a une.
+ * Prochains départs de l'arrêt, ou, à l'inverse, ses prochaines arrivées — ceux des seules lignes
+ * filtrées sur la carte, s'il y en a.
  */
 export const GetStopDeparturesQuery = (
 	stopRef: string | null,
 	direction: StopCallDirection = "departures",
-	lineId?: number,
+	lineIds?: number[],
 	realtime = false,
 ) =>
 	queryOptions({
@@ -175,11 +177,11 @@ export const GetStopDeparturesQuery = (
 		retry: false,
 		refetchInterval: realtime ? false : 5_000,
 		staleTime: 4_000,
-		queryKey: ["stop-departures", stopRef, direction, lineId],
+		queryKey: ["stop-departures", stopRef, direction, lineIds],
 		queryFn: () =>
 			client
 				.get(`/stops/${encodeURIComponent(stopRef!)}/departures`, {
-					searchParams: { direction, lineId: lineId !== undefined ? String(lineId) : undefined },
+					searchParams: toSearchParams({ direction }, { lineId: lineIds }),
 				})
 				.then((response) => response.json<StopDepartures>()),
 	});

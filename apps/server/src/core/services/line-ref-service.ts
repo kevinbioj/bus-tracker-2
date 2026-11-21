@@ -50,3 +50,7 @@ export async function findLineRefs(lineId: number) {
 	}
 	return refs;
 }
+
+export async function findLinesRefs(lineIds: number[]) {
+	return (await Promise.all(lineIds.map(findLineRefs))).flat();
+}

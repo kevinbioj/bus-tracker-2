@@ -153,7 +153,7 @@ const isFontLoaded = () => document.fonts.check(LINE_BADGES_FONT);
 
 type StopsMarkersDataProps = {
 	networkId?: number;
-	lineId?: number;
+	lineIds?: number[];
 	selectedStopPointRef: string | null;
 	expandedStopRef: string | null;
 	/** Référence du tableau ouvert : station, ou quai. */
@@ -164,7 +164,7 @@ type StopsMarkersDataProps = {
 export function StopsMarkersData({
 	expandedStopRef,
 	networkId,
-	lineId,
+	lineIds,
 	selectedRef,
 	selectedStopPointRef,
 	source,
@@ -183,7 +183,7 @@ export function StopsMarkersData({
 		};
 	}, [map]);
 
-	const lineOnly = lineId !== undefined;
+	const lineOnly = lineIds !== undefined;
 	const loaded = level !== "none";
 
 	const realtimeStatus = useRealtimeStatus();
@@ -191,7 +191,7 @@ export function StopsMarkersData({
 	const withStopPoints = lineOnly || level === "points";
 
 	const { data, refetch } = useQuery(
-		GetStopMarkersQuery(bounds, { enabled: loaded, networkId, lineId, withStopPoints }, realtime),
+		GetStopMarkersQuery(bounds, { enabled: loaded, networkId, lineIds, withStopPoints }, realtime),
 	);
 
 	useRealtimeStops({
@@ -199,7 +199,7 @@ export function StopsMarkersData({
 		bounds,
 		loaded,
 		networkId,
-		lineId,
+		lineIds,
 		withStopPoints,
 	});
 
@@ -253,7 +253,7 @@ export function StopsMarkersData({
 	// (toutes les 5 s), elle non — le partage structurel de React Query en garde la référence, et la
 	// source des arrêts n'est pas réécrite pour rien.
 	const { data: selectedStop } = useQuery({
-		...GetStopDeparturesQuery(selectedRef, "departures", lineId, realtime),
+		...GetStopDeparturesQuery(selectedRef, "departures", lineIds, realtime),
 		select: selectStop,
 	});
 
@@ -271,7 +271,7 @@ export function StopsMarkersData({
 		}
 
 		if (!realtime) refetch();
-	}, [realtime, bounds, networkId, lineId, loaded, level]);
+	}, [realtime, bounds, networkId, lineIds, loaded, level]);
 
 	const { geojson, badges } = useMemo(() => {
 		// Tant que le tableau n'est pas chargé, seule une station sélectionnée est connue de l'URL.

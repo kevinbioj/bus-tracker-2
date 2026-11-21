@@ -2,6 +2,7 @@ import { parseAsInteger, useQueryState } from "nuqs";
 import { useLayoutEffect, useRef, useState } from "react";
 
 import type { DisposeableVehicleJourney } from "~/api/vehicle-journeys";
+import { lineIdsSearchParser } from "~/components/vehicles-map/filter-module/map-filter";
 import {
 	Girouette,
 	type GirouetteData,
@@ -60,7 +61,7 @@ type VehicleGirouetteProps = {
 
 export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouetteProps>) {
 	const girouette = journey.girouette;
-	const [, setLineId] = useQueryState("line-id", parseAsInteger);
+	const [, setLineIds] = useQueryState("line-id", lineIdsSearchParser);
 	const [, setNetworkId] = useQueryState("network-id", parseAsInteger);
 
 	const line = useLine(journey.networkId, journey.lineId);
@@ -71,7 +72,7 @@ export function VehicleGirouette({ journey, width }: Readonly<VehicleGirouettePr
 
 	// Les deux filtres sont exclusifs : passer sur une ligne lève un éventuel filtre réseau.
 	const onRouteNumberClick = () => {
-		setLineId(journey.lineId ?? null);
+		setLineIds(journey.lineId !== undefined ? [journey.lineId] : null);
 		setNetworkId(null);
 	};
 

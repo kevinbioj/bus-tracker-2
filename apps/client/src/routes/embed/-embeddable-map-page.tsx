@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { FullscreenControl, GeolocateControl, type Map as MaplibreMap, NavigationControl } from "maplibre-gl";
-import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo } from "react";
 
 import { MapComponent } from "~/adapters/maplibre-gl/map";
@@ -11,6 +11,11 @@ import { NoIndex } from "~/components/seo";
 import { EmbedDisplaySettingsProvider } from "~/components/vehicles-map/embed-display-settings";
 import { EmbedSettingsControl } from "~/components/vehicles-map/embed-settings-control";
 import { FilterModuleControl } from "~/components/vehicles-map/filter-module/control";
+import {
+	lineIdsSearchParser,
+	MAX_FILTERED_LINES,
+	resolveFilteredLines,
+} from "~/components/vehicles-map/filter-module/map-filter";
 import { getMapStyleUrl, withAbsoluteSpriteUrls } from "~/components/vehicles-map/map-style";
 import { nextCallsDisplayModes } from "~/components/vehicles-map/next-calls-display-mode";
 import { Signature } from "~/components/vehicles-map/signature";
@@ -25,7 +30,7 @@ export default function EmbeddableMapPage() {
 	const { networkId } = useParams({ from: "/embed/$networkId" });
 	useRealtimeConnection();
 
-	const [lineId, setLineId] = useQueryState("line-id", parseAsInteger);
+	const [lineIds, setLineIds] = useQueryState("line-id", lineIdsSearchParser);
 	const [withFullscreen] = useQueryState("with-fullscreen", parseAsString);
 	const [withGeolocate] = useQueryState("with-geolocate", parseAsString);
 	// Réglages d'affichage choisis par l'intégrateur, tant que le visiteur ne les a pas changés depuis
@@ -40,7 +45,14 @@ export default function EmbeddableMapPage() {
 	const { selectedRef: selectedStopRef } = useStopSelection();
 
 	const { data: network } = useSuspenseQuery(GetNetworkQuery(+networkId, true));
-	const filteredLine = network.lines.find((line) => line.id === lineId);
+	const filteredLines = useMemo(
+		() => resolveFilteredLines(network.lines, lineIds).slice(0, MAX_FILTERED_LINES),
+		[network.lines, lineIds],
+	);
+	const filteredLineIds = useMemo(
+		() => (filteredLines.length > 0 ? filteredLines.map((line) => line.id) : undefined),
+		[filteredLines],
+	);
 
 	const initialDisplaySettings = useMemo(
 		() => ({
@@ -108,15 +120,17 @@ export default function EmbeddableMapPage() {
 					ref={onMap}
 				>
 					<FilterModuleControl
-						filter={filteredLine ? { kind: "line", network, line: filteredLine } : undefined}
+						filter={filteredLines.length > 0 ? { kind: "line", network, lines: filteredLines } : undefined}
 						fixedNetworkId={+networkId}
-						onFilterChange={(filter) => setLineId(filter?.kind === "line" ? filter.line.id : null)}
+						onFilterChange={(filter) =>
+							setLineIds(filter?.kind === "line" ? filter.lines.map((line) => line.id) : null)
+						}
 						withDataLink={false}
 					/>
-					<VehiclesMarkers embeddedNetworkId={+networkId} lineId={filteredLine?.id} />
-					{/* Comme sur la carte principale, une ligne filtrée ne montre que ses arrêts et ses passages. */}
-					<StopsMarkers lineId={filteredLine?.id} networkId={+networkId} />
-					{selectedStopRef !== null && <StopDeparturesPanel lineId={filteredLine?.id} networkId={+networkId} />}
+					<VehiclesMarkers embeddedNetworkId={+networkId} lineIds={filteredLineIds} />
+					{/* Comme sur la carte principale, des lignes filtrées ne montrent que leurs arrêts et leurs passages. */}
+					<StopsMarkers lineIds={filteredLineIds} networkId={+networkId} />
+					{selectedStopRef !== null && <StopDeparturesPanel lineIds={filteredLineIds} networkId={+networkId} />}
 					<EmbedSettingsControl />
 					<Signature />
 				</MapComponent>

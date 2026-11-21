@@ -69,8 +69,8 @@ function applyJourneyContext(queryClient: QueryClient, message: RealtimeMessage)
 	}
 
 	if (message.stopDepartures !== undefined) {
-		const { ref, direction, lineId } = message.stopDepartures;
-		const query = GetStopDeparturesQuery(ref, direction, lineId);
+		const { ref, direction, lineId, lineIds } = message.stopDepartures;
+		const query = GetStopDeparturesQuery(ref, direction, lineIds ?? (lineId !== undefined ? [lineId] : undefined));
 		if ("unavailable" in message.stopDepartures) {
 			void queryClient.fetchQuery({ ...query, staleTime: 0 }).catch(() => undefined);
 		} else {
@@ -141,7 +141,7 @@ export function useRealtimeMarkers({
 		});
 	}, [connected, queryClient]);
 
-	const { embeddedNetworkId, filteredNetworkId, lineId } = filter;
+	const { embeddedNetworkId, filteredNetworkId, lineIds } = filter;
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: resubscribing is driven by these values
 	useEffect(() => {
@@ -160,12 +160,12 @@ export function useRealtimeMarkers({
 			neLat: Math.min(bounds.getNorthEast().lat, 90),
 			neLon: Math.min(bounds.getNorthEast().lng, 180),
 			networkIds: params.networkId ? [params.networkId] : undefined,
-			lineIds: params.lineId ? [params.lineId] : undefined,
+			lineIds: params.lineIds,
 			positionTypes: params.positionTypes,
 			countryCodes: params.countryCodes,
 			includeMarker: params.includeMarker,
 		});
-	}, [connected, bounds, embeddedNetworkId, filteredNetworkId, lineId, lastTargetedJourneyId, preferencesKey]);
+	}, [connected, bounds, embeddedNetworkId, filteredNetworkId, lineIds, lastTargetedJourneyId, preferencesKey]);
 
 	useEffect(() => {
 		if (!connected) return;

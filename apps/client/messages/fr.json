@@ -164,6 +164,7 @@
 	"map_filter_whole_network": "Voir tout le réseau",
 	"map_filter_change_line": "Changer de ligne",
 	"map_filter_choose_line": "Choisir une ligne",
+	"map_filter_multiple_lines_hint": "{key} + clic pour afficher plusieurs lignes",
 	"map_filter_vehicles": "Filtrer les véhicules",
 	"map_filter_by_line": "Filtrer par ligne",
 	"map_filter_by_network_or_line": "Filtrer par réseau ou ligne",
