@@ -70,7 +70,7 @@ export default defineConfig({
 				// pour que ces URLs correspondent toujours au precache, déjà révisionné par Workbox.
 				ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^v$/],
 				maximumFileSizeToCacheInBytes: 16_777_216,
-				navigateFallbackDenylist: [/^\/api/, /^\/llms\.txt$/],
+				navigateFallbackDenylist: [/^\/api/, /^\/llms\.txt$/, /^\/sitemaps?[./]/],
 				runtimeCaching: [
 					{
 						urlPattern: /^https:\/\/(?:tiles\.openfreemap\.org|tiles\.bus-tracker\.fr)\/.*/i,
