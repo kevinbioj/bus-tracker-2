@@ -17,6 +17,7 @@ export type Network = {
 	regionId: number | null;
 	timezone: string;
 	embedMapCenter: [number, number, number];
+	featuredOrder: number | null;
 };
 
 export type Operator = {

@@ -20,7 +20,10 @@ export type PageHead = {
 	title: string;
 	description?: string;
 	canonicalPath: string | null;
+	breadcrumb?: BreadcrumbItem[];
 };
+
+export type BreadcrumbItem = { name: string; path: string };
 
 const CACHE_TTL = 5 * 60 * 1000;
 const MAX_CACHED_ENTITIES = 5000;
@@ -207,10 +210,19 @@ async function resolveMapHead(search: URLSearchParams, locale: Locale): Promise<
 
 		const { network, lines } = data;
 		const modes = formatNetworkModes(lines, locale);
+		const networkLabel = getNetworkLabel(network);
+		const canonicalPath = lines.some(isActiveLine) ? `/?network-id=${network.id}` : null;
 		return {
 			title: m.page_title_map_network({ modes, networkName: network.name }, { locale }),
-			description: m.page_description_map_network({ modes, network: getNetworkLabel(network) }, { locale }),
-			canonicalPath: lines.some(isActiveLine) ? `/?network-id=${network.id}` : null,
+			description: m.page_description_map_network({ modes, network: networkLabel }, { locale }),
+			canonicalPath,
+			breadcrumb:
+				canonicalPath === null
+					? undefined
+					: [
+							{ name: "Bus Tracker", path: "/" },
+							{ name: networkLabel, path: canonicalPath },
+						],
 		};
 	}
 

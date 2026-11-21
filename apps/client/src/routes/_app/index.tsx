@@ -4,9 +4,10 @@ import { z } from "zod";
 
 import { GetLineQuery } from "~/api/lines";
 import { GetNetworkQuery } from "~/api/networks";
-import { Canonical, NoIndex } from "~/components/seo";
+import { BreadcrumbJsonLd, Canonical, NoIndex } from "~/components/seo";
 import { VehiclesMap } from "~/components/vehicles-map/vehicles-map";
 import * as m from "~/paraglide/messages";
+import { PopularNetworksNav } from "~/routes/_app/-components/popular-networks-nav";
 import { getLineLabel } from "~/routes/_app/data/-components/lines/line-identity";
 import { formatNetworkModes, getNetworkLabel, isActiveLine } from "~/utils/network-seo";
 
@@ -27,6 +28,7 @@ type MapPageHead = {
 	description: string;
 	heading: string;
 	canonicalPath: string | null;
+	breadcrumb?: { name: string; path: string }[];
 };
 
 const defaultHead = (canonicalPath: string | null): MapPageHead => ({
@@ -66,11 +68,19 @@ function useMapPageHead(): MapPageHead | undefined {
 	}
 
 	const modes = formatNetworkModes(network.lines);
+	const canonicalPath = network.lines.some(isActiveLine) ? `/?network-id=${network.id}` : null;
 	return {
 		title: m.page_title_map_network({ modes, networkName: network.name }),
 		description: m.page_description_map_network({ modes, network: networkLabel }),
 		heading: m.map_page_heading_network({ modes, network: networkLabel }),
-		canonicalPath: network.lines.some(isActiveLine) ? `/?network-id=${network.id}` : null,
+		canonicalPath,
+		breadcrumb:
+			canonicalPath === null
+				? undefined
+				: [
+						{ name: "Bus Tracker", path: "/" },
+						{ name: networkLabel, path: canonicalPath },
+					],
 	};
 }
 
@@ -84,12 +94,14 @@ function MapPage() {
 					<title>{head.title}</title>
 					<meta content={head.description} name="description" />
 					{head.canonicalPath === null ? <NoIndex /> : <Canonical path={head.canonicalPath} />}
+					{head.breadcrumb !== undefined && <BreadcrumbJsonLd items={head.breadcrumb} />}
 				</>
 			)}
 			<style>{` body { background-color: var(--color-branding); } `}</style>
 			<main>
 				<h1 className="sr-only">{head?.heading ?? m.map_page_heading()}</h1>
 				<VehiclesMap className="h-[calc(100dvh-56px)]" />
+				{head?.canonicalPath === "/" && <PopularNetworksNav />}
 			</main>
 		</>
 	);

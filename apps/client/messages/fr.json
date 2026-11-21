@@ -355,6 +355,8 @@
 	"map_page_heading": "Bus Tracker : carte des bus, tramways, métros et trains en temps réel",
 	"map_page_heading_network": "{network} : carte des {modes} en direct",
 	"map_page_heading_line": "{lineLabel} – {network} : carte en direct",
+	"map_popular_networks": "Réseaux populaires",
+	"map_popular_network_link": "{network} en direct",
 	"page_description_attributions": "Sources des données ouvertes, horaires théoriques et temps réel, utilisées par Bus Tracker pour chaque réseau de transport.",
 	"page_description_data": "Les {networkCount} de transport en commun suivis par Bus Tracker : véhicules en service, lignes et historique d'activité de chaque réseau.",
 	"page_description_data_region": "{regionName} : réseaux de transport en commun suivis en temps réel par Bus Tracker ({networkNames}).",

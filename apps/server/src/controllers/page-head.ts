@@ -1,4 +1,4 @@
-import { type PageHead, resolvePageHead } from "../core/services/page-head-service.js";
+import { type BreadcrumbItem, type PageHead, resolvePageHead } from "../core/services/page-head-service.js";
 import { siteUrl } from "../options.js";
 import type { Locale } from "../paraglide/runtime.js";
 import { hono } from "../server.js";
@@ -14,7 +14,22 @@ const openGraphLocales: Record<Locale, string> = {
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
 
-function renderPageHead({ title, description, canonicalPath }: PageHead, locale: Locale) {
+function renderBreadcrumb(items: BreadcrumbItem[]) {
+	const data = {
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		itemListElement: items.map(({ name, path }, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			name,
+			item: `${siteUrl}${path}`,
+		})),
+	};
+	const json = JSON.stringify(data).replace(/</g, "\\u003c");
+	return `<script type="application/ld+json" data-static-head>${json}</script>`;
+}
+
+function renderPageHead({ title, description, canonicalPath, breadcrumb }: PageHead, locale: Locale) {
 	const canonicalUrl = canonicalPath === null ? undefined : `${siteUrl}${canonicalPath}`;
 	const tags = [
 		`<title data-static-head>${escapeHtml(title)}</title>`,
@@ -28,6 +43,7 @@ function renderPageHead({ title, description, canonicalPath }: PageHead, locale:
 		`<meta property="og:locale" content="${openGraphLocales[locale]}" />`,
 		`<meta name="twitter:title" content="${escapeHtml(title)}" />`,
 		description !== undefined && `<meta name="twitter:description" content="${escapeHtml(description)}" />`,
+		breadcrumb !== undefined && renderBreadcrumb(breadcrumb),
 	];
 	return tags.filter((tag) => tag !== false).join("\n");
 }

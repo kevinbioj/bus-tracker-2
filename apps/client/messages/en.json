@@ -355,6 +355,8 @@
 	"map_page_heading": "Bus Tracker: live map of buses, trams, metros and trains",
 	"map_page_heading_network": "{network}: live map of {modes}",
 	"map_page_heading_line": "{lineLabel} – {network}: live map",
+	"map_popular_networks": "Popular networks",
+	"map_popular_network_link": "{network} live",
 	"page_description_attributions": "Open data sources, timetables and real-time feeds, used by Bus Tracker for each transport network.",
 	"page_description_data": "The {networkCount} of public transport tracked by Bus Tracker: vehicles in service, lines and activity history of each network.",
 	"page_description_data_region": "{regionName}: public transport networks tracked live by Bus Tracker ({networkNames}).",

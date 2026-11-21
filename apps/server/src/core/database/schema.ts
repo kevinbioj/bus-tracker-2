@@ -58,6 +58,7 @@ export const networksTable = pgTable("network", {
 	hasVehiclesFeature: boolean("has_vehicles_feature").notNull().default(false),
 	regionId: integer("region_id").references(() => regionsTable.id),
 	embedMapCenter: jsonb("embed_map_center"),
+	featuredOrder: integer("featured_order"),
 });
 
 export type NetworkEntity = InferSelectModel<typeof networksTable>;
