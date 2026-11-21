@@ -72,6 +72,11 @@ export function markVehiclePopupTourSeen() {
 	markStorage(VEHICLE_POPUP_TOUR_SEEN_KEY);
 }
 
+export function dismissVehiclePopupTour() {
+	markStorage(VEHICLE_POPUP_TOUR_SEEN_KEY);
+	update({ vehiclePopupTour: false });
+}
+
 export function replayOnboarding() {
 	update({ mapTour: "replay", vehiclePopupTour: true });
 }

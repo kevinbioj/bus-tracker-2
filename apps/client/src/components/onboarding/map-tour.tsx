@@ -7,12 +7,11 @@ import { useMap } from "~/adapters/maplibre-gl/map";
 import { fetchShowcaseJourney, type ShowcaseJourney } from "~/api/vehicle-journeys";
 import { InstallInstructions } from "~/components/onboarding/install-instructions";
 import {
+	dismissVehiclePopupTour,
 	endMapTour,
 	type MapTourTrigger,
 	markMapTourSeen,
-	markVehiclePopupTourSeen,
 	startMapTour,
-	startVehiclePopupTour,
 	useOnboardingState,
 } from "~/components/onboarding/onboarding-state";
 import { skippedOutcome, Tour, type TourOutcome, type TourStep } from "~/components/onboarding/tour";
@@ -463,6 +462,7 @@ export function MapTour() {
 		markMapTourSeen();
 		if (tour.steps[tour.index]?.id === "stop-departures") clearSelection();
 		if (tour.steps[tour.index]?.id !== REPLAY_HINT_STEP_ID) {
+			dismissVehiclePopupTour();
 			reportMapTourOutcome(reportRef, skippedOutcome(tour.index), tour.steps, tour.index);
 		}
 
@@ -487,10 +487,7 @@ export function MapTour() {
 		await setMarkerId(showcase.id);
 		const root = await waitForVehiclePopup(isCancelledFor(session));
 		const steps = root !== null ? buildVehiclePopupSteps(root, true, true) : [];
-		if (steps.length > 0) {
-			startVehiclePopupTour();
-			markVehiclePopupTourSeen();
-		}
+		if (steps.length > 0) dismissVehiclePopupTour();
 		posthog.capture("onboarding_showcase", { journey_id: showcase.id, steps: steps.map((step) => step.id) });
 		return { steps };
 	};
