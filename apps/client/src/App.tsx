@@ -24,7 +24,7 @@ function buildRouter(queryClient: QueryClient) {
 	});
 
 	const unsubscribe = router.subscribe("onRendered", () => {
-		document.getElementById("app-shell")?.remove();
+		requestAnimationFrame(() => setTimeout(() => document.getElementById("app-shell")?.remove()));
 		unsubscribe();
 	});
 

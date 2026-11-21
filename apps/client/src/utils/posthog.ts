@@ -27,6 +27,7 @@ export function loadPostHog() {
 			api_host: import.meta.env.VITE_PUBLIC_POSTHOG_API_HOST,
 			autocapture: false,
 			capture_exceptions: true,
+			capture_performance: { web_vitals: true },
 			defaults: "2025-05-24",
 			respect_dnt: true,
 			ui_host: import.meta.env.VITE_PUBLIC_POSTHOG_UI_HOST,

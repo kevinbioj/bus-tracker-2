@@ -1,6 +1,7 @@
 import type { GeoJSONFeatureDiff, GeoJSONSource } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
+import { useMap } from "~/adapters/maplibre-gl/map";
 import { isLowEndDevice } from "~/utils/device-capabilities";
 
 export type CircleMarkerSource = {
@@ -100,12 +101,30 @@ function mergeUpdates(updates: GeoJSONFeatureDiff[]) {
 const canAnimate = () =>
 	document.visibilityState === "visible" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+const MIN_ANIMATED_DISPLACEMENT_PX = 2;
+
+const TILE_SIZE = 512;
+
+const mercatorY = (latitude: number) => Math.log(Math.tan(Math.PI / 4 + (latitude * Math.PI) / 360)) / (2 * Math.PI);
+
+function isVisibleMovement({ from, to, fromBearing, toBearing }: Movement, worldSize: number, bearingVisible: boolean) {
+	if (bearingVisible && fromBearing !== null && toBearing !== null && fromBearing !== toBearing) return true;
+	const displacement = Math.hypot((to[0] - from[0]) / 360, mercatorY(to[1]) - mercatorY(from[1])) * worldSize;
+	return displacement >= MIN_ANIMATED_DISPLACEMENT_PX;
+}
+
 type MapCircleMarkersProps<T extends CircleMarkerProperties> = {
+	bearingMinZoom?: number;
 	features: CircleMarkerFeature<T>[];
 	source: GeoJSONSource;
 };
 
-export function GeojsonCircles<T extends CircleMarkerProperties>({ features, source }: MapCircleMarkersProps<T>) {
+export function GeojsonCircles<T extends CircleMarkerProperties>({
+	bearingMinZoom = 0,
+	features,
+	source,
+}: MapCircleMarkersProps<T>) {
+	const map = useMap();
 	// Marqueurs tels que la source les affiche, tenus ici plutôt que relus de la source. Ils ne valent
 	// que pour la source qui les a reçus : une source recréée (contexte WebGL perdu) repart vide.
 	const displayed = useRef<{ source: GeoJSONSource; markers: Map<string, DisplayedMarker<T>> } | null>(null);
@@ -181,9 +200,9 @@ export function GeojsonCircles<T extends CircleMarkerProperties>({ features, sou
 		}
 
 		/** Positions et caps à l'avancement `t`, relevés comme affichés et prêts à envoyer à la source. */
-		const movementsAt = (t: number): GeoJSONFeatureDiff[] => {
+		const movementsAt = (list: Movement[], t: number): GeoJSONFeatureDiff[] => {
 			const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-			return movements.map(({ id, from, to, fromBearing, toBearing }) => {
+			return list.map(({ id, from, to, fromBearing, toBearing }) => {
 				const marker = markers.get(id)!;
 				marker.coordinates = t === 1 ? to : [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t];
 
@@ -202,17 +221,28 @@ export function GeojsonCircles<T extends CircleMarkerProperties>({ features, sou
 
 		// Rien ne bouge, trop de marqueurs pour les animer, ou un moment mal choisi : une seule écriture,
 		// directement aux positions finales.
-		if (movements.length === 0 || movements.length > ANIMATION_MAX_MOVEMENTS || !canAnimate()) {
-			const updates = mergeUpdates([...update, ...movementsAt(1)]);
+		const zoom = map.getZoom();
+		const worldSize = TILE_SIZE * 2 ** zoom;
+		const bearingVisible = zoom >= bearingMinZoom;
+		const animated: Movement[] = [];
+		const jumps: Movement[] = [];
+		for (const movement of movements) {
+			(isVisibleMovement(movement, worldSize, bearingVisible) ? animated : jumps).push(movement);
+		}
+
+		if (animated.length === 0 || animated.length > ANIMATION_MAX_MOVEMENTS || !canAnimate()) {
+			const updates = mergeUpdates([...update, ...movementsAt(movements, 1)]);
 			if (remove.length > 0 || add.length > 0 || updates.length > 0)
 				source.updateData({ remove, add, update: updates });
 			return;
 		}
 
 		// Première écriture immédiate : marqueurs ajoutés et retirés apparaissent sans attendre.
-		if (remove.length > 0 || add.length > 0 || update.length > 0) source.updateData({ remove, add, update });
+		const firstUpdates = mergeUpdates([...update, ...movementsAt(jumps, 1)]);
+		if (remove.length > 0 || add.length > 0 || firstUpdates.length > 0)
+			source.updateData({ remove, add, update: firstUpdates });
 
-		const frameInterval = frameIntervalFor(movements.length);
+		const frameInterval = frameIntervalFor(animated.length);
 		const start = performance.now();
 		let lastFrame = start;
 		let frameRequest: number | null = null;
@@ -231,7 +261,7 @@ export function GeojsonCircles<T extends CircleMarkerProperties>({ features, sou
 			}
 
 			lastFrame = now;
-			source.updateData({ update: movementsAt(t) });
+			source.updateData({ update: movementsAt(animated, t) });
 
 			if (t < 1) {
 				frameRequest = requestAnimationFrame(step);
@@ -243,7 +273,7 @@ export function GeojsonCircles<T extends CircleMarkerProperties>({ features, sou
 		frameRequest = requestAnimationFrame(step);
 
 		return stop;
-	}, [features, source]);
+	}, [bearingMinZoom, features, map, source]);
 
 	return null;
 }

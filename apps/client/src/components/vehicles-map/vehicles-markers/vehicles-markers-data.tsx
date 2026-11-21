@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { type GeoJSONSource, LngLatBounds } from "maplibre-gl";
 import { useQueryState } from "nuqs";
-import { useEffect, useMemo, useRef } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef } from "react";
 import { useDebounceValue, useLocalStorage } from "usehooks-ts";
 
 import { type CircleMarkerFeature, GeojsonCircles } from "~/adapters/maplibre-gl/geojson-circles";
@@ -35,16 +35,37 @@ const mulberry32 = (seed: number) => () => {
 	return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-// Offset déterministe seedé sur l'id de la course : même véhicule → même bruit,
-// ce qui évite que les marqueurs COMPUTED sautent à chaque refetch/déplacement de carte.
-const noise = ([lon, lat]: [number, number], seed: string): [number, number] => {
-	const rand = mulberry32(hashSeed(seed));
-	return [lon + ((rand() * 2 - 1) * 2.5) / 111111, lat + ((rand() * 2 - 1) * 2.5) / 75000];
-};
-
 const STACK_LEVELS = 32;
 
-const stackLevel = (id: string) => Math.floor(mulberry32(hashSeed(id))() * STACK_LEVELS);
+const MAX_CACHED_MARKER_TRAITS = 50_000;
+
+type MarkerTraits = { stackLevel: number; offset: [number, number] };
+
+const markerTraitsById = new Map<string, MarkerTraits>();
+
+const getMarkerTraits = (id: string) => {
+	let traits = markerTraitsById.get(id);
+	if (traits === undefined) {
+		if (markerTraitsById.size >= MAX_CACHED_MARKER_TRAITS) markerTraitsById.clear();
+		const rand = mulberry32(hashSeed(id));
+		const first = rand();
+		traits = {
+			stackLevel: Math.floor(first * STACK_LEVELS),
+			offset: [((first * 2 - 1) * 2.5) / 111111, ((rand() * 2 - 1) * 2.5) / 75000],
+		};
+		markerTraitsById.set(id, traits);
+	}
+	return traits;
+};
+
+// Offset déterministe seedé sur l'id de la course : même véhicule → même bruit,
+// ce qui évite que les marqueurs COMPUTED sautent à chaque refetch/déplacement de carte.
+const noise = ([lon, lat]: [number, number], id: string): [number, number] => {
+	const { offset } = getMarkerTraits(id);
+	return [lon + offset[0], lat + offset[1]];
+};
+
+const stackLevel = (id: string) => getMarkerTraits(id).stackLevel;
 
 const keepColor = (color: string) => color;
 
@@ -53,6 +74,7 @@ const NO_POSITION_OVERRIDES = new Map<string, { position: DisposeableVehicleJour
 type VehiclesMarkersDataProps = {
 	/** Course dont la popup est ouverte, s'il y en a une. */
 	activeJourneyId: string | null;
+	bearingMinZoom: number;
 	embeddedNetworkId?: number;
 	filteredNetworkId?: number;
 	lineIds?: number[];
@@ -61,6 +83,7 @@ type VehiclesMarkersDataProps = {
 
 export function VehiclesMarkersData({
 	activeJourneyId,
+	bearingMinZoom,
 	embeddedNetworkId,
 	filteredNetworkId,
 	lineIds,
@@ -274,5 +297,7 @@ export function VehiclesMarkersData({
 		[data, positionOverrides, previewVehicleNumber, markerColor],
 	);
 
-	return <GeojsonCircles features={features} source={source} />;
+	const deferredFeatures = useDeferredValue(features);
+
+	return <GeojsonCircles bearingMinZoom={bearingMinZoom} features={deferredFeatures} source={source} />;
 }

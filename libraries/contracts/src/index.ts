@@ -3,5 +3,7 @@ export * from "./line-paths.js";
 export * from "./realtime.js";
 export * from "./refs.js";
 export * from "./service-alerts.js";
+export * from "./stop-area-modes.js";
 export * from "./stops.js";
+export * from "./vehicle-journey-attributes.js";
 export * from "./vehicle-journeys.js";

@@ -1,6 +1,7 @@
 import { type } from "arktype";
 
 import { LINE_PATH_TTL_SECONDS } from "./line-paths.js";
+import { stopAreaModes } from "./stop-area-modes.js";
 import { callOnDemandEnum, vehicleJourneyCallStatusEnum } from "./vehicle-journeys.js";
 
 /*
@@ -49,12 +50,6 @@ export const stopDeparturesRequestChannel = (providerId: string) => `stop-depart
 
 /** Canal de réponse, commun : chaque réponse porte l'identifiant de la demande à laquelle elle répond. */
 export const STOP_DEPARTURES_REPLY_CHANNEL = "stop-departures:reply";
-
-/**
- * Modes retenus pour représenter une station sur la carte, du plus lourd au plus léger : une station
- * prend le plus lourd des modes qui la desservent. Tout autre mode compte comme un bus.
- */
-export const stopAreaModes = ["RAIL", "SUBWAY", "TRAMWAY", "BUS", "FUNICULAR"] as const;
 
 export const stopAreaModeEnum = type.enumerated(...stopAreaModes);
 export type StopAreaMode = typeof stopAreaModeEnum.infer;

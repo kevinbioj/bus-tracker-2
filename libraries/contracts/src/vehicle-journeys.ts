@@ -1,25 +1,10 @@
 import { type } from "arktype";
-import { z } from "zod";
 
 import type { LinePath } from "./line-paths.js";
+import { vehicleJourneyLineTypes } from "./vehicle-journey-attributes.js";
 
 /** Canal Redis sur lequel les providers publient leurs courses, par lots. */
 export const VEHICLE_JOURNEYS_CHANNEL = "journeys";
-
-export const vehicleJourneyLineTypes = [
-	"TRAMWAY",
-	"SUBWAY",
-	"RAIL",
-	"TROLLEY",
-	"FUNICULAR",
-	"GONDOLA",
-	"BUS",
-	"FERRY",
-	"COACH",
-	"UNKNOWN",
-] as const;
-
-export const vehicleJourneyLineTypeZodEnum = z.enum(vehicleJourneyLineTypes);
 
 export const vehicleJourneyLineTypeEnum = type.enumerated(...vehicleJourneyLineTypes);
 
@@ -42,12 +27,6 @@ export type VehicleJourneyCallFlags = typeof vehicleJourneyCallFlagsEnum.infer;
 
 export const callOnDemandEnum = type("'PHONE'|'DRIVER'");
 export type CallOnDemand = typeof callOnDemandEnum.infer;
-
-export function getCallOnDemand(flags: readonly VehicleJourneyCallFlags[] | undefined): CallOnDemand | undefined {
-	if (flags?.includes("PHONE_PICKUP")) return "PHONE";
-	if (flags?.includes("DRIVER_PICKUP")) return "DRIVER";
-	return undefined;
-}
 
 export const vehicleJourneyCallSchema = type({
 	// Heure de départ de l'arrêt — ou heure d'arrivée au terminus, qui n'a pas de départ.
@@ -137,29 +116,3 @@ export const vehicleJourneySchema = type({
 });
 
 export type VehicleJourney = typeof vehicleJourneySchema.infer;
-
-export const vehicleJourneyPositionTypes = ["GPS", "ESTIMATED", "SCHEDULED"] as const;
-
-export type VehicleJourneyPositionType = (typeof vehicleJourneyPositionTypes)[number];
-
-/**
- * Nature de la position publiée, telle qu'elle est présentée à l'usager et filtrée par l'API :
- * relevée par le véhicule, déduite d'un horaire temps réel, ou déduite du seul horaire théorique.
- *
- * Un arrêt ajouté par une déviation (`UNSCHEDULED`) n'a d'heure attendue que celle qu'il reprend de
- * son arrêt de référence : il n'est pas une prédiction à lui seul, et une course théorique déviée
- * reste théorique. Seule une course supplémentaire échappe à la règle — dépourvue d'horaire
- * théorique, toutes ses heures sont du temps réel, et tous ses arrêts sont `UNSCHEDULED`.
- */
-export function getVehicleJourneyPositionType(journey: {
-	calls?: { expectedTime?: string; callStatus: VehicleJourneyCallStatus }[];
-	position: { type: "GPS" | "COMPUTED" };
-	isAdded?: boolean;
-}): VehicleJourneyPositionType {
-	if (journey.position.type === "GPS") return "GPS";
-	if (journey.isAdded === true) return "ESTIMATED";
-
-	return journey.calls?.some((call) => call.callStatus !== "UNSCHEDULED" && call.expectedTime !== undefined)
-		? "ESTIMATED"
-		: "SCHEDULED";
-}

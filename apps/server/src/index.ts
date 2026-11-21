@@ -131,7 +131,13 @@ console.log("► Listening on port %d.\n", port);
 serve({
 	fetch: hono.fetch,
 	port,
-	websocket: { server: new WebSocketServer({ noServer: true, maxPayload: 16 * 1024 }) },
+	websocket: {
+		server: new WebSocketServer({
+			noServer: true,
+			maxPayload: 16 * 1024,
+			perMessageDeflate: { serverMaxWindowBits: 13, zlibDeflateOptions: { level: 3, memLevel: 7 } },
+		}),
+	},
 });
 
 process.once("SIGTERM", async () => {

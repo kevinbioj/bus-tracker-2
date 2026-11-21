@@ -129,6 +129,7 @@ export const GetVehicleJourneyMarkersQuery = (
 		placeholderData: keepPreviousData,
 		refetchInterval: realtime ? false : 10_000,
 		staleTime: 20_000,
+		structuralSharing: false,
 		queryKey: ["vehicle-journeys", filter.embeddedNetworkId, filter.filteredNetworkId, filter.lineIds],
 		queryFn: () => {
 			const { networkId, lineIds, positionTypes, countryCodes, includeMarker } = getVehicleJourneyMarkersParams(

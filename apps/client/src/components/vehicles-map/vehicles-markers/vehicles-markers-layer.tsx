@@ -101,7 +101,17 @@ const arrowsLayout: SymbolLayerSpecification["layout"] = {
 	"icon-offset": [0, -14],
 };
 
-const arrowsOpacity: DataDrivenPropertyValueSpecification<number> = ["interpolate", ["linear"], ["zoom"], 10, 0, 12, 1];
+const ARROWS_MIN_ZOOM = 10;
+
+const arrowsOpacity: DataDrivenPropertyValueSpecification<number> = [
+	"interpolate",
+	["linear"],
+	["zoom"],
+	ARROWS_MIN_ZOOM,
+	0,
+	12,
+	1,
+];
 
 // Contour de contraste, rendu sous la flèche de remplissage (couleur = `color`, comme le
 // contour du cercle du marqueur). Une silhouette légèrement plus large déborde de la flèche.
@@ -109,7 +119,7 @@ const arrowsOutlineLayerObject: AddLayerObject = {
 	id: "vehicles-arrows-outline",
 	source: "vehicles",
 	type: "symbol",
-	minzoom: 10,
+	minzoom: ARROWS_MIN_ZOOM,
 	layout: {
 		...arrowsLayout,
 		"icon-image": "arrow-outline-icon",
@@ -125,7 +135,7 @@ const arrowsLayerObject: AddLayerObject = {
 	id: "vehicles-arrows",
 	source: "vehicles",
 	type: "symbol",
-	minzoom: 10,
+	minzoom: ARROWS_MIN_ZOOM,
 	layout: {
 		...arrowsLayout,
 		"icon-image": "arrow-icon",
@@ -250,6 +260,7 @@ export function VehiclesMarkers({ embeddedNetworkId, filteredNetworkId, lineIds 
 		<>
 			<VehiclesMarkersData
 				activeJourneyId={activeJourneyId}
+				bearingMinZoom={ARROWS_MIN_ZOOM}
 				embeddedNetworkId={embeddedNetworkId}
 				filteredNetworkId={filteredNetworkId}
 				lineIds={lineIds}

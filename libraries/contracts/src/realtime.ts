@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { EncodedLinePath, EncodedVehicleJourneyPaths } from "./line-paths.js";
-import { vehicleJourneyPositionTypes } from "./vehicle-journeys.js";
+import { vehicleJourneyPositionTypes } from "./vehicle-journey-attributes.js";
 
 export const REALTIME_PROTOCOL_VERSION = 1;
 
