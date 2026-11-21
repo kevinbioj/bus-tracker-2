@@ -1,5 +1,7 @@
 import type { PostHog } from "posthog-js";
 
+import { isStandalone } from "~/utils/pwa-install";
+
 const apiKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
 
 let client: PostHog | undefined;
@@ -32,6 +34,7 @@ export function loadPostHog() {
 		posthog.register({
 			build_hash: import.meta.env.VITE_BUILD_HASH,
 			build_timestamp: import.meta.env.VITE_BUILD_TIMESTAMP,
+			display_mode: isStandalone() ? "standalone" : "browser",
 		});
 		for (const error of earlyErrors.splice(0)) posthog.captureException(error);
 
