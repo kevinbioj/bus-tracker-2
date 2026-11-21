@@ -257,11 +257,10 @@ export function buildStopAreaManifests(providerId: string, source: Source, updat
 				],
 				stopPoints: buildStopPoints(
 					stopArea.name,
-					stopArea.stops,
+					stopArea.stops.filter((stop) => stopModes.has(stop.id)),
 					(stop) => source.stopRefOf(networkRef, stop.id),
-					// Sans desserte, un quai déclaré reprend le mode de sa station ; un arrêt du seul flux temps réel est un bus.
-					(stop) => stopModes.get(stop.id) ?? (gtfs.stops.has(stop.id) ? service.mode : "BUS"),
-					(stop) => stopLineRefs.get(stop.id) ?? [],
+					(stop) => stopModes.get(stop.id)!,
+					(stop) => stopLineRefs.get(stop.id)!,
 				),
 				providerId,
 				sourceId: source.id,

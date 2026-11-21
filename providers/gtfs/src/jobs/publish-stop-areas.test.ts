@@ -115,10 +115,21 @@ function stopPointOf(source: Source, stopId: string, at = NOW) {
 }
 
 describe("buildStopAreaManifests", () => {
-	it("donne à un quai déclaré sans desserte le mode de sa station", () => {
+	it("ne publie pas un quai déclaré qu'aucune course ne dessert", () => {
 		const { source } = makeSource();
 
-		expect(stopPointOf(source, "P")).toMatchObject({ mode: "SUBWAY", lineRefs: [] });
+		expect(stopPointOf(source, "P")).toBeUndefined();
+		expect(stopPointOf(source, "M1")).toMatchObject({ mode: "SUBWAY" });
+	});
+
+	it("retire un quai déclaré dès que la déviation qui le dessert prend fin", () => {
+		const { source, gtfs, original } = makeSource();
+		detour(source, gtfs, original, "P");
+
+		source.modifiedJourneyKeys.clear();
+		source.realtimeStopAreas = collectRealtimeStopAreas(source);
+
+		expect(stopPointOf(source, "P")).toBeUndefined();
 	});
 
 	it("donne à un quai déclaré le mode des lignes qui le desservent par déviation", () => {
