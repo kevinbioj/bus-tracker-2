@@ -1,10 +1,17 @@
-import { type BreadcrumbItem, type PageHead, resolvePageHead } from "../core/services/page-head-service.js";
+import {
+	type BreadcrumbItem,
+	type PageBody,
+	type PageHead,
+	resolvePageBody,
+	resolvePageHead,
+} from "../core/services/page-head-service.js";
 import { siteUrl } from "../options.js";
 import type { Locale } from "../paraglide/runtime.js";
 import { hono } from "../server.js";
 import { resolveRequestLocale } from "../utils/request-locale.js";
 
 const PAGE_HEAD_PREFIX = "/page-head";
+const PAGE_BODY_PREFIX = "/page-body";
 
 const openGraphLocales: Record<Locale, string> = {
 	fr: "fr_FR",
@@ -47,6 +54,27 @@ function renderPageHead({ title, description, canonicalPath, breadcrumb }: PageH
 	];
 	return tags.filter((tag) => tag !== false).join("\n");
 }
+
+function renderPageBody({ heading, links }: PageBody) {
+	const items = links.map(({ label, path }) => `<li><a href="${escapeHtml(path)}">${escapeHtml(label)}</a></li>`);
+	return [
+		'<nav aria-labelledby="popular-networks-heading" class="sr-only">',
+		`<h2 id="popular-networks-heading">${escapeHtml(heading)}</h2>`,
+		`<ul>${items.join("")}</ul>`,
+		"</nav>",
+	].join("");
+}
+
+hono.get(`${PAGE_BODY_PREFIX}/*`, async (c) => {
+	const url = new URL(c.req.url);
+	const locale = resolveRequestLocale(c.req.header("user-agent"), c.req.header("accept-language"));
+	const body = await resolvePageBody(url.pathname.slice(PAGE_BODY_PREFIX.length) || "/", url.searchParams, locale);
+
+	return c.html(body === null ? "" : renderPageBody(body), 200, {
+		"Cache-Control": "no-store",
+		"Content-Language": locale,
+	});
+});
 
 hono.get(`${PAGE_HEAD_PREFIX}/*`, async (c) => {
 	const url = new URL(c.req.url);

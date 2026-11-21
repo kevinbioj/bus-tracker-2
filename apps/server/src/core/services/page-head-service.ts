@@ -1,5 +1,5 @@
 import type { VehicleJourneyLineType } from "@bus-tracker/contracts";
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull, isNull } from "drizzle-orm";
 
 import * as m from "../../paraglide/messages.js";
 import type { Locale } from "../../paraglide/runtime.js";
@@ -60,6 +60,7 @@ const networkCache = useCache<NetworkPageData | null>(CACHE_TTL, MAX_CACHED_ENTI
 const networkSummaryCache = useCache<NetworkSummary | null>(CACHE_TTL, MAX_CACHED_ENTITIES);
 const vehicleCache = useCache<VehiclePageData | null>(CACHE_TTL, MAX_CACHED_ENTITIES);
 const directoryCache = useCache<Awaited<ReturnType<typeof loadDirectory>>>(CACHE_TTL);
+const featuredNetworksCache = useCache<NetworkSummary[]>(CACHE_TTL);
 
 const isActiveLine = ({ archivedAt }: Pick<LineEntity, "archivedAt">) =>
 	archivedAt === null || Temporal.Instant.compare(Temporal.Now.instant(), archivedAt) < 0;
@@ -350,6 +351,32 @@ async function resolveEmbedHead(networkId: number, locale: Locale) {
 	const network = await findNetworkSummary(networkId);
 	if (network === null) return notFoundHead(locale);
 	return { title: m.page_title_embed_map({ networkName: network.name }, { locale }), canonicalPath: null };
+}
+
+export type PageBodyLink = { label: string; path: string };
+
+export type PageBody = { heading: string; links: PageBodyLink[] };
+
+const loadFeaturedNetworks = () =>
+	database
+		.select({ id: networksTable.id, name: networksTable.name, authority: networksTable.authority })
+		.from(networksTable)
+		.where(isNotNull(networksTable.featuredOrder))
+		.orderBy(asc(networksTable.featuredOrder));
+
+export async function resolvePageBody(path: string, search: URLSearchParams, locale: Locale): Promise<PageBody | null> {
+	if (path !== "/" || search.has("line-id") || search.has("network-id")) return null;
+
+	const networks = await featuredNetworksCache.getOrLoad("featured", loadFeaturedNetworks);
+	if (networks.length === 0) return null;
+
+	return {
+		heading: m.map_popular_networks({}, { locale }),
+		links: networks.map((network) => ({
+			label: m.map_popular_network_link({ network: getNetworkLabel(network) }, { locale }),
+			path: `/?network-id=${network.id}`,
+		})),
+	};
 }
 
 export async function resolvePageHead(path: string, search: URLSearchParams, locale: Locale): Promise<PageHead> {

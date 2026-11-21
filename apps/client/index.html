@@ -73,7 +73,8 @@
         </div>
       </div>
     </div>
-    <div id="root"></div>
+    <!--# block name="empty_body" --><!--# endblock -->
+    <div id="root"><!--# include virtual="/__page-body$request_uri" stub="empty_body" --></div>
     <script>
       if (location.pathname.startsWith('/embed')) {
         document.getElementById('app-shell').remove();
