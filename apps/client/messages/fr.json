@@ -339,6 +339,7 @@
 	"stop_departures_close": "Fermer",
 	"stop_departures_title": "Prochains départs",
 	"stop_departures_trip_cancelled": "Course supprimée",
+	"stop_departures_trip_potentially_cancelled": "Potentiellement supprimé",
 	"stop_departures_reverse": "Inverser",
 	"stop_arrivals_title": "Prochaines arrivées",
 	"stop_arrivals_loading": "Chargement des prochaines arrivées…",

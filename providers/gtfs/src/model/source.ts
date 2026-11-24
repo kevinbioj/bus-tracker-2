@@ -28,10 +28,11 @@ import type {
 	VehicleDescriptor,
 	VehiclePosition,
 } from "./gtfs-rt.js";
-import type { Journey } from "./journey.js";
+import type { Journey, JourneyCall } from "./journey.js";
 import { buildEncodedLinePaths } from "./line-path.js";
 import type { Route } from "./route.js";
 import { createServiceWindow, isServiceWindowOutdated } from "./service-window.js";
+import type { Stop } from "./stop.js";
 import type { StopArea } from "./stop-area.js";
 import type { Trip } from "./trip.js";
 
@@ -147,6 +148,38 @@ export type SourceOptions = {
 	 * la course écartée depuis celles qu'il suit.
 	 */
 	filterStopDeparture?: (departure: StopDeparture, journey: Journey) => boolean;
+	/**
+	 * Règle métier jugeant qu'un passage est « potentiellement supprimé » : la course qui l'assure
+	 * n'est vraisemblablement pas honorée — aucun véhicule ne lui est attitré au-delà d'un délai
+	 * après son départ, et le temps réel qu'elle porte encore est alors fantaisiste. Le contexte
+	 * expose la course entière et la desserte visée, pour y exprimer librement tout critère métier.
+	 * Vrai : le passage est publié avec `potentiallyCanceled` et affiché comme tel. N'est évaluée
+	 * que pour les courses connues du processeur (présentes dans `gtfs.journeys`).
+	 */
+	isPotentiallyCanceled?: (context: PotentiallyCanceledContext) => boolean;
+};
+
+/**
+ * Contexte d'évaluation de {@link SourceOptions.isPotentiallyCanceled} : tout ce qui peut fonder
+ * un critère métier sur la « non-honoration » d'une course — véhicule attitré ou non, âge du
+ * départ, temps réel porté, desserte visée.
+ */
+export type PotentiallyCanceledContext = {
+	/** Course du passage, telle que le processeur la connaît, état temps réel compris. */
+	journey: Journey;
+	/**
+	 * Desserte de la course à l'arrêt du tableau. Absente lorsque la course n'a pas d'état
+	 * matérialisé à cet arrêt (aucun temps réel, aucune déviation).
+	 */
+	call: JourneyCall | undefined;
+	/** Quai effectivement desservi : celui désigné par le temps réel, à défaut l'arrêt théorique. */
+	stop: Stop;
+	/** Instant du calcul (epoch ms). */
+	nowMs: number;
+	/** Heure de passage théorique (epoch ms) : départ, ou arrivée dans le sens « arrivées ». */
+	aimedTimeMs: number;
+	/** Heure de passage temps réel (epoch ms), lorsqu'elle existe. */
+	expectedTimeMs: number | undefined;
 };
 
 /**

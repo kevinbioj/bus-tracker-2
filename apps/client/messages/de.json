@@ -348,6 +348,7 @@
 	"stop_departures_close": "Schließen",
 	"stop_departures_title": "Nächste Abfahrten",
 	"stop_departures_trip_cancelled": "Fahrt entfällt",
+	"stop_departures_trip_potentially_cancelled": "Möglicherweise ausgefallen",
 	"stop_departures_reverse": "Umkehren",
 	"stop_arrivals_title": "Nächste Ankünfte",
 	"stop_arrivals_loading": "Nächste Ankünfte werden geladen…",

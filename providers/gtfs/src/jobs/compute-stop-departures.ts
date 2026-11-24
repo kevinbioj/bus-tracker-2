@@ -12,6 +12,7 @@ import { getEpochMsFromSecs } from "../cache/temporal-cache.js";
 import { getJourneyKey } from "../model/gtfs.js";
 import type { Journey, JourneyCall } from "../model/journey.js";
 import type { Source } from "../model/source.js";
+import type { Stop } from "../model/stop.js";
 import type { StopIndex } from "../model/stop-index.js";
 import { bitmaskToFlags, StopTimeFlag, type Trip } from "../model/trip.js";
 import { getWheelchairAccessible } from "../model/wheelchair-accessible.js";
@@ -79,6 +80,24 @@ function findOriginCall(calls: JourneyCall[]) {
 function publishedJourneyIdOf(journey: Journey | undefined) {
 	const key = journey?.lastPublishedKey;
 	return key !== undefined ? toPublishedJourneyId(key) : undefined;
+}
+
+/**
+ * Évalue la règle métier de la source sur un passage : la course qui l'assure est-elle
+ * vraisemblablement non honorée (« potentiellement supprimée ») ? Le contexte reçoit la course
+ * entière et la desserte visée, pour y exprimer librement tout critère métier (véhicule attitré,
+ * âge du départ, temps réel porté…).
+ */
+function isPotentiallyCanceled(
+	source: Source,
+	journey: Journey,
+	call: JourneyCall | undefined,
+	stop: Stop,
+	nowMs: number,
+	aimedTimeMs: number,
+	expectedTimeMs: number | undefined,
+) {
+	return source.options.isPotentiallyCanceled?.({ journey, call, stop, nowMs, aimedTimeMs, expectedTimeMs }) === true;
 }
 
 function resolveDestination(trip: Trip, stopTimeIdx: number, call?: JourneyCall) {
@@ -348,6 +367,12 @@ export function computeStopDepartures(
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, stop.timeZone, timeZone) : undefined,
 				callStatus: canceled ? "SKIPPED" : (call?.status ?? "SCHEDULED"),
 				canceled: canceled ? true : undefined,
+				potentiallyCanceled:
+					journey !== undefined &&
+					!canceled &&
+					isPotentiallyCanceled(source, journey, call, servedStop, nowMs, aimedMs, expectedMs)
+						? true
+						: undefined,
 				temporary: call !== undefined && temporaryCallsOf(journey!).has(call) ? true : undefined,
 				relocated: call !== undefined && temporaryCallsOf(journey!).get(call)?.relocated ? true : undefined,
 				onDemand: arrivals
@@ -423,6 +448,9 @@ export function computeStopDepartures(
 				aimedTime: formatCallTime(aimedMs, call.stop.timeZone, timeZone),
 				expectedTime: expectedMs !== undefined ? formatCallTime(expectedMs, call.stop.timeZone, timeZone) : undefined,
 				callStatus: call.status,
+				potentiallyCanceled: isPotentiallyCanceled(source, journey, call, servedStop, nowMs, aimedMs, expectedMs)
+					? true
+					: undefined,
 				temporary: temporaryCallsOf(journey).has(call) ? true : undefined,
 				relocated: temporaryCallsOf(journey).get(call)?.relocated ? true : undefined,
 				onDemand: arrivals ? undefined : getCallOnDemand(call.flags),

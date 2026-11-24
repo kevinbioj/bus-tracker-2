@@ -339,6 +339,7 @@
 	"stop_departures_close": "Close",
 	"stop_departures_title": "Next departures",
 	"stop_departures_trip_cancelled": "Trip cancelled",
+	"stop_departures_trip_potentially_cancelled": "Possibly cancelled",
 	"stop_departures_reverse": "Reverse",
 	"stop_arrivals_title": "Next arrivals",
 	"stop_arrivals_loading": "Loading upcoming arrivals…",

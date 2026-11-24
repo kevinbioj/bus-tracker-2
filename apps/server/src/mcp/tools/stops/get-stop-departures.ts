@@ -39,6 +39,11 @@ export const getStopDeparturesTool = defineTool({
 				minutesAway: z.number(),
 				realtime: z.boolean(),
 				cancelled: z.boolean(),
+				potentiallyCancelled: z
+					.boolean()
+					.describe(
+						"The trip is probably not operated (no vehicle assigned long after its departure): shown as possibly cancelled.",
+					),
 				vehicleTracked: z.boolean(),
 				vehicleAtStop: z.boolean(),
 				onDemand: z
@@ -81,6 +86,7 @@ export const getStopDeparturesTool = defineTool({
 				),
 				realtime: departure.realtime === true,
 				cancelled: departure.callStatus === "SKIPPED",
+				potentiallyCancelled: departure.potentiallyCanceled === true,
 				vehicleTracked: departure.tracked,
 				vehicleAtStop: departure.atStop,
 				onDemand: departure.onDemand,

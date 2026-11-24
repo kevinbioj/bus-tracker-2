@@ -54,6 +54,9 @@ export class Trip {
 	get firstArrivalSecs() {
 		return this.store.tripFirstArrivalSecs[this.idx]!;
 	}
+	get firstDepartureSecs() {
+		return this.store.departureSecs[this.stopTimeStart]!;
+	}
 	get lastArrivalSecs() {
 		return this.store.tripLastArrivalSecs[this.idx]!;
 	}

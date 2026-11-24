@@ -5,6 +5,31 @@ const isTniVehicle = (id) => (id >= 421 && id <= 435) || (id >= 670 && id <= 685
 
 const stripAgencyPrefix = (id) => id.replace(/^(TCAR|TAE|TNI):/, "");
 
+/**
+ * Course non honorée : aucun véhicule ne lui est attitré, et elle est partie depuis au moins
+ * 5 minutes. Observé à Rouen, où le flux renvoie parfois du temps réel sur des courses que
+ * plus aucun bus n'assure : passé ce délai, ce temps réel est jugé fantaisiste, et le passage
+ * affiché comme « potentiellement supprimé ».
+ */
+const UNHONORED_DEPARTED_SINCE_MS = 5 * 60 * 1000;
+/** Âge maximal d'une position GPS reçue pour retenir un véhicule comme attitré à la course. */
+const ASSIGNED_VEHICLE_MAX_POSITION_AGE_MS = 5 * 60 * 1000;
+
+const isPotentiallyCanceled = ({ journey, nowMs }) => {
+	// Un véhicule est attitré à la course (descripteur temps réel, ou position GPS récente) :
+	// elle est honorée.
+	if (journey.vehicleDescriptor !== undefined) return false;
+	if (
+		journey.lastVehiclePositionAtMs !== undefined &&
+		nowMs - journey.lastVehiclePositionAtMs <= ASSIGNED_VEHICLE_MAX_POSITION_AGE_MS
+	)
+		return false;
+
+	// Partie depuis au moins 5 minutes sans véhicule : la course n'est vraisemblablement pas
+	// honorée. Jugé sur le départ théorique, un temps réel fantaisiste pouvant le repousser.
+	return nowMs - journey.aimedOriginDepartureMs >= UNHONORED_DEPARTED_SINCE_MS;
+};
+
 /** @type {import('../src/model/source.ts').SourceOptions[]} */
 const sources = [
 	{
@@ -57,6 +82,7 @@ const sources = [
 			return true;
 		},
 		mapLineRef: stripAgencyPrefix,
+		isPotentiallyCanceled,
 	},
 ];
 

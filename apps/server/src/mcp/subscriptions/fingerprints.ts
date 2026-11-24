@@ -14,6 +14,7 @@ export const stopDeparturesFingerprint: Fingerprinter = async (stopRef) => {
 			departure.aimedTime,
 			departure.expectedTime,
 			departure.callStatus,
+			departure.potentiallyCanceled,
 			departure.platformName,
 			departure.atStop,
 		]),

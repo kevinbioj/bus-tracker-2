@@ -109,6 +109,8 @@ function DepartureRow({
 	const skipped = departure.callStatus === "SKIPPED";
 	const extra = departure.callStatus === "UNSCHEDULED";
 	const temporary = !skipped && departure.temporary === true;
+	// La course qui assure le passage est jugée non honorée : affichée, mais signalée comme peut-être supprimée.
+	const potentiallyCanceled = !skipped && departure.potentiallyCanceled === true;
 	// Un passage supprimé n'a pas d'heure attendue : c'est alors la course qui dit si elle est suivie en
 	// temps réel.
 	const realtime = departure.expectedTime !== undefined || (skipped && departure.realtime === true);
@@ -254,6 +256,12 @@ function DepartureRow({
 						{skipped && (
 							<span className="text-xs font-semibold text-red-700 dark:text-red-500 whitespace-nowrap">
 								{departure.canceled ? m.stop_departures_trip_cancelled() : m.stop_call_skipped()}
+							</span>
+						)}
+						{/* La course n'est pas annoncée supprimée, mais plus aucun véhicule ne l'assure : elle l'est peut-être. */}
+						{potentiallyCanceled && (
+							<span className="text-xs font-semibold text-orange-700 dark:text-orange-500 whitespace-nowrap">
+								{m.stop_departures_trip_potentially_cancelled()}
 							</span>
 						)}
 						{/*

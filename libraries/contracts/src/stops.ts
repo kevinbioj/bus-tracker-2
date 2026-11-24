@@ -178,6 +178,13 @@ export const stopDepartureSchema = type({
 	 */
 	"canceled?": "boolean",
 	/**
+	 * Vrai lorsque la règle métier de la source juge la course qui assure ce passage non honorée
+	 * (aucun véhicule attitré au-delà d'un délai après son départ, par exemple) : le passage est
+	 * affiché comme « potentiellement supprimé », sans que la course soit annoncée supprimée pour
+	 * autant. Absent : la course est présumée honorée.
+	 */
+	"potentiallyCanceled?": "boolean",
+	/**
 	 * Vrai lorsque le passage a lieu à un arrêt provisoire : une desserte ajoutée par une déviation, à
 	 * un arrêt que la course ne dessert pas d'ordinaire. Absent : arrêt ordinaire.
 	 */
