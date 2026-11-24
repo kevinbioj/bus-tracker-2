@@ -7,10 +7,8 @@ services:
       - "--providers.swarm=true"
       - "--providers.swarm.exposedByDefault=false"
       - "--entrypoints.web.address=:3000"
-      - "--accesslog=true"
-      - "--accesslog.format=json"
-      - "--accesslog.fields.headers.defaultmode=drop"
-      - "--accesslog.fields.headers.names.Cf-Connecting-Ip=keep"
+      - "--accesslog=false"
+      - "--log.level=ERROR"
     ports:
       - target: 3000
         published: 3000
