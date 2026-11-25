@@ -15,7 +15,15 @@ const UNHONORED_DEPARTED_SINCE_MS = 5 * 60 * 1000;
 /** Âge maximal d'une position GPS reçue pour retenir un véhicule comme attitré à la course. */
 const ASSIGNED_VEHICLE_MAX_POSITION_AGE_MS = 5 * 60 * 1000;
 
+// biome-ignore format: keep it one-liner is good
+const POTENTIALLY_CANCELLABLE_ROUTES = [
+	"90", "91", "92", "93", "94", "95", "01", "02", "03", "04", "05", "07", "08", "10", "11", "15", "20", "22", "41", "43", "98",
+];
+
 const isPotentiallyCanceled = ({ journey, nowMs }) => {
+	// Seules certaines lignes sont éligibles à cette "auto-détection"
+	if (!POTENTIALLY_CANCELLABLE_ROUTES.includes(stripAgencyPrefix(journey?.trip.route.id))) return false;
+
 	// Un véhicule est attitré à la course (descripteur temps réel, ou position GPS récente) :
 	// elle est honorée.
 	if (journey.vehicleDescriptor !== undefined) return false;
@@ -26,8 +34,8 @@ const isPotentiallyCanceled = ({ journey, nowMs }) => {
 		return false;
 
 	// Partie depuis au moins 5 minutes sans véhicule : la course n'est vraisemblablement pas
-	// honorée. Jugé sur le départ théorique, un temps réel fantaisiste pouvant le repousser.
-	return nowMs - journey.aimedOriginDepartureMs >= UNHONORED_DEPARTED_SINCE_MS;
+	// honorée. Jugé sur le départ temps réel, à défaut théorique.
+	return nowMs - journey.originDepartureMs >= UNHONORED_DEPARTED_SINCE_MS;
 };
 
 /** @type {import('../src/model/source.ts').SourceOptions[]} */

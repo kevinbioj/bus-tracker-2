@@ -239,26 +239,26 @@ describe("computeStopDepartures", () => {
 	/** Règle de Rouen : aucun véhicule attitré, et course partie depuis au moins 5 minutes. */
 	const isUnhonored = (context: Parameters<NonNullable<SourceOptions["isPotentiallyCanceled"]>>[0]) =>
 		context.journey.vehicleDescriptor === undefined &&
-		context.nowMs - context.journey.aimedOriginDepartureMs >= 5 * 60 * 1000;
+		context.nowMs - context.journey.originDepartureMs >= 5 * 60 * 1000;
 
 	it("signale « potentiellement supprimé » le passage d'une course sans véhicule attitré, partie depuis 5 minutes", () => {
 		const source = makeSource({ isPotentiallyCanceled: isUnhonored });
 		const gtfs = source.gtfs!;
 		const date = Temporal.PlainDate.from("2026-05-18");
-		// `aller` part à 8:00 avec un temps réel fantaisiste la faisant passer à 9:00.
+		// `aller` part à 8:00, à 8:01 selon le temps réel.
 		const journey = gtfs.trips.get("aller")!.getScheduledJourney(date, true);
-		journey.updateJourney(gtfs, [{ stopId: "mairie-a", stopSequence: 1, departure: { delay: 3600 } }]);
+		journey.updateJourney(gtfs, [{ stopId: "mairie-a", stopSequence: 1, departure: { delay: 60 } }]);
 		gtfs.journeys.set(getJourneyKey(date, "aller"), journey);
 		// `retour` part à 8:30 : à 8:06, elle n'est pas encore partie.
 		gtfs.journeys.set(getJourneyKey(date, "retour"), gtfs.trips.get("retour")!.getScheduledJourney(date, true));
 
 		const at = Temporal.Instant.from("2026-05-18T08:06:00Z");
-		const { departures } = computeStopDepartures(source, "mairie-a", at);
+		const { departures } = computeStopDepartures(source, "terminus", at, { direction: "arrivals" });
 
 		const aller = departures.find((departure) => departure.journeyRef?.endsWith("aller"))!;
 		expect(aller).toMatchObject({
-			aimedTime: "2026-05-18T08:00:00+00:00",
-			expectedTime: "2026-05-18T09:00:00+00:00",
+			aimedTime: "2026-05-18T08:10:00+00:00",
+			expectedTime: "2026-05-18T08:11:00+00:00",
 			potentiallyCanceled: true,
 		});
 		// Partie depuis moins de 5 minutes : présumée honorée.
@@ -267,21 +267,38 @@ describe("computeStopDepartures", () => {
 		).toBeUndefined();
 	});
 
+	it("juge le départ d'une course sur son heure temps réel", () => {
+		const source = makeSource({ isPotentiallyCanceled: isUnhonored });
+		const gtfs = source.gtfs!;
+		const date = Temporal.PlainDate.from("2026-05-18");
+		// `aller` part à 8:00, à 8:03 selon le temps réel : à 8:06, partie depuis 3 minutes seulement.
+		const journey = gtfs.trips.get("aller")!.getScheduledJourney(date, true);
+		journey.updateJourney(gtfs, [{ stopId: "mairie-a", stopSequence: 1, departure: { delay: 180 } }]);
+		gtfs.journeys.set(getJourneyKey(date, "aller"), journey);
+
+		const at = Temporal.Instant.from("2026-05-18T08:06:00Z");
+		const { departures } = computeStopDepartures(source, "terminus", at, { direction: "arrivals" });
+
+		const aller = departures.find((departure) => departure.journeyRef?.endsWith("aller"))!;
+		expect(aller.expectedTime).toBe("2026-05-18T08:13:00+00:00");
+		expect(aller.potentiallyCanceled).toBeUndefined();
+	});
+
 	it("ne signale pas « potentiellement supprimé » une course à laquelle un véhicule est attitré", () => {
 		const source = makeSource({ isPotentiallyCanceled: isUnhonored });
 		const gtfs = source.gtfs!;
 		const date = Temporal.PlainDate.from("2026-05-18");
 		const journey = gtfs.trips.get("aller")!.getScheduledJourney(date, true);
-		journey.updateJourney(gtfs, [{ stopId: "mairie-a", stopSequence: 1, departure: { delay: 3600 } }]);
+		journey.updateJourney(gtfs, [{ stopId: "mairie-a", stopSequence: 1, departure: { delay: 60 } }]);
 		// La validité du descripteur se mesure à l'horloge réelle, pas à l'instant simulé du test.
 		journey.setVehicleDescriptor({ id: "412" }, Date.now());
 		gtfs.journeys.set(getJourneyKey(date, "aller"), journey);
 
 		const at = Temporal.Instant.from("2026-05-18T08:06:00Z");
-		const { departures } = computeStopDepartures(source, "mairie-a", at);
+		const { departures } = computeStopDepartures(source, "terminus", at, { direction: "arrivals" });
 
 		const aller = departures.find((departure) => departure.journeyRef?.endsWith("aller"))!;
-		expect(aller.expectedTime).toBe("2026-05-18T09:00:00+00:00");
+		expect(aller.expectedTime).toBe("2026-05-18T08:11:00+00:00");
 		expect(aller.potentiallyCanceled).toBeUndefined();
 	});
 

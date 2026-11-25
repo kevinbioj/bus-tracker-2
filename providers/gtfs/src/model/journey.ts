@@ -383,14 +383,13 @@ export class Journey {
 	}
 
 	/**
-	 * Heure de départ théorique de la course à son premier arrêt (epoch ms), à dessein hors temps
-	 * réel : c'est elle qui dit depuis quand la course aurait dû partir, indépendamment d'un temps
-	 * réel fantaisiste. Ne matérialise pas les arrêts de la course : retombe sur le premier
-	 * `stop_time`, calculé à la volée.
+	 * Heure de départ de la course à son premier arrêt (epoch ms) : temps réel s'il existe, à défaut
+	 * théorique. Ne matérialise pas les arrêts de la course : retombe sur le premier `stop_time`,
+	 * calculé à la volée.
 	 */
-	get aimedOriginDepartureMs() {
+	get originDepartureMs() {
 		const firstCall = this._calls?.[0];
-		if (firstCall !== undefined) return firstCall.aimedDepartureTime;
+		if (firstCall !== undefined) return firstCall.expectedDepartureTime ?? firstCall.aimedDepartureTime;
 		return getEpochMsFromSecs(this.date, this.trip.firstDepartureSecs, this.trip.route.agency.timeZone);
 	}
 
