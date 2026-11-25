@@ -18,7 +18,7 @@ import {
 	startVehicleReportCleanupService,
 	sweepExpiredVehicleReports,
 } from "./core/services/vehicle-report-cleanup-service.js";
-import { storeJourneys } from "./core/store/journey-store.js";
+import { storeJourneys, withdrawJourneys } from "./core/store/journey-store.js";
 import { port } from "./options.js";
 import { hono } from "./server.js";
 import type { DisposeableVehicleJourney } from "./types/disposeable-vehicle-journey.js";
@@ -60,7 +60,13 @@ function startVehicleWorker() {
 
 	const workerPath = new URL("./vehicle-handling/vehicle-worker.js", import.meta.url);
 	worker = new Worker(workerPath);
-	worker.on("message", (data: DisposeableVehicleJourney[]) => storeJourneys(data));
+	worker.on(
+		"message",
+		({ journeys, withdrawnJourneyIds }: { journeys: DisposeableVehicleJourney[]; withdrawnJourneyIds: string[] }) => {
+			storeJourneys(journeys);
+			withdrawJourneys(withdrawnJourneyIds);
+		},
+	);
 
 	worker.on("error", (error) => {
 		console.error("✘ Worker has encountered an error:", error instanceof Error ? error.stack : error);

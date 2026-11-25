@@ -498,13 +498,14 @@ type AddedTripPublication = {
 type ComputeResult = {
 	journeys: VehicleJourney[];
 	paths: Record<string, Shape | LinePath>;
+	withdrawnJourneyIds: string[];
 };
 
 export async function computeVehicleJourneys(
 	source: Source,
 	deadline: Deadline = createDeadline(Number.POSITIVE_INFINITY),
 ): Promise<ComputeResult> {
-	if (source.gtfs === undefined) return { journeys: [], paths: {} };
+	if (source.gtfs === undefined) return { journeys: [], paths: {}, withdrawnJourneyIds: [] };
 
 	const now = Temporal.Now.instant();
 	const nowMs = now.epochMilliseconds;
@@ -548,6 +549,7 @@ export async function computeVehicleJourneys(
 		const handledJourneys = new Set<Journey>();
 		const handledBlockIds = new Set<string>();
 		const canceledJourneyKeys = new Set<string>();
+		const computedJourneyPublications = new Map<string, string>();
 		const canceledTripCandidates: TripShapeMatchCandidate[] = [];
 		const addedTrips: AddedTripPublication[] = [];
 		const tripUpdateTtlMs = source.options.tripUpdateTtlMs ?? DEFAULT_TRIP_UPDATE_TTL_MS;
@@ -924,7 +926,12 @@ export async function computeVehicleJourneys(
 			// sont différées car l'ordre d'itération de la Map n'est pas chronologique : itérées avant
 			// la course suivante du même roulement, elles lui voleraient sa clé et la feraient
 			// disparaître alors qu'elle est bien en service.
-			const endedJourneys: { key: string; block: string | undefined; vehicleJourney: VehicleJourney }[] = [];
+			const endedJourneys: {
+				key: string;
+				journeyKey: string;
+				block: string | undefined;
+				vehicleJourney: VehicleJourney;
+			}[] = [];
 
 			for (const [journeyKey, journey] of source.gtfs.journeys) {
 				if (deadline.due()) await deadline.pause();
@@ -1017,23 +1024,30 @@ export async function computeVehicleJourneys(
 
 				if (publication.accepts(vehicleJourney)) {
 					if (hasEnded) {
-						endedJourneys.push({ key, block: journey.trip.block, vehicleJourney });
+						endedJourneys.push({ key, journeyKey, block: journey.trip.block, vehicleJourney });
 					} else {
 						activeJourneys.set(key, vehicleJourney);
+						computedJourneyPublications.set(key, journeyKey);
 						journey.lastPublishedKey = key;
 					}
 				}
 			}
 
 			// Une course active occupe toujours la place en priorité sur une publication finale.
-			for (const { key, block, vehicleJourney } of endedJourneys) {
+			for (const { key, journeyKey, block, vehicleJourney } of endedJourneys) {
 				if (activeJourneys.has(key)) continue;
 				if (block !== undefined) {
 					if (handledBlockIds.has(block)) continue;
 					handledBlockIds.add(block);
 				}
 				activeJourneys.set(key, vehicleJourney);
+				computedJourneyPublications.set(key, journeyKey);
 			}
+		}
+
+		const withdrawnJourneyIds: string[] = [];
+		for (const [key, journeyKey] of source.computedJourneyPublications) {
+			if (canceledJourneyKeys.has(journeyKey) && !activeJourneys.has(key)) withdrawnJourneyIds.push(key);
 		}
 
 		for (const journey of source.gtfs!.journeys.values()) {
@@ -1060,6 +1074,7 @@ export async function computeVehicleJourneys(
 		// effectivement publié. En cas d'échec (téléchargement du flux RT le plus souvent), rien n'est
 		// publié et l'affichage date toujours du dernier succès : la fenêtre doit remonter jusqu'à lui.
 		source.lastComputeAtMs = nowMs;
+		source.computedJourneyPublications = computedJourneyPublications;
 
 		const journeys = Array.from(activeJourneys.values());
 
@@ -1072,6 +1087,7 @@ export async function computeVehicleJourneys(
 		return {
 			journeys,
 			paths: Object.fromEntries(paths),
+			withdrawnJourneyIds,
 		};
 	} catch (cause) {
 		if (cause instanceof DeadlineExceededError) throw cause;

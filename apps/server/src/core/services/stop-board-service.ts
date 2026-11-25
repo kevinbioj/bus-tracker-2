@@ -238,6 +238,7 @@ function mergeTrackedJourneys(
 		const followsVehicle = passedCallDetection === "VEHICLE" && journey.position.type === "GPS" && freshPosition;
 
 		const known = byJourneyId.get(journey.id) ?? (journeyKey !== undefined ? byJourneyKey.get(journeyKey) : undefined);
+		if (known?.canceled === true) continue;
 
 		// Les dessertes publiées commencent à l'arrêt en cours : le véhicule stationne à la station
 		// lorsqu'il est à l'arrêt et que la première desserte encore assurée en fait partie.

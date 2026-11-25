@@ -70,6 +70,17 @@ export function storeJourneys(journeys: DisposeableVehicleJourney[]) {
 	notifyJourneysChanged(journeys.map((journey) => journey.id));
 }
 
+export function withdrawJourneys(journeyIds: string[]) {
+	const withdrawnJourneyIds: string[] = [];
+	for (const journeyId of journeyIds) {
+		const journey = journeyStore.get(journeyId);
+		if (journey === undefined || journey.position.type === "GPS") continue;
+		journeyStore.delete(journeyId);
+		withdrawnJourneyIds.push(journeyId);
+	}
+	notifyJourneysChanged(withdrawnJourneyIds);
+}
+
 /**
  * Délai pendant lequel un véhicule reste en ligne sur la dernière ligne où il a été vu, y compris s'il
  * circule depuis sans ligne (haut-le-pied, ligne inconnue) ou n'est plus publié.

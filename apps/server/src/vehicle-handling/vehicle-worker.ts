@@ -1,9 +1,15 @@
 import { parentPort } from "node:worker_threads";
-import { VEHICLE_JOURNEYS_CHANNEL, type VehicleJourney, vehicleJourneySchema } from "@bus-tracker/contracts";
+import {
+	VEHICLE_JOURNEYS_CHANNEL,
+	type VehicleJourney,
+	vehicleJourneySchema,
+	WITHDRAWN_JOURNEYS_CHANNEL,
+	withdrawnJourneysSchema,
+} from "@bus-tracker/contracts";
 import { createRedisClient } from "@bus-tracker/redis";
 import { ArkErrors } from "arktype";
 
-import { handleVehicleBatch } from "./handle-vehicle-batch.js";
+import { handleVehicleBatch, keepLatestJourneys } from "./handle-vehicle-batch.js";
 
 const redisSubscriber = createRedisClient({ name: "worker subscriber" });
 
@@ -16,7 +22,7 @@ async function start() {
 
 	console.log("► [Worker] Subscribing to journeys channel.");
 	let processingPromise: Promise<void> | null = null;
-	const messageQueue: string[] = [];
+	const messageQueue: { channel: string; message: string }[] = [];
 	let queuedBytes = 0;
 	let droppedMessages = 0;
 	let lastDropWarningAt = 0;
@@ -26,13 +32,25 @@ async function start() {
 			const messages = messageQueue.splice(0);
 			queuedBytes = 0;
 			let didWarn = false;
-			const vehicleJourneys: VehicleJourney[] = [];
+			const entries: (VehicleJourney | string)[] = [];
 			const now = Temporal.Now.instant();
 			const nowIso = now.toString();
 
-			for (const message of messages) {
+			for (const { channel, message } of messages) {
 				try {
 					const payload = JSON.parse(message);
+					if (channel === WITHDRAWN_JOURNEYS_CHANNEL) {
+						const withdrawnJourneyIds = withdrawnJourneysSchema(payload);
+						if (withdrawnJourneyIds instanceof ArkErrors) {
+							console.warn(
+								"⚠ [Worker] Rejected a malformed withdrawn journeys message:",
+								withdrawnJourneyIds.toString(),
+							);
+							continue;
+						}
+						entries.push(...withdrawnJourneyIds);
+						continue;
+					}
 					if (!Array.isArray(payload)) continue;
 					for (const entry of payload) {
 						const result = vehicleJourneySchema(entry);
@@ -46,26 +64,27 @@ async function start() {
 						}
 						if (Temporal.Instant.compare(result.position.recordedAt, now) > 0) result.position.recordedAt = nowIso;
 						if (Temporal.Instant.compare(result.updatedAt, now) > 0) result.updatedAt = nowIso;
-						vehicleJourneys.push(result);
+						entries.push(result);
 					}
 				} catch (error) {
 					console.error("✘ [Worker] An error occurred while parsing batch:", error);
 				}
 			}
 
-			if (vehicleJourneys.length > 0) {
-				const processedJourneys = await handleVehicleBatch(vehicleJourneys);
-				parentPort?.postMessage(processedJourneys);
+			const { journeys, withdrawnJourneyIds } = keepLatestJourneys(entries);
+			if (journeys.length > 0 || withdrawnJourneyIds.length > 0) {
+				const processedJourneys = journeys.length > 0 ? await handleVehicleBatch(journeys) : [];
+				parentPort?.postMessage({ journeys: processedJourneys, withdrawnJourneyIds });
 			}
 		}
 	};
 
-	await redisSubscriber.subscribe(VEHICLE_JOURNEYS_CHANNEL, (message) => {
-		messageQueue.push(message);
+	await redisSubscriber.subscribe([VEHICLE_JOURNEYS_CHANNEL, WITHDRAWN_JOURNEYS_CHANNEL], (message, channel) => {
+		messageQueue.push({ channel, message });
 		queuedBytes += message.length;
 
 		while (queuedBytes > MAX_QUEUED_BYTES && messageQueue.length > 1) {
-			queuedBytes -= messageQueue.shift()!.length;
+			queuedBytes -= messageQueue.shift()!.message.length;
 			droppedMessages += 1;
 		}
 

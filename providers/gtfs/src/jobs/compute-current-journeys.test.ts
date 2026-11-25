@@ -1412,7 +1412,83 @@ describe("computeVehicleJourneys (courses supplémentaires)", () => {
 		});
 
 		expect(journeys).toHaveLength(1);
-		expect(callsOf({ journeys, paths: {} })).toEqual(["B:SCHEDULED", "C:SCHEDULED"]);
+		expect(callsOf({ journeys, paths: {}, withdrawnJourneyIds: [] })).toEqual(["B:SCHEDULED", "C:SCHEDULED"]);
+	});
+});
+
+describe("computeVehicleJourneys (retrait des courses supprimées)", () => {
+	beforeEach(() => {
+		vi.spyOn(console, "log").mockImplementation(() => {});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	const canceledTripUpdate = (tripId: string, time: string): TripUpdate => ({
+		timestamp: epochSeconds(`2026-05-18T${time}Z`),
+		trip: { tripId, routeId: "line:1", startDate: "2026-05-18", scheduleRelationship: "CANCELED" },
+	});
+
+	const vehiclePosition = (time: string): VehiclePosition => ({
+		timestamp: epochSeconds(`2026-05-18T${time}Z`),
+		trip: { tripId: "original", routeId: "line:1", startDate: "2026-05-18" },
+		vehicle: { id: "vehicle:1" },
+		position: { latitude: 0, longitude: 0.005 },
+	});
+
+	it("retire la course calculée dès que le flux la supprime", async () => {
+		const source = scheduledSource();
+
+		const scheduled = await cycleAt(source, "08:05:00");
+		expect(scheduled.journeys).toHaveLength(1);
+		expect(scheduled.withdrawnJourneyIds).toEqual([]);
+
+		const canceled = await cycleAt(source, "08:05:30", { tripUpdates: [canceledTripUpdate("original", "08:05:30")] });
+		expect(canceled.journeys).toEqual([]);
+		expect(canceled.withdrawnJourneyIds).toEqual([scheduled.journeys[0]!.id]);
+
+		const stillCanceled = await cycleAt(source, "08:06:00", {
+			tripUpdates: [canceledTripUpdate("original", "08:06:00")],
+		});
+		expect(stillCanceled.withdrawnJourneyIds).toEqual([]);
+	});
+
+	it("ne retire pas une course suivie en GPS", async () => {
+		const source = scheduledSource();
+
+		const tracked = await cycleAt(source, "08:05:00", { vehiclePositions: [vehiclePosition("08:05:00")] });
+		expect(tracked.journeys[0]?.position.type).toBe("GPS");
+
+		const canceled = await cycleAt(source, "08:05:30", {
+			tripUpdates: [canceledTripUpdate("original", "08:05:30")],
+			vehiclePositions: [vehiclePosition("08:05:30")],
+		});
+		expect(canceled.withdrawnJourneyIds).toEqual([]);
+	});
+
+	it("ne retire pas la clé reprise par la course suivante du roulement", async () => {
+		const source = blockSource({ getAheadTime: () => 300 });
+
+		const before = await cycleAt(source, "08:18:00");
+		expect(before.journeys.map((journey) => journey.journeyRef)).toEqual(["network:ServiceJourney:t1"]);
+
+		const after = await cycleAt(source, "08:18:30", { tripUpdates: [canceledTripUpdate("t1", "08:18:30")] });
+		expect(after.journeys.map((journey) => [journey.id, journey.journeyRef])).toEqual([
+			[before.journeys[0]!.id, "network:ServiceJourney:t2"],
+		]);
+		expect(after.withdrawnJourneyIds).toEqual([]);
+	});
+
+	it("retire la course après un cycle en échec", async () => {
+		const source = scheduledSource();
+
+		const scheduled = await cycleAt(source, "08:05:00");
+		vi.mocked(downloadGtfsRt).mockRejectedValueOnce(new Error("feed down"));
+		await expect(computeVehicleJourneys(source)).rejects.toThrow();
+
+		const canceled = await cycleAt(source, "08:06:00", { tripUpdates: [canceledTripUpdate("original", "08:06:00")] });
+		expect(canceled.withdrawnJourneyIds).toEqual([scheduled.journeys[0]!.id]);
 	});
 });
 

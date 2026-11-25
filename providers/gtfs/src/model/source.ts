@@ -239,6 +239,7 @@ export class Source {
 	 * que les présenter à leur horaire théorique. Recalculées à chaque cycle.
 	 */
 	canceledJourneyKeys = new Set<string>();
+	computedJourneyPublications = new Map<string, string>();
 	/**
 	 * Arrêts créés à la volée par le flux temps réel et desservis par une course déviée : ils
 	 * n'existent dans aucun fichier du GTFS statique, mais un voyageur doit pouvoir les trouver sur la

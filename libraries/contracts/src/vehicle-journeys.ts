@@ -6,6 +6,10 @@ import { vehicleJourneyLineTypes } from "./vehicle-journey-attributes.js";
 /** Canal Redis sur lequel les providers publient leurs courses, par lots. */
 export const VEHICLE_JOURNEYS_CHANNEL = "journeys";
 
+export const WITHDRAWN_JOURNEYS_CHANNEL = "journeys:withdrawn";
+
+export const withdrawnJourneysSchema = type("string[]");
+
 export const vehicleJourneyLineTypeEnum = type.enumerated(...vehicleJourneyLineTypes);
 
 export type VehicleJourneyLineType = typeof vehicleJourneyLineTypeEnum.infer;

@@ -26,22 +26,27 @@ const NETWORK_CONCURRENCY = 4;
  * seul lot : un worker en retard y trouve plusieurs cycles d'un même provider, donc plusieurs
  * publications d'une même course, dont seule la dernière est à jour.
  */
-export function keepLatestJourneys(vehicleJourneys: VehicleJourney[]) {
-	const latest = new Map<string, VehicleJourney>();
-	for (const vehicleJourney of vehicleJourneys) {
-		latest.delete(vehicleJourney.id);
-		latest.set(vehicleJourney.id, vehicleJourney);
+export function keepLatestJourneys(entries: (VehicleJourney | string)[]) {
+	const latest = new Map<string, VehicleJourney | undefined>();
+	for (const entry of entries) {
+		const id = typeof entry === "string" ? entry : entry.id;
+		latest.delete(id);
+		latest.set(id, typeof entry === "string" ? undefined : entry);
 	}
-	return Array.from(latest.values());
+
+	const journeys: VehicleJourney[] = [];
+	const withdrawnJourneyIds: string[] = [];
+	for (const [id, journey] of latest) {
+		if (journey !== undefined) journeys.push(journey);
+		else withdrawnJourneyIds.push(toPublishedJourneyId(id));
+	}
+	return { journeys, withdrawnJourneyIds };
 }
 
 export async function handleVehicleBatch(vehicleJourneys: VehicleJourney[]) {
 	const now = Temporal.Now.instant();
 
-	const vehicleJourneysByNetwork = Map.groupBy(
-		keepLatestJourneys(vehicleJourneys),
-		(vehicleJourney) => vehicleJourney.networkRef,
-	);
+	const vehicleJourneysByNetwork = Map.groupBy(vehicleJourneys, (vehicleJourney) => vehicleJourney.networkRef);
 
 	// Un réseau en échec n'emporte que ses propres courses : sans cela, une seule erreur (une ligne
 	// impossible à importer, par exemple) viderait la carte de tous les réseaux du lot.

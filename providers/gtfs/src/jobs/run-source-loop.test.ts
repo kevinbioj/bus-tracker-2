@@ -1,5 +1,5 @@
 import { setImmediate } from "node:timers/promises";
-import type { VehicleJourney } from "@bus-tracker/contracts";
+import { VEHICLE_JOURNEYS_CHANNEL, type VehicleJourney, WITHDRAWN_JOURNEYS_CHANNEL } from "@bus-tracker/contracts";
 import { captureException } from "@bus-tracker/monitoring";
 import type { RedisClient } from "@bus-tracker/redis";
 import pLimit from "p-limit";
@@ -86,6 +86,7 @@ describe("runSourceLoop", () => {
 		vi.mocked(computeVehicleJourneys).mockImplementation(async (source) => ({
 			journeys: [journeyOf(source)],
 			paths: {},
+			withdrawnJourneyIds: [],
 		}));
 		vi.mocked(publishStopAreas).mockClear();
 	});
@@ -106,6 +107,36 @@ describe("runSourceLoop", () => {
 
 		await waitFor(() => countOf(published, "fast") >= 3);
 		expect(countOf(published, "slow")).toBe(0);
+	});
+
+	it("publie les courses retirées après celles du cycle", async () => {
+		const source = makeSource("source");
+		vi.mocked(computeVehicleJourneys).mockImplementation(async (source) => ({
+			journeys: [journeyOf(source)],
+			paths: {},
+			withdrawnJourneyIds: ["withdrawn"],
+		}));
+		const { context, published } = makeContext([source]);
+
+		void runSourceLoop(source, context);
+
+		await waitFor(() => countOf(published, "source") >= 1);
+		expect(vi.mocked(context.redis.publish).mock.calls.slice(0, 2)).toEqual([
+			[VEHICLE_JOURNEYS_CHANNEL, JSON.stringify([journeyOf(source)])],
+			[WITHDRAWN_JOURNEYS_CHANNEL, JSON.stringify(["withdrawn"])],
+		]);
+	});
+
+	it("ne publie aucun retrait quand aucune course n'est retirée", async () => {
+		const source = makeSource("source");
+		const { context, published } = makeContext([source]);
+
+		void runSourceLoop(source, context);
+
+		await waitFor(() => countOf(published, "source") >= 2);
+		expect(vi.mocked(context.redis.publish).mock.calls.map(([channel]) => channel)).not.toContain(
+			WITHDRAWN_JOURNEYS_CHANNEL,
+		);
 	});
 
 	it("remonte l'échec d'import au démarrage sans bloquer les autres sources", async () => {
@@ -165,7 +196,7 @@ describe("runSourceLoop", () => {
 				failingCalls += 1;
 				throw failingCalls % 2 === 0 ? new DeadlineExceededError() : new Error("broken feed");
 			}
-			return { journeys: [journeyOf(source)], paths: {} };
+			return { journeys: [journeyOf(source)], paths: {}, withdrawnJourneyIds: [] };
 		});
 		const { context, published } = makeContext([failing, healthy]);
 
@@ -180,7 +211,7 @@ describe("runSourceLoop", () => {
 		const stuck = makeSource("stuck");
 		const healthy = makeSource("healthy");
 		vi.mocked(computeVehicleJourneys).mockImplementation(async (source) =>
-			source === stuck ? new Promise(() => {}) : { journeys: [journeyOf(source)], paths: {} },
+			source === stuck ? new Promise(() => {}) : { journeys: [journeyOf(source)], paths: {}, withdrawnJourneyIds: [] },
 		);
 		const onStuck = vi.fn();
 		const { context, published } = makeContext([stuck, healthy], { onStuck, stuckAfterMs: 20 });

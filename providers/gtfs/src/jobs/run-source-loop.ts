@@ -1,5 +1,5 @@
 import { setTimeout } from "node:timers/promises";
-import { LINE_PATH_TTL_SECONDS, VEHICLE_JOURNEYS_CHANNEL } from "@bus-tracker/contracts";
+import { LINE_PATH_TTL_SECONDS, VEHICLE_JOURNEYS_CHANNEL, WITHDRAWN_JOURNEYS_CHANNEL } from "@bus-tracker/contracts";
 import { captureException } from "@bus-tracker/monitoring";
 import type { RedisClient } from "@bus-tracker/redis";
 import type { LimitFunction } from "p-limit";
@@ -160,7 +160,7 @@ async function runIteration(source: Source, context: SourceLoopContext, state: S
 async function computeAndPublishJourneys(source: Source, context: SourceLoopContext, state: SourceLoopState) {
 	const { redis, providerId } = context;
 	const deadline = createDeadline(Date.now() + context.sourceBudgetMs);
-	const { journeys, paths } = await computeVehicleJourneys(source, deadline);
+	const { journeys, paths, withdrawnJourneyIds } = await computeVehicleJourneys(source, deadline);
 
 	for (const journey of journeys) {
 		source.observedNetworkRefs.add(journey.networkRef);
@@ -174,6 +174,10 @@ async function computeAndPublishJourneys(source: Source, context: SourceLoopCont
 
 	for (let i = 0; i < journeys.length; i += JOURNEYS_CHUNK_SIZE) {
 		await redis.publish(VEHICLE_JOURNEYS_CHANNEL, JSON.stringify(journeys.slice(i, i + JOURNEYS_CHUNK_SIZE)));
+	}
+
+	if (withdrawnJourneyIds.length > 0) {
+		await redis.publish(WITHDRAWN_JOURNEYS_CHANNEL, JSON.stringify(withdrawnJourneyIds));
 	}
 
 	await context.journeyPaths.publish(redis, paths, Date.now());
