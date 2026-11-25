@@ -116,11 +116,12 @@ function DepartureRow({
 	const realtime = departure.expectedTime !== undefined || (skipped && departure.realtime === true);
 
 	// L'heure théorique n'est rappelée que lorsqu'elle diffère de celle affichée : un passage à l'heure
-	// n'a rien à corriger. Sous un arrêt provisoire, elle cède la place à la mention : elle n'est de
-	// toute façon qu'estimée par la déviation, et la hauteur de la ligne ne tient pas les deux.
+	// n'a rien à corriger. Sous un arrêt provisoire ou une course peut-être supprimée, elle cède la place
+	// à la mention : la hauteur de la ligne ne tient pas les deux.
 	const showAimedTime =
 		!skipped &&
 		!temporary &&
+		!potentiallyCanceled &&
 		departure.expectedTime !== undefined &&
 		formatLocalTime(departure.expectedTime) !== formatLocalTime(departure.aimedTime);
 
@@ -254,13 +255,15 @@ function DepartureRow({
 						)}
 						{/* Sous l'heure barrée, ce qui est supprimé : la course entière, ou le seul arrêt. */}
 						{skipped && (
-							<span className="text-xs font-semibold text-red-700 dark:text-red-500 whitespace-nowrap">
+							<span className="flex items-center gap-0.5 text-xs font-semibold text-red-700 dark:text-red-500 whitespace-nowrap">
+								<XIcon className="shrink-0" size={12} strokeWidth={3} />
 								{departure.canceled ? m.stop_departures_trip_cancelled() : m.stop_call_skipped()}
 							</span>
 						)}
 						{/* La course n'est pas annoncée supprimée, mais plus aucun véhicule ne l'assure : elle l'est peut-être. */}
 						{potentiallyCanceled && (
-							<span className="text-xs font-semibold text-orange-700 dark:text-orange-500 whitespace-nowrap">
+							<span className="flex items-center gap-0.5 text-xs font-semibold text-orange-700 dark:text-orange-500 whitespace-nowrap">
+								<TriangleAlertFilledIcon className="shrink-0" size={12} />
 								{m.stop_departures_trip_potentially_cancelled()}
 							</span>
 						)}
