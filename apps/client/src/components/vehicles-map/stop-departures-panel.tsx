@@ -108,9 +108,10 @@ function DepartureRow({
 }: Readonly<DepartureRowProps>) {
 	const skipped = departure.callStatus === "SKIPPED";
 	const extra = departure.callStatus === "UNSCHEDULED";
-	const temporary = !skipped && departure.temporary === true;
-	// La course qui assure le passage est jugée non honorée : affichée, mais signalée comme peut-être supprimée.
+	// La course qui assure le passage est jugée non honorée : affichée, mais signalée comme peut-être
+	// supprimée, ce qui prime sur toute autre mention.
 	const potentiallyCanceled = !skipped && departure.potentiallyCanceled === true;
+	const temporary = !skipped && !potentiallyCanceled && departure.temporary === true;
 	// Un passage supprimé n'a pas d'heure attendue : c'est alors la course qui dit si elle est suivie en
 	// temps réel.
 	const realtime = departure.expectedTime !== undefined || (skipped && departure.realtime === true);
@@ -120,14 +121,14 @@ function DepartureRow({
 	// à la mention : la hauteur de la ligne ne tient pas les deux.
 	const showAimedTime =
 		!skipped &&
-		!temporary &&
 		!potentiallyCanceled &&
+		!temporary &&
 		departure.expectedTime !== undefined &&
 		formatLocalTime(departure.expectedTime) !== formatLocalTime(departure.aimedTime);
 
-	// Rouge : le passage est supprimé. Orange : desserte ajoutée par une déviation, comme dans la
-	// pop-up du véhicule — l'icône dit seule si son heure vient du temps réel. Vert : l'heure vient du
-	// temps réel. Noir : elle n'est que théorique.
+	// Rouge : le passage est supprimé. Orange : la course l'est peut-être. Jaune : desserte ajoutée par
+	// une déviation, comme dans la pop-up du véhicule — l'icône dit seule si son heure vient du temps
+	// réel. Vert : l'heure vient du temps réel. Noir : elle n'est que théorique.
 	// À l'arrivée, la provenance de la course plutôt que sa destination.
 	const headline =
 		(direction === "arrivals" ? departure.originName : undefined) ?? departure.destination ?? departure.stopName;
@@ -135,11 +136,13 @@ function DepartureRow({
 
 	const accentColor = skipped
 		? "text-red-700 dark:text-red-500"
-		: extra
-			? "text-yellow-700 dark:text-yellow-500"
-			: realtime
-				? "text-green-700 dark:text-green-500"
-				: "text-foreground";
+		: potentiallyCanceled
+			? "text-orange-700 dark:text-orange-500"
+			: extra
+				? "text-yellow-700 dark:text-yellow-500"
+				: realtime
+					? "text-green-700 dark:text-green-500"
+					: "text-foreground";
 
 	// Pictogramme puis destination ; le quai, collé à l'heure, est rejeté avec elle à l'autre bout de la
 	// ligne. La hauteur est fixe : une ligne ne grandit pas quand l'heure théorique s'affiche sous l'heure
