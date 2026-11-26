@@ -329,7 +329,7 @@ function LineVehiclesControl({ lineId, rail = false, timezone }: Readonly<LineVe
 
 		const control = {
 			onAdd: () => container,
-			onRemove: () => void 0,
+			onRemove: () => container.remove(),
 		};
 
 		map.addControl(control, "bottom-right");

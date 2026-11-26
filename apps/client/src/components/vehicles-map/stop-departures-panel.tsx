@@ -617,7 +617,7 @@ function StopDeparturesControl(props: Readonly<StopDeparturesPanelProps>) {
 
 		const control = {
 			onAdd: () => container,
-			onRemove: () => void 0,
+			onRemove: () => container.remove(),
 		};
 
 		map.addControl(control, "bottom-right");
