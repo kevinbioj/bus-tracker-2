@@ -4,6 +4,7 @@ import { useQueryState } from "nuqs";
 import { type RefObject, useEffect, useRef, useState } from "react";
 
 import { useMap } from "~/adapters/maplibre-gl/map";
+import { isStyleLoaded } from "~/adapters/maplibre-gl/style";
 import { fetchShowcaseJourney, type ShowcaseJourney } from "~/api/vehicle-journeys";
 import { InstallInstructions } from "~/components/onboarding/install-instructions";
 import {
@@ -415,7 +416,7 @@ export function MapTour() {
 			const [showcase, canGeolocate] = await Promise.all([
 				withTimeout(fetchShowcaseJourney(), SHOWCASE_FETCH_TIMEOUT_MS),
 				canOfferGeolocation(map),
-				sleep(START_DELAY_MS),
+				sleep(trigger === "first-visit" ? START_DELAY_MS : 0),
 			]);
 			if (cancelled || sessionRef.current !== session) return;
 
@@ -434,7 +435,7 @@ export function MapTour() {
 			});
 		};
 
-		if (map.isStyleLoaded()) {
+		if (isStyleLoaded(map)) {
 			void start();
 		} else {
 			map.once("load", start);
