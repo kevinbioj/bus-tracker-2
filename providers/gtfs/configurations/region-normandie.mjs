@@ -107,7 +107,6 @@ const sources = [
 		gtfsOptions: {
 			computeShapeDistTraveled: "always",
 		},
-		mode: "NO-TU",
 		mapVehiclePosition: (vehiclePosition) => {
 			if (vehiclePosition.position === undefined || vehiclePosition.vehicle.id === undefined) return vehiclePosition;
 
