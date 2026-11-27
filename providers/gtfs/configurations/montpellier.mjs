@@ -2,7 +2,7 @@
 const sources = [
 	{
 		id: "montpellier",
-		staticResourceHref: "https://gtfsproxy.e-tam.fr/COMMON/GTFS.zip",
+		staticResourceHref: "https://gtfs.bus-tracker.fr/tam.zip",
 		realtimeResourceHrefs: [
 			{ href: "https://gtfsproxy.e-tam.fr/COMMON/TripUpdate.pb", pollMs: 30_000 },
 			"https://gtfsproxy.e-tam.fr/COMMON/VehiclePosition.pb",
