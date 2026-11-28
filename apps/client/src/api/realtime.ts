@@ -9,7 +9,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { API_URL_PREFIX } from "./client";
 import type { Line } from "./lines";
 import type { ServiceAlert } from "./service-alerts";
-import type { StopDepartures, StopMarker } from "./stops";
+import type { NearbyDepartures, StopDepartures, StopMarker } from "./stops";
 import type { DisposeableVehicleJourney } from "./vehicle-journeys";
 
 export type RealtimeStatus = "closed" | "connecting" | "open" | "unavailable" | "incompatible";
@@ -20,6 +20,7 @@ type RealtimePayloads = {
 	line: Line;
 	stopMarker: StopMarker;
 	stopDepartures: StopDepartures;
+	nearbyDepartures: NearbyDepartures;
 };
 
 export type RealtimeMessage = RealtimeUpdateMessage<RealtimePayloads>;

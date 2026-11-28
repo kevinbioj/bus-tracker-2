@@ -12,7 +12,7 @@ const INSTRUCTIONS = `Bus Tracker (${siteUrl}) tracks public transport vehicles 
 How to find things:
 - Network: search_networks. Line: search_lines (works across networks) or get_network_lines. Stop: search_stops by name (pass networkId when known), or find_stops_nearby with coordinates.
 - Live situation of a line, by direction: get_line_status. Full alert texts, optionally for one direction and/or stop: get_line_alerts.
-- Next departures: get_stop_departures (accepts a stop ref or a platform ref from get_stop). All stops of a journey: get_journey.
+- Next departures: get_stop_departures (accepts a stop ref or a platform ref from get_stop). Departures reachable on foot around coordinates, across all nearby stops: get_nearby_departures. All stops of a journey: get_journey.
 - Fleet: search_vehicles, get_vehicle, get_vehicle_history, get_fleet_overview, get_line_vehicle_assignments.
 - Missing data: get_announcements may report an outage.
 - Missing capability, misleading result or anything worth telling the Bus Tracker team: use send_feedback when it is available.

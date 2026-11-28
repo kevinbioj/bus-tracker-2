@@ -1,13 +1,15 @@
-import { parseAsString, useQueryStates } from "nuqs";
+import { parseAsBoolean, parseAsString, useQueryStates } from "nuqs";
 
 const stopSelectionParsers = {
 	stopRef: parseAsString,
 	stopPointRef: parseAsString,
+	nearby: parseAsBoolean,
 };
 
 const stopSelectionUrlKeys = {
 	stopRef: "stop-ref",
 	stopPointRef: "stop-point",
+	nearby: "nearby",
 };
 
 /**
@@ -15,7 +17,7 @@ const stopSelectionUrlKeys = {
  * jamais les deux — le serveur retrouve la station d'un quai, le client n'a pas à la répéter.
  */
 export function useStopSelection() {
-	const [{ stopRef, stopPointRef }, setSelection] = useQueryStates(stopSelectionParsers, {
+	const [{ stopRef, stopPointRef, nearby }, setSelection] = useQueryStates(stopSelectionParsers, {
 		urlKeys: stopSelectionUrlKeys,
 	});
 
@@ -23,8 +25,11 @@ export function useStopSelection() {
 		/** Référence du tableau de passages : le quai s'il est choisi, la station sinon. */
 		selectedRef: stopPointRef ?? stopRef,
 		stopPointRef,
-		selectStopArea: (ref: string) => void setSelection({ stopRef: ref, stopPointRef: null }),
-		selectStopPoint: (ref: string) => void setSelection({ stopRef: null, stopPointRef: ref }),
+		nearby: nearby === true,
+		selectStopArea: (ref: string) => void setSelection({ stopRef: ref, stopPointRef: null, nearby: null }),
+		selectStopPoint: (ref: string) => void setSelection({ stopRef: null, stopPointRef: ref, nearby: null }),
+		openNearby: () => void setSelection({ stopRef: null, stopPointRef: null, nearby: true }),
+		closeNearby: () => void setSelection({ nearby: null }),
 		clearSelection: () => void setSelection({ stopRef: null, stopPointRef: null }),
 	};
 }

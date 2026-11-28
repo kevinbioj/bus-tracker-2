@@ -68,7 +68,7 @@ describe("Bus Tracker MCP server", () => {
 
 	it("exposes read-only tools with input and output schemas", async () => {
 		const { result } = await rpc(handler, "tools/list");
-		expect(result.tools).toHaveLength(19);
+		expect(result.tools).toHaveLength(20);
 		for (const tool of result.tools) {
 			expect(tool.annotations.readOnlyHint).toBe(true);
 			expect(tool.inputSchema.type).toBe("object");

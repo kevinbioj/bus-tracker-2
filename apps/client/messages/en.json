@@ -818,5 +818,12 @@
 	"onboarding_geolocate_title": "Find your location?",
 	"onboarding_geolocate_body": "Bus Tracker can center the map on your position to show you the vehicles running around you.",
 	"onboarding_geolocate_accept": "Locate me",
-	"onboarding_geolocate_decline": "No thanks"
+	"onboarding_geolocate_decline": "No thanks",
+	"nearby_departures_title": "Nearby departures",
+	"nearby_departures_open": "Nearby departures",
+	"nearby_departures_locating": "Locating you…",
+	"nearby_departures_loading": "Looking for nearby departures…",
+	"nearby_departures_empty": "No departure within walking reach in the next two hours.",
+	"nearby_departures_error": "Nearby departures are unavailable.",
+	"nearby_departures_stop": "{stop} · {distance}"
 }

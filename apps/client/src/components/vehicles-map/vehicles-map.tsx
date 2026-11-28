@@ -31,23 +31,27 @@ import {
 	useMapTheme,
 	withAbsoluteSpriteUrls,
 } from "~/components/vehicles-map/map-style";
+import { NearbyDeparturesButton } from "~/components/vehicles-map/nearby-departures-control";
+import { NearbyDeparturesPanel } from "~/components/vehicles-map/nearby-departures-panel";
 import { DEFAULT_LOCATION, PositionSave } from "~/components/vehicles-map/position-save";
 import { useShowStops } from "~/components/vehicles-map/show-stops";
 import { StopDeparturesPanel } from "~/components/vehicles-map/stop-departures-panel";
 import { useStopSelection } from "~/components/vehicles-map/stops-markers/stop-selection";
 import { StopsMarkers } from "~/components/vehicles-map/stops-markers/stops-markers-layer";
 import { VehiclesMarkers } from "~/components/vehicles-map/vehicles-markers/vehicles-markers-layer";
+import { useFeatureFlag } from "~/hooks/use-feature-flag";
 import { notifyPseudoFullscreen, PortalThemeContext } from "~/hooks/use-portal-container";
 
 type VehiclesMapProps = ComponentPropsWithoutRef<"div">;
 
 export function VehiclesMap(props: VehiclesMapProps) {
 	const [lineIds, setLineIds] = useQueryState("line-id", lineIdsSearchParser);
-	const { selectedRef: selectedStopRef } = useStopSelection();
+	const { selectedRef: selectedStopRef, nearby } = useStopSelection();
 	const [showStops] = useShowStops();
 	const [networkId, setNetworkId] = useQueryState("network-id", parseAsInteger);
 	const [showIdentifiedVehiclesPanel] = useLocalStorage("show-identified-vehicles-panel", false);
 	const [geolocateOnStart] = useGeolocateOnStart();
+	const nearbyDeparturesEnabled = useFeatureFlag("nearby-departures");
 
 	const realtime = isRealtimeAvailable(useRealtimeConnection());
 	const urlLineIds = useMemo(
@@ -180,6 +184,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 					<StopsMarkers lineIds={urlLineIds} networkId={lineId === null ? filteredNetwork?.id : undefined} />
 				)}
 				{showStops && selectedStopRef !== null && <StopDeparturesPanel lineIds={urlLineIds} />}
+				{nearbyDeparturesEnabled && nearby && <NearbyDeparturesPanel />}
 				{filteredLine !== undefined && (showIdentifiedVehiclesPanel || filteredLine.type === "RAIL") && (
 					<LineVehiclesPanel
 						lineId={filteredLine.id}
@@ -189,6 +194,7 @@ export function VehiclesMap(props: VehiclesMapProps) {
 				)}
 				<FilterModuleControl filter={filter} onFilterChange={onFilterChange} />
 				<MapSettingsControl />
+				{nearbyDeparturesEnabled && <NearbyDeparturesButton />}
 				<MapTour />
 			</MapComponent>
 		</PortalThemeContext>

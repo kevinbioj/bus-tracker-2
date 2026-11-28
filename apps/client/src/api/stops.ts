@@ -190,3 +190,32 @@ export const GetStopDeparturesQuery = (
 				})
 				.then((response) => response.json<StopDepartures>()),
 	});
+
+export type NearbyPosition = { latitude: number; longitude: number };
+
+export type NearbyDeparture = StopDeparture & {
+	stopAreaRef: string;
+	stopAreaName: string;
+	distance: number;
+};
+
+export type NearbyDepartures = { departures: NearbyDeparture[] };
+
+export const GetNearbyDeparturesQuery = (position: NearbyPosition | null, realtime = false) =>
+	queryOptions({
+		enabled: position !== null && !realtime,
+		placeholderData: keepPreviousData,
+		retry: false,
+		refetchInterval: realtime ? false : 5_000,
+		staleTime: 4_000,
+		queryKey: ["nearby-departures", position?.latitude, position?.longitude],
+		queryFn: () =>
+			client
+				.get("/stops/nearby", {
+					searchParams: toSearchParams({
+						latitude: String(position!.latitude),
+						longitude: String(position!.longitude),
+					}),
+				})
+				.then((response) => response.json<NearbyDepartures>()),
+	});

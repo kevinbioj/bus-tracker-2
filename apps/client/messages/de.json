@@ -797,5 +797,12 @@
 	"onboarding_geolocate_title": "Ihren Standort ermitteln?",
 	"onboarding_geolocate_body": "Bus Tracker kann die Karte auf Ihren Standort zentrieren, um Ihnen die Fahrzeuge in Ihrer Nähe zu zeigen.",
 	"onboarding_geolocate_accept": "Standort ermitteln",
-	"onboarding_geolocate_decline": "Nein danke"
+	"onboarding_geolocate_decline": "Nein danke",
+	"nearby_departures_title": "Abfahrten in der Nähe",
+	"nearby_departures_open": "Abfahrten in der Nähe",
+	"nearby_departures_locating": "Standort wird ermittelt…",
+	"nearby_departures_loading": "Abfahrten in der Nähe werden gesucht…",
+	"nearby_departures_empty": "Keine zu Fuß erreichbare Abfahrt in den nächsten zwei Stunden.",
+	"nearby_departures_error": "Abfahrten in der Nähe sind nicht verfügbar.",
+	"nearby_departures_stop": "{stop} · {distance}"
 }

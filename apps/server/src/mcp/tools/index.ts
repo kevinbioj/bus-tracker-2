@@ -12,6 +12,7 @@ import { getNetworkTool } from "./networks/get-network.js";
 import { searchNetworksTool } from "./networks/search-networks.js";
 import { getAnnouncementsTool } from "./platform/get-announcements.js";
 import { findStopsNearbyTool } from "./stops/find-stops-nearby.js";
+import { getNearbyDeparturesTool } from "./stops/get-nearby-departures.js";
 import { getStopTool } from "./stops/get-stop.js";
 import { getStopDeparturesTool } from "./stops/get-stop-departures.js";
 import { searchStopsTool } from "./stops/search-stops.js";
@@ -33,6 +34,7 @@ export const tools: BusTrackerTool[] = [
 	findStopsNearbyTool,
 	getStopTool,
 	getStopDeparturesTool,
+	getNearbyDeparturesTool,
 	getJourneyTool,
 	findNearbyVehiclesTool,
 	searchVehiclesTool,

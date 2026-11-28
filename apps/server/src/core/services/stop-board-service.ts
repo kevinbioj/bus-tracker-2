@@ -28,7 +28,7 @@ const MARKERS_LIMIT = 1_500;
 /** Portée du tableau de passages, alignée sur celle du processeur. */
 const DEPARTURES_HORIZON_MS = 2 * 60 * 60 * 1000;
 
-const DEPARTURES_LIMIT = 15;
+export const DEPARTURES_LIMIT = 15;
 
 /**
  * Au-delà, la position d'un véhicule est jugée figée — le véhicule s'est délocalisé : elle ne dit
@@ -138,7 +138,7 @@ export async function buildStopMarkers({
 	return { items, sourceKeys: new Set(stopAreas.map(sourceKeyOf)) };
 }
 
-type ResolvedDeparture = Omit<StopDeparture, "lineRef"> & {
+export type ResolvedDeparture = Omit<StopDeparture, "lineRef"> & {
 	/** Absente d'un passage qui ne vient que du suivi : la ligne y est déjà résolue. */
 	lineRef?: string;
 	/**
@@ -376,7 +376,7 @@ async function resolveLineIds(departures: ResolvedDeparture[]) {
  * Le client sonde le tableau toutes les 5 s : le cache, plus court, ne fait que mutualiser les
  * demandes simultanées de plusieurs visiteurs sur une même station sans rendre de réponse périmée.
  */
-const departuresCache = useCache<StopDeparturesPayload>(4_000, 1_024);
+const departuresCache = useCache<StopBoard>(4_000, 1_024);
 
 /** La station elle-même ne change qu'avec la ressource GTFS. */
 const stopAreasCache = useCache<StopArea | null>(300_000, 4_096);
@@ -482,41 +482,58 @@ function toStopDeparturesPayload(
 
 export type StopDeparturesPayload = ReturnType<typeof toStopDeparturesPayload>;
 
-const departuresInFlight = new Map<string, ReturnType<typeof computeStopDeparturesPayload>>();
+export type StopBoard = {
+	stopArea: StopArea;
+	stopPointRef?: string;
+	departures: ResolvedDeparture[];
+	payload: StopDeparturesPayload;
+};
 
-export async function buildStopDepartures(ref: string, direction: StopCallDirection, lineIds?: number[]) {
+type StopBoardResult = { board: StopBoard } | { status: 400 | 404; error: string };
+
+const departuresInFlight = new Map<string, Promise<StopBoardResult>>();
+
+export async function loadStopBoard(
+	ref: string,
+	direction: StopCallDirection,
+	lineIds?: number[],
+): Promise<StopBoardResult> {
 	const cacheKey = `${ref}|${direction}|${lineIds?.join(",") ?? ""}`;
 	const cached = departuresCache.get(cacheKey);
-	if (cached !== undefined) return { payload: cached };
+	if (cached !== undefined) return { board: cached };
 
 	let inFlight = departuresInFlight.get(cacheKey);
 	if (inFlight === undefined) {
-		inFlight = computeStopDeparturesPayload(cacheKey, ref, direction, lineIds).finally(() =>
-			departuresInFlight.delete(cacheKey),
-		);
+		inFlight = computeStopBoard(cacheKey, ref, direction, lineIds).finally(() => departuresInFlight.delete(cacheKey));
 		departuresInFlight.set(cacheKey, inFlight);
 	}
 	return inFlight;
 }
 
-async function computeStopDeparturesPayload(
+export async function buildStopDepartures(ref: string, direction: StopCallDirection, lineIds?: number[]) {
+	const result = await loadStopBoard(ref, direction, lineIds);
+	if ("error" in result) return { status: result.status, error: result.error };
+	return { payload: result.board.payload };
+}
+
+async function computeStopBoard(
 	cacheKey: string,
 	ref: string,
 	direction: StopCallDirection,
 	lineIds: number[] | undefined,
-) {
+): Promise<StopBoardResult> {
 	const lineRefs = lineIds !== undefined ? await findLinesRefs(lineIds) : undefined;
 	if (lineRefs !== undefined && lineRefs.length === 0) {
-		return { status: 400, error: `No line was found with id '${lineIds?.join("', '")}'.` } as const;
+		return { status: 400, error: `No line was found with id '${lineIds?.join("', '")}'.` };
 	}
 
 	const stop = await resolveStop(ref);
 	if (stop === undefined) {
-		return { status: 404, error: `No stop area was found for ref "${ref}".` } as const;
+		return { status: 404, error: `No stop area was found for ref "${ref}".` };
 	}
 	const { stopArea, stopPointRef, stopRefs } = stop;
 	if (direction === "arrivals" && stopArea.arrivals !== true) {
-		return { status: 400, error: `Stop area "${stopArea.ref}" does not offer arrivals.` } as const;
+		return { status: 400, error: `Stop area "${stopArea.ref}" does not offer arrivals.` };
 	}
 
 	const nowMs = Date.now();
@@ -539,10 +556,15 @@ async function computeStopDeparturesPayload(
 
 	departures.sort((a, b) => Date.parse(a.expectedTime ?? a.aimedTime) - Date.parse(b.expectedTime ?? b.aimedTime));
 
-	const payload = toStopDeparturesPayload(stopArea, stopPointRef, departures, lineIds);
+	const board: StopBoard = {
+		stopArea,
+		stopPointRef,
+		departures,
+		payload: toStopDeparturesPayload(stopArea, stopPointRef, departures, lineIds),
+	};
 
-	departuresCache.set(cacheKey, payload);
-	return { payload };
+	departuresCache.set(cacheKey, board);
+	return { board };
 }
 
 export async function buildStopAlerts(ref: string) {

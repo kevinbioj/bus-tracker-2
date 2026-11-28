@@ -6,6 +6,7 @@ import {
 	REALTIME_PROTOCOL_VERSION,
 	type RealtimeClientMessage,
 	type RealtimeJourneyUpdate,
+	type RealtimeNearbyWatch,
 	type RealtimeServerMessage,
 	type RealtimeStopWatch,
 	type RealtimeUpdateMessage,
@@ -17,6 +18,11 @@ import { createMiddleware } from "hono/factory";
 import type { WebSocket } from "ws";
 import { redis } from "../core/redis.js";
 import { findLineDetails, findLinePath, type LineDetails } from "../core/services/line-details-service.js";
+import {
+	buildNearbyDepartures,
+	type NearbyDeparturesPayload,
+	nearbyKeyOf,
+} from "../core/services/nearby-departures-service.js";
 import { type ExposedServiceAlert, findJourneyAlerts, findLineAlerts } from "../core/services/service-alert-service.js";
 import {
 	buildStopAlerts,
@@ -53,6 +59,7 @@ type Payloads = {
 	line: LineDetails;
 	stopMarker: StopMarker;
 	stopDepartures: StopDeparturesPayload;
+	nearbyDepartures: NearbyDeparturesPayload;
 };
 
 type UpdateMessage = RealtimeUpdateMessage<Payloads>;
@@ -65,6 +72,8 @@ type StopContext = { watch: RealtimeStopWatch; key: string; departuresKey?: stri
 
 type StopDeparturesResult = Awaited<ReturnType<typeof buildStopDepartures>>;
 
+type NearbyContext = { watch: RealtimeNearbyWatch; key: string; departuresKey?: string };
+
 type Connection = {
 	socket: WebSocket;
 	subscription?: { seq: number; filter: MarkersFilter; includeMarker?: string };
@@ -72,6 +81,7 @@ type Connection = {
 	watchedJourney: JourneyContext | null;
 	lines: Map<number, LineContext>;
 	watchedStop: StopContext | null;
+	watchedNearby: NearbyContext | null;
 	stops: { seq: number; filter: StopMarkersFilter } | null;
 	sentStops: Map<string, number>;
 	queue: Promise<void>;
@@ -407,6 +417,58 @@ async function refreshStopDepartures() {
 	}
 }
 
+async function loadNearbyDepartures(watch: RealtimeNearbyWatch) {
+	try {
+		return await buildNearbyDepartures(watch);
+	} catch (error) {
+		console.error("✘ Failed to build nearby departures:", error);
+		return null;
+	}
+}
+
+async function composeNearbyDepartures(
+	message: UpdateMessage,
+	context: NearbyContext,
+	prebuilt?: NearbyDeparturesPayload | null,
+) {
+	const payload = prebuilt !== undefined ? prebuilt : await loadNearbyDepartures(context.watch);
+
+	if (payload === null) {
+		if (context.departuresKey === "unavailable") return;
+		context.departuresKey = "unavailable";
+		message.nearbyDepartures = { ...context.watch, unavailable: true };
+		return;
+	}
+
+	const departuresKey = JSON.stringify({ ...payload, at: undefined });
+	if (departuresKey === context.departuresKey) return;
+
+	context.departuresKey = departuresKey;
+	message.nearbyDepartures = { ...context.watch, departures: payload };
+}
+
+async function refreshNearbyDepartures() {
+	const watches = new Map<string, RealtimeNearbyWatch>();
+	for (const connection of connections) {
+		const context = connection.watchedNearby;
+		if (context !== null) watches.set(context.key, context.watch);
+	}
+	if (watches.size === 0) return;
+
+	const results = new Map(
+		await Promise.all(watches.entries().map(async ([key, watch]) => [key, await loadNearbyDepartures(watch)] as const)),
+	);
+
+	for (const connection of connections) {
+		const context = connection.watchedNearby;
+		if (context === null) continue;
+		const result = results.get(context.key);
+		if (result !== undefined) {
+			enqueue(connection, createUpdateMessage(), (message) => composeNearbyDepartures(message, context, result));
+		}
+	}
+}
+
 function send(connection: Connection, message: RealtimeServerMessage<Payloads>) {
 	const { socket } = connection;
 	if (socket.readyState !== socket.OPEN) return;
@@ -516,7 +578,7 @@ let isRefreshingStopDepartures = false;
 setInterval(() => {
 	if (isRefreshingStopDepartures) return;
 	isRefreshingStopDepartures = true;
-	refreshStopDepartures()
+	Promise.all([refreshStopDepartures(), refreshNearbyDepartures()])
 		.catch((error) => console.error("✘ Failed to refresh stop departures:", error))
 		.finally(() => {
 			isRefreshingStopDepartures = false;
@@ -616,6 +678,16 @@ function handleMessage(connection: Connection, message: RealtimeClientMessage) {
 		return;
 	}
 
+	if (message.type === "watch-nearby") {
+		const watch = message.position;
+		connection.watchedNearby = watch !== null ? { watch, key: nearbyKeyOf(watch) } : null;
+		const nearbyContext = connection.watchedNearby;
+		if (nearbyContext !== null) {
+			enqueue(connection, createUpdateMessage(), (update) => composeNearbyDepartures(update, nearbyContext));
+		}
+		return;
+	}
+
 	connection.watchedJourney = message.id !== null ? { journeyId: message.id } : null;
 	const context = connection.watchedJourney;
 	if (context !== null) enqueue(connection, createUpdateMessage(), (update) => composeJourney(update, context));
@@ -644,6 +716,7 @@ hono.get(
 					watchedJourney: null,
 					lines: new Map(),
 					watchedStop: null,
+					watchedNearby: null,
 					stops: null,
 					sentStops: new Map(),
 					queue: Promise.resolve(),

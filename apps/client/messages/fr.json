@@ -818,5 +818,12 @@
 	"onboarding_geolocate_title": "Vous localiser ?",
 	"onboarding_geolocate_body": "Bus Tracker peut centrer la carte sur votre position pour vous montrer les véhicules qui circulent autour de vous.",
 	"onboarding_geolocate_accept": "Me localiser",
-	"onboarding_geolocate_decline": "Non merci"
+	"onboarding_geolocate_decline": "Non merci",
+	"nearby_departures_title": "Départs à proximité",
+	"nearby_departures_open": "Départs à proximité",
+	"nearby_departures_locating": "Localisation en cours…",
+	"nearby_departures_loading": "Recherche des départs à proximité…",
+	"nearby_departures_empty": "Aucun départ atteignable à pied dans les deux prochaines heures.",
+	"nearby_departures_error": "Les départs à proximité sont indisponibles.",
+	"nearby_departures_stop": "{stop} · {distance}"
 }

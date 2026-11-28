@@ -12,7 +12,7 @@ Tools:
 
 - Networks: `search_networks` (by name, city, authority or region), `get_network` (operators, real-time tracking quality, open data sources), `get_fleet_overview` (fleet by model, operator, type, air conditioning).
 - Lines: `search_lines` (by number, across networks), `get_network_lines`, `get_line_status` (live journeys grouped by direction, delays, disruptions), `get_line_alerts` (full alert texts, filterable by direction and stop), `get_line_vehicle_assignments` (vehicles that ran on a given day), `get_line_stops`.
-- Stops: `search_stops` (by name), `find_stops_nearby` (by coordinates), `get_stop` (platforms, wheelchair access, alerts), `get_stop_departures` (next departures or arrivals within two hours, real time included).
+- Stops: `search_stops` (by name), `find_stops_nearby` (by coordinates), `get_stop` (platforms, wheelchair access, alerts), `get_stop_departures` (next departures or arrivals within two hours, real time included), `get_nearby_departures` (departures reachable on foot around coordinates, across all nearby stops).
 - Journeys: `get_journey` (all remaining stops with expected times, alerts), `find_nearby_vehicles`.
 - Fleet: `search_vehicles` (by fleet number, model, operator), `get_vehicle` (record and current journey), `get_vehicle_history` (lines run day by day for a month).
 - Service: `get_announcements` (Bus Tracker news and outages).

@@ -1,5 +1,6 @@
 import * as z from "zod";
 
+import { buildNearbyDepartures } from "../core/services/nearby-departures-service.js";
 import { buildStopAlerts, buildStopDepartures, findStopMarkers } from "../core/services/stop-board-service.js";
 import { hono } from "../server.js";
 import {
@@ -30,6 +31,15 @@ hono.get("/stops/markers", createQueryValidator(getStopMarkersQuery), async (c) 
 	const { networkId, lineId, ...filter } = c.req.valid("query");
 	const items = await findStopMarkers({ ...filter, networkIds: networkId, lineIds: lineId });
 	return c.json({ items, at: Temporal.Now.instant() });
+});
+
+const getNearbyDeparturesQuery = z.object({
+	latitude: z.coerce.number().min(-90).max(90),
+	longitude: z.coerce.number().min(-180).max(180),
+});
+
+hono.get("/stops/nearby", createQueryValidator(getNearbyDeparturesQuery), async (c) => {
+	return c.json(await buildNearbyDepartures(c.req.valid("query")));
 });
 
 const getStopParams = z.object({

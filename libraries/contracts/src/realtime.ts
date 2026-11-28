@@ -62,6 +62,15 @@ export const realtimeClientMessageSchema = z.discriminatedUnion("type", [
 			})
 			.nullable(),
 	}),
+	z.object({
+		type: z.literal("watch-nearby"),
+		position: z
+			.object({
+				latitude: z.number().min(-90).max(90),
+				longitude: z.number().min(-180).max(180),
+			})
+			.nullable(),
+	}),
 ]);
 
 export type RealtimeClientMessage = z.infer<typeof realtimeClientMessageSchema>;
@@ -74,9 +83,12 @@ export type RealtimePayloadTypes = {
 	line: unknown;
 	stopMarker: unknown;
 	stopDepartures: unknown;
+	nearbyDepartures: unknown;
 };
 
 export type RealtimeStopWatch = NonNullable<Extract<RealtimeClientMessage, { type: "watch-stop" }>["stop"]>;
+
+export type RealtimeNearbyWatch = NonNullable<Extract<RealtimeClientMessage, { type: "watch-nearby" }>["position"]>;
 
 export type RealtimeUpdateMessage<T extends RealtimePayloadTypes = RealtimePayloadTypes> = {
 	type: "update";
@@ -90,6 +102,7 @@ export type RealtimeUpdateMessage<T extends RealtimePayloadTypes = RealtimePaylo
 	stops?: { seq: number; upsert: T["stopMarker"][]; remove: string[] };
 	stopDepartures?: RealtimeStopWatch & ({ departures: T["stopDepartures"] } | { unavailable: true });
 	stopAlerts?: { ref: string; items: T["alert"][] };
+	nearbyDepartures?: RealtimeNearbyWatch & ({ departures: T["nearbyDepartures"] } | { unavailable: true });
 	at: string;
 };
 
